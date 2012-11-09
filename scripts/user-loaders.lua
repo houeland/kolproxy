@@ -58,6 +58,8 @@ load_file("interface", "custom/nion/basement.lua")
 
 load_file("interface", "custom/chickencha/beararms.lua")
 
+load_file("interface", "custom/superbachelor/blank-out.lua")
+
 load_file("chat", "custom/add-log-notes.lua")
 
 load_file("interface", "custom/lua-console.lua")
