@@ -1,0 +1,8 @@
+add_printer("/volcanomaze.php", function()
+	text = text:gsub([[if %(!res.show.hasOwnProperty%(i%)%) continue;]], [[]])
+-- 	text = text:gsub([[setTitle%(sq, 'Platform'%);]], [[sq.addClass('yes'); %0]])
+	text = text:gsub([[([a-z]+).find%('a'%).css%('background','url.-platform.-%);]], [[]])
+	text = text:gsub([[platformupyou.gif]], [[travtrou.gif]])
+	text = text:gsub([[background: url%('http://images.kingdomofloathing.com/itemimages/platformdownyou.gif'%);]], [[]])
+-- 	text = text:gsub([[setTitle%(t, 'Laval'%);]], [[setTitle(t, 'Lava');]])
+end)
