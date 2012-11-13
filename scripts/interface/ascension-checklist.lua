@@ -405,8 +405,10 @@ local href = add_automation_script("custom-ascension-checklist", function()
 				return -10, [[ style="background-color: red;"]]
 			elseif have < want and importance >= 0 then
 				return -5, [[ style="background-color: darkorange;"]]
+			elseif have < want then
+				return -3, ""
 			elseif have < want * 2 + 2 then
-				return -2, ""
+				return -2, [[ style="color: gray;"]]
 			else
 				return 1, [[ style="color: gray;"]]
 			end

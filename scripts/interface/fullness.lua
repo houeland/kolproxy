@@ -151,7 +151,7 @@ add_aftercore_warning("/inv_eat.php", function()
 end)
 
 add_extra_ascension_warning("/inv_eat.php", function()
-	if have("milk of magnesium") or (have("glass of goat's milk") and (classid() == 4 or have_skill("Advanced Saucecrafting"))) then
+	if have_buff("Got Milk") or have("milk of magnesium") or (have("glass of goat's milk") and (classid() == 4 or have_skill("Advanced Saucecrafting"))) then
 		return check_eating_warning(tonumber(params.whichitem), (tonumber(params.quantity) or 1))
 	end
 end)

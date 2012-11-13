@@ -965,7 +965,7 @@ function get_automation_scripts(cached_stuff)
 			end
 		end
 
-		if neweq.weapon == get_itemid("Knob Goblin elite polearm") then
+		if neweq.weapon == get_itemid("Knob Goblin elite polearm") or neweq.weapon == get_itemid("Trusty") or neweq.weapon == get_itemid("7-Foot Dwarven mattock") then
 			neweq.offhand = nil
 		end
 
@@ -2427,7 +2427,7 @@ endif
 				if challenge == "fist" then
 					ensure_buffs { "Earthen Fist" }
 				else
-					wear { hat = "miner's helmet", weapon = "7-Foot Dwarven mattock", offhand = "empty", pants = "miner's pants" }
+					wear { hat = "miner's helmet", weapon = "7-Foot Dwarven mattock", pants = "miner's pants" }
 				end
 				result, resulturl = get_page("/mining.php", { mine = 1 })
 				result = add_colored_message_to_page(get_result(), "TODO: get 3x " .. (ascension["trapper.ore"] or "unknown") .. " ore, then run script again", "darkorange")

@@ -3358,7 +3358,7 @@ endwhile
 				if challenge == "fist" then
 					script.ensure_buffs { "Earthen Fist" }
 				else
-					script.wear { hat = "miner's helmet", weapon = "7-Foot Dwarven mattock", offhand = "empty", pants = "miner's pants" }
+					script.wear { hat = "miner's helmet", weapon = "7-Foot Dwarven mattock", pants = "miner's pants" }
 				end
 				local mined = do_day_2_mining()
 				script.wear {}
@@ -3574,7 +3574,7 @@ endwhile
 				if challenge == "fist" then
 					script.ensure_buffs { "Earthen Fist" }
 				else
-					script.wear { hat = "miner's helmet", weapon = "7-Foot Dwarven mattock", offhand = "empty", pants = "miner's pants" }
+					script.wear { hat = "miner's helmet", weapon = "7-Foot Dwarven mattock", pants = "miner's pants" }
 				end
 				local mined = do_day_2_mining()
 				script.wear {}
