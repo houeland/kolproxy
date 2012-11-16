@@ -279,3 +279,86 @@ function autoadventure(tbl)
 	local pt, url = post_page("/adventure.php", { snarfblat = tbl.zoneid })
 	return handle_adventure_result(pt, url, tbl.zoneid, tbl.macro, tbl.noncombatchoices or {}, tbl.specialnoncombatfunction)
 end
+
+function get_resistance_levels()
+	local charpage = get_page("/charsheet.php")
+	local elements = {
+		cold = "Cold",
+		hot = "Hot",
+		sleaze = "Sleaze",
+		spooky = "Spooky",
+		stench = "Stench",
+	}
+	local resists = {}
+	for x, y in pairs(elements) do
+		resists[x] = tonumber(charpage:match([[<td align=right>]]..y..[[ Protection:</td><td><b>[^>()]+%(([0-9]+)%)</b></td>]]))
+	end
+	return resists
+end
+
+function elemental_resist_level_multiplier(level)
+	local myst_resist = 0
+	if get_mainstat() == "Mysticality" then
+		myst_resist = 5
+	end
+	if level <= 3 then
+		return 1 - (level * 10 + myst_resist) / 100
+	else
+		return 1 - (90 - (50 * ((5 / 6) ^ (level - 4))) + myst_resist) / 100
+	end
+end
+
+local function check_supported_table_values()
+	-- TODO: implement, make global, use
+end
+
+local resistphials = {
+	cold = { resistform = "Coldform", doubledmgform1 = "Sleazeform", doubledmgform2 = "Stenchform" },
+	hot = { resistform = "Hotform", doubledmgform1 = "Spookyform", doubledmgform2 = "Coldform" },
+	sleaze = { resistform = "Sleazeform", doubledmgform1 = "Stenchform", doubledmgform2 = "Hotform" },
+	spooky = { resistform = "Spookyform", doubledmgform1 = "Coldform", doubledmgform2 = "Sleazeform" },
+	stench = { resistform = "Stenchform", doubledmgform1 = "Hotform", doubledmgform2 = "Spookyform" },
+}
+
+function estimate_damage(tbl)
+	check_supported_table_values(tbl, { "cold", "hot", "sleaze", "spooky", "stench", "__resistance_levels" })
+	local resists = tbl.__resistance_levels or get_resistance_levels()
+	local dmg = {}
+	for _, dmgtype in ipairs { "cold", "hot", "sleaze", "spooky", "stench" } do
+		if tbl[dmgtype] then
+			local formmult = 1
+			if have_buff(resistphials[dmgtype].resistform) then
+				formmult = 0
+			elseif have_buff(resistphials[dmgtype].doubledmgform1) or have_buff(resistphials[dmgtype].doubledmgform2) then
+				formmult = 2
+			end
+			dmg[dmgtype] = math.max(1, tbl[dmgtype] * formmult * elemental_resist_level_multiplier(resists[dmgtype] or 0))
+		end
+	end
+	return dmg
+end
+
+function table_apply_function(tbl, f)
+	local ret = {}
+	for x, y in pairs(tbl) do
+		ret[x] = f(y)
+	end
+	return ret
+end
+
+local resistcolors = {
+	cold = "blue",
+	hot = "red",
+	sleaze = "blueviolet",
+	spooky = "gray",
+	stench = "green",
+}
+
+function markup_damagetext(tbl)
+	check_supported_table_values(tbl, { "cold", "hot", "sleaze", "spooky", "stench" })
+	local dmgtext = {}
+	for x, y in pairs(tbl) do
+		dmgtext[x] = [[<b style="color: ]]..resistcolors[x]..[[">]]..y..[[</b>]]
+	end
+	return dmgtext
+end

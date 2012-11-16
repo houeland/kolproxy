@@ -1,4 +1,4 @@
-whichboard = 14 -- load zombie leaderboard
+whichboard = 15 -- load class act leaderboard
 
 register_setting {
 	name = "enable super-compact menupane",

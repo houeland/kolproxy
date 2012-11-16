@@ -1,15 +1,4 @@
 add_automator("/basement.php", function()
-	local hot_resist = 0
-	local cold_resist = 0
-	local spooky_resist = 0
-	local stench_resist = 0
-	local sleaze_resist = 0
-
-	local myst_resist = 0
-	if get_mainstat() == "Mysticality" then
-		myst_resist = 5
-	end		
-
 	local basement_floor = text:match([[<tr><td style="color: white;" align=center bgcolor=blue.-><b>Fernswarthy's Basement, Level ([^<]*)</b></td></tr>]])
 	local challenge_type = text:match([[<input class=button type=submit value="([^>]+) %(1%)">]])
 
@@ -22,41 +11,21 @@ add_automator("/basement.php", function()
 	local maxreqinfo = ""
 	local bad_estimate = false
 
-	local charpage
-	local function handle_resist_test(elem1, elem2)
-		if not charpage then
-			charpage = get_page("/charsheet.php")
-		end
-		local function get_resist_amount(e)
-			local fieldtext = charpage:match([[<td align=right>]]..e..[[ Protection:</td><td><b>[^>()]+%(([0-9]+)%)</b></td>]])
-			local level = tonumber(fieldtext) or 0
-			if level <= 3 then
-				return (level*10 + myst_resist)/100
-			else
-				return (90-(50*((5/6)^(level-4))) + myst_resist)/100
-			end
-		end
-		local function get_base_elem_dmg(e)
-			return (8 + 4.5 * (basement_floor ^ 1.4)) * (1 - get_resist_amount(e))
-		end
-		local resistcolors = {
-			Cold = "blue",
-			Hot = "red",
-			Sleaze = "blueviolet",
-			Spooky = "gray",
-			Stench = "green",
-		}
-		local mindmg1 = math.floor(0.95 * get_base_elem_dmg(elem1))
-		local mindmg2 = math.floor(0.95 * get_base_elem_dmg(elem2))
-		local maxdmg1 = math.ceil(1.05 * get_base_elem_dmg(elem1))
-		local maxdmg2 = math.ceil(1.05 * get_base_elem_dmg(elem2))
-		minreq = mindmg1 + mindmg2
+	local function handle_resist_test(elem1title, elem2title)
+		local elem1, elem2 = elem1title:lower(), elem2title:lower()
+		local resists = get_resistance_levels()
+		local basedmg = 8 + 4.5 * (basement_floor ^ 1.4)
+		local mindmg = table_apply_function(estimate_damage { [elem1] = 0.95 * basedmg, [elem2] = 0.95 * basedmg, __resistance_levels = resists }, math.floor)
+		local maxdmg = table_apply_function(estimate_damage { [elem1] = 1.05 * basedmg, [elem2] = 1.05 * basedmg, __resistance_levels = resists }, math.ceil)
+		local minmarkup = markup_damagetext(mindmg)
+		local maxmarkup = markup_damagetext(maxdmg)
+		minreq = mindmg[elem1] + mindmg[elem2]
 		havereq = hp()
-		maxreq = maxdmg1 + maxdmg2
-		minreqinfo = [[ (<b style="color: ]]..resistcolors[elem1]..[[">]] .. mindmg1 .. [[</b> + <b style="color: ]]..resistcolors[elem2]..[[">]] .. mindmg2 .. [[</b>)]]
-		maxreqinfo = [[ (<b style="color: ]]..resistcolors[elem1]..[[">]] .. maxdmg1 .. [[</b> + <b style="color: ]]..resistcolors[elem2]..[[">]] .. maxdmg2 .. [[</b>)]]
+		maxreq = maxdmg[elem1] + maxdmg[elem2]
+		minreqinfo = string.format([[ (%s + %s)]], minmarkup[elem1], minmarkup[elem2])
+		maxreqinfo = string.format([[ (%s + %s)]], maxmarkup[elem1], maxmarkup[elem2])
 		reqtype = " damage"
-		challenge_description = elem1 .. " + " .. elem2 .. " Resistance test"
+		challenge_description = elem1title .. " + " .. elem2title .. " Resistance test"
 	end
 
 	if basement_floor % 5 == 0 then
