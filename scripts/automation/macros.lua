@@ -795,12 +795,19 @@ endwhile
 end
 
 function make_cannonsniff_macro(name)
+	local castolfaction = ""
+	if have_skill() then
+		castolfaction = "cast Transcendent Olfaction"
+	end
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
 if monstername ]] .. name .. [[
 
-  cast Transcendent Olfaction
+
+]] .. castolfaction .. [[
+
+
 endif
 
 ]] .. noodles_action() .. [[
@@ -823,11 +830,19 @@ endwhile
 end
 
 function macro_8bit_realm()
+	local castolfaction = ""
+	if have_skill() then
+		castolfaction = "cast Transcendent Olfaction"
+	end
 	return [[
 ]] .. COMMON_MACROSTUFF_START(25, 30) .. [[
 
 if monstername Blooper
-  cast Transcendent Olfaction
+
+
+]] .. castolfaction .. [[
+
+
 endif
 
 ]]..conditional_salve_action()..[[
@@ -1171,6 +1186,10 @@ endif
 end
 
 function macro_orc_chasm()
+	local castolfaction = ""
+	if have_skill() then
+		castolfaction = "cast Transcendent Olfaction"
+	end
   local maybeuse334s = ""
   local function multiuse(item1, item2)
     if have_skill("Ambidextrous Funkslinging") then
@@ -1200,7 +1219,11 @@ function macro_orc_chasm()
     maybetrail = [[
 
 if monstername xxx pr0n
-  cast Transcendent Olfaction
+
+
+]] .. castolfaction .. [[
+
+
 endif
 
 

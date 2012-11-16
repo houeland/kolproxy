@@ -171,6 +171,15 @@ function get_automation_scripts(cached_stuff)
 		end
 	end
 
+	local cached_have_familiars = {}
+	function f.have_familiar(famname)
+		if not cached_have_familiars[famname] then
+			f.set_familiar(famname)
+			cached_have_familiars[famname] = (familiar_data[famname].id == familiarid())
+		end
+		return cached_have_familiars[famname]
+	end
+
 	local fam = f.set_familiar
 
 	local want_bonus = {}

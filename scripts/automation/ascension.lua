@@ -4028,11 +4028,11 @@ endwhile
 					if not have("pumpkin") and not have("pumpkin bomb") then
 						script.bonus_target { "combat" }
 						pull_in_scboris("unbearable light")
-						script.go("yellow raying frat house", 134, [[
-
-use unbearable light
-
-]], {
+						local macro = make_yellowray_macro("War")
+						if not script.have_familiar("He-Boulder") then
+							macro = "use unbearable light"
+						end
+						script.go("yellow raying frat house", 134, macro, {
 							["Catching Some Zetas"] = "Wake up the pledge and throw down",
 							["Fratacombs"] = "Wander this way",
 							["One Less Room Than In That Movie"] = "Officers' Lounge",

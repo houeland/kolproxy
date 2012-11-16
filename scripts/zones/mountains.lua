@@ -444,7 +444,7 @@ add_choice_text("Yeti Nother Hippy", {
 })
 
 add_choice_text("Duffel on the Double", {
-	["Open the bag"] = { "Get a piece of eXtreme Cold-Weather Gear", },
+	["Open the bag"] = "Get a piece of eXtreme Cold-Weather Gear",
 	["Scram"] = { leave_noturn = true },
 })
 
