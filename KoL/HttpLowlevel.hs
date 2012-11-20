@@ -438,7 +438,7 @@ mkconnthing server = do
 -- 					doHTTPLOWLEVEL_DEBUG $ "not-stale, keeping connection | " ++ show (tnow, t_stored, diffUTCTime tnow t_stored)
 					return (cf_stored, t_stored, pending)
 				else do
---					putStrLn $ "DEBUG: stale, making new connection | " ++ show (tnow, t_stored, diffUTCTime tnow t_stored)
+					putStrLn $ "DEBUG: stale, making new connection | " ++ show (tnow, t_stored, diffUTCTime tnow t_stored)
 					open_conn -- TODO: need to handle this failing!!!
 -- 			putStrLn $ "DEBUG connmv cf x: " ++ show debug_absuri
 			cf x
