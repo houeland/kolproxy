@@ -19,24 +19,19 @@ end
 setup_variables()
 -- end)
 
-for _, x in ipairs(automators[which] or {}) do
-	getfenv(x.f).text = text
-	getfenv(x.f).url = url
--- 	kolproxy_log_time_interval("run:" .. tostring(x.scriptname), x.f)
-	x.f()
-	text = getfenv(x.f).text
-	url = getfenv(x.f).url
-end
-
-if path ~= "/loggedout.php" then
-for _, x in ipairs(automators["all pages"] or {}) do
-	getfenv(x.f).text = text
-	getfenv(x.f).url = url
--- 	kolproxy_log_time_interval("run allpages:" .. tostring(x.scriptname), x.f)
-	x.f()
-	text = getfenv(x.f).text
-	url = getfenv(x.f).url
-end
+if which ~= "/loggedout.php" then
+	local automate_url = path
+	text = run_functions(path, text, function(target, pt)
+		for _, x in ipairs(automators[target] or {}) do
+			getfenv(x.f).text = pt
+			getfenv(x.f).url = automateurl
+-- 			kolproxy_log_time_interval("run:" .. tostring(x.scriptname), x.f)
+			x.f()
+			pt = getfenv(x.f).text
+			automateurl = getfenv(x.f).url
+		end
+		return pt
+	end)
 end
 
 return text

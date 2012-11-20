@@ -79,6 +79,7 @@ local function get_fam_item()
 		"hippofam",
 		"pianocat",
 		"kloop",
+		"pep_rhino",
 		"frankengnome",
 	}
 	for i,fam in ipairs(vanilla_fairy) do

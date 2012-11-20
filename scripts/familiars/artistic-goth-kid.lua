@@ -1,6 +1,7 @@
+-- TODO: track pvp fights?
+
 add_processor("/fight.php", function()
 	if newly_started_fight and encounter_source == "Artistic Goth Kid" then
--- 		print("goth kid fight!")
 		increase_daily_counter("familiar.free combat encounters")
 	end
 end)

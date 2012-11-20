@@ -34,6 +34,7 @@ load_file("familiar", "familiars/artistic-goth-kid.lua")
 load_file("familiar", "familiars/organ-grinder.lua")
 load_file("familiar", "familiars/obtuse-angel.lua")
 load_file("familiar", "familiars/bloovian-groose.lua")
+load_file("familiar", "familiars/nanorhino.lua")
 
 load_file("skill", "skills/summons.lua")
 

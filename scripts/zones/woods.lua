@@ -186,8 +186,8 @@ add_choice_text("The Only Thing About Him is the Way That He Walks", {
 	["Show him how easy it is to steal all of his stuff"] = "Get mullet wig",
 })
 
-add_printer("item drop", function ()
-	if text:contains(" pixel") then
+add_printer("item drop", function()
+	if item_name:contains(" pixel") then
 		local white = count_item("white pixel")
 		local red = count_item("red pixel")
 		local green = count_item("green pixel")

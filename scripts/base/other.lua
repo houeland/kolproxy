@@ -198,7 +198,7 @@ add_printer("/charpane.php", function()
 end)
 
 
--- 	add_automator("/inv_use.php", function ()
+-- 	add_automator("use item", function()
 -- 		if not setting_enabled("automate simple tasks") then return end
 -- 		if text:match([[<input class=button type=submit value="Begin the Ritual">]]) then
 -- 			text = text:gsub([[(<p>You feel your clubbing muscles begin to twitch with anticipation...<p><center><form action=inv_use.php method=post)(>)]], [[%1 name="kolproxy_summonsealform"%2]])

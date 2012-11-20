@@ -36,10 +36,10 @@ add_processor("used combat item", function ()
 			["strength"] = "much stronger",
 			["teleportation"] = "disappearing",
 		}
-		print(item_name .. " | " .. text)
+--		print(item_name .. " | " .. text)
 		for a, b in pairs(effects) do
-			if string.find(text, b) then
-				print(item_name .. " = " .. a)
+			if text:contains(b) then
+				print("INFO: " .. item_name .. " = " .. a)
 				tbl[item_name] = a
 			end
 		end
@@ -47,7 +47,8 @@ add_processor("used combat item", function ()
 	end
 end)
 
-add_processor("/inv_use.php", function () -- unidentified/identified text does not get updated
+add_processor("use item", function()
+-- TODO: unidentified/identified text on inventory.php does not get updated when used through ajax
 	potion = text:match([[<table><tr><td><center><img src="http://images.kingdomofloathing.com/itemimages/exclam.gif" width=30 height=30><br></center>.-You drink the ([a-z]- potion).]])
 	if potion then
 		local tbl = ascension["zone.dod.potions"] or {}
@@ -63,8 +64,8 @@ add_processor("/inv_use.php", function () -- unidentified/identified text does n
 			["teleportation"] = "Teleportitis",
 		}
 		for a, b in pairs(effects) do
-			if string.match(text, b) then
-				print(potion .. " = " .. a)
+			if text:match(b) then
+				print("INFO: " .. potion .. " = " .. a)
 				tbl[potion] = a
 			end
 		end
@@ -75,7 +76,8 @@ end)
 add_printer("/inventory.php", function ()
 	local tbl, _, unknown = get_dod_potion_status()
 	for potion in table.values(dod_potion_types) do
-		if tbl[potion] then -- KoL javascript destroys <span> tags on inventory page
+		-- KoL javascript destroys <span> tags on inventory page
+		if tbl[potion] then
 			value = [[<font style="color: green;">{&nbsp;]] .. tbl[potion] .. [[&nbsp;}</font>]]
 		else
 			value = [[<font style="color: darkorange;" title="Possibilities: ]] .. table.concat(unknown, ", ") .. [[">{&nbsp;unidentified&nbsp;}</font>]]
@@ -124,19 +126,19 @@ local function can_be_potion(itemid, whicheffect)
 	return false
 end
 
-add_ascension_warning("/inv_use.php", function()
+add_ascension_warning("use item", function()
 	if can_be_potion(tonumber(params.whichitem), "booze") and drunkenness() <= maxsafedrunkenness() and drunkenness() + 3 > maxsafedrunkenness() then
 		return "Using this potion could make you overdrunk", "dod potion could make overdrunk"
 	end
 end)
 
-add_extra_ascension_warning("/inv_use.php", function()
+add_extra_ascension_warning("use item", function()
 	if can_be_potion(tonumber(params.whichitem), "booze") then
 		return "This potion could be booze", "dod potion could be booze"
 	end
 end)
 
-add_extra_ascension_warning("/inv_use.php", function()
+add_extra_ascension_warning("use item", function()
 	if can_be_potion(tonumber(params.whichitem), "teleportation") then
 		if have_item("soft green echo eyedrop antidote") then
 			return "This potion could be teleportation", "dod potion could be teleportation"

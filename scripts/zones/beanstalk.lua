@@ -106,9 +106,7 @@ add_printer("/beanstalk.php", function ()
 	end
 end)
 
-add_automator("/inv_use.php", function ()
+add_automator("item drop: quantum egg", function()
 	if not setting_enabled("automate simple tasks") then return end
-	if text:contains("quantum egg") then
-		meatpaste_items("S.O.C.K.", "quantum egg")
-	end
+	meatpaste_items("S.O.C.K.", "quantum egg")
 end)

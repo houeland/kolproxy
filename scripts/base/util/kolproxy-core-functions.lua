@@ -21,6 +21,10 @@ local function get_item_data_by_id(id)
 end
 
 function maybe_get_itemid(name)
+	if name == nil then
+		return nil
+	end
+
 	local t = type(name)
 	if t == "number" then
 		return name
@@ -40,7 +44,7 @@ function get_itemid(name)
 end
 
 function maybe_get_itemname(name)
-	local id = get_itemid(name)
+	local id = maybe_get_itemid(name)
 	return itemid_name_lookup[id]
 end
 
@@ -360,42 +364,20 @@ end
 
 function run_functions(p, pagetext, run)
 	original_page_text = pagetext
-	pagetext = run(p, pagetext)
 
 	if p == "/fight.php" then
 		pagetext = pagetext:gsub([[(<td[^>]-><img src="http://images.kingdomofloathing.com/itemimages/)([^"]+.gif)(" width=30 height=30 alt="[^"]+" title=")([^"]+)("></td><td[^>]->)(.-)(</td></tr>)]], function (pre, itemimage, mid, title, td, msg, post)
-	--~ 		print("item use", msg)
 			item_image = itemimage
 			item_name = title
+			if item_name then
+				msg = run("used combat item: " .. item_name, msg)
+			end
 			msg = run("used combat item", msg)
 			item_image = nil
 			item_name = nil
 			return pre .. itemimage .. mid .. title .. td .. msg .. post
 		end)
-	end
 
-	pagetext = pagetext:gsub([[<center><table class="item" style="float: none" rel="[^"]*"><tr><td><img src="http://images.kingdomofloathing.com/itemimages/[^"]+.gif" alt="[^"]*" title="[^"]*" class=hand onClick='descitem%([0-9]+%)'></td><td valign=center class=effect>You acquire .-</td></tr></table></center>]], function (droptext)
--- 			print("item drop gsub", droptext)
-		item_image = droptext:match([[src="http://images.kingdomofloathing.com/itemimages/([^"]+).gif"]])
-		item_name = droptext:match([[title="([^"]*)"]])
-		msg = droptext
-		if item_name then
-			msg = run("item drop: " .. item_name, msg)
-		end
-		msg = run("item drop", msg)
--- 		print("item capture", pre, rel, mid, dropinfo, post)
--- 		local msg = pre .. rel .. mid .. "<span style=\"color: darkgreen\">" .. dropinfo .. "</span>" .. post
--- 		if string.match(rel, "u=u") then
--- 			msg = pre .. rel .. mid .. "<span style=\"color: darkgreen\">" .. dropinfo .. "</span> [use]" .. post
--- 			http://localhost:18481/inv_use.php?pwd=xxx&which=3&whichitem=3236
--- 		elseif string.match(rel, "u=q") then
--- 			msg = pre .. rel .. mid .. "<span style=\"color: darkgreen\">" .. dropinfo .. "</span> [equip]" .. post
--- 			http://localhost:18481/inv_equip.php?pwd=xxx&which=2&action=equip&whichitem=2813
--- 		end
-		return msg
-	end)
-
-	if p == "/fight.php" then
 		pagetext = pagetext:gsub([[(<!%-%-familiarmessage%-%-><center><table>.-</table></center>)]], function (msg)
 			familiarmessage_picture = msg:match([[<!%-%-familiarmessage%-%-><center><table><tr><td align=center valign=center><img src="http://images.kingdomofloathing.com/itemimages/([^"]+).gif" width=30 height=30></td>]])
 			if familiarmessage_picture then
@@ -405,6 +387,58 @@ function run_functions(p, pagetext, run)
 			return msg
 		end)
 	end
+
+	if text:contains("You acquire an item") then
+		pagetext = pagetext:gsub([[<center><table class="item" style="float: none" rel="[^"]*"><tr><td><img src="http://images.kingdomofloathing.com/itemimages/[^"]+.gif" alt="[^"]*" title="[^"]*" class=hand onClick='descitem%([0-9]+%)'></td><td valign=center class=effect>You acquire .-</td></tr></table></center>]], function (droptext)
+			item_image = droptext:match([[src="http://images.kingdomofloathing.com/itemimages/([^"]+).gif"]])
+			item_name = droptext:match([[title="([^"]*)"]])
+			msg = droptext
+			if item_name then
+				msg = run("item drop: " .. item_name, msg)
+			end
+			msg = run("item drop", msg)
+-- 			print("item capture", pre, rel, mid, dropinfo, post)
+-- 			local msg = pre .. rel .. mid .. "<span style=\"color: darkgreen\">" .. dropinfo .. "</span>" .. post
+-- 			if string.match(rel, "u=u") then
+-- 				msg = pre .. rel .. mid .. "<span style=\"color: darkgreen\">" .. dropinfo .. "</span> [use]" .. post
+-- 				http://localhost:18481/inv_use.php?pwd=xxx&which=3&whichitem=3236
+-- 			elseif string.match(rel, "u=q") then
+-- 				msg = pre .. rel .. mid .. "<span style=\"color: darkgreen\">" .. dropinfo .. "</span> [equip]" .. post
+-- 				http://localhost:18481/inv_equip.php?pwd=xxx&which=2&action=equip&whichitem=2813
+-- 			end
+			return msg
+		end)
+	end
+
+--[[
+Possible ways to use items:
+
+inv_use -> inv_use
+  GET inv_use.php whichitem=ITEMID ajax=1 pwd=PWD -> inv_use.php whichitem=ITEMID ajax=1 pwd=PWD
+
+  GET inv_use.php ajax=1 whichitem=ITEMID itemquantity=N quantity=N pwd=PWD -> inv_use.php ajax=1 whichitem=ITEMID itemquantity=N quantity=N pwd=PWD
+
+inv_use -> inventory
+  GET inv_use.php pwd=PWD whichitem=ITEMID -> inventory.php action=message
+
+multiuse -> multiuse
+  GET multiuse.php whichitem=ITEMID action=useitem ajax=1 quantity=N pwd=PWD -> multiuse.php whichitem=ITEMID action=useitem ajax=1 quantity=N pwd=PWD
+
+  POST multiuse.php [action=useitem pwd=PWD quantity=N whichitem=ITEMID] -> multiuse.php
+--]]
+
+	if (p == "/inv_use.php") or (p == "/inventory.php" and params.action == "message") or (p == "/multiuse.php" and params.action == "useitem") then
+		item_image = nil
+		item_name = maybe_get_itemname(tonumber(params.whichitem))
+		if item_name then
+			pagetext = run("use item: " .. item_name, pagetext)
+		end
+		pagetext = run("use item", pagetext)
+		item_image = nil
+		item_name = nil
+	end
+
+	pagetext = run(p, pagetext)
 
 	pagetext = run("all pages", pagetext)
 

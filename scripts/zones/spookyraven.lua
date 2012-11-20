@@ -53,7 +53,6 @@ end)
 add_processor("item drop", function()
 	if adventure_zone then
 		if item_name:match("^dusty bottle of ") then
--- 			print("bottle drop", adventure_zone, item_image, item_name, text)
 			tbl = ascension["zone.manor.wine cellar bottles"] or {}
 			if not tbl[adventure_zone] then
 				tbl[adventure_zone] = {}
@@ -359,7 +358,7 @@ add_itemdrop_counter("dance card", function(c)
 	return "{ " .. make_plural(c, "dance card", "dance cards") .. " in inventory. }"
 end)
 
-add_processor("/inv_use.php", function()
+add_processor("use item: dance card", function()
 	if text:contains("You pencil your name in on the last line of the dance card, and it evaporates in a puff of ectoplasm.") then
 		dance_turn = turnsthisrun() + 3
 		ascension["dance card turn"] = dance_turn

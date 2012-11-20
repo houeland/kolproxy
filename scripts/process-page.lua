@@ -69,17 +69,16 @@ do
 	end
 	for x in table.values(semis) do
 		if matches(x) then
-			print("SEMIRARE!!!", x)
--- 			set_ascension_state("fortune cookie numbers", "")
-			set_ascension_state("last semirare encounter", x)
-			set_ascension_state("last semirare turn", turnsthisrun())
+			print("INFO: SEMIRARE!!!", x)
+			ascension["last semirare encounter"] = x
+			ascension["last semirare turn"] = turnsthisrun()
 		end
 	end
 end
 
 -- Clear cache whenever we gain (or lose) a skill
 if text:contains("You acquire a skill") or text:contains("You leargn a new skill") then
-	print("Clearing skill cache!")
+	print("INFO: Clearing skill cache!")
 	clear_cached_skills()
 end
 

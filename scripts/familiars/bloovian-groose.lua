@@ -10,23 +10,11 @@ add_extra_ascension_adventure_warning(function()
 	end
 end)
 
-add_automator("/inv_use.php", function()
+add_automator("use item: groose grease", function()
 	if not setting_enabled("automate simple tasks") then return end
-	if tonumber(params.whichitem) == get_itemid("groose grease") then
-		if buff("Just the Best Anapests") then
-			async_get_page("/charsheet.php", { pwd = session.pwd, ajax = 1, action = "unbuff", whichbuff = 1003 })
-			text = text:gsub("<b>Just the Best Anapests</b>", [[%0 <span style="color: green">{ Shrugged. }</span>]])
-		end
-	end
-end)
-
-add_automator("/multiuse.php", function()
-	if not setting_enabled("automate simple tasks") then return end
-	if tonumber(params.whichitem) == get_itemid("groose grease") then
-		if buff("Just the Best Anapests") then
-			async_get_page("/charsheet.php", { pwd = session.pwd, ajax = 1, action = "unbuff", whichbuff = 1003 })
-			text = text:gsub("<b>Just the Best Anapests</b>", [[%0 <span style="color: green">{ Shrugged. }</span>]])
-		end
+	if buff("Just the Best Anapests") then
+		async_get_page("/charsheet.php", { pwd = session.pwd, ajax = 1, action = "unbuff", whichbuff = 1003 })
+		text = text:gsub("<b>Just the Best Anapests</b>", [[%0 <span style="color: green">{ Shrugged. }</span>]])
 	end
 end)
 
