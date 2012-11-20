@@ -646,10 +646,10 @@ endif
 			f = casual_scripts.get_dinghy,
 		}
 
-		add_task {
-			prereq = not (have("dictionary") or have("abridged dictionary")) and quest("A Quest, LOL"),
-			f = casual_scripts.do_orc_chasm,
-		}
+--		add_task {
+--			prereq = not (have("dictionary") or have("abridged dictionary")) and quest("A Quest, LOL"),
+--			f = casual_scripts.do_orc_chasm,
+--		}
 
 		add_task {
 			prereq = quest_text("Your first step is to find the Black Market"),
@@ -4256,35 +4256,35 @@ endwhile
 		}
 	}
 
-	add_task {
-		when = quest("A Quest, LOL") and count("334 scroll") >= 2 and have("30669 scroll") and have("33398 scroll"),
-		task = {
-			message = "do orc chasm",
-			nobuffing = true,
-			action = function()
-				ignore_buffing_and_outfit = false
+--	add_task {
+--		when = quest("A Quest, LOL") and count("334 scroll") >= 2 and have("30669 scroll") and have("33398 scroll"),
+--		task = {
+--			message = "do orc chasm",
+--			nobuffing = true,
+--			action = function()
+--				ignore_buffing_and_outfit = false
 -- 				if challenge == "boris" and not have_skill("Banishing Shout") then
 -- 					script.bonus_target { "item" }
 -- 					script.ensure_buffs {}
 -- 					script.wear {}
 -- 					stop "TODO: do boris orc chasm"
 -- 				end
-				script.bonus_target { "item" }
-				script.go("doing orc chasm", 80, (challenge == "boris" and macro_softcore_boris_orc_chasm or macro_orc_chasm), {}, {}, "Rogue Program", 50)
-			end
-		}
-	}
+--				script.bonus_target { "item" }
+--				script.go("doing orc chasm", 80, (challenge == "boris" and macro_softcore_boris_orc_chasm or macro_orc_chasm), {}, {}, "Rogue Program", 50)
+--			end
+--		}
+--	}
 
 	add_task { prereq = true, f = function ()
 		if ((advs() < 50 and turnsthisrun() + advs() < 850) or (advs() < 10)) and fullness() >= 12 and drunkenness() >= 19 and not highskill_at_run then
 			if script.spooky_forest_runaways() then return end -- TODO: do earlier as a task
 			if script.trade_for_clover() then return end
 			stop "TODO: end of day 4. (pvp,) overdrink"
-		elseif quest("A Quest, LOL") then
-			if ascensionstatus() ~= "Hardcore" then
-				stop "Do orc chasm"
-			end
-			script.do_orc_chasm()
+--		elseif quest("A Quest, LOL") then
+--			if ascensionstatus() ~= "Hardcore" then
+--				stop "Do orc chasm"
+--			end
+--			script.do_orc_chasm()
 		elseif level() < 13 then
 			if ascensionstatus() ~= "Hardcore" then
 				stop "Level to 13."
