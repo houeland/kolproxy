@@ -121,7 +121,7 @@ function estimate_ML_modifiers()
 	if ascension["zone.manor.quartet song"] == "Provare Compasione Per El Sciocco" then
 		mlmods.background = 5
 	end
-	mlmods.equipment = get_equipment_ML()
+	mlmods.equipment = get_equipment_ML() + (get_equipment_bonuses().ml or 0)
 	mlmods.outfit = get_outfit_bonuses().ml
 	mlmods.buff = get_buff_bonuses().ml
 	return mlmods

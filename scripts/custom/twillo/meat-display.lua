@@ -184,7 +184,7 @@ function estimate_meat_modifiers()
 	end
 	meatmods.skill = get_skill_meat()
 	meatmods.familiar = get_fam_meat()
-	meatmods.equipment = get_equipment_meat()
+	meatmods.equipment = get_equipment_meat() + (get_equipment_bonuses().meat or 0)
 	meatmods.outfit = get_outfit_bonuses().meat
 	meatmods.buff = get_buff_bonuses().meat
 	return meatmods

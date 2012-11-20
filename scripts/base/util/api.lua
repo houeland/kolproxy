@@ -403,8 +403,7 @@ function setup_functions()
 
 		function equip_item(name, slot)
 			local itemid = get_itemid(name)
-			local d = get_item_data_by_id(itemid)
-			print_debug("  equipping", slot, d and d.name or itemid)
+			print_debug("  equipping", slot, maybe_get_itemname(itemid) or itemid)
 			local tbl = { pwd = session.pwd, action = "equip", whichitem = itemid, ajax = 1 }
 			if slot == "dualwield" then
 				tbl.action = "dualwield"
@@ -475,9 +474,9 @@ function setup_functions()
 			local eq = equipment()
 			local function getnamedesc(id)
 				if tonumber(id) then
-					local d = get_item_data_by_id(tonumber(id))
-					if d and d.name then
-						return (d.name .. " (itemid:" .. tonumber(id) .. ")")
+					local n = maybe_get_itemname(id)
+					if n then
+						return (n .. " (itemid:" .. tonumber(id) .. ")")
 					else
 						return ("itemid:" .. tonumber(id))
 					end
@@ -569,7 +568,7 @@ function setup_functions()
 				elseif pt:contains([[state['fightover'] = true;]]) or true then -- HACK: doesn't get set with combat bar disabled
 					if pt:contains("You lose.") then
 						advagain = false
-					elseif pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
+					elseif zoneid and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
 						advagain = true
 					end
 				end
@@ -596,7 +595,7 @@ function setup_functions()
 					end
 				end
 				adventure_title = adventure_title:gsub(" %(#[0-9]*%)$", "")
-				if found_results and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
+				if found_results and zoneid and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
 					advagain = true
 					return pt, url, advagain
 				end
@@ -634,7 +633,7 @@ function setup_functions()
 				end
 			else
 				local advagain = false
-				if pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
+				if zoneid and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
 					advagain = true
 -- 				else
 -- 					print("non-fight non-choice unhandled url", url)
@@ -664,21 +663,22 @@ function setup_functions()
 		end
 
 		function have_cached_data() -- TODO: check anything else that's cached?
-			return get_cached_item("cached_get_skills", function()
-				return session["cached skills"]
+			return get_cached_item("cached_get_player_skills", function()
+				return session["cached player skills"]
 			end)
 		end
 
-		function get_skills()
-			return get_cached_item("cached_get_skills", function()
+		function get_player_skills()
+			return get_cached_item("cached_get_player_skills", function()
 				-- TODO: Cache in a variable if merging Lua states
-				local cached_skills = session["cached skills"]
-				local cached_skills_ascensionpathid = tonumber(session["cached skills.ascensionpathid"])
-				if (not cached_skills or cached_skills_ascensionpathid ~= ascensionpathid()) then
+				local cached_skills = session["cached player skills"]
+				local cached_skills_storedid = session["cached player skills.storedid"]
+				local currentid = ascensionpathid() .. "/" .. ascensionstatus()
+				if (not cached_skills or cached_skills_storedid ~= currentid) then
 					if raw_submit_page then
 						cached_skills = raw_retrieve_skills()
-						session["cached skills"] = cached_skills
-						session["cached skills.ascensionpathid"] = ascensionpathid()
+						session["cached player skills"] = cached_skills
+						session["cached player skills.storedid"] = currentid
 					else
 						cached_skills = nil
 					end
@@ -687,14 +687,11 @@ function setup_functions()
 			end)
 		end
 		function clear_cached_skills()
-			session["cached skills"] = nil
-			session["cached skills.ascensionpathid"] = nil
+			session["cached player skills"] = nil
+			session["cached player skills.ascensionpathid"] = nil
 		end
 		function have_skill(name)
--- 			if not setting_enabled("run automation scripts") then
--- 				return nil
--- 			end
-			local skills = get_skills()
+			local skills = get_player_skills()
 			if skills then
 				return skills[name] ~= nil
 			end

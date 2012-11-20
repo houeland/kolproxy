@@ -36,7 +36,7 @@ add_printer("/charpane.php", function()
 		tw_com = tw_com + math.min(math.floor(buffedfamiliarweight() / 6), 5)
 	end
 	tw_com = tw_com + (get_buff_bonuses().combat or 0)
-	tw_com = tw_com + get_equipment_com()
+	tw_com = tw_com + get_equipment_com() + (get_equipment_bonuses().combat or 0)
 	tw_com = tw_com + (get_outfit_bonuses().combat or 0)
 	if ascension["zone.manor.quartet song"] == "Sono Un Amante Non Un Combattente" then
 		tw_com = tw_com - 5

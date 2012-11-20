@@ -20,7 +20,7 @@ import qualified Data.Digest.Pure.MD5
 import qualified Database.SQLite3
 
 
-kolproxy_version_number = "3.4-prealpha-2"
+kolproxy_version_number = "3.4-alpha"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 
@@ -112,11 +112,13 @@ do_db_query db query params = (do
 			Database.SQLite3.Done -> return acc
 	r <- getresults []
 	Database.SQLite3.finalize s
-	return r)  `catch` (\e -> do
+	return r) `catch` (\e -> do
 		putStrLn $ "db exception: " ++ (show (e :: SomeException))
 		putStrLn $ "  for query: " ++ query
 		throwIO e)
 
 do_db_query_ db query params = void $ do_db_query db query params
 
-forkIO_ x = void $ forkIO $ x
+forkIO_ name x = void $ forkIO $ x `catch` (\e -> do
+	putStrLn $ "WARNING: " ++ name ++ " exception: " ++ (show (e :: SomeException))
+	return ())

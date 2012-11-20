@@ -1,3 +1,5 @@
+local outfits_modifier_data = load_datafile("outfits")
+
 function get_outfit_bonuses()
 	local bonuses = {}
 	for _, x in pairs(outfits_modifier_data) do

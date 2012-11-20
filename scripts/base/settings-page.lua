@@ -66,9 +66,16 @@ register_setting {
 
 register_setting {
 	name = "enable turnplaying automation",
-	description = "Enable turn-playing automation scripts (for completing quests in aftercore, or automating an entire ascension, etc.)",
+	description = "Enable turn-playing automation scripts (for completing quests in aftercore)",
 	group = "automation",
 	default_level = "standard",
+}
+
+register_setting {
+	name = "enable turnplaying automation in-run",
+	description = "Also enable turn-playing automation scripts in-run (e.g. the ascension automation script)",
+	group = "automation",
+	default_level = "detailed",
 }
 
 -- 	-- 		{ title = "Show PvP announcements in a separate tab", set = "character", name = "separate pvp announcements tab", field = "yesno" },

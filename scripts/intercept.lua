@@ -18,7 +18,7 @@ query = requestquery -- temporary workaround for backwards compatibility
 
 if not locked() then
 	-- Download and cache available skills. Do this differently(?)
-	get_skills()
+	get_player_skills()
 end
 
 function submit_original_request()
@@ -74,9 +74,9 @@ for _, x in ipairs(interceptors[requestpath] or {}) do
 end
 
 if requestpath == "/inv_use.php" then
-	local d = get_item_data_by_id(tonumber(params.whichitem))
-	if d and d.name then
-		for _, x in ipairs(interceptors["use item: " .. d.name] or {}) do
+	local n = maybe_get_itemname(tonumber(params.whichitem))
+	if n then
+		for _, x in ipairs(interceptors["use item: " .. n] or {}) do
 			local t, u = x.f()
 			if t then
 				return t, u

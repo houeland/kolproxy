@@ -3,9 +3,9 @@
 module Lua where
 
 import Prelude hiding (read, catch)
-import HardcodedGameStuff
 import Logging
 import State
+import KoL.Http
 import KoL.Util
 import KoL.UtilTypes
 import qualified KoL.Api
@@ -13,6 +13,7 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Exception
 import Control.Monad
+import Data.Char
 import Data.IORef
 import Data.List
 import Data.Maybe
@@ -20,31 +21,47 @@ import Network.URI
 import Network.CGI
 import Text.JSON
 import Text.Printf
+import Text.Regex.TDFA
+import Text.XML.Light
 import qualified Data.ByteString.Char8
 import qualified Data.Map
 import qualified Database.SQLite3
 import qualified Scripting.LuaModded as Lua
 
 local_maybepeek l n test peek = do
-    v <- test l n
-    if v
-        then liftM Just (peek l n)
-        else return Nothing
+	v <- test l n
+	if v
+		then liftM Just (peek l n)
+		else return Nothing
 
 instance Lua.StackValue Integer where
-    push l x = Lua.pushinteger l (fromIntegral x)
-    peek l1 n = local_maybepeek l1 n Lua.isnumber (\l2 n2 -> liftM fromIntegral (Lua.tointeger l2 n2))
-    valuetype _ = Lua.TNUMBER
+	push l x = Lua.pushinteger l (fromIntegral x)
+	peek l1 n = local_maybepeek l1 n Lua.isnumber (\l2 n2 -> liftM fromIntegral (Lua.tointeger l2 n2))
+	valuetype _ = Lua.TNUMBER
 
 instance Lua.StackValue Data.ByteString.Char8.ByteString where
-    push l x = Lua.pushbytestring l x
-    peek l1 n1 = local_maybepeek l1 n1 Lua.isstring (\l2 n2 -> Lua.tobytestring l2 n2)
-    valuetype _ = Lua.TSTRING
+	push l x = Lua.pushbytestring l x
+	peek l1 n1 = local_maybepeek l1 n1 Lua.isstring (\l2 n2 -> Lua.tobytestring l2 n2)
+	valuetype _ = Lua.TSTRING
 
 instance Lua.StackValue JSValue where
-    push l x = push_jsvalue l x
-    peek _l _n = throwIO $ userError $ "ERROR: Attempting to peek a jsvalue from Lua"
-    valuetype _ = Lua.TTABLE
+	push l x = push_jsvalue l x
+	peek _l _n = throwIO $ userError $ "ERROR: Attempting to peek a jsvalue from Lua"
+	valuetype _ = Lua.TTABLE
+
+instance Lua.StackValue Element where
+	push l x = push_simplexmldata l x
+	peek _l _n = throwIO $ userError $ "ERROR: Attempting to peek an Element from Lua"
+	valuetype _ = Lua.TTABLE
+
+
+get_current_kolproxy_version = return $ kolproxy_version_number :: IO String
+
+get_latest_kolproxy_version = do
+	version <- (filter (not . isSpace)) <$> getHTTPFileData kolproxy_version_string (mkuri "http://www.houeland.com/kolproxy/latest-version")
+	if (length version <= 100) && (version =~ "^[0-9A-Za-z.-]+$")
+		then return version
+		else return "?"
 
 set_state ref stateset var value = do
 	canread <- canReadState ref
@@ -64,7 +81,7 @@ get_state ref stateset var = do
 get_ref_playername ref = KoL.Api.charName <$> KoL.Api.getApiInfo ref
 
 set_state_whenever ref var value = void $ do
--- 	putStrLn $ "lua: set_state..."  ++ (show $ (var, value))
+-- 	putStrLn $ "lua: set_state..." ++ (show $ (var, value))
 	charname <- get_ref_playername ref
 -- 	putStrLn $ "lua: setting state " ++ var ++ " => " ++ (show value) ++ " for " ++ charname
 	chatmap <- Data.Map.insert var value <$> readMapFromFile ("chat-" ++ charname ++ ".state")
@@ -227,10 +244,25 @@ lua_to_jsvalue l = do
 	Lua.pop l 1
 	return val
 
+push_simplexmldata l xmlval = do
+	Lua.newtable l
+
+	Lua.pushstring l "name"
+	Lua.pushstring l $ showQName $ elName $ xmlval
+	Lua.settable l (-3)
+
+	Lua.pushstring l "text"
+	Lua.pushstring l $ strContent $ xmlval
+	Lua.settable l (-3)
+
+	Lua.pushstring l "children"
+	Lua.newtable l
+	add_table_contents l (zip ([1..] :: [Int]) (elChildren xmlval))
+	Lua.settable l (-3)
+
 push_function l1 f identifier = do
 	Lua.pushhsfunction_raw l1 (\l2 -> (f l2) `catch` (\e -> do
-		-- TODO: Test what happens when this occurs
-		putStrLn $ "lua.hs error in " ++ identifier ++ ": " ++ (show e)
+		putStrLn $ "ERROR: Lua.hs error in " ++ identifier ++ ": " ++ (show e)
 		Lua.pushstring l2 (show (e :: SomeException))
 		return (-1)))
 
@@ -441,12 +473,6 @@ setup_lua_instance level filename setupref = do
 
 		register_function "make_href" $ make_href
 
-		register_function "get_semirare_encounters" $ \_ref l -> do
-			semis <- doReadDataFile "cache/data/semirares"
-			Lua.newtable l
-			add_table_contents l (zip [1..] semis :: [(Int, String)])
-			return 1
-
 		register_function "get_inventory_counts" $ \ref l -> do
 			Lua.newtable l
 			add_table_contents l =<< KoL.Api.getInventoryCounts ref
@@ -467,7 +493,13 @@ setup_lua_instance level filename setupref = do
 			Lua.pushstring l (encodeStrict jsonobj)
 			return 1
 
-		register_function "get_item_data_by_id" $ \ref l -> do
+		register_function "simplexmldata_to_table" $ \_ref l -> do
+			Just xmlstr <- Lua.peek l 1
+			let Just xmldoc = parseXMLDoc (xmlstr :: String)
+			push_simplexmldata l xmldoc
+			return 1
+
+		register_function "__hs_get_item_data_by_id" $ \ref l -> do
 			m_id <- Lua.peek l 1
 			case m_id of
 				Just itemid -> do
@@ -480,7 +512,7 @@ setup_lua_instance level filename setupref = do
 						_ -> return 0
 				_ -> return 0
 
-		register_function "get_item_data_by_name" $ \ref l -> do
+		register_function "__hs_get_item_data_by_name" $ \ref l -> do
 			m_name <- Lua.peek l 1
 			case m_name of
 				Just name -> do
@@ -492,6 +524,12 @@ setup_lua_instance level filename setupref = do
 							return 1
 						_ -> return 0
 				_ -> return 0
+
+		register_function "get_semirare_encounters" $ \_ref l -> do
+			semis <- doReadDataFile "cache/data/semirares"
+			Lua.newtable l
+			add_table_contents l (zip [1..] semis :: [(Int, String)])
+			return 1
 
 		register_function "get_fallback_choicespoilers" $ get_fallback_choicespoilers
 
@@ -896,3 +934,55 @@ runLogParsingScript log_db = do
 	maybeloginfo <- readIORef loginforef
 
 	return (jsonstr, maybeloginfo)
+
+run_datafile_parsers = do
+	code <- readFile "scripts/update-datafiles.lua"
+
+	lstate <- Lua.newstate
+	Lua.openlibs lstate
+
+	let register_function name f = do
+		push_function lstate f name
+		Lua.setglobal lstate name
+
+	register_function "json_to_table" $ \l -> do
+		Just jsonstr <- Lua.peek l 1
+		let Ok jsonobj = decodeStrict jsonstr
+		push_jsvalue l jsonobj
+		return 1
+
+	register_function "table_to_json" $ \l -> do
+		jsonobj <- lua_to_jsvalue l
+		Lua.pushstring l (encodeStrict jsonobj)
+		return 1
+
+	register_function "simplexmldata_to_table" $ \l -> do
+		Just xmlstr <- Lua.peek l 1
+		let Just xmldoc = parseXMLDoc (xmlstr :: String)
+		push_simplexmldata l xmldoc
+		return 1
+
+	-- TODO: handle return value?
+	void $ Lua.safeloadstring lstate "local dtb = debug.traceback; return function(e) kolproxy_debug_traceback = dtb(\"\", 2) return e end"
+	-- TODO: handle return value?
+	void $ Lua.pcall lstate 0 1 0 -- put error handling function on stack=1
+
+	_c <- Lua.safeloadstring lstate code
+	-- TODO: Check that it loads correctly?
+
+	retcode <- Lua.pcall lstate 0 Lua.multret 1 -- returns on stack=2+
+	case retcode of
+		0 -> do
+			Lua.close lstate
+			return ()
+		_ -> do
+			putStrLn $ "lua error!"
+			top <- Lua.gettop lstate
+			putStrLn $ "lua error, top = " ++ (show top)
+			err <- Lua.tostring lstate (-1)
+			putStrLn $ "lua error: " ++ err
+			Lua.getglobal lstate "kolproxy_debug_traceback" -- load traceback on stack=3
+			traceback <- Lua.tostring lstate 3
+			putStrLn $ "traceback: " ++ traceback
+			Lua.close lstate
+			throwIO $ InternalError err

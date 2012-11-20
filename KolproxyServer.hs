@@ -17,6 +17,7 @@ import Data.Maybe
 import Data.Time
 import Network.CGI (formDecode)
 import Network.HTTP
+import Network.Stream (ConnError (ErrorClosed))
 import Network.URI
 import System.IO
 import System.Random
@@ -72,10 +73,11 @@ make_sessionconn kolproxy_direct_connection dblogstuff statestuff = do
 handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logchan sh dblogstuff statestuff globalref = do
 	recvdata <- kolproxy_receiveHTTP h
 	doSERVER_DEBUG "> got request"
--- 	putStrLn $ "recvdata: " ++ show recvdata
 	case recvdata of
 		Left err -> do
-			putStrLn $ "recverror " ++ (show err)
+			if err == ErrorClosed
+				then putStrLn $ "INFO: browser closed request"
+				else putStrLn $ "WARNING: error receiving browser request: " ++ (show err)
 			makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack $ "Error getting request from browser: " ++ show err) "/kolproxy-error" [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")]
 		Right req -> case uriPath $ rqURI $ req of
 			"/kolproxy-test" -> do
@@ -162,7 +164,7 @@ make_globalref = do
 	htiming <- openlog "timing-log.txt"
 	hlua <- openlog "lua-log.txt"
 	hhttp <- openlog "http-log.txt"
-	shutdown_secret <- get_md5 <$> show <$> (randomIO :: IO Integer) -- Not really important, but use stronger randomness here?
+	shutdown_secret <- get_md5 <$> show <$> (randomIO :: IO Integer) -- TODO: Not really important, but use stronger randomness here?
 	shutdown_ref <- newIORef False
 	return GlobalRefStuff {
 		logindents_ = indentref,
@@ -177,10 +179,10 @@ make_globalref = do
 
 runProxyServer r rwhenever portnum = do
 	logchan <- newChan
-	forkIO_ $ forever $ ((join $ readChan $ logchan) `catch` (\e -> do
+	forkIO_ "kps:logchan" $ forever $ ((join $ readChan $ logchan) `catch` (\e -> do
 		putStrLn $ "writelog error: " ++ (show (e :: SomeException))))
 	dropping_logchan <- newChan
-	forkIO_ $ forever $ readChan dropping_logchan
+	forkIO_ "kps:droplogchan" $ forever $ readChan dropping_logchan
 
 	globalref <- make_globalref
 
@@ -193,7 +195,7 @@ runProxyServer r rwhenever portnum = do
 	let _log_fakeref = RefType { logstuff_ = logref, processingstuff_ = undefined, otherstuff_ = _fake_other, stateValid_ = undefined, globalstuff_ = globalref }
 
 	mvsequence <- newChan
-	forkIO_ $ forever $ do
+	forkIO_ "kps:mvseq" $ forever $ do
 		(uri, params, cookie, mvresp) <- readChan mvsequence
 		putMVar mvresp =<< ((try $ do
 			log_file_retrieval _log_fakeref ("proxy:" ++ show uri) params
@@ -201,9 +203,9 @@ runProxyServer r rwhenever portnum = do
 			resp <- log_time_interval _log_fakeref ("creating response for: " ++ (show uri)) $ r uri params cookie
 			return resp) :: IO (Either SomeException (Response Data.ByteString.Char8.ByteString)))
 	mvwhenever <- newChan
-	forkIO_ $ forever $ do
+	forkIO_ "kps:mvwhen" $ forever $ do
 		(uri, params, cookie, mvresp) <- readChan mvwhenever
-		forkIO_ $ do -- Serve asynced, possible private-message loss until server is fixed
+		forkIO_ "kps:mvwhentry" $ do -- Serve asynced, possible private-message loss until server is fixed
 -- 		do -- Serve synced, possible hang on timeouts
 			putMVar mvresp =<< (try $ rwhenever uri params cookie)
 
@@ -219,7 +221,7 @@ runProxyServer r rwhenever portnum = do
 					opendb <- create_db "sqlite3 log" filename
 					do_db_query_ opendb "CREATE TABLE IF NOT EXISTS pageloads(idx INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, time TEXT NOT NULL, statusbefore TEXT NOT NULL, statusafter TEXT, statebefore TEXT, stateafter TEXT, sessionid TEXT NOT NULL, requestedurl TEXT NOT NULL, parameters TEXT, retrievedurl TEXT, pagetext TEXT);" []
 					x <- newChan
-					forkIO_ $ forever $ do
+					forkIO_ "kps:dblogchan" $ forever $ do
 						chanaction <- readChan x
 						chanaction opendb
 					return (Data.Map.insert filename x m, x)
@@ -234,7 +236,7 @@ runProxyServer r rwhenever portnum = do
 					putStrLn $ "opening state db: " ++ filename
 					statedb <- create_db "state" filename
 					x <- newChan
-					forkIO_ $ forever $ do
+					forkIO_ "kps:dbstatechan" $ forever $ do
 						chanaction <- readChan x
 						chanaction statedb
 					return (Data.Map.insert filename x m, x)
@@ -242,7 +244,7 @@ runProxyServer r rwhenever portnum = do
 
 	-- TODO: allow launching before this is finished
 	launched_ref <- newIORef False
-	forkIO_ $ do
+	forkIO_ "kps:updatedatafiles" $ do
 		update_data_files
 		writeIORef launched_ref True
 		envlaunch <- getEnvironmentSetting "KOLPROXY_LAUNCH_BROWSER"
@@ -264,7 +266,7 @@ runProxyServer r rwhenever portnum = do
 			doSERVER_DEBUG $ "doing socket:" ++ (show sh)
 			launched <- readIORef launched_ref
 			if launched
-				then ((forkIO_ $ do
+				then ((forkIO_ "kps:handleconn" $ do
 					resp <- handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logchan sh dblogstuff statestuff globalref
 					send_http_response h resp
 					end_http h) `catch` (\e -> do

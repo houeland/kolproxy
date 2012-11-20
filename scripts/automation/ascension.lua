@@ -88,13 +88,12 @@ local function automate_hcnp_day(whichday)
 		return have_item("dingy dinghy") or have_item("skeletal skiff")
 	end
 
-	skills = get_skills()
 	challenge = nil
 	if ascensionpathid() == 6 then
 		challenge = "fist"
 		fist_level = 0
 		for x in table.values { "Flying Fire Fist", "Salamander Kata", "Drunken Baby Style", "Stinkpalm", "Worldpunch" } do
-			if skills[x] then
+			if have_skill(x) then
 				fist_level = fist_level + 1
 			end
 		end
@@ -269,7 +268,7 @@ endif
 	elseif ascensionpathid() == 0 then
 		highskill_at_run = check_for_highskill_run()
 	end
-	if not skills["Saucy Salve"] then
+	if not have_skill("Saucy Salve") then
 		conditional_salve_action = function() return [[
 
 
@@ -3759,7 +3758,7 @@ endwhile
 					did_action = true
 					return
 				end
-				if quest_text("bring him back 3 chunks") then
+				if quest_text("gather up some cheese and ore") and count_item("goat cheese") >= 3 then
 					if daysthisrun() >= 2 and ascensionstatus() ~= "Hardcore" then
 						local want_ore = questlog_page:match("bring him back 3 chunks of ([a-z]+ ore)")
 						if want_ore and get_itemid(want_ore) then
@@ -4695,6 +4694,7 @@ end)
 add_printer("/main.php", function ()
 	if tonumber(status().freedralph) == 1 then return end
 	if not setting_enabled("enable turnplaying automation") then return end
+	if not setting_enabled("enable turnplaying automation in-run") then return end
 	local title = "HCNP"
 	local shorttitle = "HC"
 	if ascensionstatus() == "Softcore" then

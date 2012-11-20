@@ -44,8 +44,8 @@ type ConnChanType = Chan (URI, Network.HTTP.Request Data.ByteString.ByteString, 
 data ServerSessionType = ServerSessionType {
 	wheneverConnection_ :: ConnChanType,
 	sequenceConnection_ :: ConnChanType,
-	wheneverLastRetrieve_  :: IORef UTCTime,
-	sequenceLastRetrieve_  :: IORef UTCTime,
+	wheneverLastRetrieve_ :: IORef UTCTime,
+	sequenceLastRetrieve_ :: IORef UTCTime,
 	sessConnData_ :: SessionDataType
 }
 

@@ -138,7 +138,7 @@ function estimate_initiative_modifiers()
 	end
 	initmods.skill = get_skill_init()
 	initmods.familiar = get_fam_init()
-	initmods.equipment = get_equipment_init()
+	initmods.equipment = get_equipment_init() + (get_equipment_bonuses().initiative or 0)
 	initmods.outfit = get_outfit_bonuses().initiative
 	initmods.buff = get_buff_bonuses().initiative
 

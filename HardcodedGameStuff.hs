@@ -1,15 +1,13 @@
 module HardcodedGameStuff where
 
 import Prelude hiding (read, catch)
+import Lua
 import PlatformLowlevel
 import KoL.Http
 import KoL.Util
 import KoL.UtilTypes
-import Control.Applicative
 import Control.Exception
 import Control.Monad
-import Data.Char
-import Data.List
 import Data.Maybe
 import Data.Time.Clock
 import System.Directory
@@ -17,21 +15,6 @@ import Text.Regex.TDFA
 import qualified Data.ByteString.Char8
 
 doWriteDataFile filename filedata = best_effort_atomic_file_write filename "." filedata
-
-get_monsterdata [] _ = []
-get_monsterdata (x:xs) ys =
-	case x of
-		"<monsterdata>" -> get_monsterdata xs [x]
-		"</monsterdata>" -> [concat $ ys ++ [x]] ++ (get_monsterdata xs [])
-		_ -> get_monsterdata xs (ys ++ [x])
-
-get_current_kolproxy_version = return $ kolproxy_version_number :: IO String
-
-get_latest_kolproxy_version = do
-	version <- (filter (not . isSpace)) <$> getHTTPFileData kolproxy_version_string (mkuri "http://www.houeland.com/kolproxy/latest-version")
-	if (length version <= 100) && (version =~ "^[0-9A-Za-z.-]+$")
-		then return version
-		else return "?"
 
 load_data_file url backupurl = ((do
 	t <- getHTTPFileData kolproxy_version_string $ mkuri url
@@ -85,61 +68,20 @@ update_data_files = do
 						_ -> return True
 		when should_attempt $ do
 			case difftime of
-				Nothing -> putStrLn $ "Downloading data files..."
-				Just x -> putStrLn $ "Updating data files... [" ++ show x ++ " old]"
+				Nothing -> putStrLn $ "INFO: Updating data files..."
+				Just x -> putStrLn $ "INFO: Updating data files... [" ++ show x ++ " old]"
 			writeFile "cache/data/last_attempt" (show (kolproxy_version_string, t))
 			(do
-				init_data_files
+				download_data_files
+				putStrLn $ "  Parsing data files."
+				run_datafile_parsers
 				writeFile "cache/data/last_update" (show (kolproxy_version_string, t))
-				putStrLn $ "Data files updated.") `catch` (\e -> do
+				putStrLn $ "  Data files updated.") `catch` (\e -> do
 					putStrLn $ "Failed to update data files: " ++ (show (e :: SomeException))
 					writeFile "cache/data/last_update" "failed"
 					return ())
 
-init_data_files = do
-	do
-		itemdescs <- load_mafia_file "items.txt" (\x -> case x of
-			id_str:name:_ -> case read_as id_str of
-				Just itemid -> Just (itemid :: Integer, name)
-				_ -> Nothing
-			_ -> Nothing)
-		fullness <- load_mafia_file "fullness.txt" (\x -> case x of
-			name:fullness_str:_ -> case read_as fullness_str of
-				Just fullness -> Just (map toLower name, fullness :: Integer)
-				_ -> Nothing
-			_ -> Nothing)
-		inebriety <- load_mafia_file "inebriety.txt" (\x -> case x of
-			name:inebriety_str:_ -> case read_as inebriety_str of
-				Just inebriety -> Just (map toLower name, inebriety :: Integer)
-				_ -> Nothing
-			_ -> Nothing)
-		spleenhit <- load_mafia_file "spleenhit.txt" (\x -> case x of
-			name:spleenhit_str:_ -> case read_as spleenhit_str of
-				Just spleenhit -> Just (map toLower name, spleenhit :: Integer)
-				_ -> Nothing
-			_ -> Nothing)
-		let items = map (\(itemid, name) -> [("name", name), ("id", show itemid)] ++
-			(case lookup (map toLower name) fullness of
-					Just f -> [("fullness", show f)]
-					_ -> []) ++
-			(case lookup (map toLower name) inebriety of
-					Just f -> [("drunkenness", show f)]
-					_ -> []) ++
-			(case lookup (map toLower name) spleenhit of
-					Just f -> [("spleen", show f)]
-					_ -> [])) itemdescs
-		if (isJust $ find (\x -> lookup "name" x == Just "Orcish Frat House blueprints") items) && (isJust $ find (\x -> lookup "name" x == Just "Boris's Helm") items)
-			then doWriteDataFile "cache/data/items" (show items)
-			else do
-				putStrLn $ "  ---   "
-				putStrLn $ "Error parsing item names!"
-				putStrLn $ "  ---   "
-				putStrLn $ "  " ++ (show (length items)) ++ " items, data:"
-				putStrLn $ "      " ++ (show items)
-				putStrLn $ "  ---   "
-				putStrLn $ "Error parsing item names!"
-				putStrLn $ "  ---   "
-
+download_data_files = do
 	do
 		mix_concoctions <- load_mafia_file "concoctions.txt" (\x -> case x of
 			name:"MIX":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
@@ -199,24 +141,29 @@ init_data_files = do
 			return regrouped
 		doWriteDataFile "cache/data/pulverize-groups" (show pulverizegroups)
 
-	do
-		faxbotlist <- do
-			xmltext <- load_data_file "http://www.hogsofdestiny.com/faxbot/faxbot.xml" "http://www.houeland.com/kolproxy/files/data-mirror/faxbot.xml"
-			let monsterdatas = get_monsterdata (lines xmltext) []
-			let extract_data md =
-					[("name", name), ("command", command), ("category", category), ("description", description)]
-				where
-					[[name]] = matchGroups "<actual_name>([^<]*)</actual_name>" md
-					[[command]] = matchGroups "<command>([^<]*)</command>" md
-					[[category]] = matchGroups "<category>([^<]*)</category>" md
-					[[description]] = matchGroups "<name>([^<]*)</name>" md
-			return $ map extract_data monsterdatas
-		doWriteDataFile "cache/data/faxbot-monsterlist" (show faxbotlist)
+	let dldatafile x = do
+		let [[basename]] = matchGroups ".*/([^/]+)$" x
+		filedata <- load_data_file x ("http://www.houeland.com/kolproxy/files/data-mirror/" ++ basename)
+		doWriteDataFile ("cache/files/" ++ basename) filedata
 
-	raw_load_mafia_file "modifiers.txt" >>= doWriteDataFile "cache/files/modifiers.txt"
-	raw_load_mafia_file "equipment.txt" >>= doWriteDataFile "cache/files/equipment.txt"
-	raw_load_mafia_file "outfits.txt" >>= doWriteDataFile "cache/files/outfits.txt"
-	raw_load_mafia_file "familiars.txt" >>= doWriteDataFile "cache/files/familiars.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/items.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/fullness.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/inebriety.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/spleenhit.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/modifiers.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/equipment.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/outfits.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/familiars.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/statuseffects.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/classskills.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/concoctions.txt"
+
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/net/sourceforge/kolmafia/KoLmafia.java"
+
+	dldatafile "http://www.hogsofdestiny.com/faxbot/faxbot.xml"
+
+	dldatafile "http://userscripts.org/scripts/source/67792.user.js"
+	dldatafile "http://userscripts.org/scripts/source/68727.user.js"
 
 	return ()
 

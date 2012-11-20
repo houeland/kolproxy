@@ -19,7 +19,7 @@ import Data.List (intercalate)
 import Data.Maybe
 import Data.Time
 import Network.URI
-import System.Directory (doesFileExist)
+import System.Directory (doesFileExist, createDirectoryIfMissing)
 import System.IO
 import qualified Data.ByteString.Char8
 import qualified Data.Map
@@ -49,7 +49,7 @@ doProcessPage ref uri params = do
 
 	mv <- newEmptyMVar
 
-	forkIO_ $ do
+	forkIO_ "proxy:process" $ do
 		x <- try $ do
 			(pagetext, effuri, hdrs) <- log_time_interval ref ("fetchpage: " ++ (show uri)) $ xf
 
@@ -59,7 +59,7 @@ doProcessPage ref uri params = do
 			state_after <- get_the_state ref
 
 			-- TODO: Make sure this is definitely the very next thing logged. Make a channel for logging and write to it
-			forkIO_ $ (do
+			forkIO_ "proxy:logresult" $ (do
 				status_before <- status_before_func
 				status_after <- status_after_func
 				log_page_result ref status_before log_time state_before uri params effuri (Data.ByteString.Char8.unpack pagetext) status_after state_after
@@ -153,7 +153,7 @@ make_ref baseref = do
 	let doRetrievePageRaw ref url params = do
 		log_file_retrieval ref url params
 		(xf, mvf) <- (nochangeRawRetrievePageFunc ref) ref url params True
---		forkIO_ $ void $ xf -- Run the content-getting function. TODO: Is this necessary?
+--		forkIO_ "proxy:makeref" $ void $ xf -- Run the content-getting function. TODO: Is this necessary?
 		return (xf, mvf)
 	let ref = baseref {
 		processingstuff_ = ProcessingRefStuff {
@@ -173,7 +173,7 @@ make_ref baseref = do
 
 kolProxyHandler uri params baseref = do
 	let _fake_log_ref = baseref
-	forkIO_ $ update_data_files -- TODO: maybe not for *every single page*?
+	forkIO_ "proxy:updatedatafiles" $ update_data_files -- TODO: maybe not for *every single page*?
 
 	origref <- log_time_interval _fake_log_ref ("make ref for: " ++ (show uri)) $ make_ref baseref
 
@@ -216,7 +216,7 @@ kolProxyHandler uri params baseref = do
 				what <- loadSettingsFromServer newref
 				putStrLn $ "INFO: settings loaded: " ++ (fromMaybe "nothing" what)
 
-				forkIO_ $ compressLogs (charName ai) (ascension ai)
+				forkIO_ "proxy:compresslogs" $ compressLogs (charName ai) (ascension ai)
 
 				putStrLn $ "DEBUG login.php contents: " ++ (Data.ByteString.Char8.unpack pt)
 				makeRedirectResponse pt uri hdrs) `catch` (\e -> do
@@ -340,7 +340,16 @@ main = platform_init $ do
 	hSetBuffering stdout LineBuffering
 	have_process_page <- doesFileExist "scripts/process-page.lua"
 	if have_process_page
-		then putStrLn $ "Starting..."
+		then do
+			putStrLn $ "Starting..."
+			createDirectoryIfMissing True "cache"
+			createDirectoryIfMissing True "cache/data"
+			createDirectoryIfMissing True "cache/files"
+			createDirectoryIfMissing True "logs"
+			createDirectoryIfMissing True "logs/chat"
+			createDirectoryIfMissing True "logs/scripts"
+			createDirectoryIfMissing True "logs/info"
+			createDirectoryIfMissing True "logs/parsed"
 		else do
 			putStrLn $ "WARNING: Trying to start without required files in the \"scripts\" directory."
 			putStrLn $ "         Did you unzip the files correctly?"

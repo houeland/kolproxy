@@ -52,8 +52,6 @@ local function grimacite(choices)
 	end
 end
 
-local have_used_another_transponder = false
-
 local function solve_porko(pegs, rewards)
 	local current_worth_8 = {}
 	local current_worth_9 = {}
@@ -145,6 +143,10 @@ local function solve_porko(pegs, rewards)
 	return best_option
 end
 
+local transponders_used = 0
+
+-- TODO: stop if spooky little girl gets hurt(?)
+
 local space_href = add_automation_script("automate-spaaace", function ()
 	if not autoattack_is_set() then
 		stop "Set a macro on autoattack to use for scripting this quest."
@@ -163,8 +165,8 @@ local space_href = add_automation_script("automate-spaaace", function ()
 			stop "Out of adventures."
 		end
 		if not buff("Transpondent") then
-			if not have_used_another_transponder then
-				have_used_another_transponder = true
+			if transponders_used < 2 then
+				transponders_used = transponders_used + 1
 				maybe_pull_item("transporter transponder")
 				use_item("transporter transponder")
 			end

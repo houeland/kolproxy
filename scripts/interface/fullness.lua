@@ -36,15 +36,6 @@ add_printer("/charpane.php", function()
 	end
 end)
 
-local function get_item_field(itemid, field)
-	local item = get_item_data_by_id(itemid)
-	if item then
-		return item[field]
-	else
-		return nil
-	end
-end
-
 -- TODO: warn when using frosty mug, divine champagne flute etc. Are all those actually OK since they use inv_booze?
 
 -- TODO: warn when drinking from cafes
@@ -60,11 +51,11 @@ add_always_warning("/inv_booze.php", function()
 		if not buff("Ode to Booze") then
 			return "You do not have Ode to Booze active.", "drinking without ode"
 		end
-		local drunk = tonumber(get_item_field(tonumber(params.whichitem), "drunkenness"))
-		if not drunk then
+		local item = maybe_get_itemdata(tonumber(params.whichitem))
+		if not item or not item.drunkenness then
 			return "This booze is unknown and could potentially be larger than your remaining turns of Ode to Booze.", "drinking unknown booze", "OK, disable the warning."
 		else
-			local need_turns = (tonumber(params.quantity) or 1) * drunk
+			local need_turns = (tonumber(params.quantity) or 1) * item.drunkenness
 			if buffturns("Ode to Booze") < need_turns then
 				return "You do not have enough turns of Ode to Booze active (need " .. need_turns .. " turns).", "drinking without enough turns of ode to booze"
 			end
@@ -75,16 +66,13 @@ end)
 add_always_warning("/inv_booze.php", function()
 	local safe = false
 	local unknown = true
-	local whichitem = tonumber(params.whichitem)
-	if whichitem then
-		local drunk = tonumber(get_item_field(whichitem, "drunkenness"))
-		if drunk then
-			unknown = false
-			if drunkenness() + drunk * (tonumber(params.quantity) or 1) <= maxsafedrunkenness() then
-				safe = true
-			elseif whichitem == get_itemid("steel margarita") then
-				safe = true
-			end
+	local item = maybe_get_itemdata(tonumber(params.whichitem))
+	if item and item.drunkenness then
+		unknown = false
+		if drunkenness() + item.drunkenness * (tonumber(params.quantity) or 1) <= maxsafedrunkenness() then
+			safe = true
+		elseif whichitem == get_itemid("steel margarita") then
+			safe = true
 		end
 	end
 	
@@ -96,16 +84,13 @@ end)
 add_extra_always_warning("/inv_booze.php", function()
 	local safe = false
 	local unknown = true
-	local whichitem = tonumber(params.whichitem)
-	if whichitem then
-		local drunk = tonumber(get_item_field(whichitem, "drunkenness"))
-		if drunk then
-			unknown = false
-			if drunkenness() + drunk * (tonumber(params.quantity) or 1) <= maxsafedrunkenness() then
-				safe = true
-			elseif whichitem == get_itemid("steel margarita") then
-				safe = true
-			end
+	local item = maybe_get_itemdata(tonumber(params.whichitem))
+	if item and item.drunkenness then
+		unknown = false
+		if drunkenness() + item.drunkenness * (tonumber(params.quantity) or 1) <= maxsafedrunkenness() then
+			safe = true
+		elseif whichitem == get_itemid("steel margarita") then
+			safe = true
 		end
 	end
 	
@@ -126,11 +111,11 @@ local function check_eating_warning(itemid, quantity, whicheffect)
 	if not buff(whicheffect) then
 		return "You do not have " .. whicheffect .. " active.", "eating without " .. whicheffect
 	end
-	local full = tonumber(get_item_field(itemid, "fullness"))
-	if not full then
+	local item = maybe_get_itemdata(tonumber(params.whichitem))
+	if not item or not item.fullness then
 		return "This food is unknown and could potentially be larger than your remaining turns of " .. whicheffect .. ".", "eating unknown food", "OK, disable the warning."
 	else
-		local need_turns = quantity * full
+		local need_turns = quantity * item.fullness
 		if buffturns(whicheffect) < need_turns then
 			return "You do not have enough turns of " .. whicheffect .. " active (need " .. need_turns .. " turns).", "eating without enough turns of " .. whicheffect
 		end

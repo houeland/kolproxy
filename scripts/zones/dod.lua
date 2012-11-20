@@ -104,7 +104,10 @@ add_printer("/fight.php", function()
 	end
 end)
 
-local function can_be_potion(itemname, whicheffect)
+local function can_be_potion(itemid, whicheffect)
+	local itemname = maybe_get_itemname(itemid)
+	if not itemname then return false end
+
 	local tbl, unknown_potions, unknown_effects = get_dod_potion_status()
 	if tbl[itemname] then
 		return tbl[itemname] == whicheffect
@@ -122,32 +125,23 @@ local function can_be_potion(itemname, whicheffect)
 end
 
 add_ascension_warning("/inv_use.php", function()
-	local d = get_item_data_by_id(tonumber(params.whichitem))
-	if d then
-		if can_be_potion(d.name, "booze") and drunkenness() <= maxsafedrunkenness() and drunkenness() + 3 > maxsafedrunkenness() then
-			return "Using this potion could make you overdrunk", "dod potion could make overdrunk"
-		end
+	if can_be_potion(tonumber(params.whichitem), "booze") and drunkenness() <= maxsafedrunkenness() and drunkenness() + 3 > maxsafedrunkenness() then
+		return "Using this potion could make you overdrunk", "dod potion could make overdrunk"
 	end
 end)
 
 add_extra_ascension_warning("/inv_use.php", function()
-	local d = get_item_data_by_id(tonumber(params.whichitem))
-	if d then
-		if can_be_potion(d.name, "booze") then
-			return "This potion could be booze", "dod potion could be booze"
-		end
+	if can_be_potion(tonumber(params.whichitem), "booze") then
+		return "This potion could be booze", "dod potion could be booze"
 	end
 end)
 
 add_extra_ascension_warning("/inv_use.php", function()
-	local d = get_item_data_by_id(tonumber(params.whichitem))
-	if d then
-		if can_be_potion(d.name, "teleportation") then
-			if have_item("soft green echo eyedrop antidote") then
-				return "This potion could be teleportation", "dod potion could be teleportation"
-			else
-				return "This potion could be teleportation and you don't have a soft green echo eyedrop antidote", "dod potion could be teleportation without sgeea"
-			end
+	if can_be_potion(tonumber(params.whichitem), "teleportation") then
+		if have_item("soft green echo eyedrop antidote") then
+			return "This potion could be teleportation", "dod potion could be teleportation"
+		else
+			return "This potion could be teleportation and you don't have a soft green echo eyedrop antidote", "dod potion could be teleportation without sgeea"
 		end
 	end
 end)

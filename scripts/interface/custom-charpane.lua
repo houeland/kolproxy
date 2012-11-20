@@ -22,6 +22,13 @@ register_setting {
 	default_level = "detailed",
 }
 
+register_setting {
+	name = "show buff extension arrows",
+	description = "Show up-arrows for extending buffs on custom charpane",
+	group = "charpane",
+	default_level = "standard",
+}
+
 add_printer("/game.php", function()
 	if not setting_enabled("use custom kolproxy charpane") then return end
 	text = text:gsub([[(<frameset id=mainset cols=)"120,%*"(>)]], [[%1"200, *"%2]])
@@ -274,7 +281,8 @@ local function get_common_js()
 					var whichbuff = data.match(/whichbuff=([0-9]*)/)[1]
 					if (confirm("Do you want to shrug off " + buffname + "?")) {
 						$.ajax({
-							type: 'GET', url: 'charsheet.php?pwd=]] .. session.pwd .. [[&ajax=1&action=unbuff&whichbuff=' + whichbuff + '&noredirect=1', cache: false,
+							type: 'GET', url: 'charsheet.php?pwd=]] .. session.pwd .. [[&ajax=1&action=unbuff&whichbuff=' + whichbuff + '&noredirect=1',
+							cache: false,
 							global: false,
 							success: function (out) {
 								if (out.match(/no\|/)) {
@@ -305,6 +313,38 @@ local function get_common_js()
 					alert("That requires a soft green echo eyedrop antidote.")
 				} else {
 					alert("Can't shrug that.")
+				}
+			})
+			return false
+		}
+		function cast_skillid(skillid) {
+			$.ajax({
+				type: 'GET',
+				url: "/skills.php?whichskill=" + skillid + "&quantity=1&action=Skillz&ajax=1&targetplayer=]] .. playerid() .. [[&pwd=]] .. session.pwd .. [[",
+				cache: false,
+				global: false,
+				success: function (out) {
+					if (out.match(/no\|/)) {
+						var parts = out.split(/\|/)
+						alert("Error extending buff: " + parts[1] + ".")
+						return
+					}
+					var $eff = $(top.mainpane.document).find('#effdiv');
+					if ($eff.length == 0) {
+						var d = top.mainpane.document.createElement('DIV');
+						d.id = 'effdiv';
+						var b = top.mainpane.document.body;
+						if ($('#content_').length > 0) {
+							b = $('#content_ div:first')[0];
+						}
+						b.insertBefore(d, b.firstChild);
+						$eff = $(d);
+					}
+					$eff.find('a[name="effdivtop"]').remove().end()
+						.prepend('<a name="effdivtop"></a><center>' + out + '</center>').css('display','block');
+					if (!window.dontscroll || (window.dontscroll && dontscroll==0)) {
+						top.mainpane.document.location = top.mainpane.document.location + "#effdivtop";
+					}
 				}
 			})
 			return false
@@ -373,6 +413,14 @@ function URLEncode(x)
 	<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
 
 ]]
+end
+
+local buff_extension_info = nil
+local function get_buff_extension_info()
+	if not buff_extension_info then
+		buff_extension_info = load_buff_extension_info()
+	end
+	return buff_extension_info
 end
 
 add_interceptor("/charpane.php", function()
@@ -492,7 +540,6 @@ add_interceptor("/charpane.php", function()
 		["Everything Looks Blue"] = "blue",
 		["Everything Looks Yellow"] = "goldenrod",
 	}
-	local bufflines = {}
 	local sorting = {}
 	for descid, x in pairs(status().effects) do
 		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid }) -- HACK: tonumber is a workaround for CDM effects being strings or numbers randomly
@@ -501,25 +548,57 @@ add_interceptor("/charpane.php", function()
 		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid })
 	end
 	table.sort(sorting, buff_sort_func)
-	local curbuffline = nil
-	for _, x in ipairs(sorting) do
-		local styleinfo = ""
-		local imgstyleinfo = ""
-		if buff_colors[x.title] then
-			styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
-			imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
+
+	local bufflines = {}
+
+	if setting_enabled("show buff extension arrows") then
+		local buffinfo = get_buff_extension_info()
+		local curbuffline = nil
+		for _, x in ipairs(sorting) do
+			local styleinfo = ""
+			local imgstyleinfo = ""
+			if buff_colors[x.title] then
+				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
+				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
+			end
+			local strarrow = ""
+			local bi = buffinfo[x.title]
+			if bi and have_skill(bi.skillname) and mp() >= bi.mpcost then
+				strarrow = string.format([[<img src="%s" style="cursor: pointer;" onclick="cast_skillid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", bi.skillid)
+			end
+			local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>(%s)</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, x.duration)
+			if not curbuffline then
+				curbuffline = "<td>" .. strarrow .. "</td>" .. str
+			else
+				table.insert(bufflines, string.format([[<tr>%s<td>&nbsp;</td>%s<td>%s</td></tr>]], curbuffline, str, strarrow))
+				curbuffline = nil
+			end
 		end
-		local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>(%s)</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, x.duration)
-		if not curbuffline then
-			curbuffline = str
-		else
-			table.insert(bufflines, string.format([[<tr>%s<td>&nbsp;</td>%s</tr>]], curbuffline, str))
-			curbuffline = nil
+		if curbuffline then
+			table.insert(bufflines, string.format([[<tr>%s<td></td><td></td><td></td></tr>]], curbuffline))
+		end
+	else
+		local curbuffline = nil
+		for _, x in ipairs(sorting) do
+			local styleinfo = ""
+			local imgstyleinfo = ""
+			if buff_colors[x.title] then
+				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
+				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
+			end
+			local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>(%s)</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, x.duration)
+			if not curbuffline then
+				curbuffline = str
+			else
+				table.insert(bufflines, string.format([[<tr>%s<td>&nbsp;</td>%s</tr>]], curbuffline, str))
+				curbuffline = nil
+			end
+		end
+		if curbuffline then
+			table.insert(bufflines, string.format([[<tr>%s<td></td><td></td></tr>]], curbuffline))
 		end
 	end
-	if curbuffline then
-		table.insert(bufflines, string.format([[<tr>%s<td></td><td></td></tr>]], curbuffline))
-	end
+
 	table.insert(lines, [[<center><table>]] .. table.concat(bufflines) .. [[</table></center>]])
 
 	if ascensionstatus() == "Aftercore" then
@@ -655,7 +734,6 @@ add_interceptor("/charpane.php", function()
 		["Everything Looks Blue"] = "blue",
 		["Everything Looks Yellow"] = "goldenrod",
 	}
-	local bufflines = {}
 	local sorting = {}
 	for descid, x in pairs(status().effects) do
 		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid }) -- HACK: tonumber is a workaround for CDM effects being strings or numbers randomly
@@ -664,16 +742,39 @@ add_interceptor("/charpane.php", function()
 		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid })
 	end
 	table.sort(sorting, buff_sort_func)
-	for _, x in ipairs(sorting) do
-		local styleinfo = ""
-		local imgstyleinfo = ""
-		if buff_colors[x.title] then
-			styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
-			imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
+
+	local bufflines = {}
+
+	if setting_enabled("show buff extension arrows") then
+		local buffinfo = get_buff_extension_info()
+		for _, x in ipairs(sorting) do
+			local styleinfo = ""
+			local imgstyleinfo = ""
+			if buff_colors[x.title] then
+				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
+				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
+			end
+			local strarrow = ""
+			local bi = buffinfo[x.title]
+			if bi and have_skill(bi.skillname) and mp() >= bi.mpcost then
+				strarrow = string.format([[<img src="%s" style="cursor: pointer;" onclick="cast_skillid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", bi.skillid)
+			end
+			local str = string.format([[<tr><td>%s</td><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s (%s)</font><br></td></tr>]], strarrow, imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, x.duration)
+			table.insert(bufflines, str)
 		end
-		local str = string.format([[<tr><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s (%s)</font><br></td></tr>]], imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, x.duration)
-		table.insert(bufflines, str)
+	else
+		for _, x in ipairs(sorting) do
+			local styleinfo = ""
+			local imgstyleinfo = ""
+			if buff_colors[x.title] then
+				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
+				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
+			end
+			local str = string.format([[<tr><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s (%s)</font><br></td></tr>]], imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, x.duration)
+			table.insert(bufflines, str)
+		end
 	end
+
 	table.insert(lines, [[<br>]])
 	table.insert(lines, [[<center><table>]] .. table.concat(bufflines) .. [[</table></center>]])
 

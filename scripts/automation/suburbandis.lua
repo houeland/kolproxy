@@ -81,7 +81,7 @@ local function automate_dis_zone(zoneid)
 -- 						did_action = advagain
 end
 
-local have_used_another_folio = false
+local folios_used = 0
 
 local dis_href = add_automation_script("automate-suburbandis", function ()
 	if autoattack_is_set() then
@@ -105,8 +105,8 @@ local dis_href = add_automation_script("automate-suburbandis", function ()
 			stop "Out of adventures."
 		end
 		if not buff("Dis Abled") then
-			if not have_used_another_folio then
-				have_used_another_folio = true
+			if folios_used < 2 then
+				folios_used = folios_used + 1
 				maybe_pull_item("devilish folio")
 				use_item("devilish folio")
 			end

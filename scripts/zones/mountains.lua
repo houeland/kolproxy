@@ -473,6 +473,14 @@ end)
 
 -- highlands 
 
+add_choice_text("Lost in the Great Overlook Lodge", { -- choice adventure number: 606
+	["Investigate Room 237"] = "Requires level 4 stench resistance",
+	["Search the pantry"] = "Requires +50% items from monsters (not counting familiar)",
+	["Follow the faint sound of music"] = "Requires jar of oil (from using 12 bubblin' crude)",
+	["Wait -- who's that?"] = "Requires +40% initiative",
+	["Leave the hotel"] = { leave_noturn = true },
+})
+
 add_extra_ascension_adventure_warning(function(zoneid)
 	if zoneid == 296 and have_item("A-Boo clue") then
 		local resists = get_resistance_levels()

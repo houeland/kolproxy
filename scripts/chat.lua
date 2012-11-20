@@ -1,6 +1,8 @@
 local chatprinters = {}
 local json_chatprinters = {}
 
+-- TODO: track processed messages, only log them once
+
 local function run_wrapped_function(f_env)
 
 text = f_env.text

@@ -1,23 +1,52 @@
-local cached_itemids = {}
+function load_datafile(datafile)
+	local fobj = io.open("cache/data/" .. datafile:gsub(" ", "-") .. ".json")
+	local str = fobj:read("*a")
+	fobj:close()
+	local data = json_to_table(str)
+	return data
+end
 
-function get_itemid(name)
+local items_data = load_datafile("items")
+local itemid_name_lookup = {}
+for x, y in pairs(items_data) do
+	itemid_name_lookup[y.id] = x
+end
+
+local function get_item_data_by_name(name)
+	return items_data[name]
+end
+
+local function get_item_data_by_id(id)
+	return get_item_data_by_name(itemid_name_lookup[id])
+end
+
+function maybe_get_itemid(name)
 	local t = type(name)
 	if t == "number" then
 		return name
 	elseif t ~= "string" then
 		error("Invalid itemid type: " .. t)
 	end
-	local id = cached_itemids[name]
+
+	return (get_item_data_by_name(name) or {}).id
+end
+
+function get_itemid(name)
+	local id = maybe_get_itemid(name)
 	if not id then
-		local data = get_item_data_by_name(name)
--- 		local data = kolproxy_log_time_interval("get_item_data_by_name: " .. name, function() return get_item_data_by_name(name) end)
-		if not data or not data.id then
-			error("No itemid found for item: " .. tostring(name))
-		end
-		id = tonumber(data.id)
-		cached_itemids[name] = id
+		error("No itemid found for item: " .. tostring(name))
 	end
 	return id
+end
+
+function maybe_get_itemname(name)
+	local id = get_itemid(name)
+	return itemid_name_lookup[id]
+end
+
+function maybe_get_itemdata(name)
+	local id = get_itemid(name)
+	return get_item_data_by_id(id)
 end
 
 function intercept_warning(warning)
@@ -285,7 +314,7 @@ function load_script_files(env)
 	local function load_file(category, name)
 		local warn = true
 		run_file_with_environment(name, global_env, env, function (t, k, filename)
-			if (warn and k ~= "register_setting") or (k == "character" and not filename:contains("settings-page")) then
+			if (warn and k ~= "register_setting" and k ~= "load_datafile" and k ~= "setup_turnplaying_script") or (k == "character" and not filename:contains("settings-page")) then
 				print("Warning: using global variable", k, "in", filename)
 -- 				print(debug.traceback())
 -- 				error("Warning: invalid __index for name '" .. tostring(k) .. "' in '" .. tostring(filename) .. "'")
@@ -381,3 +410,14 @@ function run_functions(p, pagetext, run)
 
 	return pagetext
 end
+
+function load_buff_extension_info()
+	local skills = load_datafile("skills")
+	local buff_recast_skills = load_datafile("buff-recast-skills")
+	local info = {}
+	for x, y in pairs(buff_recast_skills) do
+		info[x] = { skillname = y, skillid = skills[y].skillid, mpcost = skills[y].mpcost }
+	end
+	return info
+end
+

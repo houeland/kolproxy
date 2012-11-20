@@ -244,7 +244,7 @@ function estimate_item_modifiers()
 	end
 	itemmods.skill = get_skill_item()
 	itemmods.familiar = get_fam_item()
-	itemmods.equipment = get_equipment_item()
+	itemmods.equipment = get_equipment_item() + (get_equipment_bonuses().item or 0)
 	itemmods.outfit = get_outfit_bonuses().item
 	itemmods.buff = get_buff_bonuses().item
 	return itemmods

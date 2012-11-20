@@ -37,7 +37,8 @@ import qualified Network.HTTP.HandleStream
 -- import System.Random
 
 doHTTPLOWLEVEL_DEBUG _ = return ()
--- doHTTPLOWLEVEL_DEBUG x = putStrLn $ "PROXY DEBUG: " ++ x
+-- doHTTPLOWLEVEL_DEBUG x = putStrLn $ "HTTPlow DEBUG: " ++ x
+doHTTPLOWLEVEL_DEBUGexception x = putStrLn $ "HTTPlow DEBUGexc: " ++ x
 
 class ConnFunctionsBundle a b | a -> b where
 	connGetBlock :: a -> Int -> IO b
@@ -324,7 +325,7 @@ kolproxy_openTCPConnection server = do
 		hostname = host auth
 		portnum = fromMaybe 80 (port auth)
 		getHostAddr h = do
-			catchIO (Network.Socket.inet_addr hostname)    -- handles ascii IP numbers
+			catchIO (Network.Socket.inet_addr hostname) -- handles ascii IP numbers
 				(\ _ -> do
 					hostN <- getHostByName_safe hostname
 					case Network.BSD.hostAddresses hostN of
@@ -345,7 +346,7 @@ mkconnthing server = do
 		req_counter <- newIORef 0
 		let run = do
 			(isok, (absuri, rq, mvdest, ref)) <- (readChan rchan) `catch` (\e -> do
-				doHTTPLOWLEVEL_DEBUG $ "http readchan exception: " ++ (show (e :: SomeException))
+				doHTTPLOWLEVEL_DEBUGexception $ "http readchan exception: " ++ (show (e :: SomeException))
 				throwIO e)
 			(what, was_last_request) <- case isok of
 				Right (_requesting_it, req_nr) -> log_time_interval_http ref ("HTTP reading: " ++ (show $ rqURI rq)) $ do
@@ -358,11 +359,13 @@ mkconnthing server = do
 -- 						putStrLn $ "DEBUG: resp: " ++ show resp
 -- 						putStrLn $ "DEBUG: respbody: " ++ show (rspBody resp)
 						return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, rspCode resp, resp)) `catch` (\e -> do
-							doHTTPLOWLEVEL_DEBUG $ "http read exception: " ++ (show (e :: SomeException))
+							doHTTPLOWLEVEL_DEBUGexception $ "http read exception: " ++ (show (e :: SomeException))
 							throwIO e)
 					return (what, req_nr == 80)
 				Left err -> return (Left err, False) -- TODO: Change to True?
-			putMVar mvdest what
+			putMVar mvdest what `catch` (\e -> do
+				doHTTPLOWLEVEL_DEBUGexception $ "http write mvdest exception for " ++ (uriPath absuri) ++ ": " ++ (show (e :: SomeException))
+				throwIO e)
 			going <- (modifyMVar connmv $ \(cf_stored, _t_stored, pending) -> do
 				let kill_it = do
 -- 					doHTTPLOWLEVEL_DEBUG $ "closed, making new connection"
@@ -390,9 +393,9 @@ mkconnthing server = do
 							doHTTPLOWLEVEL_DEBUG $ "http put exception for " ++ (uriPath absuri) ++ ": " ++ (show (e :: SomeException))
 							throwIO e)
 			when going run
-		forkIO_ $ run `catch` (\e -> do
-			doHTTPLOWLEVEL_DEBUG $ "http forked-run exception: " ++ (show (e :: SomeException))
-			throwIO e)
+		forkIO_ "HTTPlow:run" $ (run `catch` (\e -> do
+			doHTTPLOWLEVEL_DEBUGexception $ "http forked-run exception: " ++ (show (e :: SomeException))
+			throwIO e))
 		let cfunc (absuri, rq, mvdest, ref) = do
 -- 			putStrLn $ "DEBUG cfunc: " ++ show absuri
 			isok <- log_time_interval_http ref ("HTTP asking: " ++ (show $ rqURI $ rq)) $ try $ do
@@ -411,18 +414,18 @@ mkconnthing server = do
 -- 						when (r < 5) $ throwIO $ userError $ "faked random write error!"
 						connFlush c -- Maybe TODO???: only flush when done requesting???
 					else do
--- 						putStrLn $ "waiting with request for " ++ show (rqURI rq) ++ " (" ++ show req_nr ++ ")"
+-- 						putStrLn $ "DEBUG: waiting with request for " ++ show (rqURI rq) ++ " (" ++ show req_nr ++ ")"
 						return ()
 				return (requesting_it, req_nr)
 -- 			putStrLn $ "DEBUG cfunc isok: " ++ show isok
 			writeChan rchan (isok, (absuri, rq, mvdest, ref))
 		return (cfunc, tnow, 0)
-	forkIO_ $ putMVar connmv =<< open_conn
+	forkIO_ "HTTPlow:connmv" $ putMVar connmv =<< open_conn
 
 	connchan <- newChan
-	forkIO_ $ forever $ ((do
+	forkIO_ "HTTPlow:connchan" $ forever $ ((do
 		x <- (readChan connchan) `catch` (\e -> do
-			doHTTPLOWLEVEL_DEBUG $ "connchan read exception: " ++ (show (e :: SomeException))
+			doHTTPLOWLEVEL_DEBUGexception $ "connchan read exception: " ++ (show (e :: SomeException))
 			throwIO e)
 -- 		let (debug_absuri, _, _, _) = x
 -- 		putStrLn $ "DEBUG readchan process x: " ++ show debug_absuri
@@ -435,12 +438,12 @@ mkconnthing server = do
 -- 					doHTTPLOWLEVEL_DEBUG $ "not-stale, keeping connection | " ++ show (tnow, t_stored, diffUTCTime tnow t_stored)
 					return (cf_stored, t_stored, pending)
 				else do
--- 					doHTTPLOWLEVEL_DEBUG $ "stale, making new connection | " ++ show (tnow, t_stored, diffUTCTime tnow t_stored)
+--					putStrLn $ "DEBUG: stale, making new connection | " ++ show (tnow, t_stored, diffUTCTime tnow t_stored)
 					open_conn -- TODO: need to handle this failing!!!
 -- 			putStrLn $ "DEBUG connmv cf x: " ++ show debug_absuri
 			cf x
 -- 			putStrLn $ "DEBUG connmv cfed x!: " ++ show debug_absuri
-			return (cf, t, p + 1)) `catch` (\e -> doHTTPLOWLEVEL_DEBUG $ "connchan error: " ++ (show (e :: SomeException))))
+			return (cf, t, p + 1)) `catch` (\e -> doHTTPLOWLEVEL_DEBUGexception $ "connchan error: " ++ (show (e :: SomeException))))
 	return connchan :: IO ConnChanType
 
 

@@ -530,9 +530,12 @@ function get_automation_scripts(cached_stuff)
 				cast_skillid(11031, 10)
 			elseif challenge == "zombie" then
 				cast_skillid(12001)
-			else
+			elseif have_skill("Disco Power Nap") then
 				ensure_mp(12)
-				cast_skillid(5011) -- disco power nap
+				cast_skillid(5011)
+			elseif have_skill("Lasagna Bandages") then
+				ensure_mp(6)
+				cast_skillid(3009)
 			end
 			if hp() > oldhp then
 				if show_spammy_automation_events then
@@ -2378,18 +2381,16 @@ endif
 		end
 		local i, z, m = get_gremlin_data()
 		if z then
-			if challenge == "boris" or challenge == "zombie" then
-				if ascensionstatus() ~= "Hardcore" then
-					if not buff("Super Structure") and have("Greatest American Pants") then
-						wear { pants = "Greatest American Pants" }
-						script.get_gap_buff("Super Structure")
-					end
-					if not buff("Super Structure") then
-						stop "TODO: Do gremlins in boris"
-					end
-				else
-					script.bonus_target { "easy combat" }
+			if ascensionstatus() ~= "Hardcore" then
+				if not buff("Super Structure") and have("Greatest American Pants") then
+					wear { pants = "Greatest American Pants" }
+					script.get_gap_buff("Super Structure")
 				end
+				if challenge and not buff("Super Structure") then
+					stop "TODO: Do gremlins in challenge path without Super Structure"
+				end
+			elseif challenge then
+				script.bonus_target { "easy combat" }
 			end
 			inform(i)
 			ensure_buffs { "Spirit of Bacon Grease", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
@@ -2415,7 +2416,7 @@ endif
 			refresh_quest()
 			did_action = not quest_text("go talk to the Trapper")
 		elseif quest_text("gather up some cheese and ore for him") then
-			async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
+			local trappercabin = get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
 			refresh_quest()
 			if not quest_text("gather up some cheese and ore for him") then
 				did_action = true
@@ -2442,8 +2443,19 @@ endif
 				result = add_colored_message_to_page(get_result(), "TODO: get 3x " .. (ascension["trapper.ore"] or "unknown") .. " ore, then run script again", "darkorange")
 				did_action = false
 			elseif ascensionstatus() == "Softcore" then
-				stop "TODO: Pull ore for trapper"
-				did_action = false
+				local want_ore = trappercabin:match("fix the lift until you bring me that cheese and ([a-z]+ ore)")
+				local got = count_item(want_ore)
+				if got >= 3 then
+					critical "Trapper ore+cheese quest should be finished already."
+				end
+				if false and want_ore == "chrome ore" and not have("acoustic guitarrr") and not have("heavy metal thunderrr guitarrr") then
+					-- TODO: do this when we can untinker
+					ascension_automation_pull_item("heavy metal thunderrr guitarrr")
+					did_action = have("heavy metal thunderrr guitarrr")
+				else
+					ascension_automation_pull_item(want_ore)
+					did_action = count(want_ore) > got
+				end
 			else
 				go("get mining outfit", 270, macro_noodlecannon(), {}, { "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy", "Spirit of Garlic" }, "Slimeling", 35, { choice_function = function (advtitle, choicenum)
 					if advtitle == "100% Legal" then

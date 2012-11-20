@@ -49,19 +49,27 @@ add_automator("/clan_viplounge.php", function()
 	end
 end)
 
+local faxbot_monsters_datafile = load_datafile("faxbot monsters")
 
-local faxbot_href = add_automation_script("get-faxbot-monster", function ()
+local function describe_faxbot_option(x)
+	if x.name:lower() == x.description:lower() then
+		return x.name
+	else
+		return x.description
+	end
+end
+
+local faxbot_href = add_automation_script("get-faxbot-monster", function()
 	local pt, pturl = get_page("/clan_viplounge.php", { action = "faxmachine" })
 	local function get_contents(cmd)
-		local category_contents, category_order = faxbot_monsterlist()
-		for _, xs in pairs(category_contents) do
-			for _, x in ipairs(xs) do
-				if x.command == cmd then
-					get_page("/submitnewchat.php", { graf = "/msg FaxBot " .. x.command, pwd = params.pwd })
-					return ("Getting " .. x.name .. " from FaxBot.")
-				end
+		for _, c in ipairs(faxbot_monsters_datafile.order) do
+			local x = faxbot_monsters_datafile.categories[c][cmd]
+			if x then
+				async_get_page("/submitnewchat.php", { graf = "/msg FaxBot " .. cmd, pwd = params.pwd })
+				return string.format("Getting %s from FaxBot.", describe_faxbot_option(x))
 			end
 		end
+		-- TODO: Use darkorange frame? Never actually happens without authenticated but still invalid requests anyway.
 		return "You didn't select a known monster."
 	end
 	return pt:gsub("<body>", function(x)
@@ -72,15 +80,23 @@ end)
 add_printer("/clan_viplounge.php", function()
 	if not setting_enabled("run automation scripts") then return end
 	text = text:gsub([[<input class=button type=submit value="Receive a Fax"></form>]], function(x)
-		local category_contents, category_order = faxbot_monsterlist()
-		local optstext = ""
-		for _, c in pairs(category_order) do
-			local opts = {}
-			for _, x in ipairs(category_contents[c]) do
-				table.insert(opts, string.format([[<option value="%s">%s</option>]], x.command, x.name))
+		local optgroups = {}
+		for _, c in ipairs(faxbot_monsters_datafile.order) do
+			local optorder = {}
+			for x, y in pairs(faxbot_monsters_datafile.categories[c]) do
+				table.insert(optorder, { command = x, displayname = describe_faxbot_option(y) })
 			end
-			optstext = optstext .. string.format([[<optgroup label="%s">%s</optgroup>]], c, table.concat(opts))
+
+			table.sort(optorder, function(a, b)
+				return a.displayname:lower() < b.displayname:lower()
+			end)
+
+			local opts = {}
+			for _, x in ipairs(optorder) do
+				table.insert(opts, string.format([[<option value="%s">%s</option>]], x.command, x.displayname))
+			end
+			table.insert(optgroups, string.format([[<optgroup label="%s">%s</optgroup>]], c, table.concat(opts)))
 		end
-		return x .. [[<hr><form action="]] .. faxbot_href {} .. [[" method="post"><input type=hidden name=pwd value="]]..session.pwd..[["><span style="color: green;">Choose monster:</span> <select name="faxcommand"><option value="">-- nothing --</option>]] .. optstext .. [[</select> <input class="button" type="submit" value="Get from FaxBot"></form>]]
+		return x .. [[<hr><form action="]] .. faxbot_href {} .. [[" method="post"><input type=hidden name=pwd value="]]..session.pwd..[["><span style="color: green;">Choose monster:</span> <select name="faxcommand"><option value="">-- nothing --</option>]] .. table.concat(optgroups) .. [[</select> <input class="button" type="submit" value="Get from FaxBot"></form>]]
 	end)
 end)

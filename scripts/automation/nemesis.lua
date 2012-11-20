@@ -128,10 +128,9 @@ local href = add_automation_script("automate-nemesis", function ()
 			text = "automate DB island!"
 			local pwd = get_session_state("pwd") -- inserting pwd, boo!
 			get_page("/account.php", { action = "autoattack", whichattack = "0", ajax = "1", pwd = pwd }) -- unset autoattack, bleh
-			local skills = get_skills()
 			local skillnames = { "Break It On Down", "Pop and Lock It", "Run Like the Wind" }
-			if skills["Gothy Handwave"] then
-				if skills["Break It On Down"] and skills["Pop and Lock It"] and skills["Run Like the Wind"] then
+			if have_skill("Gothy Handwave") then
+				if have_skill("Break It On Down") and have_skill("Pop and Lock It") and have_skill("Run Like the Wind") then
 					local function learn_move(test_it)
 						text = "test " .. tostring(test_it)
 						local macro_test_db_move = [[
@@ -344,11 +343,10 @@ endif
 						if not advagain then
 							break
 						end
-						local skills = get_skills()
-						if skills["Break It On Down"] and skills["Pop and Lock It"] and skills["Run Like the Wind"] then
+						if have_skill("Break It On Down") and have_skill("Pop and Lock It") and have_skill("Run Like the Wind") then
 							break
 						end
-						print("DB skills:", skills["Break It On Down"], skills["Pop and Lock It"], skills["Run Like the Wind"])
+						print("DB skills:", have_skill("Break It On Down"), have_skill("Pop and Lock It"), have_skill("Run Like the Wind"))
 					end
 					text = result
 				end

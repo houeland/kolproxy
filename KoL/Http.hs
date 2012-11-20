@@ -96,11 +96,11 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 	mv_x <- newEmptyMVar
 	writeChan (getconn_ $ connection $ ref) (reqabsuri, r, mv_x, ref)
 
-	when should_invalidate_cache $ ((forkIO_ $ refreshstatus ref) `catch` (\e -> do
-		putStrLn $ "status retrieval connection error: " ++ (show (e :: ConnectionException))))
+	when should_invalidate_cache $ forkIO_ "HTTP:refreshstatus" $ refreshstatus ref
+--		putStrLn $ "status retrieval connection error: " ++ (show (e :: ConnectionException))))
 
 	mv_val <- newEmptyMVar
-	forkIO_ $ do
+	forkIO_ "HTTP:mv_val" $ do
 		putMVar mv_val =<< (try $ do
 			(retabsuri, body, hdrs, code, _) <- do
 				x <- (readMVar mv_x) `catch` (\e -> do

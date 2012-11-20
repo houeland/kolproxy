@@ -1,3 +1,5 @@
+local buffs_modifier_data = load_datafile("buffs")
+
 function get_buff_bonuses()
 	local bonuses = {}
 	local buffarray = {

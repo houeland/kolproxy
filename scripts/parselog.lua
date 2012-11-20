@@ -28,12 +28,7 @@ end
 print("log pageloads:", #tbl)
 
 local function desc_item(id)
-	local v = get_item_data_by_id(id)
-	if v and v.name then
-		return v.name
-	else
-		return "{???_item_" .. id .. "_???}"
-	end
+	return maybe_get_itemname(id) or ("{???_item_" .. id .. "_???}")
 end
 
 local function parse_page(x, xtbl)
