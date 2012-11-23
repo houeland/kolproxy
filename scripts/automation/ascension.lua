@@ -562,6 +562,58 @@ endif
 		}
 	}
 
+	local function count_spare_brains()
+		if have_item("good brain") or have_item("decent brain") or have_item("crappy brain") then
+			local want_brains = estimate_max_fullness() - fullness()
+			local have_brains = count_item("hunter brain") + count_item("boss brain") + count_item("good brain") + count_item("decent brain") + count_item("crappy brain")
+			return have_brains - want_brains
+		end
+	end
+
+	add_task {
+		when = challenge == "zombie" and horde_size() < 100 and have_skill("Lure Minions") and (count_spare_brains() or 0) > 0,
+		task = {
+			message = "lure zombies",
+			nobuffing = true,
+			action = function()
+				local curhorde = horde_size()
+				local options = {
+					{ name = "crappy brain", option = 1 },
+					{ name = "decent brain", option = 2 },
+					{ name = "good brain", option = 3 },
+				}
+
+				for _, x in ipairs(options) do
+					if have_item(x.name) then
+						cast_skillid(12002, 1)
+						async_get_page("/choice.php", { forceoption = 0 })
+						async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 599, option = x.option, quantity = math.min(count_spare_brains(), count_item(x.name)) })
+						async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 599, option = 5 })
+						break
+					end
+				end
+
+				did_action = horde_size() > curhorde
+			end
+		}
+	}
+
+	add_task {
+		when = challenge == "zombie" and have_skill("Summon Horde") and ((horde_size() < 20 and meat() >= 6000) or (horde_size() < 100 and meat() >= 10000)),
+		task = {
+			message = "summon horde",
+			nobuffing = true,
+			action = function()
+				local curhorde = horde_size()
+				cast_skillid(12026, 1)
+				async_get_page("/choice.php", { forceoption = 0 })
+				async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 601, option = 1 })
+				async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 601, option = 2 })
+				did_action = horde_size() > curhorde
+			end
+		}
+	}
+
 	local function do_day_2_mining()
 		inform "mine free 5 times"
 		local pt = get_page("/mining.php", { mine = 1, intro = 1 })
@@ -612,7 +664,7 @@ endif
 		end
 	end
 	
-	if drunkenness() > maxsafedrunkenness() then
+	if drunkenness() > estimate_max_safe_drunkenness() then
 		stop "Overdrunk"
 	end
 
@@ -913,7 +965,7 @@ endif
 	}
 
 	add_task {
-		when = have("steel lasagna") and maxfullness() - fullness() >= 5,
+		when = have("steel lasagna") and estimate_max_fullness() - fullness() >= 5,
 		task = {
 			message = "eating steel lasagna",
 			nobuffing = true,
@@ -928,7 +980,7 @@ endif
 	}
 
 	add_task {
-		when = have("steel-scented air freshener") and maxspleen() - spleen() >= 5,
+		when = have("steel-scented air freshener") and estimate_max_spleen() - spleen() >= 5,
 		task = {
 			message = "using steel-scented air freshener",
 			nobuffing = true,
@@ -943,23 +995,23 @@ endif
 	}
 
 	add_task {
-		when = maxspleen() - spleen() == 7 and have("astral energy drink") and level() >= 11 and have("mojo filter"),
+		when = estimate_max_spleen() - spleen() == 7 and have("astral energy drink") and level() >= 11 and have("mojo filter"),
 		task = {
 			message = "use mojo filter",
 			nobuffing = true,
 			action = function ()
-				print("free spleen before", maxspleen() - spleen())
+				print("free spleen before", estimate_max_spleen() - spleen())
 				set_result(use_item("mojo filter"))
-				print("free spleen after", maxspleen() - spleen())
+				print("free spleen after", estimate_max_spleen() - spleen())
 				get_result()
-				print("free spleen after get_result", maxspleen() - spleen())
-				did_action = maxspleen() - spleen() >= 8
+				print("free spleen after get_result", estimate_max_spleen() - spleen())
+				did_action = estimate_max_spleen() - spleen() >= 8
 			end
 		}
 	}
 
 	add_task {
-		when = maxspleen() - spleen() >= 8 and have("astral energy drink") and level() >= 11,
+		when = estimate_max_spleen() - spleen() >= 8 and have("astral energy drink") and level() >= 11,
 		task = {
 			message = "use astral energy drink",
 			nobuffing = true,
@@ -972,7 +1024,7 @@ endif
 	}
 
 	add_task {
-		when = challenge == "boris" and daysthisrun() == 1 and maxspleen() - spleen() >= 8 and have("astral energy drink") and level() >= 9,
+		when = challenge == "boris" and daysthisrun() == 1 and estimate_max_spleen() - spleen() >= 8 and have("astral energy drink") and level() >= 9,
 		task = {
 			message = "use astral energy drink",
 			nobuffing = true,
@@ -985,7 +1037,7 @@ endif
 	}
 
 	add_task {
-		when = challenge == "boris" and daysthisrun() == 1 and maxsafedrunkenness() - drunkenness() >= 2 and have("Crimbojito") and level() >= 2,
+		when = challenge == "boris" and daysthisrun() == 1 and estimate_max_safe_drunkenness() - drunkenness() >= 2 and have("Crimbojito") and level() >= 2,
 		task = {
 			message = "drink Crimbojito",
 			nobuffing = true,
@@ -998,7 +1050,7 @@ endif
 	}
 
 	add_task {
-		when = maxspleen() - spleen() >= 4 and have("glimmering roc feather") and level() >= 4,
+		when = estimate_max_spleen() - spleen() >= 4 and have("glimmering roc feather") and level() >= 4,
 		task = {
 			message = "use glimmering roc feather",
 			nobuffing = true,
@@ -1011,7 +1063,7 @@ endif
 	}
 
 	add_task {
-		when = maxspleen() - spleen() >= 4 and have("not-a-pipe") and level() >= 4,
+		when = estimate_max_spleen() - spleen() >= 4 and have("not-a-pipe") and level() >= 4,
 		task = {
 			message = "use not-a-pipe",
 			nobuffing = true,
@@ -1024,7 +1076,7 @@ endif
 	}
 
 	add_task {
-		when = maxspleen() - spleen() >= 4 and have("groose grease"),
+		when = estimate_max_spleen() - spleen() >= 4 and have("groose grease"),
 		task = {
 			message = "use groose grease",
 			nobuffing = true,
@@ -1037,7 +1089,7 @@ endif
 	}
 
 	add_task {
-		when = maxspleen() - spleen() >= 4 and have("agua de vida") and level() >= 4,
+		when = estimate_max_spleen() - spleen() >= 4 and have("agua de vida") and level() >= 4,
 		task = {
 			message = "use agua de vida",
 			nobuffing = true,
@@ -1050,7 +1102,7 @@ endif
 	}
 
 	add_task {
-		when = maxspleen() - spleen() >= 4 and have("Game Grid token") and level() >= 4,
+		when = estimate_max_spleen() - spleen() >= 4 and have("Game Grid token") and level() >= 4,
 		task = {
 			message = "use coffee pixie stick",
 			nobuffing = true,
@@ -1698,7 +1750,7 @@ endif
 			level() >= 7 and
 			count_item("tasty tart") >= 1 and
 			have_skill("Stomach of Steel") and
-			maxfullness() - fullness() == 11,
+			estimate_max_fullness() - fullness() == 11,
 		task = {
 			message = "eat moon pies after stomach",
 			nobuffing = true,
@@ -1883,14 +1935,14 @@ endif
 	}
 
 	add_task {
-		prereq = quest_text("this is Azazel in Hell") and challenge == "boris" and daysthisrun() == 1 and (have("Clancy's lute") or clancy_instrumentid() == 3) and maxfullness() - fullness() >= 5,
+		prereq = quest_text("this is Azazel in Hell") and challenge == "boris" and daysthisrun() == 1 and (have("Clancy's lute") or clancy_instrumentid() == 3) and estimate_max_fullness() - fullness() >= 5,
 		f = script.do_azazel,
 	}
 
 	add_task {
 		when = challenge == "boris" and
 			daysthisrun() == 1 and
-			maxsafedrunkenness() - drunkenness() >= 2 and
+			estimate_max_safe_drunkenness() - drunkenness() >= 2 and
 			have_item("bottle of rum") and
 			(have_item("peppermint sprout") or have_item("peppermint twist")) and
 			level() >= 2 and
@@ -2054,7 +2106,7 @@ endif
 		}
 
 		local function drink_swill()
-			if drunkenness() + 4 > maxsafedrunkenness() then
+			if drunkenness() + 4 > estimate_max_safe_drunkenness() then
 				critical "Too drunk to safely drink mixed swill"
 			end
 			script.ensure_buffs { "Ode to Booze" }
@@ -2089,12 +2141,12 @@ endif
 				action = function()
 					drink_swill()
 					for i = 1, 10 do
-						if drunkenness() < maxsafedrunkenness() then
+						if drunkenness() < estimate_max_safe_drunkenness() then
 							script.ensure_buffs { "Ode to Booze" }
 							set_result(drink_item("distilled fortified wine"))
 						end
 					end
-					did_action = drunkenness() == maxsafedrunkenness()
+					did_action = drunkenness() == estimate_max_safe_drunkenness()
 				end
 			}
 		}
@@ -2124,7 +2176,7 @@ endif
 		}
 
 		add_task {
-			when = (daysthisrun() == 1) and fullness() <= maxfullness() - 6 and (have("Hell ramen") or have("Hell broth") or have("hellion cube")),
+			when = (daysthisrun() == 1) and fullness() <= estimate_max_fullness() - 6 and (have("Hell ramen") or have("Hell broth") or have("hellion cube")),
 			task = {
 				message = "eat hell ramen day 1",
 				action = function()
@@ -4127,7 +4179,7 @@ endwhile
 	}
 
 	add_task {
-		when = challenge == "boris" and ascensionstatus() ~= "Hardcore" and maxspleen() - spleen() == 7 and have("astral energy drink") and not have("mojo filter") and not cached_stuff["ignore pull: mojo filter"],
+		when = challenge == "boris" and ascensionstatus() ~= "Hardcore" and estimate_max_spleen() - spleen() == 7 and have("astral energy drink") and not have("mojo filter") and not cached_stuff["ignore pull: mojo filter"],
 		task = {
 			message = "pull mojo filter",
 			action = function()

@@ -362,3 +362,78 @@ function markup_damagetext(tbl)
 	end
 	return dmgtext
 end
+
+function estimate_max_fullness()
+	if ascensionpathname() == "Boozetafarian" or ascensionpathname() == "Oxygenarian" then
+		return 0
+	end
+	local mf = 15
+	if ascensionpathid() == 8 then
+		mf = 20
+	end
+	if have_skill("Stomach of Steel") then
+		mf = mf + 5
+	end
+	if have_skill("Legendary Appetite") then
+		mf = mf + 5
+	end
+	if have_skill("Insatiable Hunger") then
+		mf = mf + 5
+	end
+	if have_skill("Ravenous Pounce") then
+		mf = mf + 5
+	end
+	if have_skill("Gluttony") then
+		mf = mf + 2
+	end
+	if have_skill("Pride") then
+		mf = mf - 1
+	end
+	if session["active feast of boris bonus fullness today"] == "yes" then
+		mf = mf + 15
+	end
+	return mf
+end
+
+function estimate_max_safe_drunkenness()
+	if ascensionpathname() == "Teetotaler" or ascensionpathname() == "Oxygenarian" then
+		return 0
+	end
+	if ascensionpathid() == 8 or ascensionpathid() == 10 then
+		return 4
+	elseif have_skill("Liver of Steel") then
+		return 19
+	else
+		return 14
+	end
+end
+
+function estimate_max_spleen()
+	if have_skill("Spleen of Steel") then
+		return 20
+	else
+		return 15
+	end
+end
+
+function spleen_display_string()
+	if tonumber(status().spleen) then
+		return spleen()
+	end
+	local spleen = get_daily_counter("spleen")
+	if day["unknown spleen"] == "yes" then
+		spleen = spleen .. "+?"
+	end
+	return spleen
+end
+
+function remaining_spleen_display_string()
+	if tonumber(status().spleen) then
+		return estimate_max_spleen() - spleen()
+	end
+	local spleen = estimate_max_spleen() - get_daily_counter("spleen")
+	if day["unknown spleen"] == "yes" then
+		spleen = spleen .. "+?"
+	end
+	return spleen
+end

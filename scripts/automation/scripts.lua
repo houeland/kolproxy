@@ -1025,7 +1025,7 @@ function get_automation_scripts(cached_stuff)
 							result, resulturl, advagain = autoadventure { zoneid = 113, ignorewarnings = true }
 							did_action = count_item("tasty tart") >= 3
 							return result, resulturl, did_action
-						elseif daysthisrun() == 2 and ascensionstatus() and ascensionstatus() ~= "Hardcore" and lastsemi == "Bad ASCII Art" and fullness() == maxfullness() then
+						elseif daysthisrun() == 2 and ascensionstatus() and ascensionstatus() ~= "Hardcore" and lastsemi == "Bad ASCII Art" and fullness() == estimate_max_fullness() then
 							local got_scrolls = false
 							if level() >= 9 and not quest("A Quest, LOL") then
 								got_scrolls = true
@@ -1471,7 +1471,7 @@ endif
 
 				ensure_buffs { "Ode to Booze" }
 				for i = 1, 10 do
-					if drunkenness() < 8 and drunkenness() < maxsafedrunkenness() and (buff("Ode to Booze") or not have_skill("The Ode to Booze")) then
+					if drunkenness() < 8 and drunkenness() < estimate_max_safe_drunkenness() and (buff("Ode to Booze") or not have_skill("The Ode to Booze")) then
 						local start_drunk = drunkenness()
 						if have("astral pilsner") and level() >= 11 then
 							drink_item("astral pilsner")
@@ -1500,7 +1500,7 @@ endif
 						end
 					end
 				end
-				did_action = (drunkenness() >= 3 and buff("Pisces in the Skyces")) or (drunkenness() == maxsafedrunkenness())
+				did_action = (drunkenness() >= 3 and buff("Pisces in the Skyces")) or (drunkenness() == estimate_max_safe_drunkenness())
 				return result, resulturl, did_action
 			elseif (drunkenness() < 12 or (have_skill("Liver of Steel") and drunkenness() < 19)) and have("Typical Tavern swill") and have("distilled fortified wine") and (meat() >= 2000 or session["__script.have cocktailcrafting kit"]) then
 				-- TODO: or we already have cocktailcrafting kit...
@@ -3444,7 +3444,7 @@ endif
 			zone_stasis_macro = macro_noodlecannon
 		end
 		script.bonus_target { "noncombat", "item" }
-		if fullness() + count("hellion cube") * 6 + 6 <= maxfullness() and ascensionstatus() == "Hardcore"  then
+		if fullness() + count("hellion cube") * 6 + 6 <= estimate_max_fullness() and ascensionstatus() == "Hardcore"  then
 			go("getting hellion cubes", 239, make_cannonsniff_macro("Hellion"), nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
 		elseif not have("box of birthday candles") then
 			go("getting candles", 238, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, { "Scarecrow with Boss Bat britches", "Rogue Program" }, 15)

@@ -1,3 +1,15 @@
+add_processor("/main.php", function()
+	if text:contains("the Feast of Boris") then
+		session["holiday: feast of boris"] = "yes"
+		session["active feast of boris bonus fullness today"] = nil
+		for tr in text:gmatch([[<tr>.-</tr>]]) do
+			if tr:contains("Feast of Boris") and tr:contains("Eat, eat, eat!") then
+				session["active feast of boris bonus fullness today"] = "yes"
+			end
+		end
+	end
+end)
+
 -- add green border to 100% runs
 
 add_printer("/ascensionhistory.php", function()
@@ -7,7 +19,7 @@ end)
 -- adventure mistake warnings
 
 add_always_adventure_warning(function()
-	if drunkenness() > maxsafedrunkenness() then
+	if drunkenness() > estimate_max_safe_drunkenness() then
 		return "You might not want to adventure while this drunk.", "overdrunk"
 	end
 end)

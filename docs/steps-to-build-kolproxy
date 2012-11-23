@@ -1,0 +1,76 @@
+#
+# Example commands for building kolproxy v3.4 using ghc-7.4.2 on Linux
+#
+# The release versions are built using ghc 7.2.1, but configuring the dependencies for that was trickier.
+# Unfortunately the quality of depency information in cabal packages varies greatly.
+#
+
+### INSTALL GHC ###
+
+cd
+mkdir ghc
+cd ghc/
+wget http://www.haskell.org/ghc/dist/7.4.2/ghc-7.4.2-i386-unknown-linux.tar.bz2
+tar -jxf ghc-7.4.2-i386-unknown-linux.tar.bz2
+
+mkdir root-7.4.2
+cd ghc-7.4.2/
+./configure --prefix="$HOME/ghc/root-7.4.2"
+make install
+
+export PATH="$HOME/ghc/root-7.4.2/bin:$PATH"
+
+### INSTALL CABAL ###
+
+mkdir cabal
+cd cabal/
+wget http://www.haskell.org/cabal/release/cabal-install-0.14.0/cabal-install-0.14.0.tar.gz
+tar -zxf cabal-install-0.14.0.tar.gz
+
+cd cabal-install-0.14.0/
+sh bootstrap.sh
+
+~/.cabal/bin/cabal update
+
+### COMPILE KOLPROXY ###
+
+cd
+mkdir kolproxy
+cd kolproxy/
+wget http://www.houeland.com/kolproxy/files/kolproxy-src-v3.4-beta.zip
+unzip kolproxy-src-v3.4-beta.zip
+
+~/.cabal/bin/cabal install --only-dependencies
+
+ghc -threaded -DKOLPROXY_RELEASEBUILD=linux -optc-DLUA_USE_LINUX --make proxy.hs Scripting/*.c -o kolproxy
+
+### EXTRA INFORMATION FOR TROUBLESHOOTING ###
+#
+# One line of code in KolproxyServer.hs depends on the version of the HTTP library.
+# For ghc 7.4.2 + HTTP-4000.2.3:
+#    h <- socketConnection "???" (fromIntegral portnum) sh
+# For ghc 7.2.1 + HTTP-4000.2.1:
+#    h <- socketConnection "???" sh
+#
+# Exact versions listed in case there are more dependency failures in the future:
+#   ~/.cabal/bin/cabal install bzlib-0.5.0.4
+#   ~/.cabal/bin/cabal install cgi-3001.1.8.3
+#   ~/.cabal/bin/cabal install json-0.7
+#   ~/.cabal/bin/cabal install pureMD5-2.1.2.1
+#   ~/.cabal/bin/cabal install regex-tdfa-1.1.8
+#   ~/.cabal/bin/cabal install xml-1.3.12
+#
+# Kolproxy uses 1.x API version.
+#   ~/.cabal/bin/cabal install direct-sqlite-1.1
+#
+# The following packages often have broken dependency information and may not install out-of-the-box.
+# Install in this order if doing it manually:
+#   ~/.cabal/bin/cabal install cryptocipher-0.2.5
+#   ~/.cabal/bin/cabal install tls-extra-0.2.1
+#   ~/.cabal/bin/cabal install cprng-aes-0.2.3
+#
+# Compiling for Mac OS X and Windows can be trickier, depending on your version and luck.
+# While compiling your own ghc from source is relatively easy on Linux, I would definitely recommend a pre-built ghc for Windows and Mac OS X.
+#   For Mac OS X, getting ghc working is the biggest issue. Also uses the FindBin package.
+#   For Windows, getting ghc working ond building bzlib are the biggest issues. Also uses the Win32 package.
+#

@@ -16,11 +16,9 @@ import qualified Data.ByteString.Char8
 
 doWriteDataFile filename filedata = best_effort_atomic_file_write filename "." filedata
 
-load_data_file url backupurl = ((do
-	t <- getHTTPFileData kolproxy_version_string $ mkuri url
-	return t) `catch` (\e -> do
-		putStrLn $ "load_data_file exception: " ++ (show (e::SomeException))
-		getHTTPFileData kolproxy_version_string $ mkuri backupurl))
+load_data_file url backupurl = ((getHTTPFileData kolproxy_version_string $ mkuri url) `catch` (\e -> do
+	putStrLn $ "WARNING: load_data_file exception: " ++ (show (e :: SomeException))
+	getHTTPFileData kolproxy_version_string $ mkuri backupurl))
 
 raw_load_mafia_file url = do
 	load_data_file ("http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/" ++ url) ("http://www.houeland.com/kolproxy/files/data-mirror/" ++ url)

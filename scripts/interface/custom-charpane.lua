@@ -253,9 +253,9 @@ end
 
 local function make_optimize_diet_href()
 	return make_href("/kolproxy-frame-page", { url = "http://www.houeland.com" .. make_href("/kol/diets", {
-		foodspace = math.max(0, maxfullness() - fullness()),
-		boozespace = math.max(0, maxsafedrunkenness() - drunkenness()),
-		spleenspace = math.max(0, maxspleen() - spleen()),
+		foodspace = math.max(0, estimate_max_fullness() - fullness()),
+		boozespace = math.max(0, estimate_max_safe_drunkenness() - drunkenness()),
+		spleenspace = math.max(0, estimate_max_spleen() - spleen()),
 	}), pwd = session.pwd })
 end
 
@@ -452,7 +452,7 @@ add_interceptor("/charpane.php", function()
 -- 	table.insert(lines, string.format([[Mainstat: <b><span style="color: blue; font-weight: bold;">%s</span> (%s)</b><br>]], format_integer(buffedmainstat()), format_integer(basemainstat())))
 	table.insert(lines, string.format([[Buffed: <b><span style="color: blue; font-weight: bold;">%s</span></b> / <b><span style="color: blue; font-weight: bold;">%s</span></b> / <b><span style="color: blue; font-weight: bold;">%s</span></b><br>]], format_integer(buffedmuscle()), format_integer(buffedmysticality()), format_integer(buffedmoxie())))
 	table.insert(lines, string.format([[Base: <b>%s</b> / <b>%s</b> / <b>%s</b><br>]], format_integer(basemuscle()), format_integer(basemysticality()), format_integer(basemoxie())))
-	table.insert(lines, string.format([[Organs: <b>%s</b> / <b>%s</b> / <b>%s</b><br>]], maxfullness() - fullness(), maxsafedrunkenness() - drunkenness(), remaining_spleen_display_string()))
+	table.insert(lines, string.format([[Organs: <b>%s</b> / <b>%s</b> / <b>%s</b><br>]], estimate_max_fullness() - fullness(), estimate_max_safe_drunkenness() - drunkenness(), remaining_spleen_display_string()))
 	if ascensionstatus() == "Aftercore" then
 		table.insert(lines, [[<center><a href="]] .. make_optimize_diet_href() .. [[" target="mainpane" style="color: green">{ Optimize diet }</a></center><br>]])
 	else
@@ -676,9 +676,9 @@ add_interceptor("/charpane.php", function()
 		local desc = random_choice(organdescs)
 		table.insert(lines, string.format([[<tr><td align=right>%s</td><td><b>%s</b></td></tr>]], desc, amountstr))
 	end
-	add_organ_line({ "Engorgement:", "Gluttony:", "Satiation:" }, fullness() .. " / " .. maxfullness())
-	add_organ_line({ "Inebriety:", "Temulency:", "Tipsiness:" }, drunkenness() .. " / " .. maxsafedrunkenness())
-	add_organ_line({ "Melancholy:", "Moroseness:", "Spleen:" }, spleen_display_string() .. " / " .. maxspleen())
+	add_organ_line({ "Engorgement:", "Gluttony:", "Satiation:" }, fullness() .. " / " .. estimate_max_fullness())
+	add_organ_line({ "Inebriety:", "Temulency:", "Tipsiness:" }, drunkenness() .. " / " .. estimate_max_safe_drunkenness())
+	add_organ_line({ "Melancholy:", "Moroseness:", "Spleen:" }, spleen_display_string() .. " / " .. estimate_max_spleen())
 	table.insert(lines, [[</table>]])
 	if ascensionstatus() == "Aftercore" then
 		table.insert(lines, [[<center><font size="2"><a href="]] .. make_optimize_diet_href() .. [[" target="mainpane" style="color: green">{ Optimize diet }</a></font></center>]])

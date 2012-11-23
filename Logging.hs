@@ -103,7 +103,8 @@ log_page_result ref status_before log_time state_before uri params effuri pagete
 	doLOGGING_DEBUG $ "log_page_result start: " ++ show log_time ++ " | " ++ show effuri
 	(charname, charasc) <- do
 		let getSessState var = do
-			when (not $ stateValid_ $ ref) $ putStrLn $ "State invalid while logging and trying to get session state"
+			unless (stateValid_ ref) $ do
+				putStrLn $ "State invalid while logging and trying to get session state"
 			Just (_, st) <- readIORef $ state ref
 			let value = case st of
 				(_requestmap, sessionmap, _charmap, _ascmap, _daymap) -> Data.Map.lookup var sessionmap

@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module KolproxyServer where
 
 import Prelude hiding (read, catch)
@@ -13,6 +15,7 @@ import Control.Concurrent
 import Control.Exception
 import Control.Monad
 import Data.IORef
+import Data.List
 import Data.Maybe
 import Data.Time
 import Network.CGI (formDecode)
@@ -94,7 +97,7 @@ handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logch
 				doSERVER_DEBUG $ "got request: " ++ (show $ rqURI req) ++ " [" ++ show sh ++ "]"
 				let cookie = findHeader HdrCookie req
 				let Just uri = parseURIReference $ modded (show $ rqURI req)
-					where modded x = if take 2 x == "//" then modded (tail x) else x
+					where modded x = if "//" `isPrefixOf` x then modded (tail x) else x
 				let params = case rqBody req of
 					"" -> Nothing
 					x -> Just $ formDecode $ x
@@ -259,10 +262,14 @@ runProxyServer r rwhenever portnum = do
 
 	let do_loop = do
 		should_stop <- readIORef $ shutdown_ref_ $ globalref
-		when (not should_stop) $ do
+		unless should_stop $ do
 			doSERVER_DEBUG "listening on socket"
 			(sh, _) <- Network.Socket.accept sock
+#if __GLASGOW_HASKELL__ <= 702
 			h <- socketConnection "???" sh
+#else
+			h <- socketConnection "???" (fromIntegral portnum) sh
+#endif
 			doSERVER_DEBUG $ "doing socket:" ++ (show sh)
 			launched <- readIORef launched_ref
 			if launched

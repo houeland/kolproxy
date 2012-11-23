@@ -5,6 +5,7 @@ import Lua
 import PlatformLowlevel
 import KoL.Http
 import KoL.Util
+import Control.Applicative
 import Control.Concurrent
 import Control.Monad
 import Data.List
@@ -102,7 +103,7 @@ compressFile path = do
 
 			test_uncompressed <- Data.ByteString.Lazy.Char8.readFile path
 			test_compressed <- Data.ByteString.Lazy.Char8.readFile bz2path
-			decompressed <- yielding_bs_eval test_compressed >>= return . Codec.Compression.BZip.decompress
+			decompressed <- Codec.Compression.BZip.decompress <$> yielding_bs_eval test_compressed
 			if test_uncompressed == decompressed
 				then do
 					putStrLn $ "INFO: compression ok, removing file " ++ path

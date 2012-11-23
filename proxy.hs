@@ -202,7 +202,7 @@ kolProxyHandler uri params baseref = do
 			(x:xs) -> Just $ intercalate "; " (map ((takeWhile (/= ';')) . snd) (x:xs)) -- TODO: Make readable
 		putStrLn $ "  old_cookie = " ++ (show $ cookie_ $ connection $ origref)
 		putStrLn $ "  new_cookie = " ++ (show new_cookie)
-		if new_cookie == Nothing
+		if isNothing new_cookie
 			then do
 				putStrLn $ "Error: No cookie from logging in!"
 				putStrLn $ "  headers: " ++ (show hdrs)

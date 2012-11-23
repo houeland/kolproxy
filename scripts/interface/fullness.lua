@@ -69,14 +69,14 @@ add_always_warning("/inv_booze.php", function()
 	local item = maybe_get_itemdata(tonumber(params.whichitem))
 	if item and item.drunkenness then
 		unknown = false
-		if drunkenness() + item.drunkenness * (tonumber(params.quantity) or 1) <= maxsafedrunkenness() then
+		if drunkenness() + item.drunkenness * (tonumber(params.quantity) or 1) <= estimate_max_safe_drunkenness() then
 			safe = true
 		elseif whichitem == get_itemid("steel margarita") then
 			safe = true
 		end
 	end
 	
-	if not unknown and not safe and drunkenness() < maxsafedrunkenness() then
+	if not unknown and not safe and drunkenness() < estimate_max_safe_drunkenness() then
 		return "You have not drunk to full liver before nightcapping.", "not drunk before nightcapping"
 	end
 end)
@@ -87,7 +87,7 @@ add_extra_always_warning("/inv_booze.php", function()
 	local item = maybe_get_itemdata(tonumber(params.whichitem))
 	if item and item.drunkenness then
 		unknown = false
-		if drunkenness() + item.drunkenness * (tonumber(params.quantity) or 1) <= maxsafedrunkenness() then
+		if drunkenness() + item.drunkenness * (tonumber(params.quantity) or 1) <= estimate_max_safe_drunkenness() then
 			safe = true
 		elseif whichitem == get_itemid("steel margarita") then
 			safe = true

@@ -283,7 +283,7 @@ luatbl_to_stringmap l idx = do
 					_ -> fail $ "Table keys/values are not strings: " ++ (show $ (t1, t2))
 				Lua.pop l 1
 				more <- get_more
-				return $ [(k, v)] ++ more
+				return $ (k, v) : more
 			else return []
 	Lua.pushnil l
 	get_more
@@ -302,7 +302,7 @@ parse_keyvalue_luatbl l idx = do
 					_ -> fail "key or value missing from param table"
 				Lua.pop l 1
 				more <- get_more (n + 1)
-				return $ [(k, v)] ++ more
+				return $ (k, v) : more
 			Lua.TNIL -> return []
 			Lua.TNONE -> return []
 			_ -> fail "Wrong types for params table"

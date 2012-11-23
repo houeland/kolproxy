@@ -182,75 +182,8 @@ function setup_functions()
 		end
 		equipment = get_equipment
 		function fullness() return tonumber(status().full) end
-		function maxfullness()
-			if ascensionpathname() == "Boozetafarian" or ascensionpathname() == "Oxygenarian" then
-				return 0
-			end
-			local mf = 15
-			if ascensionpathid() == 8 then
-				mf = 20
-			end
-			if have_skill("Stomach of Steel") then
-				mf = mf + 5
-			end
-			if have_skill("Legendary Appetite") then
-				mf = mf + 5
-			end
-			if have_skill("Insatiable Hunger") then
-				mf = mf + 5
-			end
-			if have_skill("Ravenous Pounce") then
-				mf = mf + 5
-			end
-			if have_skill("Gluttony") then
-				mf = mf + 2
-			end
-			if have_skill("Pride") then
-				mf = mf - 1
-			end
-			return mf
-		end
 		function drunkenness() return tonumber(status().drunk) end
-		function maxsafedrunkenness()
-			if ascensionpathname() == "Teetotaler" or ascensionpathname() == "Oxygenarian" then
-				return 0
-			end
-			if ascensionpathid() == 8 or ascensionpathid() == 10 then
-				return 4
-			elseif have_skill("Liver of Steel") then
-				return 19
-			else
-				return 14
-			end
-		end
 		function spleen() return tonumber(status().spleen) end
-		function maxspleen()
-			if have_skill("Spleen of Steel") then
-				return 20
-			else
-				return 15
-			end
-		end
-		function spleen_display_string()
-			if tonumber(status().spleen) then
-				return spleen()
-			end
-			local spleen = get_daily_counter("spleen")
-			if day["unknown spleen"] == "yes" then
-				spleen = spleen .. "+?"
-			end
-			return spleen
-		end
-		function remaining_spleen_display_string()
-			if tonumber(status().spleen) then
-				return maxspleen() - spleen()
-			end
-			local spleen = maxspleen() - get_daily_counter("spleen")
-			if day["unknown spleen"] == "yes" then
-				spleen = spleen .. "+?"
-			end
-			return spleen
-		end
 		function ascensionstatus()
 			if tonumber(status().freedralph) == 1 then
 				return "Aftercore"
@@ -650,6 +583,11 @@ function setup_functions()
 			else
 				print "INFO: raw_retrieve_skills() called"
 			end
+
+			if session["holiday: feast of boris"] == "yes" then
+				async_get_page("/main.php")
+			end
+
 			local cs = get_page("/charsheet.php")
 			local skills_text = cs:match("<p>Skills:</b>.-(<a onClick.-)</td>")
 			if not skills_text then

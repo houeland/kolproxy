@@ -451,7 +451,7 @@ function automate_lair_statues(text)
 	end
 
 	if text:contains("You gather up your instruments") or text:contains("no reason to mess with them anymore") then
-		return
+		return text, url
 	end
 
 	if not have("stone tablet (Squeezings of Woe)") then
@@ -501,7 +501,7 @@ function automate_lair_statues(text)
 
 	text, url = get_page("/lair2.php", { action = "statues" })
 	if text:contains("You gather up your instruments") or text:contains("no reason to mess with them anymore") then
-		return
+		return text, url
 	end
 
 	if text:contains("no instrument to give to the first") then
@@ -520,7 +520,7 @@ function automate_lair_statues(text)
 
 	text, url = get_page("/lair2.php", { action = "statues" })
 	if text:contains("You gather up your instruments") or text:contains("no reason to mess with them anymore") then
-		return
+		return text, url
 	end
 
 	return missing_stuff
@@ -860,23 +860,23 @@ add_printer("/lair6.php", function ()
 	end
 end)
 
-add_automator("/lair6.php", function ()
-	if not setting_enabled("automate simple tasks") then return end
-	if params.place == "0" then
+function automate_lair6_place(place, text)
+	if place == 0 then
 		if text:contains("At the top of the steps leading to the Sorceress' Chamber, you encounter two doors.") then
 			ascension["zone.lair.doorcode"] = nil
 			post_page("/lair6.php", { preaction = "lightdoor" })
 			code = ascension["zone.lair.doorcode"]
-			print("lair6 code", code, "params", params)
+			print("INFO: lair6 code", code, "params", params)
 			if code then
 				text = post_page("/lair6.php", { action = "doorcode", code = code })
 			end
 		end
 	end
-	if params.place == "3" or params.place == "4" then
+
+	if place == 3 or place == 4 then
 		if text:contains("Disappointed by your failure, you stomp off in a huff, and stub your toe.") then
-			which = text:match([[<img src="http://images.kingdomofloathing.com/adventureimages/([a-z]+).gif" width=100 height=100>]])
-			print("Sorceress familiar:", which)
+			local which = text:match([[<img src="http://images.kingdomofloathing.com/adventureimages/([a-z]+).gif" width=100 height=100>]])
+			print("INFO: Sorceress familiar = " .. tostring(which))
 			local familiar_lookup = {
 				barrrnacle = { id = 4, name = "Angry Goat", },
 				goat = { id = 1, name = "Mosquito", },
@@ -885,7 +885,7 @@ add_automator("/lair6.php", function ()
 				potato = { id = 8, name = "Barrrnacle", },
 			}
 			if familiar_lookup[which] then
-				print("Familiar used to defeat it:", familiar_lookup[which].name)
+				print("  Familiar used to defeat it:", familiar_lookup[which].name)
 				local famid = familiarid()
 				get_page("/familiar.php", { action = "newfam", ajax = "1", newfam = familiar_lookup[which].id })
 				if familiarid() == familiar_lookup[which].id then
@@ -905,24 +905,31 @@ add_automator("/lair6.php", function ()
 						newtext = get_page("/lair6.php", { place = params.place })
 						if newtext:contains("You move further into the tower, while huge chunks of stone fall from the walls for no good reason.") then
 							text = newtext
-							print("Won vs NS familiar")
+							print("INFO: Won vs NS familiar")
 						else
-							print("Error fighting NS familiar")
+							print("WARNING: Error fighting NS familiar")
 							error("Error, expected to win this fight with a " .. weight .. " lbs. " .. familiar_lookup[which].name .. ".")
 						end
 					else
-						print("Familiar weight is only", weight)
+						print("INFO: Familiar weight is only", weight)
 					end
 					set_equipment(eq)
 				else
-					print("Missing familiar")
+					print("INFO: Missing familiar")
 				end
-				get_page("/familiar.php", { action = "newfam", ajax = "1", newfam = famid })
+				async_get_page("/familiar.php", { action = "newfam", ajax = "1", newfam = famid })
 			else
-				print("Unknown NS familiar", which)
+				print("INFO: Unknown NS familiar", which)
 			end
 		end
 	end
+	return text
+end
+
+add_automator("/lair6.php", function ()
+	if not setting_enabled("automate simple tasks") then return end
+
+	text = automate_lair6_place(tonumber(params.place), text)
 end)
 
 add_interceptor("/lair6.php", function()

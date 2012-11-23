@@ -127,7 +127,7 @@ local function can_be_potion(itemid, whicheffect)
 end
 
 add_ascension_warning("use item", function()
-	if can_be_potion(tonumber(params.whichitem), "booze") and drunkenness() <= maxsafedrunkenness() and drunkenness() + 3 > maxsafedrunkenness() then
+	if can_be_potion(tonumber(params.whichitem), "booze") and drunkenness() <= estimate_max_safe_drunkenness() and drunkenness() + 3 > estimate_max_safe_drunkenness() then
 		return "Using this potion could make you overdrunk", "dod potion could make overdrunk"
 	end
 end)

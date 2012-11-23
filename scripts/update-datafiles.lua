@@ -38,7 +38,9 @@ local blacklist = {
 local processed_datafiles = {}
 
 local softwarn = function() end
-local hardwarn = print
+local function hardwarn(...)
+	print("WARNING: downloaded data files inconsistent,", ...)
+end
 
 local function split_tabbed_line(l)
 	local tbl = {}
@@ -113,7 +115,7 @@ function verify_outfits(data)
 	for xi, x in pairs(data) do
 		for _, y in ipairs(x.items) do
 			if not processed_datafiles["items"][y] then
-				hardwarn("WARNING: unknown outfit item", y)
+				hardwarn("unknown outfit item", y)
 				data[xi] = nil
 			end
 		end
@@ -160,11 +162,11 @@ end
 function verify_buff_recast_skills(data)
 	for x, y in pairs(data) do
 		if not processed_datafiles["buffs"][x] then
-			hardwarn("WARNING: unknown recast buff", x)
+			hardwarn("unknown recast buff", x)
 			data[x] = nil
 		end
 		if not processed_datafiles["skills"][y] then
-			hardwarn("WARNING: unknown recast skill", y)
+			hardwarn("unknown recast skill", y)
 			data[x] = nil
 		end
 	end
@@ -193,7 +195,7 @@ function parse_items()
 			if name then
 				items[name][field] = size
 			else
-				softwarn("WARNING: item does not exist", fakename)
+				softwarn("item does not exist", fakename)
 			end
 		end
 	end
@@ -251,12 +253,12 @@ end
 function verify_enthroned_familiars(data)
 	for x, _ in pairs(processed_datafiles["familiars"]) do
 		if not data[x] then
-			softwarn("WARNING: missing enthroned familiar", x)
+			softwarn("missing enthroned familiar", x)
 		end
 	end
 	for x, _ in pairs(data) do
 		if not processed_datafiles["familiars"][x] then
-			hardwarn("WARNING: unknown enthroned familiar", x)
+			hardwarn("unknown enthroned familiar", x)
 			data[x] = nil
 		end
 	end
@@ -352,13 +354,11 @@ function process(datafile)
 			fobj:write(json)
 			fobj:close()
 			processed_datafiles[datafile] = verified
-		elseif verifyok then
-			print("WARNING: verifying " .. tostring(filename) .. " failed.")
 		else
-			print("WARNING: verifying " .. tostring(filename) .. " failed (" .. tostring(verified) .. ").")
+			print("WARNING: verifying " .. tostring(filename) .. " data file failed (" .. tostring(verified) .. ").")
 		end
 	else
-		print("ERROR: parsing " .. tostring(filename) .. " failed (" .. tostring(data) .. ").")
+		print("ERROR: parsing " .. tostring(filename) .. " data file failed (" .. tostring(data) .. ").")
 	end
 end
 

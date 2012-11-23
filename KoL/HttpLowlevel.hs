@@ -181,7 +181,7 @@ mkreq useragent cookie absuri params forproxy =
 	where
 		cookiehdr = case cookie of
 			Nothing -> [mkHeader HdrUserAgent useragent] -- ++ [mkHeader HdrConnection "Keep-Alive"]
-			Just x -> [mkHeader HdrCookie x] ++ [mkHeader HdrUserAgent useragent] -- ++ [mkHeader HdrConnection "Keep-Alive"]
+			Just x -> [mkHeader HdrCookie x, mkHeader HdrUserAgent useragent] -- ++ [mkHeader HdrConnection "Keep-Alive"]
 
 rewrite_headers hdrs = map (\(Header x y) -> (show x, y)) hdrs
 
