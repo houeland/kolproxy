@@ -55,17 +55,17 @@ local automate_zone_href = add_automation_script("automate-zone", function ()
 
 			-- ...prepare, heal up, spend mp, etc...
 
-			if playername() == "Eleron" then
+-- 			if playername() == "Eleron" then
 -- 				burn_aftercore_mp(100)
 -- 				get_aftercore_buffs { "Beaten Up", "Sleepy" }
-				if hp() < maxhp() / 2 then
-					cast_skillid(3012)
-				end
+-- 				if hp() < maxhp() / 2 then
+-- 					cast_skillid(3012)
+-- 				end
 -- 				if mp() < 200 then
 -- 					use_item("ancient Magi-Wipes")
 -- 					use_item("ancient Magi-Wipes")
 -- 				end
-			end
+-- 			end
 
 			-- adventure
 			text, url, advagain = autoadventure { zoneid = zoneid, noncombatchoices = autochoices }

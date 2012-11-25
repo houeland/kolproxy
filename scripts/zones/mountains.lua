@@ -164,7 +164,7 @@ local function compute_mine_spoiler(minetext)
 		end
 		return true
 	end
-	mine_data = nil -- DEBUG HACK, TODO: REMOVE
+	--mine_data = nil -- DEBUG HACK, TODO: REMOVE
 	if not mine_data then
 		mine_data = {}
 		for l in io.lines("mine-output-sample") do

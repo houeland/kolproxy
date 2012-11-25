@@ -481,14 +481,16 @@ endif
 	}
 
 	add_task {
-		when = not cached_stuff.done_campground and
-			playername() ~= "Eleron", -- TODO: HACK!
+		when = not cached_stuff.done_campground,
 		task = {
 			message = "doing campground stuff",
 			nobuffing = true,
 			action = function()
 				async_get_page("/campground.php")
-				async_get_page("/campground.php", { action = "garden", pwd = get_pwd() })
+				if setting_enabled("automate daily visits/harvest garden") then
+					-- TODO: remove, should have been done anyway?
+					async_get_page("/campground.php", { action = "garden", pwd = get_pwd() })
+				end
 
 				async_post_page("/campground.php", { action = "telescopelow" })
 
@@ -680,6 +682,7 @@ endif
 	end
 
 	if tonumber(status().casual) == 1 then
+		critical "Casual mode for the ascension script is out of date and doesn't work correctly."
 		local casual_scripts = get_casual_automation_scripts()
 		-- Powerlevel to level 12 to start the war etc.
 
@@ -4402,7 +4405,7 @@ endwhile
 			-- TODO: Make it so we can do one level at a time, not all 3 at once?
 			local pt, pturl = get_page("/lair3.php")
 			if pt:contains("lair4.php") then
-				local itemsneeded = ascension["zone.lair.itemsneeded"] or {}
+				local itemsneeded = session["zone.lair.itemsneeded"] or {}
 				local function check_levels(lvls)
 					local allok = true
 					for _, level in ipairs(lvls) do
@@ -4483,6 +4486,7 @@ use ]] .. itemsneeded[level + 1] .. [[
 				end
 			elseif pturl:contains("/lair3.php") then
 				inform "finish lair (3)"
+				script.heal_up()
 				script.ensure_mp(100)
 				local pt, url = post_page("/lair3.php", { action = "hedge" })
 				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodleserpent())

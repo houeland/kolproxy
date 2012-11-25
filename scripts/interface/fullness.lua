@@ -41,6 +41,18 @@ end)
 -- TODO: warn when drinking from cafes
 --   /cafe.php [("cafeid","1"),("pwd","..."),("action","CONSUME!"),("whichitem","1257")]
 
+local function retrieve_itemid_potency(itemid)
+--	local item = maybe_get_itemdata(itemid)
+--	if item and item.drunkenness then
+--		return item.drunkenness
+--	else
+		local descid = item_api_data(itemid).descid
+		local pt = get_page("/desc_item.php", { whichitem = descid })
+		local potency = tonumber(pt:match([[>Potency: <b>([0-9]*)</b><]]))
+		return potency
+--	end
+end
+
 add_always_warning("/inv_booze.php", function()
 	for _, x in ipairs { "steel margarita", "shot of flower schnapps", "used beer", "slap and slap again", "beery blood" } do
 		if tonumber(params.whichitem) == get_itemid(x) then
@@ -51,52 +63,39 @@ add_always_warning("/inv_booze.php", function()
 		if not buff("Ode to Booze") then
 			return "You do not have Ode to Booze active.", "drinking without ode"
 		end
-		local item = maybe_get_itemdata(tonumber(params.whichitem))
-		if not item or not item.drunkenness then
-			return "This booze is unknown and could potentially be larger than your remaining turns of Ode to Booze.", "drinking unknown booze", "OK, disable the warning."
-		else
-			local need_turns = (tonumber(params.quantity) or 1) * item.drunkenness
-			if buffturns("Ode to Booze") < need_turns then
-				return "You do not have enough turns of Ode to Booze active (need " .. need_turns .. " turns).", "drinking without enough turns of ode to booze"
-			end
+		local potency = retrieve_itemid_potency(tonumber(params.whichitem))
+		local need_turns = (tonumber(params.quantity) or 1) * potency
+		if buffturns("Ode to Booze") < need_turns then
+			return "You do not have enough turns of Ode to Booze active (need " .. need_turns .. " turns).", "drinking without enough turns of ode to booze"
 		end
 	end
 end)
 
 add_always_warning("/inv_booze.php", function()
 	local safe = false
-	local unknown = true
-	local item = maybe_get_itemdata(tonumber(params.whichitem))
-	if item and item.drunkenness then
-		unknown = false
-		if drunkenness() + item.drunkenness * (tonumber(params.quantity) or 1) <= estimate_max_safe_drunkenness() then
-			safe = true
-		elseif whichitem == get_itemid("steel margarita") then
-			safe = true
-		end
+	local potency = retrieve_itemid_potency(tonumber(params.whichitem))
+	if drunkenness() + potency * (tonumber(params.quantity) or 1) <= estimate_max_safe_drunkenness() then
+		safe = true
+	elseif whichitem == get_itemid("steel margarita") then
+		safe = true
 	end
-	
-	if not unknown and not safe and drunkenness() < estimate_max_safe_drunkenness() then
+
+	if not safe and drunkenness() < estimate_max_safe_drunkenness() then
 		return "You have not drunk to full liver before nightcapping.", "not drunk before nightcapping"
 	end
 end)
 
 add_extra_always_warning("/inv_booze.php", function()
 	local safe = false
-	local unknown = true
-	local item = maybe_get_itemdata(tonumber(params.whichitem))
-	if item and item.drunkenness then
-		unknown = false
-		if drunkenness() + item.drunkenness * (tonumber(params.quantity) or 1) <= estimate_max_safe_drunkenness() then
-			safe = true
-		elseif whichitem == get_itemid("steel margarita") then
-			safe = true
-		end
+	local potency = retrieve_itemid_potency(tonumber(params.whichitem))
+
+	if drunkenness() + potency * (tonumber(params.quantity) or 1) <= estimate_max_safe_drunkenness() then
+		safe = true
+	elseif whichitem == get_itemid("steel margarita") then
+		safe = true
 	end
 	
-	if unknown then
-		return "This booze is unknown and could potentially make you fallen-down drunk.", "overdrinking unknown booze", "OK, disable the warning and do it."
-	elseif not safe then
+	if not safe then
 		return "This booze will make you fallen-down drunk.", "overdrinking", "OK, I'm done for today, disable the warning and do it."
 	end
 end)

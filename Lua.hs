@@ -316,49 +316,61 @@ parse_keyvalue_luatbl l idx = do
 				t <- Lua.ltype l idx
 				fail $ "ERROR: param " ++ show idx ++ " not a table parameter (" ++ show t ++ ")"
 
+show_blocked_page_info ref l = do
+	pwdstr <- KoL.Api.pwd <$> KoL.Api.getApiInfo ref
+	Lua.pushstring l $ "<html><body><tt style=\"color: darkorange\">Page loading blocked.</tt><br><br><a href=\"/custom-clear-lua-script-cache?pwd=" ++ pwdstr ++ "\" style=\"color: green\">Reset</a></body></html>"
+	Lua.pushstring l "/kolproxy-page-loading-blocked"
+	return 2
+
 submit_page_func ref l = do
 	lua_log_line ref "> submit_page_func" (return ())
 	shouldstop <- readIORef (blocking_lua_scripting ref)
-	when shouldstop $ fail "Scripted file downloads blocked."
-	top <- Lua.gettop l
-	if top < 2
-		then fail "Not enough parameters to submit_page"
+	if shouldstop
+		then show_blocked_page_info ref l
 		else do
-			m_one <- Lua.peek l 1
-			m_two <- Lua.peek l 2
-			case (m_one, m_two) of
-				(Just one, Just two) -> do
-					params <- parse_keyvalue_luatbl l 3
-					(pt, puri, _hdrs) <- join $ async_submit_page ref one two params
-					Lua.pushbytestring l pt
-					Lua.pushstring l (show puri)
-					lua_log_line ref ("< submit_page_func " ++ (show puri)) (return ())
-					return 2
-				_ -> fail "Wrong parameters to submit_page"
+			top <- Lua.gettop l
+			if top < 2
+				then fail "Not enough parameters to submit_page"
+				else do
+					m_one <- Lua.peek l 1
+					m_two <- Lua.peek l 2
+					case (m_one, m_two) of
+						(Just one, Just two) -> do
+							params <- parse_keyvalue_luatbl l 3
+							(pt, puri, _hdrs) <- join $ async_submit_page ref one two params
+							Lua.pushbytestring l pt
+							Lua.pushstring l (show puri)
+							lua_log_line ref ("< submit_page_func " ++ (show puri)) (return ())
+							return 2
+						_ -> fail "Wrong parameters to submit_page"
 
 async_submit_page_func ref l1 = do
 	lua_log_line ref "> async_submit_page_func" (return ())
 	shouldstop <- readIORef (blocking_lua_scripting ref)
-	when shouldstop $ fail "Scripted file downloads blocked."
-	top <- Lua.gettop l1
-	if top < 2
-		then fail "Not enough parameters to async_submit_page"
+	if shouldstop
+		then do
+			push_function l1 (show_blocked_page_info ref) "async_submit_page_callback"
+			return 1
 		else do
-			m_one <- Lua.peek l1 1
-			m_two <- Lua.peek l1 2
-			case (m_one, m_two) of
-				(Just one, Just two) -> do
-					params <- parse_keyvalue_luatbl l1 3
-					f <- async_submit_page ref one two params
-					lua_log_line ref "< async_submit_page_func requested" (return ())
-					push_function l1 (\l2 -> do
-						(pt, puri, _hdrs) <- f
-						lua_log_line ref ("< async_submit_page_func result " ++ (show puri)) (return ())
-						Lua.pushbytestring l2 pt
-						Lua.pushstring l2 (show puri)
-						return 2) "async_submit_page_callback"
-					return 1
-				_ -> fail "Wrong parameters to async_submit_page"
+			top <- Lua.gettop l1
+			if top < 2
+				then fail "Not enough parameters to async_submit_page"
+				else do
+					m_one <- Lua.peek l1 1
+					m_two <- Lua.peek l1 2
+					case (m_one, m_two) of
+						(Just one, Just two) -> do
+							params <- parse_keyvalue_luatbl l1 3
+							f <- async_submit_page ref one two params
+							lua_log_line ref "< async_submit_page_func requested" (return ())
+							push_function l1 (\l2 -> do
+								(pt, puri, _hdrs) <- f
+								lua_log_line ref ("< async_submit_page_func result " ++ (show puri)) (return ())
+								Lua.pushbytestring l2 pt
+								Lua.pushstring l2 (show puri)
+								return 2) "async_submit_page_callback"
+							return 1
+						_ -> fail "Wrong parameters to async_submit_page"
 
 -- TODO: parse in lua
 get_faxbot_monsterlist _ref l = do

@@ -29,36 +29,36 @@ add_choice_text("The Baker's Dilemma", { -- choice adventure number: 114
 add_processor("/desc_item.php", function()
 	local glyph = text:match([[title="(Arcane Glyph #[0-9]+)"]])
 	if glyph then
-		tbl = ascension["zone.manor.glyphs"] or {}
+		local tbl = session["zone.manor.glyphs"] or {}
 		name = text:match("<b>(dusty bottle of [A-Za-z ]+)</b>")
 		print(name .. " -> " .. glyph)
 		tbl[glyph] = name
-		ascension["zone.manor.glyphs"] = tbl
+		session["zone.manor.glyphs"] = tbl
 	end
 end)
 
 add_processor("/manor3.php", function()
 	if text:match("Your eyes are drawn to a pattern of odd glyphs") then
-		tbl = ascension["zone.manor.glyphs"]
+		tbl = session["zone.manor.glyphs"]
 		if not tbl then return end
 		wines_needed = {}
 		for x in text:gmatch([[title="(Arcane Glyph #[0-9]+)"]]) do
 			print("glyph:"..x.." -> "..tostring(tbl[x]))
 			table.insert(wines_needed, tbl[x])
 		end
-		ascension["zone.manor.wines needed"] = wines_needed
+		session["zone.manor.wines needed"] = wines_needed
 	end
 end)
 
 add_processor("item drop", function()
 	if adventure_zone then
 		if item_name:match("^dusty bottle of ") then
-			tbl = ascension["zone.manor.wine cellar bottles"] or {}
+			tbl = ascension["zone.manor.wine cellar zone bottles"] or ascension["zone.manor.wine cellar bottles"] or {}
 			if not tbl[adventure_zone] then
 				tbl[adventure_zone] = {}
 			end
 			tbl[adventure_zone][item_name] = true
-			ascension["zone.manor.wine cellar bottles"] = tbl
+			ascension["zone.manor.wine cellar zone bottles"] = tbl
 		end
 	end
 end)
@@ -77,8 +77,8 @@ end)
 -- end
 
 add_printer("/manor3.php", function()
-	if not ascension["zone.manor.wines needed"] then return end
-	local tbl = ascension["zone.manor.wine cellar bottles"] or {}
+	if not session["zone.manor.wines needed"] then return end
+	local tbl = ascension["zone.manor.wine cellar zone bottles"] or ascension["zone.manor.wine cellar bottles"] or {}
 
 	local wines, valid_permutations = get_wine_cellar_data(tbl)
 
@@ -86,7 +86,7 @@ add_printer("/manor3.php", function()
 -- 		print("wine", z, table_to_str(wtbl))
 -- 	end
 
-	local wines_needed_list = ascension["zone.manor.wines needed"] or {}
+	local wines_needed_list = session["zone.manor.wines needed"] or {}
 -- 	local wines_missing = {}
 -- 	for wine in table.values(wines_needed_list) do
 -- 		if not have(wine) then
@@ -777,7 +777,7 @@ end)
 
 local wines_href = add_automation_script("automate-pour-manor-wines", function ()
 --	posting page /manor3.php params: Just [("action","pourwine"),("whichwine","2271")]
-	local wines_needed_list = ascension["zone.manor.wines needed"] or {}
+	local wines_needed_list = session["zone.manor.wines needed"] or {}
 	local got = 0
 	for wine in table.values(wines_needed_list) do
 		if have(wine) then
@@ -795,7 +795,7 @@ end)
 
 add_printer("/manor3.php", function()
 	if text:match("How curious.") then
-		tbl = ascension["zone.manor.wines needed"]
+		tbl = session["zone.manor.wines needed"]
 		if not tbl then return end
 		prints = {}
 		table.insert(prints, "<ol>")
@@ -804,10 +804,9 @@ add_printer("/manor3.php", function()
 		end
 		table.insert(prints, "</ol>")
 
-		local wines_needed_list = ascension["zone.manor.wines needed"] or {}
 		local count = 0
 		local got = 0
-		for wine in table.values(wines_needed_list) do
+		for wine in table.values(session["zone.manor.wines needed"] or {}) do
 			count = count + 1
 			if have(wine) then
 				got = got + 1

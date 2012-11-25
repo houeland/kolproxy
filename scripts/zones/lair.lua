@@ -100,12 +100,12 @@ add_processor("/campground.php", function()
 	table.sort(itemsneeded, function(a, b) return whereidx[a] < whereidx[b] end)
 -- 	print("itemsneeded: ", table.concat(itemsneeded, "|"))
 	if table.maxn(itemsneeded) > 0 then
-		ascension["zone.lair.itemsneeded"] = itemsneeded
+		session["zone.lair.itemsneeded"] = itemsneeded
 	end
 end)
 
 add_printer("/campground.php", function()
-	if text:contains("peer into the eyepiece of the telescope") then
+	if text:contains("peer into the eyepiece of the telescope") or (text:contains("Nope.") and params.action == "telescopelow") then
 		-- telescope lair info
 
 		local dod_gate_effects = {
@@ -179,20 +179,26 @@ add_printer("/campground.php", function()
 						return string.format([[<span style="color: darkorange">%s</span> (%d / 30 pixels)]], x, pixels)
 					end
 				elseif x == "Richard's star key" then
+					local have_star_weapon = have_item("star sword") or have_item("star staff") or have_item("star crossbow")
 					local extrastrs = {}
 					local wantstaritems = { "star hat", "star sword", "star staff", "star crossbow" }
 					if ascensionpathid() == 4 or ascensionpathid() == 8 then
 						wantstaritems = { "star hat" }
+						have_star_weapon = true
 					end
+					local have_star_everything = have("Richard's star key") and have_item("star hat") and have_star_weapon
 					for y in table.values(wantstaritems) do
 						if have(y) then
 							table.insert(extrastrs, string.format([[<span style="color: green">%s</span>]], y))
-						else
-							table.insert(extrastrs, string.format([[<span>%s</span>]], y))
+						elseif y == "star hat" or not have_star_weapon then
+							table.insert(extrastrs, string.format([[<span style="color: darkorange">%s</span>]], y))
 						end
 					end
-					table.insert(extrastrs, make_plural(count("star"), "star", "stars"))
-					table.insert(extrastrs, make_plural(count("line"), "line", "lines"))
+					if not have_star_everything then
+						table.insert(extrastrs, make_plural(count("star"), "star", "stars"))
+						table.insert(extrastrs, make_plural(count("line"), "line", "lines"))
+						table.insert(extrastrs, make_plural(count("star chart"), "chart", "charts"))
+					end
 					if have(x) then
 						return string.format([[<span style="color: green">%s</span> (%s)]], x, table.concat(extrastrs, ", "))
 					else
@@ -262,7 +268,15 @@ add_printer("/campground.php", function()
 		table.insert(extratext, [[<h4>Mariachi statue keys</h4><p>]] .. table.concat(get_statues_display_lines(), "<br>") .. [[</p>]])
 		table.insert(extratext, [[<h4>Other items</h4><p>]] .. table.concat(get_other_display_lines(), "<br>") .. [[</p>]])
 
-		text = text:gsub([[</td></tr></table>]], function(x) return table.concat(extratext, "\n") .. x end, 1)
+		local isfirst = true
+		text = text:gsub([[<table[^>]*width=95%%]], function(x)
+			if isfirst then
+				isfirst = false
+				return x
+			else
+				return make_kol_html_frame(table.concat(extratext, "\n"), "Lair Checklist:") .. x
+			end
+		end, 2)
 	end
 end)
 
@@ -763,7 +777,7 @@ add_printer("/lair3.php", function()
 end)
 
 local function show_tower_items(levelidxs)
-	local itemsneeded = ascension["zone.lair.itemsneeded"] or {}
+	local itemsneeded = session["zone.lair.itemsneeded"] or {}
 	for level in table.values(levelidxs) do
 		local needitem = itemsneeded[level + 1]
 		if needitem then
@@ -786,7 +800,7 @@ end)
 
 add_automator("/fight.php", function()
 	local function known_win(level)
-		local itemsneeded = ascension["zone.lair.itemsneeded"] or {}
+		local itemsneeded = session["zone.lair.itemsneeded"] or {}
 		local needitem = itemsneeded[level + 1]
 		return needitem and have(needitem)
 	end
@@ -846,14 +860,14 @@ add_processor("/lair6.php", function ()
 		end
 		print("lair6 door", first, second, third)
 		if first and second and third then
-			ascension["zone.lair.doorcode"] = first..second..third
+			session["zone.lair.doorcode"] = first..second..third
 		end
 	end
 end)
 
 add_printer("/lair6.php", function ()
 	if text:contains("You approach the heavy door.  Next to it is a panel with a bunch of buttons on it.  On the buttons are numbers.") then
-		local code = ascension["zone.lair.doorcode"]
+		local code = session["zone.lair.doorcode"]
 		if code then
 			text = text:gsub("(<input type=text class=text size=5 name=code)(>)", [[%1 value="]]..code..[["%2]])
 		end
@@ -863,9 +877,9 @@ end)
 function automate_lair6_place(place, text)
 	if place == 0 then
 		if text:contains("At the top of the steps leading to the Sorceress' Chamber, you encounter two doors.") then
-			ascension["zone.lair.doorcode"] = nil
+			session["zone.lair.doorcode"] = nil
 			post_page("/lair6.php", { preaction = "lightdoor" })
-			code = ascension["zone.lair.doorcode"]
+			code = session["zone.lair.doorcode"]
 			print("INFO: lair6 code", code, "params", params)
 			if code then
 				text = post_page("/lair6.php", { action = "doorcode", code = code })

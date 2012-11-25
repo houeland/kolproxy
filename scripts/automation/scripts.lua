@@ -1958,18 +1958,18 @@ mark m_done
 					end
 				end
 			end })
-		elseif not ascension["zone.manor.wines needed"] then
+		elseif not session["zone.manor.wines needed"] then
 			inform "determine cellar wines"
 			determine_cellar_wines()
 --			print("determine call over")
-			if ascension["zone.manor.wines needed"] then
+			if session["zone.manor.wines needed"] then
 				print("got wine state set now!")
 				did_action = true
 			end
 --			print("all determine over")
 		else
 			local manor3pt = get_page("/manor3.php")
-			local wines_needed_list = ascension["zone.manor.wines needed"]
+			local wines_needed_list = session["zone.manor.wines needed"]
 			local need = 0
 			local got = 0
 			local missing = {}
@@ -2016,7 +2016,7 @@ mark m_done
 					maybe_ensure_buffs { "Brother Smothers's Blessing" }
 				end
 				softcore_stoppable_action("get cellar wines")
-				local wines, _ = get_wine_cellar_data(ascension["zone.manor.wine cellar bottles"] or {})
+				local wines, _ = get_wine_cellar_data(ascension["zone.manor.wine cellar zone bottles"] or {})
 --				print("wines", table_to_str(wines))
 				local best = -1
 				local best_zones = nil
@@ -2342,7 +2342,17 @@ endif
 					end
 				end
 			elseif challenge == "zombie" and not have_buff("Waking the Dead") then
-				stop "TODO: Do sonofa in zombie"
+				if have_skill("Summon Horde") then
+					cast_skillid(12021, 1)
+					async_get_page("/choice.php", { forceoption = 0 })
+					async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 600, option = 1 })
+					async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 600, option = 2 })
+				end
+				if have_buff("Waking the Dead") then
+					go("do sonofa beach, " .. make_plural(count("barrel of gunpowder"), "barrel", "barrels"), 136, macro_noodleserpent, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
+				else
+					stop "TODO: Do sonofa in zombie"
+				end
 			else
 				go("do sonofa beach, " .. make_plural(count("barrel of gunpowder"), "barrel", "barrels"), 136, macro_noodleserpent, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
 			end
@@ -2686,10 +2696,10 @@ endif
 				["barbed-wire fence"] = 3,
 			}
 
-			local tbl = ascension["zone.lair.itemsneeded"]
+			local tbl = session["zone.lair.itemsneeded"]
 			if not tbl then
 				async_post_page("/campground.php", { action = "telescopelow" })
-				tbl = ascension["zone.lair.itemsneeded"] or {}
+				tbl = session["zone.lair.itemsneeded"] or {}
 			end
 			local need_item = nil
 			local want_adv = nil
@@ -3831,7 +3841,7 @@ endif
 					}, { "Smooth Movements", "The Sonata of Sneakiness" }, "Mini-Hipster", 15)
 				end
 			else
-				-- HACK: doesn't appear until plains is loaded
+				-- WORKAROUND: doesn't appear until plains is loaded
 				if not have_equipped("Talisman o' Nam") then
 					print("must equip talisman")
 					wear { acc3 = "Talisman o' Nam" }

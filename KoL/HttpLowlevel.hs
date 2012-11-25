@@ -38,7 +38,8 @@ import qualified Network.HTTP.HandleStream
 
 doHTTPLOWLEVEL_DEBUG _ = return ()
 -- doHTTPLOWLEVEL_DEBUG x = putStrLn $ "HTTPlow DEBUG: " ++ x
-doHTTPLOWLEVEL_DEBUGexception x = putStrLn $ "HTTPlow DEBUGexc: " ++ x
+doHTTPLOWLEVEL_DEBUGexception _ = return ()
+-- doHTTPLOWLEVEL_DEBUGexception x = putStrLn $ "HTTPlow DEBUGexc: " ++ x
 
 class ConnFunctionsBundle a b | a -> b where
 	connGetBlock :: a -> Int -> IO b
@@ -395,7 +396,8 @@ mkconnthing server = do
 			when going run
 		forkIO_ "HTTPlow:run" $ (run `catch` (\e -> do
 			doHTTPLOWLEVEL_DEBUGexception $ "http forked-run exception: " ++ (show (e :: SomeException))
-			throwIO e))
+--			throwIO e))
+			return ()))
 		let cfunc (absuri, rq, mvdest, ref) = do
 -- 			putStrLn $ "DEBUG cfunc: " ++ show absuri
 			isok <- log_time_interval_http ref ("HTTP asking: " ++ (show $ rqURI $ rq)) $ try $ do
@@ -438,7 +440,7 @@ mkconnthing server = do
 -- 					doHTTPLOWLEVEL_DEBUG $ "not-stale, keeping connection | " ++ show (tnow, t_stored, diffUTCTime tnow t_stored)
 					return (cf_stored, t_stored, pending)
 				else do
-					putStrLn $ "DEBUG: stale, making new connection | " ++ show (tnow, t_stored, diffUTCTime tnow t_stored)
+--					putStrLn $ "DEBUG: stale, making new connection | " ++ show (tnow, t_stored, diffUTCTime tnow t_stored)
 					open_conn -- TODO: need to handle this failing!!!
 -- 			putStrLn $ "DEBUG connmv cf x: " ++ show debug_absuri
 			cf x

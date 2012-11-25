@@ -2,6 +2,7 @@ add_chat_redirect("/hottub", "Relaxing in the hot tub.", "/clan_viplounge.php", 
 
 add_chat_redirect("/telescope", "Looking into the telescope.", "/campground.php", { action = "telescopelow" })
 add_chat_alias("/scope", "/telescope")
+add_chat_alias("/lairchecklist", "/telescope")
 
 add_chat_command("/kolproxy_example_test_chat_command", "Testing things.", function()
 	return "Hello, world."
@@ -9,7 +10,7 @@ end)
 
 add_chat_trigger("/stop", function()
 	block_lua_scripting()
-	return [[<span style="color: green">{ Stopping automation! }</span><br>]]
+	return [[<span style="color: green">{ Page loading halted! }</span><br>]]
 end)
 
 add_raw_chat_script_redirect("/mcd", "Setting MCD.", function(mcdparam)

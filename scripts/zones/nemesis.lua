@@ -46,7 +46,7 @@ add_printer("/cave.php", function()
 	end
 
 	if text:match("SPEAK THE PASSWORD TO ENTER") then
-		local tbl = ascension["zone.cave.paper strips"] or {}
+		local tbl = session["zone.cave.paper strips"] or {}
 		right_sides = {}
 		left_sides = {}
 		strips = {}
@@ -77,9 +77,9 @@ end)
 add_processor("/desc_item.php", function()
 	name, left, right, word = text:match([[<b>(a [a-z]- paper strip)</b>.-title="A ([a-z-]-) tear".-title="A ([a-z-]-) tear".-<font size=%+1><b>([A-Z]-)</b></font>]])
 	if name and left and right and word then
-		tbl = ascension["zone.cave.paper strips"] or {}
-		tbl[name] = { left=left, right=right, word=word }
-		ascension["zone.cave.paper strips"] = tbl
+		local tbl = session["zone.cave.paper strips"] or {}
+		tbl[name] = { left = left, right = right, word = word }
+		session["zone.cave.paper strips"] = tbl
 	end
 end)
 

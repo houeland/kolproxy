@@ -6,17 +6,8 @@ local shore_tower_items = {
 	["barbed-wire fence"] = "Large Donkey Mountain Ski Resort",
 }
 
-add_ascension_warning("/shore.php", function()
-	if params.whichtrip then
-		if level() >= 11 and not have("forged identification documents") and not have("your father's MacGuffin diary") then
-			return "You don't have the forged identification documents.", "shoring without forged identification documents"
-		end
-	end
-end)
-
 add_printer("/shore.php", function()
-	local tbl = ascension["zone.lair.itemsneeded"] or {}
-	for from, to in pairs(tbl) do
+	for from, to in pairs(session["zone.lair.itemsneeded"] or {}) do
 		if shore_tower_items[to] then
 			text = text:gsub("(<td valign=center>)("..shore_tower_items[to]..")(</td>)", "%1<b>%2</b>%3")
 		end
@@ -34,6 +25,14 @@ add_processor("/shore.php", function ()
 		end
 		if trips_text == "one" or found_combat_item then
 			ascension["shore turn"] = turnsthisrun() + 35
+		end
+	end
+end)
+
+add_ascension_warning("/shore.php", function()
+	if params.whichtrip then
+		if level() >= 11 and not have("forged identification documents") and not have("your father's MacGuffin diary") then
+			return "You don't have the forged identification documents.", "shoring without forged identification documents"
 		end
 	end
 end)

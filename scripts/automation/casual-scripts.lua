@@ -798,7 +798,7 @@ function get_casual_automation_scripts()
 				["barbed-wire fence"] = 3,
 			}
 
-			local tbl = ascension["zone.lair.itemsneeded"] or {}
+			local tbl = session["zone.lair.itemsneeded"] or {}
 			local need_item = nil
 			local want_adv = nil
 			for from, to in pairs(tbl) do

@@ -22,6 +22,59 @@ add_choice_text("The Oracle Will See You Now", { -- choice adventure number: 3
 
 -- DoD potions
 
+dod_potion_types = {
+	"bubbly potion",
+	"cloudy potion",
+	"dark potion",
+	"effervescent potion",
+	"fizzy potion",
+	"milky potion",
+	"murky potion",
+	"smoky potion",
+	"swirly potion",
+}
+
+dod_potion_effects = {
+	"acuity",
+	"blessing",
+	"booze",
+	"confusion",
+	"detection",
+	"healing",
+	"sleep",
+	"strength",
+	"teleportation",
+}
+
+function get_dod_potion_status()
+	local tbl = ascension["zone.dod.potions"] or {}
+	unknown_potions = {}
+	for pot in table.values(dod_potion_types) do
+		if not tbl[pot] then
+			table.insert(unknown_potions, pot)
+		end
+	end
+
+	found = {}
+	for pot, eff in pairs(tbl) do
+		found[eff] = pot
+	end
+
+	unknown_effects = {}
+	for eff in table.values(dod_potion_effects) do
+		if not found[eff] then
+			table.insert(unknown_effects, eff)
+		end
+	end
+
+	if table.maxn(unknown_effects) == 1 and table.maxn(unknown_potions) == 1 then -- only one missing effect and one missing potion
+		tbl[unknown_potions[1]] = unknown_effects[1]
+		return tbl, {}, {}
+	else
+		return tbl, unknown_potions, unknown_effects
+	end
+end
+
 add_processor("used combat item", function ()
 	if item_image == "exclam.gif" then
 		local tbl = ascension["zone.dod.potions"] or {}
