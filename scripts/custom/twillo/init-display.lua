@@ -3,6 +3,8 @@
 local function get_fam_init()
 	if familiarid() == 159 then -- happy medium
 		return buffedfamiliarweight()
+	elseif familiarid() == 168 then -- oily woim
+		return buffedfamiliarweight() * 2
 	else
 		return 0
 	end
