@@ -429,10 +429,14 @@ function click_cb(cb, name, stateset) {
 	});
 	return true;
 }
+function reset_button(b, v) {
+	b.value = v
+}
 function clear_lua_script_cache(button) {
 	var pwd = ']] .. session.pwd .. [['
 	$.post('custom-clear-lua-script-cache', { pwd: pwd }, function (res) {
 		button.value = 'Script cache cleared!'
+		setTimeout(function() { reset_button(button, 'Reload Lua script files again') }, 3000)
 	});
 }
 			</script>
