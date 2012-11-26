@@ -433,6 +433,7 @@ function clear_lua_script_cache(button) {
 	var pwd = ']] .. session.pwd .. [['
 	$.post('custom-clear-lua-script-cache', { pwd: pwd }, function (res) {
 		button.value = 'Script cache cleared!'
+		setTimeout(function() { button.value = 'Reload Lua script files again' }, 3000)
 	});
 }
 			</script>
