@@ -465,7 +465,7 @@ function automate_lair_statues(text)
 	end
 
 	if text:contains("You gather up your instruments") or text:contains("no reason to mess with them anymore") then
-		return text, url
+		return
 	end
 
 	if not have("stone tablet (Squeezings of Woe)") then
@@ -515,7 +515,7 @@ function automate_lair_statues(text)
 
 	text, url = get_page("/lair2.php", { action = "statues" })
 	if text:contains("You gather up your instruments") or text:contains("no reason to mess with them anymore") then
-		return text, url
+		return
 	end
 
 	if text:contains("no instrument to give to the first") then
@@ -534,7 +534,7 @@ function automate_lair_statues(text)
 
 	text, url = get_page("/lair2.php", { action = "statues" })
 	if text:contains("You gather up your instruments") or text:contains("no reason to mess with them anymore") then
-		return text, url
+		return
 	end
 
 	return missing_stuff
@@ -544,6 +544,7 @@ local automate_statues_href = add_automation_script("automate-lair-statues", fun
 	text, url = get_page("/lair2.php", { action = "statues" })
 	local missing_stuff = automate_lair_statues(text)
 
+	text, url = get_page("/lair2.php", { action = "statues" })
 	if missing_stuff then
 		local missingtext = ""
 		for _, x in ipairs(missing_stuff) do
