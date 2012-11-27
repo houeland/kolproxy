@@ -1,9 +1,9 @@
-dofile("scripts/base/util/base-lua-functions.lua")
-dofile("scripts/base/util/state.lua")
-dofile("scripts/base/util/kolproxy-core-functions.lua")
-dofile("scripts/base/util/script-functions.lua")
-dofile("scripts/base/util/charpane.lua")
-dofile("scripts/base/util/api.lua")
+dofile("scripts/base/base-lua-functions.lua")
+dofile("scripts/base/state.lua")
+dofile("scripts/base/kolproxy-core-functions.lua")
+dofile("scripts/base/script-functions.lua")
+dofile("scripts/base/charpane.lua")
+dofile("scripts/base/api.lua")
 
 
 
@@ -55,13 +55,6 @@ end
 
 
 -- -- Should be in other files -- --
-
-
-
-
-
-
-
 
 local function get_wine_cellar_permutations_and_quadrants(tbl)
 	local quadrants = {
@@ -130,8 +123,6 @@ function get_wine_cellar_data(known_tbl)
 	end
 	return wines, valid_permutations
 end
-
-
 
 function determine_cellar_wines()
 	if not session["zone.manor.wines needed"] and not session["tried determining wines"] then

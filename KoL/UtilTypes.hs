@@ -92,7 +92,8 @@ data RefType = RefType {
 	processingstuff_ :: ProcessingRefStuff,
 	otherstuff_ :: OtherRefStuff,
 	stateValid_ :: Bool,
-	globalstuff_ :: GlobalRefStuff
+	globalstuff_ :: GlobalRefStuff,
+	skipRunningPrinters_ :: Bool
 }
 
 getlogchan ref = logchan_ $ logstuff_ $ ref

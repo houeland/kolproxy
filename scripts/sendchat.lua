@@ -1,5 +1,5 @@
 dofile("scripts/base/util.lua")
-dofile("scripts/base/util/base-lua-functions.lua")
+dofile("scripts/base/base-lua-functions.lua")
 
 local function run_wrapped_function(f_env)
 

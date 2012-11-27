@@ -16,10 +16,8 @@ reset_pageload_cache()
 path = requestpath -- temporary workaround for backwards compatibility
 query = requestquery -- temporary workaround for backwards compatibility
 
-if not locked() then
-	-- Download and cache available skills. Do this differently(?)
-	get_player_skills()
-end
+-- Download and cache available skills. Do this differently(?)
+get_player_skills()
 
 function submit_original_request()
 	return raw_submit_page(request_type, requestpath, parse_params_raw(input_params))

@@ -1,14 +1,15 @@
-loadfile("scripts/base/util/base-lua-functions.lua")()
+loadfile("scripts/base/base-lua-functions.lua")()
+loadfile("scripts/base/kolproxy-core-functions.lua")()
 
 local xmeta = { __index = function(t, k)
 	if k == "time" or k == "requestedurl" or k == "retrievedurl" or k == "pagetext" then
 		t[k] = get_line_text(t.idx, k)
 	elseif k == "statusbefore" or k == "inventorybefore" then
-		local v = get_line_json(t.idx, "statusbefore")
+		local v = json_to_table(get_line_text(t.idx, "statusbefore"))
 		t.statusbefore = v.status
 		t.inventorybefore = v.inventory
 	elseif k == "statusafter" or k == "inventoryafter" then
-		local v = get_line_json(t.idx, "statusafter")
+		local v = json_to_table(get_line_text(t.idx, "statusafter"))
 		t.statusafter = v.status
 		t.inventoryafter = v.inventory
 	elseif k == "onthetrail" then

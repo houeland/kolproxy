@@ -107,8 +107,6 @@ function get_cached_item(name, f)
 	end
 end
 
-raw_submit_page = submit_page
-
 function do_submit_page(t, url, params)
 	kolproxy_debug_print("> do_submit_page(" .. tostring(url) .. ")\n" .. debug.traceback(""))
 	after_pageload_cache = {}
@@ -132,13 +130,11 @@ function do_submit_page(t, url, params)
 	return pt, pturl
 end
 
-function get_page(url, params) return do_submit_page("GET", url, params) end
+--function get_page(url, params) return do_submit_page("GET", url, params) end
 
-function post_page(url, params) return do_submit_page("POST", url, params) end
+--function post_page(url, params) return do_submit_page("POST", url, params) end
 
 
-
-raw_async_submit_page = async_submit_page
 
 -- TODO: improve async and after_pageload_cache interaction, after_pageload_cache should be cleared after every completed pageload/statuschange!
 function do_async_submit_page(t, url, params)
@@ -165,11 +161,13 @@ function async_get_page(url, params) return do_async_submit_page("GET", url, par
 
 function async_post_page(url, params) return do_async_submit_page("POST", url, params) end
 
+function get_page(url, params) return async_get_page(url, params)() end
+
+function post_page(url, params) return async_post_page(url, params)() end
 
 
-raw_make_href = make_href
 
-function do_make_href(url, params)
+function make_href(url, params)
 	if params then
 		local tbl = {}
 		for a, b in pairs(params) do
@@ -187,8 +185,6 @@ function do_make_href(url, params)
 		return raw_make_href(url, nil)
 	end
 end
-
-make_href = do_make_href
 
 
 function run_file_with_environment(filename, orgenv, prefillenv, f_notfound)

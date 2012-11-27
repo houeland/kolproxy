@@ -13,7 +13,6 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Exception
 import Control.Monad
-import Data.Char
 import Data.IORef
 import Data.List
 import Data.Maybe
@@ -58,7 +57,7 @@ instance Lua.StackValue Element where
 get_current_kolproxy_version = return $ kolproxy_version_number :: IO String
 
 get_latest_kolproxy_version = do
-	version <- (filter (not . isSpace)) <$> getHTTPFileData kolproxy_version_string (mkuri "http://www.houeland.com/kolproxy/latest-version")
+	version <- getHTTPFileData kolproxy_version_string (mkuri "http://www.houeland.com/kolproxy/latest-version")
 	if (length version <= 100) && (version =~ "^[0-9A-Za-z.-]+$")
 		then return version
 		else return "?"
@@ -129,18 +128,6 @@ doReadDataFile filename = do
 			putStrLn $ filedata
 			putStrLn $ "=== ERROR ==="
 			throwIO $ InternalError $ "Failed to read data file: " ++ filename
-
-get_item_funcs_internal ref = do
-	v <- readIORef (itemData_ $ sessionData ref)
-	case v of
-		Just i -> return i
-		Nothing -> do
-			items <- doReadDataFile "cache/data/items"
-			let idmap = Data.Map.fromList (map (\x -> (fromJust $ read_as $ fromJust $ lookup "id" x :: Int, x)) items)
-			let namemap = Data.Map.fromList (map (\x -> (fromJust $ lookup "name" x, x)) items)
-			let fs = (\x -> Data.Map.lookup x idmap, \x -> Data.Map.lookup x namemap)
-			writeIORef (itemData_ $ sessionData ref) (Just fs)
-			return fs
 
 get_submit_uri_params _ref method inputuristr params = do
 	case parseURIReference inputuristr of	
@@ -372,49 +359,29 @@ async_submit_page_func ref l1 = do
 							return 1
 						_ -> fail "Wrong parameters to async_submit_page"
 
--- TODO: parse in lua
-get_faxbot_monsterlist _ref l = do
-	mds <- doReadDataFile "cache/data/faxbot-monsterlist"
-	Lua.newtable l
-	topidx <- Lua.gettop l
-	let add_monsterdata (trgidx, tbl) = do
-		Lua.pushinteger l trgidx
-		Lua.newtable l
-		add_table_contents l (tbl :: [(String, String)])
-		Lua.settable l topidx
-	mapM_ add_monsterdata (zip [1..] mds)
-	return 1
 
--- TODO: merge?
-make_href_raw _ref inputuristr params = do
-	case parseURIReference inputuristr of	
-		Just inputuri -> do
-			case (stripPrefix "/" (uriPath inputuri), uriQuery inputuri) of
-				(Just _, "") -> do
-					case params of
-						Nothing -> return (show inputuri)
-						Just p -> do
-							let testurienc = (uriPath inputuri) ++ "?" ++ (formEncode p)
-							let testuri = escapeURIString (\x -> x `notElem` "[]") testurienc
-							case parseURIReference testuri of
-								Just uri -> return (show uri)
-								_ -> fail $ "make_href error: uri " ++ (show testuri) ++ " not recognized."
-				_ -> fail $ "make_href error: unknown url " ++ (show inputuri)
-		_ -> fail $ "make_href error: unknown url " ++ (show inputuristr)
-
-make_href ref l = do
-	top <- Lua.gettop l
-	if top < 1
-		then fail "Not enough parameters to make_href"
-		else do
-			m_one <- Lua.peek l 1
-			case m_one of
-				Just one -> do
-					params <- parse_keyvalue_luatbl l 2
-					href <- make_href_raw ref one params
-					Lua.pushstring l href
-					return 1
-				_ -> fail "Wrong parameters to make_href"
+make_href _ref l = do
+	m_one <- Lua.peek l 1
+	case m_one of
+		Just inputuristr -> do
+			params <- parse_keyvalue_luatbl l 2
+			case parseURIReference inputuristr of	
+				Just inputuri -> do
+					case (stripPrefix "/" (uriPath inputuri), uriQuery inputuri) of
+						(Just _, "") -> do
+							href <- case params of
+								Nothing -> return (show inputuri)
+								Just p -> do
+									let testurienc = (uriPath inputuri) ++ "?" ++ (formEncode p)
+									let testuri = escapeURIString (\x -> x `notElem` "[]") testurienc
+									case parseURIReference testuri of
+										Just uri -> return (show uri)
+										_ -> fail $ "make_href error: uri " ++ (show testuri) ++ " not recognized."
+							Lua.pushstring l href
+							return 1
+						_ -> fail $ "make_href error: unknown url " ++ (show inputuri)
+				_ -> fail $ "make_href error: unknown url " ++ (show inputuristr)
+		_ -> fail "Wrong parameters to make_href"
 
 -- TODO: parse in lua
 get_fallback_choicespoilers _ref l = do
@@ -483,7 +450,7 @@ setup_lua_instance level filename setupref = do
 			push_function lstate log_f name
 			Lua.setglobal lstate name
 
-		register_function "make_href" $ make_href
+		register_function "raw_make_href" $ make_href
 
 		register_function "get_inventory_counts" $ \ref l -> do
 			Lua.newtable l
@@ -511,32 +478,6 @@ setup_lua_instance level filename setupref = do
 			push_simplexmldata l xmldoc
 			return 1
 
-		register_function "__hs_get_item_data_by_id" $ \ref l -> do
-			m_id <- Lua.peek l 1
-			case m_id of
-				Just itemid -> do
-					(fid, _fname) <- get_item_funcs_internal ref
-					case fid itemid of
-						Just tbl -> do
-							Lua.newtable l
-							add_table_contents l tbl
-							return 1
-						_ -> return 0
-				_ -> return 0
-
-		register_function "__hs_get_item_data_by_name" $ \ref l -> do
-			m_name <- Lua.peek l 1
-			case m_name of
-				Just name -> do
-					(_fid, fname) <- get_item_funcs_internal ref
-					case fname name of
-						Just tbl -> do
-							Lua.newtable l
-							add_table_contents l tbl
-							return 1
-						_ -> return 0
-				_ -> return 0
-
 		register_function "get_semirare_encounters" $ \_ref l -> do
 			semis <- doReadDataFile "cache/data/semirares"
 			Lua.newtable l
@@ -546,8 +487,6 @@ setup_lua_instance level filename setupref = do
 		register_function "get_fallback_choicespoilers" $ get_fallback_choicespoilers
 
 		register_function "get_pulverize_groups" get_pulverize_groups
-
-		register_function "get_faxbot_monsterlist" $ get_faxbot_monsterlist
 
 		register_function "get_current_kolproxy_version" $ \_ref l -> do
 			Lua.pushstring l =<< get_current_kolproxy_version
@@ -583,7 +522,6 @@ setup_lua_instance level filename setupref = do
 
 		register_function "get_recipes" get_recipes
 
-		-- TODO: Remove?
 		--Lua.registerhsfunction l "get_raw_charpane_text" KoL.Api.getRawCharpaneText
 
 		case level of
@@ -606,14 +544,14 @@ setup_lua_instance level filename setupref = do
 			AUTOMATE -> do
 				Lua.registerhsfunction lstate "set_state" (set_state setupref)
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)
-				register_function "submit_page" submit_page_func
-				register_function "async_submit_page" async_submit_page_func
+				register_function "raw_submit_page" submit_page_func
+				register_function "raw_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
 			INTERCEPT -> do
 				Lua.registerhsfunction lstate "set_state" (set_state setupref)
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)
-				register_function "submit_page" submit_page_func
-				register_function "async_submit_page" async_submit_page_func
+				register_function "raw_submit_page" submit_page_func
+				register_function "raw_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
 
 		Lua.registerhsfunction lstate "kolproxy_debug_print" (\x -> lua_log_line setupref ("kolproxy_debug_print: " ++ x) (return ()))
@@ -625,8 +563,7 @@ setup_lua_instance level filename setupref = do
 		c <- Lua.safeloadstring lstate code
 		return (lstate, c)
 
--- 	putStrLn $ "> run_lua_code/go: " ++ (filename) ++ " [" ++ (show $ lookup "path" vars) ++ "]"
-	ret <- case c of
+	case c of
 		0 -> do
 			moo <- log_time_interval setupref ("do lua loading code: " ++ filename) $ Lua.pcall l 0 Lua.multret 1 -- returns on stack=2+
 			case moo of
@@ -650,30 +587,20 @@ setup_lua_instance level filename setupref = do
 			err <- Lua.tostring l (-1)
 			putStrLn $ "luaload error: " ++ err
 			return $ Left $ ("error " ++ (show errnum) ++ " loading code (" ++ filename ++ "):\n" ++ err, "")
--- 	putStrLn $ "< run_lua_code/go: " ++ (filename) ++ " [" ++ (show $ lookup "path" vars) ++ "]"
--- 	log_time_interval setupref "close lua" $ Lua.close l
--- 	putStrLn $ "< run_lua_code: " ++ (filename) ++ " [" ++ (show $ lookup "path" vars) ++ "]"
-	return ret
 
-get_cached_lua_instance_for_code level filename ref codebit = do
+get_cached_lua_instance_for_code level filename ref runcodebit = do
 	-- TODO! CLOSE LUA INSTANCES!!
 	let make_lsetup = log_time_interval ref ("setup lua instance: " ++ filename ++ "|" ++ show level) $ setup_lua_instance level filename ref
 
 	canread <- canReadState ref
-	let use_cache = case (canread, level) of
--- 		(_, WHENEVER) -> False
-		(_, WHENEVER) -> True
-		(False, _) -> False
-		_ -> True
-
-	if use_cache
+	if canread || level == WHENEVER
 		then do
 			-- TODO: Wrap in MVar instead of IORef?
 			insts <- readIORef (luaInstances_ $ sessionData $ ref)
 			case Data.Map.lookup (filename, level) insts of
 				-- Use MVar to only run one piece of code in an instance at a time, e.g. sequence one processor after another serially.
 				-- TODO: Use a Chan to enforce order?
-				Just old -> withMVar old (\x -> codebit x)
+				Just existingmv -> withMVar existingmv runcodebit
 				_ -> do
 					either_l_setup <- make_lsetup
 					case either_l_setup of
@@ -681,14 +608,14 @@ get_cached_lua_instance_for_code level filename ref codebit = do
 							mv_l <- newMVar l_setup
 							let newinsts = Data.Map.insert (filename, level) mv_l insts
 							writeIORef (luaInstances_ $ sessionData $ ref) newinsts
-							withMVar mv_l (\x -> codebit x)
+							withMVar mv_l runcodebit
 						Left err -> return $ Left err
 		else do
 -- 			putStrLn $ "DEBUG: not cached " ++ show (canread, level) ++ " | " ++ show filename
 			either_l_setup <- make_lsetup
 			case either_l_setup of
 				Right l_setup -> do
-					x <- codebit l_setup
+					x <- runcodebit l_setup
 					log_time_interval ref "close lua" $ Lua.close l_setup
 					return x
 				Left err -> return $ Left err
@@ -804,6 +731,12 @@ runLogParsingScript log_db = do
 		push_function lstate f name
 		Lua.setglobal lstate name
 
+	register_function "json_to_table" $ \l -> do
+		Just jsonstr <- Lua.peek l 1
+		let Ok jsonobj = decodeStrict jsonstr
+		push_jsvalue l jsonobj
+		return 1
+
 	register_function "get_log_lines" $ \l -> do
 		s <- Database.SQLite3.prepare log_db "SELECT idx FROM pageloads;"
 		Lua.newtable l
@@ -835,20 +768,20 @@ runLogParsingScript log_db = do
 		Database.SQLite3.finalize s
 		return retvals
 
-	register_function "get_line_json" $ \l -> do
-		Just whichidx <- Lua.peek l 1 :: IO (Maybe Int)
-		Just whichfield <- Lua.peek l 2
-		s <- Database.SQLite3.prepare log_db ("SELECT " ++ whichfield ++ " FROM pageloads WHERE idx == " ++ show whichidx ++ ";") -- TODO: make safe?
-		sr <- Database.SQLite3.step s
-		retvals <- case sr of
-			Database.SQLite3.Row -> do
-				[Database.SQLite3.SQLText jsonstr] <- Database.SQLite3.columns s
-				let Ok jsonobj = decodeStrict jsonstr
-				push_jsvalue l jsonobj
-				return 1
-			Database.SQLite3.Done -> return 0
-		Database.SQLite3.finalize s
-		return retvals
+--	register_function "get_line_json" $ \l -> do
+--		Just whichidx <- Lua.peek l 1 :: IO (Maybe Int)
+--		Just whichfield <- Lua.peek l 2
+--		s <- Database.SQLite3.prepare log_db ("SELECT " ++ whichfield ++ " FROM pageloads WHERE idx == " ++ show whichidx ++ ";") -- TODO: make safe?
+--		sr <- Database.SQLite3.step s
+--		retvals <- case sr of
+--			Database.SQLite3.Row -> do
+--				[Database.SQLite3.SQLText jsonstr] <- Database.SQLite3.columns s
+--				let Ok jsonobj = decodeStrict jsonstr
+--				push_jsvalue l jsonobj
+--				return 1
+--			Database.SQLite3.Done -> return 0
+--		Database.SQLite3.finalize s
+--		return retvals
 
 	register_function "get_line_allparams" $ \l -> do
 		Just whichidx <- Lua.peek l 1 :: IO (Maybe Int)
@@ -871,28 +804,6 @@ runLogParsingScript log_db = do
 			Database.SQLite3.Done -> return 0
 		Database.SQLite3.finalize s
 		return retvals
-
-	itemdataioref <- newIORef Nothing
-	register_function "get_item_data_by_id" $ \l -> do
-		m_id <- Lua.peek l 1
-		case m_id of
-			Just itemid -> do
-				v <- readIORef itemdataioref
-				fid <- case v of
-					Just i -> return i
-					Nothing -> do
-						items <- doReadDataFile "cache/data/items"
-						let idmap = Data.Map.fromList (map (\x -> (fromJust $ read_as $ fromJust $ lookup "id" x :: Int, x)) items)
-						let f = (\x -> Data.Map.lookup x idmap)
-						writeIORef itemdataioref (Just f)
-						return f
-				case fid itemid of
-					Just tbl -> do
-						Lua.newtable l
-						add_table_contents l tbl
-						return 1
-					_ -> return 0
-			_ -> return 0
 
 	loginforef <- newIORef Nothing
 	register_function "set_log_info" $ \l -> do
@@ -984,9 +895,7 @@ run_datafile_parsers = do
 
 	retcode <- Lua.pcall lstate 0 Lua.multret 1 -- returns on stack=2+
 	case retcode of
-		0 -> do
-			Lua.close lstate
-			return ()
+		0 -> Lua.close lstate
 		_ -> do
 			putStrLn $ "lua error!"
 			top <- Lua.gettop lstate

@@ -103,7 +103,7 @@ function do_daily_visits()
 end
 
 add_automator("/main.php", function()
-	if not locked() and setting_enabled("automate daily visits") and not day["done daily visits"] then
+	if setting_enabled("automate daily visits") and not day["done daily visits"] and not locked() then
 		print "player login daily visits!"
 		local dailythings = do_daily_visits()
 		day["done daily visits"] = "yes"

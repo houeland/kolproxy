@@ -386,10 +386,9 @@ end)
 -- auto-visit council after leveling
 
 local last_council_visit_level = nil
-add_automator("all pages", function ()
-	if locked() then return end
+add_automator("all pages", function()
 	if not setting_enabled("enable ascension assistance") then return end
-	if last_council_visit_level ~= level() then
+	if last_council_visit_level ~= level() and not locked() then
 		local _, pturl = get_page("/council.php")
 		if pturl:contains("council.php") then
 			last_council_visit_level = level()
@@ -398,7 +397,7 @@ add_automator("all pages", function ()
 end)
 
 local done_on_ascension_action = nil
-add_automator("/main.php", function ()
+add_automator("/main.php", function()
 	if not setting_enabled("enable ascension assistance") then return end
 	if not done_on_ascension_action then
 		async_post_page("/campground.php", { action = "telescopelow" })
@@ -453,18 +452,16 @@ add_printer("/hermit.php", function()
 	end
 end)
 
-add_automator("all pages", function ()
-	if locked() then return end
+add_automator("all pages", function()
 	if not setting_enabled("enable ascension assistance") then return end
-	if have("Knob Goblin encryption key") and have("Cobb's Knob map") and ascensionpathid() ~= 4 then
+	if have("Knob Goblin encryption key") and have("Cobb's Knob map") and ascensionpathid() ~= 4 and not locked() then
 		use_item("Cobb's Knob map")
 	end
 end)
 
-add_automator("all pages", function ()
-	if locked() then return end
+add_automator("all pages", function()
 	if not setting_enabled("enable ascension assistance") then return end
-	if level() >= 2 and not have("continuum transfunctioner") then
+	if level() >= 2 and not have("continuum transfunctioner") and not locked() then
 		async_post_page("/forestvillage.php", { action = "screwquest" })
 		async_get_page("/mystic.php")
 		async_post_page("/mystic.php", { action = "crackyes1" })
@@ -473,18 +470,17 @@ add_automator("all pages", function ()
 	end
 end)
 
-add_automator("all pages", function ()
-	if locked() then return end
+add_automator("all pages", function()
 	if not setting_enabled("enable ascension assistance") then return end
-	if level() >= 9 and have("64735 scroll") then
+	if level() >= 9 and have("64735 scroll") and session["tried using 64735 scroll"] ~= "yes" and not locked() then
 		use_item("64735 scroll")
+		session["tried using 64735 scroll"] = "yes"
 	end
 end)
 
-add_automator("all pages", function ()
-	if locked() then return end
+add_automator("all pages", function()
 	if not setting_enabled("enable ascension assistance") then return end
-	if have_item("hermit script") then
+	if have_item("hermit script") and not locked() then
 		use_item("hermit script")
 	end
 end)

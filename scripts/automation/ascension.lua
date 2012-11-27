@@ -576,6 +576,7 @@ endif
 		when = challenge == "zombie" and horde_size() < 100 and have_skill("Lure Minions") and (count_spare_brains() or 0) > 0,
 		task = {
 			message = "lure zombies",
+			hide_message = true,
 			nobuffing = true,
 			action = function()
 				local curhorde = horde_size()
@@ -1812,6 +1813,33 @@ endif
 	if not turns_to_next_sr then
 		turns_to_next_sr = 1000000
 	end
+
+	add_task {
+		when = challenge == "zombie" and
+			ascensionstatus() == "Hardcore" and
+			have_skill("Neurogourmet") and
+			have_item("hunter brain") or have_item("boss brain") and
+			fullness() < estimate_max_fullness() and
+			(whichday > 1 or fullness() + 5 <= estimate_max_fullness()),
+		task = {
+			message = "eat epic brain",
+			action = function()
+				local a = advs()
+				eat_item("hunter brain")
+				eat_item("boss brain")
+				did_action = (advs() > a)
+			end,
+		}
+	}
+
+	add_task {
+		when = challenge == "zombie" and
+			level() < 6 and
+			get_daily_counter("zombie.bear arm Bear Hugs used") < 10 and
+			have_item("right bear arm") and have_item("left bear arm") and
+			have_skill("Hunter's Sprint"),
+		task = tasks.do_bearhug_sewerleveling,
+	}
 
 	add_task {
 		when = challenge == "boris" and quest("The Minstrel Cycle") and quest_text("Clancy would like you to take him to the Typical Tavern"),

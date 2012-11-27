@@ -102,6 +102,8 @@ handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logch
 					"" -> Nothing
 					x -> Just $ formDecode $ x
 
+				let skip_running_printers = False
+
 				kolproxy_host <- fromMaybe "http://www.kingdomofloathing.com/" <$> getEnvironmentSetting "KOLPROXY_SERVER"
 
 				sc <- modifyMVar sessionmastermv $ \m -> do
@@ -143,7 +145,8 @@ handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logch
 						sessionData_ = sessConnData_ sc
 					},
 					stateValid_ = False,
-					globalstuff_ = globalref
+					globalstuff_ = globalref,
+					skipRunningPrinters_ = skip_running_printers
 				}
 
 				mymv <- newEmptyMVar
@@ -195,7 +198,7 @@ runProxyServer r rwhenever portnum = do
 		sessionData_ = undefined
 	}
 	let logref = LogRefStuff { logchan_ = logchan, solid_logchan_ = logchan }
-	let _log_fakeref = RefType { logstuff_ = logref, processingstuff_ = undefined, otherstuff_ = _fake_other, stateValid_ = undefined, globalstuff_ = globalref }
+	let _log_fakeref = RefType { logstuff_ = logref, processingstuff_ = undefined, otherstuff_ = _fake_other, stateValid_ = undefined, globalstuff_ = globalref, skipRunningPrinters_ = undefined }
 
 	mvsequence <- newChan
 	forkIO_ "kps:mvseq" $ forever $ do

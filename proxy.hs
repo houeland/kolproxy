@@ -140,7 +140,9 @@ kolProxyHandlerWhenever uri params baseref = do
 handleRequest ref uri effuri headers params pagetext = do
 	let allparams = concat $ catMaybes $ [decodeUrlParams uri, decodeUrlParams effuri, params]
 
-	xresptext <- log_time_interval ref ("printing: " ++ (show uri)) $ runPrinterScript ref uri effuri pagetext allparams
+	xresptext <- if skipRunningPrinters_ ref
+		then return $ Right $ pagetext
+		else log_time_interval ref ("printing: " ++ (show uri)) $ runPrinterScript ref uri effuri pagetext allparams
 
 	let resptext = case xresptext of
 		Right msg -> msg

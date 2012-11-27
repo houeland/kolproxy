@@ -106,6 +106,12 @@ local felonia_href = setup_turnplaying_script {
 					equip_item("ring of conflict", "acc2")
 					equip_item("Space Trip safety headphones", "acc3")
 				end
+				if not buff("The Sonata of Sneakiness") then
+					cast_skillid(6015, 2) -- sonata of sneakiness
+				end
+				if not buff("Smooth Movements") then
+					cast_skillid(5017, 2) -- smooth moves
+				end
 				result, resulturl, advagain = autoadventure {
 					zoneid = 48,
 					specialnoncombatfunction = function (advtitle, choicenum, pt)

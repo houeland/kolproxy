@@ -241,12 +241,6 @@ end)
 
 function increase_battlefield_kill_counter(side, amount)
 	local killrange = ascension["battlefield.kills." .. side] or {}
-	if not killrange.min then
-		killrange.min = tonumber(ascension["battlefield.kills." .. side .. ".min"]) or 0
-	end
-	if not killrange.max then
-		killrange.max = tonumber(ascension["battlefield.kills." .. side .. ".max"]) or 0
-	end
 	local min_add = 0
 	local max_add = amount
 	if amount > 1 then -- Got a message, so the kill definitely counts
@@ -363,8 +357,8 @@ end)
 add_printer("/fight.php", function()
 	if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Frat Uniform%)%)</a>]]) then
 		killrange = ascension["battlefield.kills.frat boy"] or {}
-		min_value = killrange.min or tonumber(ascension["battlefield.kills.frat boy.min"]) or 0
-		max_value = killrange.max or tonumber(ascension["battlefield.kills.frat boy.max"]) or 0
+		min_value = killrange.min or 0
+		max_value = killrange.max or 0
 		if min_value == max_value then
 			printstr = min_value .. " hippies killed"
 		else
@@ -374,8 +368,8 @@ add_printer("/fight.php", function()
 	end
 	if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Hippy Uniform%)%)</a>]]) then
 		killrange = ascension["battlefield.kills.hippy"] or {}
-		min_value = killrange.min or tonumber(ascension["battlefield.kills.hippy.min"]) or 0
-		max_value = killrange.max or tonumber(ascension["battlefield.kills.hippy.max"]) or 0
+		min_value = killrange.min or 0
+		max_value = killrange.max or 0
 		if min_value == max_value then
 			printstr = min_value .. " frat boys killed"
 		else

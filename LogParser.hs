@@ -14,6 +14,8 @@ import System.Directory
 import System.IO
 import qualified Codec.Compression.BZip
 import qualified Codec.Compression.GZip
+import qualified Data.ByteString.Base64
+import qualified Data.ByteString.Char8
 import qualified Data.ByteString.Lazy.Char8
 import qualified Data.ByteString.Lazy.Internal
 import qualified Database.SQLite3
@@ -27,8 +29,8 @@ scan_through_database_lua_logparse filename basefilename = do
 	case maybeloginfo of
 		Just (playerid, name, ascnum, secretkey) -> do
 			writeFile ("logs/parsed/parsed-log-" ++ basefilename ++ ".json") jsonlog
-			let gzippedjsonlog = Data.ByteString.Lazy.Char8.unpack $ Codec.Compression.GZip.compress $ Data.ByteString.Lazy.Char8.pack $ jsonlog
-			ret <- postHTTPFileData kolproxy_version_string (mkuri "http://www.houeland.com/kolproxy/ascension-log") [("action", "store"), ("playerid", show playerid), ("secretkey", secretkey), ("charactername", name), ("ascensionnumber", show ascnum), ("gzippedjsonlog", gzippedjsonlog)]
+			let base64gzippedjsonlog = Data.ByteString.Char8.unpack $ Data.ByteString.Base64.encode $ Data.ByteString.Char8.concat $ Data.ByteString.Lazy.Char8.toChunks $ Codec.Compression.GZip.compress $ Data.ByteString.Lazy.Char8.pack $ jsonlog
+			ret <- postHTTPFileData kolproxy_version_string (mkuri "http://www.houeland.com/kolproxy/ascension-log") [("action", "store"), ("playerid", show playerid), ("secretkey", secretkey), ("charactername", name), ("ascensionnumber", show ascnum), ("base64gzippedjsonlog", base64gzippedjsonlog)]
 			putStrLn $ "ret: " ++ ret
 			case matchGroups "logid: ([0-9a-z]{40})" ret of
 				[[logid]] -> do

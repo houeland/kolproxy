@@ -289,5 +289,29 @@ mark m_done
 		return result, resulturl, did_action
 	end
 
+	function t.do_bearhug_sewerleveling()
+		if advs() < 12 then
+			stop "Fewer than 12 advs for sewerleveling"
+		else
+			return {
+				message = "sewerlevel with bear hug",
+				equipment = { weapon = "right bear arm", offhand = "left bear arm" },
+				action = adventure {
+					zoneid = 166,
+					macro_function = function() return "cast Bear Hug" end,
+					noncombats = {
+						["Disgustin' Junction"] = "Swim back toward the entrance",
+						["The Former or the Ladder"] = "Play in the water",
+						["Somewhat Higher and Mostly Dry"] = "Dive back into the water",
+					}
+				}
+			}
+		end
+		if not did_action then
+			result = add_colored_message_to_page(get_result(), "Tried to adventure at the Hobopolis sewer entrance", "darkorange")
+		end
+		return result, resulturl, did_action
+	end
+
 	return t
 end

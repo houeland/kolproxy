@@ -3,7 +3,7 @@ local function run_wrapped_function(f_env)
 text = f_env.text
 
 dofile("scripts/base/util.lua")
-dofile("scripts/base/util/base-lua-functions.lua")
+dofile("scripts/base/base-lua-functions.lua")
 
 function load_file(category, name)
 	function add_json_chat_printer() end
