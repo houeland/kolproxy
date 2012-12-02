@@ -220,6 +220,9 @@ endif
 		end
 	elseif ascensionpathid() == 10 then
 		challenge = "zombie"
+		if ascensionstatus() == "Hardcore" then
+			macro_softcore_boris = macro_hardcore_boris
+		end
 		boris_action = function()
 			return [[
 
@@ -590,7 +593,7 @@ endif
 					if have_item(x.name) then
 						cast_skillid(12002, 1)
 						async_get_page("/choice.php", { forceoption = 0 })
-						async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 599, option = x.option, quantity = math.min(count_spare_brains(), count_item(x.name)) })
+						async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 599, option = x.option, quantity = math.min(10, count_spare_brains(), count_item(x.name)) })
 						async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 599, option = 5 })
 						break
 					end

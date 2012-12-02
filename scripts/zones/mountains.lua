@@ -481,6 +481,12 @@ add_choice_text("Lost in the Great Overlook Lodge", { -- choice adventure number
 	["Leave the hotel"] = { leave_noturn = true },
 })
 
+add_choice_text("Cabin Fever", { -- choice adventure number: 618
+	["A path is formed by laying one stone at a time."] = { text = "Keep trying to solve the mystery" },
+	["Burn this mother-goddamning hotel to the ground."] = { text = "Skip the mystery and light the signal fire", good_choice = true },
+})
+
+
 add_extra_ascension_adventure_warning(function(zoneid)
 	if zoneid == 296 and have_item("A-Boo clue") then
 		local resists = get_resistance_levels()
@@ -500,11 +506,79 @@ add_extra_ascension_adventure_warning(function(zoneid)
 				accumulbanish = accumulbanish + 2
 				beatenup = true
 			end
-			print("DEBUG: accumuldmg", accumuldmg, "accumulbanish", accumulbanish)
+--			print("DEBUG: accumuldmg", accumuldmg, "accumulbanish", accumulbanish)
 		end
 		if accumulbanish < 30 then
 			local dmgtext = markup_damagetext(accumuldmg)
 			return string.format([[<p>You only have enough HP to lower haunting level by %s%% (max is 30%%).</p><p>Maximum reduction would require at least %s HP (taking %s + %s damage) or higher resistance.</p>]], accumulbanish, accumuldmg.cold + accumuldmg.spooky + 1, dmgtext.spooky, dmgtext.cold), "a-boo peak incomplete banish"
 		end
+	end
+end)
+
+local aboo_peak_monster = {
+	["Battlie Knight Ghost"] = true,
+	["Claybender Sorcerer Ghost"] = true,
+	["Dusken Raider Ghost"] = true,
+	["Space Tourist Explorer Ghost"] = true,
+	["Whatsian Commando Ghost"] = true,
+}
+
+local function get_hauntedness()
+	local questlog_page = get_page("/questlog.php", { which = 1 })
+	local hauntedness = questlog_page:match([[It is currently [0-9%%]+ haunted.]])
+	if not hauntedness and questlog_page:contains("You should keep clearing the ghosts out of A-Boo Peak so you can reach the signal fire.") then
+		hauntedness = "No longer haunted."
+	end
+	if not hauntedness then
+		async_get_page("/place.php", { whichplace = "highlands", action = "highlands_dude" })
+		questlog_page = get_page("/questlog.php", { which = 1 })
+		hauntedness = questlog_page:match([[It is currently [0-9%%]+ haunted.]])
+	end
+	if not hauntedness and questlog_page:contains("You should keep clearing the ghosts out of A-Boo Peak so you can reach the signal fire.") then
+		hauntedness = "No longer haunted."
+	end
+	return hauntedness
+end
+
+add_automator("/fight.php", function()
+	if aboo_peak_monster[monster_name:gsub("^a ", "")] and text:contains("<!--WINWINWIN-->") then
+		local hauntedness = get_hauntedness()
+		text = text:gsub("<!%-%-WINWINWIN%-%->", function(x) return x .. [[<p style="color: green">{ ]] .. (hauntedness or "Unknown hauntedness.") .. [[ }</p>]] end)
+	end
+end)
+
+add_automator("/choice.php", function()
+	if text:contains([[Adventure Again (A-Boo Peak)]]) then
+		local hauntedness = get_hauntedness()
+		text = text:gsub("</td></tr></table></center></td></tr><tr><td height=4>", function(y) return [[<p><center style="color: green">{ ]] .. (hauntedness or "Unknown hauntedness.") .. [[ }</center></p>]] .. y end, 1)
+	end
+end)
+
+local oil_peak_monster = {
+	["oil slick"] = true,
+	["oil tycoon"] = true,
+	["oil baron"] = true,
+	["oil cartel"] = true,
+}
+
+local function get_pressure()
+	local questlog_page = get_page("/questlog.php", { which = 1 })
+	local pressure = questlog_page:match([[The pressure is currently [0-9.]+ microbowies per Mercury.]]) or questlog_page:match([[The pressure is very low at this point.]]) or questlog_page:match([[You've lit the fire on Oil Peak.]])
+	if not pressure then
+		async_get_page("/place.php", { whichplace = "highlands", action = "highlands_dude" })
+		questlog_page = get_page("/questlog.php", { which = 1 })
+		pressure = questlog_page:match([[The pressure is currently [0-9.]+ microbowies per Mercury.]]) or questlog_page:match([[The pressure is very low at this point.]]) or questlog_page:match([[You've lit the fire on Oil Peak.]])
+	end
+	local microbowies = tonumber(pressure:match([[currently ([0-9.]+) microbowies]]))
+	if microbowies then
+		pressure = pressure:gsub("Mercury", function(x) return x .. string.format(" (%.0f%%)", microbowies / 3.17) end)
+	end
+	return pressure
+end
+
+add_automator("/fight.php", function()
+	if oil_peak_monster[monster_name:gsub("^an ", "")] and text:contains("<!--WINWINWIN-->") then
+		local pressure = get_pressure()
+		text = text:gsub("<!%-%-WINWINWIN%-%->", function(x) return x .. [[<p style="color: green">{ ]] .. (pressure or "Unknown pressure.") .. [[ }</p>]] end)
 	end
 end)

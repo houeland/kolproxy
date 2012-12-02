@@ -723,7 +723,9 @@ runInterceptScript ref uri allparams reqtype = do
 
 runLogParsingScript log_db = do
 	code <- readFile "scripts/parselog.lua"
+	runLogScript log_db code
 
+runLogScript log_db code = do
 	lstate <- Lua.newstate
 	Lua.openlibs lstate
 
@@ -767,21 +769,6 @@ runLogParsingScript log_db = do
 			Database.SQLite3.Done -> return 0
 		Database.SQLite3.finalize s
 		return retvals
-
---	register_function "get_line_json" $ \l -> do
---		Just whichidx <- Lua.peek l 1 :: IO (Maybe Int)
---		Just whichfield <- Lua.peek l 2
---		s <- Database.SQLite3.prepare log_db ("SELECT " ++ whichfield ++ " FROM pageloads WHERE idx == " ++ show whichidx ++ ";") -- TODO: make safe?
---		sr <- Database.SQLite3.step s
---		retvals <- case sr of
---			Database.SQLite3.Row -> do
---				[Database.SQLite3.SQLText jsonstr] <- Database.SQLite3.columns s
---				let Ok jsonobj = decodeStrict jsonstr
---				push_jsvalue l jsonobj
---				return 1
---			Database.SQLite3.Done -> return 0
---		Database.SQLite3.finalize s
---		return retvals
 
 	register_function "get_line_allparams" $ \l -> do
 		Just whichidx <- Lua.peek l 1 :: IO (Maybe Int)
@@ -890,8 +877,15 @@ run_datafile_parsers = do
 	-- TODO: handle return value?
 	void $ Lua.pcall lstate 0 1 0 -- put error handling function on stack=1
 
-	_c <- Lua.safeloadstring lstate code
+	c <- Lua.safeloadstring lstate code
 	-- TODO: Check that it loads correctly?
+
+	when (c /= 0) $ do
+		putStrLn $ "luaload error!"
+		top <- Lua.gettop lstate
+		putStrLn $ "luaload error, top = " ++ (show top)
+		err <- Lua.tostring lstate (-1)
+		putStrLn $ "luaload error: " ++ err
 
 	retcode <- Lua.pcall lstate 0 Lua.multret 1 -- returns on stack=2+
 	case retcode of

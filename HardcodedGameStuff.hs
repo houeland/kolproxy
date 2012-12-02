@@ -144,17 +144,22 @@ download_data_files = do
 		filedata <- load_data_file x ("http://www.houeland.com/kolproxy/files/data-mirror/" ++ basename)
 		doWriteDataFile ("cache/files/" ++ basename) filedata
 
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/items.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/fullness.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/inebriety.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/spleenhit.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/modifiers.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/equipment.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/outfits.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/familiars.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/statuseffects.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/adventures.txt"
 	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/classskills.txt"
 	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/concoctions.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/equipment.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/familiars.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/foldgroups.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/fullness.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/inebriety.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/items.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/modifiers.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/monsters.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/npcstores.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/outfits.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/spleenhit.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/statuseffects.txt"
+	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/zapgroups.txt"
 
 	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/net/sourceforge/kolmafia/KoLmafia.java"
 

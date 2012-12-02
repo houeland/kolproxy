@@ -2612,7 +2612,9 @@ endif
 					text, url = post_page("/choice.php", { pwd = get_pwd(), whichchoice = found.Muscle.whichchoice, option = found.Muscle.option })
 					did_action = text:contains("You help him push his cart back onto dry land")
 				else
-					stop "TODO: Explore louvre to locate muscle adventure"
+					result, resulturl = louvre_automate_looking_for_muscle(get_pwd())
+					result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, 106)
+					did_action = advagain
 				end
 			end
 		elseif ascension["zone.conservatory.gallery key"] == "unlocked" then
@@ -3410,8 +3412,8 @@ endif
 					wear { pants = "Greatest American Pants" }
 					script.get_gap_buff("Super Structure")
 				end
-				if not buff("Super Structure") and level() < 8 then
-					stop "TODO: Do bedroom in challenge path"
+				if not buff("Super Structure") and level() < 7 then
+					stop "TODO: Do bedroom in challenge path at level < 7"
 				end
 			end
 			go("do bedroom", 108, macro, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Springy Fusilli", "Spirit of Garlic", "Jaba&ntilde;ero Saucesphere", "Jalape&ntilde;o Saucesphere" }, "Frumious Bandersnatch", 50, { choice_function = function (advtitle, choicenum)

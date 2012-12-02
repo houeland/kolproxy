@@ -16,6 +16,17 @@ local xmeta = { __index = function(t, k)
 		t[k] = t.statusbefore.effects["91635be2834f8a07c8ff9e3b47d2e43a"] ~= nil
 	elseif k == "allparams" then
 		t[k] = get_line_allparams(t.idx)
+	elseif k == "__warprogress" then
+		local rettbl = {}
+		local v = get_line_text(t.idx, "statebefore")
+		for sset in v:gmatch("(%b())") do
+			for val in sset:sub(2, -2):gmatch("(%b())") do
+				if val:match("battlefield.kills") then
+					table.insert(rettbl, val)
+				end
+			end
+		end
+		t[k] = table.concat(rettbl, " #+# ")
 	end
 	return rawget(t, k)
 end }
@@ -36,6 +47,7 @@ local function parse_page(x, xtbl)
 	local pt = x.pagetext
 	local pagetitle
 	local backuppagetitle
+	local backuptypetitle
 	for z in pt:gmatch([[<tr><td style="color: white;" align=center bgcolor=blue><b>([^<]+)</b></td></tr>]]) do
 		if z ~= "Results:" and z ~= "Adventure Results:" and z ~= "Adventure Again:" then
 			pagetitle = z
@@ -50,8 +62,9 @@ local function parse_page(x, xtbl)
 	local title = monstername or advrestitle or pagetitle
 
 	for _, u in ipairs { "/inv_eat.php", "/inv_booze.php", "/inv_use.php", "/multiuse.php" } do
+		-- TODO: support non-ajax pageloads that result in inventory.php
 		if x.retrievedurl:contains(u) then
-			local whichitem = x.allparams.whichitem
+			local whichitem = tonumber(x.allparams.whichitem)
 			if whichitem then
 				xtbl.item = { description = desc_item(whichitem), quantity = x.allparams.quantity }
 			end
@@ -64,43 +77,42 @@ local function parse_page(x, xtbl)
 			table.insert(pulls, { itemname = itemname, amount = tonumber(amount) })
 		end
 		xtbl.pulls = pulls
+		backuptypetitle = "(Storage)"
 	end
 
 	if x.retrievedurl:contains("/craft.php") then
--- 		print("UNHANDLED CRAFT", x.allparams)
 		-- craft.target = 50
-		local whichitem = x.allparams.target
+		local whichitem = tonumber(x.allparams.target)
 		if whichitem then
 			xtbl.item = { description = desc_item(whichitem), quantity = x.allparams.qty }
 		end
 
 		-- craft.a = 476 + craft.b = 346
-		local whicha = x.allparams.a
-		local whichb = x.allparams.b
+		local whicha = tonumber(x.allparams.a)
+		local whichb = tonumber(x.allparams.b)
 		if whicha and whichb then
 			xtbl.item_a = { description = desc_item(whicha) }
 			xtbl.item_b = { description = desc_item(whichb) }
 		end
+		backuptypetitle = "(Crafting)"
 	end
 
 	if title then
 		xtbl.title = title
-	elseif backuppagetitle then
-		xtbl.title = backuppagetitle
 	elseif x.pagetext:contains([[top.mainpane.document.location = "fight.php]]) then
 		xtbl.title = "(fight redirect)"
 		xtbl.page_redirect = "/fight.php"
 	elseif x.pagetext:contains([[top.mainpane.document.location = "choice.php]]) then
 		xtbl.title = "(choice redirect)"
 		xtbl.page_redirect = "/choice.php"
+	elseif backuppagetitle then
+		xtbl.title = backuppagetitle
+	elseif backuptypetitle then
+		xtbl.title = backuptypetitle
 	else
 		print("")
 		print("")
-		print("")
-		print("")
-		print("strange page!", x)
-		print("")
-		print("")
+		print("strange page!", x.idx, x.retrievedurl, pagetitle)
 		print("")
 		print("")
 		xtbl.title = "???"
@@ -140,6 +152,8 @@ for _, xidx in ipairs(tbl) do
 	setmetatable(x, xmeta)
 
 	local xtbl = {}
+
+--	xtbl.debug_line = x.idx .. ": " .. x.__warprogress -- DEBUG
 
 	for _, n in pairs{ "name", "class", "path", "sign", "hardcore", "casual", "freedralph" } do
 		if laststatestatus[n] ~= x.statusafter[n] then
@@ -250,7 +264,7 @@ for _, xidx in ipairs(tbl) do
 			familiar = { id = tonumber(x.statusafter.familiar), pic = x.statusafter.familiarpic, famlevel = tonumber(x.statusafter.famlevel) },
 			meat = tonumber(x.statusafter.meat),
 		}
--- 		xtbl.idx = tonumber(x.idx)
+--		xtbl.idx = tonumber(x.idx) -- DEBUG
 		xtbl.daysthisrun = tonumber(x.statusafter.daysthisrun)
 		xtbl.mcd = tonumber(x.statusafter.mcd)
 		xtbl.zonename = x.statusafter.lastadv.name

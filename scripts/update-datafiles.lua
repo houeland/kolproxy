@@ -33,6 +33,8 @@ local blacklist = {
 	["A Little Bit Evil (Disco Bandit)"] = true,
 	["A Little Bit Evil (Accordion Thief)"] = true,
 	["Fortunate Resolve"] = true,
+
+	["especially homoerotic frat-paddle"] = true,
 }
 
 local processed_datafiles = {}
@@ -115,7 +117,7 @@ function verify_outfits(data)
 	for xi, x in pairs(data) do
 		for _, y in ipairs(x.items) do
 			if not processed_datafiles["items"][y] then
-				hardwarn("unknown outfit item", y)
+				hardwarn("outfit:item does not exist", y)
 				data[xi] = nil
 			end
 		end
@@ -182,31 +184,52 @@ function parse_items()
 	for l in io.lines("cache/files/items.txt") do
 		local tbl = split_tabbed_line(l)
 		local itemid, name = tonumber(tbl[1]), tbl[2]
-		if itemid and name then
+		if itemid and name and not blacklist[name] then
 			items[name] = { id = itemid }
 			lowercasemap[name:lower()] = name
 		end
 	end
-	function do_line(l, field)
+
+	function do_organ_line(l, field)
 		local tbl = split_tabbed_line(l)
 		local fakename, size = tbl[1], tonumber(tbl[2])
-		if fakename and size then
+		if fakename and size and not blacklist[fakename] then
 			local name = lowercasemap[fakename:lower()]
 			if name then
 				items[name][field] = size
 			else
-				softwarn("item does not exist", fakename)
+				softwarn("organ:item does not exist", fakename)
 			end
 		end
 	end
 	for l in io.lines("cache/files/fullness.txt") do
-		do_line(l, "fullness")
+		do_organ_line(l, "fullness")
 	end
 	for l in io.lines("cache/files/inebriety.txt") do
-		do_line(l, "drunkenness")
+		do_organ_line(l, "drunkenness")
 	end
 	for l in io.lines("cache/files/spleenhit.txt") do
-		do_line(l, "spleen")
+		do_organ_line(l, "spleen")
+	end
+
+	for l in io.lines("cache/files/equipment.txt") do
+		local tbl = split_tabbed_line(l)
+		local name = tbl[1]
+		local req = tbl[3]
+		if name and req and not blacklist[name] then
+			if items[name] then
+				local reqtbl = {}
+				reqtbl.muscle = tonumber(req:match("Mus: ([0-9]+)"))
+				reqtbl.mysticality = tonumber(req:match("Mys: ([0-9]+)"))
+				reqtbl.moxie = tonumber(req:match("Mox: ([0-9]+)"))
+				if req ~= "none" and not next(reqtbl) then
+					hardwarn("unknown equip requirement", req)
+				end
+				items[name].equip_requirement = reqtbl
+			else
+				hardwarn("equipment:item does not exist", name)
+			end
+		end
 	end
 	return items
 end
@@ -341,6 +364,32 @@ function verify_faxbot_monsters(data)
 	end
 end
 
+function parse_semirares()
+	local semirares = {}
+	for l in io.lines("cache/files/KoLmafia.java") do
+		local sr = l:match([[{ *"([^"]+)", *EncounterTypes.SEMIRARE *}]])
+		if sr then
+			table.insert(semirares, sr)
+		end
+	end
+	return semirares
+end
+
+function verify_semirares(data)
+	local ok1, ok2 = false, false
+	for _, x in ipairs(data) do
+		if x == "All The Rave" then
+			ok1 = true
+		end
+		if x == "It's a Gas Gas Gas" then
+			ok2 = true
+		end
+	end
+	if ok1 and ok2 then
+		return data
+	end
+end
+
 function process(datafile)
 	local filename = datafile:gsub(" ", "-")
 	local loadf = _G["parse_"..datafile:gsub(" ", "_")]
@@ -373,3 +422,5 @@ process("skills")
 process("buff recast skills")
 
 process("faxbot monsters")
+
+process("semirares")

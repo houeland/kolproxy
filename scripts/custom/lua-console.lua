@@ -1,4 +1,5 @@
 add_automation_script("lua-console", function()
+	local prefilltext = params.command or ""
 	output = ""
 	if params.command then
 		local f, e = loadstring(params.command)
@@ -18,7 +19,7 @@ add_automation_script("lua-console", function()
 <form action="/kolproxy-automation-script">
 <input type="hidden" name="automation-script" value="lua-console">
 <input type="hidden" name="pwd" value="]] .. params.pwd .. [[">
-<textarea name="command" rows="5" cols="80"></textarea><br>
+<textarea name="command" rows="5" cols="80">]] .. prefilltext .. [[</textarea><br>
 <input type="submit">
 <p>Type Lua commands to evaluate in the form. Assign to the variable "output" to see it on the page.</p>
 <p>Examples:

@@ -101,10 +101,14 @@ local felonia_href = setup_turnplaying_script {
 				result, result_url = cook_items("small leather glove", "spooky fairy gravy")()
 				advagain = have("spooky glove")
 			else
+				if not have_equipped_item("ring of conflict") then
+					equip_item("ring of conflict", "acc2")
+				end
+				if not have_equipped_item("Space Trip safety headphones") then
+					equip_item("Space Trip safety headphones", "acc3")
+				end
 				if have("spooky glove") and have("inexplicably glowing rock") then
 					equip_item("spooky glove", "acc1")
-					equip_item("ring of conflict", "acc2")
-					equip_item("Space Trip safety headphones", "acc3")
 				end
 				if not buff("The Sonata of Sneakiness") then
 					cast_skillid(6015, 2) -- sonata of sneakiness

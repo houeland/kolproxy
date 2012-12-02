@@ -164,6 +164,8 @@ aftercore_items_list = {
 
 	"insulting hat",
 	"offensive moustache",
+
+	"can of Rain-Doh",
 }
 
 maybe_pvp_stealable = {

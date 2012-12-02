@@ -431,7 +431,7 @@ if monstername procrastination giant
   while !times 5
 ]] .. maybe_belch .. [[
   endwhile
-  abort no spell for procrastination giant
+  abort no SC spell for procrastination giant
 endif
 
 if monstername animated nightstand
@@ -707,6 +707,9 @@ function macro_hardcore_boris(extrastuff)
   local maybe_belch = [[
 
 ]]
+  local maybe_zombify = [[
+
+]]
   local maybe_broadside = [[
 
 ]]
@@ -737,6 +740,15 @@ endif
 
 ]]
   end
+  if get_daily_counter("zombie.bear arm Bear Hugs used") < 10 then
+    maybe_zombify = [[
+
+if hasskill Bear Hug
+  cast Bear Hug
+endif
+
+]]
+  end
   return [[
 
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
@@ -756,13 +768,15 @@ if monstername procrastination giant
   while !times 5
 ]] .. maybe_belch .. [[
   endwhile
-  abort no spell for procrastination giant
+]] .. maybe_zombify .. [[
+  abort no HC spell for procrastination giant
 endif
 
 if monstername animated nightstand
   while !times 5
 ]] .. maybe_belch .. [[
   endwhile
+]] .. maybe_zombify .. [[
 endif
 
 if (monstername tetchy pirate) || (monstername toothy pirate) || (monstername tipsy pirate)
@@ -782,6 +796,12 @@ if (monstername senile lihc) || (monstername slick lihc)
 endif
 
 if (monstername chalkdust wraith)
+  if hasskill Kodiak Moment
+    cast Kodiak Moment
+  endif
+  if hasskill Bilious Burst
+    cast Bilious Burst
+  endif
   cast Heroic Belch
 endif
 

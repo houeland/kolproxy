@@ -429,22 +429,15 @@ add_processor("/choice.php", function()
 		if choice_adventure_number and whichchoice and option then
 			if choice_adventure_number ~= 91 then -- TODO: Hmm, bit hardcoded, check for some text instead?
 				ascension["louvre.adventure." .. whichchoice .. ".choice." .. option] = "choice " .. choice_adventure_number
--- 				print("setting", whichchoice, option, "choice", choice_adventure_number)
--- 			else
--- 				print("louvre debug", choice_adventure_number, text)
 			end
 		end
--- 		ascension["louvre.lastadventure"] = choice_adventure_number
 		lastlouvre = choice_adventure_number
 	else
 -- 		print("not-louvre", choice_adventure_number, table_to_str(params), "|" .. tostring(adventure_title) .. "|")
--- 		lastlouvre = ascension["louvre.lastadventure"]
 -- 		print("lastlouvre", lastlouvre, type(lastlouvre))
 		if lastlouvre then
-			whichchoice = params.whichchoice
-			option = params.option
-			if whichchoice == "" then whichchoice = nil else whichchoice = tonumber(whichchoice) end
-			if option == "" then option = nil else option = tonumber(option) end
+			whichchoice = tonumber(params.whichchoice)
+			option = tonumber(params.option)
 -- 			print("which, opt", whichchoice, option, type(whichchoice))
 			if whichchoice and option and tostring(lastlouvre) == tostring(whichchoice) then
 -- 				print("louvre-result", choice_adventure_number, table_to_str(params), adventure_title)
@@ -503,6 +496,53 @@ function compute_louvre_paths(fromchoice)
 	return found, reached
 end
 
+local function create_D_value()
+	local D = {}
+	for id = 92, 104 do
+		for option = 1, 3 do
+			local r = ascension["louvre.adventure." .. id .. ".choice." .. option]
+			if r then
+				for c = 92, 104 do
+					if r == "choice " .. c then
+						table.insert(D, { choiceid = id, branch = option, result = c })
+					end
+				end
+				for i in table.values { "Muscle", "Mysticality", "Moxie", "bottle of Pinot Renoir", "bottle of Vangoghbitussin", "Manetwich" } do
+					if r:contains("result") and r:lower():contains(i:lower()) then
+						table.insert(D, { choiceid = id, branch = option, result = i })
+					end
+				end
+			end
+		end
+	end
+	return D
+end
+
+function louvre_automate_looking_for_muscle(pwd)
+	local function pickopt(whichchoice)
+		if not whichchoice then
+		elseif whichchoice == 91 then
+			return 1
+		elseif whichchoice >= 92 and whichchoice <= 104 then
+			local D = create_D_value()
+			return louvre_policy_escherval(0.5)(whichchoice, D)
+		end
+	end
+	local pt, pturl = get_page("/choice.php")
+	for timeout = 1, 100 do
+		whichchoice = tonumber(pt:match([[<input type=hidden name=whichchoice value=([0-9]+)>]]))
+		local opt = pickopt(whichchoice)
+		if whichchoice and opt then
+			pt, pturl = post_page("/choice.php", { pwd = pwd, whichchoice = whichchoice, option = opt })
+		end
+	end
+	return pt, pturl
+end
+
+local automate_looking_for_muscle_href = add_automation_script("automate-louvre-looking-for-muscle", function()
+	return louvre_automate_looking_for_muscle(params.pwd)
+end)
+
 local function get_louvre_automation_links()
 	found, reached = compute_louvre_paths(choice_adventure_number)
 	choice_tbl = {}
@@ -529,8 +569,16 @@ local function get_louvre_automation_links()
 		local pwd = text:match([[<input type=hidden name=pwd value='([0-9a-f]+)'>]])
 		if result == "Gain muscle" then
 			result = "<b>" .. result .. "</b>"
+		elseif result == "Muscle" then
+			have_muscle_result = true
 		end
 		table.insert(choice_tbl[choice_string], [[<a href="]]..automate_noncombat_href(tparams)..[[" style="color: green">]] .. result .. [[</a>]])
+	end
+	if not found["Muscle"] then
+		if not choice_tbl["Enter the drawing"] then
+			choice_tbl["Enter the drawing"] = {}
+		end
+		table.insert(choice_tbl["Enter the drawing"], [[<a href="]]..automate_looking_for_muscle_href { pwd = session.pwd }..[[" style="color: green">Automate looking for muscle</a>]])
 	end
 	for a, b in pairs(choice_tbl) do
 		choice_tbl[a] = table.concat(b, ", ")
@@ -551,25 +599,7 @@ add_choice_text("Louvre It or Leave It ", function()
 			["Pass on by"] = { leave_noturn = true },
 		}
 	end
-	local D = {}
-	for id = 92, 104 do
-		for option = 1, 3 do
-			local r = ascension["louvre.adventure." .. id .. ".choice." .. option]
---			print(r)
-			if r then
-				for c = 92, 104 do
-					if r == "choice " .. c then
-						table.insert(D, { choiceid = id, branch = option, result = c })
-					end
-				end
-				for i in table.values { "Muscle", "Mysticality", "Moxie", "bottle of Pinot Renoir", "bottle of Vangoghbitussin", "Manetwich" } do
-					if r:contains("result") and r:lower():contains(i:lower()) then
-						table.insert(D, { choiceid = id, branch = option, result = i })
-					end
-				end
-			end
-		end
-	end
+	local D = create_D_value()
 	local probabilities = predict_louvre(choice_adventure_number, D)
 	local function display_probabilities(p)
 --		print(p)
@@ -775,7 +805,7 @@ end)
 --~ 		return choice_data
 --~ 	end)
 
-local wines_href = add_automation_script("automate-pour-manor-wines", function ()
+local wines_href = add_automation_script("automate-pour-manor-wines", function()
 --	posting page /manor3.php params: Just [("action","pourwine"),("whichwine","2271")]
 	local wines_needed_list = session["zone.manor.wines needed"] or {}
 	local got = 0

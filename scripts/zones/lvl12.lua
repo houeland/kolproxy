@@ -240,7 +240,7 @@ end)
 -- battlefield
 
 function increase_battlefield_kill_counter(side, amount)
-	local killrange = ascension["battlefield.kills." .. side] or {}
+	local killrange = ascension["battlefield.kills." .. side] or { min = 0, max = 0 }
 	local min_add = 0
 	local max_add = amount
 	if amount > 1 then -- Got a message, so the kill definitely counts
@@ -286,7 +286,7 @@ add_processor("/fight.php", function()
 		[ [[You see a squadron of police cars drive up,]] ] = 31,
 		[ [[You see a kegtank rumble through the battlefield,]] ] = 31,
 
-		[ [[You see the a couple of frat boys attaching big, long planks of wood to either side of a kegtank.]] ] = 63,
+		[ [[You see a couple of frat boys attaching big, long planks of wood to either side of a kegtank.]] ] = 63,
 		[ [[Several SWAT vans of police in full riot gear pull up, and one of them informs the hippies through a megaphone]] ] = 63,
 		[ [[You see a couple of frat boys stick a fuse into a huge wooden barrel, light the fuse, and roll it down the hill]] ] = 63,
 	}
