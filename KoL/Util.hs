@@ -20,7 +20,7 @@ import qualified Data.Digest.Pure.MD5
 import qualified Database.SQLite3
 
 
-kolproxy_version_number = "3.5-alpha"
+kolproxy_version_number = "3.5-beta"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 
@@ -41,13 +41,6 @@ read_e x = let y = read_as x in
 	case y of
 		Just z -> z
 		z -> throw $ userError $ ("read_e error: for type " ++ (show $ typeOf y) ++ ": " ++ (show (x, z)))
-
--- data LogZone = ZoneUrl String String deriving (Eq, Read, Show)
-
--- tointeger text = y
--- 	where
--- 		filtered = filter (\x -> x /= ',') text
--- 		Just y = read_as filtered :: Maybe Integer
 
 mkuri page = fromJust $ parseURIReference page
 

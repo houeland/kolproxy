@@ -1,6 +1,14 @@
 function get_ascension_automation_settings(want_bonus)
 	local tbl = {
-		should_wear_weapons = have_item("Operation Patriot Shield") or have_item("Trusty") or challenge == "zombie" or have_item("Brimstone Bludgeon") or have_item("Brimstone Bunker") or have_item("right bear arm") or have_item("left bear arm"),
+		should_wear_weapons = challenge ~= "fist" and (
+				have_item("Operation Patriot Shield") or
+				have_item("Trusty") or
+				challenge == "zombie" or
+				have_item("Brimstone Bludgeon") or
+				have_item("Brimstone Bunker") or
+				have_item("right bear arm") or
+				have_item("left bear arm")
+			),
 		ignore_buffs = {
 			["A Fake Kolproxy Buff To Ignore"] = true,
 			["Another Example Kolproxy Buff"] = true,

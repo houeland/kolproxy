@@ -90,18 +90,18 @@ download_data_files = do
 			_ -> Nothing)
 		doWriteDataFile "cache/data/recipes" (show mix_concoctions)
 
-	do
-		semirares <- do
-			javatext <- load_data_file "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/net/sourceforge/kolmafia/KoLmafia.java" "http://www.houeland.com/kolproxy/files/data-mirror/KoLmafia.java"
-			let xs = lines javatext
-			let fx x = case matchGroups "{ *\"(.*)\", *EncounterTypes.SEMIRARE *}" x of
-				[] -> Nothing
-				[[y]] -> Just y
-				_ -> throw $ InternalError $ "Error parsing semirare data"
-			return $ mapMaybe fx xs
-		if "All The Rave" `elem` semirares
-			then doWriteDataFile "cache/data/semirares" (show semirares)
-			else putStrLn $ "Error parsing semirares!"
+--	do
+--		semirares <- do
+--			javatext <- load_data_file "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/net/sourceforge/kolmafia/KoLmafia.java" "http://www.houeland.com/kolproxy/files/data-mirror/KoLmafia.java"
+--			let xs = lines javatext
+--			let fx x = case matchGroups "{ *\"(.*)\", *EncounterTypes.SEMIRARE *}" x of
+--				[] -> Nothing
+--				[[y]] -> Just y
+--				_ -> throw $ InternalError $ "Error parsing semirare data"
+--			return $ mapMaybe fx xs
+--		if "All The Rave" `elem` semirares
+--			then doWriteDataFile "cache/data/semirares" (show semirares)
+--			else putStrLn $ "Error parsing semirares!"
 
 	do
 		choicespoilers <- do

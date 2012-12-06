@@ -156,7 +156,10 @@ function setup_functions()
 		function lastadventuredata() return status().lastadv end
 		function ascensionpathid() return tonumber(status().path) end
 		function ascensionpathname() return status().pathname end
-		function moonsign() return status().sign end
+		function ascensionpath(check)
+			-- TODO
+		end
+		function moonsign() return status().sign end -- TODO: check
 		function freedralph() return tonumber(status().freedralph) == 1 end
 		function moonsign_area()
 			local areas = {
@@ -184,7 +187,13 @@ function setup_functions()
 		function fullness() return tonumber(status().full) end
 		function drunkenness() return tonumber(status().drunk) end
 		function spleen() return tonumber(status().spleen) end
-		function ascensionstatus()
+		function ascensionstatus(check)
+			if check then
+				if check ~= "Aftercore" and check ~= "Hardcore" and check ~= "Softcore" then
+					error("Invalid ascensionstatus check: " .. tostring(check))
+				end
+				return check == ascensionstatus()
+			end
 			if tonumber(status().freedralph) == 1 then
 				return "Aftercore"
 			elseif tonumber(status().casual) == 1 then
@@ -197,9 +206,9 @@ function setup_functions()
 				return "Aftercore"
 			end
 		end
-		function in_aftercore()
-			return ascensionstatus() == "Aftercore"
-		end
+--		function in_aftercore()
+--			return ascensionstatus() == "Aftercore"
+--		end
 		function mcd() return tonumber(status().mcd) end
 		function applied_scratchnsniff_stickers()
 			local tbl = {}
@@ -300,7 +309,7 @@ function setup_functions()
 		end
 
 		function clancy_level() return tonumber(status().clancy_level) end
-		function clancy_instrumentid() return tonumber(status().clancy_instrument) end
+		function clancy_instrumentid() return tonumber(status().clancy_instrument) end -- TODO: check
 		function clancy_wantsattention() return status().clancy_wantsattention end
 
 		function horde_size() return tonumber(status().horde) end

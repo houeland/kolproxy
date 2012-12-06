@@ -35,6 +35,11 @@ local blacklist = {
 	["Fortunate Resolve"] = true,
 
 	["especially homoerotic frat-paddle"] = true,
+
+	["bonuses: jalape&ntilde;o slices"] = true,
+	["bonuses: frosty halo"] = true,
+	["bonuses: spooky little girl"] = true,
+	["bonuses: parasitic tentacles"] = true,
 }
 
 local processed_datafiles = {}
@@ -47,6 +52,14 @@ end
 local function split_tabbed_line(l)
 	local tbl = {}
 	for x in l:gmatch("[^	]+") do
+		table.insert(tbl, x)
+	end
+	return tbl
+end
+
+local function split_commaseparated(l)
+	local tbl = {}
+	for x in l:gmatch("[^, ]+") do
 		table.insert(tbl, x)
 	end
 	return tbl
@@ -76,7 +89,7 @@ function parse_buffs()
 		section = l:match([[^# (.*) section of modifiers.txt]]) or section
 		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
 		local name2 = l:match([[^# ([^	:]+)]])
-		if section == "Status Effects" and name and bonuslist and not blacklist[name] then
+		if section == "Status Effects" and name and bonuslist and not blacklist[name] and not name2 then
 			buffs[name] = parse_mafia_bonuslist(bonuslist)
 		elseif section == "Status Effects" and name2 and not blacklist[name2] and not buffs[name2] then
 			buffs[name2] = {}
@@ -181,12 +194,19 @@ end
 function parse_items()
 	local items = {}
 	local lowercasemap = {}
+	local allitemuses = {}
+	local itemslots = { hat = true, shirt = true, container = true, weapon = true, offhand = true, pants = true, accessory = true }
 	for l in io.lines("cache/files/items.txt") do
 		local tbl = split_tabbed_line(l)
-		local itemid, name = tonumber(tbl[1]), tbl[2]
+		local itemid, name, itemusestr = tonumber(tbl[1]), tbl[2], tbl[5]
 		if itemid and name and not blacklist[name] then
 			items[name] = { id = itemid }
 			lowercasemap[name:lower()] = name
+			for _, u in ipairs(split_commaseparated(itemusestr or "")) do
+				if itemslots[u] then
+					items[name].equipment_slot = u
+				end
+			end
 		end
 	end
 
@@ -225,12 +245,34 @@ function parse_items()
 				if req ~= "none" and not next(reqtbl) then
 					hardwarn("unknown equip requirement", req)
 				end
+				-- Mafia data files frequently show no equipment requirements as e.g. "Mus: 0" instead of "none"
+				for a, b in pairs(reqtbl) do
+					if b == 0 then
+						reqtbl[a] = nil
+					end
+				end
 				items[name].equip_requirement = reqtbl
 			else
 				hardwarn("equipment:item does not exist", name)
 			end
 		end
 	end
+
+	local section = nil
+	local equip_sections = { Hats = true, Containers = true, Shirts = true, Weapons = true, ["Off-hand"] = true, Pants = true, Accessories = true, ["Familiar Items"] = true }
+	for l in io.lines("cache/files/modifiers.txt") do
+		section = l:match([[^# (.*) section of modifiers.txt]]) or section
+		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
+		local name2 = l:match([[^# ([^	:]+)]])
+		if section and equip_sections[section] and name and bonuslist and not blacklist[name] and not name2 and not blacklist["bonuses: " .. name] then
+			if items[name] then
+				items[name].equip_bonuses = parse_mafia_bonuslist(bonuslist)
+			else
+				hardwarn("modifiers:item does not exist", name)
+			end
+		end
+	end
+
 	return items
 end
 

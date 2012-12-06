@@ -1,6 +1,6 @@
 -- To Do - make underwater separate. Wait for spading on e.g. 28% combat rate
 
-function get_equipment_com()
+function get_equipment_com__()
 	local tw_com = 0
 	local equipmentarray = {
 		["monster bait"] = 5,
@@ -36,7 +36,7 @@ add_printer("/charpane.php", function()
 		tw_com = tw_com + math.min(math.floor(buffedfamiliarweight() / 6), 5)
 	end
 	tw_com = tw_com + (get_buff_bonuses().combat or 0)
-	tw_com = tw_com + get_equipment_com() + (get_equipment_bonuses().combat or 0)
+	tw_com = tw_com + (get_equipment_bonuses().combat or 0)
 	tw_com = tw_com + (get_outfit_bonuses().combat or 0)
 	if ascension["zone.manor.quartet song"] == "Sono Un Amante Non Un Combattente" then
 		tw_com = tw_com - 5

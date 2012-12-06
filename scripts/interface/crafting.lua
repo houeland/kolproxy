@@ -109,9 +109,9 @@ local href = add_automation_script("custom-mix-drinks", function ()
 	return "Note: Work in progress, currently missing an interface<br><br>" .. resptext, requestpath
 end)
 
-add_printer("/craft.php", function()
-	text = text:gsub("%[.-discoveries.-%]", [[%0&nbsp;<a href="]]..href { pwd = session.pwd }..[[" style="color:green;">{ mix drinks }</a>]], 1)
-end)
+--add_printer("/craft.php", function()
+--	text = text:gsub("%[.-discoveries.-%]", [[%0&nbsp;<a href="]]..href { pwd = session.pwd }..[[" style="color:green;">{ mix drinks }</a>]], 1)
+--end)
 
 add_automation_script("buy-and-cook-fancy", function()
 	local kitchen = get_page("/campground.php", { action = "inspectkitchen" })

@@ -6,14 +6,14 @@ function load_datafile(datafile)
 	return data
 end
 
-local items_data = load_datafile("items")
+local items_datafile = load_datafile("items")
 local itemid_name_lookup = {}
-for x, y in pairs(items_data) do
+for x, y in pairs(items_datafile) do
 	itemid_name_lookup[y.id] = x
 end
 
 local function get_item_data_by_name(name)
-	return items_data[name]
+	return items_datafile[name]
 end
 
 local function get_item_data_by_id(id)
@@ -51,6 +51,28 @@ end
 function maybe_get_itemdata(name)
 	local id = get_itemid(name)
 	return get_item_data_by_id(id)
+end
+
+
+local familiars_datafile = load_datafile("familiars")
+function maybe_get_familiarid(name)
+	if name == nil then
+		return nil
+	end
+
+	local t = type(name)
+	if t == "number" then
+		return name
+	elseif t ~= "string" then
+		error("Invalid familiarid type: " .. t)
+	end
+	return (familiars_datafile[name] or {}).famid
+end
+
+
+local semirares_datafile = load_datafile("semirares")
+function get_semirare_encounters()
+	return semirares_datafile
 end
 
 function intercept_warning(warning)

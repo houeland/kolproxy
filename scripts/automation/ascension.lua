@@ -1548,7 +1548,7 @@ endif
 		want_softcore_item("Mr. Accessory Jr.")
 	end
 	want_softcore_item_oneof { "Boris's Helm (askew)", "Boris's Helm", "Spooky Putty mitre" }
-	if challenge ~= "boris" then
+	if challenge ~= "boris" and challenge ~= "fist" then
 		want_softcore_item("Operation Patriot Shield")
 	end
 

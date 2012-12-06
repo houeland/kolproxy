@@ -24,9 +24,16 @@ register_setting {
 
 register_setting {
 	name = "show buff extension arrows",
-	description = "Show up-arrows for extending buffs on custom charpane",
+	description = "Show up-arrows for extending buffs (currently only on custom charpane)",
 	group = "charpane",
 	default_level = "standard",
+}
+
+register_setting {
+	name = "show multiple previous-adventure links",
+	description = "Show multiple previous-adventure links (currently only on custom charpane)",
+	group = "charpane",
+	default_level = "detailed",
 }
 
 add_printer("/game.php", function()
@@ -423,6 +430,21 @@ local function get_buff_extension_info()
 	return buff_extension_info
 end
 
+local previous_adventures_tbl = {}
+local function update_and_get_previous_adventure_links()
+	if previous_adventures_tbl[1] ~= lastadventuredata().name then
+		local newtbl = {}
+		table.insert(newtbl, lastadventuredata())
+		for _, x in ipairs(previous_adventures_tbl) do
+			if x.name ~= lastadventuredata().name and #newtbl < 5 then
+				table.insert(newtbl, x)
+			end
+		end
+		previous_adventures_tbl = newtbl
+	end
+	return previous_adventures_tbl
+end
+
 add_interceptor("/charpane.php", function()
 	if not setting_enabled("use custom kolproxy charpane") then return end
 	if not pcall(turnsthisrun) then return end -- in afterlife
@@ -467,6 +489,14 @@ add_interceptor("/charpane.php", function()
 	table.insert(lines, string.format([[Meat: <b>%s</b><br>]], format_integer(meat())))
 	table.insert(lines, string.format([[Turns: <b>%s</b> <span class="tiny">(%s played, day %s)</span><br>]], advs(), turnsthisrun(), daysthisrun()))
 	table.insert(lines, string.format([[<a href="%s" target="mainpane">Zone</a>: <b><a href="%s" target="mainpane">%s</a></b><br>]], lastadventuredata().container or "", lastadventuredata().link, lastadventuredata().name))
+	if setting_enabled("show multiple previous-adventure links") then
+		local links = update_and_get_previous_adventure_links()
+		for i = 2, 5 do
+			if links[i] then
+				table.insert(lines, string.format([[<small><a href="%s" target="mainpane">Zone</a>: <a href="%s" target="mainpane">%s</a></small><br>]], links[i].container or "", links[i].link, links[i].name))
+			end
+		end
+	end
 	table.insert(lines, "<!-- kolproxy charpane text area --><br>")
 
 	table.insert(lines, srdata .. "<br>")
@@ -700,9 +730,17 @@ add_interceptor("/charpane.php", function()
 	table.insert(lines, [[<center><font size="2">]]..srdata..[[</font></center>]])
 	table.insert(lines, string.format([[<center><font size="2">Turns played: <b>%s</b> (day %s)</font></center>]], turnsthisrun(), daysthisrun()))
 	table.insert(lines, "<!-- kolproxy charpane text area -->")
-	table.insert(lines, [[<br>]])
-	table.insert(lines, string.format([[<center><font size=2><b><a class=nounder href="%s" target=mainpane>Last Adventure:</a></b></font><br><font size=2><a target=mainpane href="%s">%s</a><br></font></center>]], lastadventuredata().container or "", lastadventuredata().link, lastadventuredata().name))
-	table.insert(lines, [[<br>]])
+	table.insert(lines, [[<br><center>]])
+	table.insert(lines, string.format([[<font size=2><b><a class=nounder href="%s" target=mainpane>Last Adventure:</a></b></font><br><font size=2><a target=mainpane href="%s">%s</a></font><br>]], lastadventuredata().container or "", lastadventuredata().link, lastadventuredata().name))
+	if setting_enabled("show multiple previous-adventure links") then
+		local links = update_and_get_previous_adventure_links()
+		for i = 2, 5 do
+			if links[i] then
+				table.insert(lines, string.format([[<font size=1><a target=mainpane href="%s">%s</a></font><br>]], links[i].link, links[i].name))
+			end
+		end
+	end
+	table.insert(lines, [[</center><br>]])
 
 	-- TODO: make bee counter generic and auto-insert
 

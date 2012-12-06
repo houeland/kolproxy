@@ -2401,6 +2401,9 @@ endif
 				end
 			elseif challenge then
 				script.bonus_target { "easy combat" }
+				if not have_buff("Standard Issue Bravery") and have_item("CSA bravery badge") then
+					use_item("CSA bravery badge")
+				end
 			end
 			inform(i)
 			ensure_buffs { "Spirit of Bacon Grease", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }

@@ -10,7 +10,7 @@ local function get_fam_init()
 	end
 end
 
-local function get_equipment_init()
+local function get_equipment_init__()
 	local tw_init = 0	
 	local equipmentarray = {
 		["Brimstone Boxers"] = 50,
@@ -140,7 +140,7 @@ function estimate_initiative_modifiers()
 	end
 	initmods.skill = get_skill_init()
 	initmods.familiar = get_fam_init()
-	initmods.equipment = get_equipment_init() + (get_equipment_bonuses().initiative or 0)
+	initmods.equipment = get_equipment_bonuses().initiative
 	initmods.outfit = get_outfit_bonuses().initiative
 	initmods.buff = get_buff_bonuses().initiative
 

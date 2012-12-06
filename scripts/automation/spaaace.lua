@@ -1,5 +1,3 @@
-local script = nil
-
 local function maybe_pull_item(name, amount)
 	amount = amount or 1
 	if count(name) < amount then
@@ -147,23 +145,22 @@ local transponders_used = 0
 
 -- TODO: stop if spooky little girl gets hurt(?)
 
-local space_href = add_automation_script("automate-spaaace", function ()
-	if not autoattack_is_set() then
-		stop "Set a macro on autoattack to use for scripting this quest."
-	end
-	script = get_automation_scripts()
-	maybe_pull_item("sea salt scrubs")
-	maybe_pull_item("flaming pink shirt")
-	maybe_pull_item("spangly mariachi pants")
-	script.set_familiar "Scarecrow with spangly mariachi pants"
-	equip_item("spangly mariachi pants", "familiarequip")
-	equip_item("sea salt scrubs", "shirt")
-	equip_item("flaming pink shirt", "shirt")
-	local function run_turns()
+local space_href = setup_turnplaying_script {
+	name = "automate-spaaace",
+	description = "Repair Shield Generator (spaaace quest)",
+	when = function() return true end,
+	macro = nil,
+	preparation = function()
+		maybe_pull_item("sea salt scrubs")
+		maybe_pull_item("flaming pink shirt")
+		maybe_pull_item("spangly mariachi pants")
+		script.set_familiar "Scarecrow with spangly mariachi pants"
+		equip_item("spangly mariachi pants", "familiarequip")
+		equip_item("sea salt scrubs", "shirt")
+		equip_item("flaming pink shirt", "shirt")
+	end,
+	adventuring = function()
 		advagain = false
-		if advs() == 0 then
-			stop "Out of adventures."
-		end
 		if not buff("Transpondent") then
 			if transponders_used < 2 then
 				transponders_used = transponders_used + 1
@@ -226,17 +223,11 @@ local space_href = add_automation_script("automate-spaaace", function ()
 				result, resulturl = get_page("/choice.php", { whichchoice = 540, pwd = session.pwd, option = best_option })
 				result, resulturl = get_page("/spaaace.php", { place = "grimace" })
 			end
-
-			return result, resulturl
+			advagain = false
 		end
-		if advagain then
-			return run_turns()
-		else
-			return result, resulturl
-		end
+		__set_turnplaying_result(result, resulturl, advagain)
 	end
-	return run_turns()
-end)
+}
 
 add_printer("/spaaace.php", function()
 	if not setting_enabled("enable turnplaying automation") or ascensionstatus() ~= "Aftercore" then return end

@@ -90,7 +90,7 @@ local function get_fam_item()
 	return tw_item
 end
 
-local function get_equipment_item()
+local function get_equipment_item__()
 	local tw_item = 0
 	if have_equipped("frosty halo") and not (equipment().weapon or equipment().offhand) then -- unarmed
 		tw_item = tw_item + 25
@@ -245,7 +245,7 @@ function estimate_item_modifiers()
 	end
 	itemmods.skill = get_skill_item()
 	itemmods.familiar = get_fam_item()
-	itemmods.equipment = get_equipment_item() + (get_equipment_bonuses().item or 0)
+	itemmods.equipment = get_equipment_bonuses().item
 	itemmods.outfit = get_outfit_bonuses().item
 	itemmods.buff = get_buff_bonuses().item
 	return itemmods

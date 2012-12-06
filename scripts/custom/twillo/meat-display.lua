@@ -42,7 +42,7 @@ local function get_fam_meat()
 	return tw_meat
 end
 
-local function get_equipment_meat()
+local function get_equipment_meat__()
 	local tw_meat = 0
 	if have_equipped("scratch 'n' sniff sword") or have_equipped("scratch 'n' sniff crossbow") then
 		for i = 1, 3 do
@@ -184,7 +184,7 @@ function estimate_meat_modifiers()
 	end
 	meatmods.skill = get_skill_meat()
 	meatmods.familiar = get_fam_meat()
-	meatmods.equipment = get_equipment_meat() + (get_equipment_bonuses().meat or 0)
+	meatmods.equipment = get_equipment_bonuses().meat
 	meatmods.outfit = get_outfit_bonuses().meat
 	meatmods.buff = get_buff_bonuses().meat
 	return meatmods

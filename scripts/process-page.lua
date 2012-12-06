@@ -30,7 +30,7 @@ end
 
 if requestpath == "/adventure.php" then
 	local z = tonumber(params.snarfblat)
-	if z then -- TODO: can be slow because it forces API load
+	if z then -- TODO: can be slow because it forces API load. Does it still do that?
 		fight.zone = z
 		session["adventure.lastzone"] = z
 	end

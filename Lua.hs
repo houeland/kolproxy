@@ -478,11 +478,11 @@ setup_lua_instance level filename setupref = do
 			push_simplexmldata l xmldoc
 			return 1
 
-		register_function "get_semirare_encounters" $ \_ref l -> do
-			semis <- doReadDataFile "cache/data/semirares"
-			Lua.newtable l
-			add_table_contents l (zip [1..] semis :: [(Int, String)])
-			return 1
+--		register_function "get_semirare_encounters" $ \_ref l -> do
+--			semis <- doReadDataFile "cache/data/semirares"
+--			Lua.newtable l
+--			add_table_contents l (zip [1..] semis :: [(Int, String)])
+--			return 1
 
 		register_function "get_fallback_choicespoilers" $ get_fallback_choicespoilers
 

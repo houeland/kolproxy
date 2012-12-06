@@ -24,7 +24,7 @@ add_automator("all pages", function()
 	end
 end)
 
-function get_equipment_ML()
+function get_equipment_ML__()
 	local tw_ml = 0	
 	if have_equipped("snake shield") and have_equipped("serpentine sword") then
 		tw_ml = tw_ml + 10
@@ -121,7 +121,7 @@ function estimate_ML_modifiers()
 	if ascension["zone.manor.quartet song"] == "Provare Compasione Per El Sciocco" then
 		mlmods.background = 5
 	end
-	mlmods.equipment = get_equipment_ML() + (get_equipment_bonuses().ml or 0)
+	mlmods.equipment = get_equipment_bonuses().ml
 	mlmods.outfit = get_outfit_bonuses().ml
 	mlmods.buff = get_buff_bonuses().ml
 	return mlmods

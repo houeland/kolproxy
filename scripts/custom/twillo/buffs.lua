@@ -5,7 +5,7 @@ function get_buff_bonuses()
 	local buffarray = {
 		["Sole Soul"] = { item = math.min(buffturns("Sole Soul"), 300) },
 		["The HeyDezebound Heart"] = { item = math.min(buffturns("The HeyDezebound Heart"), 300) },
-		["Bubble Vision"] = { item = math.min(101 - buffturns("Bubble Vision"), 0) },
+		["Bubble Vision"] = { item = math.max(101 - buffturns("Bubble Vision"), 0) },
 		["Polka Face"] = { item = math.min(55, 5 * level()), meat = math.min(55, 5 * level()) },
 		["Withered Heart"] = { item = math.min(buffturns("Withered Heart"), 20) },
 		["Fortunate Resolve"] = { item = 5, meat = 5, initiative = 5 },
@@ -13,7 +13,7 @@ function get_buff_bonuses()
 
 		["Cunctatitis"] = { initiative = -1000 },
 
-		["Buy! Sell! Buy! Sell!"] = { meat = math.max(202 - 2 * buffturns("Buy! Sell! Buy! Sell!"), 0) },
+		["Buy!  Sell!  Buy!  Sell!"] = { meat = math.max(202 - 2 * buffturns("Buy!  Sell!  Buy!  Sell!"), 0) },
 		["Sweet Heart"] = { meat = math.min(2 * buffturns("Sweet Heart"), 40) },
 
 		["Ur-Kel's Aria of Annoyance"] = { ml = math.min(2 * level(), 60) },
