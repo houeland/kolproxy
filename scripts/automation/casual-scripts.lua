@@ -680,18 +680,7 @@ function get_casual_automation_scripts()
 		end
 		go("fight on battlefield: " .. tostring(ascension["battlefield.kills.frat boy.min"]) .. " hippies killed", 132, macro_kill(), nil, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling even in fist", 80, { equipment = { hat = "beer helmet", pants = "distressed denim pants", acc1 = "bejeweled pledge pin" } })
 		if result:contains("There are no hippy soldiers left") then
-			local turnins = {
-				"green clay bead",
-				"pink clay bead",
-				"purple clay bead",
-				"communications windchimes",
-			}
-			for x in table.values(turnins) do
-				if have(x) then
-					async_get_page("/bigisland.php", { action = "turnin", pwd = pwd, whichcamp = 2, whichitem = get_itemid(x), quantity = count(x) })
-				end
-			end
-			local camppt = get_page("/bigisland.php", { place = "camp", whichcamp = 2 })
+			local camppt = turn_in_junk_for_quarters()
 			if camppt:contains("You don't have any quarters on file") then
 				inform "fight hippy boss"
 				fam "Frumious Bandersnatch"
