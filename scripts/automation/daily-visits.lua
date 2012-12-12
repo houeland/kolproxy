@@ -87,6 +87,11 @@ function do_daily_visits()
 	dopage("/choice.php", { whichchoice = 585, pwd = pwd, option = 1, action = "treasure" })
 	dopage("/choice.php", { whichchoice = 585, pwd = pwd, option = 1, action = "leave" })
 
+	local itemname = "Taco Dan's Taco Stand Flier"
+	if have(itemname) then
+		dopage("/inv_use.php", { pwd = pwd, whichitem = get_itemid(itemname), ajax = 1 })
+	end
+
 	for f in table.values(tocall) do
 		f()
 	end
