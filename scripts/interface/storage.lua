@@ -166,6 +166,8 @@ aftercore_items_list = {
 	"offensive moustache",
 
 	"can of Rain-Doh",
+	"Trivial Avocations board game",
+	"KoL Con Six Pack",
 }
 
 maybe_pvp_stealable = {

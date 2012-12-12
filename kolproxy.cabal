@@ -1,5 +1,5 @@
 name:           Kolproxy
-version:        3.4-alpha
+version:        3.5
 synopsis:       Kingdom of Loathing user interface
 author:         Tor Gunnar Houeland
 build-type:     Simple

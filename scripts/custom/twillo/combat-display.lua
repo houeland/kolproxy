@@ -1,22 +1,5 @@
 -- To Do - make underwater separate. Wait for spading on e.g. 28% combat rate
 
-function get_equipment_com__()
-	local tw_com = 0
-	local equipmentarray = {
-		["monster bait"] = 5,
-		["Dungeon Fist gauntlet"] = 5,
-		["ring of conflict"] = -5,
-		["Space Trip safety headphones"] = -5,
-		["silent beret"] = -5,
-	}
-	for comequip, com in pairs(equipmentarray) do 
-		if have_equipped(comequip) then
-			tw_com = tw_com + com
-		end
-	end
-	return tw_com
-end
-	
 function get_underwater_com()
 	local tw_com = 0
 	if buff("Colorfully Concealed") then

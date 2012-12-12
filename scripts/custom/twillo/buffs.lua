@@ -1,5 +1,3 @@
-local buffs_modifier_data = load_datafile("buffs")
-
 function get_buff_bonuses()
 	local bonuses = {}
 	local buffarray = {
@@ -28,7 +26,7 @@ function get_buff_bonuses()
 			end
 		end
 	end
-	for name, buffb in pairs(buffs_modifier_data) do
+	for name, buffb in pairs(datafile("buffs")) do
 		if not buffarray[name] and have_buff(name) then
 			for a, b in pairs(buffb) do
 				bonuses[a] = (bonuses[a] or 0) + b

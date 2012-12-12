@@ -401,12 +401,10 @@ add_automator("/main.php", function()
 	if not setting_enabled("enable ascension assistance") then return end
 	if not done_on_ascension_action then
 		async_post_page("/campground.php", { action = "telescopelow" })
-		if not have("Clan VIP Lounge key") then
+		if not have_item("Clan VIP Lounge key") then
 			freepull_item("Clan VIP Lounge key")
-			async_get_page("/clan_viplounge.php", { action = "klaw" })
-			async_get_page("/clan_viplounge.php", { action = "klaw" })
-			async_get_page("/clan_viplounge.php", { action = "klaw" })
-			async_get_page("/clan_viplounge.php", { action = "lookingglass" })
+			freepull_item("cursed microwave")
+			freepull_item("cursed pony keg")
 		end
 		if ascensionpathid() == 8 and not have_item("Boris's Helm") and not have_item("Boris's Helm (askew)") then
 			freepull_item("Boris's Helm")

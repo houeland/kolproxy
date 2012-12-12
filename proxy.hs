@@ -43,6 +43,7 @@ doProcessPage ref uri params = do
 	let status_after_func = do
 		v <- readMVar =<< mvf
 		-- TODO: Is this ever Nothing?
+		-- TODO: YES! How/why/when? Use Right/Left to report the error
 		case v of
 			Just s -> return s
 			_ -> throwIO $ InternalError $ "Error getting after-page-load status"
@@ -113,7 +114,9 @@ kolProxyHandlerWhenever uri params baseref = do
 			let handle_normally = do
 				y <- join $ (processPage ref) ref uri params
 				case y of
-					Right (msg, _, _) -> runSentChatScript ref msg
+					Right (msg, _, _) -> do
+						log_chat_messages ref (Data.ByteString.Char8.unpack msg)
+						runSentChatScript ref msg
 					_ -> return ()
 				return y
 			case x of
@@ -127,6 +130,7 @@ kolProxyHandlerWhenever uri params baseref = do
 		_ -> join $ (processPage ref) ref uri params
 	resptext <- case uriPath uri of
 		"/newchatmessages.php" -> do
+			log_chat_messages ref (Data.ByteString.Char8.unpack text)
 			let allparams = concat $ catMaybes $ [decodeUrlParams uri, decodeUrlParams effuri, params]
 			x <- runChatScript ref uri effuri text allparams
 			case x of

@@ -1,9 +1,16 @@
-function load_datafile(datafile)
-	local fobj = io.open("cache/data/" .. datafile:gsub(" ", "-") .. ".json")
+local function load_datafile(datafilename)
+	local fobj = io.open("cache/data/" .. datafilename:gsub(" ", "-") .. ".json")
 	local str = fobj:read("*a")
 	fobj:close()
 	local data = json_to_table(str)
 	return data
+end
+local datafile_cache = {}
+function datafile(name)
+	if not datafile_cache[name] then
+		datafile_cache[name] = load_datafile(name)
+	end
+	return datafile_cache[name]
 end
 
 local items_datafile = load_datafile("items")
@@ -54,7 +61,6 @@ function maybe_get_itemdata(name)
 end
 
 
-local familiars_datafile = load_datafile("familiars")
 function maybe_get_familiarid(name)
 	if name == nil then
 		return nil
@@ -66,7 +72,7 @@ function maybe_get_familiarid(name)
 	elseif t ~= "string" then
 		error("Invalid familiarid type: " .. t)
 	end
-	return (familiars_datafile[name] or {}).famid
+	return (datafile("familiars")[name] or {}).famid
 end
 
 

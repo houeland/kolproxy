@@ -104,7 +104,12 @@ function setup_functions()
 		function familiarid() return tonumber(status().familiar) end
 		function familiarpicture() return status().familiarpic end
 		function buffedfamiliarweight() return tonumber(status().famlevel) end
-		function have_buff(name) return buffslist()[name] ~= nil end
+		function have_buff(name)
+			if not datafile("buffs")[name] then
+				print("WARNING: unknown buff", name)
+			end
+			return buffslist()[name] ~= nil
+		end
 		buff = have_buff
 		function buffturns(name) return buffslist()[name] or 0 end
 		function have_intrinsic(name) return intrinsicslist()[name] ~= nil end

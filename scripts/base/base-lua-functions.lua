@@ -201,3 +201,21 @@ function make_plural(v, singular, plural)
 		return string.format("%d %s", v, plural)
 	end
 end
+
+function display_number(n)
+	if n <= 8000 then
+		return tostring(n)
+	elseif n <= 2000000 then
+		return string.format("%.1fk", n / 1000)
+	else
+		return string.format("%.1fM", n / 1000000)
+	end
+end
+
+function display_value(v)
+	if type(v) == "number" then
+		return display_number(v)
+	else
+		return v
+	end
+end

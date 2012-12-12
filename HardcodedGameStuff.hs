@@ -168,6 +168,8 @@ download_data_files = do
 	dldatafile "http://userscripts.org/scripts/source/67792.user.js"
 	dldatafile "http://userscripts.org/scripts/source/68727.user.js"
 
+	dldatafile "http://www.houeland.com/kol/mallprices.json"
+
 	return ()
 
 add_colored_message_to_page color msg pt =

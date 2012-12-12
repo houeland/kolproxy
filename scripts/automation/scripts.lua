@@ -650,7 +650,7 @@ function get_automation_scripts(cached_stuff)
 				cached_stuff.used_hatter_buff_today = true
 			end
 			equip_item(previous_hat)
-			return pt, pturl
+			return function() return pt, pturl end
 		end,
 	}
 	local spells = {
@@ -718,6 +718,7 @@ function get_automation_scripts(cached_stuff)
 	end
 
 	function f.cast_buff(buffname)
+--		print("DEBUG castbuff", buffname)
 		if buffs[buffname] then
 			return buffs[buffname]()
 		else
@@ -805,8 +806,19 @@ function get_automation_scripts(cached_stuff)
 		local function try_casting_buff(buffname, try_shrugging)
 			if buffs[buffname] then
 				local ptf = f.cast_buff(buffname)
+				if not ptf then
+					print("DEBUG: castbuff returned nil:", buffname)
+				end
+				if type(ptf) == "string" then
+					print("DEBUG: castbuff non-function:", buffname)
+				else
+					ptf = ptf()
+				end
+				if not ptf then
+					print("DEBUG: castbuff returned nil:", buffname)
+				end
 				if not have_buff(buffname) and not have_intrinsic(buffname) then
-					if ptf():contains("too many songs stuck in your head") and try_shrugging then
+					if ptf:contains("too many songs stuck in your head") and try_shrugging then
 						for _, atname in ipairs(at_shruggable) do
 							if buff(atname) and not want_buffs[atname] then
 								shrug_buff(atname)
@@ -2453,7 +2465,7 @@ endif
 					wear { hat = "miner's helmet", weapon = "7-Foot Dwarven mattock", pants = "miner's pants" }
 				end
 				result, resulturl = get_page("/mining.php", { mine = 1 })
-				result = add_colored_message_to_page(get_result(), "TODO: get 3x " .. (ascension["trapper.ore"] or "unknown") .. " ore, then run script again", "darkorange")
+				result = add_colored_message_to_page(get_result(), "TODO: get 3x " .. (session["trapper.ore"] or "unknown") .. " ore, then run script again", "darkorange")
 				did_action = false
 			elseif ascensionstatus() == "Softcore" then
 				local want_ore = trappercabin:match("fix the lift until you bring me that cheese and ([a-z]+ ore)")

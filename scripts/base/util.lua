@@ -41,10 +41,17 @@ function setup_variables()
 		end
 	end
 	choice_adventure_number = tonumber(text:match([[<input type=hidden name=whichchoice value=([0-9]+)>]]))
-	adventure_result = text:match([[<td style="color: white;" align=center bgcolor=blue.-><b>Adventure Results:</b></td></tr><tr><td style="padding: 5px; border: 1px solid blue;"><center><table><tr><td><center><b>([^<]*)</b>]])
+	adventure_result = text:match([[<td style="color: white;" align=center bgcolor=blue.-><b>Adventure Results:</b></td></tr><tr><td style="padding: 5px; border: 1px solid blue;"><center><table><tr><td><center><b>(.-)</b>]])
 end
 
-
+function monstername(name)
+	if name then
+		return name == monstername()
+	end
+	if monster_name then
+		return monster_name:gsub("^a ", ""):gsub("^an ", "")
+	end
+end
 
 
 

@@ -148,7 +148,7 @@ local transponders_used = 0
 local space_href = setup_turnplaying_script {
 	name = "automate-spaaace",
 	description = "Repair Shield Generator (spaaace quest)",
-	when = function() return true end,
+	when = function() return not quest_completed("Repair the Elves' Shield Generator") end,
 	macro = nil,
 	preparation = function()
 		maybe_pull_item("sea salt scrubs")

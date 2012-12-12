@@ -38,6 +38,7 @@ local function format_chat_message(msg)
 	end
 end
 
+-- TODO: remove, obsoleted by sqlite3 chatlog(?)
 local function log_chat(msg)
 	local msgformat = tostring(msg.type) .. (msg.format or "")
 	if msgformat == "public0" then
@@ -48,8 +49,10 @@ local function log_chat(msg)
 		log_file_line("events.html", format_chat_message(msg))
 	elseif msgformat == "private" then
 		log_file_line("private-" .. msg.who.name .. ".html", format_chat_message(msg))
+	elseif msgformat == "system2" then
+		log_file_line("system.html", format_chat_message(msg))
 	else
-		print("DEBUG, chat:", msgformat, msg)
+--		print("DEBUG, chat:", msgformat, msg)
 	end
 end
 

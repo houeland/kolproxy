@@ -34,27 +34,59 @@ function do_daily_visits()
 
 	local function scan_results(pt)
 		for _, x in ipairs(extracts) do
-			local m = pt:match(x)
-			if m then
+			for m in pt:gmatch(x) do
 				add_result(m)
 			end
 		end
 	end
 
-	local function dopage(url, params)
-		local ptf = async_get_page(url, params)
+	local function queue_page_result(ptf)
 		table.insert(tocall, function()
 			local pt, pturl = ptf()
 			scan_results(pt)
 		end)
 	end
 
+	local function dopage(url, params)
+		queue_page_result(async_get_page(url, params))
+	end
+
 	async_get_page("/main.php")
-	async_get_page("/campground.php")
+	local campground_pt = get_page("/campground.php")
 
 	local pwd = status().pwd
 
-	if setting_enabled("automate daily visits/harvest garden") then
+	local possible_daily_items = {
+		"ball-in-a-cup",
+		"burrowgrub hive",
+		"cheap toaster",
+		"cheap toaster",
+		"cheap toaster",
+		"Chester's bag of candy",
+		"cursed microwave",
+		"cursed pony keg",
+		"Emblem of Ak'gyxoth",
+		"glass gnoll eye",
+		"handmade hobby horse",
+		"Idol of Ak'gyxoth",
+		"KoL Con Six Pack",
+		"set of jacks",
+		"Taco Dan's Taco Stand Flier",
+		"Trivial Avocations board game",
+	}
+	-- TODO? neverending soda
+	-- TODO? creepy voodoo doll
+
+	local daily_items = {}
+	for _, x in ipairs(possible_daily_items) do
+		if have_item(x) then
+			table.insert(daily_items, x)
+		end
+	end
+
+	if campground_pt:contains("Humongous Buried Skull") then
+		add_result([[<span style="color: darkorange">Skipped harvesting garden (<b>skulldozer ready</b>).</span>]])
+	elseif setting_enabled("automate daily visits/harvest garden") then
 		dopage("/campground.php", { action = "garden", pwd = pwd })
 	else
 		add_result("Skipped harvesting garden (can be enabled in settings).")
@@ -87,12 +119,30 @@ function do_daily_visits()
 	dopage("/choice.php", { whichchoice = 585, pwd = pwd, option = 1, action = "treasure" })
 	dopage("/choice.php", { whichchoice = 585, pwd = pwd, option = 1, action = "leave" })
 
-	local itemname = "Taco Dan's Taco Stand Flier"
-	if have(itemname) then
-		dopage("/inv_use.php", { pwd = pwd, whichitem = get_itemid(itemname), ajax = 1 })
+	if ascensionstatus("Aftercore") and setting_enabled("automate daily visits/use bookshelf skills in aftercore") then
+		dopage("/campground.php", { preaction = "summonsnowcone", quantity = 3 })
+		dopage("/campground.php", { preaction = "summonstickers", quantity = 3 })
+		dopage("/campground.php", { preaction = "summonsugarsheets", quantity = 3 })
+		-- TODO: clip art
+		dopage("/campground.php", { preaction = "summonradlibs", quantity = 3 })
+		dopage("/campground.php", { preaction = "summonhilariousitems" })
+		dopage("/campground.php", { preaction = "summonspencersitems" })
+		dopage("/campground.php", { preaction = "summonaa" })
+		dopage("/campground.php", { preaction = "summonthinknerd" })
+		-- TODO: librams
 	end
 
-	for f in table.values(tocall) do
+	for _, x in ipairs(daily_items) do
+		queue_page_result(use_item(x))
+	end
+
+	-- TODO: cast class skills
+
+	-- TODO: trade with hermit
+
+	-- TODO: use still
+
+	for _, f in ipairs(tocall) do
 		f()
 	end
 
@@ -108,23 +158,33 @@ function do_daily_visits()
 end
 
 add_automator("/main.php", function()
-	if setting_enabled("automate daily visits") and not day["done daily visits"] and not locked() then
-		print "player login daily visits!"
+	if not setting_enabled("automate daily visits") then return end
+	if locked() then return end
+	local should_visit = false
+
+	local want_tbl = {}
+	table.insert(want_tbl, "visit")
+	if ascensionstatus("Aftercore") then
+		table.insert(want_tbl, "aftercore")
+	end
+	if setting_enabled("automate daily visits/harvest garden") then
+		table.insert(want_tbl, "garden")
+	end
+	if ascensionstatus("Aftercore") and setting_enabled("automate daily visits/use bookshelf skills in aftercore") then
+		table.insert(want_tbl, "bookshelf")
+	end
+	local want_string = table.concat(want_tbl, "+")
+
+	if day["done daily visits"] ~= want_string then
+		print "INFO: doing daily visits"
 		local dailythings = do_daily_visits()
-		day["done daily visits"] = "yes"
+		day["done daily visits"] = want_string
 		text = add_message_to_page(text, dailythings, "Daily visits:")
 	end
 end)
 
 -- do_aftercore_dailyvisits ref withskills = do
 -- 	when withskills (do
--- 		castSkill 8000 3 ref -- Summon snowcones
--- 		castSkill 8001 3 ref -- Summon stickers
--- 		castSkill 8002 3 ref -- Summon sugar sheets
-
--- 		castSkill 8200 1 ref -- summon hilarious objects
--- 		castSkill 8201 1 ref -- summon tasteful gifts
-
 -- 		castSkill 4006 3 ref -- Advanced Saucecrafting
 -- 		castSkill 4006 3 ref
 -- 		castSkill 4006 2 ref
@@ -142,15 +202,7 @@ end)
 -- 		castSkillMax 8101 ref -- summon party favors
 -- 		castSkillMax 8102 ref -- summon love songs
 
--- 		useItem 3393 ref -- oscus's soda
--- 		useItem 3629 ref -- burrowgrub
 -- 		-- trade with hermit
 -- 		-- use other rumpus equipment
 -- 		-- 	use still
 -- 		return ())
-
--- 	useItem 3261 ref -- chester's bag of candy
--- 	useItem 637 ref -- cheap toaster
--- 	useItem 637 ref -- cheap toaster
--- 	useItem 637 ref -- cheap toaster
--- 	useItem 3731 ref -- glass gnoll eye

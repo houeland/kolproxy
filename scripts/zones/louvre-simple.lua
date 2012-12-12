@@ -185,10 +185,9 @@ local function getvalue_escherval(id, D, escherval)
 	end
 end
 
-louvre_choicecache = {}
-local choicecache = louvre_choicecache
+local louvre_choicecache = {}
 
-function desc_cD(choiceid, D)
+local function desc_cD(choiceid, D)
 	local tbl = {}
 	for _, x in ipairs(D) do
 		table.insert(tbl, x.choiceid .. ":" .. x.branch .. ":" .. x.result)
@@ -197,13 +196,13 @@ function desc_cD(choiceid, D)
 end
 
 function louvre_policy_escherval(escher_value_estimate)
-	if not choicecache[escher_value_estimate] then
-		choicecache[escher_value_estimate] = {}
+	if not louvre_choicecache[escher_value_estimate] then
+		louvre_choicecache[escher_value_estimate] = {}
 	end
 	return function(choiceid, D)
 		local descstr = desc_cD(choiceid, D)
-		if choicecache[escher_value_estimate][descstr] then
-			return choicecache[escher_value_estimate][descstr]
+		if louvre_choicecache[escher_value_estimate][descstr] then
+			return louvre_choicecache[escher_value_estimate][descstr]
 		end
 		local p = predict_louvre_simple(choiceid, D)
 		local chooseopt = -1
@@ -222,7 +221,7 @@ function louvre_policy_escherval(escher_value_estimate)
 		end
 		print("  DEBUG (" .. escher_value_estimate .. "):", choiceid, "->", chooseopt)
 		print("    " .. descstr)
-		choicecache[escher_value_estimate][descstr] = chooseopt
+		louvre_choicecache[escher_value_estimate][descstr] = chooseopt
 		return chooseopt
 	end
 end

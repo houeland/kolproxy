@@ -20,7 +20,7 @@ import qualified Data.Digest.Pure.MD5
 import qualified Database.SQLite3
 
 
-kolproxy_version_number = "3.5-beta"
+kolproxy_version_number = "3.5"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 
@@ -56,6 +56,7 @@ getBaseDirectory filetype = do
 		"log" -> basedir ++ "logs/"
 		"detailed log" -> basedir ++ "logs/detailed/"
 		"sqlite3 log" -> basedir ++ "logs/raw/"
+		"sqlite3 chatlog" -> basedir ++ "logs/chat/"
 		"state" -> basedir ++ "state/"
 		_ -> throw $ InternalError $ "Invalid directory path type: " ++ filetype
 	createDirectoryIfMissing True dirpath

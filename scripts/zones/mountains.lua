@@ -74,7 +74,7 @@ add_processor("/place.php", function ()
 	if params.action == "trappercabin" then
 		local wantore = text:match([[some dagburned ([a-z]-) ore]]) or text:match([[bring me that cheese and ([a-z]-) ore]])
 		if wantore then
-			ascension["trapper.ore"] = wantore
+			session["trapper.ore"] = wantore
 		end
 	end
 end)
@@ -126,11 +126,11 @@ local mine_data = nil
 
 local function compute_mine_spoiler(minetext)
 	local what_do_we_want = nil
-	if ascension["trapper.ore"] then
+	if session["trapper.ore"] then
 		local trapper_wants = { asbestos = "a", chrome = "c", linoleum = "l" }
-		what_did_we_want = trapper_wants[ascension["trapper.ore"]]
-		if count(ascension["trapper.ore"] .. " ore") < 3 then
-			what_do_we_want = trapper_wants[ascension["trapper.ore"]]
+		what_did_we_want = trapper_wants[session["trapper.ore"]]
+		if count(session["trapper.ore"] .. " ore") < 3 then
+			what_do_we_want = what_did_we_want
 		end
 	end
 	if not what_do_we_want then
@@ -319,6 +319,13 @@ local function compute_mine_spoiler(minetext)
 	return best_which, what_did_we_want
 end
 
+add_automator("/mining.php", function()
+	if not session["trapper.ore"] and not session["trapper.visited"] then
+		get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
+		session["trapper.visited"] = "yes"
+	end
+end)
+
 local mining_ids = {
 	 [9] = 0, [10] = 1, [11] = 0, [12] = 1, [13] = 0, [14] = 1,
 	[17] = 1, [18] = 0, [19] = 1, [20] = 0, [21] = 1, [22] = 0,
@@ -383,7 +390,7 @@ add_printer("/mining.php", function ()
 					if tbl[id] then -- and alt == "Open Cavern" 
 						celldata = [[<center><img src="http://images.kingdomofloathing.com/itemimages/]] .. tbl[id] .. [[.gif"></center>]]
 						local trapper_wants = { asbestos = "a", chrome = "c", linoleum = "l" }
-						local what_did_we_want = trapper_wants[ascension["trapper.ore"]]
+						local what_did_we_want = trapper_wants[session["trapper.ore"]]
 						print("DEBUG", what_did_we_want, orechars[tbl[id]])
 						if what_did_we_want and orechars[tbl[id]] == what_did_we_want then
 							background = "background-color: green;";

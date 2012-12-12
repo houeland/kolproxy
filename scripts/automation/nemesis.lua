@@ -1,3 +1,6 @@
+-- TODO: use automation script framework
+-- quest_completed("Me and My Nemesis")
+
 -- TODO: make this work more like ascension-automation
 
 local href = add_automation_script("automate-nemesis", function ()

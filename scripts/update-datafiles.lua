@@ -32,14 +32,12 @@ local blacklist = {
 	["A Little Bit Evil (Sauceror)"] = true,
 	["A Little Bit Evil (Disco Bandit)"] = true,
 	["A Little Bit Evil (Accordion Thief)"] = true,
-	["Fortunate Resolve"] = true,
+	["Buy! Sell! Buy! Sell!"] = true,
 
 	["especially homoerotic frat-paddle"] = true,
 
 	["bonuses: jalape&ntilde;o slices"] = true,
 	["bonuses: frosty halo"] = true,
-	["bonuses: spooky little girl"] = true,
-	["bonuses: parasitic tentacles"] = true,
 }
 
 local processed_datafiles = {}
@@ -84,6 +82,12 @@ end
 
 function parse_buffs()
 	local buffs = {}
+	buffs["A Little Bit Evil"] = {}
+	buffs["Buy!  Sell!  Buy!  Sell!"] = {}
+	buffs["Everything Looks Yellow"] = {}
+	buffs["Everything Looks Red"] = {}
+	buffs["Everything Looks Blue"] = {}
+
 	local section = nil
 	for l in io.lines("cache/files/modifiers.txt") do
 		section = l:match([[^# (.*) section of modifiers.txt]]) or section
@@ -288,9 +292,12 @@ function parse_familiars()
 	local familiars = {}
 	for l in io.lines("cache/files/familiars.txt") do
 		local tbl = split_tabbed_line(l)
-		local famid, name = tonumber(tbl[1]), tbl[2]
+		local famid, name, pic = tonumber(tbl[1]), tbl[2], tbl[3]
+		if pic then
+			pic = pic:gsub("%.gif$", "")
+		end
 		if famid and name then
-			familiars[name] = { famid = famid }
+			familiars[name] = { famid = famid, familiarpic = pic }
 		end
 	end
 	return familiars
@@ -432,6 +439,21 @@ function verify_semirares(data)
 	end
 end
 
+function parse_mallprices()
+	local fobj = io.open("cache/files/mallprices.json")
+	local mallprices_datafile = fobj:read("*a")
+	fobj:close()
+	local mallprices = json_to_table(mallprices_datafile)
+
+	return mallprices
+end
+
+function verify_mallprices(data)
+	if data["Mr. Accessory"] >= 1000000 and data["Mr. Accessory"] <= 100000000 and data["Mick's IcyVapoHotness Inhaler"] >= 200 and data["Mick's IcyVapoHotness Inhaler"] <= 200000 then
+		return data
+	end
+end
+
 function process(datafile)
 	local filename = datafile:gsub(" ", "-")
 	local loadf = _G["parse_"..datafile:gsub(" ", "_")]
@@ -466,3 +488,5 @@ process("buff recast skills")
 process("faxbot monsters")
 
 process("semirares")
+
+process("mallprices")

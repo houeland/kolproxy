@@ -137,7 +137,7 @@ add_printer("/fight.php", function()
 		color = "royalblue"
 		if awesome_monsters[monster_name] ~= "" then
 			local numitems = count(awesome_monsters[monster_name])
-			if monster_name == "a Blooper" then
+			if monstername("Blooper") then
 				numitems = count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel"))
 			end
 			if drop_uncertainty[monster_name] then

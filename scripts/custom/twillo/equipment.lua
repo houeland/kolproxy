@@ -1,6 +1,3 @@
-local items_datafile = load_datafile("items")
-local enthroned_familiars_datafile = load_datafile("enthroned-familiars")
-
 add_processor("/familiar.php", function()
 	session["cached enthroned familiar"] = nil
 end)
@@ -83,7 +80,7 @@ function get_equipment_bonuses()
 	if have_equipped_item("Crown of Thrones") then
 		local famtype = session["cached enthroned familiar"]
 		if famtype and famtype ~= "none" then
-			itemarray["Crown of Thrones"] = enthroned_familiars_datafile[famtype]
+			itemarray["Crown of Thrones"] = datafile("enthroned familiars")[famtype]
 		end
 	end
 
@@ -95,8 +92,8 @@ function get_equipment_bonuses()
 			-- ..unknown..
 		elseif itemarray[name] then
 			add_bonuses(bonuses, itemarray[name])
-		elseif items_datafile[name] then
-			add_bonuses(bonuses, items_datafile[name].equip_bonuses or {})
+		elseif datafile("items")[name] then
+			add_bonuses(bonuses, datafile("items")[name].equip_bonuses or {})
 		end
 	end
 

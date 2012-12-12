@@ -172,6 +172,19 @@ make_globalref = do
 	hhttp <- openlog "http-log.txt"
 	shutdown_secret <- get_md5 <$> show <$> (randomIO :: IO Integer) -- TODO: Not really important, but use stronger randomness here?
 	shutdown_ref <- newIORef False
+
+	chatopendb <- create_db "sqlite3 chatlog" "chat-log.sqlite3"
+	do_db_query_ chatopendb "CREATE TABLE IF NOT EXISTS public(mid INTEGER PRIMARY KEY NOT NULL, time INTEGER NOT NULL, channel TEXT NOT NULL, playerid INTEGER NOT NULL, msg TEXT NOT NULL, rawjson TEXT NOT NULL);" []
+	do_db_query_ chatopendb "CREATE TABLE IF NOT EXISTS private(idx INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, time INTEGER NOT NULL, playerid INTEGER NOT NULL, msg TEXT NOT NULL, rawjson TEXT NOT NULL);" []
+	do_db_query_ chatopendb "CREATE TABLE IF NOT EXISTS other(idx INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, time INTEGER NOT NULL, msg TEXT NOT NULL, rawjson TEXT NOT NULL);" []
+	do_db_query_ chatopendb "CREATE TABLE IF NOT EXISTS unrecognized(idx INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, rawjson TEXT NOT NULL);" []
+	do_db_query_ chatopendb "CREATE TABLE IF NOT EXISTS oldchat(idx INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, text TEXT NOT NULL);" []
+
+	chatlogchan <- newChan
+	forkIO_ "kps:chatlogchan" $ forever $ do
+		chanaction <- readChan chatlogchan
+		chanaction chatopendb
+
 	return GlobalRefStuff {
 		logindents_ = indentref,
 		blocking_lua_scripting_ = blockluaref,
@@ -180,7 +193,8 @@ make_globalref = do
 		h_lua_log_ = hlua,
 		h_http_log_ = hhttp,
 		shutdown_secret_ = shutdown_secret,
-		shutdown_ref_ = shutdown_ref
+		shutdown_ref_ = shutdown_ref,
+		doChatLogAction_ = \action -> writeChan chatlogchan action
 	}
 
 runProxyServer r rwhenever portnum = do

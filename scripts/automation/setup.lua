@@ -70,6 +70,11 @@ end
 local automation_script_details_list = {}
 
 add_automation_script("custom-aftercore-automation", function()
+	local questlogcompleted_page = get_page("/questlog.php", { which = 2 })
+	function quest_completed(name)
+		return questlogcompleted_page:contains([[<b>]] .. name .. [[</b>]])
+	end
+
 	local goodlinks = {}
 	local links = {}
 	for x in pairs(get_automation_script_links()) do

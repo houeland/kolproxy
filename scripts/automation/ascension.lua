@@ -2330,6 +2330,7 @@ endif
 				message = "do bat quest",
 				nobuffing = true,
 				action = function()
+					script.maybe_ensure_buffs { "Spirit of Garlic" }
 					return script.do_boss_bat(macro_noodlecannon, 20)
 				end,
 			}
@@ -2416,6 +2417,7 @@ endif
 			}
 		}
 
+		-- TODO: automate
 		add_task {
 			when = DD_keys < 1 and level() >= 6,
 			task = {
@@ -2915,6 +2917,7 @@ endwhile
 			message = "do bat quest",
 			nobuffing = true,
 			action = function()
+				script.maybe_ensure_buffs { "Spirit of Garlic" }
 				return script.do_boss_bat(macro_noodlecannon, 20)
 			end,
 		}

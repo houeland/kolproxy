@@ -323,7 +323,7 @@ add_processor("/fight.php", function()
 
 		[ [[A mobile sweat lodge rumbles into a regiment of frat boys and the hippies inside open all of its vents simultaneously.]] ] = 31,
 		[ [[You see a squadron of police cars drive up, and a squad of policemen arrest an entire regiment of frat boys.]] ] = 31,
-		[ [[You see a regiment of frat boys decide they're tired of drinking non-alcoholic beer and tired of not hitting on chicks,]] ] = 31,
+		[ [[frat boys decide they're tired of drinking non-alcoholic beer and tired of not hitting on chicks,]] ] = 31, -- buggy/typoed server message, so skipping first part
 
 		[ [[You see an airborne commander trying out a new strategy: she mixes a tiny bottle of rum she found on one of the frat boy casualties]] ] = 63,
 		[ [[You see a couple of hippies rigging a mobile sweat lodge with a public address system.]] ] = 63,
@@ -339,7 +339,7 @@ add_processor("/fight.php", function()
 				end
 			end
 			increase_battlefield_kill_counter("frat boy", amount)
-			session["debug.just added frat kills"] = amount
+--			session["debug.just added frat kills"] = amount
 		end
 		if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Hippy Uniform%)%)</a>]]) then
 			amount = 1
@@ -349,7 +349,7 @@ add_processor("/fight.php", function()
 				end
 			end
 			increase_battlefield_kill_counter("hippy", amount)
-			session["debug.just added hippy kills"] = amount
+--			session["debug.just added hippy kills"] = amount
 		end
 	end
 end)

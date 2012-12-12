@@ -79,7 +79,8 @@ data GlobalRefStuff = GlobalRefStuff {
 	h_lua_log_ :: Handle,
 	h_http_log_ :: Handle,
 	shutdown_secret_ :: String,
-	shutdown_ref_ :: IORef Bool
+	shutdown_ref_ :: IORef Bool,
+	doChatLogAction_ :: (Database.SQLite3.Database -> IO ()) -> IO ()
 }
 
 data OtherRefStuff = OtherRefStuff {
@@ -113,6 +114,7 @@ logindents ref = logindents_ $ globalstuff_ $ ref
 blocking_lua_scripting ref = blocking_lua_scripting_ $ globalstuff_ $ ref
 
 doDbLogAction ref action = (doDbLogAction_ $ sessionData $ ref) ref action
+doChatLogAction ref action = (doChatLogAction_ $ globalstuff_ $ ref) action
 doStateAction ref action = (doStateAction_ $ sessionData $ ref) ref action
 
 -- TODO: Use a better name. Split into different types?

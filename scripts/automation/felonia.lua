@@ -1,7 +1,7 @@
 local felonia_href = setup_turnplaying_script {
 	name = "automate-felonia",
 	description = "Defeat Felonia (Degrassi Knoll quest)",
-	when = function() return moonsign_area() == "Degrassi Knoll" end,
+	when = function() return moonsign_area() == "Degrassi Knoll" and not quest_completed("A Bugbear of a Problem") end,
 	macro = nil,
 	preparation = function()
 		maybe_pull_item("annoying pitchfork")

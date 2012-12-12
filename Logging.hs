@@ -11,6 +11,7 @@ import Data.IORef
 import Data.Time
 import Network.URI
 import System.IO
+import Text.JSON
 import Text.Printf
 import qualified Data.Map
 
@@ -115,3 +116,66 @@ log_page_result ref status_before log_time state_before uri params effuri pagete
 	let Just sessid = get_sessid ref
 	print_log_msg ref (charname ++ "-" ++ charasc ++ "-detailed.txt") $ LogItem { time = log_time, apiStatusBefore = status_before, apiStatusAfter = status_after, stateBefore = state_before, stateAfter = state_after, sessionId = sessid, requestedUri = uri, parameters = params, retrievedUri = effuri, pageText = pagetext }
 	doLOGGING_DEBUG $ "log_page_result done: " ++ show log_time ++ " | " ++ show effuri
+
+log_chat_messages ref text = (do
+	let integerFromObj name jsobj = case valFromObj name jsobj of
+		Ok (JSString s) -> case read_as $ fromJSString s of
+			Just i -> Ok (i :: Integer)
+			_ -> Error "string does not represent a number"
+		Ok (JSRational _ r) -> Ok (round r :: Integer)
+		_ -> Error "unknown number type"
+
+	let handle_msg m = (do
+		let rawjson = encodeStrict m
+--		putStrLn $ "DEBUG log_chat: " ++ rawjson
+		let mtype = valFromObj "type" m
+		let mmsg = valFromObj "msg" m :: Result String
+		let mtime = integerFromObj "time" m
+		let mmid = integerFromObj "mid" m
+		let mchannel = valFromObj "channel" m :: Result String
+		let mwhoid = case valFromObj "who" m of
+			Ok jswho -> integerFromObj "id" jswho
+			_ -> Error "no who value"
+		let mforid = case valFromObj "who" m of
+			Ok jswho -> integerFromObj "id" jswho
+			_ -> Error "no who value"
+		let mplayerid = case mforid of
+			Ok id -> Ok id
+			_ -> mwhoid
+		case (mtype, mtime, mmsg, mplayerid, mmid, mchannel) of
+			(Ok "public", Ok time, Ok msg, Ok playerid, Ok mid, Ok channel) -> do
+--				putStrLn $ "DEBUG chat public: " ++ show (time, playerid, channel, mid)
+				doChatLogAction ref $ \db -> do
+					do_db_query_ db "INSERT OR IGNORE INTO public(mid, time, channel, playerid, msg, rawjson) VALUES(?, ?, ?, ?, ?, ?);"
+						[Just $ show $ mid, Just $ show $ time, Just channel, Just $ show $ playerid, Just msg, Just rawjson]
+			(Ok "private", Ok time, Ok msg, Ok playerid, _, _) -> do
+--				putStrLn $ "DEBUG chat private: " ++ show (time, playerid)
+				doChatLogAction ref $ \db -> do
+					do_db_query_ db "INSERT INTO private(time, playerid, msg, rawjson) VALUES(?, ?, ?, ?);"
+						[Just $ show $ time, Just $ show $ playerid, Just msg, Just rawjson]
+			(Ok _, Ok time, Ok msg, _, _, _) -> do
+--				putStrLn $ "DEBUG chat other: " ++ show (time, oktype)
+				doChatLogAction ref $ \db -> do
+					do_db_query_ db "INSERT INTO other(time, msg, rawjson) VALUES(?, ?, ?, ?);"
+						[Just $ show $ time, Just msg, Just rawjson]
+			_ -> do
+				putStrLn $ "WARNING: unrecognized chat type"
+				doChatLogAction ref $ \db -> do
+					do_db_query_ db "INSERT INTO unrecognized(rawjson) VALUES(?);"
+						[Just rawjson]
+		return ()) `catch` (\e -> do
+			putStrLn $ "ERROR: handle_msg exception: " ++ show (e :: SomeException)
+			return ())
+
+	let Ok json = decodeStrict $ text
+	let Ok (JSArray msglist) = valFromObj "msgs" json
+	mapM_ (\x -> case x of
+		JSObject m -> handle_msg m
+		_ -> putStrLn $ "WARNING: unrecognized chat message") msglist
+	return ()) `catch` (\e -> do
+		return (e :: SomeException)
+		doChatLogAction ref $ \db -> do
+			do_db_query_ db "INSERT INTO oldchat(text) VALUES(?);"
+				[Just text]
+--		putStrLn $ "DEBUG: log_chat_messages exception: " ++ show (e :: SomeException)
+		return ())

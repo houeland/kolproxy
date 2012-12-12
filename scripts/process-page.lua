@@ -55,7 +55,6 @@ setup_variables()
 -- end
 
 do
-	local semis = get_semirare_encounters()
 	local function matches(x)
 		if monster_name and newly_started_fight and encounter_source == "adventure" then
 			return monster_name:contains(x)
@@ -67,11 +66,12 @@ do
 			return false
 		end
 	end
-	for x in table.values(semis) do
+	for _, x in ipairs(datafile("semirares")) do
 		if matches(x) then
 			print("INFO: SEMIRARE!!!", x)
 			ascension["last semirare encounter"] = x
 			ascension["last semirare turn"] = turnsthisrun()
+			ascension["last semirare"] = { encounter = x, turn = turnsthisrun() }
 		end
 	end
 end
