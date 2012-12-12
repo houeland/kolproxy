@@ -156,7 +156,7 @@ log_chat_messages ref text = (do
 			(Ok _, Ok time, Ok msg, _, _, _) -> do
 --				putStrLn $ "DEBUG chat other: " ++ show (time, oktype)
 				doChatLogAction ref $ \db -> do
-					do_db_query_ db "INSERT INTO other(time, msg, rawjson) VALUES(?, ?, ?, ?);"
+					do_db_query_ db "INSERT INTO other(time, msg, rawjson) VALUES(?, ?, ?);"
 						[Just $ show $ time, Just msg, Just rawjson]
 			_ -> do
 				putStrLn $ "WARNING: unrecognized chat type"
