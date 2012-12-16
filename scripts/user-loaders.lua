@@ -29,6 +29,7 @@ load_file("automation", "automation/nemesis.lua")
 load_file("automation", "automation/suburbandis.lua")
 load_file("automation", "automation/spaaace.lua")
 load_file("automation", "automation/felonia.lua")
+load_file("automation", "automation/dungeonfist.lua")
 
 -- load_file("spading", "spading-automation.lua")
 -- load_file("spading", "custom/slimeling-spading.lua")
