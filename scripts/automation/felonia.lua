@@ -22,7 +22,7 @@ local felonia_href = setup_turnplaying_script {
 			refresh_quest()
 			advagain = quest_text("investigate the Spooky Gravy Barrow")
 		elseif quest_text("investigate the Spooky Gravy Barrow") then
-			script.set_familiar "Flaming Gravy Fairy"
+			script.want_familiar "Flaming Gravy Fairy"
 			if not have("spooky glove") and have("small leather glove") and have("spooky fairy gravy") then
 				result, result_url = cook_items("small leather glove", "spooky fairy gravy")()
 				advagain = have("spooky glove")

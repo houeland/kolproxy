@@ -7,7 +7,7 @@ local interceptors = {}
 function wrapped_function()
 text = nil
 
-if can_read_state() ~= "yes" then
+if not can_read_state() then
 	return
 end
 

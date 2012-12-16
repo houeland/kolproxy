@@ -47,20 +47,27 @@ local function hardwarn(...)
 	print("WARNING: downloaded data files inconsistent,", ...)
 end
 
-local function split_tabbed_line(l)
+local function split_line_on(what, l)
 	local tbl = {}
-	for x in l:gmatch("[^	]+") do
-		table.insert(tbl, x)
+	local idx = 0
+	while idx do
+		local nextidx = l:find(what, idx + 1)
+		if nextidx then
+			table.insert(tbl, l:sub(idx + 1, nextidx - 1))
+		else
+			table.insert(tbl, l:sub(idx + 1))
+		end
+		idx = nextidx
 	end
 	return tbl
 end
 
+local function split_tabbed_line(l)
+	return split_line_on("	", l)
+end
+
 local function split_commaseparated(l)
-	local tbl = {}
-	for x in l:gmatch("[^, ]+") do
-		table.insert(tbl, x)
-	end
-	return tbl
+	return split_line_on(",", l)
 end
 
 local function parse_mafia_bonuslist(bonuslist)
@@ -202,7 +209,10 @@ function parse_items()
 	local itemslots = { hat = true, shirt = true, container = true, weapon = true, offhand = true, pants = true, accessory = true }
 	for l in io.lines("cache/files/items.txt") do
 		local tbl = split_tabbed_line(l)
-		local itemid, name, itemusestr = tonumber(tbl[1]), tbl[2], tbl[5]
+		local itemid, name, picture, itemusestr, plural = tonumber(tbl[1]), tbl[2], tbl[4], tbl[5], tbl[8]
+		if picture then
+			picture = picture:gsub("%.gif$", "")
+		end
 		if itemid and name and not blacklist[name] then
 			items[name] = { id = itemid }
 			lowercasemap[name:lower()] = name
@@ -238,8 +248,7 @@ function parse_items()
 
 	for l in io.lines("cache/files/equipment.txt") do
 		local tbl = split_tabbed_line(l)
-		local name = tbl[1]
-		local req = tbl[3]
+		local name, req = tbl[1], tbl[3]
 		if name and req and not blacklist[name] then
 			if items[name] then
 				local reqtbl = {}
@@ -247,7 +256,7 @@ function parse_items()
 				reqtbl.mysticality = tonumber(req:match("Mys: ([0-9]+)"))
 				reqtbl.moxie = tonumber(req:match("Mox: ([0-9]+)"))
 				if req ~= "none" and not next(reqtbl) then
-					hardwarn("unknown equip requirement", req)
+					hardwarn("unknown equip requirement", req, "for", name)
 				end
 				-- Mafia data files frequently show no equipment requirements as e.g. "Mus: 0" instead of "none"
 				for a, b in pairs(reqtbl) do

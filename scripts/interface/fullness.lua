@@ -64,6 +64,9 @@ add_always_warning("/inv_booze.php", function()
 			return "You do not have Ode to Booze active.", "drinking without ode"
 		end
 		local potency = retrieve_itemid_potency(tonumber(params.whichitem))
+		if not potency then
+			return "You might not have enough turns of Ode to Booze active (unknown potency).", "drinking unknown potency without enough turns of ode to booze"
+		end
 		local need_turns = (tonumber(params.quantity) or 1) * potency
 		if buffturns("Ode to Booze") < need_turns then
 			return "You do not have enough turns of Ode to Booze active (need " .. need_turns .. " turns).", "drinking without enough turns of ode to booze"
@@ -74,7 +77,7 @@ end)
 add_always_warning("/inv_booze.php", function()
 	local safe = false
 	local potency = retrieve_itemid_potency(tonumber(params.whichitem))
-	if drunkenness() + potency * (tonumber(params.quantity) or 1) <= estimate_max_safe_drunkenness() then
+	if potency and drunkenness() + potency * (tonumber(params.quantity) or 1) <= estimate_max_safe_drunkenness() then
 		safe = true
 	elseif whichitem == get_itemid("steel margarita") then
 		safe = true
@@ -88,6 +91,10 @@ end)
 add_extra_always_warning("/inv_booze.php", function()
 	local safe = false
 	local potency = retrieve_itemid_potency(tonumber(params.whichitem))
+
+	if not potency then
+		return "This booze could make you fallen-down drunk.", "overdrinking unknown potency"
+	end
 
 	if drunkenness() + potency * (tonumber(params.quantity) or 1) <= estimate_max_safe_drunkenness() then
 		safe = true

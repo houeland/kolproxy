@@ -38,15 +38,12 @@ doProcessPage ref uri params = do
 
 	state_before <- get_the_state ref
 
-	(xf, mvf) <- (rawRetrievePage ref) ref uri params
+	log_file_retrieval ref uri params
+
+	(xf, mvf) <- (nochangeRawRetrievePageFunc ref) ref uri params True
 
 	let status_after_func = do
-		v <- readMVar =<< mvf
-		-- TODO: Is this ever Nothing?
-		-- TODO: YES! How/why/when? Use Right/Left to report the error
-		case v of
-			Just s -> return s
-			_ -> throwIO $ InternalError $ "Error getting after-page-load status"
+		readMVar =<< mvf
 
 	mv <- newEmptyMVar
 
@@ -81,33 +78,31 @@ doProcessPage ref uri params = do
 		readMVar mv
 
 doProcessPageWhenever ref uri params = do
-	xf <- fst <$> (rawRetrievePage ref) ref uri params
+	xf <- fst <$> internalKolRequest_pipelining ref uri params False
 	return $ do
 		Right <$> xf
 
 statusfunc ref = do
 	mv <- readIORef $ jsonStatusPageMVarRef_ $ sessionData $ ref
 	return $ do
-		x <- modifyMVar mv $ \v -> do
-			case v of
-				Just j -> return (Just j, j)
-				Nothing -> do
-					x <- KoL.Api.getStatus ref
-					writeIORef (latestRawJsonText_ $ sessionData $ ref) (Just x)
-					return (Just x, x)
-		return x
+		x <- readMVar mv
+		putStrLn $ "DEBUG statusfunc: " ++ (show $ case x of
+			Right r -> Right $ length $ r
+			Left err -> Left err)
+		case x of
+			Right r -> return r
+			Left err -> throwIO err
 
 -- TODO: Redo how scripts are run and used to do chat, make it more similar to normal pages
 kolProxyHandlerWhenever uri params baseref = do
 	let ref = baseref {
 		processingstuff_ = ProcessingRefStuff {
 			processPage_ = doProcessPageWhenever,
-			rawRetrievePage_ = (\xref xuri xparams -> internalKolRequest_pipelining xref xuri xparams False),
 			nochangeRawRetrievePageFunc_ = internalKolRequest_pipelining,
 			getstatusfunc_ = statusfunc
 		}
 	}
-	Right (text, effuri, _hdrs) <- case uriPath uri of
+	Right (text, effuri, _hdrs) <- case uriPath uri of -- TODO: handle Left here?
 		"/submitnewchat.php" -> do
 			let allparams = concat $ catMaybes $ [decodeUrlParams uri, params]
 			x <- runSendChatScript ref uri allparams
@@ -156,22 +151,23 @@ handleRequest ref uri effuri headers params pagetext = do
 
 
 make_ref baseref = do
-	let doRetrievePageRaw ref url params = do
-		log_file_retrieval ref url params
-		(xf, mvf) <- (nochangeRawRetrievePageFunc ref) ref url params True
---		forkIO_ "proxy:makeref" $ void $ xf -- Run the content-getting function. TODO: Is this necessary?
-		return (xf, mvf)
 	let ref = baseref {
 		processingstuff_ = ProcessingRefStuff {
 			processPage_ = doProcessPage,
-			rawRetrievePage_ = doRetrievePageRaw,
 			nochangeRawRetrievePageFunc_ = internalKolRequest_pipelining,
 			getstatusfunc_ = statusfunc
 		}
 	}
 	state_is_ok <- (do
-		refreshstatus ref
+		mjs <- readIORef (latestRawJsonText_ $ sessionData $ ref)
+		when (isNothing mjs) $ do
+			mv <- readIORef (jsonStatusPageMVarRef_ $ sessionData $ ref)
+			load_api_status_to_mv ref mv
+		putStrLn $ "DEBUG: s_i_ok: force_latest_status_parse"
+		force_latest_status_parse ref
+		putStrLn $ "DEBUG: s_i_ok: loadState"
 		void $ loadState ref
+		putStrLn $ "DEBUG: s_i_ok: done"
 		return True) `catch` (\e -> do
 			putStrLn $ "loadstate exception: " ++ show (e :: SomeException)
 			return False)
@@ -215,7 +211,11 @@ kolProxyHandler uri params baseref = do
 				putStrLn $ "  url: " ++ (show effuri)
 				handleRequest origref uri effuri hdrs params pt
 			else (do
-				newref <- make_ref $ baseref { otherstuff_ = (otherstuff_ origref) { connection_ = (connection_ $ otherstuff_ $ origref) { cookie_ = new_cookie } } }
+				newref <- do
+					mv <- newEmptyMVar
+					writeIORef (jsonStatusPageMVarRef_ $ sessionData $ origref) mv
+					writeIORef (latestRawJsonText_ $ sessionData $ origref) Nothing
+					make_ref $ baseref { otherstuff_ = (otherstuff_ origref) { connection_ = (connection_ $ otherstuff_ $ origref) { cookie_ = new_cookie } } }
 				putStrLn $ "INFO: login.php -> getting server state"
 				ai <- getApiInfo newref
 				putStrLn $ "INFO: Logging in as " ++ (charName ai) ++ " (ascension " ++ (show $ ascension ai) ++ ")"
@@ -347,7 +347,7 @@ main = platform_init $ do
 	have_process_page <- doesFileExist "scripts/process-page.lua"
 	if have_process_page
 		then do
-			putStrLn $ "Starting..."
+			putStrLn $ "INFO: Starting..."
 			createDirectoryIfMissing True "cache"
 			createDirectoryIfMissing True "cache/data"
 			createDirectoryIfMissing True "cache/files"

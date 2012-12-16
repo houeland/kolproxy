@@ -34,12 +34,12 @@ import qualified Network.HTTP.HandleStream
 
 -- TODO: Split into a ModdedHttp part for the modified Network.HTTP stuff and another kolproxy part
 
--- import System.Random
+--import System.Random
 
 doHTTPLOWLEVEL_DEBUG _ = return ()
 -- doHTTPLOWLEVEL_DEBUG x = putStrLn $ "HTTPlow DEBUG: " ++ x
 doHTTPLOWLEVEL_DEBUGexception _ = return ()
--- doHTTPLOWLEVEL_DEBUGexception x = putStrLn $ "HTTPlow DEBUGexc: " ++ x
+--doHTTPLOWLEVEL_DEBUGexception x = putStrLn $ "HTTPlow DEBUGexc: " ++ x
 
 class ConnFunctionsBundle a b | a -> b where
 	connGetBlock :: a -> Int -> IO b
@@ -233,18 +233,18 @@ doHTTPreq (absuri, rq) = do
 		_ -> simple_http_withproxy rq
 	case r of
 		Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, rspCode resp)
-		x -> do
-			putStrLn $ "doHTTPreq: " ++ (show x)
-			throwIO $ userError $ "doHTTPreq [" ++ (show x) ++ "]"
+		Left ce -> do
+			putStrLn $ "doHTTPreq: " ++ (show ce)
+			throwIO $ InternalError $ "doHTTPreq[" ++ (show ce) ++ "]"
 
 doHTTPSreq (absuri, rq) = do
 --	putStrLn $ "doHTTPSreq: " ++ show absuri
 	r <- simple_https_direct rq
 	case r of
 		Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, rspCode resp)
-		x -> do
-			putStrLn $ "doHTTPSreq: " ++ (show x)
-			throwIO $ userError $ "doHTTPSreq [" ++ (show x) ++ "]"
+		Left ce -> do
+			putStrLn $ "doHTTPSreq: " ++ (show ce)
+			throwIO $ InternalError $ "doHTTPSreq[" ++ (show ce) ++ "]"
 
 kolproxy_withVersion v hs = case v of
 	[] -> hs
@@ -316,8 +316,8 @@ kolproxy_openTCPConnection server = do
 -- 			putStrLn $ "opentcp connecting to " ++ show auth ++ " | " ++ show hostname ++ " -> " ++ show hostA
 			let a = Network.Socket.SockAddrInet (toEnum portnum) hostA
 			Network.Socket.connect s a
--- 			r <- randomRIO (1, 100 :: Integer)
--- 			when (r < 10) $ throwIO $ userError $ "faked random connection error!"
+--			r <- randomRIO (1, 100 :: Integer)
+--			when (r < 10) $ throwIO $ userError $ "faked random connection error!"
 			h <- Network.Socket.socketToHandle s ReadWriteMode
 			return h
 	where
@@ -346,58 +346,59 @@ mkconnthing server = do
 		rchan <- newChan
 		req_counter <- newIORef 0
 		let run = do
-			(isok, (absuri, rq, mvdest, ref)) <- (readChan rchan) `catch` (\e -> do
-				doHTTPLOWLEVEL_DEBUGexception $ "http readchan exception: " ++ (show (e :: SomeException))
-				throwIO e)
-			(what, was_last_request) <- case isok of
-				Right (_requesting_it, req_nr) -> log_time_interval_http ref ("HTTP reading: " ++ (show $ rqURI rq)) $ do
-					what <- try $ (do
-						rsp <- log_time_interval_http ref "HTTP head" $ getResponseHead c -- fails to read from mafia because mafia terminates with LF instead of CRLF. Is this still true?
--- 						r <- randomRIO (1, 100 :: Integer)
--- 						when (r < 5) $ throwIO $ userError $ "faked random read error!"
-						Right resp <- log_time_interval_http ref "HTTP body" $ switchResponse c True False rsp rq
--- 						putStrLn $ "DEBUG: HTTP lowlevel GOT " ++ (show absuri) ++ " (" ++ show req_nr ++ ")"
--- 						putStrLn $ "DEBUG: resp: " ++ show resp
--- 						putStrLn $ "DEBUG: respbody: " ++ show (rspBody resp)
-						return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, rspCode resp, resp)) `catch` (\e -> do
-							doHTTPLOWLEVEL_DEBUGexception $ "http read exception: " ++ (show (e :: SomeException))
-							throwIO e)
-					return (what, req_nr == 80)
-				Left err -> return (Left err, False) -- TODO: Change to True?
-			putMVar mvdest what `catch` (\e -> do
-				doHTTPLOWLEVEL_DEBUGexception $ "http write mvdest exception for " ++ (uriPath absuri) ++ ": " ++ (show (e :: SomeException))
-				throwIO e)
-			going <- (modifyMVar connmv $ \(cf_stored, _t_stored, pending) -> do
-				let kill_it = do
--- 					doHTTPLOWLEVEL_DEBUG $ "closed, making new connection"
-					(cf, connt, _p) <- open_conn
-					let transfer n = when (n > 0) $ do
-						(_, x) <- readChan rchan
-						cf x
-						transfer (n - 1)
-					transfer (pending - 1)
-					return ((cf, connt, pending - 1), False)
-				case (was_last_request, what) of
-					(True, _) -> do
--- 						doHTTPLOWLEVEL_DEBUG $ "last request, refreshing connection"
-						kill_it
-					(_, Right (_, _, hdrs, _, _)) -> case lookup "Connection" hdrs of
-						Just "close" -> do
--- 							doHTTPLOWLEVEL_DEBUG $ "got Just close, refreshing connection"
-							kill_it
-						_ -> do
-							trefreshed <- getCurrentTime
-							return ((cf_stored, trefreshed, pending - 1), True)
-					_ -> do
-						doHTTPLOWLEVEL_DEBUG $ "no Right hdrs for connection, refreshing"
-						kill_it) `catch` (\e -> do
-							doHTTPLOWLEVEL_DEBUG $ "http put exception for " ++ (uriPath absuri) ++ ": " ++ (show (e :: SomeException))
-							throwIO e)
-			when going run
+			stuff <- readChan rchan
+			case stuff of
+				Just (isok, (absuri, rq, mvdest, ref)) -> do
+					(what, was_last_request) <- case isok of
+						Right (_requesting_it, req_nr) -> log_time_interval_http ref ("HTTP reading: " ++ (show $ rqURI rq)) $ do
+							what <- try $ ((do
+								rsp <- log_time_interval_http ref "HTTP head" $ getResponseHead c -- fails to read from mafia because mafia terminates with LF instead of CRLF. Is this still true?
+--								r <- randomRIO (1, 100 :: Integer)
+--								when (r < 5) $ throwIO $ userError $ "faked random read error!"
+								Right resp <- log_time_interval_http ref "HTTP body" $ switchResponse c True False rsp rq
+-- 								putStrLn $ "DEBUG: HTTP lowlevel GOT " ++ (show absuri) ++ " (" ++ show req_nr ++ ")"
+-- 								putStrLn $ "DEBUG: resp: " ++ show resp
+-- 								putStrLn $ "DEBUG: respbody: " ++ show (rspBody resp)
+								return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, rspCode resp, resp)) `catch` (\e -> do
+									doHTTPLOWLEVEL_DEBUGexception $ "http read exception: " ++ (show (e :: SomeException))
+									throwIO e))
+							return (what, req_nr == 80)
+						Left err -> return (Left err, False) -- TODO: Change to True?
+					putMVar mvdest what `catch` (\e -> do
+						doHTTPLOWLEVEL_DEBUGexception $ "http write mvdest exception for " ++ (uriPath absuri) ++ ": " ++ (show (e :: SomeException))
+						throwIO e)
+					going <- (modifyMVar connmv $ \(cf_stored, _, pending, thiskillfunc) -> do
+						let kill_it = do
+-- 							doHTTPLOWLEVEL_DEBUG $ "closed, making new connection"
+							(cf, connt, _, cnewkill) <- open_conn
+							let transfer n = when (n > 0) $ do
+								Just (_, x) <- readChan rchan
+								cf x
+								transfer (n - 1)
+							transfer (pending - 1)
+							return ((cf, connt, pending - 1, cnewkill), False)
+						case (was_last_request, what) of
+							(True, _) -> do
+-- 								doHTTPLOWLEVEL_DEBUG $ "last request, refreshing connection"
+								kill_it
+							(_, Right (_, _, hdrs, _, _)) -> case lookup "Connection" hdrs of
+								Just "close" -> do
+									putStrLn $ "WARNING: server closed connection"
+									kill_it
+								_ -> do
+									trefreshed <- getCurrentTime
+									return ((cf_stored, trefreshed, pending - 1, thiskillfunc), True)
+							_ -> do
+								putStrLn $ "WARNING: no headers from server, closing connection"
+								kill_it) `catch` (\e -> do
+									doHTTPLOWLEVEL_DEBUG $ "http put exception for " ++ (uriPath absuri) ++ ": " ++ (show (e :: SomeException))
+									throwIO e)
+					when going run
+				_ -> return ()
 		forkIO_ "HTTPlow:run" $ (run `catch` (\e -> do
 			doHTTPLOWLEVEL_DEBUGexception $ "http forked-run exception: " ++ (show (e :: SomeException))
---			throwIO e))
-			return ()))
+			throwIO e))
+--			return ()))
 		let cfunc (absuri, rq, mvdest, ref) = do
 -- 			putStrLn $ "DEBUG cfunc: " ++ show absuri
 			isok <- log_time_interval_http ref ("HTTP asking: " ++ (show $ rqURI $ rq)) $ try $ do
@@ -412,16 +413,18 @@ mkconnthing server = do
 -- 						putStrLn $ ""
 						connPut c (show rq)
 						connPut c (Data.ByteString.Char8.unpack $ rqBody rq)
--- 						r <- randomRIO (1, 100 :: Integer)
--- 						when (r < 5) $ throwIO $ userError $ "faked random write error!"
+--						r <- randomRIO (1, 100 :: Integer)
+--						when (r < 5) $ throwIO $ userError $ "faked random write error!"
 						connFlush c -- Maybe TODO???: only flush when done requesting???
 					else do
 -- 						putStrLn $ "DEBUG: waiting with request for " ++ show (rqURI rq) ++ " (" ++ show req_nr ++ ")"
 						return ()
 				return (requesting_it, req_nr)
 -- 			putStrLn $ "DEBUG cfunc isok: " ++ show isok
-			writeChan rchan (isok, (absuri, rq, mvdest, ref))
-		return (cfunc, tnow, 0)
+			writeChan rchan $ Just (isok, (absuri, rq, mvdest, ref))
+		let ckill = do
+			writeChan rchan Nothing
+		return (cfunc, tnow, 0, ckill)
 	forkIO_ "HTTPlow:connmv" $ putMVar connmv =<< open_conn
 
 	connchan <- newChan
@@ -433,19 +436,20 @@ mkconnthing server = do
 -- 		putStrLn $ "DEBUG readchan process x: " ++ show debug_absuri
 
 		-- TODO: unify open_conn and transfer? should be 0 pending here
-		modifyMVar_ connmv $ \(cf_stored, t_stored, pending) -> do
+		modifyMVar_ connmv $ \(cf_stored, t_stored, pending, oldkill) -> do
 			tnow <- getCurrentTime
-			(cf, t, p) <- if diffUTCTime tnow t_stored <= 60.0 -- Reuse connection if it is less than a minute old
+			(cf, t, p, k) <- if diffUTCTime tnow t_stored <= 60.0 -- Reuse connection if it is less than a minute old
 				then do
 -- 					doHTTPLOWLEVEL_DEBUG $ "not-stale, keeping connection | " ++ show (tnow, t_stored, diffUTCTime tnow t_stored)
-					return (cf_stored, t_stored, pending)
+					return (cf_stored, t_stored, pending, oldkill)
 				else do
 --					putStrLn $ "DEBUG: stale, making new connection | " ++ show (tnow, t_stored, diffUTCTime tnow t_stored)
+					oldkill
 					open_conn -- TODO: need to handle this failing!!!
 -- 			putStrLn $ "DEBUG connmv cf x: " ++ show debug_absuri
 			cf x
 -- 			putStrLn $ "DEBUG connmv cfed x!: " ++ show debug_absuri
-			return (cf, t, p + 1)) `catch` (\e -> doHTTPLOWLEVEL_DEBUGexception $ "connchan error: " ++ (show (e :: SomeException))))
+			return (cf, t, p + 1, k)) `catch` (\e -> doHTTPLOWLEVEL_DEBUGexception $ "connchan error: " ++ (show (e :: SomeException))))
 	return connchan :: IO ConnChanType
 
 

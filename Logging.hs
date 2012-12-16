@@ -18,7 +18,7 @@ import qualified Data.Map
 data LogItem = LogItem {
 	time :: ZonedTime,
 	apiStatusBefore :: String,
-	apiStatusAfter :: String,
+	apiStatusAfter :: Either SomeException String,
 	stateBefore :: Maybe StateType,
 	stateAfter :: Maybe StateType,
 	sessionId :: String,
@@ -44,7 +44,9 @@ print_log_msg ref _file logdetails = do
 		do_db_query_ db "INSERT INTO pageloads(time, statusbefore, statusafter, statebefore, stateafter, sessionid, requestedurl, parameters, retrievedurl, pagetext) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);" [
 			Just $ show $ time $ logdetails,
 			Just $ apiStatusBefore $ logdetails,
-			Just $ apiStatusAfter $ logdetails,
+			case apiStatusAfter logdetails of
+				Right x -> Just x
+				_ -> Nothing,
 			Just $ showstate (stateBefore $ logdetails),
 			Just $ showstate (stateAfter $ logdetails),
 			Just $ sessionId $ logdetails,

@@ -35,8 +35,7 @@ doSERVER_DEBUG _ = return ()
 make_sessionconn kolproxy_direct_connection dblogstuff statestuff = do
 	cs <- mkconnthing kolproxy_direct_connection
 	cw <- mkconnthing kolproxy_direct_connection
-	jspmv <- newMVar Nothing
-	jspmvref <- newIORef jspmv
+	jspmvref <- newIORef =<< newEmptyMVar
 	lrjtref <- newIORef Nothing
 	tnow <- getCurrentTime
 	lrs <- newIORef tnow
@@ -198,11 +197,18 @@ make_globalref = do
 	}
 
 runProxyServer r rwhenever portnum = do
-	logchan <- newChan
-	forkIO_ "kps:logchan" $ forever $ ((join $ readChan $ logchan) `catch` (\e -> do
-		putStrLn $ "writelog error: " ++ (show (e :: SomeException))))
-	dropping_logchan <- newChan
-	forkIO_ "kps:droplogchan" $ forever $ readChan dropping_logchan
+	(logchan, dropping_logchan) <- do
+		dropping_logchan <- newChan
+		forkIO_ "kps:droplogchan" $ forever $ readChan dropping_logchan
+		v <- getEnvironmentSetting "KOLPROXY_DISABLE_LOGGING"
+		case v of
+			-- TODO: not right, we get code we need to run! Should just disable the actual file writing?
+			Just "I_PROMISE_I_AM_REALLY_SURE_I_WANT_TO_DISABLE_LOGGING" -> return (dropping_logchan, dropping_logchan)
+			_ -> do
+				logchan <- newChan
+				forkIO_ "kps:logchan" $ forever $ ((join $ readChan $ logchan) `catch` (\e -> do
+					putStrLn $ "writelog error: " ++ (show (e :: SomeException))))
+				return (logchan, dropping_logchan)
 
 	globalref <- make_globalref
 
@@ -239,7 +245,7 @@ runProxyServer r rwhenever portnum = do
 				Nothing -> do
 					putStrLn $ "opening log db: " ++ filename
 					opendb <- create_db "sqlite3 log" filename
-					do_db_query_ opendb "CREATE TABLE IF NOT EXISTS pageloads(idx INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, time TEXT NOT NULL, statusbefore TEXT NOT NULL, statusafter TEXT, statebefore TEXT, stateafter TEXT, sessionid TEXT NOT NULL, requestedurl TEXT NOT NULL, parameters TEXT, retrievedurl TEXT, pagetext TEXT);" []
+					do_db_query_ opendb "CREATE TABLE IF NOT EXISTS pageloads(idx INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, time TEXT NOT NULL, statusbefore TEXT, statusafter TEXT, statebefore TEXT, stateafter TEXT, sessionid TEXT NOT NULL, requestedurl TEXT NOT NULL, parameters TEXT, retrievedurl TEXT, pagetext TEXT);" []
 					x <- newChan
 					forkIO_ "kps:dblogchan" $ forever $ do
 						chanaction <- readChan x

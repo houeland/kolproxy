@@ -5,7 +5,6 @@ module KoL.UtilTypes where
 import Prelude hiding (read, catch)
 import Control.Concurrent
 import Control.Exception
-import Control.Monad
 import Data.IORef
 import Data.Time
 import Data.Typeable
@@ -28,7 +27,7 @@ data LuaScriptType = WHENEVER | PROCESS | PRINTER | AUTOMATE | INTERCEPT
 
 -- This entire thing should be locked up into DiscerningStateIdentifier. log/state actions don't really belong.
 data SessionDataType = SessionDataType {
-	jsonStatusPageMVarRef_ :: IORef (MVar (Maybe String)),
+	jsonStatusPageMVarRef_ :: IORef (MVar (Either SomeException String)),
 	latestRawJsonText_ :: IORef (Maybe String),
 	itemData_ :: IORef (Maybe (Int -> Maybe [(String, String)], String -> Maybe [(String, String)])),
 	doDbLogAction_ :: RefType -> (Database.SQLite3.Database -> IO ()) -> IO (),
@@ -66,8 +65,7 @@ data LogRefStuff = LogRefStuff {
 
 data ProcessingRefStuff = ProcessingRefStuff {
 	processPage_ :: RefType -> URI -> Maybe [(String, String)] -> IO (IO (Either (Data.ByteString.ByteString, URI, [(String, String)]) (Data.ByteString.ByteString, URI, [(String, String)]))),
-	rawRetrievePage_ :: RefType -> URI -> Maybe [(String, String)] -> IO (IO (Data.ByteString.ByteString, URI, [(String, String)]), IO (MVar (Maybe String))),
-	nochangeRawRetrievePageFunc_ :: RefType -> URI -> Maybe [(String, String)] -> Bool -> IO (IO (Data.ByteString.ByteString, URI, [(String, String)]), IO (MVar (Maybe String))),
+	nochangeRawRetrievePageFunc_ :: RefType -> URI -> Maybe [(String, String)] -> Bool -> IO (IO (Data.ByteString.ByteString, URI, [(String, String)]), IO (MVar (Either SomeException String))),
 	getstatusfunc_ :: RefType -> IO (IO String)
 }
 
@@ -99,11 +97,9 @@ data RefType = RefType {
 
 getlogchan ref = logchan_ $ logstuff_ $ ref
 processPage ref = processPage_ $ processingstuff_ $ ref
-rawRetrievePage ref = rawRetrievePage_ $ processingstuff_ $ ref
 nochangeRawRetrievePageFunc ref = nochangeRawRetrievePageFunc_ $ processingstuff_ $ ref
 getstatusfunc ref = (getstatusfunc_ $ processingstuff_ $ ref) ref
-readstatus ref = join $ getstatusfunc ref
-refreshstatus ref = void $ join $ getstatusfunc ref
+--readstatus ref = join $ getstatusfunc ref
 
 connection ref = connection_ $ otherstuff_ $ ref
 state ref = if stateValid_ ref
@@ -130,10 +126,11 @@ instance Show ConnectionException where
 	show (HttpRequestException uri err) = "Network connection error while loading " ++ uriPath uri ++ " (exception: " ++ show err ++ ")"
 	show (StateException) = "Error loading state"
 
-data InternalError = InternalError String
+data OtherKolproxyException = InternalError String | ExceptionMessage String
 	deriving (Typeable)
 
-instance Exception InternalError
+instance Exception OtherKolproxyException
 
-instance Show InternalError where
+instance Show OtherKolproxyException where
 	show (InternalError str) = "Internal error: " ++ str
+	show (ExceptionMessage str) = str

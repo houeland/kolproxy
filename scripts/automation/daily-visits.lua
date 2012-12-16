@@ -14,7 +14,7 @@ register_setting {
 
 register_setting {
 	name = "automate daily visits/use bookshelf skills in aftercore",
-	description = "Use bookshelf skills in aftercore as part of daily visits (not implemented yet)",
+	description = "Use bookshelf skills in aftercore and daily items as part of daily visits",
 	group = "automation",
 	default_level = "enthusiast",
 }
@@ -119,28 +119,28 @@ function do_daily_visits()
 	dopage("/choice.php", { whichchoice = 585, pwd = pwd, option = 1, action = "treasure" })
 	dopage("/choice.php", { whichchoice = 585, pwd = pwd, option = 1, action = "leave" })
 
-	if ascensionstatus("Aftercore") and setting_enabled("automate daily visits/use bookshelf skills in aftercore") then
-		dopage("/campground.php", { preaction = "summonsnowcone", quantity = 3 })
-		dopage("/campground.php", { preaction = "summonstickers", quantity = 3 })
-		dopage("/campground.php", { preaction = "summonsugarsheets", quantity = 3 })
-		-- TODO: clip art
-		dopage("/campground.php", { preaction = "summonradlibs", quantity = 3 })
-		dopage("/campground.php", { preaction = "summonhilariousitems" })
-		dopage("/campground.php", { preaction = "summonspencersitems" })
-		dopage("/campground.php", { preaction = "summonaa" })
-		dopage("/campground.php", { preaction = "summonthinknerd" })
-		-- TODO: librams
+	if setting_enabled("automate daily visits/use bookshelf skills in aftercore") then
+		if ascensionstatus("Aftercore") then
+			dopage("/campground.php", { preaction = "summonsnowcone", quantity = 3 })
+			dopage("/campground.php", { preaction = "summonstickers", quantity = 3 })
+			dopage("/campground.php", { preaction = "summonsugarsheets", quantity = 3 })
+			-- TODO: clip art
+			dopage("/campground.php", { preaction = "summonradlibs", quantity = 3 })
+			dopage("/campground.php", { preaction = "summonhilariousitems" })
+			dopage("/campground.php", { preaction = "summonspencersitems" })
+			dopage("/campground.php", { preaction = "summonaa" })
+			dopage("/campground.php", { preaction = "summonthinknerd" })
+			-- TODO: librams
+
+			-- TODO: cast class skills
+			-- TODO: trade with hermit
+			-- TODO: use still
+		end
+
+		for _, x in ipairs(daily_items) do
+			queue_page_result(use_item(x))
+		end
 	end
-
-	for _, x in ipairs(daily_items) do
-		queue_page_result(use_item(x))
-	end
-
-	-- TODO: cast class skills
-
-	-- TODO: trade with hermit
-
-	-- TODO: use still
 
 	for _, f in ipairs(tocall) do
 		f()
@@ -151,6 +151,9 @@ function do_daily_visits()
 		get_page("/hermit.php")
 		if count_item("ten-leaf clover") > clover_before then
 			scan_results(use_item("ten-leaf clover")())
+		end
+		if count_item("ten-leaf clover") ~= clover_before then
+			print("WARNING: unexpected result trying to pick up hermit clover")
 		end
 	end
 
@@ -195,14 +198,12 @@ end)
 -- 		castSkill 3006 3 ref -- Pastamastery
 -- 		castSkill 3006 2 ref
 
--- 		castSkill 53 1 ref -- sumon crimbo candy
+-- 		castSkill 53 1 ref -- summon crimbo candy
 
 -- 		castSkillMax 8103 ref -- summon brickos
 -- 		castSkillMax 8100 ref -- summon candy hearts
 -- 		castSkillMax 8101 ref -- summon party favors
 -- 		castSkillMax 8102 ref -- summon love songs
 
--- 		-- trade with hermit
 -- 		-- use other rumpus equipment
--- 		-- 	use still
 -- 		return ())

@@ -36,7 +36,7 @@ function get_casual_automation_scripts()
 	local macro_kill = casual_macro_kill
 	local macro_runaway_most = casual_macro_runaway_most
 	local script = get_automation_scripts()
-	local fam = script.set_familiar
+	local fam = script.want_familiar
 	local wear = script.wear
 	local go = script.go
 	local ensure_buffs = script.ensure_buffs
@@ -310,7 +310,7 @@ function get_casual_automation_scripts()
 		if buff("Knob Goblin Perfume") then
 			inform "fight king in harem girl outfit"
 			script.ensure_mp(20)
-			script.set_familiar "Frumious Bandersnatch"
+			script.want_familiar "Frumious Bandersnatch"
 			set_mcd(7) -- TODO: moxie-specific
 			local pt, url = get_page("/cobbsknob.php", { action = "throneroom" })
 			result, resulturl, advagain = handle_adventure_result(pt, url, "?", casual_macro_attack())
@@ -680,7 +680,18 @@ function get_casual_automation_scripts()
 		end
 		go("fight on battlefield: " .. tostring(ascension["battlefield.kills.frat boy.min"]) .. " hippies killed", 132, macro_kill(), nil, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling even in fist", 80, { equipment = { hat = "beer helmet", pants = "distressed denim pants", acc1 = "bejeweled pledge pin" } })
 		if result:contains("There are no hippy soldiers left") then
-			local camppt = turn_in_junk_for_quarters()
+			local turnins = {
+				"green clay bead",
+				"pink clay bead",
+				"purple clay bead",
+				"communications windchimes",
+			}
+			for x in table.values(turnins) do
+				if have(x) then
+					async_get_page("/bigisland.php", { action = "turnin", pwd = pwd, whichcamp = 2, whichitem = get_itemid(x), quantity = count(x) })
+				end
+			end
+			local camppt = get_page("/bigisland.php", { place = "camp", whichcamp = 2 })
 			if camppt:contains("You don't have any quarters on file") then
 				inform "fight hippy boss"
 				fam "Frumious Bandersnatch"

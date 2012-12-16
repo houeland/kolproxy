@@ -75,7 +75,7 @@ function get_automation_scripts(cached_stuff)
 	}
 
 	-- TODO: set the familiar equipment here
-	function f.set_familiar(famname_input)
+	function f.want_familiar(famname_input)
 		-- TODO: improve fallbacks and priorities
 		if can_change_familiar == false then
 			return {}
@@ -116,12 +116,12 @@ function get_automation_scripts(cached_stuff)
 		end
 		if missing_fams[famname] or (d.needsequip and not have(d.familiarequip)) then
 			if famname == "Rogue Program" and spleen() < 12 then
-				return f.set_familiar("Bloovian Groose")
+				return f.want_familiar("Bloovian Groose")
 			else
 				if not familiar_data[famname].fallback or highskill_at_run then
 					critical("No fallback familiar for " .. famname)
 				end
-				return f.set_familiar(next_famname_input or familiar_data[famname].fallback)
+				return f.want_familiar(next_famname_input or familiar_data[famname].fallback)
 			end
 		end
 		if d then
@@ -137,7 +137,7 @@ function get_automation_scripts(cached_stuff)
 					missing_fams[famname] = true
 					session["__script.missing familiars"] = missing_fams
 					print("Using fallback familiar", famname, "->", d.fallback)
-					return f.set_familiar(d.fallback)
+					return f.want_familiar(d.fallback)
 				end
 				if show_spammy_automation_events then
 					print("  changed familiar", famname)
@@ -174,13 +174,13 @@ function get_automation_scripts(cached_stuff)
 	local cached_have_familiars = {}
 	function f.have_familiar(famname)
 		if not cached_have_familiars[famname] then
-			f.set_familiar(famname)
+			f.want_familiar(famname)
 			cached_have_familiars[famname] = (familiar_data[famname].id == familiarid())
 		end
 		return cached_have_familiars[famname]
 	end
 
-	local fam = f.set_familiar
+	local fam = f.want_familiar
 
 	local want_bonus = {}
 	function f.bonus_target(targets)
@@ -1817,9 +1817,9 @@ endif
 		if not quest_text("wants you to defeat Old Don Rickets") then
 			did_action = true
 		elseif get_result():match("Insult Beer Pong") then
-			local attempts = tonumber(ascension["__script.failed insult beer pong attempts"]) or 0
+			local attempts = tonumber(session["__script.failed insult beer pong attempts"]) or 0
 			if attempts < 5 then
-				ascension["__script.failed insult beer pong attempts"] = attempts + 1
+				session["__script.failed insult beer pong attempts"] = attempts + 1
 				result, resulturl = post_page("/beerpong.php", { response = 11 })
 				did_action = true
 			end
@@ -4123,7 +4123,7 @@ endif
 		local function resist_test(element)
 			return function ()
 				if get_page("/charsheet.php"):contains([[<td align=right>]]..element..[[ Protection:</td>]]) then return true end
-				f.set_familiar "Exotic Parrot"
+				f.want_familiar "Exotic Parrot"
 				ensure_buffs { "Astral Shell", "Leash of Linguini", "Empathy" }
 				maybe_ensure_buffs_in_fist { "Astral Shell" }
 				if get_page("/charsheet.php"):contains([[<td align=right>]]..element..[[ Protection:</td>]]) then return true end
@@ -4167,7 +4167,7 @@ endif
 		elseif roomtitle == "Monster!" then
 			inform "fight DD monster"
 			f.heal_up()
-			f.set_familiar "Stocking Mimic"
+			f.want_familiar "Stocking Mimic"
 			f.wear {}
 			f.ensure_mp(5)
 			local pt, pturl = post_page("/dungeon.php", { pwd = get_pwd(), action = "Yep", option = num })

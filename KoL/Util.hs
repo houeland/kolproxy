@@ -20,11 +20,12 @@ import qualified Data.Digest.Pure.MD5
 import qualified Database.SQLite3
 
 
-kolproxy_version_number = "3.5"
+kolproxy_version_number = "3.6-prealpha"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 
 get_md5 str = show $ Data.Digest.Pure.MD5.md5 $ Data.ByteString.Lazy.Char8.pack str
+
 
 
 

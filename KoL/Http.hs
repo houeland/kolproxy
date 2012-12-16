@@ -81,13 +81,20 @@ internalKolRequest url params cu noredirect = do
 					_ -> throwIO $ InternalError $ "Error parsing redirect: No location header"
 			_ -> return (body, effuri, hdrs)
 
+load_api_status_to_mv ref mv = putMVar mv =<< (try $ do
+	(xf, _) <- internalKolRequest_pipelining ref (mkuri $ "/api.php?what=status,inventory&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") Nothing False
+	(xraw, _, _) <- xf
+	let x = Data.ByteString.Char8.unpack $ xraw
+	writeIORef (latestRawJsonText_ $ sessionData $ ref) (Just x)
+	return x)
+
 internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 -- 	putStrLn $ "DEBUG: pipeline-req " ++ show uri
 	let host = hostUri_ $ connection $ ref
 
 	curjsonmv <- if should_invalidate_cache
 		then do
-			newmv <- newMVar Nothing
+			newmv <- newEmptyMVar
 			writeIORef (jsonStatusPageMVarRef_ $ sessionData $ ref) newmv
 			return newmv
 		else readIORef (jsonStatusPageMVarRef_ $ sessionData $ ref)
@@ -96,16 +103,16 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 	mv_x <- newEmptyMVar
 	writeChan (getconn_ $ connection $ ref) (reqabsuri, r, mv_x, ref)
 
-	when should_invalidate_cache $ forkIO_ "HTTP:refreshstatus" $ refreshstatus ref
---		putStrLn $ "status retrieval connection error: " ++ (show (e :: ConnectionException))))
+	when should_invalidate_cache $ forkIO_ "HTTP:load_api_status_to_mv" $ load_api_status_to_mv ref curjsonmv
 
 	mv_val <- newEmptyMVar
 	forkIO_ "HTTP:mv_val" $ do
 		putMVar mv_val =<< (try $ do
 			(retabsuri, body, hdrs, code, _) <- do
 				x <- (readMVar mv_x) `catch` (\e -> do
-					-- TODO: can this happen?
-					putStrLn $ "httpreq read exception for " ++ (uriPath reqabsuri) ++ ": " ++ (show (e :: SomeException))
+					-- TODO: when does this happen?
+					-- TODO: make it not happen
+					putStrLn $ "WARNING: httpreq read exception for " ++ (uriPath reqabsuri) ++ ": " ++ (show (e :: SomeException))
 					throwIO e)
 				case x of
 					Right rx -> return rx

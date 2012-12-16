@@ -569,7 +569,7 @@ end)
 
 add_interceptor("/kolproxy-frame-page", function()
 	if params.pwd ~= session.pwd then return "", requestpath end
-	return [[<html style="margin: 0px; padding: 0px;"><body style="margin: 0px; padding: 0px;"><iframe src="]] .. params.url .. [[" style="width: 100%; height: 100%; border: none; margin: 0px; padding: 0px;"></iframe></body></html>]], requestpath
+	return [[<html style="margin: 0px; padding: 0px;"><head><script language=Javascript src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script></head><body style="margin: 0px; padding: 0px;"><iframe src="]] .. params.url .. [[" style="width: 100%; height: 100%; border: none; margin: 0px; padding: 0px;"></iframe></body></html>]], requestpath
 end)
 
 add_interceptor("use item: Degrassi Knoll shopping list", function()
@@ -663,9 +663,9 @@ add_interceptor("use item: black market map", function()
 	-- TODO: add Bee path support?
 	-- TODO: support not having a fam before?
 	local famid = familiarid()
-	async_get_page("/familiar.php", { action = "newfam", ajax = 1, newfam = 59 }) -- blackbird
+	switch_familiarid(59) -- blackbird
 	text, url = submit_original_request()
-	async_get_page("/familiar.php", { action = "newfam", ajax = 1, newfam = famid })
+	switch_familiarid(famid)
 	return text, url
 end)
 

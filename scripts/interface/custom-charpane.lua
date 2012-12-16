@@ -41,6 +41,14 @@ add_printer("/game.php", function()
 	text = text:gsub([[(<frameset id=mainset cols=)"120,%*"(>)]], [[%1"200, *"%2]])
 end)
 
+local function display_duration(x)
+	local desc = "(" .. display_value(x) .. ")"
+	if desc:len() >= 6 then
+		desc = [[<span style="font-size: 80%">]] .. desc .. [[</span>]]
+	end
+	return desc
+end
+
 local function get_clancy_display()
 	local instruments = {
 		"whelp",
@@ -596,7 +604,7 @@ add_interceptor("/charpane.php", function()
 			if bi and have_skill(bi.skillname) and mp() >= bi.mpcost then
 				strarrow = string.format([[<img src="%s" style="cursor: pointer;" onclick="cast_skillid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", bi.skillid)
 			end
-			local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>(%s)</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, display_value(x.duration))
+			local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>%s</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, display_duration(x.duration))
 			if not curbuffline then
 				curbuffline = "<td>" .. strarrow .. "</td>" .. str
 			else
@@ -616,7 +624,7 @@ add_interceptor("/charpane.php", function()
 				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
 				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
 			end
-			local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>(%s)</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, display_value(x.duration))
+			local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>%s</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, display_duration(x.duration))
 			if not curbuffline then
 				curbuffline = str
 			else
@@ -797,7 +805,7 @@ add_interceptor("/charpane.php", function()
 			if bi and have_skill(bi.skillname) and mp() >= bi.mpcost then
 				strarrow = string.format([[<img src="%s" style="cursor: pointer;" onclick="cast_skillid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", bi.skillid)
 			end
-			local str = string.format([[<tr><td>%s</td><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s (%s)</font><br></td></tr>]], strarrow, imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_value(x.duration))
+			local str = string.format([[<tr><td>%s</td><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s %s</font><br></td></tr>]], strarrow, imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_duration(x.duration))
 			table.insert(bufflines, str)
 		end
 	else
@@ -808,7 +816,7 @@ add_interceptor("/charpane.php", function()
 				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
 				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
 			end
-			local str = string.format([[<tr><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s (%s)</font><br></td></tr>]], imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_value(x.duration))
+			local str = string.format([[<tr><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s %s</font><br></td></tr>]], imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_duration(x.duration))
 			table.insert(bufflines, str)
 		end
 	end

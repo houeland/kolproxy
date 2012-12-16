@@ -29,6 +29,7 @@ load_file("automation", "automation/nemesis.lua")
 load_file("automation", "automation/suburbandis.lua")
 load_file("automation", "automation/spaaace.lua")
 load_file("automation", "automation/felonia.lua")
+load_file("automation", "automation/castle-farming.lua")
 load_file("automation", "automation/dungeon-fist.lua")
 
 -- load_file("spading", "spading-automation.lua")
@@ -57,7 +58,7 @@ load_file("interface", "custom/demon_llama/hiddencity-spheres.lua")
 load_file("interface", "custom/nion/basement.lua")
 
 load_file("interface", "custom/chickencha/beararms.lua")
--- load_file("interface", "custom/chickencha/lvl12.lua")
+load_file("interface", "custom/chickencha/lvl12.lua")
 
 load_file("interface", "custom/superbachelor/blank-out.lua")
 

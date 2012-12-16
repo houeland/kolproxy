@@ -1,16 +1,3 @@
---add_interceptor("/trapper.php", function()
---	if not setting_enabled("automate simple tasks") then return end
---	if input_params == "[]" then
---		-- TODO: revisit, handle familiar equipment locking
---		local famid = familiarid()
---		get_page("/familiar.php", { action = "newfam", ajax = 1, newfam = 72 }) -- parrot
---		text, url = get_page(requestpath)
---		get_page("/familiar.php", { action = "newfam", ajax = 1, newfam = famid })
---		return text, url
---	end
---end)
-
-
 -- itznotyerzitz mine
 
 add_choice_text("A Flat Miner", { -- choice adventure number: 18
@@ -548,14 +535,14 @@ local function get_hauntedness()
 end
 
 add_automator("/fight.php", function()
-	if aboo_peak_monster[monster_name:gsub("^a ", "")] and text:contains("<!--WINWINWIN-->") then
+	if aboo_peak_monster[monster_name:gsub("^a ", "")] and text:contains("<!--WINWINWIN-->") and not freedralph() then
 		local hauntedness = get_hauntedness()
 		text = text:gsub("<!%-%-WINWINWIN%-%->", function(x) return x .. [[<p style="color: green">{ ]] .. (hauntedness or "Unknown hauntedness.") .. [[ }</p>]] end)
 	end
 end)
 
 add_automator("/choice.php", function()
-	if text:contains([[Adventure Again (A-Boo Peak)]]) then
+	if text:contains([[Adventure Again (A-Boo Peak)]]) and not freedralph() then
 		local hauntedness = get_hauntedness()
 		text = text:gsub("</td></tr></table></center></td></tr><tr><td height=4>", function(y) return [[<p><center style="color: green">{ ]] .. (hauntedness or "Unknown hauntedness.") .. [[ }</center></p>]] .. y end, 1)
 	end
@@ -576,15 +563,17 @@ local function get_pressure()
 		questlog_page = get_page("/questlog.php", { which = 1 })
 		pressure = questlog_page:match([[The pressure is currently [0-9.]+ microbowies per Mercury.]]) or questlog_page:match([[The pressure is very low at this point.]]) or questlog_page:match([[You've lit the fire on Oil Peak.]])
 	end
-	local microbowies = tonumber(pressure:match([[currently ([0-9.]+) microbowies]]))
-	if microbowies then
-		pressure = pressure:gsub("Mercury", function(x) return x .. string.format(" (%.0f%%)", microbowies / 3.17) end)
+	if pressure then
+		local microbowies = tonumber(pressure:match([[currently ([0-9.]+) microbowies]]))
+		if microbowies then
+			pressure = pressure:gsub("Mercury", function(x) return x .. string.format(" (%.0f%%)", microbowies / 3.17) end)
+		end
 	end
 	return pressure
 end
 
 add_automator("/fight.php", function()
-	if oil_peak_monster[monster_name:gsub("^an ", "")] and text:contains("<!--WINWINWIN-->") then
+	if oil_peak_monster[monster_name:gsub("^an ", "")] and text:contains("<!--WINWINWIN-->") and not freedralph() then
 		local pressure = get_pressure()
 		text = text:gsub("<!%-%-WINWINWIN%-%->", function(x) return x .. [[<p style="color: green">{ ]] .. (pressure or "Unknown pressure.") .. [[ }</p>]] end)
 	end

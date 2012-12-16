@@ -511,7 +511,7 @@ setup_lua_instance level filename setupref = do
 		-- TODO: push true/false directly
 		register_function "can_read_state" $ \ref l -> do
 			x <- canReadState ref
-			Lua.pushstring l $ if x then "yes" else "no"
+			Lua.pushboolean l x
 			return 1
 
 		register_function "block_lua_scripting" $ \ref _l -> do

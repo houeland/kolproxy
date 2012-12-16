@@ -95,7 +95,7 @@ local dis_href = add_automation_script("automate-suburbandis", function ()
 	maybe_pull_item("jar full of wind", 20)
 	maybe_pull_item("dangerous jerkcicle", 40)
 	maybe_pull_item(damageitem, 40)
-	script.set_familiar "Slimeling even in fist"
+	script.want_familiar "Slimeling even in fist"
 	equip_item("sea salt scrubs", "shirt")
 	equip_item("ring of conflict", "acc1")
 	equip_item("Space Trip safety headphones", "acc2")

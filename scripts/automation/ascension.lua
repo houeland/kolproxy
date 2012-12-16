@@ -447,7 +447,7 @@ endif
 			nobuffing = true,
 			action = function()
 				cached_stuff.gotten_kgnee = true
-				script.set_familiar "Reagnimated Gnome"
+				script.want_familiar "Reagnimated Gnome"
 				async_get_page("/arena.php")
 				async_get_page("/choice.php", { forceoption = 0 })
 				async_post_page("/choice.php", { pwd = get_pwd(), whichchoice = 597, option = 4 })
@@ -1776,7 +1776,7 @@ endif
 	-- TODO: make task
 	if buff("Teleportitis") then
 		if have("plus sign") then
-			script.set_familiar "Pair of Stomping Boots"
+			script.want_familiar "Pair of Stomping Boots"
 			stop "TODO: find oracle"
 		elseif DD_keys < 3 then
 			-- TODO: test DD potions while doing this
@@ -1884,7 +1884,7 @@ endif
 				if buff("Knob Goblin Perfume") then
 					inform "fight king in harem girl outfit"
 					script.ensure_mp(20)
-					script.set_familiar "Frumious Bandersnatch"
+					script.want_familiar "Frumious Bandersnatch"
 					set_mcd(7) -- TODO: moxie-specific
 					local pt, url = get_page("/cobbsknob.php", { action = "throneroom" })
 					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_softcore_boris())
@@ -1915,7 +1915,7 @@ endif
 				if buff("Knob Goblin Perfume") then
 					inform "fight king in harem girl outfit"
 					script.ensure_mp(20)
-					script.set_familiar "Frumious Bandersnatch"
+					script.want_familiar "Frumious Bandersnatch"
 					set_mcd(7) -- TODO: moxie-specific
 					local pt, url = get_page("/cobbsknob.php", { action = "throneroom" })
 					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_softcore_boris())
@@ -3016,7 +3016,7 @@ endwhile
 			if buff("Knob Goblin Perfume") then
 				inform "fight king in harem girl outfit"
 				script.ensure_mp(20)
-				script.set_familiar "Frumious Bandersnatch"
+				script.want_familiar "Frumious Bandersnatch"
 				set_mcd(7) -- TODO: moxie-specific
 				local pt, url = get_page("/cobbsknob.php", { action = "throneroom" })
 				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodleserpent())
@@ -3395,7 +3395,7 @@ endwhile
 							inform "fight and sniff blooper"
 							script.heal_up()
 							script.ensure_buffs { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric" }
-							script.set_familiar "Stocking Mimic"
+							script.want_familiar "Stocking Mimic"
 							script.wear { acc3 = "continuum transfunctioner" }
 							script.ensure_mp(60)
 							set_result(use_item("photocopied monster"))
@@ -3469,7 +3469,7 @@ endwhile
 					script.get_faxbot_fax("lobsterfrogman", "lobsterfrogman")
 				else
 					script.heal_up()
-					script.set_familiar "Obtuse Angel"
+					script.want_familiar "Obtuse Angel"
 					stop "TODO: summon quake, fax and arrow lobsterfrogman"
 				end
 			end
@@ -4049,7 +4049,7 @@ endwhile
 					inform "fight ASCII"
 					script.heal_up()
 					script.ensure_buffs { "Spirit of Garlic" }
-					script.set_familiar "Stocking Mimic"
+					script.want_familiar "Stocking Mimic"
 					script.wear {}
 					script.ensure_mp(40)
 					use_item("photocopied monster")
@@ -4625,7 +4625,7 @@ use ]] .. itemsneeded[level + 1] .. [[
 
 			if x.fam then
 				-- TODO: unequip fam?
-				local famt = script.set_familiar(x.fam)
+				local famt = script.want_familiar(x.fam)
 				local fammpregen, famequip = famt.mpregen, famt.familiarequip
 				if fammpregen then
 					if challenge == "fist" then

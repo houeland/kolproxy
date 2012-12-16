@@ -4,7 +4,7 @@ local automators = {}
 
 function wrapped_function()
 
-if can_read_state() ~= "yes" then
+if not can_read_state() then
 	return text
 end
 

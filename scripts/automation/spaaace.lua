@@ -154,7 +154,7 @@ local space_href = setup_turnplaying_script {
 		maybe_pull_item("sea salt scrubs")
 		maybe_pull_item("flaming pink shirt")
 		maybe_pull_item("spangly mariachi pants")
-		script.set_familiar "Scarecrow with spangly mariachi pants"
+		script.want_familiar "Scarecrow with spangly mariachi pants"
 		equip_item("spangly mariachi pants", "familiarequip")
 		equip_item("sea salt scrubs", "shirt")
 		equip_item("flaming pink shirt", "shirt")

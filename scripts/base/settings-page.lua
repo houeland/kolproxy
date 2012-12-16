@@ -119,7 +119,7 @@ local setting_groups = {
 -- Ask chatbot for bounty/clover status on logon
 
 function setting_enabled(name)
-	if can_read_state() ~= "yes" then return false end
+	if not can_read_state() then return false end
 	local s = character["setting: " .. name]
 	if s then
 		local enabled = (s == "on")

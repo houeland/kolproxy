@@ -45,7 +45,7 @@ end
 function get_itemid(name)
 	local id = maybe_get_itemid(name)
 	if not id then
-		error("No itemid found for item: " .. tostring(name))
+		error("No itemid found for: " .. tostring(name))
 	end
 	return id
 end
@@ -73,6 +73,14 @@ function maybe_get_familiarid(name)
 		error("Invalid familiarid type: " .. t)
 	end
 	return (datafile("familiars")[name] or {}).famid
+end
+
+function get_familiarid(name)
+	local id = maybe_get_familiarid(name)
+	if not id then
+		error("No familiarid found for: " .. tostring(name))
+	end
+	return id
 end
 
 

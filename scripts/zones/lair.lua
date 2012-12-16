@@ -902,7 +902,7 @@ function automate_lair6_place(place, text)
 			if familiar_lookup[which] then
 				print("  Familiar used to defeat it:", familiar_lookup[which].name)
 				local famid = familiarid()
-				get_page("/familiar.php", { action = "newfam", ajax = "1", newfam = familiar_lookup[which].id })
+				switch_familiarid(familiar_lookup[which].id)
 				if familiarid() == familiar_lookup[which].id then
 					get_page("/charpane.php") -- Workaround for CDM updating bug
 					local eq = equipment()
@@ -932,7 +932,7 @@ function automate_lair6_place(place, text)
 				else
 					print("INFO: Missing familiar")
 				end
-				async_get_page("/familiar.php", { action = "newfam", ajax = "1", newfam = famid })
+				switch_familiarid(famid)
 			else
 				print("INFO: Unknown NS familiar", which)
 			end
