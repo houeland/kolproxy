@@ -106,6 +106,5 @@ function load_file(category, name)
 end
 
 dofile("scripts/loaders.lua")
-dofile("scripts/user-loaders.lua")
 
 return run_wrapped_function

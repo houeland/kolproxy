@@ -20,6 +20,7 @@ register_setting {
 	description = "Allow the kolproxy scripts to download pages (required for everything else)",
 	group = "automation",
 	default_level = "limited",
+	hidden = true,
 }
 
 register_setting {
@@ -206,13 +207,15 @@ local function get_customize_features_page()
 			local baselevel = character["settings base level"] or "limited"
 			local defaultvalue = (setting_levels[y.default_level or "enthusiast"] <= setting_levels[baselevel]) and "on" or "off"
 			local featuredesc = y.description and ([[<span title="Lua scripting syntax: setting_enabled(&quot;]] .. y.name .. [[&quot)">]] .. y.description .. [[</span>]]) or ([[<span style="color: red">No description (<tt>]] .. y.name .. [[</tt>)</span>]])
-			table.insert(featurerows, [[<tr data-feature-name="]]..y.name..[["><td class="tdname">]] .. featuredesc .. [[</td>]] ..
-				[[<td class="tdon"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..onchecked..[[>On</td>]] ..
-				[[<td class="tdoff"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..offchecked..[[>Off</td>]] ..
-				[[<td class="tddefault"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..defaultchecked..[[>Default (]]..defaultvalue..[[)</td></tr>]])
+			if not y.hidden then
+				table.insert(featurerows, [[<tr data-feature-name="]]..y.name..[["><td class="tdname">]] .. featuredesc .. [[</td>]] ..
+					[[<td class="tdon"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..onchecked..[[>On</td>]] ..
+					[[<td class="tdoff"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..offchecked..[[>Off</td>]] ..
+					[[<td class="tddefault"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..defaultchecked..[[>Default (]]..defaultvalue..[[)</td></tr>]])
+			end
 		end
 	end
-	local explanation = [[<p>The base settings (limited/standard/detailed) activate different sets of features by default.<p>On this page, individual features can be customized on a per-features basis. The settings work like this:<br>
+	local explanation = [[<p>The base settings (limited/standard/detailed) activate different sets of features by default.<p>On this page, individual features can be customized. The settings work like this:<br>
 	<ul>
 	<li><b>On</b>: This feature will always be enabled.</li>
 	<li><b>Off</b>: This feature will always be disabled.</li>

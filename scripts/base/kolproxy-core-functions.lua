@@ -360,7 +360,6 @@ function load_script_files(env)
 	end
 
 	run_file_with_environment("loaders.lua", { load_file = load_file }, {})
-	run_file_with_environment("user-loaders.lua", { load_file = load_file }, {})
 
 	global_env.register_setting = nil
 end

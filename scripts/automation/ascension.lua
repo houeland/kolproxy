@@ -97,9 +97,6 @@ local function automate_hcnp_day(whichday)
 				fist_level = fist_level + 1
 			end
 		end
--- 		if classid() ~= 6 or not have("astral belt") then
--- 			critical "On fist challenge path and not AT with astral belt"
--- 		end
 		attack_action = fist_action
 		cannon_action = fist_action
 		if fist_level >= 3 then
@@ -682,273 +679,11 @@ endif
 	end
 
 	local function have_frat_war_outfit()
-		return have("beer helmet") and have("distressed denim pants") and have("bejeweled pledge pin")
+		return have_item("beer helmet") and have_item("distressed denim pants") and have_item("bejeweled pledge pin")
 	end
 
-	if tonumber(status().casual) == 1 then
-		critical "Casual mode for the ascension script is out of date and doesn't work correctly."
-		local casual_scripts = get_casual_automation_scripts()
-		-- Powerlevel to level 12 to start the war etc.
-
-		-- Note - use the family of kobolds til level 12 (probably 2 so we are at 13 without worry)
-
-		-- Buy dictionary
-		-- Get Talisman
-
-		add_task {
-			prereq = not unlocked_beach(),
-			f = casual_scripts.make_meatcar,
-		}
-
-		add_task {
-			prereq = not have("dingy dinghy"),
-			f = casual_scripts.get_dinghy,
-		}
-
---		add_task {
---			prereq = not (have("dictionary") or have("abridged dictionary")) and quest("A Quest, LOL"),
---			f = casual_scripts.do_orc_chasm,
---		}
-
-		add_task {
-			prereq = quest_text("Your first step is to find the Black Market"),
-			f = casual_scripts.find_black_market,
-		}
-
-		add_task {
-			prereq = quest_text("now to hit the Travel Agency and get yourself on a slow boat"),
-			f = casual_scripts.get_macguffin_diary,
-		}
-
--- 		add_task {
--- 			prereq = quest("Never Odd Or Even"),
--- 			f = casual_scripts.trapper,
--- 		}
-
-		add_task {
-			prereq = not have("Cobb's Knob map") and quest("The Goblin Who Wouldn't Be King"),
-			f = casual_scripts.knob_king,
-		}
-
--- 		add_task {
--- 			prereq = not quest_text("you've been given crappy scutwork") and not have("pirate fledges"),
--- 			f = function()
--- 				script.wear { hat = "eyepatch", pants = "swashbuckling pants", acc3 = "stuffed shoulder parrot" }
--- 				local covept = get_page("/cove.php")
--- 				if covept:match("The F'c'le") then
--- 					critical "F'c'le unlocked, but quest is not at the right point?"
--- 				else
--- 					local tbl = ascension["zone.pirates.insults"] or {}
--- 					local insults = table.maxn(tbl)
--- 					if insults < 7 or quest_text("A salty old pirate named Cap'm Caronch has offered to let you join his crew if you find some treasure for him") then
--- 						script.do_barrr(insults)
--- 					elseif have("Cap'm Caronch's nasty booty") then
--- 						inform "get blueprints"
--- 						script.wear { hat = "eyepatch", pants = "swashbuckling pants", acc3 = "stuffed shoulder parrot" }
--- 						result, resulturl, advagain = autoadventure(157)
--- 						if have("Orcish Frat House blueprints") then
--- 							did_action = advagain
--- 						end
--- 					elseif have("Orcish Frat House blueprints") and quest_text("and asked you to steal his dentures back") then
--- 						inform "use blueprints"
--- 						if not have("frilly skirt") then
--- 							buy_item("frilly skirt", "5")
--- 						end
--- 						if have("frilly skirt") and count("hot wing") >= 3 then
--- 							script.wear { pants = "frilly skirt" }
--- 							use_item("Orcish Frat House blueprints")
--- 							result, resulturl = post_page("/choice.php", { pwd = get_pwd(), whichchoice = 188, option = 3 })
--- 							if have("Cap'm Caronch's dentures") then
--- 								did_action = true
--- 							end
--- 						end
--- 					elseif have("Cap'm Caronch's dentures") then
--- 						inform "return blueprints"
--- 						script.wear { hat = "eyepatch", pants = "swashbuckling pants", acc3 = "stuffed shoulder parrot" }
--- 						result, resulturl, advagain = autoadventure(157)
--- 						if not have("Cap'm Caronch's dentures") then
--- 							did_action = advagain
--- 						end
--- 					elseif quest_text("wants you to defeat Old Don Rickets") then
--- 						script.beat_ibp()
--- 					else
--- 						critical "Error while getting pirate fledges: unexpected quest status"
--- 					end
--- 				end
--- 			end,
--- 			message = "get fledges",
--- 		}
-
--- 		add_task {
--- 			prereq = quest("Never Odd Or Even"),
--- 			f = casual_scripts.do_never_odd_or_even_quest,
--- 		}
-
-		add_task {
-			prereq = quest_text("see if you can't stir up some trouble") and
-				basemoxie() >= 70 and basemysticality() >= 70 and
-				have_frat_war_outfit(),
-			f = function()
-				casual_scripts.go("start war", 131, macro_runaway_all, {
-					["Bait and Switch"] = "Wake the cadet up and fight him",
-					["Blockin' Out the Scenery"] = "The Lookout Tower",
-					["The Thin Tie-Dyed Line"] = "The Barracks Yurt",
-				}, ensure_nc_buffs, "Hobo Monkey", 30, { equipment = { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" } })
-				if get_result():match("Begun, this frat war has.") then
-					did_action = true
-				end
-			end,
-		}
-
-		add_task {
-			prereq = quest("Make War, Not... Oh, Wait"),
-			f = function()
-				if not have("heart of the filthworm queen") then
-					casual_scripts.do_filthworms()
-				end
-				-- inform "check if done with war prep"
-				wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
-				local concertptf = async_get_page("/bigisland.php", { place = "concert" })
-				local junkmanptf = async_get_page("/bigisland.php", { action = "junkman", pwd = get_pwd() })
-				local pyroptf = async_get_page("/bigisland.php", { place = "lighthouse", action = "pyro", pwd = get_pwd() })
-				if not junkmanptf():contains("next shipment of cars ready") then
-					casual_scripts.do_junkyard()
-				end
-				
-				if not pyroptf():contains("gave you the big boom today") then
-					casual_scripts.do_sonofa()
-				end
-				if have("rock band flyers") then
-					inform "turn in rock band flyers"
-					casual_scripts.wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
-					result, resulturl = get_page("/bigisland.php", { place = "concert" })
-					if not have("rock band flyers") then
-						did_action = true
-					end
-				end
-			end,
-		}
-
-		add_task {
-			prereq = quest_text("now the Council wants you to finish it") and not have("rock band flyers"),
-			f = casual_scripts.get_flyers,
-		}
-
-		local woodspt = get_page("/woods.php")
-		add_task {
-			prereq = not woodspt:contains("The Hidden Temple"),
-			f = casual_scripts.spooky_forest,
-		}
-
-
-		add_task {
-			prereq = not woodspt:match("hiddencity"),
-			f = casual_scripts.unlock_city,
-		}
-
-		add_task {
-			prereq = woodspt:match("hiddencity") and not have("ancient amulet") and not have("Staff of Ed"),
-			f = casual_scripts.do_gotta_worship_them_all,
-		}
-			
-		add_task {
-			prereq = quest("Ooh, I Think I Smell a Bat."),
-			f = casual_scripts.do_boss_bat,
-		}
-
-		add_task {
-			prereq = have("dictionary"),
-			f = casual_scripts.do_orc_chasm,
-		-- Noncombat Zones
-		}
-
-		add_task {
-			prereq = buff("Ultrahydrated") and quest("A Pyramid Scheme") and not quest_text("you've found the little pyramid") and not have("Staff of Ed"),
-			f = casual_scripts.do_oasis_and_desert,
-			message = "ultrahydrated",
-		}
-
-
-
-
-		add_task {
-			prereq = have("ancient amulet") and have("Eye of Ed") and have("Staff of Fats"),
-			f = function()
-				inform "paste staff of ed"
-				meatpaste_items("Eye of Ed", "ancient amulet")
-				meatpaste_items("headpiece of the Staff of Ed", "Staff of Fats")
-				if have("Staff of Ed") then
-					async_get_page("/beach.php", { action = "woodencity" })
-					did_action = true
-				end
-			end,
-		}
-
--- 		add_task {
--- 			prereq =
--- 				not have("Richard's star key") and
--- 				not (trailed == "Astronomer"),
--- 			f = casual_scripts.make_star_key,
--- 		}
-
--- 		add_task {
--- 			prereq = quest("Ooh, I Think I Smell a Rat"),
--- 			f = casual_scripts.tavern,
--- 		}
-
-		add_task {
-			prereq = quest("Trial By Friar"),
-			f = casual_scripts.friars,
-		}
-
-		-- Combat Zones
-
-		add_task {
-			prereq = level() >= 5 and quest("The Goblin Who Wouldn't Be King") and quest_text("haven't figured out how to decrypt it yet"),
-			f = casual_scripts.unlock_cobbs_knob,
-		}
-
-		add_task {
-			prereq = not have("Spookyraven library key"),
-			f = casual_scripts.unlock_manor,
-		}
-
-		add_task {
-			prereq = not have("Spookyraven library key"),
-			f = casual_scripts.get_library_key,
-		}
-
-		add_task {
-			prereq = quest("Make War, Not... Oh, Wait"),
-			f = function()
-				script.wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
-				local concertptf = async_get_page("/bigisland.php", { place = "concert" })
-				local junkmanptf = async_get_page("/bigisland.php", { action = "junkman", pwd = get_pwd() })
-				local pyroptf = async_get_page("/bigisland.php", { place = "lighthouse", action = "pyro", pwd = get_pwd() })
-				if concertptf():contains("has already taken the stage") and junkmanptf():contains("next shipment of cars ready") and pyroptf():contains("gave you the big boom today") then
-					casual_scripts.do_battlefield()
-				end
-			end,
-		}
-
-		add_task {
-			when = true,
-			task = {
-				nobuffing = true,
-				message = "end of casual script",
-				action = function ()
-					stop "TODO: end of casual script"
-				end
-			}
-		}
-
-
-
-		-- Ballroom
-
-		-- Level 11 - Quest for the Holy MacGuffin ("<Player Name> and the Quest for the Holy MacGuffin")
-		-- Level 12 - Mysterious Island Quest ("Make War, Not... Oh, Wait")
-		-- Level 13 - Naughty Sorceress Quest ("The Final Ultimate Epic Final Conflict")
+	local function have_miners_outfit()
+		return have_item("miner's helmet") and have_item("7-Foot Dwarven mattock") and have_item("miner's pants")
 	end
 
 	add_task {
@@ -3414,31 +3149,6 @@ endwhile
 	}
 
 	add_task {
-		prereq = quest_text("visit the L337 Tr4pz0r"),
-		f = function()
-			inform "visiting trapper..."
-			async_get_page("/trapper.php")
-			refresh_quest()
-			did_action = not quest_text("visit the L337 Tr4pz0r")
-		end,
-	}
-
--- 	add_task {
--- 		prereq = quest("Am I My Trapper's Keeper?") and not (
--- 			have("miner's helmet") and
--- 			have("7-Foot Dwarven mattock") and
--- 			have("miner's pants")
--- 		) and not buff("Everything Looks Yellow") and not challenge,
--- 		f = function()
--- 			script.go("yellow raying mine", 61, make_yellowray_macro("Dwarf"), {
--- 				["A Flat Miner"] = "Hijack the Meat vein",
--- 				["100% Legal"] = "Ask for ore",
--- 				["See You Next Fall"] = "Give 'im the stick",
--- 			}, { "Carlweather's Cantata of Confrontation", }, "He-Boulder", 15)
--- 		end,
--- 	}
-
-	add_task {
 		when = quest("Am I My Trapper's Keeper?") and (not trailed or trailed == "dairy goat") and highskill_at_run,
 		task = {
 			message = "get milk early in highskill AT",
@@ -3658,7 +3368,7 @@ endwhile
 			if DD_keys < 1 then
 				stop "TODO: Get DD key"
 			end
-			if quest("Am I My Trapper's Keeper?") then
+			if quest("Am I My Trapper's Keeper?") and have_miners_outfit() then
 				if challenge == "fist" then
 					script.ensure_buffs { "Earthen Fist" }
 				else
@@ -3969,6 +3679,11 @@ endwhile
 	}
 
 	add_task {
+		when = quest("There Can Be Only One Topping"),
+		task = tasks.there_can_be_only_one_topping,
+	}
+
+	add_task {
 		prereq = level() < 10,
 		f = function()
 			use_dancecard()
@@ -4041,12 +3756,12 @@ endwhile
 			if script.spooky_forest_runaways() then return end -- TODO: do earlier as a task
 			if script.trade_for_clover() then return end
 			-- TODO: move out, check for scrolls and level() and quest()
-			if not have("334 scroll") and not have("facsimile dictionary") then
-				if script.get_photocopied_monster() ~= "Bad ASCII Art" then
-					inform "get ASCII from faxbot"
-					script.get_faxbot_fax("Bad ASCII Art", "ascii")
+			if not have("334 scroll") and not have("facsimile dictionary") and false then
+				if script.get_photocopied_monster() ~= "smut orc pervert" then
+					inform "get pervert from faxbot"
+					script.get_faxbot_fax("smut orc pervert", "smut_orc_perv")
 				else
-					inform "fight ASCII"
+					stop "fight pervert"
 					script.heal_up()
 					script.ensure_buffs { "Spirit of Garlic" }
 					script.want_familiar "Stocking Mimic"
@@ -4739,6 +4454,32 @@ use ]] .. itemsneeded[level + 1] .. [[
 		if get_result():contains("You acquire an item: <b>Cobb's Knob lab key</b>") and get_result():contains("you see a glint of metal sticking out from the edge of one of the ubiquitous piles of garbage") then
 			did_action = true
 		end
+		if get_result():contains("surging oil finally drops in pressure enough for you to get up to the signal fire") then
+			did_action = true
+		end
+		if get_result():contains("finally see a clear path to the signal fire and make your way to it") then
+			did_action = true
+		end
+	end
+
+	if have_buff("Beaten Up") then
+		if get_result():contains("That's all the horror you can take.  You flee the scene.") then
+			if have_buff("Beaten Up") then
+				cast_skillid(1010)
+			end
+			if have_buff("Beaten Up") then
+				cast_skillid(1007)
+			end
+			if have_buff("Beaten Up") then
+				use_item("tiny house")
+			end
+			if have_buff("Beaten Up") then
+				use_hottub()
+			end
+			did_action = not have_buff("Beaten Up")
+		else
+			did_action = false
+		end
 	end
 
 	if not did_action and not finished then
@@ -4767,7 +4508,7 @@ local function do_loop(whichday)
 	while loop do
 		loop = false
 		local result, resulturl, did_action = automate_hcnp_day(whichday)
-		if did_action and not buff("Beaten Up") then
+		if did_action then
 			loop = true
 		else
 			text, url = [[<script>top.charpane.location = "charpane.php"</script>]] .. tostring(get_result()), resulturl

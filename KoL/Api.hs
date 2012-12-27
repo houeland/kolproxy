@@ -14,12 +14,12 @@ import qualified Data.ByteString.Char8
 readlateststatus ref = join $ getstatusfunc ref
 
 getCharStatusObj ref = do
-	Ok jscomb <- decodeStrict <$> readlateststatus ref
+	jscomb <- readlateststatus ref
 	let Ok jsobj = valFromObj "status" jscomb
 	return jsobj
 
 getInventoryObj ref = do
-	Ok jscomb <- decodeStrict <$> readlateststatus ref
+	jscomb <- readlateststatus ref
 	let Ok jsobj = valFromObj "inventory" jscomb
 	return jsobj
 
@@ -42,10 +42,9 @@ data ApiInfo = ApiInfo {
 	pwd :: String
 } -- deriving (Read, Show, Data, Typeable)
 
-rawDecodeApiInfo jsontext = do
+rawDecodeApiInfo jscomb = do
 		ApiInfo { charName = getstr "name", turnsplayed = getnum "turnsplayed", ascension = getnum "ascensions" + 1, daysthisrun = getnum "daysthisrun", pwd = getstr "pwd" }
 	where
-		Ok jscomb = decodeStrict jsontext
 		Ok jsobj = valFromObj "status" jscomb
 		getstr what = case valFromObj what jsobj of
 			Ok (JSString s) -> fromJSString s
@@ -59,11 +58,7 @@ rawDecodeApiInfo jsontext = do
 
 getApiInfo ref = rawDecodeApiInfo <$> readlateststatus ref
 
-force_latest_status_parse ref = do
-	jsontext <- readlateststatus ref
-	case decodeStrict jsontext :: Result JSValue of
-		Ok _ -> return ()
-		_ -> throwIO $ ExceptionMessage "Missing API status"
+force_latest_status_parse ref = readlateststatus ref
 
 -- TODO: Do this in Lua instead?
 asyncGetItemInfoObj itemid ref = do
@@ -72,9 +67,9 @@ asyncGetItemInfoObj itemid ref = do
 		jsonobj <- Data.ByteString.Char8.unpack <$> f
 		case decodeStrict jsonobj :: Result JSValue of
 			Ok x -> return x
-			_ -> do
+			Error err -> do
 				putStrLn $ "Item API returned:\n  ===\n\n" ++ jsonobj ++ "\n\n  ===\n\n"
-				throwIO $ ApiPageException jsonobj
+				throwIO $ ApiPageException err
 
 
 

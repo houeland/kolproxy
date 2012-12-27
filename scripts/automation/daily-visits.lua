@@ -6,6 +6,13 @@ register_setting {
 }
 
 register_setting {
+	name = "automate daily visits/use bookshelf skills in aftercore",
+	description = "Use daily items as part of daily visits and bookshelf skills in aftercore",
+	group = "automation",
+	default_level = "detailed",
+}
+
+register_setting {
 	name = "automate daily visits/harvest garden",
 	description = "Harvest garden as part of daily visits",
 	group = "automation",
@@ -13,8 +20,8 @@ register_setting {
 }
 
 register_setting {
-	name = "automate daily visits/use bookshelf skills in aftercore",
-	description = "Use bookshelf skills in aftercore and daily items as part of daily visits",
+	name = "automate daily visits/perform lazy aftercore automation",
+	description = "Also perform other lazy aftercore automation as part of daily visits",
 	group = "automation",
 	default_level = "enthusiast",
 }

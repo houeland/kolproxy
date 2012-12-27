@@ -20,7 +20,7 @@ import qualified Data.Digest.Pure.MD5
 import qualified Database.SQLite3
 
 
-kolproxy_version_number = "3.6-prealpha"
+kolproxy_version_number = "3.6-alpha"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 
@@ -117,3 +117,7 @@ do_db_query_ db query params = void $ do_db_query db query params
 forkIO_ name x = void $ forkIO $ x `catch` (\e -> do
 	putStrLn $ "WARNING: " ++ name ++ " exception: " ++ (show (e :: SomeException))
 	return ())
+
+get_custom_autoload_script_files = do
+	filenames <- getDirectoryContents "scripts/custom-autoload"
+	return $ filter (=~ "\\.lua$") filenames

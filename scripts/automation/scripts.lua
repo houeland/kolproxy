@@ -671,8 +671,10 @@ function get_automation_scripts(cached_stuff)
 		["Spirit of Wormwood"] = { spellid = 3104, mpcost = 1 },
 		["Spirit of Bacon Grease"] = { spellid = 3105, mpcost = 1 },
 		["Saucemastery"] = { spellid = 4000, mpcost = 1 },
+		["Elemental Saucesphere"] = { spellid = 4007, mpcost = 10, item = "saucepan" },
 		["Jalape&ntilde;o Saucesphere"] = { spellid = 4008, mpcost = 5, item = "saucepan" },
 		["Jaba&ntilde;ero Saucesphere"] = { spellid = 4011, mpcost = 10, item = "saucepan" },
+		["Scarysauce"] = { spellid = 4019, mpcost = 10, item = "saucepan" },
 		["Smooth Movements"] = { spellid = 5017, mpcost = 10 },
 		["The Moxious Madrigal"] = { spellid = 6004, mpcost = 2, effectid = 61 },
 		["Polka of Plenty"] = { spellid = 6006, mpcost = 7, effectid = 63 },
@@ -1333,6 +1335,10 @@ endif
 					inform "eat fortune cookie day 1"
 					buy_item("fortune cookie", "m")
 					eat_item("fortune cookie")
+					if not (fullness() == f + 1 and script.get_turns_until_sr() ~= nil) then
+						print("WARNING fortune cookie result:", script.get_turns_until_sr())
+						critical "Error getting fortune cookie numbers"
+					end
 					did_action = (ascension["fortune cookie numbers"] ~= nil)
 					return result, resulturl, did_action
 				elseif have("Knob pasty") and fullness() == 2 then
@@ -1367,6 +1373,10 @@ endif
 					inform "eat fortune cookie day 2"
 					buy_item("fortune cookie", "m")
 					eat_item("fortune cookie")
+					if not (fullness() == f + 1 and script.get_turns_until_sr() ~= nil) then
+						print("WARNING fortune cookie result:", script.get_turns_until_sr())
+						critical "Error getting fortune cookie numbers"
+					end
 					did_action = (fullness() == f + 1 and script.get_turns_until_sr() ~= nil)
 					return result, resulturl, did_action
 				elseif have("Knob pasty") and (fullness() < 3 or fullness() >= 12) then
@@ -1411,6 +1421,10 @@ endif
 					inform "eat fortune cookie day 3"
 					buy_item("fortune cookie", "m")
 					eat_item("fortune cookie")
+					if not (fullness() == f + 1 and script.get_turns_until_sr() ~= nil) then
+						print("WARNING fortune cookie result:", script.get_turns_until_sr())
+						critical "Error getting fortune cookie numbers"
+					end
 					did_action = (fullness() == f + 1 and script.get_turns_until_sr() ~= nil)
 					return result, resulturl, did_action
 				elseif have("Knob pasty") and (fullness() < 3 or fullness() >= 12) then
@@ -2270,7 +2284,7 @@ mark m_done
 			wear { pants = "Greatest American Pants" }
 			script.get_gap_buff("Super Vision")
 		end
-		if daysthisrun() <= 2 and not buff("Super Vision") then
+		if daysthisrun() <= 2 and not ascensionstatus("Hardcore") and not have_buff("Super Vision") then
 			ensure_buffs {}
 			wear {}
 			stop "TODO: Do filthworms [not automated when it's day 2 without super vision]"

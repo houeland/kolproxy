@@ -47,6 +47,13 @@ register_setting {
 	default_level = "detailed",
 }
 
+register_setting {
+	name = "retrieve latest chat",
+	description = "Retrieve latest chat from server when starting chat",
+	group = "chat",
+	default_level = "enthusiast",
+}
+
 
 add_printer("/lchat.php", function()
 	text = text:gsub("font%-size: 12px;", "font-size: 13px;")
@@ -120,3 +127,8 @@ add_printer("/mchat.php", function()
 	end
 end)
 
+add_printer("/mchat.php", function()
+	if setting_enabled("retrieve latest chat") then
+		text = text:gsub([[var lastlast = 0;]], [[var lastlast = 1;]])
+	end
+end)

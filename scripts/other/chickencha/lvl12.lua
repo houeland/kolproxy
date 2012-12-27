@@ -55,9 +55,9 @@ function turn_in_war_items(campid, what)
 		end
 	end
 	for _, x in ipairs(turnins) do
-		async_get_page("/bigisland.php", { action = "turnin", pwd = session.pwd, whichcamp = campid[side], whichitem = x.whichitem, quantity = x.quantity })
+		async_get_page("/bigisland.php", { action = "turnin", pwd = session.pwd, whichcamp = campid, whichitem = x.whichitem, quantity = x.quantity })
 	end
-	return get_page("/bigisland.php", { place = "camp", whichcamp = campid[side] })
+	return get_page("/bigisland.php", { place = "camp", whichcamp = campid })
 end
 
 local turn_in_war_items_href = add_automation_script("turn-in-war-items", function()
@@ -76,8 +76,8 @@ end)
 --[[
 -- add this?
 add_automator("/fight.php", function()
-if ascension automation assistance
-if won battlefield fight
-turn in junk
+ if ascension automation assistance
+  if won battlefield fight
+   turn in junk
 end)
 --]]

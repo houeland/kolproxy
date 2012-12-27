@@ -17,8 +17,8 @@ import qualified Data.Map
 
 data LogItem = LogItem {
 	time :: ZonedTime,
-	apiStatusBefore :: String,
-	apiStatusAfter :: Either SomeException String,
+	apiStatusBefore :: Either SomeException (JSObject JSValue),
+	apiStatusAfter :: Either SomeException (JSObject JSValue),
 	stateBefore :: Maybe StateType,
 	stateAfter :: Maybe StateType,
 	sessionId :: String,
@@ -43,9 +43,11 @@ print_log_msg ref _file logdetails = do
 			_ -> throw $ InternalError $ "Invalid state while logging"
 		do_db_query_ db "INSERT INTO pageloads(time, statusbefore, statusafter, statebefore, stateafter, sessionid, requestedurl, parameters, retrievedurl, pagetext) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);" [
 			Just $ show $ time $ logdetails,
-			Just $ apiStatusBefore $ logdetails,
+			case apiStatusBefore logdetails of
+				Right x -> Just $ encodeStrict $ x
+				_ -> Nothing,
 			case apiStatusAfter logdetails of
-				Right x -> Just x
+				Right x -> Just $ encodeStrict $ x
 				_ -> Nothing,
 			Just $ showstate (stateBefore $ logdetails),
 			Just $ showstate (stateAfter $ logdetails),

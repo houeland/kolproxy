@@ -60,7 +60,7 @@ doProcessPage ref uri params = do
 			forkIO_ "proxy:logresult" $ (do
 				status_before <- status_before_func
 				status_after <- status_after_func
-				log_page_result ref status_before log_time state_before uri params effuri (Data.ByteString.Char8.unpack pagetext) status_after state_after
+				log_page_result ref (Right status_before) log_time state_before uri params effuri (Data.ByteString.Char8.unpack pagetext) status_after state_after
 				return ()) `catch` (\e -> putStrLn $ "processpage logging error: " ++ (show (e :: ConnectionException)))
 
 			return (y, pagetext, effuri, hdrs)
@@ -86,9 +86,6 @@ statusfunc ref = do
 	mv <- readIORef $ jsonStatusPageMVarRef_ $ sessionData $ ref
 	return $ do
 		x <- readMVar mv
-		putStrLn $ "DEBUG statusfunc: " ++ (show $ case x of
-			Right r -> Right $ length $ r
-			Left err -> Left err)
 		case x of
 			Right r -> return r
 			Left err -> throwIO err
@@ -159,15 +156,12 @@ make_ref baseref = do
 		}
 	}
 	state_is_ok <- (do
-		mjs <- readIORef (latestRawJsonText_ $ sessionData $ ref)
+		mjs <- readIORef (latestRawJson_ $ sessionData $ ref)
 		when (isNothing mjs) $ do
 			mv <- readIORef (jsonStatusPageMVarRef_ $ sessionData $ ref)
 			load_api_status_to_mv ref mv
-		putStrLn $ "DEBUG: s_i_ok: force_latest_status_parse"
 		force_latest_status_parse ref
-		putStrLn $ "DEBUG: s_i_ok: loadState"
 		void $ loadState ref
-		putStrLn $ "DEBUG: s_i_ok: done"
 		return True) `catch` (\e -> do
 			putStrLn $ "loadstate exception: " ++ show (e :: SomeException)
 			return False)
@@ -214,7 +208,8 @@ kolProxyHandler uri params baseref = do
 				newref <- do
 					mv <- newEmptyMVar
 					writeIORef (jsonStatusPageMVarRef_ $ sessionData $ origref) mv
-					writeIORef (latestRawJsonText_ $ sessionData $ origref) Nothing
+					writeIORef (latestRawJson_ $ sessionData $ origref) Nothing
+					writeIORef (latestValidJson_ $ sessionData $ origref) Nothing
 					make_ref $ baseref { otherstuff_ = (otherstuff_ origref) { connection_ = (connection_ $ otherstuff_ $ origref) { cookie_ = new_cookie } } }
 				putStrLn $ "INFO: login.php -> getting server state"
 				ai <- getApiInfo newref
@@ -257,7 +252,7 @@ kolProxyHandler uri params baseref = do
 
 		"/kolproxy-automation-script" -> check_pwd_for $ do
 			runauto <- getState origref "character" "setting: run automation scripts"
-			if runauto == Just "no"
+			if runauto == Just "no/HACK:DISABLED"
 				then makeResponse (Data.ByteString.Char8.pack "Automation is currently disabled (scripts are not allowed to download pages). Go to the kolproxy settings to change it.") uri []
 				else do
 					(pt, effuri, hdrs) <- do
@@ -299,7 +294,7 @@ kolProxyHandler uri params baseref = do
 			should_run_intercept_script <- if canread_before
 				then do
 					x <- getState origref "character" "setting: run automation scripts"
-					return $ x /= Just "no"
+					return $ x /= Just "no/HACK:DISABLED"
 				else return False
 
 			downloaded_page <- if should_run_intercept_script
@@ -324,7 +319,7 @@ kolProxyHandler uri params baseref = do
 					should_run_automate_script <- if canread_after
 						then do
 							x <- getState newref "character" "setting: run automation scripts"
-							return $ x /= Just "no"
+							return $ x /= Just "no/HACK:DISABLED"
 						else return False
 					x <- if should_run_automate_script
 						then do

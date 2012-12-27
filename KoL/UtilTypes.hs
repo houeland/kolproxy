@@ -9,6 +9,7 @@ import Data.IORef
 import Data.Time
 import Data.Typeable
 import Network.URI
+import Text.JSON
 import System.IO
 import qualified Data.ByteString
 import qualified Data.Map
@@ -27,8 +28,9 @@ data LuaScriptType = WHENEVER | PROCESS | PRINTER | AUTOMATE | INTERCEPT
 
 -- This entire thing should be locked up into DiscerningStateIdentifier. log/state actions don't really belong.
 data SessionDataType = SessionDataType {
-	jsonStatusPageMVarRef_ :: IORef (MVar (Either SomeException String)),
-	latestRawJsonText_ :: IORef (Maybe String),
+	jsonStatusPageMVarRef_ :: IORef (MVar (Either SomeException (JSObject JSValue))),
+	latestRawJson_ :: IORef (Maybe (Either SomeException (JSObject JSValue))),
+	latestValidJson_ :: IORef (Maybe (JSObject JSValue)),
 	itemData_ :: IORef (Maybe (Int -> Maybe [(String, String)], String -> Maybe [(String, String)])),
 	doDbLogAction_ :: RefType -> (Database.SQLite3.Database -> IO ()) -> IO (),
 	doStateAction_ :: RefType -> (Database.SQLite3.Database -> IO ()) -> IO (),
@@ -65,8 +67,8 @@ data LogRefStuff = LogRefStuff {
 
 data ProcessingRefStuff = ProcessingRefStuff {
 	processPage_ :: RefType -> URI -> Maybe [(String, String)] -> IO (IO (Either (Data.ByteString.ByteString, URI, [(String, String)]) (Data.ByteString.ByteString, URI, [(String, String)]))),
-	nochangeRawRetrievePageFunc_ :: RefType -> URI -> Maybe [(String, String)] -> Bool -> IO (IO (Data.ByteString.ByteString, URI, [(String, String)]), IO (MVar (Either SomeException String))),
-	getstatusfunc_ :: RefType -> IO (IO String)
+	nochangeRawRetrievePageFunc_ :: RefType -> URI -> Maybe [(String, String)] -> Bool -> IO (IO (Data.ByteString.ByteString, URI, [(String, String)]), IO (MVar (Either SomeException (JSObject JSValue)))),
+	getstatusfunc_ :: RefType -> IO (IO (JSObject JSValue))
 }
 
 data GlobalRefStuff = GlobalRefStuff {
@@ -114,7 +116,7 @@ doChatLogAction ref action = (doChatLogAction_ $ globalstuff_ $ ref) action
 doStateAction ref action = (doStateAction_ $ sessionData $ ref) ref action
 
 -- TODO: Use a better name. Split into different types?
-data ConnectionException = UrlMismatchException String URI | NotLoggedInException | ApiPageException String | HttpRequestException URI SomeException | StateException
+data ConnectionException = UrlMismatchException String URI | NotLoggedInException | InValhallaException | ApiPageException String | HttpRequestException URI SomeException | StateException
 	deriving (Typeable)
 
 instance Exception ConnectionException
@@ -122,7 +124,8 @@ instance Exception ConnectionException
 instance Show ConnectionException where
 	show (UrlMismatchException urlstr goturi) = "Error loading URL: " ++ urlstr ++ ", received: " ++ (show goturi)
 	show (NotLoggedInException) = "Not logged in"
-	show (ApiPageException pagestr) = "Error loading API, page returned: " ++ pagestr
+	show (InValhallaException) = "In valhalla"
+	show (ApiPageException errstr) = "Error loading API: " ++ errstr
 	show (HttpRequestException uri err) = "Network connection error while loading " ++ uriPath uri ++ " (exception: " ++ show err ++ ")"
 	show (StateException) = "Error loading state"
 

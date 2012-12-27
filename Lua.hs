@@ -478,12 +478,6 @@ setup_lua_instance level filename setupref = do
 			push_simplexmldata l xmldoc
 			return 1
 
---		register_function "get_semirare_encounters" $ \_ref l -> do
---			semis <- doReadDataFile "cache/data/semirares"
---			Lua.newtable l
---			add_table_contents l (zip [1..] semis :: [(Int, String)])
---			return 1
-
 		register_function "get_fallback_choicespoilers" $ get_fallback_choicespoilers
 
 		register_function "get_pulverize_groups" get_pulverize_groups
@@ -508,10 +502,15 @@ setup_lua_instance level filename setupref = do
 				0 -> fromIntegral <$> Lua.gettop l
 				_ -> throwIO =<< userError <$> Lua.tostring l (-1)
 
-		-- TODO: push true/false directly
 		register_function "can_read_state" $ \ref l -> do
 			x <- canReadState ref
 			Lua.pushboolean l x
+			return 1
+
+		register_function "list_custom_autoload_script_files" $ \_ref l -> do
+			filenames <- get_custom_autoload_script_files
+			Lua.newtable l
+			add_table_contents l (zip ([1..] :: [Int]) filenames)
 			return 1
 
 		register_function "block_lua_scripting" $ \ref _l -> do
@@ -521,8 +520,6 @@ setup_lua_instance level filename setupref = do
 		register_function "parse_table_string" parse_table_string
 
 		register_function "get_recipes" get_recipes
-
-		--Lua.registerhsfunction l "get_raw_charpane_text" KoL.Api.getRawCharpaneText
 
 		case level of
 			WHENEVER -> do

@@ -93,7 +93,7 @@ add_extra_always_warning("/inv_booze.php", function()
 	local potency = retrieve_itemid_potency(tonumber(params.whichitem))
 
 	if not potency then
-		return "This booze could make you fallen-down drunk.", "overdrinking unknown potency"
+		return "This booze could make you fallen-down drunk (unknown potency).", "overdrinking unknown potency"
 	end
 
 	if drunkenness() + potency * (tonumber(params.quantity) or 1) <= estimate_max_safe_drunkenness() then

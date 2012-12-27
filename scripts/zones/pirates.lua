@@ -59,17 +59,16 @@ end)
 
 add_processor("/fight.php", function()
 	if text:match("The pirate sneers at you and replies") then
--- 		print("pirate sneering")
 		local tbl = ascension["zone.pirates.insults"] or {}
 		insult = text:match("The pirate sneers at you and replies &quot;(.-)&quot;")
-		print("insult: "..tostring(insult))
+		print("INFO pirate insult: "..tostring(insult))
 		local should_add = true
 		for from, to in pairs(tbl) do
-			if (to == insult) then
+			if to == insult then
 				should_add = false
 			end
 		end
-		if (should_add == true) then
+		if should_add then
 			table.insert(tbl, insult)
 			ascension["zone.pirates.insults"] = tbl
 			fight["pirate.new insult"] = "yes"
@@ -106,7 +105,7 @@ add_printer("/beerpong.php", function()
 			choice = to
 		end
 	end
-	print("choice:"..tostring(choice))
+	print("INFO: beer pong choice", choice)
 	if choice and text:match(choice) then
 		text = text:gsub("(<option value=[0-9]+)(>"..choice.."</option>)", [[%1 selected="selected"%2]])
 	else
@@ -126,7 +125,7 @@ add_automator("/beerpong.php", function()
 		end
 		if choice and text:match(choice) then
 			responsenum = tonumber(text:match("<option value=([0-9]+)>"..choice.."</option>"))
-			print("choose choice ", choice, responsenum)
+			print("INFO: beer pong choose choice", choice, responsenum)
 			if responsenum then
 				text, url = post_page("/beerpong.php", { response = responsenum })
 				return solve_beerpong(n - 1)
@@ -146,11 +145,7 @@ add_printer("/cove.php", function ()
 		if count >= 3 then
 			chance = count/8 * (count-1)/7 * (count-2)/6
 		end
-		local insults_plural = "insults"
-		if count == 1 then
-			insults_plural = "insult"
-		end
-		local status = string.format("<b>%d %s collected (%.1f%% chance)</b><br>", count, insults_plural, chance * 100)
+		local status = string.format("<b>%s collected (%.1f%% chance)</b><br>", make_plural(count, "insult", "insults"), chance * 100)
 		status = status .. table.concat(tbl, "<br>")
 		text = text:gsub([[(</table>)(</body>)]], function (a, b) return a .. "<center>" .. status .. "</center>" .. b end)
 	end

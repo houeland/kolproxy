@@ -313,5 +313,162 @@ mark m_done
 		return result, resulturl, did_action
 	end
 
+-- TODO: fax & arrow smut orc instead of ascii art (day 3)
+-- TODO: lvl 9 quest on day 4 & after the bridge is untinkered
+	function t.there_can_be_only_one_topping()
+		if quest_text("should seek him out, in the Highlands beyond the Orc Chasm") then
+			local pt, pturl = get_page("/place.php", { whichplace = "orc_chasm" })
+			local pieces = tonumber(pt:match("action=bridge([0-9]*)"))
+			if not pieces then
+				critical "Couldn't determine bridge status"
+			end
+			if not have_item("dictionary") then
+				if have_item("abridged dictionary") then
+					async_post_page("/forestvillage.php", { pwd = get_pwd(), action = "untinker", whichitem = get_itemid("abridged dictionary") })
+				else
+					stop "Missing bridge from pirates"
+				end
+			end
+			pt = get_page("/place.php", { whichplace = "orc_chasm", action = "bridge" .. pieces })
+			if pt:contains("have to check out that lumber camp down there") then
+				return {
+					message = "get bridge parts (" .. pieces .. ")",
+					fam = "Slimeling",
+					buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+					minmp = 30,
+					action = adventure {
+						zoneid = 295,
+						macro_function = macro_noodleserpent,
+					}
+				}
+			else
+				return {
+					message = "check bridge",
+					action = function()
+						pt = get_page("/place.php", { whichplace = "orc_chasm" })
+						pieces = tonumber(pt:match("action=bridge([0-9]*)"))
+						if not pieces then
+							did_action = true
+							return
+						end
+						pt, pturl = get_page("/place.php", { whichplace = "orc_chasm", action = "bridge" .. pieces })
+						if pt:contains("have to check out that lumber camp down there") then
+							did_action = true
+						end
+						return pt, pturl
+					end
+				}
+			end
+		elseif quest_text("now you should go talk to Black Angus") or quest_text("Go see Black Angus") then
+			return {
+				message = "visit highland lord",
+				action = function()
+					get_page("/place.php", { whichplace = "highlands", action = "highlands_dude" })
+					refresh_quest()
+					did_action = not (quest_text("now you should go talk to Black Angus") or quest_text("Go see Black Angus"))
+				end
+			}
+		elseif quest_text("should go to Oil Peak and investigate the signal fire there") or quest_text("should keep killing oil monsters until the pressure on the peak drops") then
+			-- TODO: buff ML to +50 or +100 via:
+				-- bugbear familiar or purse rat + familiar levels
+				-- ur-kel's
+				-- lap dog
+				-- hipposkin poncho or goth kid t-shirt
+				-- buoybottoms
+				-- spiky turtle helmet or crown of thrones w/ el vibrato megadrone
+				-- astral belt, C.A.R.N.I.V.O.R.E. button, grumpy old man charrrm bracelet, ring of aggravate monster
+				-- Boris: Song of Cockiness, Overconfident
+			return {
+				message = "do oil peak",
+				fam = "Baby Bugged Bugbear",
+				buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "A Few Extra Pounds", "Ur-Kel's Aria of Annoyance" },
+				minmp = 60,
+				action = adventure {
+					zoneid = 298,
+					macro_function = macro_noodleserpent,
+				}
+			}
+		elseif quest_text("should check out A-Boo Peak and see") or quest_text("should keep clearing the ghosts out of A-Boo Peak") then
+			if have_item("A-Boo clue") then
+				if not buff("Super Structure") and have("Greatest American Pants") then
+					wear { pants = "Greatest American Pants" }
+					script.get_gap_buff("Super Structure")
+				end
+				if not have_buff("Well-Oiled") and have_item("Oil of Parrrlay") then
+					use_item("Oil of Parrrlay")
+				end
+-- 				wear { weapon = "titanium assault umbrella" }
+-- 				wear { weapon = "double-barreled sling" }
+-- 				wear { weapon = "broken sword" }
+-- 				wear { offhand = "battered hubcap" }
+-- 				wear { weapon = "coffin lid" }
+-- 				wear { shirt = "eXtreme Bi-Polar Fleece Vest" }
+-- 				wear { acc2 = "enchanted handwarmer" }
+-- 				wear { acc1 = "glowing red eye" }
+-- 				wear { hat = "eXtreme scarf", pants = "snowboarder pants", acc3 = "eXtreme mittens" }
+-- 				wear { hat = "antique helmet" }
+-- 				wear { hat = "lihc face" }
+-- 				-- TODO: handle other towel versions
+-- 				wear { hat = "makeshift turban" }
+-- 				wear { hat = "wool hat" }
+
+-- 				-- TODO: buff max hp
+
+-- 				if not buff("Spooky Flavor") and have("ectoplasmic paste") then
+-- 					use_item("ectoplasmic paste")
+-- 					-- +0/+2
+-- 				end
+-- 				if not buff("Spookypants") and have("spooky powder") then
+-- 					use_item("spooky powder")
+-- 					-- +0/+1
+-- 				end
+-- 				if not buff("Insulated Trousers") and have("cold powder") then
+-- 					use_item("cold powder")
+-- 					-- +1/+0
+-- 				end
+				-- TODO: heal up fully
+				return {
+					message = "follow a-boo clue",
+					fam = "Exotic Parrot",
+					buffs = { "Astral Shell", "Elemental Saucesphere", "Scarysauce", "A Few Extra Pounds", "Go Get 'Em, Tiger!" },
+					minmp = 5,
+					action = adventure {
+						zoneid = 296,
+						choice_function = function (advtitle, choicenum)
+							if advtitle == "The Horror..." then
+								return "", 1
+							end
+						end
+					}
+				}
+			else
+				return {
+					message = "do a-boo peak",
+					fam = "Slimeling",
+					buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+					minmp = 50,
+					action = adventure {
+						zoneid = 296,
+						macro_function = macro_noodlecannon,
+					}
+				}
+			end
+		else
+-- 			-- TODO: boost item drops & noncombats, sniff either topiary
+-- 			-- TODO: ensure 4+ stench resistance
+-- 			-- TODO: one choice adv
+-- 			-- TODO: ensure +50% item drops (excluding familiars)
+-- 			-- TODO: one choice adv
+-- 			-- TODO: ensure "jar of oil"
+-- 			if not have_item("jar of oil") and count_item("bubblin' crude") >= 12 then
+-- 				use_item("bubblin' crude", 12)
+-- 			end
+-- 			-- TODO: one choice adv
+-- 			-- TODO: ensure combat init +40%
+-- 			-- TODO: one choice adventure
+			stop "TODO: solve twin peak mystery"
+		end
+	end
+
 	return t
 end

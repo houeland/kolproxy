@@ -1,3 +1,9 @@
+add_choice_text("Finger-Lickin'... Death.", { -- choice adventure number: 4
+	["Bet 500 Meat on Tapajunta Del Maiz"] = "Win or lose 500 meat",
+	["Bet 500 Meat on Cuerno De...  the other one"] = "Lose 500 meat, chance to get a poultrygeist",
+	["Walk away in disgust"] = { leave_noturn = true, good_choice = true },
+})
+
 -- shore
 
 local shore_tower_items = {

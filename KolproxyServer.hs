@@ -36,7 +36,8 @@ make_sessionconn kolproxy_direct_connection dblogstuff statestuff = do
 	cs <- mkconnthing kolproxy_direct_connection
 	cw <- mkconnthing kolproxy_direct_connection
 	jspmvref <- newIORef =<< newEmptyMVar
-	lrjtref <- newIORef Nothing
+	lrjref <- newIORef Nothing
+	lvjref <- newIORef Nothing
 	tnow <- getCurrentTime
 	lrs <- newIORef tnow
 	lrw <- newIORef tnow
@@ -45,13 +46,13 @@ make_sessionconn kolproxy_direct_connection dblogstuff statestuff = do
 	-- TODO: Change this raw API decoding business?
 	let dologaction ref action = do
 		doSERVER_DEBUG "dologaction"
-		Just jsontext <- readIORef (latestRawJsonText_ $ sessionData $ ref)
-		let ai = rawDecodeApiInfo jsontext
+		Just jsonobj <- readIORef (latestValidJson_ $ sessionData $ ref)
+		let ai = rawDecodeApiInfo jsonobj
 		dblogstuff ((charName ai) ++ "-" ++ (show $ ascension ai) ++ ".ascension-log.sqlite3") action
 	let dostateaction ref action = do
 		doSERVER_DEBUG "dostateaction"
-		Just jsontext <- readIORef (latestRawJsonText_ $ sessionData $ ref)
-		let ai = rawDecodeApiInfo jsontext
+		Just jsonobj <- readIORef (latestValidJson_ $ sessionData $ ref)
+		let ai = rawDecodeApiInfo jsonobj
 		statestuff ("character-" ++ (charName ai) ++ ".state.sqlite3") action
 	luainstancesref <- newIORef $ Data.Map.empty
 	laststoredstateref <- newIORef Nothing
@@ -62,7 +63,8 @@ make_sessionconn kolproxy_direct_connection dblogstuff statestuff = do
 		wheneverLastRetrieve_ = lrw,
 		sessConnData_ = SessionDataType {
 			jsonStatusPageMVarRef_ = jspmvref,
-			latestRawJsonText_ = lrjtref,
+			latestRawJson_ = lrjref,
+			latestValidJson_ = lvjref,
 			itemData_ = idata,
 			doDbLogAction_ = dologaction,
 			doStateAction_ = dostateaction,

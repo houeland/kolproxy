@@ -74,3 +74,75 @@ load_file("interface", "interface/preview-chat-commands.lua")
 
 load_file("automation", "automation/setup.lua")
 load_file("automation", "automation/daily-visits.lua")
+
+load_file("other", "other/mmg-blocker.lua")
+load_file("other", "other/visit-people-warnings.lua")
+-- load_file("other", "other/chrome-volcano.lua")
+-- load_file("other", "other/nemesis-fight-music.lua")
+-- load_file("other", "other/hookah-printer.lua")
+
+-- load_file("other", "other/log-everything.lua")
+
+load_file("chat", "other/chat-pvp-announcements.lua")
+
+load_file("chat", "other/chat-commands.lua")
+
+-- load_file("interface", "other/itemdrop-decorator.lua")
+
+load_file("chat", "other/afh-clan-chat.lua")
+-- load_file("other", "other/afh-clan-chat-base.lua")
+load_file("chat", "other/chat-highlighting.lua")
+
+load_file("automation", "automation/settings.lua")
+load_file("automation", "automation/macros.lua")
+load_file("automation", "automation/scripts.lua")
+load_file("automation", "automation/tasks.lua")
+load_file("automation", "automation/ascension.lua")
+
+load_file("automation", "automation/casual-macro.lua")
+load_file("automation", "automation/casual-scripts.lua")
+
+load_file("automation", "automation/nemesis.lua")
+load_file("automation", "automation/suburbandis.lua")
+load_file("automation", "automation/spaaace.lua")
+load_file("automation", "automation/felonia.lua")
+load_file("automation", "automation/castle-farming.lua")
+load_file("automation", "automation/dungeon-fist.lua")
+
+-- load_file("spading", "spading-automation.lua")
+-- load_file("spading", "other/slimeling-spading.lua")
+-- load_file("spading", "other/scarecrow-spading.lua")
+
+load_file("interface", "other/twillo/buffs.lua")
+load_file("interface", "other/twillo/outfits.lua")
+load_file("interface", "other/twillo/equipment.lua")
+load_file("interface", "other/twillo/combat-display.lua")
+load_file("interface", "other/twillo/item-display.lua")
+load_file("interface", "other/twillo/ml-display.lua")
+load_file("interface", "other/twillo/init-display.lua")
+load_file("interface", "other/twillo/meat-display.lua")
+
+load_file("interface", "other/bmaher/compact-topmenu.lua")
+
+load_file("interface", "other/demon_llama/monster-data.lua")
+load_file("interface", "other/demon_llama/phylum-treasures.lua")
+load_file("interface", "other/demon_llama/combat-tracking.lua")
+load_file("interface", "other/demon_llama/flyers.lua")
+load_file("interface", "other/demon_llama/fight-stats.lua")
+load_file("warning", "other/demon_llama/dictionary-warning.lua")
+load_file("interface", "other/demon_llama/hiddencity-spheres.lua")
+
+load_file("interface", "other/nion/basement.lua")
+
+load_file("interface", "other/chickencha/beararms.lua")
+load_file("interface", "other/chickencha/lvl12.lua")
+
+load_file("interface", "other/superbachelor/blank-out.lua")
+
+load_file("chat", "other/add-log-notes.lua")
+
+load_file("interface", "other/lua-console.lua")
+
+for _, f in ipairs(list_custom_autoload_script_files()) do
+	load_file("custom autoload", "custom-autoload/" .. f)
+end

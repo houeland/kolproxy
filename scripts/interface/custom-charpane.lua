@@ -16,7 +16,7 @@ register_setting {
 }
 
 register_setting {
-	name = "use compact mode custom kolproxy charpane",
+	name = "use custom kolproxy charpane/use compact mode",
 	description = "Use compact mode for custom kolproxy charpane",
 	group = "charpane",
 	default_level = "detailed",
@@ -63,7 +63,7 @@ local function get_clancy_display()
 end
 
 local function kolproxy_custom_charpane_mode()
-	if setting_enabled("use compact mode custom kolproxy charpane") then
+	if setting_enabled("use custom kolproxy charpane/use compact mode") then
 		return "compact"
 	else
 		return "normal"
@@ -202,9 +202,9 @@ local function format_hpmp(c, m)
 	if c == m then
 		return string.format([[<span style="color: green">%s</span>]], format_integer(c))
 	elseif c < m * 0.25 then
-		return string.format([[<span style="color: red">%s / %s</span>]], format_integer(c), format_integer(m))
+		return string.format([[<span style="color: red">%s&nbsp;/&nbsp;%s</span>]], format_integer(c), format_integer(m))
 	else
-		return string.format([[%s / %s]], format_integer(c), format_integer(m))
+		return string.format([[%s&nbsp;/&nbsp;%s]], format_integer(c), format_integer(m))
 	end
 end
 
@@ -277,8 +277,6 @@ end
 local function make_get_buffs_href()
 	return make_href("/kolproxy-frame-page", { url = "http://kol.obeliks.de" .. make_href("/buffbot/buff", { style = "kol", target = playername() }), pwd = session.pwd })
 end
-
--- dojax('charsheet.php?pwd=674ef17fe8f7051871529a8d7a93fbcc&ajax=1&action=unbuff&whichbuff=52');
 
 local function get_common_js()
 	return [[
@@ -723,12 +721,12 @@ add_interceptor("/charpane.php", function()
 	end
 
 	table.insert(lines, [[<table cellpadding=3 align=center>]])
-	table.insert(lines, string.format([[<tr><td align=center><img src="http://images.kingdomofloathing.com/itemimages/hp.gif" class=hand title="Hit Points" alt="Hit Points"><br><span class=black>%s&nbsp;/&nbsp;%s</span></td>]], format_integer(hp()), format_integer(maxhp())))
+	table.insert(lines, string.format([[<tr><td align=center><img src="http://images.kingdomofloathing.com/itemimages/hp.gif" class=hand title="Hit Points" alt="Hit Points"><br><span class=black>%s</span></td>]], format_hpmp(hp(), maxhp())))
 	if ascensionpathid() == 10 then
 		table.insert(lines, string.format([[<td align=center><img src="http://images.kingdomofloathing.com/otherimages/zombies/horde_15.gif"  height=35 class=hand title="Horde (%s zombie(s))" alt="Horde (%s zombie(s))"><br><span class=black>%s</span></td></tr>]], horde_size(), horde_size(), horde_size()))
 	else
 		local mpname = ({ "Muscularity Points", "Muscularity Points", "Mana Points", "Mana Points", "Mojo Points", "Mojo Points" })[classid()] or "MP"
-		table.insert(lines, string.format([[<td align=center><img src="http://images.kingdomofloathing.com/itemimages/mp.gif" class=hand title="%s" alt="%s"><br><span class=black>%s&nbsp;/&nbsp;%s</span></td></tr>]], mpname, mpname, format_integer(mp()), format_integer(maxmp())))
+		table.insert(lines, string.format([[<td align=center><img src="http://images.kingdomofloathing.com/itemimages/mp.gif" class=hand title="%s" alt="%s"><br><span class=black>%s</span></td></tr>]], mpname, mpname, format_hpmp(mp(), maxmp())))
 	end
 	table.insert(lines, string.format([[<tr><td align=center><img src="http://images.kingdomofloathing.com/itemimages/meat.gif" class=hand title="Meat" alt="Meat"><br><span class=black>%s</span></td>]], format_integer(meat())))
 	table.insert(lines, string.format([[<td align=center><img src="http://images.kingdomofloathing.com/itemimages/hourglass.gif" class=hand title="Adventures Remaining" alt="Adventures Remaining"><br><span class=black>%s</span></td></tr>]], format_integer(advs())))

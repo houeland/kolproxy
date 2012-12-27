@@ -14,6 +14,7 @@ import Data.IORef
 import Data.Maybe
 import Data.Time
 import Network.URI
+import Text.JSON
 import qualified Data.ByteString.Char8
 
 getHTTPFileData useragent url = do
@@ -81,12 +82,28 @@ internalKolRequest url params cu noredirect = do
 					_ -> throwIO $ InternalError $ "Error parsing redirect: No location header"
 			_ -> return (body, effuri, hdrs)
 
-load_api_status_to_mv ref mv = putMVar mv =<< (try $ do
-	(xf, _) <- internalKolRequest_pipelining ref (mkuri $ "/api.php?what=status,inventory&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") Nothing False
-	(xraw, _, _) <- xf
-	let x = Data.ByteString.Char8.unpack $ xraw
-	writeIORef (latestRawJsonText_ $ sessionData $ ref) (Just x)
-	return x)
+load_api_status_to_mv ref mv = do
+	apires <- (try $ do
+		(xf, _) <- internalKolRequest_pipelining ref (mkuri $ "/api.php?what=status,inventory&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") Nothing False
+		(xraw, xuri, _) <- xf
+		jsobj <- case uriPath xuri of
+			"/api.php" -> do
+				let x = Data.ByteString.Char8.unpack $ xraw
+				case decodeStrict x of
+					Ok jsobj -> return jsobj
+					Error err -> throwIO $ ApiPageException err
+			"/login.php" -> throwIO $ NotLoggedInException
+			"/maint.php" -> throwIO $ NotLoggedInException
+			"/afterlife.php" -> throwIO $ InValhallaException
+			_ -> do
+				putStrLn $ "WARNING: got uri: " ++ (show xuri) ++ " when raw-getting API"
+				throwIO $ UrlMismatchException "/api.php" xuri
+		return jsobj)
+	writeIORef (latestRawJson_ $ sessionData $ ref) (Just apires)
+	case apires of
+		Right js -> writeIORef (latestValidJson_ $ sessionData $ ref) (Just js)
+		_ -> return ()
+	putMVar mv apires
 
 internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 -- 	putStrLn $ "DEBUG: pipeline-req " ++ show uri

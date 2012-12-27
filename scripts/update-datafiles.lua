@@ -34,6 +34,7 @@ local blacklist = {
 	["A Little Bit Evil (Accordion Thief)"] = true,
 	["Buy! Sell! Buy! Sell!"] = true,
 
+	[""] = true,
 	["especially homoerotic frat-paddle"] = true,
 
 	["bonuses: jalape&ntilde;o slices"] = true,
