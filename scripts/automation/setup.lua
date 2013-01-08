@@ -69,6 +69,17 @@ end
 
 local automation_script_details_list = {}
 
+automation_script_details_list["automate-dungeonfist"] = { simple_link = "arcade.php", description = "Automate playing Dungeon Fist (link to the game grid)" }
+automation_script_details_list["automate-porko"] = { simple_link = "spaaace.php", description = "Automate playing Porko (link to spaaace)" }
+automation_script_details_list["get-faxbot-monster"] = { simple_link = "clan_viplounge.php?action=faxmachine", description = "Request monster from FaxBot (link to fax machine)" }
+automation_script_details_list["custom-ascension-checklist"] = { simple = true, description = "Ascension checklist" }
+automation_script_details_list["automate-nemesis"] = { when = function() return true end, description = "Automate Nemesis quest" }
+automation_script_details_list["automate-suburbandis"] = { when = function() return true end, description = "Automate Suburban Dis quest" }
+automation_script_details_list["castle-farming"] = { when = function() return true end, description = "Automate Castle in the Clouds in the Sky meat farming" }
+automation_script_details_list["lua-console"] = { simple = true, description = "Go to Lua console" }
+automation_script_details_list["add-log-notes"] = { simple = true, description = "Add note to ascension log" }
+automation_script_details_list["automate-aftercore-pulls"] = { when = function() return true end, description = "Pull a selection of useful aftercore items from Hagnks storage" }
+
 add_automation_script("custom-aftercore-automation", function()
 	local questlogcompleted_page = get_page("/questlog.php", { which = 2 })
 	function quest_completed(name)
@@ -80,13 +91,17 @@ add_automation_script("custom-aftercore-automation", function()
 	for x in pairs(get_automation_script_links()) do
 		local tbl = automation_script_details_list[x]
 		if tbl and tbl.description then
-			if ascensionstatus("Aftercore") and tbl.when() then
-				table.insert(goodlinks, [[<a href="kolproxy-automation-script?automation-script=]]..tbl.name..[[&pwd=]]..session.pwd..[[">]]..tbl.description..[[</a>]])
+			if tbl.simple_link then
+				table.insert(goodlinks, [[<a href="]]..tbl.simple_link..[[">]]..tbl.description..[[</a>]])
+			elseif tbl.simple then
+				table.insert(goodlinks, [[<a href="kolproxy-automation-script?automation-script=]]..(tbl.name or x)..[[&pwd=]]..session.pwd..[[">]]..tbl.description..[[</a>]])
+			elseif ascensionstatus("Aftercore") and tbl.when and tbl.when() then
+				table.insert(goodlinks, [[<a href="kolproxy-automation-script?automation-script=]]..(tbl.name or x)..[[&pwd=]]..session.pwd..[[">]]..tbl.description..[[</a>]])
 			else
 				table.insert(goodlinks, [[<span style="color: gray">]]..tbl.description..[[</a>]])
 			end
 		else
-			table.insert(links, [[<a href="kolproxy-automation-script?automation-script=]]..x..[[&pwd=]]..session.pwd..[[">]]..x..[[</a>]])
+--			table.insert(links, [[<a href="kolproxy-automation-script?automation-script=]]..x..[[&pwd=]]..session.pwd..[[">]]..x..[[</a>]])
 		end
 	end
 	return "Note: Work in progress, currently missing an interface<br><br>" .. table.concat(goodlinks, "<br>") .. "<br><br>" .. table.concat(links, "<br>"), requestpath

@@ -335,6 +335,7 @@ mark m_done
 					message = "get bridge parts (" .. pieces .. ")",
 					fam = "Slimeling",
 					buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+					bonus_target = { "item" },
 					minmp = 30,
 					action = adventure {
 						zoneid = 295,
@@ -344,6 +345,7 @@ mark m_done
 			else
 				return {
 					message = "check bridge",
+					nobuffing = true,
 					action = function()
 						pt = get_page("/place.php", { whichplace = "orc_chasm" })
 						pieces = tonumber(pt:match("action=bridge([0-9]*)"))
@@ -391,7 +393,7 @@ mark m_done
 		elseif quest_text("should check out A-Boo Peak and see") or quest_text("should keep clearing the ghosts out of A-Boo Peak") then
 			if have_item("A-Boo clue") then
 				if not buff("Super Structure") and have("Greatest American Pants") then
-					wear { pants = "Greatest American Pants" }
+					script.wear { pants = "Greatest American Pants" }
 					script.get_gap_buff("Super Structure")
 				end
 				if not have_buff("Well-Oiled") and have_item("Oil of Parrrlay") then

@@ -270,10 +270,10 @@ runProxyServer r rwhenever portnum = do
 					return (Data.Map.insert filename x m, x)
 		writeChan chan action
 
-	-- TODO: allow launching before this is finished
 	launched_ref <- newIORef False
 	forkIO_ "kps:updatedatafiles" $ do
 		update_data_files
+	forkIO_ "kps:launchkolproxy" $ do
 		writeIORef launched_ref True
 		envlaunch <- getEnvironmentSetting "KOLPROXY_LAUNCH_BROWSER"
 		when (envlaunch /= Just "0") $ do

@@ -101,7 +101,6 @@ getlogchan ref = logchan_ $ logstuff_ $ ref
 processPage ref = processPage_ $ processingstuff_ $ ref
 nochangeRawRetrievePageFunc ref = nochangeRawRetrievePageFunc_ $ processingstuff_ $ ref
 getstatusfunc ref = (getstatusfunc_ $ processingstuff_ $ ref) ref
---readstatus ref = join $ getstatusfunc ref
 
 connection ref = connection_ $ otherstuff_ $ ref
 state ref = if stateValid_ ref
@@ -115,25 +114,16 @@ doDbLogAction ref action = (doDbLogAction_ $ sessionData $ ref) ref action
 doChatLogAction ref action = (doChatLogAction_ $ globalstuff_ $ ref) action
 doStateAction ref action = (doStateAction_ $ sessionData $ ref) ref action
 
--- TODO: Use a better name. Split into different types?
-data ConnectionException = UrlMismatchException String URI | NotLoggedInException | InValhallaException | ApiPageException String | HttpRequestException URI SomeException | StateException
+data KolproxyException = UrlMismatchException String URI | NotLoggedInException | InValhallaException | ApiPageException String | HttpRequestException URI SomeException | StateException | InternalError String
 	deriving (Typeable)
 
-instance Exception ConnectionException
+instance Exception KolproxyException
 
-instance Show ConnectionException where
+instance Show KolproxyException where
 	show (UrlMismatchException urlstr goturi) = "Error loading URL: " ++ urlstr ++ ", received: " ++ (show goturi)
 	show (NotLoggedInException) = "Not logged in"
 	show (InValhallaException) = "In valhalla"
 	show (ApiPageException errstr) = "Error loading API: " ++ errstr
 	show (HttpRequestException uri err) = "Network connection error while loading " ++ uriPath uri ++ " (exception: " ++ show err ++ ")"
 	show (StateException) = "Error loading state"
-
-data OtherKolproxyException = InternalError String | ExceptionMessage String
-	deriving (Typeable)
-
-instance Exception OtherKolproxyException
-
-instance Show OtherKolproxyException where
 	show (InternalError str) = "Internal error: " ++ str
-	show (ExceptionMessage str) = str

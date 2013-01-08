@@ -42,7 +42,7 @@ loadState ref = do
 			-- TODO: Don't spin this off to another thread?
 			doStateAction ref $ \db -> do
 				putMVar mv =<< (try $ do
-					ai <- getApiInfo ref
+					ai <- getApiInfo ref -- TODO: don't getapiinfo here?
 					let readMapFromDB base_tablename = do
 						tablename <- get_state_tablename ref base_tablename
 						do_db_query_ db ("CREATE TABLE IF NOT EXISTS " ++ tablename ++ "(name TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY(name));") []
@@ -290,9 +290,9 @@ loadSettingsFromServer ref = do
 				mirrorStateIntoDatabase ref
 				return $ Just $ show what_list
 			Nothing -> return Nothing
-		_ -> do
-			putStrLn $ "Error loading actionbar data:"
-			putStrLn $ ""
-			putStrLn $ json
-			putStrLn $ ""
+		Error err -> do
+			putStrLn $ "Error loading actionbar data: " ++ err
+-- 			putStrLn $ ""
+-- 			putStrLn $ json
+-- 			putStrLn $ ""
 			throwIO StateException

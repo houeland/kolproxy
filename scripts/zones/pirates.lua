@@ -210,6 +210,20 @@ add_choice_text("Chatterboxing", {
 	["Jump overboard"] = "Gain mysticality",
 })
 
+add_extra_ascension_adventure_warning(function(zoneid)
+	if zoneid == 158 then
+		local touse = {}
+		for _, x in ipairs { "ball polish", "mizzenmast mop", "rigging shampoo" } do
+			if have_item(x) then
+				table.insert(touse, x)
+			end
+		end
+		if next(touse) then
+			return "You might want to use your F'c'le quest items first (" .. table.concat(touse, ", ") .. ").", "use fcle quest items"
+		end
+	end
+end)
+
 -- poop deck
 
 add_choice_text("O Cap'm, My Cap'm", {

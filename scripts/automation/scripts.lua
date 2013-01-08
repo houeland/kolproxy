@@ -333,7 +333,7 @@ function get_automation_scripts(cached_stuff)
 			end
 		end
 
-		if challenge ~= "fist" and (ascensionstatus() == "Hardcore" or meat() < 7000) then
+		if challenge ~= "fist" and ((ascensionstatus() == "Hardcore" and meat() < 14000) or meat() < 7000) then
 			local sell_items = get_ascension_automation_settings().sell_items
 			local sell_except_one = get_ascension_automation_settings().sell_except_one
 			for s in table.values(sell_items) do
@@ -454,21 +454,21 @@ function get_automation_scripts(cached_stuff)
 				else
 					critical "Failed to buy MMJ as lvl 9+ AT"
 				end
-			elseif have("Cobb's Knob lab key") and ((have("Knob Goblin elite helm") and have("Knob Goblin elite polearm") and have("Knob Goblin elite pants")) or level() >= 8) and challenge ~= "fist" and not have("Knob Goblin seltzer") and not highskill_at_run and challenge ~= "boris" then
+			elseif have("Cobb's Knob lab key") and ((have("Knob Goblin elite helm") and have("Knob Goblin elite polearm") and have("Knob Goblin elite pants")) or level() >= 8) and challenge ~= "fist" and not have("Knob Goblin seltzer") and not highskill_at_run and challenge ~= "boris" and not have_item("Knob Goblin seltzer") then
 				buy_item("Knob Goblin seltzer", "k", 5)
 				if have("Knob Goblin seltzer") then
 					return f.ensure_mp(amount, true)
 				else
 					critical "Failed to buy knob goblin seltzer"
 				end
-			elseif kgs_available then
+			elseif kgs_available and not have_item("Knob Goblin seltzer") then
 				buy_item("Knob Goblin seltzer", "k", 5)
 				if have("Knob Goblin seltzer") then
 					return f.ensure_mp(amount, true)
 				else
 					critical "Failed to buy knob goblin seltzer"
 				end
-			elseif have("your father's MacGuffin diary") then
+			elseif have("your father's MacGuffin diary") and not have_item("black cherry soda") then
 				buy_item("black cherry soda", "l", 5)
 				if have("black cherry soda") then
 					return f.ensure_mp(amount, true)
@@ -654,44 +654,26 @@ function get_automation_scripts(cached_stuff)
 		end,
 	}
 	local spells = {
-		["Salamanderenity"] = { spellid = 65, mpcost = 5 },
-		["Earthen Fist"] = { spellid = 72, mpcost = 11 },
-		["Musk of the Moose"] = { spellid = 1019, mpcost = 10 },
-		["A Few Extra Pounds"] = { spellid = 1024, mpcost = 10 },
-		["Ghostly Shell"] = { spellid = 2007, mpcost = 6, item = "totem" },
-		["Empathy"] = { spellid = 2009, mpcost = 15, item = "totem" },
-		["Astral Shell"] = { spellid = 2012, mpcost = 10, item = "totem" },
-		["Curiosity of Br'er Tarrypin"] = { spellid = 2026, mpcost = 10, item = "totem" },
-		["Pasta Oneness"] = { spellid = 3000, mpcost = 1 },
-		["Leash of Linguini"] = { spellid = 3010, mpcost = 12 },
-		["Springy Fusilli"] = { spellid = 3015, mpcost = 10 },
-		["Spirit of Cayenne"] = { spellid = 3101, mpcost = 1 },
-		["Spirit of Peppermint"] = { spellid = 3102, mpcost = 1 },
-		["Spirit of Garlic"] = { spellid = 3103, mpcost = 1 },
-		["Spirit of Wormwood"] = { spellid = 3104, mpcost = 1 },
-		["Spirit of Bacon Grease"] = { spellid = 3105, mpcost = 1 },
-		["Saucemastery"] = { spellid = 4000, mpcost = 1 },
-		["Elemental Saucesphere"] = { spellid = 4007, mpcost = 10, item = "saucepan" },
-		["Jalape&ntilde;o Saucesphere"] = { spellid = 4008, mpcost = 5, item = "saucepan" },
-		["Jaba&ntilde;ero Saucesphere"] = { spellid = 4011, mpcost = 10, item = "saucepan" },
-		["Scarysauce"] = { spellid = 4019, mpcost = 10, item = "saucepan" },
-		["Smooth Movements"] = { spellid = 5017, mpcost = 10 },
-		["The Moxious Madrigal"] = { spellid = 6004, mpcost = 2, effectid = 61 },
-		["Polka of Plenty"] = { spellid = 6006, mpcost = 7, effectid = 63 },
-		["The Magical Mojomuscular Melody"] = { spellid = 6007, mpcost = 3, effectid = 64 },
-		["Power Ballad of the Arrowsmith"] = { spellid = 6008, mpcost = 5, effectid = 65 },
-		["Fat Leon's Phat Loot Lyric"] = { spellid = 6010, mpcost = 11, effectid = 67 },
-		["Ode to Booze"] = { spellid = 6014, mpcost = 50, effectid = 71 },
-		["The Sonata of Sneakiness"] = { spellid = 6015, mpcost = 20, effectid = 162, shrug_first = "Carlweather's Cantata of Confrontation" },
-		["Carlweather's Cantata of Confrontation"] = { spellid = 6016, mpcost = 20, effectid = 163, shrug_first = "The Sonata of Sneakiness" },
-		["Ur-Kel's Aria of Annoyance"] = { spellid = 6017, mpcost = 30, effectid = 164 },
-		["Pep Talk"] = { spellid = 11005, mpcost = 1 },
-		["Song of Accompaniment"] = { spellid = 11013, mpcost = 10 },
-		["Song of the Glorious Lunch"] = { spellid = 11023, mpcost = 10 },
-		["Song of Solitude"] = { spellid = 11015, mpcost = 15 },
-		["Song of Fortune"] = { spellid = 11017, mpcost = 10 },
-		["Song of Battle"] = { spellid = 11019, mpcost = 10 },
-		["Song of Cockiness"] = { spellid = 11008, mpcost = 15 },
+		["Ghostly Shell"] = { item = "totem" },
+		["Empathy"] = { item = "totem" },
+		["Astral Shell"] = { item = "totem" },
+		["Curiosity of Br'er Tarrypin"] = { item = "totem" },
+		["Elemental Saucesphere"] = { item = "saucepan" },
+		["Jalape&ntilde;o Saucesphere"] = { item = "saucepan" },
+		["Jaba&ntilde;ero Saucesphere"] = { item = "saucepan" },
+		["Scarysauce"] = { item = "saucepan" },
+
+		["The Moxious Madrigal"] = { effectid = 61 },
+		["Polka of Plenty"] = { effectid = 63 },
+		["The Magical Mojomuscular Melody"] = { effectid = 64 },
+		["Power Ballad of the Arrowsmith"] = { effectid = 65 },
+		["Fat Leon's Phat Loot Lyric"] = { effectid = 67 },
+		["Ode to Booze"] = { effectid = 71 },
+		["The Sonata of Sneakiness"] = { effectid = 162, shrug_first = "Carlweather's Cantata of Confrontation" },
+		["Carlweather's Cantata of Confrontation"] = { effectid = 163, shrug_first = "The Sonata of Sneakiness" },
+		["Ur-Kel's Aria of Annoyance"] = { effectid = 164 },
+
+		["Pep Talk"] = { skillid = 11005, mpcost = 1 },
 	}
 
 	function f.shrug_buff(buffname)
@@ -706,16 +688,31 @@ function get_automation_scripts(cached_stuff)
 
 	local shrug_buff = f.shrug_buff
 
-	for name, data in pairs(spells) do
+	for name, skillname in pairs(datafile("buff recast skills")) do
+		local data = datafile("skills")[skillname]
 		buffs[name] = function()
 			if show_spammy_automation_events then
 				print("  casting buff", name, "[current mp: " .. mp() .. "]")
 			end
 			ensure_mp(data.mpcost)
-			if data.shrug_first then
-				shrug_buff(data.shrug_first)
+			if spells[name] and spells[name].shrug_first then
+				shrug_buff(spells[name].shrug_first)
 			end
-			return cast_skillid(data.spellid)
+			return cast_skillid(data.skillid)
+		end 
+	end
+
+	for _, name in pairs { "Pep Talk" } do
+		local data = spells[name]
+		buffs[name] = function()
+			if show_spammy_automation_events then
+				print("  casting buff", name, "[current mp: " .. mp() .. "]")
+			end
+			ensure_mp(data.mpcost)
+			if spells[name] and spells[name].shrug_first then
+				shrug_buff(spells[name].shrug_first)
+			end
+			return cast_skillid(data.skillid)
 		end 
 	end
 
@@ -1332,6 +1329,7 @@ endif
 					did_action = (fullness() == 1)
 					return result, resulturl, did_action
 				elseif not ascension["fortune cookie numbers"] and fullness() == 1 and meat() >= 40 then
+					local f = fullness()
 					inform "eat fortune cookie day 1"
 					buy_item("fortune cookie", "m")
 					eat_item("fortune cookie")
@@ -2198,7 +2196,7 @@ mark m_done
 						f.burn_mp(90)
 					end
 					ensure_mp(60)
-					print("DEBUG: fighting in hidden city, did_action: " .. tostring(did_action))
+--					print("DEBUG: fighting in hidden city, did_action: " .. tostring(did_action))
 					local pt, url = get_page("/hiddencity.php", { which = which })
 					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_hiddencity())
 					if advagain or get_result():match([[Altared Perceptions]]) or get_result():match([[Mansion House of the Black Friars]]) or get_result():match([[Dr. Henry "Dakota" Fanning, Ph.D., R.I.P.]]) then
@@ -2206,7 +2204,7 @@ mark m_done
 					elseif resulturl:match("/adventure.php") and get_result():match([[<a href="hiddencity.php">Go back to The Hidden City</a>]]) then
 						did_action = true
 					end
-					print("DEBUG: fought in hidden city, did_action: " .. tostring(did_action))
+--					print("DEBUG: fought in hidden city, did_action: " .. tostring(did_action))
 				else
 					critical "Nothing to do in hidden city, but don't have all spheres"
 				end
@@ -2395,6 +2393,8 @@ endif
 		result, resulturl = handle_adventure_result(get_result(), resulturl, "?", nil, { ["Pants-Gazing"] = buff })
 		if have_buff(buff) then
 			print("  gap buff: " .. tostring(buff))
+		else
+			result, resulturl = handle_adventure_result(get_result(), resulturl, "?", nil, { ["Pants-Gazing"] = "Ignore the pants" })
 		end
 	end
 
@@ -2422,10 +2422,11 @@ endif
 					wear { pants = "Greatest American Pants" }
 					script.get_gap_buff("Super Structure")
 				end
-				if challenge and not buff("Super Structure") then
+				if challenge and not buff("Super Structure") and not have_skill("Louder Bellows") then
 					stop "TODO: Do gremlins in challenge path without Super Structure"
 				end
-			elseif challenge then
+			end
+			if challenge and not buff("Super Structure") then
 				script.bonus_target { "easy combat" }
 				if not have_buff("Standard Issue Bravery") and have_item("CSA bravery badge") then
 					use_item("CSA bravery badge")
@@ -2531,7 +2532,7 @@ endif
 			if not quest_text("like you to investigate the summit") then
 				did_action = true
 			else
-				-- TODO: noncombats
+				script.bonus_target { "noncombat" }
 				go("explore the extreme slope", 273, macro_noodlecannon(), {}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Peppermint" }, "Slimeling", 35, { choice_function = function (advtitle, choicenum)
 					if advtitle == "Generic Teen Comedy Snowboarding Adventure" then
 						if not have("eXtreme mittens") then
@@ -2581,15 +2582,6 @@ endif
 		else
 			critical "Failed to finish trapper quest"
 		end
--- 		else
--- 			ensure_buffs { "Astral Shell" }
--- 			fam "Exotic Parrot"
--- 			async_get_page("/trapper.php")
--- 			async_get_page("/trapper.php")
--- 			refresh_quest()
--- 			if quest("Am I My Trapper's Keeper?") then
--- 				critical "Failed to finish trapper quest."
--- 			end
 -- 			if have("astral shirt") or have("cane-mail shirt") then
 -- 				did_action = true
 -- 			elseif challenge == "fist" then
@@ -3070,15 +3062,18 @@ endif
 	end
 
 	function f.do_azazel()
+		local macro_smash_and_graagh = ""
 		if challenge == "zombie" then
-			stop "TODO: do azazel, use smash & graaagh"
+			if have_skill("Smash & Graaagh") and horde_size() >= 10 then
+				macro_smash_and_graagh = "cast Smash & Graaagh"
+			else
+				stop "TODO: do azazel, use smash & graaagh"
+			end
 		end
 		script.bonus_target { "item" }
-		if challenge == "boris" and not buff("Super Vision") and have("Greatest American Pants") then
+		if not buff("Super Vision") and have("Greatest American Pants") then
 			wear { pants = "Greatest American Pants" }
 			script.get_gap_buff("Super Vision")
-		end
-		if have("Azazel's lollipop") and have("Azazel's tutu") and have("Azazel's unicorn") then
 		end
 		if not challenge then
 			maybe_ensure_buffs { "Mental A-cue-ity" }
@@ -3097,6 +3092,9 @@ endif
 			else
 				local macro_laughfloor = [[
 if monstername imp
+]] .. macro_smash_and_graagh .. [[
+
+
 ]] .. macro_ppnoodlecannon() .. [[
 
   goto m_done
@@ -3133,7 +3131,12 @@ mark m_done
 				did_action = have("Azazel's unicorn")
 			else
 				if count("bus pass") < 5 then
-					go("sven golly, bus passes: " .. count("bus pass"), 243, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
+				local macro_backstage = [[
+]] .. macro_smash_and_graagh .. [[
+
+
+]] .. macro_ppnoodlecannon()
+					go("sven golly, bus passes: " .. count("bus pass"), 243, macro_backstage, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
 				else
 					-- TODO: buff for finding faster?
 					go("sven golly, getting items", 243, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)

@@ -760,9 +760,12 @@ runLogScript log_db code = do
 		sr <- Database.SQLite3.step s
 		retvals <- case sr of
 			Database.SQLite3.Row -> do
-				[Database.SQLite3.SQLText str] <- Database.SQLite3.columns s
-				Lua.pushstring l str
-				return 1
+				row <- Database.SQLite3.columns s
+				case row of
+					[Database.SQLite3.SQLText str] -> do
+						Lua.pushstring l str
+						return 1
+					_ -> return 0
 			Database.SQLite3.Done -> return 0
 		Database.SQLite3.finalize s
 		return retvals

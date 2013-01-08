@@ -675,6 +675,12 @@ add_extra_always_warning("use item: photocopied monster", function()
 	end
 end)
 
+add_always_warning("use item: spice melange", function()
+	if fullness() < 3 or drunkenness() < 3 then
+		return string.format("You only have %d fullness and %d drunkenness, while spice melange can remove up to 3 of each.", fullness(), drunkenness()), "using spice melange with empty organs"
+	end
+end)
+
 add_automator("/manor3.php", function()
 	if params.place == "chamber" and text:contains(">One of them asks you the name of the Demon you would summon.<") then
 		local questlogpage = get_page("/questlog.php", { which = 3 })

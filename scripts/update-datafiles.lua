@@ -22,7 +22,7 @@ local blacklist = {
 	["Fast as Lightning"] = true,
 	["Expert Timing"] = true,
 	["Gaze of the Trickster God"] = true,
-	["Overconfident"] = true,
+	["buff: Overconfident"] = true,
 	["Iron Palms"] = true,
 	["Missing Kidney"] = true,
 
@@ -39,6 +39,8 @@ local blacklist = {
 
 	["bonuses: jalape&ntilde;o slices"] = true,
 	["bonuses: frosty halo"] = true,
+
+	["recast buff warning: Overconfident"] = true,
 }
 
 local processed_datafiles = {}
@@ -47,6 +49,8 @@ local softwarn = function() end
 local function hardwarn(...)
 	print("WARNING: downloaded data files inconsistent,", ...)
 end
+
+function string.contains(a, b) return a:find(b, 1, true) end
 
 local function split_line_on(what, l)
 	local tbl = {}
@@ -64,7 +68,7 @@ local function split_line_on(what, l)
 end
 
 local function split_tabbed_line(l)
-	return split_line_on("	", l)
+	return split_line_on("	", l:gsub("\r$", ""))
 end
 
 local function split_commaseparated(l)
@@ -101,8 +105,8 @@ function parse_buffs()
 		section = l:match([[^# (.*) section of modifiers.txt]]) or section
 		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
 		local name2 = l:match([[^# ([^	:]+)]])
-		if section == "Status Effects" and name and bonuslist and not blacklist[name] and not name2 then
-			buffs[name] = parse_mafia_bonuslist(bonuslist)
+		if section == "Status Effects" and name and bonuslist and not blacklist[name] and not blacklist["buff: " .. name] and not name2 then
+			buffs[name] = { bonuses = parse_mafia_bonuslist(bonuslist) }
 		elseif section == "Status Effects" and name2 and not blacklist[name2] and not buffs[name2] then
 			buffs[name2] = {}
 		end
@@ -111,7 +115,7 @@ function parse_buffs()
 end
 
 function verify_buffs(data)
-	if data["Peppermint Twisted"].initiative == 40 and data["Peppermint Twisted"].ml == 10 and data["Peeled Eyeballs"].meat == -20 then
+	if data["Peppermint Twisted"].bonuses.initiative == 40 and data["Peppermint Twisted"].bonuses.ml == 10 and data["Peeled Eyeballs"].bonuses.meat == -20 then
 		return data
 	end
 end
@@ -188,7 +192,7 @@ end
 
 function verify_buff_recast_skills(data)
 	for x, y in pairs(data) do
-		if not processed_datafiles["buffs"][x] then
+		if not processed_datafiles["buffs"][x] and not blacklist["recast buff warning: "..x] then
 			hardwarn("unknown recast buff", x)
 			data[x] = nil
 		end
@@ -207,7 +211,7 @@ function parse_items()
 	local items = {}
 	local lowercasemap = {}
 	local allitemuses = {}
-	local itemslots = { hat = true, shirt = true, container = true, weapon = true, offhand = true, pants = true, accessory = true }
+	local itemslots = { hat = "hat", shirt = "shirt", container = "container", weapon = "weapon", offhand = "offhand", pants = "pants", accessory = "accessory", familiar = "familiarequip" }
 	for l in io.lines("cache/files/items.txt") do
 		local tbl = split_tabbed_line(l)
 		local itemid, name, picture, itemusestr, plural = tonumber(tbl[1]), tbl[2], tbl[4], tbl[5], tbl[8]
@@ -218,9 +222,7 @@ function parse_items()
 			items[name] = { id = itemid }
 			lowercasemap[name:lower()] = name
 			for _, u in ipairs(split_commaseparated(itemusestr or "")) do
-				if itemslots[u] then
-					items[name].equipment_slot = u
-				end
+				items[name].equipment_slot = itemslots[u]
 			end
 		end
 	end
@@ -296,6 +298,28 @@ function verify_items(data)
 			return data
 		end
 	end
+end
+
+function parse_hatrack()
+	local hatrack = {}
+
+	for l in io.lines("cache/files/modifiers.txt") do
+		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
+		if name and bonuslist and not blacklist[name] and processed_datafiles["items"][name] then
+			hatrack[name] = bonuslist:match([[Familiar Effect: "(.-)"]])
+		end
+	end
+
+	return hatrack
+end
+
+function verify_hatrack(data)
+	if data["Cloaca-Cola fatigues"]:lower():contains("potato") and data["Cloaca-Cola fatigues"]:contains("7") then
+		if data["asbestos helmet turtle"]:lower():contains("fairy") and data["asbestos helmet turtle"]:contains("20") then
+			return data
+		end
+	end
+	print("DEBUG", data["Cerebral Culottes"], data["asbestos helmet turtle"])
 end
 
 function parse_familiars()
@@ -464,6 +488,41 @@ function verify_mallprices(data)
 	end
 end
 
+function parse_choice_spoilers()
+	local jsonlines = {}
+	local found_adv_options = false
+	for l in io.lines("cache/files/68727.user.js") do
+		if l:match("var advOptions") then
+			found_adv_options = true
+			table.insert(jsonlines, "{")
+		elseif found_adv_options then
+			if l:match("};") then
+				table.insert(jsonlines, [["__dummyvalue":0 }]])
+				break
+			else
+				l_json = l:gsub("\r", ""):gsub("//.+", ""):gsub("([0-9]+)(:%[)", [["%1"%2]]) -- Strip CRs, comments, and quote keys
+				l_json = l_json:gsub("\\m", "\\n") -- Correct known typo
+				l_json = l_json:gsub("%+$", ",") -- HACK: Remove code using string concatenation
+				table.insert(jsonlines, l_json)
+			end
+		end
+	end
+	local rawspoilers = json_to_table(table.concat(jsonlines, "\n"))
+	rawspoilers["__dummyvalue"] = nil
+	local choice_spoilers = {}
+	for a, b in pairs(rawspoilers) do
+		table.remove(b, 1)
+		choice_spoilers["choiceid:"..tonumber(a)] = b
+	end
+	return choice_spoilers
+end
+
+function verify_choice_spoilers(data)
+	if data["choiceid:17"][2]:contains("snowboarder pants") and data["choiceid:603"][4]:contains("Skeletal Rogue") and data["choiceid:497"][1]:contains("unearthed monstrosity") then
+		return data
+	end
+end
+
 function process(datafile)
 	local filename = datafile:gsub(" ", "-")
 	local loadf = _G["parse_"..datafile:gsub(" ", "_")]
@@ -485,11 +544,14 @@ function process(datafile)
 	end
 end
 
+process("choice spoilers")
+
 process("familiars")
 process("enthroned familiars")
 
 process("items")
 process("outfits")
+process("hatrack")
 
 process("buffs")
 process("skills")

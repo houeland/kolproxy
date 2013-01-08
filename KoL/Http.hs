@@ -91,7 +91,9 @@ load_api_status_to_mv ref mv = do
 				let x = Data.ByteString.Char8.unpack $ xraw
 				case decodeStrict x of
 					Ok jsobj -> return jsobj
-					Error err -> throwIO $ ApiPageException err
+					Error err -> do
+-- 						putStrLn $ "HTTP API load returned: " ++ x
+						throwIO $ ApiPageException err
 			"/login.php" -> throwIO $ NotLoggedInException
 			"/maint.php" -> throwIO $ NotLoggedInException
 			"/afterlife.php" -> throwIO $ InValhallaException

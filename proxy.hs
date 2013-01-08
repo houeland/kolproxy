@@ -61,7 +61,7 @@ doProcessPage ref uri params = do
 				status_before <- status_before_func
 				status_after <- status_after_func
 				log_page_result ref (Right status_before) log_time state_before uri params effuri (Data.ByteString.Char8.unpack pagetext) status_after state_after
-				return ()) `catch` (\e -> putStrLn $ "processpage logging error: " ++ (show (e :: ConnectionException)))
+				return ()) `catch` (\e -> putStrLn $ "processpage logging error: " ++ (show (e :: KolproxyException)))
 
 			return (y, pagetext, effuri, hdrs)
 		putMVar mv =<< case x of

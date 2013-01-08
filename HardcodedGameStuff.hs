@@ -75,46 +75,33 @@ update_data_files = do
 				run_datafile_parsers
 				writeFile "cache/data/last_update" (show (kolproxy_version_string, t))
 				putStrLn $ "  Data files updated.") `catch` (\e -> do
-					putStrLn $ "Failed to update data files: " ++ (show (e :: SomeException))
+					putStrLn $ "WARNING: Failed to update data files: " ++ (show (e :: SomeException))
 					writeFile "cache/data/last_update" "failed"
 					return ())
 
 download_data_files = do
-	do
-		mix_concoctions <- load_mafia_file "concoctions.txt" (\x -> case x of
-			name:"MIX":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
-			name:"ACOCK":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
-			name:"SCOCK":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
-			name:"BSTILL":[source] -> Just (name, [("type", "still"), ("ingredient", show source)])
-			name:"MSTILL":[source] -> Just (name, [("type", "still"), ("ingredient", show source)])
-			_ -> Nothing)
-		doWriteDataFile "cache/data/recipes" (show mix_concoctions)
+--	do
+--		mix_concoctions <- load_mafia_file "concoctions.txt" (\x -> case x of
+--			name:"MIX":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
+--			name:"ACOCK":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
+--			name:"SCOCK":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
+--			name:"BSTILL":[source] -> Just (name, [("type", "still"), ("ingredient", show source)])
+--			name:"MSTILL":[source] -> Just (name, [("type", "still"), ("ingredient", show source)])
+--			_ -> Nothing)
+--		doWriteDataFile "cache/data/recipes" (show mix_concoctions)
 
 --	do
---		semirares <- do
---			javatext <- load_data_file "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/net/sourceforge/kolmafia/KoLmafia.java" "http://www.houeland.com/kolproxy/files/data-mirror/KoLmafia.java"
---			let xs = lines javatext
---			let fx x = case matchGroups "{ *\"(.*)\", *EncounterTypes.SEMIRARE *}" x of
+--		choicespoilers <- do
+--			jstext <- load_data_file "http://userscripts.org/scripts/source/68727.user.js" "http://www.houeland.com/kolproxy/files/data-mirror/68727.user.js"
+--			let choices = takeWhile (\x -> not (x =~ "};")) $ dropWhile (\x -> not (x =~ "var advOptions")) $ (lines jstext)
+--			let fx y = case matchGroups "([0-9]+):(\\[.*\\])," y of
 --				[] -> Nothing
---				[[y]] -> Just y
---				_ -> throw $ InternalError $ "Error parsing semirare data"
---			return $ mapMaybe fx xs
---		if "All The Rave" `elem` semirares
---			then doWriteDataFile "cache/data/semirares" (show semirares)
---			else putStrLn $ "Error parsing semirares!"
-
-	do
-		choicespoilers <- do
-			jstext <- load_data_file "http://userscripts.org/scripts/source/68727.user.js" "http://www.houeland.com/kolproxy/files/data-mirror/68727.user.js"
-			let choices = takeWhile (\x -> not (x =~ "};")) $ dropWhile (\x -> not (x =~ "var advOptions")) $ (lines jstext)
-			let fx y = case matchGroups "([0-9]+):(\\[.*\\])," y of
-				[] -> Nothing
-				[[choicenum, spoilers]] -> case read_as spoilers of
-					Just (_:xs) -> Just [("choice number", choicenum), ("spoilers", show $ (xs :: [String]))]
-					_ -> Nothing
-				_ -> throw $ InternalError $ "Error parsing choice spoiler data"
-			return $ mapMaybe fx choices
-		doWriteDataFile "cache/data/choice-spoilers" (show choicespoilers)
+--				[[choicenum, spoilers]] -> case read_as spoilers of
+--					Just (_:xs) -> Just [("choice number", choicenum), ("spoilers", show $ (xs :: [String]))]
+--					_ -> Nothing
+--				_ -> throw $ InternalError $ "Error parsing choice spoiler data"
+--			return $ mapMaybe fx choices
+--		doWriteDataFile "cache/data/choice-spoilers" (show choicespoilers)
 
 	do
 		pulverizegroups <- do

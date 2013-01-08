@@ -5,11 +5,11 @@ local xmeta = { __index = function(t, k)
 	if k == "time" or k == "requestedurl" or k == "retrievedurl" or k == "pagetext" then
 		t[k] = get_line_text(t.idx, k)
 	elseif k == "statusbefore" or k == "inventorybefore" then
-		local v = json_to_table(get_line_text(t.idx, "statusbefore"))
+		local v = json_to_table(get_line_text(t.idx, "statusbefore") or "{}")
 		t.statusbefore = v.status
 		t.inventorybefore = v.inventory
 	elseif k == "statusafter" or k == "inventoryafter" then
-		local v = json_to_table(get_line_text(t.idx, "statusafter"))
+		local v = json_to_table(get_line_text(t.idx, "statusafter") or "{}")
 		t.statusafter = v.status
 		t.inventoryafter = v.inventory
 	elseif k == "onthetrail" then
@@ -155,6 +155,7 @@ for _, xidx in ipairs(tbl) do
 
 --	xtbl.debug_line = x.idx .. ": " .. x.__warprogress -- DEBUG
 
+	if x.statusbefore and x.statusafter then
 	for _, n in pairs{ "name", "class", "path", "sign", "hardcore", "casual", "freedralph" } do
 		if laststatestatus[n] ~= x.statusafter[n] then
 			xtbl.new_runstate = {
@@ -298,6 +299,7 @@ for _, xidx in ipairs(tbl) do
 
 -- 	print(x.idx, tonumber(laststatus.turnsthisrun), tonumber(x.statusbefore.turnsthisrun), tonumber(x.statusafter.turnsthisrun), x.statusafter.lastadv.name, x.requestedurl, x.retrievedurl)
 	laststatus = x.statusafter
+	end
 end
 
 tbl = nil

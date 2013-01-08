@@ -617,6 +617,31 @@ endif
 		}
 	}
 
+	-- TODO: Handle when buffing
+	add_task {
+		when = challenge == "zombie" and not have_buff("Chow Downed") and have_skill("Zombie Chow") and horde_size() >= 20,
+		task = {
+			message = "cast zombie chow",
+			nobuffing = true,
+			action = function()
+				cast_skillid(12022, 1)
+				did_action = have_buff("Chow Downed")
+			end
+		}
+	}
+
+	add_task {
+		when = challenge == "zombie" and not have_buff("Scavengers Scavenging") and have_skill("Scavenge") and horde_size() >= 20,
+		task = {
+			message = "cast scavenge",
+			nobuffing = true,
+			action = function()
+				cast_skillid(12024, 1)
+				did_action = have_buff("Scavengers Scavenging")
+			end
+		}
+	}
+
 	local function do_day_2_mining()
 		inform "mine free 5 times"
 		local pt = get_page("/mining.php", { mine = 1, intro = 1 })
@@ -1030,22 +1055,6 @@ endif
 			end
 		}
 	}
-
--- 	add_task {
--- 		when = challenge == "boris" and ascensionstatus() == "Hardcore" and meat() >= 1000 and have("pretty flower") and count_item("flower petal pie") < 10,
--- 		task = {
--- 			message = "cook flower petal pie",
--- 			nobuffing = true,
--- 			action = function()
--- 				local pies = count("flower petal pie")
--- 				buy_item("Gnollish pie tin", "4")
--- 				buy_item("wad of dough", "4")
--- 				cook_items("Gnollish pie tin", "wad of dough")
--- 				cook_items("pie crust", "pretty flower")
--- 				did_action = count("flower petal pie") > pies
--- 			end
--- 		}
--- 	}
 
 	add_task {
 		when = challenge == "boris" and have_skill("Pep Talk") and ((level() >= 3 and ascensionstatus() ~= "Hardcore") or level() >= 7) and level() < 13 and not have_intrinsic("Overconfident"),
@@ -1556,7 +1565,7 @@ endif
 		when = challenge == "zombie" and
 			ascensionstatus() == "Hardcore" and
 			have_skill("Neurogourmet") and
-			have_item("hunter brain") or have_item("boss brain") and
+			(have_item("hunter brain") or have_item("boss brain")) and
 			fullness() < estimate_max_fullness() and
 			(whichday > 1 or fullness() + 5 <= estimate_max_fullness()),
 		task = {
@@ -1565,6 +1574,23 @@ endif
 				local a = advs()
 				eat_item("hunter brain")
 				eat_item("boss brain")
+				did_action = (advs() > a)
+			end,
+		}
+	}
+
+	add_task {
+		when = challenge == "zombie" and
+			ascensionstatus() == "Hardcore" and
+			have_skill("Neurogourmet") and
+			have_skill("Stomach of Steel") and
+			have_item("good brain") and
+			fullness() + 5 <= estimate_max_fullness(),
+		task = {
+			message = "eat good brain",
+			action = function()
+				local a = advs()
+				eat_item("good brain")
 				did_action = (advs() > a)
 			end,
 		}
@@ -2329,6 +2355,7 @@ endif
 		async_get_page("/familiar.php", { pwd = get_pwd(), action = "unequip", famid = 152 })
 	end
 
+	if challenge ~= "zombie" then
 	if buff("Hardly Poisoned at All") or buff("A Little Bit Poisoned") or buff("Somewhat Poisoned") or buff("Really Quite Poisoned") or buff("Majorly Poisoned") then
 		async_get_page("/galaktik.php", { action = "buyitem", buying = 1, pwd = get_pwd(), whichitem = get_itemid("anti-anti-antidote"), howmany = 1, ajax = 1 })
 		use_item("anti-anti-antidote")
@@ -2338,6 +2365,7 @@ endif
 			did_action = true
 		end
 		return result, resulturl, did_action
+	end
 	end
 
 	add_task {
@@ -3551,7 +3579,7 @@ endwhile
 			message = "trapper quest in boris",
 			nobuffing = true,
 			action = function()
-				async_get_page("/trapper.php")
+				async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
 				refresh_quest()
 				if not quest("Am I My Trapper's Keeper?") then
 					did_action = true
@@ -3578,10 +3606,11 @@ endwhile
 					ignore_buffing_and_outfit = false
 					if (daysthisrun() == 1 or ascensionstatus() == "Hardcore") and have_skill("Banishing Shout") then
 						script.bonus_target { "item", "extraitem" }
-						script.go("farming mountain men", 61, macro_softcore_boris, {
+						script.go("farming mountain men", 270, macro_softcore_boris, {
 							["A Flat Miner"] = "Hijack the Meat vein",
 							["100% Legal"] = "Ask for ore",
 							["See You Next Fall"] = "Give 'im the stick",
+							["More Locker Than Morlock"] = "Get to the choppa' (which is outside)",
 						}, {}, "He-Boulder", 15)
 					else
 						script.bonus_target { "item" }
@@ -3590,6 +3619,7 @@ endwhile
 						stop "TODO: Want trapper ore. End the day(?) or fight mountain men."
 					end
 				else
+					ignore_buffing_and_outfit = false
 					script.do_trapper_quest()
 				end
 			end

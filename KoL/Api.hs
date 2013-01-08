@@ -68,7 +68,7 @@ asyncGetItemInfoObj itemid ref = do
 		case decodeStrict jsonobj :: Result JSValue of
 			Ok x -> return x
 			Error err -> do
-				putStrLn $ "Item API returned:\n  ===\n\n" ++ jsonobj ++ "\n\n  ===\n\n"
+-- 				putStrLn $ "Item API returned:\n  ===\n\n" ++ jsonobj ++ "\n\n  ===\n\n"
 				throwIO $ ApiPageException err
 
 

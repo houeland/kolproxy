@@ -133,11 +133,13 @@ if spoilers_tbl then
 	end
 elseif choice_adventure_number ~= nil then
 	print("fallback for", adventure_title, choice_adventure_number)
-	local isok, spoilers = pcall(get_fallback_choicespoilers)
-	if isok and spoilers[choice_adventure_number] and choice_adventure_number ~= 546 then -- 546 is Vamping Out, the fallback source doesn't actually explain anything there and is just wrong
-		print("got", spoilers[choice_adventure_number])
+	local isok, spoilers = pcall(function()
+		return datafile("choice spoilers")
+	end)
+	if isok and spoilers["choiceid:"..tostring(choice_adventure_number)] and choice_adventure_number ~= 546 then -- 546 is Vamping Out, the fallback source doesn't actually explain anything there and is just wrong
+		print("got", spoilers["choiceid:"..tostring(choice_adventure_number)])
 		text = text:gsub([[(<input type=hidden name=option value=)([0-9]+)(>)(<input class=button type=submit value=")([^"]-)(")(>)]], function(preopt, opt, postopt, pre, value, between, post)
-			local s = spoilers[choice_adventure_number][tonumber(opt)]
+			local s = spoilers["choiceid:"..tostring(choice_adventure_number)][tonumber(opt)]
 			if s then
 				local spoiler = [[<br><span style="color: gray;">( ]] .. s .. [[ )</span>]]
 				return preopt .. opt .. postopt .. pre .. value .. between .. post .. spoiler

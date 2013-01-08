@@ -46,12 +46,17 @@ platform_launch portnum = void $ createProcess (shell $ "open http://localhost:"
 #endif
 
 #ifdef platform_windows
-import Network
 import Control.Exception
+--import GHC.IO.Encoding
+import Network
 import qualified System.Win32.File (copyFile)
 platform_name = "windows"
 platform_init :: IO () -> IO ()
-platform_init = withSocketsDo
+platform_init x = do
+--	setLocaleEncoding utf8
+--	setFileSystemEncoding utf8
+--	setForeignEncoding utf8
+	withSocketsDo x
 platform_launch :: Integer -> IO ()
 platform_launch portnum = void $ createProcess (shell $ "start http://localhost:" ++ show portnum ++ "/")
 #endif
@@ -59,16 +64,25 @@ platform_launch portnum = void $ createProcess (shell $ "start http://localhost:
 #ifndef platform_windows
 best_effort_atomic_file_write path basedir filedata = do
 -- 	writeFile path filedata
-	(fp, h) <- openTempFile basedir "temp-file.tmp"
+	(fp, h) <- openBinaryTempFile basedir "temp-file.tmp"
 	hPutStrLn h filedata
 	hClose h
 	renameFile fp path -- atomic move, on POSIX. Something could of course happen between closing and moving
 #else
 best_effort_atomic_file_write path basedir filedata = do
 -- 	writeFile path filedata
-	(fp, h) <- openTempFile basedir "temp-file.tmp"
+	putStrLn $ "DEBUG: writing file " ++ path ++ " (" ++ (show $ length $ filedata) ++ " chars)"
+	(fp, h) <- openBinaryTempFile basedir "temp-file.tmp"
+	enc1 <- hGetEncoding h
+	hSetEncoding h utf8
+	enc2 <- hGetEncoding h
+	hSetBinaryMode h True
+	enc3 <- hGetEncoding h
+	putStrLn $ "  encoding: " ++ show (enc1, enc2, enc3)
 	hPutStrLn h filedata
+	putStrLn $ "  wrote file data: " ++ fp
 	hClose h
+	putStrLn $ "  closed file: " ++ fp
 	(renameFile fp path) `catch` (\e -> do
 		putStrLn $ "windows file write error: " ++ show (e :: SomeException)
 		putStrLn $ "  perfoming an unsafe non-atomic write instead"

@@ -28,7 +28,7 @@ function get_buff_bonuses()
 	end
 	for name, buffb in pairs(datafile("buffs")) do
 		if not buffarray[name] and have_buff(name) then
-			for a, b in pairs(buffb) do
+			for a, b in pairs(buffb.bonuses or {}) do
 				bonuses[a] = (bonuses[a] or 0) + b
 			end
 		end

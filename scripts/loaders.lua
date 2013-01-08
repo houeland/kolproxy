@@ -35,6 +35,7 @@ load_file("familiar", "familiars/organ-grinder.lua")
 load_file("familiar", "familiars/obtuse-angel.lua")
 load_file("familiar", "familiars/bloovian-groose.lua")
 load_file("familiar", "familiars/nanorhino.lua")
+load_file("familiar", "familiars/hatrack.lua")
 
 load_file("skill", "skills/summons.lua")
 
@@ -108,6 +109,7 @@ load_file("automation", "automation/spaaace.lua")
 load_file("automation", "automation/felonia.lua")
 load_file("automation", "automation/castle-farming.lua")
 load_file("automation", "automation/dungeon-fist.lua")
+load_file("automation", "automation/a-quest-lol.lua")
 
 -- load_file("spading", "spading-automation.lua")
 -- load_file("spading", "other/slimeling-spading.lua")

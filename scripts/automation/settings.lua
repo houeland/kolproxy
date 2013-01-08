@@ -130,6 +130,9 @@ function get_ascension_automation_settings(want_bonus)
 			container = {
 				{ name = "Rain-Doh red wings", check = function() return want_bonus.plusinitiative end },
 				"Camp Scout backpack",
+				{ name = "Misty Cape", check = function() return (basemoxie() >= 75) end },
+				{ name = "Misty Cloak", check = function() return (basemuscle() >= 75) end },
+				{ name = "Misty Robe", check = function() return (basemysticality() >= 75) end },
 				"Rain-Doh red wings",
 -- 				"barskin cloak",
 -- 				"vampire cape",

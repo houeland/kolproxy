@@ -420,7 +420,7 @@ local lastlouvre = nil
 
 -- louvre
 add_processor("/choice.php", function()
-	if adventure_title == "Louvre It or Leave It " then
+	if adventure_title:contains("Louvre It or Leave It") then
 -- 		print("louvre", choice_adventure_number, table_to_str(params))
 		whichchoice = params.whichchoice
 		option = params.option
