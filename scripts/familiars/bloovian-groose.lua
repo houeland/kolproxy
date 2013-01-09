@@ -17,20 +17,3 @@ add_automator("use item: groose grease", function()
 		text = text:gsub("<b>Just the Best Anapests</b>", [[%0 <span style="color: green">{ Shrugged. }</span>]])
 	end
 end)
-
-add_processor("familiar message: groose", function()
-	if text:contains("produces a small glob of grease") then
-		increase_daily_counter("familiar.bloovian groose.grease")
-	end
-end)
-
-add_printer("/charpane.php", function()
-	if familiarpicture() == "groose" then
-		grease = get_daily_counter("familiar.bloovian groose.grease")
-
-		compact = grease .. " / 5"
-		normal = grease .. " / 5 grease"
-
-		print_familiar_counter(compact, normal)
-	end
-end)
