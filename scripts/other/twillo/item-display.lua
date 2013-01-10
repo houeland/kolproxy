@@ -32,7 +32,39 @@ add_automator("all pages", function()
 		session["cached Jekyllin hide belt bonus"] = bonus
 	end
 end)
-	
+
+local vanilla_fairy = {
+	slimeling = true,
+	stompboots = true,
+	obtuseangel = true,
+	familiar15 = true,
+	familiar22 = true,
+	familiar26 = true,
+	familiar34 = true,
+	familiar35 = true,
+	familiar36 = true,
+	familiar39 = true,
+	familiar41 = true,
+	sgfairy = true,
+	slgfairy = true,
+	jitterbug = true,
+	dandylion = true,
+	cassagnome = true,
+	dancebear = true,
+	sugarfairy = true,
+	pictsie = true,
+	turtle = true,
+	gibberer = true,
+	grouper2 = true,
+	dancfrog = true,
+	hippofam = true,
+	pianocat = true,
+	kloop = true,
+	pep_rhino = true,
+	frankengnome = true,
+	jungman = true,
+}
+
 local function get_fam_item()
 	if ascensionpathid() == 8 then
 		if clancy_instrumentid() == 3 then
@@ -52,40 +84,8 @@ local function get_fam_item()
 	elseif familiarpicture() == "spanglepants" and familiarid() == 152 then
 		tw_item = tw_item + fairy_bonus(buffedfamiliarweight() * 2)
 	end
-	local vanilla_fairy = {
-		"slimeling",
-		"stompboots",
-		"obtuseangel",
-		"familiar15",
-		"familiar22",
-		"familiar26",
-		"familiar34",
-		"familiar35",
-		"familiar36",
-		"familiar39",
-		"familiar41",
-		"sgfairy",
-		"slgfairy",
-		"jitterbug",
-		"dandylion",
-		"cassagnome",
-		"dancebear",
-		"sugarfairy",
-		"pictsie",
-		"turtle",
-		"gibberer",
-		"grouper2",
-		"dancfrog",
-		"hippofam",
-		"pianocat",
-		"kloop",
-		"pep_rhino",
-		"frankengnome",
-	}
-	for i,fam in ipairs(vanilla_fairy) do
-		if familiarpicture() == fam then
-			tw_item = tw_item + fairy_bonus(buffedfamiliarweight())
-		end
+	if vanilla_fairy[familiarpicture()] then
+		tw_item = tw_item + fairy_bonus(buffedfamiliarweight())
 	end
 	return tw_item
 end
