@@ -4,40 +4,41 @@ local function lep_bonus(weight)
 	return 2 * fairy_bonus(weight)
 end
 
+local vanilla_lep = {
+	familiar2 = true,
+	familiar22 = true,
+	familiar23 = true,
+	familiar25 = true,
+	familiar41 = true,
+	familiar42 = true,
+	jitterbug = true,
+	tick = true,
+	cassagnome = true,
+	hunchback = true,
+	uniclops = true,
+	dancebear = true,
+	heboulder = true,
+	urchin = true,
+	dancfrog = true,
+	chauvpig = true,
+	hippofam = true,
+	organgoblin = true,
+	pianocat = true,
+	dramahog = true,
+	groose = true,
+	kloop = true,
+	uc = true,
+	jungman = true,
+}
+
 local function get_fam_meat()
 	-- TODO: Use familiar IDs/names instead
 	local tw_meat = 0
 	if familiarpicture() == "hobomonkey" then
 		tw_meat = tw_meat + lep_bonus(buffedfamiliarweight() * 1.25)
 	end
-	local vanilla_lep = {
-		"familiar2",
-		"familiar22",
-		"familiar23",
-		"familiar25",
-		"familiar41",
-		"familiar42",
-		"jitterbug",
-		"tick",
-		"cassagnome",
-		"hunchback",
-		"uniclops",
-		"dancebear",
-		"heboulder",
-		"urchin",
-		"dancfrog",
-		"chauvpig",
-		"hippofam",
-		"organgoblin",
-		"pianocat",
-		"dramahog",
-		"groose",
-		"kloop",
-	}
-	for _, fam in pairs(vanilla_lep) do
-		if familiarpicture() == fam then
-			tw_meat = tw_meat + lep_bonus(buffedfamiliarweight())
-		end
+	if vanilla_lep[familiarpicture()] then
+		tw_meat = tw_meat + lep_bonus(buffedfamiliarweight())
 	end
 	return tw_meat
 end
