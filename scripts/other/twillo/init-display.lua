@@ -39,9 +39,7 @@ function estimate_initiative_modifiers()
 
 	local ml = 0
 	for mname, m in pairs(estimate_ML_modifiers()) do
-		if mname ~= "mcd" then
-			ml = ml + m
-		end
+		ml = ml + m
 	end
 
 	local ml_init_penalty = 0

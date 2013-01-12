@@ -3488,13 +3488,13 @@ endif
 			zone_stasis_macro = macro_noodlecannon
 		end
 		script.bonus_target { "noncombat", "item" }
-		if fullness() + count("hellion cube") * 6 + 6 <= estimate_max_fullness() and ascensionstatus() == "Hardcore"  then
+		if fullness() + count("hellion cube") * 6 + 6 <= estimate_max_fullness() and ascensionstatus() == "Hardcore" and challenge ~= "zombie" then
 			go("getting hellion cubes", 239, make_cannonsniff_macro("Hellion"), nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
 		elseif not have("box of birthday candles") then
 			go("getting candles", 238, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, { "Scarecrow with Boss Bat britches", "Rogue Program" }, 15)
 		elseif (count("hot wing") < 3 or (meat() < 1000 and fullness() < 5)) and not have("box of birthday candles") then
 			go("getting hot wings", 238, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "Slimeling even in fist", 20)
-		elseif have_reagent_pastas < 4 and not highskill_at_run and ascensionstatus() == "Hardcore" then
+		elseif have_reagent_pastas < 4 and not highskill_at_run and ascensionstatus() == "Hardcore" and challenge ~= "zombie" then
 			go("getting more hellion cubes", 239, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
 		elseif not have("dodecagram") then
 			go("getting dodecagram", 239, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling even in fist", 20)

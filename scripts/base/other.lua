@@ -122,6 +122,13 @@ add_always_adventure_warning(function()
 	end
 end)
 
+add_always_adventure_warning(function()
+	if have_buff("QWOPped Up") then
+		return "You are QWOPped Up and will always fumble in combat.", "adventuring while qwopped up"
+	end
+end)
+
+
 -- add_ascension_adventure_warning(function()
 -- 	if get_mainstat() == "Moxie" and basemoxie() >= 60 and have_inventory("spangly sombrero") and level() < 13 then
 -- -- TODO: and not in an outfit-required place
@@ -383,42 +390,71 @@ add_automator("/fight.php", function()
 end)
 
 
--- auto-visit council after leveling
+active_automation_assistance_scanner = nil
+add_submit_page_listener(function(ptf)
+	if active_automation_assistance_scanner then
+		active_automation_assistance_scanner(ptf)
+	end
+end)
 
-local last_council_visit_level = nil
-add_automator("all pages", function()
-	if not setting_enabled("enable ascension assistance") then return end
-	if last_council_visit_level ~= level() and not locked() then
-		local _, pturl = get_page("/council.php")
-		if pturl:contains("council.php") then
-			last_council_visit_level = level()
+function add_ascension_assistance(checkf, f)
+	local last_checked = nil
+	add_automator("all pages", function()
+		if not setting_enabled("enable ascension assistance") then return end
+		if last_checked ~= level() and not locked() and checkf() then
+			local scan = setup_automation_scan_page_results()
+			active_automation_assistance_scanner = scan
+			pcall(f)
+			active_automation_assistance_scanner = nil
+			last_checked = level()
+			text = setup_automation_display_page_results(scan, text)
+		end
+	end)
+end
+
+add_ascension_assistance(function() return true end, function()
+	async_get_page("/council.php")
+end)
+
+add_ascension_assistance(function() return true end, function()
+	async_post_page("/campground.php", { action = "telescopelow" })
+	if not have_item("Clan VIP Lounge key") then
+		freepull_item("Clan VIP Lounge key")
+		freepull_item("cursed microwave")
+		freepull_item("cursed pony keg")
+	end
+	if ascensionpathid() == 8 and not have_item("Boris's Helm") and not have_item("Boris's Helm (askew)") then
+		freepull_item("Boris's Helm")
+		freepull_item("Boris's Helm (askew)")
+	end
+	if level() == 1 then
+		async_get_page("/tutorial.php", { action = "toot" })
+		use_item("letter from King Ralph XI")
+		if ascensionpathid() ~= 4 then
+			use_item("Newbiesport&trade; tent")
 		end
 	end
 end)
 
-local done_on_ascension_action = nil
-add_automator("/main.php", function()
-	if not setting_enabled("enable ascension assistance") then return end
-	if not done_on_ascension_action then
-		async_post_page("/campground.php", { action = "telescopelow" })
-		if not have_item("Clan VIP Lounge key") then
-			freepull_item("Clan VIP Lounge key")
-			freepull_item("cursed microwave")
-			freepull_item("cursed pony keg")
-		end
-		if ascensionpathid() == 8 and not have_item("Boris's Helm") and not have_item("Boris's Helm (askew)") then
-			freepull_item("Boris's Helm")
-			freepull_item("Boris's Helm (askew)")
-		end
-		if level() == 1 then
-			async_get_page("/tutorial.php", { action = "toot" })
-			use_item("letter from King Ralph XI")
-			if ascensionpathid() ~= 4 then
-				use_item("Newbiesport&trade; tent")
-			end
-		end
-		done_on_ascension_action = true
-	end
+add_ascension_assistance(function() return have_item("Knob Goblin encryption key") and have_item("Cobb's Knob map") and ascensionpathid() ~= 4 end, function()
+	use_item("Cobb's Knob map")
+end)
+
+add_ascension_assistance(function() return level() >= 2 and not have_item("continuum transfunctioner") end, function()
+	async_post_page("/forestvillage.php", { action = "screwquest" })
+	async_post_page("/forestvillage.php", { action = "mystic" })
+	async_get_page("/choice.php", { forceoption = 0 })
+	async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 664, option = 1 })
+	async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 664, option = 1 })
+	async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 664, option = 1 })
+end)
+
+add_ascension_assistance(function() return level() >= 9 and have_item("64735 scroll") end, function()
+	use_item("64735 scroll")
+end)
+
+add_ascension_assistance(function() return have_item("hermit script") end, function()
+	use_item("hermit script")
 end)
 
 local hermit_items_href = add_automation_script("get-hermit-items", function()
@@ -447,39 +483,6 @@ add_printer("/hermit.php", function()
 	if not setting_enabled("enable ascension assistance") then return end
 	if text:contains("don't have anything worthless enough") then
 		text = text:gsub("worthless enough for him to want to trade for it.<P>", [[%0<a href="]] .. hermit_items_href { pwd = session.pwd } .. [[" style="color:green">{ Get trinket and permit }</a><p>]])
-	end
-end)
-
-add_automator("all pages", function()
-	if not setting_enabled("enable ascension assistance") then return end
-	if have("Knob Goblin encryption key") and have("Cobb's Knob map") and ascensionpathid() ~= 4 and not locked() then
-		use_item("Cobb's Knob map")
-	end
-end)
-
-add_automator("all pages", function()
-	if not setting_enabled("enable ascension assistance") then return end
-	if level() >= 2 and not have("continuum transfunctioner") and not locked() then
-		async_post_page("/forestvillage.php", { action = "screwquest" })
-		async_get_page("/mystic.php")
-		async_post_page("/mystic.php", { action = "crackyes1" })
-		async_post_page("/mystic.php", { action = "crackyes2" })
-		async_post_page("/mystic.php", { action = "crackyes3" })
-	end
-end)
-
-add_automator("all pages", function()
-	if not setting_enabled("enable ascension assistance") then return end
-	if level() >= 9 and have("64735 scroll") and session["tried using 64735 scroll"] ~= "yes" and not locked() then
-		use_item("64735 scroll")
-		session["tried using 64735 scroll"] = "yes"
-	end
-end)
-
-add_automator("all pages", function()
-	if not setting_enabled("enable ascension assistance") then return end
-	if have_item("hermit script") and not locked() then
-		use_item("hermit script")
 	end
 end)
 

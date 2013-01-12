@@ -8,6 +8,7 @@ function get_buff_bonuses()
 		["Withered Heart"] = { item = math.min(buffturns("Withered Heart"), 20) },
 		["Fortunate Resolve"] = { item = 5, meat = 5, initiative = 5 },
 		-- ["Limber as Mortimer"] = ...,
+		["Voracious Gorging"] = { item = math.min(40, math.ceil(fullness() / 5) * 10) },
 
 		["Cunctatitis"] = { initiative = -1000 },
 

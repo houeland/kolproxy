@@ -165,7 +165,7 @@ function get_automation_tasks(script, cached_stuff)
 				nobuffing = true,
 				action = function()
 					local to_make = 30 - count("white pixel")
-					async_post_page("/mystic.php", { action = "makepixel", pwd = get_pwd(), makewhich = get_itemid("white pixel"), quantity = to_make })
+					async_post_page("/shop.php", { whichshop = "mystic", pwd = get_pwd(), action = "buyitem", whichitem = get_itemid("white pixel"), quantity = to_make })
 					did_action = (count("white pixel") >= 30)
 				end
 			}
@@ -174,7 +174,7 @@ function get_automation_tasks(script, cached_stuff)
 				message = "make digital key",
 				nobuffing = true,
 				action = function()
-					async_post_page("/mystic.php", { action = "makepixel", pwd = get_pwd(), makewhich = get_itemid("digital key"), quantity = 1 })
+					async_post_page("/shop.php", { whichshop = "mystic", pwd = get_pwd(), action = "buyitem", whichitem = get_itemid("digital key"), quantity = to_make })
 					did_action = have("digital key")
 				end
 			}

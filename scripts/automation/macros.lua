@@ -966,6 +966,10 @@ function macro_ppnoodlecannon()
 ]] .. COMMON_MACROSTUFF_START(20, 40) .. [[
 pickpocket
 
+if hasskill Smash & Graaagh
+  cast Smash & Graaagh
+endif
+
 ]] .. noodles_action() .. [[
 
 ]] .. COMMON_MACROSTUFF_FLYERS .. [[

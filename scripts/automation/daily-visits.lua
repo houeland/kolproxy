@@ -26,6 +26,45 @@ register_setting {
 	default_level = "enthusiast",
 }
 
+function setup_automation_scan_page_results()
+	local extracts = {
+		[[<center><table><tr><td><img src="http://images.kingdomofloathing.com/itemimages/meat.gif" height=30 width=30 alt="Meat"></td><td valign=center>You gain [0-9,]+ Meat.</td></tr></table></center>]],
+		[[<center><table class="item" style="float: none" rel="[^"]*"><tr><td><img src="http://images.kingdomofloathing.com/itemimages/[^"]+.gif" alt="[^"]*" title="[^"]*" class=hand onClick='descitem%([0-9]+%)'></td><td valign=center class=effect>You acquire .-</td></tr></table></center>]],
+		[[{"]]..playerid()..[==[":%[[^"]*"(I found ([^"]*)!)",]==],
+	}
+	local ptfs = {}
+	return function(x)
+		if x then
+			table.insert(ptfs, x)
+		else
+			local results = {}
+			for _, pt in ipairs(ptfs) do
+				if type(pt) ~= "string" then
+					pt = pt()
+				end
+				for _, x in ipairs(extracts) do
+					for m in pt:gmatch(x) do
+						table.insert(results, m)
+					end
+				end
+			end
+			return results
+		end
+	end
+end
+
+function setup_automation_display_page_results(scan, text)
+	local results = scan()
+	if next(results) then
+		local resulttext = ""
+		for _, x in ipairs(results) do
+			resulttext = resulttext .. "<center>" .. x .. "</center>"
+		end
+		text = add_message_to_page(text, resulttext, "Automation results:")
+	end
+	return text
+end
+
 function do_daily_visits()
 	local extracts = {
 		[[<center><table><tr><td><img src="http://images.kingdomofloathing.com/itemimages/meat.gif" height=30 width=30 alt="Meat"></td><td valign=center>You gain [0-9,]+ Meat.</td></tr></table></center>]],

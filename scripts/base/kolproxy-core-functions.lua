@@ -172,6 +172,12 @@ end
 
 
 
+local submit_page_listeners = {}
+
+function add_submit_page_listener(f)
+	table.insert(submit_page_listeners, f)
+end
+
 -- TODO: improve async and after_pageload_cache interaction, after_pageload_cache should be cleared after every completed pageload/statuschange!
 function do_async_submit_page(t, url, params)
 	kolproxy_debug_print("> do_async_submit_page()\n" .. debug.traceback(""))
@@ -190,7 +196,11 @@ function do_async_submit_page(t, url, params)
 		end
 	end
 	kolproxy_debug_print("< do_async_submit_page()")
-	return raw_async_submit_page(t, url, tbl)
+	local ptf = raw_async_submit_page(t, url, tbl)
+	for _, lf in ipairs(submit_page_listeners) do
+		pcall(lf, ptf)
+	end
+	return ptf
 end
 
 function async_get_page(url, params) return do_async_submit_page("GET", url, params) end
@@ -351,7 +361,7 @@ function load_script_files(env)
 		local warn = true
 		run_file_with_environment(name, global_env, env, function (t, k, filename)
 			if (warn and k ~= "register_setting" and k ~= "load_datafile" and k ~= "setup_turnplaying_script") or (k == "character" and not filename:contains("settings-page")) then
-				print("Warning: using global variable", k, "in", filename)
+--				print("Warning: using global variable", k, "in", filename)
 -- 				print(debug.traceback())
 -- 				error("Warning: invalid __index for name '" .. tostring(k) .. "' in '" .. tostring(filename) .. "'")
 			end
@@ -482,6 +492,10 @@ function load_buff_extension_info()
 	local info = {}
 	for x, y in pairs(buff_recast_skills) do
 		info[x] = { skillname = y, skillid = skills[y].skillid, mpcost = skills[y].mpcost }
+		if ascensionpathid() == 10 then
+			info[x].zombiecost = info[x].mpcost
+			info[x].mpcost = 0
+		end
 	end
 	return info
 end

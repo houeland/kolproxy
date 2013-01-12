@@ -1414,7 +1414,7 @@ endif
 			if challenge == "fist" then
 				script.ensure_buffs { "Earthen Fist" }
 			end
-			result, resulturl = get_page("/lair2.php")
+			result, resulturl = get_page("/lair2.php", { action = "statues" })
 			local missing_stuff = automate_lair_statues(result)
 			if missing_stuff then
 				result, resulturl = get_page("/lair2.php")

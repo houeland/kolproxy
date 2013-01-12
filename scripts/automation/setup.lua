@@ -75,7 +75,7 @@ automation_script_details_list["get-faxbot-monster"] = { simple_link = "clan_vip
 automation_script_details_list["custom-ascension-checklist"] = { simple = true, description = "Ascension checklist" }
 automation_script_details_list["automate-nemesis"] = { when = function() return true end, description = "Automate Nemesis quest" }
 automation_script_details_list["automate-suburbandis"] = { when = function() return true end, description = "Automate Suburban Dis quest" }
-automation_script_details_list["castle-farming"] = { when = function() return true end, description = "Automate Castle in the Clouds in the Sky meat farming" }
+automation_script_details_list["castle-farming"] = { simple_link = "beanstalk.php", description = "Automate Castle meat farming (link to beanstalk)" }
 automation_script_details_list["lua-console"] = { simple = true, description = "Go to Lua console" }
 automation_script_details_list["add-log-notes"] = { simple = true, description = "Add note to ascension log" }
 automation_script_details_list["automate-aftercore-pulls"] = { when = function() return true end, description = "Pull a selection of useful aftercore items from Hagnks storage" }

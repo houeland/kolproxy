@@ -84,6 +84,7 @@ local function buff_sort_func(a, b)
 end
 
 local familiarfaves = nil
+local familiarfaves_id = nil
 local expired_fams = nil
 
 add_processor("/familiar.php", function()
@@ -96,7 +97,8 @@ end)
 local function get_familiar_grid()
 	fams_per_line = 1000
 
-	if not familiarfaves or session.have_familiarfaves ~= "yes" then
+	local faveid = ascensionpathid() .. "/" .. ascensionstatus()
+	if not familiarfaves or familiarfaved_id ~= faveid or session.have_familiarfaves ~= "yes" then
 -- 		print("DEBUG: loading familiar favorites")
 
 		expired_fams = {}
@@ -115,6 +117,7 @@ local function get_familiar_grid()
 		end
 
 		familiarfaves = cppt_f():match("var FAMILIARFAVES = %[.-%];") or "{ Fake no faves text }"
+		familiarfaved_id = faveid
 		session.have_familiarfaves = "yes"
 	end
 	return make_familiar_grid(familiarfaves:match("var FAMILIARFAVES = %[(.-)%];"), session.pwd, expired_fams)

@@ -76,19 +76,68 @@ local function split_commaseparated(l)
 end
 
 local function parse_mafia_bonuslist(bonuslist)
-	local bonuses = {}
 	local checks = {
-		["Initiative"] = "initiative",
-		["Item Drop"] = "item",
-		["Meat Drop"] = "meat",
-		["Monster Level"] = "ml",
-		["Combat Rate"] = "combat",
+		-- TODO: +++ change these legacy ones +++
+		["Initiative"] = "initiative", -- Combat Initiative
+		["Item Drop"] = "item", -- Item Drops from Monsters
+		["Meat Drop"] = "meat", -- Meat from Monsters
+		["Monster Level"] = "ml", -- -100 to Monster Level
+		["Combat Rate"] = "combat", -- Monsters will be more attracted to you.
+		-- TODO: --- change these legacy ones ---
+
+		["Muscle"] = "Muscle",
+		["Mysticality"] = "Mysticality",
+		["Moxie"] = "Moxie",
+		["Hobo Power"] = "Hobo Power",
+		["PvP Fights"] = "PvP fights per day", -- PvP fight(s) per day when equipped
+		["Adventures"] = "Adventures per day", -- Adventure(s) per day when equipped.
+		["Muscle Percent"] = "Muscle %", -- Muscle +15%
+		["Mysticality Percent"] = "Mysticality %",
+		["Moxie Percent"] = "Moxie %",
+
+		["Damage Absorption"] = "Damage Absorption",
+		["Damage Reduction"] = "Damage Reduction",
+
+		["Cold Resistance"] = "Cold Resistance",
+		["Hot Resistance"] = "Hot Resistance",
+		["Sleaze Resistance"] = "Sleaze Resistance",
+		["Spooky Resistance"] = "Spooky Resistance",
+		["Stench Resistance"] = "Stench Resistance",
+		["Slime Resistance"] = "Slime Resistance",
+
+		["Cold Spell Damage"] = "Damage to Cold Spells",
+		["Hot Spell Damage"] = "Damage to Hot Spells",
+		["Sleaze Spell Damage"] = "Damage to Sleaze Spells",
+		["Spooky Spell Damage"] = "Damage to Spooky Spells",
+		["Stench Spell Damage"] = "Damage to Stench Spells",
+
+		["Cold Damage"] = "Cold Damage",
+		["Hot Damage"] = "Hot Damage",
+		["Sleaze Damage"] = "Sleaze Damage",
+		["Spooky Damage"] = "Spooky Damage",
+		["Stench Damage"] = "Stench Damage",
+
+		["Spell Damage"] = "Spell Damage",
+		["Weapon Damage"] = "Weapon Damage",
+
+		["Maximum HP"] = "Maximum HP",
+		["Maximum MP"] = "Maximum MP",
+
+		["HP Regen Min"] = "Regenerate minimum HP per adventure", -- Regenerate 10-15 HP and MP per adventure
+		["MP Regen Max"] = "Regenerate maximum HP per adventure",
+		["MP Regen Min"] = "Regenerate minimum MP per adventure",
+		["MP Regen Max"] = "Regenerate maximum MP per adventure",
+
+		-- TODO: add more modifiers
 	}
+
+	local bonuses = {}
 	for x, y in (", "..bonuslist):gmatch(", ([^,:]+): ([^,]+)") do
 		if checks[x] then
 			bonuses[checks[x]] = tonumber(y)
 		end
 	end
+
 	return bonuses
 end
 
@@ -251,7 +300,7 @@ function parse_items()
 
 	for l in io.lines("cache/files/equipment.txt") do
 		local tbl = split_tabbed_line(l)
-		local name, req = tbl[1], tbl[3]
+		local name, power, req = tbl[1], tbl[2], tbl[3]
 		if name and req and not blacklist[name] then
 			if items[name] then
 				local reqtbl = {}
@@ -268,6 +317,7 @@ function parse_items()
 					end
 				end
 				items[name].equip_requirement = reqtbl
+				items[name].power = power
 			else
 				hardwarn("equipment:item does not exist", name)
 			end
