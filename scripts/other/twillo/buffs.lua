@@ -19,17 +19,14 @@ function get_buff_bonuses()
 		["Mysteriously Handsome"] = { ml = 6 }, -- Not for men
 		["A Little Bit Evil"] = { ml = 2 },
 	}
-	-- TODO: Iterate over buffs we have instead?
-	for name, buffb in pairs(buffarray) do
-		if have_buff(name) then
-			for a, b in pairs(buffb) do
-				bonuses[a] = (bonuses[a] or 0) + b
-			end
+	local buff_datafile = datafile("buffs")
+	for buff, _ in pairs(buffslist()) do
+		local buffb = buffarray[buff]
+		if not buffb then
+			buffb = (buff_datafile[buff] or {}).bonuses
 		end
-	end
-	for name, buffb in pairs(datafile("buffs")) do
-		if not buffarray[name] and have_buff(name) then
-			for a, b in pairs(buffb.bonuses or {}) do
+		if buffb then
+			for a, b in pairs(buffb) do
 				bonuses[a] = (bonuses[a] or 0) + b
 			end
 		end
