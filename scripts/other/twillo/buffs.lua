@@ -1,5 +1,5 @@
 function get_buff_bonuses()
-	local bonuses = {}
+	local bonuses = {combat = 0, item = 0, initiative = 0, ml = 0, meat = 0}
 	local buffarray = {
 		["Sole Soul"] = { item = math.min(buffturns("Sole Soul"), 300) },
 		["The HeyDezebound Heart"] = { item = math.min(buffturns("The HeyDezebound Heart"), 300) },

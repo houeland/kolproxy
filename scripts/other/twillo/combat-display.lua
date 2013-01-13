@@ -1,40 +1,33 @@
 -- To Do - make underwater separate. Wait for spading on e.g. 28% combat rate
 
-function get_underwater_com()
-	local tw_com = 0
+function estimate_underwater_com()
+	local com = 0
 	if buff("Colorfully Concealed") then
-		tw_com = tw_com + -5
+		com = com + -5
 	end
 	if have_equipped("Mer-kin sneakmask") then
-		tw_com = tw_com + -5
+		com = com + -5
 	end
-	return tw_com
+	return com
 end
 
-add_printer("/charpane.php", function()
-	if not setting_enabled("show modifier estimates") then return end
-
-	local tw_com = 0
-	if familiarpicture() == "hounddog" then
-		tw_com = tw_com + math.min(math.floor(buffedfamiliarweight() / 6), 5)
+function estimate_other_com()
+	local com = 0
+	if familiarid() == 69 then -- jumpsuited hound dog
+		com = com + math.min(math.floor(buffedfamiliarweight() / 6), 5)
 	end
-	tw_com = tw_com + (get_buff_bonuses().combat or 0)
-	tw_com = tw_com + (get_equipment_bonuses().combat or 0)
-	tw_com = tw_com + (get_outfit_bonuses().combat or 0)
 	if ascension["zone.manor.quartet song"] == "Sono Un Amante Non Un Combattente" then
-		tw_com = tw_com - 5
+		com = com - 5
 	end
-	if tw_com > 25 then
-		tw_com = 25 + math.floor((tw_com - 25) / 5)	
-	end
-	if tw_com < -25 then
-		tw_com = -25 + math.ceil((tw_com + 25) / 5)	
-	end
-	tw_com = tw_com + get_underwater_com()
+	com = com + estimate_underwater_com()
+	return com
+end
 
-	local uncertaintystr = ""
-	if not have_cached_data() then
-		uncertaintystr = " ?"
+function adjust_com(com)
+	if com > 25 then
+		com = 25 + math.floor((com - 25) / 5)
+	elseif com < -25 then
+		com = -25 + math.ceil((com + 25) / 5)
 	end
-	print_charpane_value { normalname = "(Non)combat", compactname = "C/NC", value = string.format("%+d%%", tw_com) .. uncertaintystr }
-end)
+	return com
+end

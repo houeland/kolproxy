@@ -35,7 +35,7 @@ local function add_bonuses(target, source)
 end
 
 function get_equipment_bonuses()
-	local bonuses = {}
+	local bonuses = {combat = 0, item = 0, initiative = 0, ml = 0, meat = 0}
 
 	local itemarray = {
 		["Jekyllin hide belt"] = { item = session["cached Jekyllin hide belt bonus"] or "?" },

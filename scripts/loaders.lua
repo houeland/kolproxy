@@ -120,6 +120,7 @@ load_file("interface", "other/twillo/item-display.lua")
 load_file("interface", "other/twillo/ml-display.lua")
 load_file("interface", "other/twillo/init-display.lua")
 load_file("interface", "other/twillo/meat-display.lua")
+load_file("interface", "other/twillo/bonus-display.lua")
 
 load_file("interface", "other/bmaher/compact-topmenu.lua")
 

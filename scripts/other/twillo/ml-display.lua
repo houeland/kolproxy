@@ -24,33 +24,21 @@ add_automator("all pages", function()
 	end
 end)
 
-function estimate_ML_modifiers()
-	local mlmods = {}
-	mlmods.mcd = mcd()
+function estimate_other_ml()
+	local ml = mcd()
 	if familiarid() == 109 then -- purse rat
-		mlmods.familiar = math.floor(buffedfamiliarweight() / 2)
+		ml = ml + math.floor(buffedfamiliarweight() / 2)
 	end
 	if ascension["zone.manor.quartet song"] == "Provare Compasione Per El Sciocco" then
-		mlmods.background = 5
+		ml = ml + 5
 	end
-	mlmods.equipment = get_equipment_bonuses().ml
-	mlmods.outfit = get_outfit_bonuses().ml
-	mlmods.buff = get_buff_bonuses().ml
-	return mlmods
+	return ml
 end
 
-add_printer("/charpane.php", function()
-	if not setting_enabled("show modifier estimates") then return end
-
-	local mlmods = estimate_ML_modifiers()
-	local ml = 0
-	for _, m in pairs(mlmods) do
-		ml = ml + m
-	end
-	
-	local uncertaintystr = ""
-	if not have_cached_data() then
-		uncertaintystr = " ?"
-	end
-	print_charpane_value { normalname = "ML", compactname = "ML", value = string.format("%+d", ml) .. uncertaintystr }
-end)
+function estimate_ml()
+	local ml = get_equipment_bonuses().ml
+	ml = ml + get_outfit_bonuses().ml
+	ml = ml + get_buff_bonuses().ml
+	ml = ml + estimate_other_ml()
+	return ml
+end
