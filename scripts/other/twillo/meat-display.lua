@@ -62,31 +62,10 @@ local function get_skill_meat()
 	return tw_meat
 end
 
-function estimate_meat_modifiers()
-	local meatmods = {}
+function estimate_other_meat()
+	local meat = get_fam_meat() + get_skill_meat()
 	if moonsign() == "Wombat" then
-		meatmods.background = (meatmods.background or 0) + 20
+		meat = meat + 20
 	end
-	meatmods.skill = get_skill_meat()
-	meatmods.familiar = get_fam_meat()
-	meatmods.equipment = get_equipment_bonuses().meat
-	meatmods.outfit = get_outfit_bonuses().meat
-	meatmods.buff = get_buff_bonuses().meat
-	return meatmods
+	return meat
 end
-
-add_printer("/charpane.php", function()
-	if not setting_enabled("show modifier estimates") then return end
-
-	local meatmods = estimate_meat_modifiers()
-	local meat = 0
-	for _, m in pairs(meatmods) do
-		meat = meat + m
-	end
-
-	local uncertaintystr = ""
-	if not have_cached_data() then
-		uncertaintystr = " ?"
-	end
-	print_charpane_value { normalname = "Meat drops", compactname = "Meat", value = string.format("%+.1f%%", floor_to_places(meat, 1)) .. uncertaintystr }
-end)

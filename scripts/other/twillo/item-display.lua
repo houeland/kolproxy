@@ -1,12 +1,5 @@
 -- ToDo - Grimacite, Tuesday Ruby, LBOF range, Bounty Hunting Outfit
 
-register_setting {
-	name = "show modifier estimates",
-	description = "Show modifier estimates (+noncombat%, +item%, +ML. <b>Not always accurate</b>)",
-	group = "charpane",
-	default_level = "standard",
-}
-
 add_processor("/fight.php", function()
 	if newly_started_fight then
 		session["cached stinky cheese eye bonus"] = nil
@@ -107,34 +100,21 @@ local function get_skill_item()
 	return tw_item
 end
 
-function estimate_item_modifiers()
-	local itemmods = {}
+function estimate_other_item()
+	local item = get_fam_item() + get_skill_item()
 	if ascension["zone.manor.quartet song"] == "Le Mie Cose Favorite" then
-		itemmods.background = (itemmods.background or 0) + 5
+		item = item + 5
 	end
 	if moonsign() == "Packrat" then
-		itemmods.background = (itemmods.background or 0) + 10
+		item = item + 10
 	end
-	itemmods.skill = get_skill_item()
-	itemmods.familiar = get_fam_item()
-	itemmods.equipment = get_equipment_bonuses().item
-	itemmods.outfit = get_outfit_bonuses().item
-	itemmods.buff = get_buff_bonuses().item
-	return itemmods
+	return item
 end
 
-add_printer("/charpane.php", function()
-	if not setting_enabled("show modifier estimates") then return end
-
-	local itemmods = estimate_item_modifiers()
-	local item = 0
-	for _, m in pairs(itemmods) do
-		item = item + m
-	end
-
-	local uncertaintystr = ""
-	if not have_cached_data() then
-		uncertaintystr = " ?"
-	end
-	print_charpane_value { normalname = "Item drops", compactname = "Item", value = string.format("%+.1f%%", floor_to_places(item, 1)) .. uncertaintystr }
-end)
+function estimate_item_bonus()
+	local item = estimate_other_item()
+	item = item + get_equipment_bonuses().item
+	item = item + get_outfit_bonuses().item
+	item = item + get_buff_bonuses().item
+	return item
+end

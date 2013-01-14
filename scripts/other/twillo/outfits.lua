@@ -1,5 +1,5 @@
 function get_outfit_bonuses()
-	local bonuses = {}
+	local bonuses = {combat = 0, item = 0, initiative = 0, ml = 0, meat = 0}
 	for _, x in pairs(datafile("outfits")) do
 		local wearing = true
 		for _, y in ipairs(x.items) do
