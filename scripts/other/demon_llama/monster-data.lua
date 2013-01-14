@@ -2,6 +2,12 @@
 --data is in no way guaranteed to be accurate
 --v.2.6a
 
+local function estimate_ml()
+	return estimate_modifier_bonuses().ml or 0
+end
+
+-- TODO: Redo this to be parsed to JSON data files instead
+
 local monsterData = {
 	["\"handyman\" jay android"] = {
 		["Stats"] = {
@@ -19584,9 +19590,9 @@ local monsterData = {
 	},
 	["usher"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "humanoid",
 			["Scales"] = {
 				["HP"] = true,
@@ -19603,9 +19609,9 @@ local monsterData = {
 	},
 	["bellhop"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "humanoid",
 			["Scales"] = {
 				["HP"] = true,
@@ -19622,9 +19628,9 @@ local monsterData = {
 	},
 	["black cat"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "beast",
 			["Scales"] = {
 				["HP"] = true,
@@ -19641,9 +19647,9 @@ local monsterData = {
 	},
 	["ourang-outang"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "beast",
 			["Scales"] = {
 				["HP"] = true,
@@ -19660,9 +19666,9 @@ local monsterData = {
 	},
 	["raven"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "beast",
 			["Scales"] = {
 				["HP"] = true,
@@ -19679,9 +19685,9 @@ local monsterData = {
 	},
 	["can-can dancer"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "humanoid",
 			["Scales"] = {
 				["HP"] = true,
@@ -19698,9 +19704,9 @@ local monsterData = {
 	},
 	["courtesan"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "humanoid",
 			["Scales"] = {
 				["HP"] = true,
@@ -19717,9 +19723,9 @@ local monsterData = {
 	},
 	["sensitive poet-type"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "humanoid",
 			["Scales"] = {
 				["HP"] = true,
@@ -19736,9 +19742,9 @@ local monsterData = {
 	},
 	["the master of ceremonies"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "humanoid",
 			["Scales"] = {
 				["HP"] = true,
@@ -19755,9 +19761,9 @@ local monsterData = {
 	},
 	["voyeuristic artist"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "humanoid",
 			["Scales"] = {
 				["HP"] = true,
@@ -19774,9 +19780,9 @@ local monsterData = {
 	},
 	["ancient mariner"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "humanoid",
 			["Scales"] = {
 				["HP"] = true,
@@ -19793,9 +19799,9 @@ local monsterData = {
 	},
 	["angry poet"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "humanoid",
 			["Scales"] = {
 				["HP"] = true,
@@ -19816,9 +19822,9 @@ local monsterData = {
 	},
 	["kubla khan"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "humanoid",
 			["Scales"] = {
 				["HP"] = true,
@@ -19829,9 +19835,9 @@ local monsterData = {
 	},
 	["roller-skating muse"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "humanoid",
 			["Scales"] = {
 				["HP"] = true,
@@ -19848,9 +19854,9 @@ local monsterData = {
 	},
 	["toothless mastiff bitch"] = {
 		["Stats"] = {
-			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()-mcd()))+(estimate_ml()-mcd())*0.75) end,
-			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()-mcd()) end,
-			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()-mcd()) end,
+			["HP"] = function() return math.floor(math.min(100,0.8*(math.min(125,buffedmuscle())+estimate_ml()))+(estimate_ml())*0.75) end,
+			["Atk"] = function() return math.floor(math.min(125,buffedmoxie()*1.1)+estimate_ml()) end,
+			["Def"] = function() return math.floor(math.min(125,buffedmuscle())+estimate_ml()) end,
 			["Phylum"] = "beast",
 			["Scales"] = {
 				["HP"] = true,
@@ -21859,7 +21865,7 @@ end
 function getMonsterData(monsterName, fightText)
 	local ml = estimate_ml()
 
-	local item = estimate_item_bonus()
+	local item = estimate_modifier_bonuses().item or 0
 
 	local monsterDataName = parseMonsterNameIntoMafiaFormat(monsterName, fightText)
 	if monsterDataName == "tomb rat king" then ml = 0 end -- ML doesn't get reapplied when using rat tangles

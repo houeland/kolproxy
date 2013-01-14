@@ -437,3 +437,14 @@ function remaining_spleen_display_string()
 	end
 	return spleen
 end
+
+function estimate_mallbuy_cost(item)
+	return datafile("mallprices")[maybe_get_itemname(item)]
+end
+
+function estimate_mallsell_profit(item)
+	local buyprice = estimate_mallbuy_cost(item)
+	if buyprice then
+		return buyprice * 0.85
+	end
+end

@@ -1,5 +1,3 @@
--- ToDo - Stinky Cheese, Tuesday Ruby, Hodgman gear
-
 local function lep_bonus(weight)
 	return 2 * fairy_bonus(weight)
 end
@@ -33,14 +31,13 @@ local vanilla_lep = {
 
 local function get_fam_meat()
 	-- TODO: Use familiar IDs/names instead
-	local tw_meat = 0
-	if familiarpicture() == "hobomonkey" then
-		tw_meat = tw_meat + lep_bonus(buffedfamiliarweight() * 1.25)
-	end
 	if vanilla_lep[familiarpicture()] then
-		tw_meat = tw_meat + lep_bonus(buffedfamiliarweight())
+		return lep_bonus(buffedfamiliarweight())
+	elseif familiarpicture() == "hobomonkey" then
+		return lep_bonus(buffedfamiliarweight() * 1.25)
+	else
+		return 0
 	end
-	return tw_meat
 end
 
 local function get_skill_meat()
@@ -64,7 +61,7 @@ end
 
 function estimate_other_meat()
 	local meat = get_fam_meat() + get_skill_meat()
-	if moonsign() == "Wombat" then
+	if moonsign("Wombat") then
 		meat = meat + 20
 	end
 	return meat

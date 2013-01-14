@@ -46,7 +46,7 @@ register_setting {
 
 register_setting {
 	name = "enable experimental implementations",
-	description = "Enable (beta) features that are still in development (<b>Not always accurate</b>)",
+	description = "Enable (beta) features that are still in development (<b>Not always accurate</b>, currently: mining prediction)",
 	group = "other",
 	default_level = "enthusiast",
 }

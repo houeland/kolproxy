@@ -1,17 +1,15 @@
--- To Do - make underwater separate. Wait for spading on e.g. 28% combat rate
-
-function estimate_underwater_com()
+function estimate_underwater_combat()
 	local com = 0
 	if buff("Colorfully Concealed") then
-		com = com + -5
+		com = com - 5
 	end
 	if have_equipped("Mer-kin sneakmask") then
-		com = com + -5
+		com = com - 5
 	end
 	return com
 end
 
-function estimate_other_com()
+function estimate_other_combat()
 	local com = 0
 	if familiarid() == 69 then -- jumpsuited hound dog
 		com = com + math.min(math.floor(buffedfamiliarweight() / 6), 5)
@@ -19,15 +17,15 @@ function estimate_other_com()
 	if ascension["zone.manor.quartet song"] == "Sono Un Amante Non Un Combattente" then
 		com = com - 5
 	end
-	com = com + estimate_underwater_com()
 	return com
 end
 
-function adjust_com(com)
+function adjust_combat(com)
 	if com > 25 then
-		com = 25 + math.floor((com - 25) / 5)
+		return 25 + math.floor((com - 25) / 5)
 	elseif com < -25 then
-		com = -25 + math.ceil((com + 25) / 5)
+		return -adjust_combat(-com)
+	else
+		return com
 	end
-	return com
 end

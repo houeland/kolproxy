@@ -162,9 +162,16 @@ function setup_functions()
 		function ascensionpathid() return tonumber(status().path) end
 		function ascensionpathname() return status().pathname end
 		function ascensionpath(check)
-			-- TODO
+			-- TODO: validate
+			return check == ascensionpathname()
 		end
-		function moonsign() return status().sign end -- TODO: check
+		function moonsign(check)
+			if check then
+				-- TODO: validate
+				return check == moonsign()
+			end
+			return status().sign
+		end
 		function freedralph() return tonumber(status().freedralph) == 1 end
 		function moonsign_area()
 			local areas = {

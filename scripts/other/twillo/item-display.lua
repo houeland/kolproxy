@@ -1,5 +1,3 @@
--- ToDo - Grimacite, Tuesday Ruby, LBOF range, Bounty Hunting Outfit
-
 add_processor("/fight.php", function()
 	if newly_started_fight then
 		session["cached stinky cheese eye bonus"] = nil
@@ -47,7 +45,6 @@ local vanilla_fairy = {
 	sugarfairy = true,
 	pictsie = true,
 	turtle = true,
-	gibberer = true,
 	grouper2 = true,
 	dancfrog = true,
 	hippofam = true,
@@ -67,20 +64,19 @@ local function get_fam_item()
 		end
 	end
 	-- TODO: Use familiar names instead of pictures
-	local tw_item = 0
-	if familiarpicture() == "jackinthebox" then
-		tw_item = tw_item + 2 * fairy_bonus(buffedfamiliarweight())
-	elseif familiarpicture() == "hounddog" then
-		tw_item = tw_item + fairy_bonus(buffedfamiliarweight() * 1.25)
-	elseif familiarpicture() == "spanglehat" and familiarid() == 82 then
-		tw_item = tw_item + fairy_bonus(buffedfamiliarweight() * 2)
-	elseif familiarpicture() == "spanglepants" and familiarid() == 152 then
-		tw_item = tw_item + fairy_bonus(buffedfamiliarweight() * 2)
-	end
 	if vanilla_fairy[familiarpicture()] then
-		tw_item = tw_item + fairy_bonus(buffedfamiliarweight())
+		return fairy_bonus(buffedfamiliarweight())
+	elseif familiarpicture() == "jackinthebox" then
+		return 2 * fairy_bonus(buffedfamiliarweight())
+	elseif familiarpicture() == "hounddog" then
+		return fairy_bonus(buffedfamiliarweight() * 1.25)
+	elseif familiarpicture() == "spanglehat" and familiarid() == 82 then
+		return fairy_bonus(buffedfamiliarweight() * 2)
+	elseif familiarpicture() == "spanglepants" and familiarid() == 152 then
+		return fairy_bonus(buffedfamiliarweight() * 2)
+	else
+		return 0
 	end
-	return tw_item
 end
 
 local function get_skill_item()
@@ -105,16 +101,8 @@ function estimate_other_item()
 	if ascension["zone.manor.quartet song"] == "Le Mie Cose Favorite" then
 		item = item + 5
 	end
-	if moonsign() == "Packrat" then
+	if moonsign("Packrat") then
 		item = item + 10
 	end
-	return item
-end
-
-function estimate_item_bonus()
-	local item = estimate_other_item()
-	item = item + get_equipment_bonuses().item
-	item = item + get_outfit_bonuses().item
-	item = item + get_buff_bonuses().item
 	return item
 end

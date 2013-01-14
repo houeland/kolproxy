@@ -1,5 +1,3 @@
--- TO DO: CoT, Handsomeness potion for men, card sleeve, furry suit, Tiny Plastic Commons, El Vibrato
-
 add_automator("all pages", function()
 	if have_equipped("Grimacite gown") and not session["cached Grimacite gown bonus"] then
 		local pt = get_page("/desc_item.php", { whichitem = 528443762 })
@@ -32,13 +30,5 @@ function estimate_other_ml()
 	if ascension["zone.manor.quartet song"] == "Provare Compasione Per El Sciocco" then
 		ml = ml + 5
 	end
-	return ml
-end
-
-function estimate_ml()
-	local ml = get_equipment_bonuses().ml
-	ml = ml + get_outfit_bonuses().ml
-	ml = ml + get_buff_bonuses().ml
-	ml = ml + estimate_other_ml()
 	return ml
 end

@@ -3150,10 +3150,7 @@ endwhile
 						else
 							if not have("continuum transfunctioner") then
 								inform "pick up continuum transfunctioner"
-								async_get_page("/mystic.php")
-								async_post_page("/mystic.php", { action = "crackyes1" })
-								async_post_page("/mystic.php", { action = "crackyes2" })
-								result, resulturl = post_page("/mystic.php", { action = "crackyes3" })
+								set_result(pick_up_continuum_transfunctioner())
 							end
 							inform "fight and sniff blooper"
 							script.heal_up()

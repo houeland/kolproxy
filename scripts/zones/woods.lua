@@ -197,12 +197,11 @@ add_printer("item drop", function()
 	end
 end)
 
+-- TODO: no longer mystic.php
 add_automator("/mystic.php", function ()
 	if not setting_enabled("automate simple tasks") then return end
 	if text:contains("Would you like to hear a tale") then
-		async_post_page("/mystic.php", { action = "crackyes1" })
-		async_post_page("/mystic.php", { action = "crackyes2" })
-		text = post_page("/mystic.php", { action = "crackyes3" })
+		text = pick_up_continuum_transfunctioner()()
 	end
 end)
 

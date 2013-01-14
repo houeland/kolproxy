@@ -473,9 +473,9 @@ function automate_lair_statues(text)
 			if count("white pixel") + math.min(count("red pixel"), count("green pixel"), count("blue pixel")) >= 30 then
 				if count("white pixel") < 30 then
 					local to_make = 30 - count("white pixel")
-					async_post_page("/mystic.php", { action = "makepixel", pwd = get_pwd(), makewhich = get_itemid("white pixel"), quantity = to_make })
+					async_post_page("/shop.php", { whichshop = "mystic", pwd = get_pwd(), action = "buyitem", whichitem = get_itemid("white pixel"), quantity = to_make })
 				end
-				async_post_page("/mystic.php", { action = "makepixel", pwd = get_pwd(), makewhich = get_itemid("digital key"), quantity = 1 })
+				async_post_page("/shop.php", { whichshop = "mystic", pwd = get_pwd(), action = "buyitem", whichitem = get_itemid("digital key"), quantity = 1 })
 			end
 		end
 		if have("digital key") then

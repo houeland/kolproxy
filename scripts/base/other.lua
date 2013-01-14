@@ -440,13 +440,17 @@ add_ascension_assistance(function() return have_item("Knob Goblin encryption key
 	use_item("Cobb's Knob map")
 end)
 
-add_ascension_assistance(function() return level() >= 2 and not have_item("continuum transfunctioner") end, function()
-	async_post_page("/forestvillage.php", { action = "screwquest" })
+function pick_up_continuum_transfunctioner()
 	async_post_page("/forestvillage.php", { action = "mystic" })
 	async_get_page("/choice.php", { forceoption = 0 })
 	async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 664, option = 1 })
 	async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 664, option = 1 })
-	async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 664, option = 1 })
+	return async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 664, option = 1 })
+end
+
+add_ascension_assistance(function() return level() >= 2 and not have_item("continuum transfunctioner") end, function()
+	async_post_page("/forestvillage.php", { action = "screwquest" })
+	pick_up_continuum_transfunctioner()
 end)
 
 add_ascension_assistance(function() return level() >= 9 and have_item("64735 scroll") end, function()

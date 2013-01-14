@@ -24,7 +24,7 @@ local function count_distinct_equipped_itemlist(itemlist)
 	return c
 end
 
-local function add_bonuses(target, source)
+function add_modifier_bonuses(target, source)
 	for a, b in pairs(source) do
 		if b == "?" then
 			target[a .. "_unknown"] = true
@@ -34,8 +34,10 @@ local function add_bonuses(target, source)
 	end
 end
 
+local add_bonuses = add_modifier_bonuses
+
 function get_equipment_bonuses()
-	local bonuses = {combat = 0, item = 0, initiative = 0, ml = 0, meat = 0}
+	local bonuses = {}
 
 	local itemarray = {
 		["Jekyllin hide belt"] = { item = session["cached Jekyllin hide belt bonus"] or "?" },
@@ -52,6 +54,8 @@ function get_equipment_bonuses()
 		["Mayflower bouquet"] = { item_upto = 10, meat_upto = 40, item = "?" }, -- not sufficiently spaded
 		["Tuesday's ruby"] = { item = "?", meat = "?" }, -- varies by day
 		["spooky little girl"] = { item = "?" }, -- varies with grimacite
+
+		["card sleeve"] = { initiative = "?", item = "?", meat = "?" }, -- varies by card
 	}
 
 	if not equipment().weapon and not equipment().offhand then

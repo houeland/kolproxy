@@ -1,5 +1,5 @@
 function get_buff_bonuses()
-	local bonuses = {combat = 0, item = 0, initiative = 0, ml = 0, meat = 0}
+	local bonuses = {}
 	local buffarray = {
 		["Sole Soul"] = { item = math.min(buffturns("Sole Soul"), 300) },
 		["The HeyDezebound Heart"] = { item = math.min(buffturns("The HeyDezebound Heart"), 300) },
@@ -18,34 +18,27 @@ function get_buff_bonuses()
 		["Ur-Kel's Aria of Annoyance"] = { ml = math.min(2 * level(), 60) },
 		["Mysteriously Handsome"] = { ml = 6 }, -- Not for men
 		["A Little Bit Evil"] = { ml = 2 },
+
+		["Amorous Avarice"] = { meat = 25 * math.min(math.floor(drunkenness() / 5), 4) },
 	}
-	local buff_datafile = datafile("buffs")
 	for buff, _ in pairs(buffslist()) do
-		local buffb = buffarray[buff]
-		if not buffb then
-			buffb = (buff_datafile[buff] or {}).bonuses
-		end
-		if buffb then
-			for a, b in pairs(buffb) do
-				bonuses[a] = (bonuses[a] or 0) + b
-			end
+		if buffarray[buff] then
+			add_modifier_bonuses(bonuses, buffarray[buff])
+		elseif datafile("buffs")[buff] then
+			add_modifier_bonuses(bonuses, datafile("buffs")[buff].bonuses)
 		end
 	end
 	if equipment().weapon == nil and equipment().offhand == nil then -- unarmed
 		if have_intrinsic("Expert Timing") then
-			bonuses.item = (bonuses.item or 0) + 20
+			add_modifier_bonuses(bonuses, { item = 20 })
 		end
 		if have_intrinsic("Fast as Lightning") then
-			bonuses.initiative = (bonuses.initiative or 0) + 50
+			add_modifier_bonuses(bonuses, { initiative = 50 })
 		end
-	end
-
-	if have_buff("Amorous Avarice") then
-		bonuses.meat = (bonuses.meat or 0) + 25 * math.min(math.floor(drunkenness() / 5), 4)
 	end
 
 	if have_intrinsic("Overconfident") then
-		bonuses.ml = (bonuses.ml or 0) + 30
+		add_modifier_bonuses(bonuses, { ml = 30 })
 	end
 
 	return bonuses

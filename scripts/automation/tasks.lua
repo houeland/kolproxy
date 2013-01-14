@@ -152,10 +152,7 @@ function get_automation_tasks(script, cached_stuff)
 				message = "pick up continuum transfunctioner",
 				nobuffing = true,
 				action = function()
-					async_get_page("/mystic.php")
-					async_post_page("/mystic.php", { action = "crackyes1" })
-					async_post_page("/mystic.php", { action = "crackyes2" })
-					result, resulturl = post_page("/mystic.php", { action = "crackyes3" })
+					set_result(pick_up_continuum_transfunctioner())
 					did_action = have("continuum transfunctioner")
 				end
 			}
@@ -189,10 +186,7 @@ function get_automation_tasks(script, cached_stuff)
 				return {
 					message = "pick up continuum transfunctioner",
 					action = function()
-						async_get_page("/mystic.php")
-						async_post_page("/mystic.php", { action = "crackyes1" })
-						async_post_page("/mystic.php", { action = "crackyes2" })
-						result, resulturl = post_page("/mystic.php", { action = "crackyes3" })
+						set_result(pick_up_continuum_transfunctioner())
 						did_action = have("continuum transfunctioner")
 					end
 				}

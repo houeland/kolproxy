@@ -69,8 +69,24 @@ end
 
 local automation_script_details_list = {}
 
-automation_script_details_list["automate-dungeonfist"] = { simple_link = "arcade.php", description = "Automate playing Dungeon Fist (link to the game grid)" }
-automation_script_details_list["automate-porko"] = { simple_link = "spaaace.php", description = "Automate playing Porko (link to spaaace)" }
+local porko_mpastr = ""
+local dungeonfist_mpastr = ""
+
+if estimate_mallsell_profit("lunar isotope") and estimate_mallbuy_cost("transporter transponder") then
+	local porko_mpa = estimate_mallsell_profit("lunar isotope") * 4.385 - estimate_mallbuy_cost("transporter transponder") / 30
+	porko_mpastr = string.format(", %.1fk Meat/Adventure", porko_mpa / 1000)
+end
+
+if estimate_mallsell_profit("Game Grid ticket") and estimate_mallbuy_cost("Game Grid token") then
+	local dungeonfist_mpa = (estimate_mallsell_profit("Game Grid ticket") * 30 - estimate_mallbuy_cost("Game Grid token")) / 5
+	dungeonfist_mpastr = string.format(", %.1fk Meat/Adventure", dungeonfist_mpa / 1000)
+end
+
+local porko_mpa = (estimate_mallsell_profit("lunar isotope") or 150) * 4.385 - (estimate_mallbuy_cost("transporter transponder") or 8000) / 30
+local dungeonfist_mpa = ((estimate_mallsell_profit("Game Grid ticket") or 200) * 30 - (estimate_mallbuy_cost("Game Grid token") or 8000)) / 5
+
+automation_script_details_list["automate-dungeonfist"] = { simple_link = "arcade.php", description = string.format("Automate playing Dungeon Fist (link to the game grid%s)", dungeonfist_mpastr) }
+automation_script_details_list["automate-porko"] = { simple_link = "spaaace.php", description = string.format("Automate playing Porko (link to spaaace%s)", porko_mpastr) }
 automation_script_details_list["get-faxbot-monster"] = { simple_link = "clan_viplounge.php?action=faxmachine", description = "Request monster from FaxBot (link to fax machine)" }
 automation_script_details_list["custom-ascension-checklist"] = { simple = true, description = "Ascension checklist" }
 automation_script_details_list["automate-nemesis"] = { when = function() return true end, description = "Automate Nemesis quest" }

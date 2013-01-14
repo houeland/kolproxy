@@ -28,7 +28,7 @@ end
 
 function estimate_other_init()
 	local init = get_fam_init() + get_skill_init()
-	if moonsign() == "Vole" then
+	if moonsign("Vole") then
 		init = init + 20
 	end
 	return init

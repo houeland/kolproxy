@@ -19,12 +19,12 @@ register_setting {
 	default_level = "enthusiast",
 }
 
-register_setting {
-	name = "automate daily visits/perform lazy aftercore automation",
-	description = "Also perform other lazy aftercore automation as part of daily visits",
-	group = "automation",
-	default_level = "enthusiast",
-}
+--register_setting {
+--	name = "automate daily visits/perform lazy aftercore automation",
+--	description = "Also perform other lazy aftercore automation as part of daily visits",
+--	group = "automation",
+--	default_level = "enthusiast",
+--}
 
 function setup_automation_scan_page_results()
 	local extracts = {
