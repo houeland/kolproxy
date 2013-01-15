@@ -25,7 +25,7 @@ function get_buff_bonuses()
 		if buffarray[buff] then
 			add_modifier_bonuses(bonuses, buffarray[buff])
 		elseif datafile("buffs")[buff] then
-			add_modifier_bonuses(bonuses, datafile("buffs")[buff].bonuses)
+			add_modifier_bonuses(bonuses, datafile("buffs")[buff].bonuses or {})
 		end
 	end
 	if equipment().weapon == nil and equipment().offhand == nil then -- unarmed
