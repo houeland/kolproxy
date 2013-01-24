@@ -20,7 +20,7 @@ import qualified Data.Digest.Pure.MD5
 import qualified Database.SQLite3
 
 
-kolproxy_version_number = "3.7-prealpha"
+kolproxy_version_number = "3.7-alpha"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 
@@ -41,7 +41,7 @@ read_as str = case reads str of
 read_e x = let y = read_as x in
 	case y of
 		Just z -> z
-		z -> throw $ userError $ ("read_e error: for type " ++ (show $ typeOf y) ++ ": " ++ (show (x, z)))
+		z -> throw $ InternalError $ ("read_e error: for type " ++ (show $ typeOf y) ++ ": " ++ (show (x, z)))
 
 mkuri page = fromJust $ parseURIReference page
 

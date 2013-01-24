@@ -18,8 +18,8 @@ import Data.List
 import Data.Maybe
 import Network.URI
 import Network.CGI
+import System.IO.Error (isUserError, ioeGetErrorString)
 import Text.JSON
-import Text.Printf
 import Text.Regex.TDFA
 import Text.XML.Light
 import qualified Data.ByteString.Char8
@@ -45,14 +45,21 @@ instance Lua.StackValue Data.ByteString.Char8.ByteString where
 
 instance Lua.StackValue JSValue where
 	push l x = push_jsvalue l x
-	peek _l _n = throwIO $ userError $ "ERROR: Attempting to peek a jsvalue from Lua"
+	peek _l _n = throwIO $ LuaError $ "ERROR: Attempting to peek a jsvalue from Lua"
 	valuetype _ = Lua.TTABLE
 
 instance Lua.StackValue Element where
 	push l x = push_simplexmldata l x
-	peek _l _n = throwIO $ userError $ "ERROR: Attempting to peek an Element from Lua"
+	peek _l _n = throwIO $ LuaError $ "ERROR: Attempting to peek an Element from Lua"
 	valuetype _ = Lua.TTABLE
 
+failLua msg = throwIO $ LuaError $ msg
+
+peekJust l idx = do
+	x <- Lua.peek l idx
+	case x of
+		Just v -> return v
+		_ -> failLua $ "Wrong paramater " ++ show idx
 
 get_current_kolproxy_version = return $ kolproxy_version_number :: IO String
 
@@ -64,17 +71,17 @@ get_latest_kolproxy_version = do
 
 set_state ref stateset var value = do
 	canread <- canReadState ref
-	unless canread $ fail $ "Error: Trying to set state \"" ++ var ++ "\" before state is available."
+	unless canread $ failLua $ "Error: Trying to set state \"" ++ var ++ "\" before state is available."
 	if stateset `elem` ["ascension", "day", "fight", "session"]
 		then setState ref stateset var value
-		else fail $ "cannot write to stateset " ++ (show $ stateset)
+		else failLua $ "cannot write to stateset " ++ (show $ stateset)
 
 get_state ref stateset var = do
 	canread <- canReadState ref
-	unless canread $ fail $ "Error: Trying to get state \"" ++ var ++ "\" before state is available."
+	unless canread $ failLua $ "Error: Trying to get state \"" ++ var ++ "\" before state is available."
 	if stateset `elem` ["character", "ascension", "day", "fight", "session"]
 		then fromMaybe "" <$> getState ref stateset var
-		else fail $ "cannot read stateset " ++ (show $ stateset)
+		else failLua $ "cannot read stateset " ++ (show $ stateset)
 
 -- TODO: Check if this is really OK. It's not in valhalla!
 get_ref_playername ref = KoL.Api.charName <$> KoL.Api.getApiInfo ref
@@ -95,24 +102,32 @@ get_state_whenever ref var = do
 
 -- TODO: change to return 0 and not handling it in lua
 get_player_id ref l = do
-	Just name <- Lua.peek l 1
+	name <- peekJust l 1
 	pid <- KoL.Api.getPlayerId name ref
 	Lua.pushstring l =<< case pid of
 		Just x -> return (show x)
 		Nothing -> return "-1"
 	return 1
 
--- TODO: create the table directly in haskell, remove eval from lua code
-parse_table_string _ref l = do
-	Just str <- Lua.peek l 1
-	Lua.pushstring l =<< case read_as str :: Maybe [(String, String)] of
+parse_request_param_string _ref l = do
+	str <- peekJust l 1
+	case read_as str :: Maybe [(String, String)] of
 		Just xs -> do
-			let luaxs = map (\(idx, (x,y)) -> printf "[%d] = { key = %s, value = %s }" (idx :: Integer) (show x) (show y)) (zip [1..] xs)
-			return $ printf "return { %s }" $ intercalate ", " luaxs
-		_ -> do
-			putStrLn $ "parse_table_string error: " ++ (show str)
-			return ""
-	return 1
+			let pushkeyvalue (idx, (x, y)) = do
+				Lua.push l idx
+				Lua.newtable l
+				Lua.push l "key"
+				Lua.push l x
+				Lua.settable l (-3)
+				Lua.push l "value"
+				Lua.push l y
+				Lua.settable l (-3)
+				Lua.settable l (-3)
+
+			Lua.newtable l
+			mapM_ pushkeyvalue (zip ([1..] :: [Integer]) xs)
+			return 1
+		_ -> return 0
 
 get_recipes _ref l = do
 	Lua.pushstring l =<< readFile "cache/data/recipes"
@@ -143,14 +158,14 @@ get_submit_uri_params _ref method inputuristr params = do
 									let testuri = escapeURIString (\x -> x `notElem` "[]") testurienc
 									case parseURIReference testuri of
 										Just uri -> return (show uri, Nothing)
-										_ -> fail $ "submit page error: uri " ++ (show testuri) ++ " not recognized."
+										_ -> failLua $ "submit page error: uri " ++ (show testuri) ++ " not recognized."
 						"POST" -> do
 							case params of
 								Just p -> return (uriPath inputuri, Just p)
-								_ -> fail $ "submit page error: parameters " ++ (show params) ++ " not recognized."
-						_ -> fail $ "submit page error: unknown method " ++ (show method) ++ ", should be GET or POST"
-				_ -> fail $ "submit page error: unknown url " ++ (show inputuri)
-		_ -> fail $ "submit page error: unknown url " ++ (show inputuristr)
+								_ -> failLua $ "submit page error: parameters " ++ (show params) ++ " not recognized."
+						_ -> failLua $ "submit page error: unknown method " ++ (show method) ++ ", should be GET or POST"
+				_ -> failLua $ "submit page error: unknown url " ++ (show inputuri)
+		_ -> failLua $ "submit page error: unknown url " ++ (show inputuristr)
 
 async_submit_page ref method inputuristr params = do
 	(final_url, final_params) <- get_submit_uri_params ref method inputuristr params
@@ -199,6 +214,10 @@ stringobj_tbl_to_jsvalue l = do
 		nonempty <- Lua.next l (-2)
 		if nonempty
 			then do
+				t <- Lua.ltype l (-2)
+				case t of
+					Lua.TSTRING -> return ()
+					_ -> failLua ("JSON object keys must be strings, got type: " ++ show t)
 				k <- Lua.tostring l (-2)
 				v <- lua_to_jsvalue l
 				recur $ initlist ++ [(k, v)]
@@ -227,7 +246,7 @@ lua_to_jsvalue l = do
 		Lua.TNUMBER -> JSRational False <$> toRational <$> Lua.tonumber l (-1)
 		Lua.TBOOLEAN -> JSBool <$> Lua.toboolean l (-1)
 		Lua.TNIL -> return JSNull
-		_ -> fail ("Unhandled type for lua_to_jsvalue: " ++ show t)
+		_ -> failLua ("Unhandled type for lua_to_jsvalue: " ++ show t)
 	Lua.pop l 1
 	return val
 
@@ -248,12 +267,17 @@ push_simplexmldata l xmlval = do
 	Lua.settable l (-3)
 
 push_function l1 f identifier = do
-	Lua.pushhsfunction_raw l1 (\l2 -> (f l2) `catch` (\e -> do
-		putStrLn $ "ERROR: Lua.hs error in " ++ identifier ++ ": " ++ (show e)
-		Lua.pushstring l2 (show (e :: SomeException))
-		return (-1)))
+	let f_final l2 = (catchJust (\e -> if isUserError e then Just e else Nothing)
+		(f l2)
+		(\e -> do
+			putStrLn $ "ERROR: Lua.hs IOerror in " ++ identifier ++ ": " ++ ioeGetErrorString e
+			Lua.pushstring l2 $ "Haskell exception in " ++ identifier ++ " (" ++ ioeGetErrorString e ++ ")"
+			return (-1))) `catch` (\e -> do
+				putStrLn $ "ERROR: Lua.hs error in " ++ identifier ++ ": " ++ (show e)
+				Lua.pushstring l2 $ "Haskell exception in " ++ identifier ++ ": " ++ show (e :: SomeException)
+				return (-1))
 
--- TODO: Just use index 1 and 2, not "key" and "value"?
+	Lua.pushhsfunction_raw l1 f_final
 
 luatbl_to_stringmap l idx = do
 	let get_more = do
@@ -267,7 +291,7 @@ luatbl_to_stringmap l idx = do
 						k <- Lua.tostring l (-2)
 						v <- Data.ByteString.Char8.unpack <$> Lua.tobytestring l (-1)
 						return (k, v)
-					_ -> fail $ "Table keys/values are not strings: " ++ (show $ (t1, t2))
+					_ -> failLua $ "Table keys/values are not strings: " ++ (show $ (t1, t2))
 				Lua.pop l 1
 				more <- get_more
 				return $ (k, v) : more
@@ -286,13 +310,13 @@ parse_keyvalue_luatbl l idx = do
 				tbl <- luatbl_to_stringmap l topidx
 				(k, v) <- case (lookup "key" tbl, lookup "value" tbl) of
 					(Just k, Just v) -> return (k, v)
-					_ -> fail "key or value missing from param table"
+					_ -> failLua "key or value missing from param table"
 				Lua.pop l 1
 				more <- get_more (n + 1)
 				return $ (k, v) : more
 			Lua.TNIL -> return []
 			Lua.TNONE -> return []
-			_ -> fail "Wrong types for params table"
+			_ -> failLua "Wrong types for params table"
 	isnil <- Lua.isnoneornil l idx
 	istbl <- Lua.istable l idx
 	if isnil
@@ -301,7 +325,7 @@ parse_keyvalue_luatbl l idx = do
 			then Just <$> get_more 1
 			else do
 				t <- Lua.ltype l idx
-				fail $ "ERROR: param " ++ show idx ++ " not a table parameter (" ++ show t ++ ")"
+				failLua $ "ERROR: param " ++ show idx ++ " not a table parameter (" ++ show t ++ ")"
 
 show_blocked_page_info ref l = do
 	pwdstr <- KoL.Api.pwd <$> KoL.Api.getApiInfo ref
@@ -317,19 +341,16 @@ submit_page_func ref l = do
 		else do
 			top <- Lua.gettop l
 			if top < 2
-				then fail "Not enough parameters to submit_page"
+				then failLua "Not enough parameters to submit_page"
 				else do
-					m_one <- Lua.peek l 1
-					m_two <- Lua.peek l 2
-					case (m_one, m_two) of
-						(Just one, Just two) -> do
-							params <- parse_keyvalue_luatbl l 3
-							(pt, puri, _hdrs) <- join $ async_submit_page ref one two params
-							Lua.pushbytestring l pt
-							Lua.pushstring l (show puri)
-							lua_log_line ref ("< submit_page_func " ++ (show puri)) (return ())
-							return 2
-						_ -> fail "Wrong parameters to submit_page"
+					one <- peekJust l 1
+					two <- peekJust l 2
+					params <- parse_keyvalue_luatbl l 3
+					(pt, puri, _hdrs) <- join $ async_submit_page ref one two params
+					Lua.pushbytestring l pt
+					Lua.pushstring l (show puri)
+					lua_log_line ref ("< submit_page_func " ++ (show puri)) (return ())
+					return 2
 
 async_submit_page_func ref l1 = do
 	lua_log_line ref "> async_submit_page_func" (return ())
@@ -341,47 +362,41 @@ async_submit_page_func ref l1 = do
 		else do
 			top <- Lua.gettop l1
 			if top < 2
-				then fail "Not enough parameters to async_submit_page"
+				then failLua "Not enough parameters to async_submit_page"
 				else do
-					m_one <- Lua.peek l1 1
-					m_two <- Lua.peek l1 2
-					case (m_one, m_two) of
-						(Just one, Just two) -> do
-							params <- parse_keyvalue_luatbl l1 3
-							f <- async_submit_page ref one two params
-							lua_log_line ref "< async_submit_page_func requested" (return ())
-							push_function l1 (\l2 -> do
-								(pt, puri, _hdrs) <- f
-								lua_log_line ref ("< async_submit_page_func result " ++ (show puri)) (return ())
-								Lua.pushbytestring l2 pt
-								Lua.pushstring l2 (show puri)
-								return 2) "async_submit_page_callback"
-							return 1
-						_ -> fail "Wrong parameters to async_submit_page"
+					one <- peekJust l1 1
+					two <- peekJust l1 2
+					params <- parse_keyvalue_luatbl l1 3
+					f <- async_submit_page ref one two params
+					lua_log_line ref "< async_submit_page_func requested" (return ())
+					push_function l1 (\l2 -> do
+						(pt, puri, _hdrs) <- f
+						lua_log_line ref ("< async_submit_page_func result " ++ (show puri)) (return ())
+						Lua.pushbytestring l2 pt
+						Lua.pushstring l2 (show puri)
+						return 2) "async_submit_page_callback"
+					return 1
 
 
 make_href _ref l = do
-	m_one <- Lua.peek l 1
-	case m_one of
-		Just inputuristr -> do
-			params <- parse_keyvalue_luatbl l 2
-			case parseURIReference inputuristr of	
-				Just inputuri -> do
-					case (stripPrefix "/" (uriPath inputuri), uriQuery inputuri) of
-						(Just _, "") -> do
-							href <- case params of
-								Nothing -> return (show inputuri)
-								Just p -> do
-									let testurienc = (uriPath inputuri) ++ "?" ++ (formEncode p)
-									let testuri = escapeURIString (\x -> x `notElem` "[]") testurienc
-									case parseURIReference testuri of
-										Just uri -> return (show uri)
-										_ -> fail $ "make_href error: uri " ++ (show testuri) ++ " not recognized."
-							Lua.pushstring l href
-							return 1
-						_ -> fail $ "make_href error: unknown url " ++ (show inputuri)
-				_ -> fail $ "make_href error: unknown url " ++ (show inputuristr)
-		_ -> fail "Wrong parameters to make_href"
+	inputuristr <- peekJust l 1
+	params <- parse_keyvalue_luatbl l 2
+	case parseURIReference inputuristr of	
+		Just inputuri -> do
+			case (stripPrefix "/" (uriPath inputuri), uriQuery inputuri) of
+				(Just _, "") -> do
+					href <- case params of
+						Nothing -> return (show inputuri)
+						Just p -> do
+							let testurienc = (uriPath inputuri) ++ "?" ++ (formEncode p)
+							let testuri = escapeURIString (\x -> x `notElem` "[]") testurienc
+							case parseURIReference testuri of
+								Just uri -> return (show uri)
+								_ -> failLua $ "make_href error: uri " ++ (show testuri) ++ " not recognized."
+					Lua.pushstring l href
+					return 1
+				_ -> failLua $ "make_href error: unknown url " ++ (show inputuri)
+		_ -> failLua $ "make_href error: unknown url " ++ (show inputuristr)
 
 -- TODO: parse in lua
 get_fallback_choicespoilers _ref l = do
@@ -427,16 +442,13 @@ get_pulverize_groups _ref l = do
 	return 1
 
 get_api_itemid_info ref l1 = do
-	m_id <- Lua.peek l1 1 :: IO (Maybe Int)
-	case m_id of
-		Just itemid -> do
-			f <- KoL.Api.asyncGetItemInfoObj itemid ref
-			let callback_f l2 = do
-				push_jsvalue l2 =<< f
-				return 1
-			push_function l1 callback_f "get_api_itemid_info_callback"
-			return 1
-		_ -> return 0
+	itemid <- peekJust l1 1
+	f <- KoL.Api.asyncGetItemInfoObj (itemid :: Int) ref
+	let callback_f l2 = do
+		push_jsvalue l2 =<< f
+		return 1
+	push_function l1 callback_f "get_api_itemid_info_callback"
+	return 1
 
 setup_lua_instance level filename setupref = do
 	(l, c) <- log_time_interval setupref ("setup lua: " ++ filename) $ do
@@ -462,7 +474,7 @@ setup_lua_instance level filename setupref = do
 			return 1
 
 		register_function "json_to_table" $ \_ref l -> do
-			Just jsonstr <- Lua.peek l 1
+			jsonstr <- peekJust l 1
 			let Ok jsonobj = decodeStrict jsonstr
 			push_jsvalue l jsonobj
 			return 1
@@ -473,7 +485,7 @@ setup_lua_instance level filename setupref = do
 			return 1
 
 		register_function "simplexmldata_to_table" $ \_ref l -> do
-			Just xmlstr <- Lua.peek l 1
+			xmlstr <- peekJust l 1
 			let Just xmldoc = parseXMLDoc (xmlstr :: String)
 			push_simplexmldata l xmldoc
 			return 1
@@ -500,7 +512,7 @@ setup_lua_instance level filename setupref = do
 			isok <- log_time_interval ref ("lua:" ++ desc) $ Lua.pcall l 0 Lua.multret 0
 			case isok of
 				0 -> fromIntegral <$> Lua.gettop l
-				_ -> throwIO =<< userError <$> Lua.tostring l (-1)
+				_ -> throwIO =<< LuaError <$> Lua.tostring l (-1)
 
 		register_function "can_read_state" $ \ref l -> do
 			x <- canReadState ref
@@ -517,7 +529,7 @@ setup_lua_instance level filename setupref = do
 			writeIORef (blocking_lua_scripting ref) True
 			return 0
 
-		register_function "parse_table_string" parse_table_string
+		register_function "parse_request_param_string" parse_request_param_string
 
 		register_function "get_recipes" get_recipes
 
@@ -568,11 +580,11 @@ setup_lua_instance level filename setupref = do
 					Lua.setglobal l "kolproxy_stored_wrapped_function"
 					return $ Right l
 				_ -> do
-					putStrLn $ "lua error!"
+					putStrLn $ "lualoadcall error!"
 					top <- Lua.gettop l
-					putStrLn $ "lua error, top = " ++ (show top)
+					putStrLn $ "lualoadcall error, top = " ++ (show top)
 					err <- Lua.tostring l (-1)
-					putStrLn $ "lua error: " ++ err
+					putStrLn $ "lualoadcall error: " ++ err
 					Lua.getglobal l "kolproxy_debug_traceback" -- load traceback on stack=3
 					traceback <- Lua.tostring l 3
 					putStrLn $ "traceback: " ++ traceback
@@ -718,6 +730,10 @@ runInterceptScript ref uri allparams reqtype = do
 		Right xs -> Left ("Lua intercept call error, return values = " ++ (show xs), "")
 		Left err -> Left err
 
+runBotScript {-ref-} _code = do
+--	setup_lua_instance level filename setupref
+	return ()
+
 runLogParsingScript log_db = do
 	code <- readFile "scripts/parselog.lua"
 	runLogScript log_db code
@@ -731,7 +747,7 @@ runLogScript log_db code = do
 		Lua.setglobal lstate name
 
 	register_function "json_to_table" $ \l -> do
-		Just jsonstr <- Lua.peek l 1
+		jsonstr <- peekJust l 1
 		let Ok jsonobj = decodeStrict jsonstr
 		push_jsvalue l jsonobj
 		return 1
@@ -754,9 +770,9 @@ runLogScript log_db code = do
 		return 1
 
 	register_function "get_line_text" $ \l -> do
-		Just whichidx <- Lua.peek l 1 :: IO (Maybe Int)
-		Just whichfield <- Lua.peek l 2
-		s <- Database.SQLite3.prepare log_db ("SELECT " ++ whichfield ++ " FROM pageloads WHERE idx == " ++ show whichidx ++ ";") -- TODO: make safe?
+		whichidx <- peekJust l 1
+		whichfield <- peekJust l 2
+		s <- Database.SQLite3.prepare log_db ("SELECT " ++ whichfield ++ " FROM pageloads WHERE idx == " ++ show (whichidx :: Int) ++ ";") -- TODO: make safe?
 		sr <- Database.SQLite3.step s
 		retvals <- case sr of
 			Database.SQLite3.Row -> do
@@ -771,8 +787,8 @@ runLogScript log_db code = do
 		return retvals
 
 	register_function "get_line_allparams" $ \l -> do
-		Just whichidx <- Lua.peek l 1 :: IO (Maybe Int)
-		s <- Database.SQLite3.prepare log_db ("SELECT requestedurl, retrievedurl, parameters FROM pageloads WHERE idx == " ++ show whichidx ++ ";")
+		whichidx <- peekJust l 1
+		s <- Database.SQLite3.prepare log_db ("SELECT requestedurl, retrievedurl, parameters FROM pageloads WHERE idx == " ++ show (whichidx :: Int) ++ ";")
 		sr <- Database.SQLite3.step s
 		retvals <- case sr of
 			Database.SQLite3.Row -> do
@@ -794,22 +810,19 @@ runLogScript log_db code = do
 
 	loginforef <- newIORef Nothing
 	register_function "set_log_info" $ \l -> do
-		Just playerid <- Lua.peek l 1
-		Just charname <- Lua.peek l 2
-		Just ascnum <- Lua.peek l 3
-		Just secretkey <- Lua.peek l 4
+		playerid <- peekJust l 1
+		charname <- peekJust l 2
+		ascnum <- peekJust l 3
+		secretkey <- peekJust l 4
 		writeIORef loginforef $ Just (fromIntegral (playerid :: Int) :: Integer, charname :: String, fromIntegral (ascnum :: Int) :: Integer, get_md5 $ secretkey)
 		return 0
 
 	register_function "get_url_path" $ \l -> do
-		m_url <- Lua.peek l 1
-		case m_url of
-			Just urlstr -> do
-				case parseURIReference urlstr of
-					Just uri -> do
-						Lua.pushstring l (uriPath uri)
-						return 1
-					_ -> return 0
+		urlstr <- peekJust l 1
+		case parseURIReference urlstr of
+			Just uri -> do
+				Lua.pushstring l (uriPath uri)
+				return 1
 			_ -> return 0
 
 	let l = lstate
@@ -829,11 +842,11 @@ runLogScript log_db code = do
 			putStrLn $ "json length: " ++ (show $ length $ jsonstr)
 			return jsonstr
 		_ -> do
-			putStrLn $ "lua error!"
+			putStrLn $ "lualog error!"
 			top <- Lua.gettop l
-			putStrLn $ "lua error, top = " ++ (show top)
+			putStrLn $ "lualog error, top = " ++ (show top)
 			err <- Lua.tostring l (-1)
-			putStrLn $ "lua error: " ++ err
+			putStrLn $ "lualog error: " ++ err
 			Lua.getglobal l "kolproxy_debug_traceback" -- load traceback on stack=3
 			traceback <- Lua.tostring l 3
 			putStrLn $ "traceback: " ++ traceback
@@ -856,7 +869,7 @@ run_datafile_parsers = do
 		Lua.setglobal lstate name
 
 	register_function "json_to_table" $ \l -> do
-		Just jsonstr <- Lua.peek l 1
+		jsonstr <- peekJust l 1
 		let Ok jsonobj = decodeStrict jsonstr
 		push_jsvalue l jsonobj
 		return 1
@@ -867,7 +880,7 @@ run_datafile_parsers = do
 		return 1
 
 	register_function "simplexmldata_to_table" $ \l -> do
-		Just xmlstr <- Lua.peek l 1
+		xmlstr <- peekJust l 1
 		let Just xmldoc = parseXMLDoc (xmlstr :: String)
 		push_simplexmldata l xmldoc
 		return 1
@@ -881,21 +894,21 @@ run_datafile_parsers = do
 	-- TODO: Check that it loads correctly?
 
 	when (c /= 0) $ do
-		putStrLn $ "luaload error!"
+		putStrLn $ "luadatafileload error!"
 		top <- Lua.gettop lstate
-		putStrLn $ "luaload error, top = " ++ (show top)
+		putStrLn $ "luadatafileload error, top = " ++ (show top)
 		err <- Lua.tostring lstate (-1)
-		putStrLn $ "luaload error: " ++ err
+		putStrLn $ "luadatafileload error: " ++ err
 
 	retcode <- Lua.pcall lstate 0 Lua.multret 1 -- returns on stack=2+
 	case retcode of
 		0 -> Lua.close lstate
 		_ -> do
-			putStrLn $ "lua error!"
+			putStrLn $ "luadatafile error!"
 			top <- Lua.gettop lstate
-			putStrLn $ "lua error, top = " ++ (show top)
+			putStrLn $ "luadatafile error, top = " ++ (show top)
 			err <- Lua.tostring lstate (-1)
-			putStrLn $ "lua error: " ++ err
+			putStrLn $ "luadatafile error: " ++ err
 			Lua.getglobal lstate "kolproxy_debug_traceback" -- load traceback on stack=3
 			traceback <- Lua.tostring lstate 3
 			putStrLn $ "traceback: " ++ traceback

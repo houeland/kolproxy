@@ -481,7 +481,9 @@ multiuse -> multiuse
 
 	pagetext = run(p, pagetext)
 
-	pagetext = run("all pages", pagetext)
+	if (p ~= "/charpane.php") then
+		pagetext = run("all pages", pagetext)
+	end
 
 	return pagetext
 end

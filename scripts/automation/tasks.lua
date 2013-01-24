@@ -1,5 +1,7 @@
 __allow_global_writes = true
 
+local previous_twin_peak_noncombat_pagetext = nil
+
 function get_automation_tasks(script, cached_stuff)
 	local t = {}
 	local task = t
@@ -449,7 +451,7 @@ mark m_done
 					}
 				}
 			end
-		else
+		elseif quest_text("need to solve the mystery of Twin Peak") then
 -- 			-- TODO: boost item drops & noncombats, sniff either topiary
 -- 			-- TODO: ensure 4+ stench resistance
 -- 			-- TODO: one choice adv
@@ -462,7 +464,65 @@ mark m_done
 -- 			-- TODO: one choice adv
 -- 			-- TODO: ensure combat init +40%
 -- 			-- TODO: one choice adventure
-			stop "TODO: solve twin peak mystery"
+
+			if session["__script.automate twin peak"] == "yes" then
+				return {
+					message = "solve twin peak mystery",
+					fam = "Slimeling",
+					buffs = { "Fat Leon's Phat Loot Lyric", "Astral Shell", "Elemental Saucesphere" },
+					minmp = 50,
+					action = function()
+						if get_resistance_levels().stench < 4 and not have_buff("Red Door Syndrome") then
+							script.ensure_buffs { "Red Door Syndrome" }
+						end
+						if get_resistance_levels().stench < 4 then
+							switch_familiarid(72)
+						end
+						return autoadventure { zoneid = 297, macro = macro_noodlecannon(), noncombatchoices = nil, specialnoncombatfunction = function(advtitle, choicenum, pagetext)
+							if advtitle == "Welcome to the Great Overlook Lodge" then
+								return "", 1
+							elseif advtitle == "Lost in the Great Overlook Lodge" then
+								for _, x in ipairs { "Investigate Room 237", "Search the pantry", "Follow the faint sound of music", "Wait -- who's that?" } do
+									if pagetext:contains(x) then
+										if pagetext == previous_twin_peak_noncombat_pagetext then
+											stop "Failed to make progress in Twin Peak"
+										end
+										previous_twin_peak_noncombat_pagetext = pagetext
+										return x
+									end
+								end
+							else
+								return "", 1
+							end
+						end, ignorewarnings = true }
+					end
+				}
+			else
+				return {
+					message = "check twin peak requirements",
+					action = function()
+						if not have_item("jar of oil") then
+							use_item("bubblin' crude", 12)
+						end
+						script.ensure_buffs { "Fat Leon's Phat Loot Lyric", "Astral Shell", "Elemental Saucesphere" }
+						if get_resistance_levels().stench < 4 and not have_buff("Red Door Syndrome") then
+							script.ensure_buffs { "Red Door Syndrome" }
+						end
+						if get_resistance_levels().stench < 4 then
+							switch_familiarid(72)
+						end
+						if familiarid() ~= 72 then
+							switch_familiarid(1)
+						end
+						if get_resistance_levels().stench >= 4 and (familiarid() == 1 or familiarid() == 72) and estimate_modifier_bonuses().item >= 50 and have_item("jar of oil") and estimate_modifier_bonuses().initiative >= 40 then
+							session["__script.automate twin peak"] = "yes"
+							did_action = true
+						else
+							stop "TODO: solve twin peak mystery"
+						end
+					end
+				}
+			end
 		end
 	end
 

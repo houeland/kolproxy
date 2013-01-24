@@ -151,16 +151,11 @@ function str_to_table(str) -- TODO: redo properly!
 end
 
 function parse_params_raw(str)
-	local loadstr = parse_table_string(str)
-	if loadstr == "" then
+	local tbl = parse_request_param_string(str)
+	if table.maxn(tbl) == 0 then
 		return nil
 	else
-		local tbl = assert(loadstring(loadstr))()
-		if table.maxn(tbl) == 0 then
-			return nil
-		else
-			return tbl
-		end
+		return tbl
 	end
 end
 

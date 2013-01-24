@@ -76,9 +76,6 @@ local function automate_dis_zone(zoneid)
 		macro = macro_dis(),
 		noncombatchoices = noncombatchoices,
 	}
--- 						local pt, url = get_page("/cobbsknob.php", { action = "throneroom" })
--- 						result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_fist())
--- 						did_action = advagain
 end
 
 local folios_used = 0

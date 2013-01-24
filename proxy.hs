@@ -20,6 +20,7 @@ import Data.Maybe
 import Data.Time
 import Network.URI
 import System.Directory (doesFileExist, createDirectoryIfMissing)
+import System.Environment (getArgs)
 import System.IO
 import qualified Data.ByteString.Char8
 import qualified Data.Map
@@ -251,19 +252,15 @@ kolProxyHandler uri params baseref = do
 			handleRequest origref uri uri [] params (Data.ByteString.Char8.pack "Empty page.")
 
 		"/kolproxy-automation-script" -> check_pwd_for $ do
-			runauto <- getState origref "character" "setting: run automation scripts"
-			if runauto == Just "no/HACK:DISABLED"
-				then makeResponse (Data.ByteString.Char8.pack "Automation is currently disabled (scripts are not allowed to download pages). Go to the kolproxy settings to change it.") uri []
-				else do
-					(pt, effuri, hdrs) <- do
-						let reqtype = if isJust params then "POST" else "GET"
-						zz <- runInterceptScript origref uri allparams reqtype
-						case zz of
-							Right (text, effuri) -> return (text, effuri, [])
-							Left (msg, trace) -> do
-								putStrLn $ "intercept.lua error: " ++ msg ++ "\n" ++ trace
-								return (add_error_message_to_page ("intercept.lua error: " ++ msg ++ "\n" ++ trace) (Data.ByteString.Char8.pack "{ Kolproxy automation script. }"), mkuri "/error", [])
-					handleRequest origref uri effuri hdrs params pt
+			(pt, effuri, hdrs) <- do
+				let reqtype = if isJust params then "POST" else "GET"
+				zz <- runInterceptScript origref uri allparams reqtype
+				case zz of
+					Right (text, effuri) -> return (text, effuri, [])
+					Left (msg, trace) -> do
+						putStrLn $ "intercept.lua error: " ++ msg ++ "\n" ++ trace
+						return (add_error_message_to_page ("intercept.lua error: " ++ msg ++ "\n" ++ trace) (Data.ByteString.Char8.pack "{ Kolproxy automation script. }"), mkuri "/error", [])
+			handleRequest origref uri effuri hdrs params pt
 		_ -> Nothing
 
 	let getpage = join $ (processPage origref) origref uri params
@@ -291,11 +288,7 @@ kolProxyHandler uri params baseref = do
 			when (uriPath uri == "/logout.php" && canread_before) $ storeSettingsOnServer origref "logging out"
 
 			-- TODO: redo this stuff. Simple case is when we're connected both before and after
-			should_run_intercept_script <- if canread_before
-				then do
-					x <- getState origref "character" "setting: run automation scripts"
-					return $ x /= Just "no/HACK:DISABLED"
-				else return False
+			let should_run_intercept_script = canread_before
 
 			downloaded_page <- if should_run_intercept_script
 				then do
@@ -316,11 +309,7 @@ kolProxyHandler uri params baseref = do
 						else log_time_interval _fake_log_ref ("make ref-2 for: " ++ (show uri)) $ make_ref baseref
 					canread_after <- canReadState newref
 -- 					putStrLn $ "canread_after: " ++ show (uri, canread_after)
-					should_run_automate_script <- if canread_after
-						then do
-							x <- getState newref "character" "setting: run automation scripts"
-							return $ x /= Just "no/HACK:DISABLED"
-						else return False
+					let should_run_automate_script = canread_after
 					x <- if should_run_automate_script
 						then do
 							y <- log_time_interval newref ("automating: " ++ (show uri)) $ runAutomateScript newref uri effuri pt allparams
@@ -337,8 +326,7 @@ kolProxyHandler uri params baseref = do
 				Right (pt, effuri, _hdrs) -> log_time_interval newref ("run handle request for: " ++ (show uri)) $ handleRequest newref uri effuri [] params pt
 	return retresp
 
-main = platform_init $ do
-	hSetBuffering stdout LineBuffering
+runKolproxy = do
 	have_process_page <- doesFileExist "scripts/process-page.lua"
 	if have_process_page
 		then do
@@ -359,4 +347,15 @@ main = platform_init $ do
 		Just x -> fromJust $ read_as x :: Integer
 		Nothing -> 18481
 	runProxyServer kolProxyHandler kolProxyHandlerWhenever portnum `catch` (\e -> putStrLn ("mainError: " ++ show (e :: Control.Exception.SomeException)))
-	putStrLn $ "Done! (main finished)"
+
+main = platform_init $ do
+	hSetBuffering stdout LineBuffering
+	args <- getArgs
+	case args of
+		[] -> runKolproxy
+		["--runbotscript", botscriptfilename] -> do
+			botscriptcode <- readFile botscriptfilename
+			runBotScript botscriptcode
+		_ -> do
+			putStrLn $ "ERROR: Unsupported command-line options!"
+	putStrLn $ "INFO: Done! (main finished)"

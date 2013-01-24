@@ -28,6 +28,8 @@ function add_modifier_bonuses(target, source)
 	for a, b in pairs(source) do
 		if b == "?" then
 			target[a .. "_unknown"] = true
+		elseif b == true then
+			target[a] = true
 		else
 			target[a] = (target[a] or 0) + b
 		end

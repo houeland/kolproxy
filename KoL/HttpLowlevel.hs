@@ -103,7 +103,7 @@ instance ConnFunctionsBundle (MVar SslConn) Data.ByteString.ByteString where
 		let newconn = conn { sslconn_sendBuffer = [] }
 		return (newconn, ())
 
-	connGetContents _mvconn = throwIO $ userError "SslConn:connGetContents should not be called"
+	connGetContents _mvconn = throwIO $ InternalError "SslConn:connGetContents should not be called"
 
 read_till_empty conn = do
 	x <- connGetLine conn
@@ -317,7 +317,7 @@ kolproxy_openTCPConnection server = do
 			let a = Network.Socket.SockAddrInet (toEnum portnum) hostA
 			Network.Socket.connect s a
 --			r <- randomRIO (1, 100 :: Integer)
---			when (r < 10) $ throwIO $ userError $ "faked random connection error!"
+--			when (r < 10) $ throwIO $ NetworkError $ "faked random connection error!"
 			h <- Network.Socket.socketToHandle s ReadWriteMode
 			return h
 	where
@@ -330,11 +330,11 @@ kolproxy_openTCPConnection server = do
 				(\ _ -> do
 					hostN <- getHostByName_safe hostname
 					case Network.BSD.hostAddresses hostN of
-						[]     -> fail ("openTCPConnection: no addresses in host entry for " ++ show h)
+						[]     -> throwIO $ NetworkError $ ("openTCPConnection: no addresses in host entry for " ++ show h)
 						(ha:_) -> return ha)
 		getHostByName_safe h = 
 			catchIO (Network.BSD.getHostByName h)
-				(\ _ -> fail ("openTCPConnection: host lookup failure for " ++ show h))
+				(\ _ -> throwIO $ NetworkError $ ("openTCPConnection: host lookup failure for " ++ show h))
 
 mkconnthing server = do
 	-- TODO: merge stale-check and max-requests-check?
@@ -354,7 +354,7 @@ mkconnthing server = do
 							what <- try $ ((do
 								rsp <- log_time_interval_http ref "HTTP head" $ getResponseHead c -- fails to read from mafia because mafia terminates with LF instead of CRLF. Is this still true?
 --								r <- randomRIO (1, 100 :: Integer)
---								when (r < 5) $ throwIO $ userError $ "faked random read error!"
+--								when (r < 5) $ throwIO $ NetworkError $ "faked random read error!"
 								Right resp <- log_time_interval_http ref "HTTP body" $ switchResponse c True False rsp rq
 -- 								putStrLn $ "DEBUG: HTTP lowlevel GOT " ++ (show absuri) ++ " (" ++ show req_nr ++ ")"
 -- 								putStrLn $ "DEBUG: resp: " ++ show resp
@@ -414,7 +414,7 @@ mkconnthing server = do
 						connPut c (show rq)
 						connPut c (Data.ByteString.Char8.unpack $ rqBody rq)
 --						r <- randomRIO (1, 100 :: Integer)
---						when (r < 5) $ throwIO $ userError $ "faked random write error!"
+--						when (r < 5) $ throwIO $ NetworkError $ "faked random write error!"
 						connFlush c -- Maybe TODO???: only flush when done requesting???
 					else do
 -- 						putStrLn $ "DEBUG: waiting with request for " ++ show (rqURI rq) ++ " (" ++ show req_nr ++ ")"

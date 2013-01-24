@@ -239,9 +239,9 @@ end)
 
 -- battlefield
 
-function increase_battlefield_kill_counter(side, amount)
+function increase_battlefield_kill_counter(side, amount, minamount)
 	local killrange = ascension["battlefield.kills." .. side] or { min = 0, max = 0 }
-	local min_add = 0
+	local min_add = minamount or 0
 	local max_add = amount
 	if amount > 1 then -- Got a message, so the kill definitely counts
 		min_add = amount
@@ -251,105 +251,168 @@ function increase_battlefield_kill_counter(side, amount)
 	ascension["battlefield.kills." .. side] = killrange
 end
 
+local war_hippies = {
+	["Bailey's Beetle"] = true,
+	["Green Ops Soldier"] = true,
+	["Mobile Armored Sweat Lodge"] = true,
+	["War Hippy Airborne Commander"] = true,
+	["War Hippy Baker"] = true,
+	["War Hippy Dread Squad"] = true,
+	["War Hippy Elder Shaman"] = true,
+	["War Hippy Elite Fire Spinner"] = true,
+	["War Hippy Elite Rigger"] = true,
+	["War Hippy Fire Spinner"] = true,
+	["War Hippy F.R.O.G."] = true,
+	["War Hippy Green Gourmet"] = true,
+	["War Hippy Homeopath"] = true,
+	["War Hippy Infantryman"] = true,
+	["War Hippy Naturopathic Homeopath"] = true,
+	["War Hippy Rigger"] = true,
+	["War Hippy Shaman"] = true,
+	["War Hippy Sky Captain"] = true,
+	["War Hippy Windtalker"] = true,
+	["C.A.R.N.I.V.O.R.E. Operative"] = true,
+	["Glass of Orange Juice"] = true,
+	["Neil"] = true,
+	["Slow Talkin' Elliot"] = true,
+	["Zim Merman"] = true,
+	["The Big Wisniewski"] = true,
+}
+
+local frat_warriors = {
+	["Beer Bongadier"] = true,
+	["Sorority Nurse"] = true,
+	["Sorority Operator"] = true,
+	["War Frat 110th Infantryman"] = true,
+	["War Frat 151st Infantryman"] = true,
+	["War Frat 500th Infantrygentleman"] = true,
+	["War Frat Wartender"] = true,
+	["War Frat Grill Sergeant"] = true,
+	["War Frat Kegrider"] = true,
+	["Elite Beer Bongadier"] = true,
+	["Naughty Sorority Nurse"] = true,
+	["Heavy Kegtank"] = true,
+	["Panty Raider Frat Boy"] = true,
+	["War Frat Elite 110th Captain"] = true,
+	["War Frat 151st Captain"] = true,
+	["War Frat Elite 500th Captain"] = true,
+	["War Frat Elite Wartender"] = true,
+	["War Frat Mobile Grill Unit"] = true,
+	["War Frat Senior Grill Sergeant"] = true,
+	["War Frat Streaker"] = true,
+	["Brutus, the Toga-Clad Lout"] = true,
+	["Danglin' Chad"] = true,
+	["Monty Basingstoke-Pratt, IV"] = true,
+	["Next-Generation Frat Boy"] = true,
+	["The Man"] = true,
+}
+
+local frat_kill_messages = {
+	["You see one of your frat brothers take out an M.C. Escher drawing"] = 1,
+	["You see a hippy loading his didgeridooka, but before he can fire it,"] = 1,
+	["hippy take one bite too many from a big plate of brownies, then curl up to take a nap."] = 1,
+	["You see a hippy a few paces away suddenly realize that he's violating his deeply held pacifist beliefs,"] = 1,
+	["You look over and see a fellow frat brother garotting a hippy shaman with the hippy's own dreadlocks."] = 1,
+	["You glance over and see one of your frat brothers hosing down a hippy with soapy water."] = 1,
+	["You glance out over the battlefield and see a hippy from the F.R.O.G. division get the hiccups"] = 1,
+	["sneeze midway through making a bomb, inadvertently turning himself"] = 1,
+	["You see a frat boy hose down a hippy Airborne Commander with sugar water."] = 1,
+	["You see one of your frat brothers paddling a hippy who seems to be enjoying it."] = 1,
+	["As the hippy falls, you see a hippy a few yards away clutch his chest and fall over, too."] = 1,
+
+	["You see a War Frat Grill Sergeant hose down three hippies with"] = 3,
+	["As you finish your fight, you see a nearby Wartender mixing up a cocktail of vodka and pain for a trio of charging hippies."] = 3,
+	["You see one of your frat brothers douse a trio of nearby hippies in cheap aftershave."] = 3,
+	["You see one of your frat brothers line up three hippies for simultaneous paddling."] = 3,
+	["Some mercenaries drive up, shove three hippies into their bitchin' meat car,"] = 3,
+	["As you deliver the finishing blow, you see a frat boy lob a sake bomb into a trio of nearby hippies."] = 3,
+
+	["You see one of your Beer Bongadier frat brothers use a complicated beer bong to spray cheap, skunky beer on a whole squad of hippies at once."] = 7,
+	["You glance over and see one of the Roaring Drunks from the 151st Division overturning a mobile sweat lodge in a berserker rage."] = 7,
+	["You see one of your frat brothers punch an F.R.O.G. in the solar plexus, then aim the subsequent exhale"] = 7,
+	["You see a Grillmaster flinging hot kabobs as fast as he can make them."] = 7,
+
+	["A streaking frat boy runs past a nearby funk of hippies."] = 15,
+	["You see one of the Fortunate 500 call in an air strike."] = 15,
+	["You look over and see a platoon of frat boys round up a funk of hippies and take them prisoner."] = 15,
+	["You see a kegtank and a mobile sweat lodge facing off in the distance."] = 15,
+
+	["You see an entire regiment of hippies throw down their arms"] = 31,
+	["You see a squadron of police cars drive up,"] = 31,
+	["You see a kegtank rumble through the battlefield,"] = 31,
+
+	["You see a couple of frat boys attaching big, long planks of wood to either side of a kegtank."] = 63,
+	["Several SWAT vans of police in full riot gear pull up, and one of them informs the hippies through a megaphone"] = 63,
+	["You see a couple of frat boys stick a fuse into a huge wooden barrel, light the fuse, and roll it down the hill"] = 63,
+}
+
+local hippy_kill_messages = {
+	["You look over and see a fellow hippy warrior using his dreadlocks to garotte a frat warrior."] = 1,
+	["You see a Green Gourmet give a frat boy a plate of herbal brownies."] = 1,
+	["Elsewhere on the battlefield, you see a fellow hippy grab a frat warrior's paddle"] = 1,
+	["You see a Grill Sergeant pour too much lighter fluid on his grill"] = 1,
+	["You see a Fire Spinner blow a gout of flame onto a Grill Sergeant's grill"] = 1,
+	["Nearby, you see one of your sister hippies explaining the rules of Ultimate Frisbee"] = 1,
+	["You see a member of the frat boy's 151st division pour himself a stiff drink,"] = 1,
+	["You glance over your shoulder and see a squadron of winged ferrets descend on a frat warrior,"] = 1,
+	["You see a hippy shaman casting a Marxist spell over a member"] = 1,
+	["You see a frat boy warrior pound a beer, smash the can against his forehead,"] = 1,
+	["You see an F.R.O.G. crunch a bulb of garlic in his teeth and breathe all over"] = 1,
+
+	["vines sprout from a War Hippy Shaman's dreads and entangle three attacking frat boy warriors."] = 3,
+	["Nearby, you see an Elite Fire Spinner take down three frat boys"] = 3,
+	["You look over and see three ridiculously drunk members of the 151st Division"] = 3,
+	["You see a member of the Fortunate 500 take a phone call, hear him holler something about a stock market crash,"] = 3,
+	["Over the next hill, you see three frat boys abruptly vanish into a cloud of green smoke."] = 3,
+	["You hear excited chittering overhead, and look up to see a squadron of winged ferrets"] = 3,
+
+	["Nearby, a War Hippy Elder Shaman nods almost imperceptibly."] = 7,
+	["You leap out of the way of a runaway Mobile Sweat Lodge, then watch it run over"] = 7,
+	["A few yards away, one of the Jerry's Riggers hippies detonates a bomb underneath a Grill Sergeant's grill."] = 7,
+	["You look over and see one of Jerry's Riggers placing land mines he made out of paperclips,"] = 7,
+
+	["You turn to see a nearby War Hippy Elder Shaman making a series of complex hand gestures."] = 15,
+	["You see a platoon of charging frat boys get mowed down by a hippy."] = 15,
+	["You look over and see a funk of hippies round up a bunch of frat boys to take as prisoners of war."] = 15,
+	["Nearby, a platoon of frat boys is rocking a mobile sweat lodge back and forth, trying to tip it over."] = 15,
+
+	["A mobile sweat lodge rumbles into a regiment of frat boys and the hippies inside open all of its vents simultaneously."] = 31,
+	["You see a squadron of police cars drive up, and a squad of policemen arrest an entire regiment of frat boys."] = 31,
+	["frat boys decide they're tired of drinking non-alcoholic beer and tired of not hitting on chicks,"] = 31, -- buggy/typoed server message, so skipping first part
+
+	["You see an airborne commander trying out a new strategy: she mixes a tiny bottle of rum she found on one of the frat boy casualties"] = 63,
+	["You see a couple of hippies rigging a mobile sweat lodge with a public address system."] = 63,
+	["You see an elder hippy shaman close her eyes, clench her fists, and start to chant."] = 63,
+}
+
+
 add_processor("/fight.php", function()
-	frat_kills = {
-		[ [[You see one of your frat brothers take out an M.C. Escher drawing]] ] = 1,
-		[ [[You see a hippy loading his didgeridooka, but before he can fire it,]] ] = 1,
-		[ [[hippy take one bite too many from a big plate of brownies, then curl up to take a nap.]] ] = 1,
-		[ [[You see a hippy a few paces away suddenly realize that he's violating his deeply held pacifist beliefs,]] ] = 1,
-		[ [[You look over and see a fellow frat brother garotting a hippy shaman with the hippy's own dreadlocks.]] ] = 1,
-		[ [[You glance over and see one of your frat brothers hosing down a hippy with soapy water.]] ] = 1,
-		[ [[You glance out over the battlefield and see a hippy from the F.R.O.G. division get the hiccups]] ] = 1,
-		[ [[sneeze midway through making a bomb, inadvertently turning himself]] ] = 1,
-		[ [[You see a frat boy hose down a hippy Airborne Commander with sugar water.]] ] = 1,
-		[ [[You see one of your frat brothers paddling a hippy who seems to be enjoying it.]] ] = 1,
-		[ [[As the hippy falls, you see a hippy a few yards away clutch his chest and fall over, too.]] ] = 1,
-
-		[ [[You see a War Frat Grill Sergeant hose down three hippies with]] ] = 3,
-		[ [[As you finish your fight, you see a nearby Wartender mixing up a cocktail of vodka and pain for a trio of charging hippies.]] ] = 3,
-		[ [[You see one of your frat brothers douse a trio of nearby hippies in cheap aftershave.]] ] = 3,
-		[ [[You see one of your frat brothers line up three hippies for simultaneous paddling.]] ] = 3,
-		[ [[Some mercenaries drive up, shove three hippies into their bitchin' meat car,]] ] = 3,
-		[ [[As you deliver the finishing blow, you see a frat boy lob a sake bomb into a trio of nearby hippies.]] ] = 3,
-
-		[ [[You see one of your Beer Bongadier frat brothers use a complicated beer bong to spray cheap, skunky beer on a whole squad of hippies at once.]] ] = 7,
-		[ [[You glance over and see one of the Roaring Drunks from the 151st Division overturning a mobile sweat lodge in a berserker rage.]] ] = 7,
-		[ [[You see one of your frat brothers punch an F.R.O.G. in the solar plexus, then aim the subsequent exhale]] ] = 7,
-		[ [[You see a Grillmaster flinging hot kabobs as fast as he can make them.]] ] = 7,
-
-		[ [[A streaking frat boy runs past a nearby funk of hippies.]] ] = 15,
-		[ [[You see one of the Fortunate 500 call in an air strike.]] ] = 15,
-		[ [[You look over and see a platoon of frat boys round up a funk of hippies and take them prisoner.]] ] = 15,
-		[ [[You see a kegtank and a mobile sweat lodge facing off in the distance.]] ] = 15,
-
-		[ [[You see an entire regiment of hippies throw down their arms]] ] = 31,
-		[ [[You see a squadron of police cars drive up,]] ] = 31,
-		[ [[You see a kegtank rumble through the battlefield,]] ] = 31,
-
-		[ [[You see a couple of frat boys attaching big, long planks of wood to either side of a kegtank.]] ] = 63,
-		[ [[Several SWAT vans of police in full riot gear pull up, and one of them informs the hippies through a megaphone]] ] = 63,
-		[ [[You see a couple of frat boys stick a fuse into a huge wooden barrel, light the fuse, and roll it down the hill]] ] = 63,
-	}
-
-	hippy_kills = {
-		[ [[You look over and see a fellow hippy warrior using his dreadlocks to garotte a frat warrior.]] ] = 1,
-		[ [[You see a Green Gourmet give a frat boy a plate of herbal brownies.]] ] = 1,
-		[ [[Elsewhere on the battlefield, you see a fellow hippy grab a frat warrior's paddle]] ] = 1,
-		[ [[You see a Grill Sergeant pour too much lighter fluid on his grill]] ] = 1,
-		[ [[You see a Fire Spinner blow a gout of flame onto a Grill Sergeant's grill]] ] = 1,
-		[ [[Nearby, you see one of your sister hippies explaining the rules of Ultimate Frisbee]] ] = 1,
-		[ [[You see a member of the frat boy's 151st division pour himself a stiff drink,]] ] = 1,
-		[ [[You glance over your shoulder and see a squadron of winged ferrets descend on a frat warrior,]] ] = 1,
-		[ [[You see a hippy shaman casting a Marxist spell over a member]] ] = 1,
-		[ [[You see a frat boy warrior pound a beer, smash the can against his forehead,]] ] = 1,
-		[ [[You see an F.R.O.G. crunch a bulb of garlic in his teeth and breathe all over]] ] = 1,
-
-		[ [[vines sprout from a War Hippy Shaman's dreads and entangle three attacking frat boy warriors.]] ] = 3,
-		[ [[Nearby, you see an Elite Fire Spinner take down three frat boys]] ] = 3,
-		[ [[You look over and see three ridiculously drunk members of the 151st Division]] ] = 3,
-		[ [[You see a member of the Fortunate 500 take a phone call, hear him holler something about a stock market crash,]] ] = 3,
-		[ [[Over the next hill, you see three frat boys abruptly vanish into a cloud of green smoke.]] ] = 3,
-		[ [[You hear excited chittering overhead, and look up to see a squadron of winged ferrets]] ] = 3,
-
-		[ [[Nearby, a War Hippy Elder Shaman nods almost imperceptibly.]] ] = 7,
-		[ [[You leap out of the way of a runaway Mobile Sweat Lodge, then watch it run over]] ] = 7,
-		[ [[A few yards away, one of the Jerry's Riggers hippies detonates a bomb underneath a Grill Sergeant's grill.]] ] = 7,
-		[ [[You look over and see one of Jerry's Riggers placing land mines he made out of paperclips,]] ] = 7,
-
-		[ [[You turn to see a nearby War Hippy Elder Shaman making a series of complex hand gestures.]] ] = 15,
-		[ [[You see a platoon of charging frat boys get mowed down by a hippy.]] ] = 15,
-		[ [[You look over and see a funk of hippies round up a bunch of frat boys to take as prisoners of war.]] ] = 15,
-		[ [[Nearby, a platoon of frat boys is rocking a mobile sweat lodge back and forth, trying to tip it over.]] ] = 15,
-
-		[ [[A mobile sweat lodge rumbles into a regiment of frat boys and the hippies inside open all of its vents simultaneously.]] ] = 31,
-		[ [[You see a squadron of police cars drive up, and a squad of policemen arrest an entire regiment of frat boys.]] ] = 31,
-		[ [[frat boys decide they're tired of drinking non-alcoholic beer and tired of not hitting on chicks,]] ] = 31, -- buggy/typoed server message, so skipping first part
-
-		[ [[You see an airborne commander trying out a new strategy: she mixes a tiny bottle of rum she found on one of the frat boy casualties]] ] = 63,
-		[ [[You see a couple of hippies rigging a mobile sweat lodge with a public address system.]] ] = 63,
-		[ [[You see an elder hippy shaman close her eyes, clench her fists, and start to chant.]] ] = 63,
-	}
-
 	if text:contains("<!--WINWINWIN-->") then
-		if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Frat Uniform%)%)</a>]]) then
-			amount = 1
-			for msg, kills in pairs(frat_kills) do
+		if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Frat Uniform%)%)</a>]]) or (monster_name and war_hippies[monster_name]) then
+			local amount = 1
+			for msg, kills in pairs(frat_kill_messages) do
 				if text:contains(msg) then
 					amount = amount + kills
 				end
 			end
-			increase_battlefield_kill_counter("frat boy", amount)
---			session["debug.just added frat kills"] = amount
+			local minamount = 0
+			if (monster_name and war_hippies[monster_name]) then
+				minamount = 1
+			end
+			increase_battlefield_kill_counter("frat boy", amount, minamount)
 		end
-		if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Hippy Uniform%)%)</a>]]) then
-			amount = 1
-			for msg, kills in pairs(hippy_kills) do
+		if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Hippy Uniform%)%)</a>]]) or (monster_name and frat_warriors[monster_name]) then
+			local amount = 1
+			for msg, kills in pairs(hippy_kill_messages) do
 				if text:contains(msg) then
 					amount = amount + kills
 				end
 			end
-			increase_battlefield_kill_counter("hippy", amount)
---			session["debug.just added hippy kills"] = amount
+			local minamount = 0
+			if (monster_name and frat_warriors[monster_name]) then
+				minamount = 1
+			end
+			increase_battlefield_kill_counter("hippy", amount, minamount)
 		end
 	end
 end)

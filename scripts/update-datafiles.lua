@@ -278,11 +278,22 @@ function parse_items()
 
 	function do_organ_line(l, field)
 		local tbl = split_tabbed_line(l)
-		local fakename, size = tbl[1], tonumber(tbl[2])
+		local fakename, size, levelreq, advgainstr = tbl[1], tonumber(tbl[2]), tonumber(tbl[3]), tbl[5]
 		if fakename and size and not blacklist[fakename] then
 			local name = lowercasemap[fakename:lower()]
 			if name then
 				items[name][field] = size
+				items[name].levelreq = levelreq
+				if advgainstr then
+					local advmin, advmax = advgainstr:match("^([0-9]+)%-([0-9]+)$")
+					if advmin and advmax then
+						items[name].advmin = tonumber(advmin)
+						items[name].advmax = tonumber(advmax)
+					else
+						items[name].advmin = tonumber(advgainstr)
+						items[name].advmax = tonumber(advgainstr)
+					end
+				end
 			else
 				softwarn("organ:item does not exist", fakename)
 			end
@@ -369,7 +380,6 @@ function verify_hatrack(data)
 			return data
 		end
 	end
-	print("DEBUG", data["Cerebral Culottes"], data["asbestos helmet turtle"])
 end
 
 function parse_familiars()
@@ -527,14 +537,28 @@ function parse_mallprices()
 	local fobj = io.open("cache/files/mallprices.json")
 	local mallprices_datafile = fobj:read("*a")
 	fobj:close()
-	local mallprices = json_to_table(mallprices_datafile)
-
-	return mallprices
+	return json_to_table(mallprices_datafile)
 end
 
 function verify_mallprices(data)
 	if data["Mr. Accessory"] >= 1000000 and data["Mr. Accessory"] <= 100000000 and data["Mick's IcyVapoHotness Inhaler"] >= 200 and data["Mick's IcyVapoHotness Inhaler"] <= 200000 then
 		return data
+	end
+end
+
+-- TODO: Merge with items datafile, or at least don't have fullness/drunkenness/spleen in both?
+function parse_consumables()
+	local fobj = io.open("cache/files/consumable-advgain.json")
+	local consumables_datafile = fobj:read("*a")
+	fobj:close()
+	return json_to_table(consumables_datafile)
+end
+
+function verify_consumables(data)
+	if data["Hell ramen"].type == "food" and data["Hell ramen"].size[1] == 6 and data["Hell ramen"].advmin == 22 and data["Hell ramen"].advmax == 28 then
+		if data["beastly paste"].type == "spleen" and data["beastly paste"].size[3] == 4 and data["beastly paste"].advmin == 5 and data["beastly paste"].advmax == 10 then
+				return data
+		end
 	end
 end
 
@@ -547,7 +571,7 @@ function parse_choice_spoilers()
 			table.insert(jsonlines, "{")
 		elseif found_adv_options then
 			if l:match("};") then
-				table.insert(jsonlines, [["__dummyvalue":0 }]])
+				table.insert(jsonlines, "}")
 				break
 			else
 				l_json = l:gsub("\r", ""):gsub("//.+", ""):gsub("([0-9]+)(:%[)", [["%1"%2]]) -- Strip CRs, comments, and quote keys
@@ -558,7 +582,6 @@ function parse_choice_spoilers()
 		end
 	end
 	local rawspoilers = json_to_table(table.concat(jsonlines, "\n"))
-	rawspoilers["__dummyvalue"] = nil
 	local choice_spoilers = {}
 	for a, b in pairs(rawspoilers) do
 		table.remove(b, 1)
@@ -612,3 +635,4 @@ process("faxbot monsters")
 process("semirares")
 
 process("mallprices")
+process("consumables")

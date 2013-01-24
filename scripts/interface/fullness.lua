@@ -4,9 +4,8 @@ add_printer("/charpane.php", function()
 	if tonumber(api_flag_config().compactchar) == 1 then
 		text = text:gsub([[(<hr width=50%%>.-)(</table><hr width=50%%><table align=center cellpadding=1 cellspacing=1>)]], function (a, b)
 			local spleentext = ""
-			local spleen = spleen_display_string()
-			if tostring(spleen) ~= "0" then
-				spleentext = [[<tr><td align=right>Spleen:</td><td align=left><b>]] .. spleen .. [[</b></td></tr>]]
+			if spleen() > 0 then
+				spleentext = [[<tr><td align=right>Spleen:</td><td align=left><b>]] .. spleen() .. [[</b></td></tr>]]
 			end
 			if a:match(">Drunk:<") then
 				return a:gsub([[(.-)(<tr><td align=right>Drunk:</td><td align=left><b>[0-9,]-</b></td></tr>)]], function (x, y)
@@ -19,10 +18,9 @@ add_printer("/charpane.php", function()
 	else
 		text = text:gsub([[^(.-)(<table cellpadding=3 align=center>)]], function (a, b)
 			local spleentext = ""
-			local spleen = spleen_display_string()
-			if tostring(spleen) ~= "0" then
+			if spleen() > 0 then
 				local spleen_description = random_choice { "Spleen", "Melancholy", "Moroseness" }
-				spleentext = [[<tr><td align=right>]] .. spleen_description .. [[:</td><td><b>]] .. spleen .. [[</b></td></tr>]]
+				spleentext = [[<tr><td align=right>]] .. spleen_description .. [[:</td><td><b>]] .. spleen() .. [[</b></td></tr>]]
 			end
 			if a:match("<tr><td align=right>[^<]-</td><td><b>[0-9,]-</b></td></tr>") then
 				return a:gsub([[(.-)(<tr><td align=right>[^<]-</td><td><b>[0-9,]-</b></td></tr>)]], function (x, y)

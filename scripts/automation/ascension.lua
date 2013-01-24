@@ -3165,6 +3165,8 @@ endwhile
 								if advagain then
 									did_action = true
 								end
+							else
+								print("DEBUG sniffing blooper, got url", url)
 							end
 						end
 					end
@@ -3172,6 +3174,29 @@ endwhile
 			end
 		end,
 	}
+
+--	add_task {
+--		when = (level() < 9 or quest("There Can Be Only One Topping")) and ascensionstatus() == "Hardcore" and challenge ~= "boris" and challenge ~= "zombie" and script.have_familiar("Obtuse Angel"),
+--		task = function()
+--			return {
+--				message = "arrow pervert",
+--				action = function ()
+--					if script.get_photocopied_monster() ~= "smut orc pervert" then
+--						print("photocopied:", script.get_photocopied_monster())
+--						inform "get pervert from faxbot"
+--						script.get_faxbot_fax("smut orc pervert", "smut_orc_perv")
+--					else
+--						inform "fight and arrow pervert"
+--						script.heal_up()
+--						script.ensure_buffs { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric" }
+--						script.want_familiar "Obtuse Angel"
+--						script.ensure_mp(60)
+--						stop "TODO: fight and arrow pervert"
+--					end
+--				end
+--			}
+--		end,
+--	}
 
 	add_task {
 		when = quest("Am I My Trapper's Keeper?") and (not trailed or trailed == "dairy goat") and highskill_at_run,
@@ -3195,7 +3220,7 @@ endwhile
 	}
 
 	add_task {
-		when = highskill_at_run and not have("barrel of gunpowder") and level() >= 8 and level() < 12, -- and have_familiar("Obtuse Angel")
+		when = highskill_at_run and not have("barrel of gunpowder") and level() >= 8 and level() < 12 and script.have_familiar("Obtuse Angel"),
 		task = {
 			message = "fax and arrow lobsterfrogman",
 			action = function ()
@@ -3706,7 +3731,7 @@ endwhile
 	}
 
 	add_task {
-		when = quest("There Can Be Only One Topping"),
+		when = quest("There Can Be Only One Topping") and (level() >= 11 and not quest_text("Your first step is to find the Black Market")),
 		task = tasks.there_can_be_only_one_topping,
 	}
 

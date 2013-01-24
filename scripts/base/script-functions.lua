@@ -417,25 +417,13 @@ function estimate_max_spleen()
 end
 
 function spleen_display_string()
-	if tonumber(status().spleen) then
-		return spleen()
-	end
-	local spleen = get_daily_counter("spleen")
-	if day["unknown spleen"] == "yes" then
-		spleen = spleen .. "+?"
-	end
-	return spleen
+	print("WARNING: spleen_display_string is no longer needed and deprecated, use spleen()!")
+	return spleen()
 end
 
 function remaining_spleen_display_string()
-	if tonumber(status().spleen) then
-		return estimate_max_spleen() - spleen()
-	end
-	local spleen = estimate_max_spleen() - get_daily_counter("spleen")
-	if day["unknown spleen"] == "yes" then
-		spleen = spleen .. "+?"
-	end
-	return spleen
+	print("WARNING: remaining_spleen_display_string is no longer needed and deprecated, use spleen() and estimate_max_spleen()!")
+	return estimate_max_spleen() - spleen()
 end
 
 function estimate_mallbuy_cost(item)
@@ -447,4 +435,20 @@ function estimate_mallsell_profit(item)
 	if buyprice then
 		return buyprice * 0.85
 	end
+end
+
+function can_equip_item(item)
+	-- TODO: boris/fist
+	local name = maybe_get_itemname(item)
+	local eqreqs = datafile("items")[name].equip_requirement or {}
+	for a, b in pairs(eqreqs) do
+		if a == "muscle" and basemuscle() < b then
+			return false
+		elseif a == "mysticality" and basemysticality() < b then
+			return false
+		elseif a == "moxie" and basemoxie() < b then
+			return false
+		end
+	end
+	return true
 end

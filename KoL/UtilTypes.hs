@@ -114,7 +114,7 @@ doDbLogAction ref action = (doDbLogAction_ $ sessionData $ ref) ref action
 doChatLogAction ref action = (doChatLogAction_ $ globalstuff_ $ ref) action
 doStateAction ref action = (doStateAction_ $ sessionData $ ref) ref action
 
-data KolproxyException = UrlMismatchException String URI | NotLoggedInException | InValhallaException | ApiPageException String | HttpRequestException URI SomeException | StateException | InternalError String
+data KolproxyException = UrlMismatchException String URI | NotLoggedInException | InValhallaException | ApiPageException String | HttpRequestException URI SomeException | StateException | InternalError String | LuaError String | NetworkError String
 	deriving (Typeable)
 
 instance Exception KolproxyException
@@ -127,3 +127,6 @@ instance Show KolproxyException where
 	show (HttpRequestException uri err) = "Network connection error while loading " ++ uriPath uri ++ " (exception: " ++ show err ++ ")"
 	show (StateException) = "Error loading state"
 	show (InternalError str) = "Internal error: " ++ str
+	show (LuaError str) = "Lua error: " ++ str
+	show (NetworkError str) = "Network error: " ++ str
+

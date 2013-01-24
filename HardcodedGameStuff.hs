@@ -156,6 +156,7 @@ download_data_files = do
 	dldatafile "http://userscripts.org/scripts/source/68727.user.js"
 
 	dldatafile "http://www.houeland.com/kol/mallprices.json"
+	dldatafile "http://www.houeland.com/kol/consumable-advgain.json"
 
 	return ()
 

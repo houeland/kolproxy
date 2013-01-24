@@ -652,6 +652,12 @@ function get_automation_scripts(cached_stuff)
 			equip_item(previous_hat)
 			return function() return pt, pturl end
 		end,
+		["Red Door Syndrome"] = function()
+			if not have("can of black paint") then
+				buy_item("can of black paint", "l")
+			end
+			return use_item("can of black paint")
+		end,
 	}
 	local spells = {
 		["Ghostly Shell"] = { item = "totem" },
@@ -1311,6 +1317,7 @@ endif
 
 	function f.get_turns_until_sr()
 		local SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info(turnsthisrun())
+		print("DEBUG get_turns_until_sr", get_semirare_info(turnsthisrun()))
 		return good_numbers[1]
 	end
 
@@ -3379,58 +3386,22 @@ endif
 			})
 		else
 			script.bonus_target { "noncombat" }
-			local toequip = {}
 			if get_mainstat() == "Muscle" then
-				if have("Crown of the Goblin King") then
-					toequip = { hat = "Crown of the Goblin King" }
-				end
-				wear(toequip)
 				if buffedmainstat() < 85 then
 					ensure_buffs { "Go Get 'Em, Tiger!" }
 				end
 			elseif get_mainstat() == "Mysticality" then
-				wear {}
 				if buffedmainstat() < 85 then
 					ensure_buffs { "Pasta Oneness", "Saucemastery" }
 				end
 				if buffedmainstat() < 85 then
-					ensure_buffs { "The Magical Mojomuscular Melody", "The Sonata of Sneakiness" } -- HACK: sonata is there to avoid shrugging that
-				end
-				if buffedmainstat() < 85 then
 					ensure_buffs { "Glittering Eyelashes" }
 				end
-				if buffedmainstat() < 85 and not buff("Smoky Third Eye") and not buff("Down the Rabbit Hole") and have("&quot;DRINK ME&quot; potion") then
-					if not have("ravioli hat") then
-						return f.buy_use_chewing_gum()
-					end
-					use_item("&quot;DRINK ME&quot; potion")
-					wear { hat = "ravioli hat" }
-					async_get_page("/rabbithole.php", { action = "teaparty" })
-					async_post_page("/choice.php", { pwd = get_pwd(), whichchoice = "441", option = "1" }) -- get hatter buff
-					wear {}
-				end
 			elseif get_mainstat() == "Moxie" then
-				wear {}
-				if buffedmainstat() < 85 then
-					ensure_buffs { "The Moxious Madrigal", "The Sonata of Sneakiness" } -- HACK: sonata is there to avoid shrugging that
-				end
 				if buffedmainstat() < 85 then
 					ensure_buffs { "Butt-Rock Hair" }
 					maybe_ensure_buffs_in_fist { "Butt-Rock Hair" }
 				end
--- 				if buffedmainstat() < 85 and not buff("Cat-Alyzed") and not buff("Down the Rabbit Hole") and have("&quot;DRINK ME&quot; potion") then
--- 					use_item("&quot;DRINK ME&quot; potion")
--- 					wear { hat = "snorkel" }
--- 					async_get_page("/rabbithole.php", { action = "teaparty" })
--- 					async_post_page("/choice.php", { pwd = get_pwd(), whichchoice = "441", option = "1" }) -- get hatter buff
--- 					wear {}
--- 				end
-			end
-			if buffedmainstat() < 85 and not buff("Starry-Eyed") then
-				local gazept = post_page("/campground.php", { action = "telescopehigh" })
-			end
-			if buffedmainstat() < 85 then
-				stop "Too low mainstat to enter bedroom"
 			end
 			maybe_ensure_buffs { "Mental A-cue-ity" }
 			local macro = macro_noodlegeyser(4)
@@ -3469,7 +3440,7 @@ endif
 						return "Check the bottom drawer"
 					end
 				end
-			end, equipment = toequip })
+			end })
 			if should_get_key and not have("Spookyraven ballroom key") then
 				critical "Didn't get ballroom key when expected"
 			end
@@ -3967,9 +3938,13 @@ endif
 				local pt = get_page("/clan_log.php")
 				local faxedtext = pt:match("faxed in .-<")
 				if not faxedtext then
-					critical "Error when checking clan log for faxbot"
-				end
-				if faxedtext:contains(target) then
+					if i >= 5 and timestamp() >= tstart + 10 then
+						async_get_page("/clan_viplounge.php", { preaction = "receivefax" })
+						break
+					elseif i > 50 then
+						critical "Error when checking clan log for faxbot"
+					end
+				elseif faxedtext:contains(target) then
 					async_get_page("/clan_viplounge.php", { preaction = "receivefax" })
 					break
 				end

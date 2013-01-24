@@ -123,11 +123,11 @@ add_automation_script("custom-aftercore-automation", function()
 	return "Note: Work in progress, currently missing an interface<br><br>" .. table.concat(goodlinks, "<br>") .. "<br><br>" .. table.concat(links, "<br>"), requestpath
 end)
 
-function maybe_pull_item(name, amount)
-	amount = amount or 1
-	if count(name) < amount then
+function maybe_pull_item(name, input_amount)
+	local amount = input_amount or 1
+	if count_item(name) < amount then
 		async_post_page("/storage.php", { action = "pull", whichitem1 = get_itemid(name), howmany1 = amount - count(name), pwd = session.pwd, ajax = 1 })
-		if amount > 1 and count(name) < amount then
+		if input_amount and count_item(name) < input_amount then
 			critical("Couldn't pull " .. tostring(amount) .. "x " .. tostring(name))
 		end
 	end
@@ -155,9 +155,12 @@ function setup_turnplaying_script(tbl)
 			tbl.preparation()
 		end
 
-		if not tbl.macro and not autoattack_is_set() then
+		if tbl.macro and autoattack_is_set() then
+			stop "Unset your autoattack for scripting this quest."
+		elseif not tbl.macro and not autoattack_is_set() then
 			stop "Set a macro on autoattack to use for scripting this quest."
 		end
+		automation_macro = tbl.macro
 
 		-- TODO: cache quest per pageload
 		local questlog_page = nil

@@ -439,11 +439,30 @@ local function get_buff_extension_info()
 	return buff_extension_info
 end
 
+local cached_workarounds = {}
+local function work_around_broken_status_lastadv(advdata)
+	if advdata.container == "place.php" then
+		print "WARNING: Working around status lastadv.container server API bug. Shout at CDMoyer!"
+		if not cached_workarounds[advdata.name] then
+			async_post_page("/account.php", { am = 1, pwd = session.pwd, action = "flag_compactchar", value = 0, ajax = 1 })
+			local pt = get_page("/charpane.php")
+			local real_container = pt:match([[href="(place.php%?whichplace=[^"]-)"]])
+			if real_container then
+				advdata.container = real_container
+			end
+			cached_workarounds[advdata.name] = advdata
+		end
+		return cached_workarounds[advdata.name]
+	else
+		return advdata
+	end
+end
+
 local previous_adventures_tbl = {}
 local function update_and_get_previous_adventure_links()
-	if previous_adventures_tbl[1] ~= lastadventuredata().name then
+	if not previous_adventures_tbl[1] or previous_adventures_tbl[1].name ~= lastadventuredata().name then
 		local newtbl = {}
-		table.insert(newtbl, lastadventuredata())
+		table.insert(newtbl, work_around_broken_status_lastadv(lastadventuredata()))
 		for _, x in ipairs(previous_adventures_tbl) do
 			if x.name ~= lastadventuredata().name and #newtbl < 5 then
 				table.insert(newtbl, x)
@@ -483,7 +502,8 @@ add_interceptor("/charpane.php", function()
 -- 	table.insert(lines, string.format([[Mainstat: <b><span style="color: blue; font-weight: bold;">%s</span> (%s)</b><br>]], format_integer(buffedmainstat()), format_integer(basemainstat())))
 	table.insert(lines, string.format([[Buffed: <b><span style="color: blue; font-weight: bold;">%s</span></b> / <b><span style="color: blue; font-weight: bold;">%s</span></b> / <b><span style="color: blue; font-weight: bold;">%s</span></b><br>]], format_integer(buffedmuscle()), format_integer(buffedmysticality()), format_integer(buffedmoxie())))
 	table.insert(lines, string.format([[Base: <b>%s</b> / <b>%s</b> / <b>%s</b><br>]], format_integer(basemuscle()), format_integer(basemysticality()), format_integer(basemoxie())))
-	table.insert(lines, string.format([[Organs: <b>%s</b> / <b>%s</b> / <b>%s</b><br>]], estimate_max_fullness() - fullness(), estimate_max_safe_drunkenness() - drunkenness(), remaining_spleen_display_string()))
+	table.insert(lines, string.format([[Organs: <b>%s</b> / <b>%s</b> / <b>%s</b><br>]], estimate_max_fullness() - fullness(), estimate_max_safe_drunkenness() - drunkenness(), estimate_max_spleen() - spleen()))
+--	table.insert(lines, string.format([[Organs: <b>%s</b>/%s, <b>%s</b>/%s, <b>%s</b>/%s<br>]], fullness(), estimate_max_fullness(), drunkenness(), estimate_max_safe_drunkenness(), spleen(), estimate_max_spleen()))
 	if ascensionstatus() == "Aftercore" then
 		table.insert(lines, [[<center><a href="]] .. make_optimize_diet_href() .. [[" target="mainpane" style="color: green">{ Optimize diet }</a></center><br>]])
 	else
@@ -497,9 +517,9 @@ add_interceptor("/charpane.php", function()
 	end
 	table.insert(lines, string.format([[Meat: <b>%s</b><br>]], format_integer(meat())))
 	table.insert(lines, string.format([[Turns: <b>%s</b> <span class="tiny">(%s played, day %s)</span><br>]], advs(), turnsthisrun(), daysthisrun()))
-	table.insert(lines, string.format([[<a href="%s" target="mainpane">Zone</a>: <b><a href="%s" target="mainpane">%s</a></b><br>]], lastadventuredata().container or "", lastadventuredata().link, lastadventuredata().name))
+	table.insert(lines, string.format([[<a href="%s" target="mainpane">Zone</a>: <b><a href="%s" target="mainpane">%s</a></b><br>]], work_around_broken_status_lastadv(lastadventuredata()).container or "", lastadventuredata().link, lastadventuredata().name))
+	local links = update_and_get_previous_adventure_links()
 	if setting_enabled("show multiple previous-adventure links") then
-		local links = update_and_get_previous_adventure_links()
 		for i = 2, 5 do
 			if links[i] then
 				table.insert(lines, string.format([[<small><a href="%s" target="mainpane">Zone</a>: <a href="%s" target="mainpane">%s</a></small><br>]], links[i].container or "", links[i].link, links[i].name))
@@ -717,7 +737,7 @@ add_interceptor("/charpane.php", function()
 	end
 	add_organ_line({ "Engorgement:", "Gluttony:", "Satiation:" }, fullness() .. " / " .. estimate_max_fullness())
 	add_organ_line({ "Inebriety:", "Temulency:", "Tipsiness:" }, drunkenness() .. " / " .. estimate_max_safe_drunkenness())
-	add_organ_line({ "Melancholy:", "Moroseness:", "Spleen:" }, spleen_display_string() .. " / " .. estimate_max_spleen())
+	add_organ_line({ "Melancholy:", "Moroseness:", "Spleen:" }, spleen() .. " / " .. estimate_max_spleen())
 	table.insert(lines, [[</table>]])
 	if ascensionstatus() == "Aftercore" then
 		table.insert(lines, [[<center><font size="2"><a href="]] .. make_optimize_diet_href() .. [[" target="mainpane" style="color: green">{ Optimize diet }</a></font></center>]])
@@ -735,12 +755,11 @@ add_interceptor("/charpane.php", function()
 	table.insert(lines, string.format([[<td align=center><img src="http://images.kingdomofloathing.com/itemimages/hourglass.gif" class=hand title="Adventures Remaining" alt="Adventures Remaining"><br><span class=black>%s</span></td></tr>]], format_integer(advs())))
 	table.insert(lines, [[</table>]])
 
--- 	table.insert(lines, string.format([[<a href="%s" target="mainpane">Zone</a>: <b><a href="%s" target="mainpane">%s</a></b>]], lastadventuredata().container or "", lastadventuredata().link, lastadventuredata().name))
 	table.insert(lines, [[<center><font size="2">]]..srdata..[[</font></center>]])
 	table.insert(lines, string.format([[<center><font size="2">Turns played: <b>%s</b> (day %s)</font></center>]], turnsthisrun(), daysthisrun()))
 	table.insert(lines, "<!-- kolproxy charpane text area -->")
 	table.insert(lines, [[<br><center>]])
-	table.insert(lines, string.format([[<font size=2><b><a class=nounder href="%s" target=mainpane>Last Adventure:</a></b></font><br><font size=2><a target=mainpane href="%s">%s</a></font><br>]], lastadventuredata().container or "", lastadventuredata().link, lastadventuredata().name))
+	table.insert(lines, string.format([[<font size=2><b><a class=nounder href="%s" target=mainpane>Last Adventure:</a></b></font><br><font size=2><a target=mainpane href="%s">%s</a></font><br>]], work_around_broken_status_lastadv(lastadventuredata()).container or "", lastadventuredata().link, lastadventuredata().name))
 	if setting_enabled("show multiple previous-adventure links") then
 		local links = update_and_get_previous_adventure_links()
 		for i = 2, 5 do

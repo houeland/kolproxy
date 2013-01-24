@@ -67,21 +67,13 @@ module Scripting.LuaModded
     concat,
     cpcall,
     createtable,
-    dump,
+    ---dump,
     equal,
-    --error,    -- cannot import this one, as this uses setjmp/longjmp
     gc,
-    --getallocf,
     getfenv,
     getfield,
     getglobal,
-    --gethook,
-    --gethookcount,
-    --gethookmask,
-    --getinfo,
-    --getlocal,
     getmetatable,
-    --getstack,
     gettable,
     gettop,
     getupvalue,
@@ -99,7 +91,6 @@ module Scripting.LuaModded
     isthread,
     isuserdata,
     lessthan,
-    --load,
     newstate,
     newtable,
     newthread,
@@ -111,17 +102,14 @@ module Scripting.LuaModded
     pushboolean,
     pushcclosure,
     pushcfunction,
-    --pushfstring,
     pushinteger,
     pushlightuserdata,
-    --pushlstring,
     pushnil,
     pushnumber,
     pushstring,
     pushbytestring,
     pushthread,
     pushvalue,
-    --pushvfstring,
     rawequal,
     rawget,
     rawgeti,
@@ -131,12 +119,9 @@ module Scripting.LuaModded
     remove,
     replace,
     resume,
-    --setallocf,
     setfenv,
     setfield,
     setglobal,
-    --sethook,
-    --setlocal,
     setmetatable,
     settable,
     settop,
@@ -145,7 +130,6 @@ module Scripting.LuaModded
     toboolean,
     tocfunction,
     tointeger,
-    --tolstring,
     tonumber,
     topointer,
     tostring,
@@ -155,27 +139,20 @@ module Scripting.LuaModded
     ltype,
     typename,
     upvalueindex,
-    xmove,
+    ---xmove,
     yield,
 
     -- * luaL_* functions
     openlibs,
-    loadfile,
-    loadstring,
+    ---loadfile,
+    ---loadstring,
     newmetatable,
     argerror,
     safeloadstring,
 
     -- * Haskell extensions
     StackValue(..),
-    --callproc,
-    --callfunc,
-    --getglobal2,
-    --newcfunction,
-    --freecfunction,
-    --luaimport,
     pushhsfunction_raw,
-    --pushhsfunction,
     registerhsfunction
 )
 where
@@ -185,7 +162,7 @@ import Foreign.Ptr
 import Foreign.StablePtr
 import Control.Monad
 import Foreign.Marshal.Alloc
-import Data.IORef
+---import Data.IORef
 import qualified Foreign.Storable as F
 --import qualified Data.List as L
 import Data.Maybe
@@ -200,10 +177,10 @@ newtype LuaState = LuaState (Ptr ())
 -- | Wrapper for @lua_Alloc@. See @lua_Alloc@ in Lua Reference Manual.
 -- type LuaAlloc = Ptr () -> Ptr () -> CInt -> CInt -> IO (Ptr ())
 -- | Wrapper for @lua_Reader@. See @lua_Reader@ in Lua Reference Manual.
-type LuaReader = Ptr () -> Ptr () -> Ptr CInt -> IO (Ptr CChar)
+---type LuaReader = Ptr () -> Ptr () -> Ptr CInt -> IO (Ptr CChar)
 
 -- | Wrapper for @lua_Writer@. See @lua_Writer@ in Lua Reference Manual.
-type LuaWriter = LuaState -> Ptr CChar -> CInt -> Ptr () -> IO CInt
+---type LuaWriter = LuaState -> Ptr CChar -> CInt -> Ptr () -> IO CInt
 -- | Wrapper for @lua_CFunction@. See @lua_CFunction@ in Lua Reference Manual.
 type LuaCFunction = LuaState -> IO CInt
 -- | Wrapper for @lua_Integer@. See @lua_Integer@ in Lua Reference Manual.
@@ -278,7 +255,6 @@ some functions known not to call gc are marked with faster 'unsafe' modifier.
 
 -}
 foreign import ccall "lua.h lua_close" c_lua_close :: LuaState -> IO ()
--- foreign import ccall "lua.h lua_newstate" c_lua_newstate :: FunPtr LuaAlloc -> Ptr () -> IO LuaState
 foreign import ccall "lua.h lua_newthread" c_lua_newthread :: LuaState -> IO LuaState
 foreign import ccall "lua.h lua_atpanic" c_lua_atpanic :: LuaState -> FunPtr LuaCFunction -> IO (FunPtr LuaCFunction)
 
@@ -290,7 +266,7 @@ foreign import ccall "lua.h lua_remove" c_lua_remove :: LuaState -> CInt -> IO (
 foreign import ccall "lua.h lua_insert" c_lua_insert :: LuaState -> CInt -> IO ()
 foreign import ccall "lua.h lua_replace" c_lua_replace :: LuaState -> CInt -> IO ()
 foreign import ccall "lua.h lua_checkstack" c_lua_checkstack :: LuaState -> CInt -> IO CInt
-foreign import ccall "lua.h lua_xmove" c_lua_xmove :: LuaState -> LuaState -> CInt -> IO ()
+---foreign import ccall "lua.h lua_xmove" c_lua_xmove :: LuaState -> LuaState -> CInt -> IO ()
 
 
 foreign import ccall "lua.h lua_isnumber" c_lua_isnumber :: LuaState -> CInt -> IO CInt
@@ -319,12 +295,6 @@ foreign import ccall "lua.h lua_pushnil" c_lua_pushnil :: LuaState -> IO ()
 foreign import ccall "lua.h lua_pushnumber" c_lua_pushnumber :: LuaState -> LuaNumber -> IO ()
 foreign import ccall "lua.h lua_pushinteger" c_lua_pushinteger :: LuaState -> LuaInteger -> IO ()
 foreign import ccall "lua.h lua_pushlstring" c_lua_pushlstring :: LuaState -> Ptr CChar -> CInt -> IO ()
--- foreign import ccall "lua.h lua_pushstring" c_lua_pushstring :: LuaState -> Ptr CChar -> IO ()
-{-
-LUA_API const char *(lua_pushvfstring) (lua_State *L, const char *fmt,
-                                                      va_list argp);
-LUA_API const char *(lua_pushfstring) (lua_State *L, const char *fmt, ...);
--}
 foreign import ccall "lua.h lua_pushcclosure" c_lua_pushcclosure :: LuaState -> FunPtr LuaCFunction -> CInt -> IO ()
 foreign import ccall "lua.h lua_pushboolean" c_lua_pushboolean :: LuaState -> CInt -> IO ()
 foreign import ccall "lua.h lua_pushlightuserdata" c_lua_pushlightuserdata :: LuaState -> Ptr a -> IO ()
@@ -350,22 +320,18 @@ foreign import ccall "lua.h lua_rawseti" c_lua_rawseti :: LuaState -> CInt -> CI
 foreign import ccall "lua.h lua_setmetatable" c_lua_setmetatable :: LuaState -> CInt -> IO ()
 foreign import ccall "lua.h lua_setfenv" c_lua_setfenv :: LuaState -> CInt -> IO CInt
 
-
--- foreign import ccall "lua.h lua_call" c_lua_call :: LuaState -> CInt -> CInt -> IO ()
 foreign import ccall "lua.h lua_pcall" c_lua_pcall :: LuaState -> CInt -> CInt -> CInt -> IO CInt
 foreign import ccall "lua.h lua_cpcall" c_lua_cpcall :: LuaState -> FunPtr LuaCFunction -> Ptr a -> IO CInt
 
-foreign import ccall "lua.h lua_load" c_lua_load :: LuaState -> FunPtr LuaReader -> Ptr () -> Ptr CChar -> IO CInt
+---foreign import ccall "lua.h lua_load" c_lua_load :: LuaState -> FunPtr LuaReader -> Ptr () -> Ptr CChar -> IO CInt
 
-foreign import ccall "lua.h lua_dump" c_lua_dump :: LuaState -> FunPtr LuaWriter -> Ptr () -> IO ()
+---foreign import ccall "lua.h lua_dump" c_lua_dump :: LuaState -> FunPtr LuaWriter -> Ptr () -> IO ()
 
 foreign import ccall "lua.h lua_yield" c_lua_yield :: LuaState -> CInt -> IO CInt
 foreign import ccall "lua.h lua_resume" c_lua_resume :: LuaState -> CInt -> IO CInt
 foreign import ccall "lua.h lua_status" c_lua_status :: LuaState -> IO CInt
 
 foreign import ccall "lua.h lua_gc" c_lua_gc :: LuaState -> CInt -> CInt -> IO CInt
-
--- foreign import ccall "lua.h lua_error" c_lua_error :: LuaState -> IO CInt
 
 foreign import ccall "lua.h lua_next" c_lua_next :: LuaState -> CInt -> IO CInt
 
@@ -378,7 +344,6 @@ foreign import ccall "lauxlib.h luaL_argerror" c_luaL_argerror :: LuaState -> CI
 
 foreign import ccall "lauxlib.h luaL_loadstring" c_luaL_loadstring :: LuaState -> Ptr CChar -> IO CInt
 
--- foreign import ccall "ntrljmp.h lua_neutralize_longjmp" c_lua_neutralize_longjmp :: LuaState -> IO CInt
 foreign import ccall "ntrljmp.h &lua_neutralize_longjmp" c_lua_neutralize_longjmp_addr :: FunPtr (LuaState -> IO CInt) 
 
 
@@ -521,8 +486,8 @@ typename :: LuaState -> LTYPE -> IO String
 typename l n = c_lua_typename l (fromIntegral (fromEnum n)) >>= peekCString
 
 -- | See @lua_xmove@ in Lua Reference Manual.
-xmove :: LuaState -> LuaState -> Int -> IO ()
-xmove l1 l2 n = c_lua_xmove l1 l2 (fromIntegral n)
+---xmove :: LuaState -> LuaState -> Int -> IO ()
+---xmove l1 l2 n = c_lua_xmove l1 l2 (fromIntegral n)
 
 -- | See @lua_yield@ in Lua Reference Manual.
 yield :: LuaState -> Int -> IO Int
@@ -580,20 +545,20 @@ setglobal l n = setfield l globalsindex n
 openlibs :: LuaState -> IO ()
 openlibs = c_luaL_openlibs
 
-foreign import ccall "wrapper" mkStringWriter :: LuaWriter -> IO (FunPtr LuaWriter)
+---foreign import ccall "wrapper" mkStringWriter :: LuaWriter -> IO (FunPtr LuaWriter)
 
-dump :: LuaState -> IO String
-dump l = do
-    r <- newIORef ""
-    let wr :: LuaWriter
-        wr _l p s _d = do
-               k <- peekCStringLen (p,fromIntegral s)
-               modifyIORef r (++k)
-               return 0
-    writer <- mkStringWriter wr
-    c_lua_dump l writer nullPtr
-    freeHaskellFunPtr writer
-    readIORef r
+---dump :: LuaState -> IO String
+---dump l = do
+---    r <- newIORef ""
+---    let wr :: LuaWriter
+---        wr _l p s _d = do
+---               k <- peekCStringLen (p,fromIntegral s)
+---               modifyIORef r (++k)
+---               return 0
+---    writer <- mkStringWriter wr
+---    c_lua_dump l writer nullPtr
+---    freeHaskellFunPtr writer
+---    readIORef r
 
 -- | See @lua_equal@ in Lua Reference Manual.
 equal :: LuaState -> Int -> Int -> IO Bool
@@ -653,33 +618,33 @@ lessthan l i j = liftM (/=0) (c_lua_lessthan l (fromIntegral i) (fromIntegral j)
 
 
 -- | See @luaL_loadfile@ in Lua Reference Manual.
-loadfile :: LuaState -> String -> IO Int
-loadfile l f = readFile f >>= \c -> loadstring l c f
+---loadfile :: LuaState -> String -> IO Int
+---loadfile l f = readFile f >>= \c -> loadstring l c f
 
 
-foreign import ccall "wrapper" mkStringReader :: LuaReader -> IO (FunPtr LuaReader)
+---foreign import ccall "wrapper" mkStringReader :: LuaReader -> IO (FunPtr LuaReader)
 
 -- | See @luaL_loadstring@ in Lua Reference Manual.
-loadstring :: LuaState -> String -> String -> IO Int
-loadstring l script cn = do
-    w <- newIORef nullPtr
-    let rd :: LuaReader
-        rd _l _d ps = do
-               k <- readIORef w
-               if k==nullPtr
-                   then do
-                       (k,l) <- newCStringLen script
-                       writeIORef w k
-                       F.poke ps (fromIntegral l)
-                       return k
-                   else do
-                       return nullPtr
-    writer <- mkStringReader rd
-    res <- withCString cn $ \cn -> c_lua_load l writer nullPtr cn
-    freeHaskellFunPtr writer
-    k <- readIORef w
-    free k
-    return (fromIntegral res)
+---loadstring :: LuaState -> String -> String -> IO Int
+---loadstring l script cn = do
+---    w <- newIORef nullPtr
+---    let rd :: LuaReader
+---        rd _l _d ps = do
+---               k <- readIORef w
+---               if k==nullPtr
+---                   then do
+---                       (k,l) <- newCStringLen script
+---                       writeIORef w k
+---                       F.poke ps (fromIntegral l)
+---                       return k
+---                   else do
+---                       return nullPtr
+---    writer <- mkStringReader rd
+---    res <- withCString cn $ \cn -> c_lua_load l writer nullPtr cn
+---    freeHaskellFunPtr writer
+---    k <- readIORef w
+---    free k
+---    return (fromIntegral res)
 
 -- | See @lua_newthread@ in Lua Reference Manual.
 newthread :: LuaState -> IO LuaState
@@ -894,10 +859,10 @@ instance StackValue (Ptr a) where
     valuetype _ = TUSERDATA
 
 -- watch out for push here
-instance StackValue LuaState where
-    push l _ = pushthread l >> return ()
-    peek l n = maybepeek l n isthread tothread
-    valuetype _ = TTHREAD
+---instance StackValue LuaState where
+    ---push l _ = pushthread l >> return ()
+    ---peek l n = maybepeek l n isthread tothread
+    ---valuetype _ = TTHREAD
 
 instance StackValue () where
     push l _ = pushnil l

@@ -65,6 +65,8 @@ local felonia_href = setup_turnplaying_script {
 			end
 		else
 			result, resulturl = get_page("/knoll.php", { place = "mayor" })
+			refresh_quest()
+			advagain = quest_text("investigate the Gnolls' bugbear pens")
 		end
 		__set_turnplaying_result(result, resulturl, advagain)
 	end,
