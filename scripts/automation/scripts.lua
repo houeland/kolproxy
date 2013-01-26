@@ -525,6 +525,9 @@ function get_automation_scripts(cached_stuff)
 			elseif have_skill("Tongue of the Walrus") then
 				ensure_mp(10)
 				cast_skillid(1010)
+			elseif have_skill("Tongue of the Otter") then
+				ensure_mp(7)
+				cast_skillid(1007)
 			elseif challenge == "boris" and have("your father's MacGuffin diary") and (hp() < 200 or hp() / maxhp() < 0.5 or ascensionstatus() == "Hardcore") then
 				ensure_mp(10)
 				cast_skillid(11031, 10)
