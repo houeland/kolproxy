@@ -135,6 +135,7 @@ load_file("interface", "other/demon_llama/hiddencity-spheres.lua")
 load_file("interface", "other/nion/basement.lua")
 
 load_file("interface", "other/chickencha/beararms.lua")
+load_file("interface", "other/chickencha/chess.lua")
 load_file("interface", "other/chickencha/lvl12.lua")
 
 load_file("interface", "other/superbachelor/blank-out.lua")
