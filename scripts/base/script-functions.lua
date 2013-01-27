@@ -260,6 +260,15 @@ function add_raw_chat_script_redirect(cmd, msg, f)
 	end)
 end
 
+function add_raw_chat_command(cmd, msg, f)
+	add_automation_script("custom-chat-command-" .. cmd, function()
+		return f(params.line)
+	end)
+	add_chat_trigger(cmd, function(line)
+		return [[<span style="color: green">{ ]] .. msg .. [[ }</span><!--js(dojax(']] .. make_href("/kolproxy-automation-script", { ["automation-script"] = "custom-chat-command-" .. cmd, pwd = sendchat_pwd, line = line }) .. [[');)--><br>]]
+	end)
+end
+
 function add_chat_command(cmd, msg, f)
 	add_automation_script("custom-chat-command-" .. cmd, function()
 		return make_kol_html_frame(f(params.line)), requestpath

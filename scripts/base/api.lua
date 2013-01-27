@@ -503,6 +503,10 @@ function setup_functions()
 			return async_get_page("/sellstuff.php", { action = "sell", ajax = 1, type = "quant", ["whichitem[]"] = get_itemid(name), howmany = amount or 1, pwd = session.pwd })
 		end
 
+		function stock_item(name, amount, price, limit)
+			return async_get_page("/managestore.php", { action = "additem", ajax = 1, item1 = get_itemid(name), limit1 = limit, price1 = price, qty1 = amount or 1, pwd = session.pwd })
+		end
+
 		function cast_skill(skill, quantity, targetid)
 			local skillid = get_skillid(skill)
 			targetid = targetid or playerid()
