@@ -3135,7 +3135,7 @@ endwhile
 	}
 
 	add_task {
-		when = not have("digital key") and ascensionstatus() == "Hardcore" and challenge ~= "boris" and challenge ~= "zombie",
+		when = not have("digital key") and ascensionstatus() == "Hardcore" and challenge ~= "boris" and challenge ~= "zombie" and not script.have_familiar("Angry Jung Man"),
 		task = function()
 			if highskill_at_run then
 				return tasks.do_8bit_realm()
@@ -3155,18 +3155,16 @@ endwhile
 							inform "fight and sniff blooper"
 							script.heal_up()
 							script.ensure_buffs { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric" }
-							script.want_familiar "Stocking Mimic"
+							script.want_familiar "Frumious Bandersnatch"
 							script.wear { acc3 = "continuum transfunctioner" }
 							script.ensure_mp(60)
 							set_result(use_item("photocopied monster"))
 							local pt, url = get_page("/fight.php")
-							if url == "/fight.php" then
+							if url:contains("/fight.php") then
 								result, resulturl, advagain = handle_adventure_result(pt, url, "?", make_cannonsniff_macro("Blooper"))
 								if advagain then
 									did_action = true
 								end
-							else
-								print("DEBUG sniffing blooper, got url", url)
 							end
 						end
 					end
@@ -4237,10 +4235,62 @@ use ]] .. itemsneeded[level + 1] .. [[
 				if pt:contains("lair5.php") then
 					local pt, pturl = get_page("/lair5.php")
 					if pt:contains("lair6.php") then
-						inform "TODO: finish lair (6)"
 						result, resulturl = get_page("/lair6.php")
-						result = add_colored_message_to_page(get_result(), "TODO: Finish top of tower", "darkorange")
-						finished = true
+						if result:contains("place=0") then
+							inform "pass door riddle"
+							result, resulturl = get_page("/lair6.php", { place = 0 })
+							automate_lair6_place(0, result)
+							pt, pturl = get_page("/lair6.php")
+							did_action = pt:contains("place=1")
+						elseif result:contains("place=1") then
+							inform "avoid electrical attack"
+							if challenge ~= "fist" and challenge ~= "boris" then
+								script.wear { weapon = "huge mirror shard" }
+							end
+							result, resulturl = get_page("/lair6.php", { place = 1 })
+							script.wear {}
+							did_action = result:contains("place=2")
+						elseif result:contains("place=2") and have_skill("Ambidextrous Funkslinging") and count_item("gauze garter") >= 8 then
+							inform "defeat shadow"
+							script.wear {}
+							script.heal_up()
+							script.want_familiar "Frumious Bandersnatch"
+							set_mcd(0)
+							local pt, url = get_page("/lair6.php", { place = 2 })
+							result, resulturl, advagain = handle_adventure_result(pt, url, "?", [[
+]] .. COMMON_MACROSTUFF_START(20, 5) .. [[
+
+if hasskill Saucy Salve
+  cast Saucy Salve
+endif
+
+use gauze garter, gauze garter
+use gauze garter, gauze garter
+use gauze garter, gauze garter
+use gauze garter, gauze garter
+
+]])
+							did_action = get_result():contains("<!--WINWINWIN-->")
+						elseif result:contains("place=3") or result:contains("place=4") then
+							inform "pass NS familiars"
+							script.ensure_buffs { "Leash of Linguini", "Empathy", "Billiards Belligerence" }
+							script.maybe_ensure_buffs_in_fist { "Leash of Linguini", "Empathy", "Billiards Belligerence" }
+							script.heal_up()
+							result, resulturl = get_page("/lair6.php", { place = 3 })
+							automate_lair6_place(3, result)
+							script.heal_up()
+							result, resulturl = get_page("/lair6.php", { place = 4 })
+							automate_lair6_place(4, result)
+							pt, pturl = get_page("/lair6.php")
+							did_action = pt:contains("place=5")
+						else
+							inform "TODO: finish lair (6)"
+							script.wear {}
+							script.heal_up()
+							result, resulturl = get_page("/lair6.php")
+							result = add_colored_message_to_page(get_result(), "TODO: Finish top of tower", "darkorange")
+							finished = true
+						end
 					else
 						if check_levels { 4, 5, 6 } then
 							async_post_page("/lair5.php", { action = "level1" })
@@ -4570,59 +4620,69 @@ local function do_loop(whichday)
 	return text, url
 end
 
-ascension_automation_script_href = add_automation_script("automate-ascension", function ()
+ascension_automation_script_href = add_automation_script("automate-ascension", function()
 	return do_loop(tonumber(params.whichday))
+end)
+
+ascension_automation_setup_href = add_automation_script("setup-ascension-automation", function()
+	if params.confirm == "yes" then
+		ascension["__script.ascension script enabled"] = "yes"
+		return get_page("/main.php")
+	end
+
+	local ok_paths = { [0] = true, [6] = true, [8] = true, [10] = true }
+	local path_support_text = ""
+	local pathdesc = string.format([[%s %s]], ascensionstatus(), ascensionpathname())
+	if ascensionpathid() == 0 then
+		pathdesc = ascensionstatus()
+	end
+	if not ok_paths[ascensionpathid()] or (ascensionpathid() == 0 and ascensionstatus() ~= "Hardcore") then
+		path_support_text = string.format([[<p style="color: darkorange">You are currently in %s. This is not a well supported path for the ascension script.</p>]], pathdesc)
+	else
+		path_support_text = string.format([[<p>You are currently in %s.</p>]], pathdesc)
+	end
+	text = [[
+<html>
+<body>
+<p>Are you sure you want to enable ascension automation for this run?</p>
+]] .. path_support_text .. [[
+<p><a style="color: green" href="]]..ascension_automation_setup_href { pwd = session.pwd, confirm = "yes" }..[[">I am sure!</a></p>
+</body>
+</html>]]
+	return text, requestpath
 end)
 
 add_printer("/main.php", function ()
 	if tonumber(status().freedralph) == 1 then return end
 	if not setting_enabled("enable turnplaying automation") then return end
 	if not setting_enabled("enable turnplaying automation in-run") then return end
-	local title = "HCNP"
-	local shorttitle = "HC"
-	if ascensionstatus() == "Softcore" then
-		title = "SCNP"
-		shorttitle = "SC"
-	elseif tonumber(status().casual) == 1 then
-		title = "casual"
-		shorttitle = "Casual"
-	elseif check_for_highskill_run() then
-		title = "fast HCNP"
-		shorttitle = "FastHC"
-	elseif ascensionstatus() == "Aftercore" then
-		title = "aftercore"
-		shorttitle = "Aftercore"
-	end
-	
-	if tonumber(ascensionpathid()) == 6 then
-		title = shorttitle .. "Fist"
-	elseif tonumber(ascensionpathid()) == 7 then
-		title = shorttitle .. "Trendy"
-	elseif tonumber(ascensionpathid()) == 8 then
-		title = shorttitle .. "Boris"
-	elseif tonumber(ascensionpathid()) > 0 then
-		title = shorttitle .. "Challenge"
-	end
 
-	local links = {
-		{ titleday = "day 1", whichday = 1 },
-		{ titleday = "day 2", whichday = 2 },
-		{ titleday = "day 3", whichday = 3 },
-		{ titleday = "day 4+", whichday = 4 },
-	}
-	if ascensionstatus() ~= "Hardcore" then
-		links = {
-			{ titleday = "", whichday = 1000 },
+	if ascension["__script.ascension script enabled"] == "yes" then
+		local links = {
+			{ titleday = " day 1", whichday = 1 },
+			{ titleday = " day 2", whichday = 2 },
+			{ titleday = " day 3", whichday = 3 },
+			{ titleday = " day 4+", whichday = 4 },
 		}
-	end
-
-	local rows = {}
-	for _, x in ipairs(links) do
-		local alink = [[<a href="]]..ascension_automation_script_href { pwd = session.pwd, whichday = x.whichday }..[[" style="color: green">{ Automate ]]..title.." ascension "..x.titleday..[[ }</a>]]
-		if x.whichday == daysthisrun() then
-			alink = [[&rarr; ]] .. alink .. [[ &larr;]]
+		if ascensionstatus() ~= "Hardcore" then
+			links = {
+				{ titleday = "", whichday = 1000 },
+			}
 		end
+
+		local rows = {}
+		for _, x in ipairs(links) do
+			local alink = [[<a href="]]..ascension_automation_script_href { pwd = session.pwd, whichday = x.whichday }..[[" style="color: green">{ Automate ascension]]..x.titleday..[[ }</a>]]
+			if x.whichday == daysthisrun() then
+				alink = [[&rarr; ]] .. alink .. [[ &larr;]]
+			end
+			table.insert(rows, [[<tr><td><center>]] .. alink .. [[</center></td></tr>]])
+		end
+		text = text:gsub([[title="Bottom Edge".-</table>]], [[%0<table>]] .. table.concat(rows) .. [[</table>]])
+	else
+		local rows = {}
+		local alink = [[<a href="]]..ascension_automation_setup_href { pwd = session.pwd }..[[" style="color: green">{ Setup ascension automation }</a>]]
 		table.insert(rows, [[<tr><td><center>]] .. alink .. [[</center></td></tr>]])
+		text = text:gsub([[title="Bottom Edge".-</table>]], [[%0<table>]] .. table.concat(rows) .. [[</table>]])
 	end
-	text = text:gsub([[title="Bottom Edge".-</table>]], [[%0<table>]] .. table.concat(rows) .. [[</table>]])
 end)

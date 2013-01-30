@@ -36,7 +36,7 @@ function setup_variables()
 	end
 
 	for x in text:gmatch([[<tr><td style="color: white;" align=center bgcolor=blue.-><b>([^<]*)</b></td></tr>]]) do
-		if x ~= "Results:" then
+		if x ~= "Results:" and x ~= "Adventure Again:" then
 			adventure_title = x
 		end
 	end
@@ -49,7 +49,7 @@ function monstername(name)
 		return name == monstername()
 	end
 	if monster_name then
-		return monster_name:gsub("^a ", ""):gsub("^an ", "")
+		return monster_name:gsub("^a ", ""):gsub("^an ", ""):gsub("^ ", "")
 	end
 end
 

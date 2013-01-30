@@ -20,7 +20,7 @@ end
 --print("noncombat: {"..tostring(adventure_title).."} (" .. tostring(choice_adventure_number) .. ")")
 
 local found_function = false
-local spoilers_tbl = get_noncombat_choice_spoilers(adventure_title:gsub(" %(#[0-9]*%)$", ""))
+local spoilers_tbl = get_noncombat_choice_spoilers((adventure_title or ""):gsub(" %(#[0-9]*%)$", ""))
 if spoilers_tbl then
 	for a, b in pairs(spoilers_tbl) do
 		if b.test() then

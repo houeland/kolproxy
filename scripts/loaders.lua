@@ -18,6 +18,7 @@ load_file("item", "items/fly-away.lua")
 load_file("item", "items/leaflet.lua")
 load_file("item", "items/clover.lua")
 load_file("item", "items/halo.lua")
+load_file("interface", "items/beararms.lua")
 
 load_file("familiar", "familiars/butt-away.lua")
 load_file("familiar", "familiars/llama.lua")
@@ -108,10 +109,6 @@ load_file("automation", "automation/castle-farming.lua")
 load_file("automation", "automation/dungeon-fist.lua")
 load_file("automation", "automation/a-quest-lol.lua")
 
--- load_file("spading", "spading-automation.lua")
--- load_file("spading", "other/slimeling-spading.lua")
--- load_file("spading", "other/scarecrow-spading.lua")
-
 load_file("interface", "other/twillo/buffs.lua")
 load_file("interface", "other/twillo/outfits.lua")
 load_file("interface", "other/twillo/equipment.lua")
@@ -134,9 +131,8 @@ load_file("interface", "other/demon_llama/hiddencity-spheres.lua")
 
 load_file("interface", "other/nion/basement.lua")
 
-load_file("interface", "other/chickencha/beararms.lua")
-load_file("interface", "other/chickencha/chess.lua")
 load_file("interface", "other/chickencha/lvl12.lua")
+load_file("interface", "other/chickencha/chess.lua")
 
 load_file("interface", "other/superbachelor/blank-out.lua")
 

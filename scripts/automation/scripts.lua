@@ -71,18 +71,12 @@ function get_automation_scripts(cached_stuff)
 		["Bloovian Groose"] = { id = 154, fallback = "Midget Clownfish" },
 		["Obtuse Angel"] = { id = 146, fallback = "Slimeling" },
 		["Reagnimated Gnome"] = { id = 162, familiarequip = "gnomish housemaid's kgnee", fallback = "Hovering Sombrero" },
-		["Hovering Sombrero"] = { id = 18, fallback = "(ignore familiar)" }
+		["Hovering Sombrero"] = { id = 18, fallback = "(ignore familiar)" },
+		["Angry Jung Man"] = { id = 165, fallback = "Slimeling" },
 	}
 
-	-- TODO: set the familiar equipment here
-	function f.want_familiar(famname_input)
+	local function raw_want_familiar(famname_input)
 		-- TODO: improve fallbacks and priorities
-		if can_change_familiar == false then
-			return {}
-		end
-		if challenge == "zombie" and famname_input ~= "Reassembled Blackbird" then
-			famname_input = "Reagnimated Gnome"
-		end
 		local missing_fams = session["__script.missing familiars"] or {}
 		local famname, next_famname_input
 		if type(famname_input) == "table" then
@@ -103,25 +97,18 @@ function get_automation_scripts(cached_stuff)
 		else
 			error("Unknown familiar input: " .. tostring(famname_input))
 		end
-		if famname == "Slimeling" and highskill_at_run then
-			famname = "Scarecrow with spangly mariachi pants"
-		elseif have("spangly mariachi pants") and (famname == "Slimeling" or famname == "Jumpsuited Hound Dog") then
-			famname = "Scarecrow with spangly mariachi pants"
-		elseif have("spangly sombrero") and (famname == "Slimeling" or famname == "Jumpsuited Hound Dog") then
-			famname = "Mad Hatrack with spangly sombrero"
-		end
 		local d = familiar_data[famname]
 		if not d then
 			print("DEBUG, no familiar data for", famname, "from", famname_input)
 		end
 		if missing_fams[famname] or (d.needsequip and not have(d.familiarequip)) then
 			if famname == "Rogue Program" and spleen() < 12 then
-				return f.want_familiar("Bloovian Groose")
+				return raw_want_familiar("Bloovian Groose")
 			else
 				if not familiar_data[famname].fallback or highskill_at_run then
 					critical("No fallback familiar for " .. famname)
 				end
-				return f.want_familiar(next_famname_input or familiar_data[famname].fallback)
+				return raw_want_familiar(next_famname_input or familiar_data[famname].fallback)
 			end
 		end
 		if d then
@@ -137,7 +124,7 @@ function get_automation_scripts(cached_stuff)
 					missing_fams[famname] = true
 					session["__script.missing familiars"] = missing_fams
 					print("Using fallback familiar", famname, "->", d.fallback)
-					return f.want_familiar(d.fallback)
+					return raw_want_familiar(d.fallback)
 				end
 				if show_spammy_automation_events then
 					print("  changed familiar", famname)
@@ -171,13 +158,37 @@ function get_automation_scripts(cached_stuff)
 		end
 	end
 
-	local cached_have_familiars = {}
-	function f.have_familiar(famname)
-		if not cached_have_familiars[famname] then
-			f.want_familiar(famname)
-			cached_have_familiars[famname] = (familiar_data[famname].id == familiarid())
+	-- TODO: set the familiar equipment here
+	function f.want_familiar(famname)
+		if can_change_familiar == false then
+			return {}
 		end
-		return cached_have_familiars[famname]
+		if challenge == "zombie" and famname ~= "Reassembled Blackbird" then
+			famname = "Reagnimated Gnome"
+		end
+		if famname == "Slimeling" and highskill_at_run then
+			famname = "Scarecrow with spangly mariachi pants"
+		elseif have("spangly mariachi pants") and (famname == "Slimeling" or famname == "Jumpsuited Hound Dog") then
+			famname = "Scarecrow with spangly mariachi pants"
+		elseif have("spangly sombrero") and (famname == "Slimeling" or famname == "Jumpsuited Hound Dog") then
+			famname = "Mad Hatrack with spangly sombrero"
+		end
+		if famname == "Slimeling" and daysthisrun() >= 2 and not have_item("digital key") and not have_item("psychoanalytic jar") and get_daily_counter("familiar.jungman.jar") == 0 then
+			famname = "Angry Jung Man"
+		end
+		return raw_want_familiar(famname)
+	end
+
+	function f.have_familiar(famname)
+		if not cached_stuff.have_familiars then
+			cached_stuff.have_familiars = {}
+		end
+		if cached_stuff.have_familiars[famname] == nil then
+			print("INFO: checking for familiar", famname)
+			f.want_familiar(famname)
+			cached_stuff.have_familiars[famname] = (familiar_data[famname].id == familiarid())
+		end
+		return cached_stuff.have_familiars[famname]
 	end
 
 	local fam = f.want_familiar
@@ -1317,7 +1328,7 @@ endif
 
 	function f.get_turns_until_sr()
 		local SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info(turnsthisrun())
-		print("DEBUG get_turns_until_sr", get_semirare_info(turnsthisrun()))
+		--print("DEBUG get_turns_until_sr", get_semirare_info(turnsthisrun()))
 		return good_numbers[1]
 	end
 
@@ -1472,6 +1483,13 @@ endif
 		end
 	end
 
+	local function warn_imported_beer()
+		if true then return end -- Remove line to stop when drinking imported beer
+		if cached_stuff.warned_imported_beer == turnsthisrun() then return end
+		cached_stuff.warned_imported_beer = turnsthisrun()
+		stop "Script would drink imported beer. Drink something else manually instead, or run again to proceed."
+	end
+
 	function f.drink_booze(whichday, forced)
 -- 		local function want_to_drink()
 -- 			-- TODO: revamp, improve and use this
@@ -1523,6 +1541,7 @@ endif
 						elseif have("shot of flower schnapps") then
 							drink_item("shot of flower schnapps")
 						else
+							warn_imported_beer()
 							buy_item("overpriced &quot;imported&quot; beer", "v", 1)
 							drink_item("overpriced &quot;imported&quot; beer")
 						end
@@ -1615,6 +1634,7 @@ endif
 							elseif have("shot of flower schnapps") then
 								drink_item("shot of flower schnapps")
 							else
+								warn_imported_beer()
 								buy_item("overpriced &quot;imported&quot; beer", "v", 1)
 								if not have("overpriced &quot;imported&quot; beer") then
 									critical "Failed to buy imported beer"
@@ -1706,6 +1726,7 @@ endif
 						elseif have("shot of flower schnapps") then
 							drink_item("shot of flower schnapps")
 						else
+							warn_imported_beer()
 							buy_item("overpriced &quot;imported&quot; beer", "v", 1)
 							if not have("overpriced &quot;imported&quot; beer") then
 								critical "Failed to buy imported beer"
@@ -3465,8 +3486,8 @@ endif
 			go("getting candles", 238, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, { "Scarecrow with Boss Bat britches", "Rogue Program" }, 15)
 		elseif (count("hot wing") < 3 or (meat() < 1000 and fullness() < 5)) and not have("box of birthday candles") then
 			go("getting hot wings", 238, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "Slimeling even in fist", 20)
-		elseif have_reagent_pastas < 4 and not highskill_at_run and ascensionstatus() == "Hardcore" and challenge ~= "zombie" then
-			go("getting more hellion cubes", 239, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
+--		elseif have_reagent_pastas < 4 and not highskill_at_run and ascensionstatus() == "Hardcore" and challenge ~= "zombie" then
+--			go("getting more hellion cubes", 239, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
 		elseif not have("dodecagram") then
 			go("getting dodecagram", 239, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling even in fist", 20)
 		elseif not have("ruby W") and (have_reagent_pastas < 8 or trailed ~= "Hellion") and ascensionstatus() == "Hardcore" then
@@ -3474,14 +3495,14 @@ endif
 		elseif not have("eldritch butterknife") then
 			go("getting butterknife", 237, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, { "Scarecrow with Boss Bat britches", "Rogue Program" }, 15)
 		elseif count("hot wing") < 3 then
-			go("getting hot wings", 238, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "Slimeling", 20)
+			go("getting hot wings", 238, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "Slimeling", 20)
 		else
 			inform "do ritual"
 			async_post_page("/friars.php", { pwd = get_pwd(), action = "ritual" })
 			async_post_page("/friars.php", { pwd = get_pwd(), action = "buffs", bro = "1" })
 			async_get_page("/pandamonium.php")
 			refresh_quest()
-			did_action = (not quest("Trial By Friar") and quest_text("this is Azazel in Hell"))
+			did_action = not quest("Trial By Friar") and quest_text("this is Azazel in Hell")
 		end
 		return result, resulturl, did_action
 	end

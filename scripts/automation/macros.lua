@@ -179,7 +179,7 @@ end
 function fist_action()
   return [[
 
-if (monstername ghuol whelp || monstername chalkdust wraith)
+if (monstername ghuol whelp || monstername chalkdust wraith || monstername ghost)
   cast Cannelloni Cannon
 endif
 
@@ -815,10 +815,7 @@ endwhile
 end
 
 function make_cannonsniff_macro(name)
-	local castolfaction = ""
-	if have_skill() then
-		castolfaction = "cast Transcendent Olfaction"
-	end
+	local castolfaction = "cast Transcendent Olfaction"
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
@@ -850,10 +847,7 @@ endwhile
 end
 
 function macro_8bit_realm()
-	local castolfaction = ""
-	if have_skill() then
-		castolfaction = "cast Transcendent Olfaction"
-	end
+	local castolfaction = "cast Transcendent Olfaction"
 	return [[
 ]] .. COMMON_MACROSTUFF_START(25, 30) .. [[
 
@@ -1210,10 +1204,7 @@ endif
 end
 
 function macro_orc_chasm()
-	local castolfaction = ""
-	if have_skill() then
-		castolfaction = "cast Transcendent Olfaction"
-	end
+	local castolfaction = "cast Transcendent Olfaction"
   local maybeuse334s = ""
   local function multiuse(item1, item2)
     if have_skill("Ambidextrous Funkslinging") then

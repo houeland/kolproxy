@@ -917,7 +917,7 @@ function automate_lair6_place(place, text)
 						weight = buffedfamiliarweight()
 					end
 					if weight and weight >= 20 then
-						newtext = get_page("/lair6.php", { place = params.place })
+						newtext = get_page("/lair6.php", { place = place })
 						if newtext:contains("You move further into the tower, while huge chunks of stone fall from the walls for no good reason.") then
 							text = newtext
 							print("INFO: Won vs NS familiar")

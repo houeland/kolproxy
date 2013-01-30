@@ -548,7 +548,7 @@ function setup_functions()
 						adventure_title = x
 					end
 				end
-				adventure_title = adventure_title:gsub(" %(#[0-9]*%)$", "")
+				adventure_title = (adventure_title or ""):gsub(" %(#[0-9]*%)$", "")
 				if found_results and zoneid and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
 					advagain = true
 					return pt, url, advagain

@@ -420,7 +420,7 @@ local lastlouvre = nil
 
 -- louvre
 add_processor("/choice.php", function()
-	if adventure_title:contains("Louvre It or Leave It") then
+	if (adventure_title or ""):contains("Louvre It or Leave It") then
 -- 		print("louvre", choice_adventure_number, table_to_str(params))
 		whichchoice = params.whichchoice
 		option = params.option
@@ -657,7 +657,7 @@ add_choice_text("Louvre It or Leave It ", function()
 end)
 
 add_printer("/choice.php", function()
-	if adventure_title == "Louvre It or Leave It " then
+	if (adventure_title or ""):contains("Louvre It or Leave It") then
 		text = text:gsub([[</head>]], [[
 <style type="text/css">
 .kolproxy_louvremapimage span { position: relative; }

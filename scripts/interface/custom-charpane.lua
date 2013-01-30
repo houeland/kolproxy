@@ -219,12 +219,7 @@ local function get_srdata(SRtitle)
 		color = "green"
 	end
 	if table.maxn(good_numbers) > 0 then
-		value = good_numbers[1]
-		for x, _ in pairs(good_numbers) do
-			if x > 1 then
-				value = value .. " +"
-			end
-		end
+		value = table.concat(good_numbers, ", ")
 	else
 		value = "?"
 	end

@@ -458,9 +458,6 @@ mark m_done
 -- 			-- TODO: ensure +50% item drops (excluding familiars)
 -- 			-- TODO: one choice adv
 -- 			-- TODO: ensure "jar of oil"
--- 			if not have_item("jar of oil") and count_item("bubblin' crude") >= 12 then
--- 				use_item("bubblin' crude", 12)
--- 			end
 -- 			-- TODO: one choice adv
 -- 			-- TODO: ensure combat init +40%
 -- 			-- TODO: one choice adventure
@@ -478,7 +475,7 @@ mark m_done
 						if get_resistance_levels().stench < 4 then
 							switch_familiarid(72)
 						end
-						return autoadventure { zoneid = 297, macro = macro_noodlecannon(), noncombatchoices = nil, specialnoncombatfunction = function(advtitle, choicenum, pagetext)
+						result, resulturl, advagain = autoadventure { zoneid = 297, macro = macro_noodlecannon(), noncombatchoices = nil, specialnoncombatfunction = function(advtitle, choicenum, pagetext)
 							if advtitle == "Welcome to the Great Overlook Lodge" then
 								return "", 1
 							elseif advtitle == "Lost in the Great Overlook Lodge" then
@@ -495,6 +492,8 @@ mark m_done
 								return "", 1
 							end
 						end, ignorewarnings = true }
+						-- TODO: set advagain on initial twin peak visit
+						return result, resulturl, advagain
 					end
 				}
 			else

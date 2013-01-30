@@ -186,6 +186,7 @@ function get_ascension_automation_settings(want_bonus)
 				{ name = "Loathing Legion necktie", check = function() return level() < 13 end },
 				{ name = "C.A.R.N.I.V.O.R.E. button", check = function() return level() < 13 end },
 				{ name = "shining halo", check = function() return (level() < 13 and not equipment().weapon) end },
+				{ name = "badge of authority", check = function() return level() < 13 end },
 				{ name = "ring of aggravate monster", check = function() return level() < 13 end },
 				"Juju Mojo Mask",
 				"plastic vampire fangs",

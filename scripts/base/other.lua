@@ -390,6 +390,21 @@ add_automator("/fight.php", function()
 end)
 
 
+-- Pick up filthy lucre
+add_automator("/fight.php", function()
+	if not setting_enabled("enable ascension assistance") then return end
+	local bounty1, bounty2 = text:match("%(([0-9]+) of ([0-9]+) found.%)")
+	if tonumber(bounty2) and bounty1 == bounty2 and not locked() then
+			local scan = setup_automation_scan_page_results()
+			active_automation_assistance_scanner = scan
+			pcall(function()
+				async_get_page("/bhh.php")
+			end)
+			active_automation_assistance_scanner = nil
+			text = setup_automation_display_page_results(scan, text)
+		end
+	end)
+
 active_automation_assistance_scanner = nil
 add_submit_page_listener(function(ptf)
 	if active_automation_assistance_scanner then
@@ -412,10 +427,15 @@ function add_ascension_assistance(checkf, f)
 	end)
 end
 
+-- Visit council
 add_ascension_assistance(function() return true end, function()
 	async_get_page("/council.php")
+	if level() == 8 then
+		async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
+	end
 end)
 
+-- Pick up free pulls and talk to Toot
 add_ascension_assistance(function() return true end, function()
 	async_post_page("/campground.php", { action = "telescopelow" })
 	if not have_item("Clan VIP Lounge key") then
@@ -436,6 +456,7 @@ add_ascension_assistance(function() return true end, function()
 	end
 end)
 
+-- Use Cobb's Knob map
 add_ascension_assistance(function() return have_item("Knob Goblin encryption key") and have_item("Cobb's Knob map") and ascensionpathid() ~= 4 end, function()
 	use_item("Cobb's Knob map")
 end)
@@ -448,11 +469,13 @@ function pick_up_continuum_transfunctioner()
 	return async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 664, option = 1 })
 end
 
+-- Pick up transfunctioner
 add_ascension_assistance(function() return level() >= 2 and not have_item("continuum transfunctioner") end, function()
 	async_post_page("/forestvillage.php", { action = "screwquest" })
 	pick_up_continuum_transfunctioner()
 end)
 
+-- Use roflmao scrolls
 add_ascension_assistance(function() return level() >= 9 and have_item("64735 scroll") end, function()
 	use_item("64735 scroll")
 end)
@@ -486,7 +509,7 @@ end)
 add_printer("/hermit.php", function()
 	if not setting_enabled("enable ascension assistance") then return end
 	if text:contains("don't have anything worthless enough") then
-		text = text:gsub("worthless enough for him to want to trade for it.<P>", [[%0<a href="]] .. hermit_items_href { pwd = session.pwd } .. [[" style="color:green">{ Get trinket and permit }</a><p>]])
+		text = text:gsub("worthless enough for him to want to trade for it.<P>", [[%0<a href="]] .. hermit_items_href { pwd = session.pwd } .. [[" style="color:green">{ Get trinket and/or permit }</a><p>]])
 	end
 end)
 
