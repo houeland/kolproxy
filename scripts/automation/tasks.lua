@@ -513,7 +513,7 @@ mark m_done
 						if familiarid() ~= 72 then
 							switch_familiarid(1)
 						end
-						if get_resistance_levels().stench >= 4 and (familiarid() == 1 or familiarid() == 72) and estimate_modifier_bonuses().item >= 50 and have_item("jar of oil") and estimate_modifier_bonuses().initiative >= 40 then
+						if get_resistance_levels().stench >= 4 and (familiarid() == 1 or familiarid() == 72) and estimate_modifier_bonuses()["Item Drops from Monsters"] >= 50 and have_item("jar of oil") and estimate_modifier_bonuses()["Combat Initiative"] >= 40 then
 							session["__script.automate twin peak"] = "yes"
 							did_action = true
 						else

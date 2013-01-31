@@ -3,7 +3,7 @@
 --v.2.6a
 
 local function estimate_ml()
-	return estimate_modifier_bonuses().ml or 0
+	return estimate_modifier_bonuses()["Monster Level"] or 0
 end
 
 -- TODO: Redo this to be parsed to JSON data files instead
@@ -21865,7 +21865,7 @@ end
 function getMonsterData(monsterName, fightText)
 	local ml = estimate_ml()
 
-	local item = estimate_modifier_bonuses().item or 0
+	local item = estimate_modifier_bonuses()["Item Drops from Monsters"] or 0
 
 	local monsterDataName = parseMonsterNameIntoMafiaFormat(monsterName, fightText)
 	if monsterDataName == "tomb rat king" then ml = 0 end -- ML doesn't get reapplied when using rat tangles
