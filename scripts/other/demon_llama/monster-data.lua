@@ -3,7 +3,7 @@
 --v.2.6a
 
 local function estimate_ml()
-	return estimate_modifier_bonuses().ml or 0
+	return estimate_modifier_bonuses()["Monster Level"] or 0
 end
 
 -- TODO: Redo this to be parsed to JSON data files instead
