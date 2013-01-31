@@ -87,7 +87,7 @@ add_choice_text("Such Great Heights", { -- choice adventure number: 579
 
 local temple_door_spoilers = {
 	["a carved stone hemisphere"] = { text = "Gain muscle" },
-	["a carved sun"] = { get_item = "ancient calendar fragment" },
+	["a carved sun"] = { getitem = "ancient calendar fragment" },
 	["a tongue-wagging stone gargoyle"] = { text = "Gain MP" },
 	["that little lightning-tailed guy from your father's diary"] = { text = "Unlock hidden city [quest step 4]", good_choice = true },
 }
@@ -102,7 +102,7 @@ add_choice_text("The Hidden Heart of the Hidden Temple", function()
 end)
 
 add_choice_text("Such Great Depths", { -- choice adventure number: 581
-	["The glowing"] = { get_item = "glowing fungus" },
+	["The glowing"] = { getitem = "glowing fungus" },
 	["The glowering"] = { text = "Get +15 muscle/mysticality/moxie buff" },
 	["The growling"] = { text = "Fight clan of cave bars", good_choice = true },
 })

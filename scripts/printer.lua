@@ -181,14 +181,14 @@ local function add_printer_raw(file, func, scriptname)
 	table.insert(printers[file], { f = func, scriptname = scriptname })
 end
 
-local function add_choice_text_conditional_raw(title, data, test)
+local function add_choice_text_raw(title, data)
 	if not noncombat_choice_texts[title] then noncombat_choice_texts[title] = {} end
-	table.insert(noncombat_choice_texts[title], { test = test, data = data })
+	table.insert(noncombat_choice_texts[title], data)
 end
 
 envstoreinfo.g_env.load_script_files {
 	add_printer_raw = add_printer_raw,
-	add_choice_text = function (title, x) add_choice_text_conditional_raw(title, x, function() return true end) end,
+	add_choice_text = add_choice_text_raw,
 }
 
 function run_wrapped_function(f_env)
