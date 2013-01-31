@@ -77,13 +77,11 @@ end
 
 local function parse_mafia_bonuslist(bonuslist)
 	local checks = {
-		-- TODO: +++ change these legacy ones +++
-		["Initiative"] = "initiative", -- Combat Initiative
-		["Item Drop"] = "item", -- Item Drops from Monsters
-		["Meat Drop"] = "meat", -- Meat from Monsters
-		["Monster Level"] = "ml", -- -100 to Monster Level
-		["Combat Rate"] = "combat", -- Monsters will be more attracted to you.
-		-- TODO: --- change these legacy ones ---
+		["Initiative"] = "Combat Initiative",
+		["Item Drop"] = "Item Drops from Monsters",
+		["Meat Drop"] = "Meat from Monsters",
+		["Monster Level"] = "Monster Level",
+		["Combat Rate"] = "Monsters will be more attracted to you",
 
 		["Muscle"] = "Muscle",
 		["Mysticality"] = "Mysticality",
@@ -124,7 +122,7 @@ local function parse_mafia_bonuslist(bonuslist)
 		["Maximum MP"] = "Maximum MP",
 
 		["HP Regen Min"] = "Regenerate minimum HP per adventure", -- Regenerate 10-15 HP and MP per adventure
-		["MP Regen Max"] = "Regenerate maximum HP per adventure",
+		["HP Regen Max"] = "Regenerate maximum HP per adventure",
 		["MP Regen Min"] = "Regenerate minimum MP per adventure",
 		["MP Regen Max"] = "Regenerate maximum MP per adventure",
 
@@ -164,7 +162,7 @@ function parse_buffs()
 end
 
 function verify_buffs(data)
-	if data["Peppermint Twisted"].bonuses.initiative == 40 and data["Peppermint Twisted"].bonuses.ml == 10 and data["Peeled Eyeballs"].bonuses.meat == -20 then
+	if data["Peppermint Twisted"].bonuses["Combat Initiative"] == 40 and data["Peppermint Twisted"].bonuses["Monster Level"] == 10 and data["Peeled Eyeballs"].bonuses["Meat from Monsters"] == -20 then
 		return data
 	end
 end
@@ -201,7 +199,7 @@ function verify_outfits(data)
 		end
 	end
 
-	if data["Antique Arms and Armor"].bonuses.initiative == -10 and data["Pork Elf Prizes"].bonuses.item == 10 and data["Pork Elf Prizes"].items[2] == "pig-iron helm" then
+	if data["Antique Arms and Armor"].bonuses["Combat Initiative"] == -10 and data["Pork Elf Prizes"].bonuses["Item Drops from Monsters"] == 10 and data["Pork Elf Prizes"].items[2] == "pig-iron helm" then
 		return data
 	end
 end
@@ -429,7 +427,7 @@ function verify_enthroned_familiars(data)
 		end
 	end
 
-	if data["Leprechaun"].meat == 20 and data["Feral Kobold"].item == 15 then
+	if data["Leprechaun"]["Meat from Monsters"] == 20 and data["Feral Kobold"]["Item Drops from Monsters"] == 15 then
 		return data
 	end
 end
