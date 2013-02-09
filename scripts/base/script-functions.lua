@@ -333,6 +333,9 @@ function elemental_resist_level_multiplier(level)
 end
 
 function check_supported_table_values(tbl, optional, mandatory)
+	if true then return true end
+	optional = optional or {}
+	mandatory = mandatory or {}
 	local ok_keys = {}
 	for _, x in ipairs(optional) do
 		ok_keys[x] = true
@@ -340,13 +343,13 @@ function check_supported_table_values(tbl, optional, mandatory)
 	for _, x in ipairs(mandatory) do
 		ok_keys[x] = true
 		if not tbl[x] then
-			if playername() == "Eleron" then print("DEBUG: missing mandatory param", x) end
+--			if playername() == "Eleron" then print("DEBUG: missing mandatory param", x) end
 --			error("Missing mandatory table parameter value: " .. tostring(x))
 		end
 	end
 	for x, _ in pairs(tbl) do
 		if not ok_keys[x] then
-			if playername() == "Eleron" then print("DEBUG: unsupported param", x, tbl[x]) end
+--			if playername() == "Eleron" then print("DEBUG: unsupported param", x, tbl[x]) end
 --			error("Unsupported table parameter value: " .. tostring(x))
 		end
 	end

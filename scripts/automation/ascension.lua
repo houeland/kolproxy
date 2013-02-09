@@ -4697,7 +4697,7 @@ end)
 
 ascension_automation_setup_href = add_automation_script("setup-ascension-automation", function()
 	if params.confirm == "yes" then
-		ascension["__script.ascension script enabled"] = "yes"
+		ascension["__script.ascension script enabled"] = "yes/" .. get_current_kolproxy_version()
 		if params.stop_on_imported_beer == "yes" then
 			ascension["__script.stop on imported beer"] = "yes"
 		end
@@ -4732,7 +4732,7 @@ add_printer("/main.php", function ()
 	if not setting_enabled("enable turnplaying automation") then return end
 	if not setting_enabled("enable turnplaying automation in-run") then return end
 
-	if ascension["__script.ascension script enabled"] == "yes" then
+	if ascension["__script.ascension script enabled"] == "yes/" .. get_current_kolproxy_version() then
 		local links = {
 			{ titleday = " day 1", whichday = 1 },
 			{ titleday = " day 2", whichday = 2 },

@@ -91,9 +91,9 @@ handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logch
 				if (lookup "secretkey" =<< maybeparams) == Just (shutdown_secret_ $ globalref)
 					then do
 						writeIORef (shutdown_ref_ $ globalref) True
-						makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack "<html><body><span style=\"color: green\">Closing.</span></body></html>") "/kolproxy-shutdown" [("Content-Type", "text/html; charset=UTF-8"), ("Cache-Control", "no-cache")]
+						makeResponse (Data.ByteString.Char8.pack "<html><body><span style=\"color: green\">Closing.</span></body></html>") "/kolproxy-shutdown" []
 					else do
-						makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack "<html><body><span style=\"color: darkorange\">Denied.</span></body></html>") "/kolproxy-shutdown" [("Content-Type", "text/html; charset=UTF-8"), ("Cache-Control", "no-cache")]
+						makeResponse (Data.ByteString.Char8.pack "<html><body><span style=\"color: darkorange\">Denied.</span></body></html>") "/kolproxy-shutdown" []
 			_ -> do
 				doSERVER_DEBUG $ "got request: " ++ (show $ rqURI req) ++ " [" ++ show sh ++ "]"
 				let cookie = findHeader HdrCookie req
