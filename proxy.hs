@@ -18,9 +18,10 @@ import Data.IORef
 import Data.List (intercalate)
 import Data.Maybe
 import Data.Time
+import Network.CGI (formEncode)
 import Network.URI
 import System.Directory (doesFileExist, createDirectoryIfMissing)
-import System.Environment (getArgs)
+--import System.Environment (getArgs)
 import System.IO
 import qualified Data.ByteString.Char8
 import qualified Data.Map
@@ -103,23 +104,34 @@ kolProxyHandlerWhenever uri params baseref = do
 	Right (text, effuri, _hdrs) <- case uriPath uri of -- TODO: handle Left here?
 		"/submitnewchat.php" -> do
 			let allparams = concat $ catMaybes $ [decodeUrlParams uri, params]
-			x <- runSendChatScript ref uri allparams
-			let handle_normally = do
-				y <- join $ (processPage ref) ref uri params
+			let handle_normally msguri msgparams = do
+				y <- join $ (processPage ref) ref msguri msgparams
 				case y of
 					Right (msg, _, _) -> do
 						log_chat_messages ref (Data.ByteString.Char8.unpack msg)
 						runSentChatScript ref msg
 					_ -> return ()
 				return y
+			x <- runSendChatScript ref uri allparams
 			case x of
 				Right msg -> do
 					if msg == Data.ByteString.Char8.pack ""
-						then handle_normally
-						else return $ Right (msg, uri, [])
+						then handle_normally uri params
+						else if Data.ByteString.Char8.isPrefixOf (Data.ByteString.Char8.pack "//kolproxy:sendgraf:") msg
+							then do
+								let Just uriparams = decodeUrlParams uri
+								let newgraf = Data.ByteString.Char8.drop 20 msg
+								let newuriparams = map (\(x, y) -> (x, if x == "graf" then Data.ByteString.Char8.unpack newgraf else y)) uriparams
+								let newuri = uri { uriQuery = "?" ++ (formEncode newuriparams) }
+								let newparams = params
+--								putStrLn $ "DEBUG: send chat uri: " ++ show newuri
+--								putStrLn $ "DEBUG: send chat params: " ++ show newparams
+--								putStrLn $ "DEBUG:   want to graf: " ++ show (Data.ByteString.Char8.drop 20 msg)
+								handle_normally newuri newparams
+							else return $ Right (msg, uri, [])
 				Left (msg, trace) -> do
 					putStrLn $ "sendchat error: " ++ (msg ++ "\n" ++ trace)
-					handle_normally
+					handle_normally uri params
 		_ -> join $ (processPage ref) ref uri params
 	resptext <- case uriPath uri of
 		"/newchatmessages.php" -> do
@@ -350,7 +362,8 @@ runKolproxy = do
 
 main = platform_init $ do
 	hSetBuffering stdout LineBuffering
-	args <- getArgs
+--	args <- getArgs
+	let args = []
 	case args of
 		[] -> runKolproxy
 		["--runbotscript", botscriptfilename] -> do
@@ -359,3 +372,4 @@ main = platform_init $ do
 		_ -> do
 			putStrLn $ "ERROR: Unsupported command-line options!"
 	putStrLn $ "INFO: Done! (main finished)"
+	return ()

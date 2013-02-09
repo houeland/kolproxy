@@ -88,11 +88,15 @@ local function automate_hcnp_day(whichday)
 		return have_item("dingy dinghy") or have_item("skeletal skiff")
 	end
 
+	local function want_shore()
+		return not unlocked_island() and not have_item("skeleton")
+	end
+
 	challenge = nil
 	if ascensionpathid() == 6 then
 		challenge = "fist"
 		fist_level = 0
-		for x in table.values { "Flying Fire Fist", "Salamander Kata", "Drunken Baby Style", "Stinkpalm", "Worldpunch" } do
+		for _, x in ipairs { "Flying Fire Fist", "Salamander Kata", "Drunken Baby Style", "Stinkpalm", "Worldpunch" } do
 			if have_skill(x) then
 				fist_level = fist_level + 1
 			end
@@ -502,7 +506,25 @@ endif
 	}
 
 	add_task {
-		when = not unlocked_island() and
+		when = not cached_stuff.campground_psychoses,
+		task = {
+			message = "checking campground psychoses",
+			nobuffing = true,
+			action = function()
+				set_result(get_page("/campground.php"))
+				if get_result():contains("The Crackpot Mystic's Psychoses") then
+					cached_stuff.campground_psychoses = "mystic"
+				else
+					cached_stuff.campground_psychoses = "not mystic"
+				end
+				did_action = true
+			end
+		}
+	}
+
+	add_task {
+		when = want_shore() and
+			not unlocked_island() and
 			unlocked_beach() and
 			not cached_stuff.completed_shore_trips,
 		task = {
@@ -1403,7 +1425,7 @@ endif
 			inform "trading for legend keys"
 			for x in table.values { "Boris's key", "Jarlsberg's key", "Sneaky Pete's key" } do
 				if not have(x) then
-					async_post_page("/da.php", { pwd = get_pwd(), action = "vendo", whichitem = get_itemid(x) })
+					async_post_page("/shop.php", { pwd = get_pwd(), whichshop = "damachine", action = "buyitem", whichitem = get_itemid(x), quantity = 1 })
 				end
 			end
 			if countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") >= 3 then
@@ -1757,7 +1779,8 @@ endif
 	}
 
 	add_task {
-		prereq = challenge == "boris" and
+		prereq = want_shore() and
+			challenge == "boris" and
 			((cached_stuff.completed_shore_trips or 0) >= 2 or (tonumber(ascension["shore turn"]) and tonumber(ascension["shore turn"]) < turnsthisrun())) and
 			not unlocked_island() and
 			turns_to_next_sr >= 5 and
@@ -3173,6 +3196,51 @@ endwhile
 		end,
 	}
 
+	-- TODO: check campground, not session[]
+	add_task {
+		when = not have_item("digital key") and cached_stuff.campground_psychoses == "mystic" and count_item("white pixel") < 30,
+		task = {
+			message = "get digital key",
+			fam = "Slimeling",
+			buffs = { "Glittering Eyelashes", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" },
+			minmp = 20,
+			olfact = "morbid skull",
+			action = adventure {
+				zoneid = 302,
+				macro_function = function() return make_cannonsniff_macro("morbid skull") end,
+			},
+		}
+	}
+
+	add_task {
+		when = have_buff("Consumed by Fear"),
+		task = {
+			message = "remove consumed by fear buff",
+			nobuffing = true,
+			action = function()
+				get_page("/place.php", { whichplace = "junggate_3", action = "mystic_face" })
+				did_action = not have_buff("Consumed by Fear")
+			end
+		}
+	}
+
+	add_task {
+		when = not have_item("digital key") and have_item("psychoanalytic jar") and advs() >= 80 and not trailed,
+		task = {
+			message = "use mystic jar",
+			nobuffing = true,
+			action = function()
+				post_page("/shop.php", { whichshop = "mystic", action = "jung", whichperson = "mystic" })
+				if not have_item("jar of psychoses (The Crackpot Mystic)") then
+					critical "Failed to pick up crackpot mystic jar"
+				end
+				cached_stuff.campground_psychoses = nil
+				use_item("jar of psychoses (The Crackpot Mystic)")
+				did_action = not have_item("jar of psychoses (The Crackpot Mystic)")
+			end
+		}
+	}
+
 --	add_task {
 --		when = (level() < 9 or quest("There Can Be Only One Topping")) and ascensionstatus() == "Hardcore" and challenge ~= "boris" and challenge ~= "zombie" and script.have_familiar("Obtuse Angel"),
 --		task = function()
@@ -3295,7 +3363,8 @@ endwhile
 	}
 
 	add_task {
-		prereq = unlocked_beach() and
+		prereq = want_shore() and
+			unlocked_beach() and
 			not unlocked_island() and
 			not have("dinghy plans") and
 			(cached_stuff.completed_shore_trips or 0) < 1 and
@@ -3367,7 +3436,8 @@ endwhile
 	-- TODO: shore as early as possible.
 	if challenge == "fist" then
 		add_task {
-			prereq = not unlocked_island() and
+			prereq = want_shore() and
+				not unlocked_island() and
 				turns_to_next_sr >= 5,
 			f = script.get_dinghy,
 			message = "get dinghy",
@@ -3502,7 +3572,8 @@ endwhile
 
 	-- TODO: wait until shore counter is up
 	add_task {
-		prereq = not unlocked_island() and
+		prereq = want_shore() and
+			not unlocked_island() and
 			turns_to_next_sr >= 5 and
 			meat() >= 1000 and
 			unlocked_beach(),
@@ -4627,6 +4698,9 @@ end)
 ascension_automation_setup_href = add_automation_script("setup-ascension-automation", function()
 	if params.confirm == "yes" then
 		ascension["__script.ascension script enabled"] = "yes"
+		if params.stop_on_imported_beer == "yes" then
+			ascension["__script.stop on imported beer"] = "yes"
+		end
 		return get_page("/main.php")
 	end
 
@@ -4647,6 +4721,7 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 <p>Are you sure you want to enable ascension automation for this run?</p>
 ]] .. path_support_text .. [[
 <p><a style="color: green" href="]]..ascension_automation_setup_href { pwd = session.pwd, confirm = "yes" }..[[">I am sure!</a></p>
+<p><small><a style="color: green" href="]]..ascension_automation_setup_href { pwd = session.pwd, confirm = "yes", stop_on_imported_beer = "yes" }..[[">I am sure! And stop instead of drinking imported beer as fallback booze!</a></small></p>
 </body>
 </html>]]
 	return text, requestpath

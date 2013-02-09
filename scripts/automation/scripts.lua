@@ -1350,7 +1350,7 @@ endif
 					local f = fullness()
 					inform "eat fortune cookie day 1"
 					buy_item("fortune cookie", "m")
-					eat_item("fortune cookie")
+					eat_item("fortune cookie")()
 					if not (fullness() == f + 1 and script.get_turns_until_sr() ~= nil) then
 						print("WARNING fortune cookie result:", script.get_turns_until_sr())
 						critical "Error getting fortune cookie numbers"
@@ -1388,7 +1388,7 @@ endif
 					local f = fullness()
 					inform "eat fortune cookie day 2"
 					buy_item("fortune cookie", "m")
-					eat_item("fortune cookie")
+					eat_item("fortune cookie")()
 					if not (fullness() == f + 1 and script.get_turns_until_sr() ~= nil) then
 						print("WARNING fortune cookie result:", script.get_turns_until_sr())
 						critical "Error getting fortune cookie numbers"
@@ -1436,7 +1436,7 @@ endif
 					local f = fullness()
 					inform "eat fortune cookie day 3"
 					buy_item("fortune cookie", "m")
-					eat_item("fortune cookie")
+					eat_item("fortune cookie")()
 					if not (fullness() == f + 1 and script.get_turns_until_sr() ~= nil) then
 						print("WARNING fortune cookie result:", script.get_turns_until_sr())
 						critical "Error getting fortune cookie numbers"
@@ -1484,7 +1484,7 @@ endif
 	end
 
 	local function warn_imported_beer()
-		if true then return end -- Remove line to stop when drinking imported beer
+		if ascension["__script.stop on imported beer"] ~= "yes" then return end
 		if cached_stuff.warned_imported_beer == turnsthisrun() then return end
 		cached_stuff.warned_imported_beer = turnsthisrun()
 		stop "Script would drink imported beer. Drink something else manually instead, or run again to proceed."

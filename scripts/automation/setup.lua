@@ -147,6 +147,7 @@ end
 result, resulturl = "?", "?"
 
 function setup_turnplaying_script(tbl)
+	check_supported_table_values(tbl, { "preparation", "macro" }, { "name", "adventuring" })
 	automation_script_details_list[tbl.name] = tbl
 	return add_automation_script(tbl.name, function()
 		-- TODO: limit global variables to script environments

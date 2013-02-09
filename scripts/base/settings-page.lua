@@ -10,6 +10,7 @@ local setting_levels = {
 }
 
 function register_setting(tbl)
+	check_supported_table_values(tbl, { "hidden" }, { "name", "description", "group", "default_level" })
 	settings[tbl.name] = tbl
 	settings_order_counter = settings_order_counter + 1
 	settings_order[tbl.name] = settings_order_counter
@@ -363,6 +364,7 @@ add_printer("/custom-settings", function()
 			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-ascension-checklist&pwd=]]..session.pwd..[[">Pre-ascension pull stocking checklist</a></center></td></tr>
 			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-aftercore-automation&pwd=]]..session.pwd..[[">Aftercore automation scripts</a></center></td></tr>
 			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-mix-drinks&pwd=]]..session.pwd..[[">List advanced cocktails you can craft (preview)</a></center></td></tr>
+			<tr><td><center><a href="kolproxy-automation-script?automation-script=display-tracked-variables&pwd=]]..session.pwd..[[">Display tracked game variables (preview)</a></center></td></tr>
 			<tr><td><center><a href="http://www.houeland.com/kolproxy/wiki/" target="_blank">Kolproxy documentation</a> (opens in a new tab)</center></td></tr>
 			</td></tr></table></center>
 ]], "Kolproxy special pages") .. make_kol_html_frame([[

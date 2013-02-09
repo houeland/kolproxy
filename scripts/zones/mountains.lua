@@ -480,32 +480,48 @@ add_choice_text("Cabin Fever", { -- choice adventure number: 618
 	["Burn this mother-goddamning hotel to the ground."] = { text = "Skip the mystery and light the signal fire", good_choice = true },
 })
 
+local function predict_aboo_peak_banish()
+	local resists = get_resistance_levels()
+	local accumuldmg = { cold = 0, spooky = 0 }
+	local accumulbanish = 0
+	local nextbanish = 2
+	local beatenup = false
+	for _, dmg in ipairs { 13, 25, 50, 125, 250 } do
+		local dmg = table_apply_function(estimate_damage { cold = dmg, spooky = dmg, __resistance_levels = resists }, math.ceil)
+		accumuldmg.cold = accumuldmg.cold + dmg.cold
+		accumuldmg.spooky = accumuldmg.spooky + dmg.spooky
+		if beatenup then
+		elseif accumuldmg.cold + accumuldmg.spooky < hp() then
+			accumulbanish = accumulbanish + nextbanish
+			nextbanish = nextbanish + 2
+		else
+			accumulbanish = accumulbanish + 2
+			beatenup = true
+		end
+--		print("DEBUG: accumuldmg", accumuldmg, "accumulbanish", accumulbanish)
+	end
+	return accumulbanish, accumuldmg
+end
 
 add_extra_ascension_adventure_warning(function(zoneid)
-	if zoneid == 296 and have_item("A-Boo clue") then
-		local resists = get_resistance_levels()
-		local accumuldmg = { cold = 0, spooky = 0 }
-		local accumulbanish = 0
-		local nextbanish = 2
-		local beatenup = false
-		for _, dmg in ipairs { 13, 25, 50, 125, 250 } do
-			local dmg = table_apply_function(estimate_damage { cold = dmg, spooky = dmg, __resistance_levels = resists }, math.ceil)
-			accumuldmg.cold = accumuldmg.cold + dmg.cold
-			accumuldmg.spooky = accumuldmg.spooky + dmg.spooky
-			if beatenup then
-			elseif accumuldmg.cold + accumuldmg.spooky < hp() then
-				accumulbanish = accumulbanish + nextbanish
-				nextbanish = nextbanish + 2
-			else
-				accumulbanish = accumulbanish + 2
-				beatenup = true
-			end
---			print("DEBUG: accumuldmg", accumuldmg, "accumulbanish", accumulbanish)
-		end
+	if zoneid == 296 and have_item("A-Boo clue") and not have_item("ten-leaf clover") then
+		local accumulbanish, accumuldmg = predict_aboo_peak_banish()
 		if accumulbanish < 30 then
 			local dmgtext = markup_damagetext(accumuldmg)
 			return string.format([[<p>You only have enough HP to lower haunting level by %s%% (max is 30%%).</p><p>Maximum reduction would require at least %s HP (taking %s + %s damage) or higher resistance.</p>]], accumulbanish, accumuldmg.cold + accumuldmg.spooky + 1, dmgtext.spooky, dmgtext.cold), "a-boo peak incomplete banish"
 		end
+	end
+end)
+
+local aboo_peak_banish_href = add_automation_script("aboo-peak-banish", function()
+	local accumulbanish, accumuldmg = predict_aboo_peak_banish()
+	local dmgtext = markup_damagetext(accumuldmg)
+	return string.format([[<p>You have enough HP to lower haunting level by %s%% (max is 30%%).</p><p>Maximum reduction requires at least %s HP (taking %s + %s damage) or higher resistance.</p>]], accumulbanish, accumuldmg.cold + accumuldmg.spooky + 1, dmgtext.spooky, dmgtext.cold), requestpath
+end)
+
+add_printer("/place.php", function()
+	if params.whichplace == "highlands" then
+		text = text:gsub([[</body>]], [[<center><a href="]] .. aboo_peak_banish_href { pwd = session.pwd } .. [[" style="color: green;">{ Check resistance level. }</a></center>%0]])
 	end
 end)
 

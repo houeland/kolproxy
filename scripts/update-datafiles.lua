@@ -41,6 +41,8 @@ local blacklist = {
 	["bonuses: frosty halo"] = true,
 
 	["recast buff warning: Overconfident"] = true,
+
+	["Dungeons of Doom"] = true,
 }
 
 local processed_datafiles = {}
@@ -124,7 +126,7 @@ local function parse_mafia_bonuslist(bonuslist)
 		["Maximum MP"] = "Maximum MP",
 
 		["HP Regen Min"] = "Regenerate minimum HP per adventure", -- Regenerate 10-15 HP and MP per adventure
-		["MP Regen Max"] = "Regenerate maximum HP per adventure",
+		["HP Regen Max"] = "Regenerate maximum HP per adventure",
 		["MP Regen Min"] = "Regenerate minimum MP per adventure",
 		["MP Regen Max"] = "Regenerate maximum MP per adventure",
 
@@ -311,7 +313,7 @@ function parse_items()
 
 	for l in io.lines("cache/files/equipment.txt") do
 		local tbl = split_tabbed_line(l)
-		local name, power, req = tbl[1], tbl[2], tbl[3]
+		local name, power, req = tbl[1], tonumber(tbl[2]), tbl[3]
 		if name and req and not blacklist[name] then
 			if items[name] then
 				local reqtbl = {}
@@ -356,7 +358,9 @@ end
 function verify_items(data)
 	if data["Orcish Frat House blueprints"] and data["Boris's Helm"] then
 		if data["Hell ramen"].fullness == 6 and data["water purification pills"].drunkenness == 3 and data["beastly paste"].spleen == 4 then
-			return data
+			if data["leather chaps"].equip_requirement.moxie == 65 then
+				return data
+			end
 		end
 	end
 end
@@ -433,6 +437,30 @@ function verify_enthroned_familiars(data)
 		return data
 	end
 end
+
+--function parse_zones()
+--	local zones = {}
+--	-- Fix wrong data file entries
+--	zones["The Dungeons of Doom"] = { zoneid = 39 }
+--	for l in io.lines("cache/files/adventures.txt") do
+--		local tbl = split_tabbed_line(l)
+--		local skillid, name, mpcost = tonumber(tbl[1]), tbl[2], tonumber(tbl[4])
+--
+--		local zoneid, name = tonumber(tbl[2]:match("^adventure=([0-9]+)$")), tbl[4]
+--		if zoneid and name and not blacklist[name] then
+--			zones[name] = { zoneid = zoneid }
+--		end
+--	end
+--	return zones
+--end
+--
+--function verify_zones()
+--	if zones["The Dungeons of Doom"].zoneid == 39 then
+--		if zones["McMillicancuddy's Farm"].zoneid == 155 then
+--			return data
+--		end
+--	end
+--end
 
 function xml_findelements(elem, name)
 	local tbl = {}
@@ -636,3 +664,5 @@ process("semirares")
 
 process("mallprices")
 process("consumables")
+
+--process("zones")

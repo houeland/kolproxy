@@ -168,6 +168,29 @@ do
 		raw_add_zone_check(zid, f)
 	end
 
+	local function get_zoneid(name)
+		-- TODO: Make a datafile
+		if name == "The Dungeons of Doom" then
+			return 39
+		else
+			error "TODO: get_zoneid() is not ready yet"
+		end
+	end
+
+	function add_warning(tbl)
+		check_supported_table_values(tbl, {}, { "message", "check", "level", "zone" })
+		if tbl.level == "extra" then
+--			localtable.insert(__raw_extra_adventure_warnings, f)
+			__raw_add_extra_warning("/adventure.php", function()
+				if tonumber(params.snarfblat) == get_zoneid(tbl.zone) and tbl.check() then
+					return tbl.message, tbl.zone .. "/" .. tbl.message
+				end
+			end)
+		else
+			error "TODO: tbl.level ~= extra not supported yet"
+		end
+	end
+
 	local added_automation_handler = false
 	local automation_scripts = {}
 
@@ -254,6 +277,7 @@ function add_chat_alias(newcmd, realcmd)
 end
 
 function autoadventure(tbl)
+	check_supported_table_values(tbl, { "ignorewarnings", "noncombatchoices", "specialnoncombatfunction" }, { "zoneid", "macro" })
 -- 	if not tbl.ignorewarnings and setting_enabled("enable adventure warnings") then
 	if not tbl.ignorewarnings and character["setting: enable adventure warnings"] ~= "no" then
 		local foo = { kolproxy_log_time_interval("check adv warnings", function()
@@ -308,8 +332,24 @@ function elemental_resist_level_multiplier(level)
 	end
 end
 
-local function check_supported_table_values()
-	-- TODO: implement, make global, use
+function check_supported_table_values(tbl, optional, mandatory)
+	local ok_keys = {}
+	for _, x in ipairs(optional) do
+		ok_keys[x] = true
+	end
+	for _, x in ipairs(mandatory) do
+		ok_keys[x] = true
+		if not tbl[x] then
+			if playername() == "Eleron" then print("DEBUG: missing mandatory param", x) end
+--			error("Missing mandatory table parameter value: " .. tostring(x))
+		end
+	end
+	for x, _ in pairs(tbl) do
+		if not ok_keys[x] then
+			if playername() == "Eleron" then print("DEBUG: unsupported param", x, tbl[x]) end
+--			error("Unsupported table parameter value: " .. tostring(x))
+		end
+	end
 end
 
 local resistphials = {

@@ -141,7 +141,7 @@ elseif choice_adventure_number ~= nil then
 		text = text:gsub([[(<input type=hidden name=option value=)([0-9]+)(>)(<input class=button type=submit value=")([^"]-)(")(>)]], function(preopt, opt, postopt, pre, value, between, post)
 			local s = spoilers["choiceid:"..tostring(choice_adventure_number)][tonumber(opt)]
 			if s then
-				local spoiler = [[<br><span style="color: gray;">( ]] .. s .. [[ )</span>]]
+				local spoiler = [[<br><span style="color: gray;">Fallback spoiler: ( ]] .. s .. [[ )</span>]]
 				return preopt .. opt .. postopt .. pre .. value .. between .. post .. spoiler
 			end
 		end)

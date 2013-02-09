@@ -548,7 +548,14 @@ local href = add_automation_script("automate-volcanomaze", function ()
 	return text, url
 end)
 
-add_printer("/volcanomaze.php", function ()
+add_printer("/volcanomaze.php", function()
 	if not setting_enabled("run automation scripts") or not setting_enabled("automate simple tasks") then return end
 	text = text:gsub([[value="Swim Back to Shore".->]], [[%0<br><a href="]].. href { pwd = session.pwd } ..[[" style="color:green">{ solve }</a>]])
+end)
+
+add_printer("/fight.php", function()
+	if text:contains("In your ears! Earworms! He's given you <i>EARWORMS!</i>") then
+		link = make_href("/fight.php", { action = "skill", whichskill = 6025, pwd = session.pwd })
+		text = text:gsub("He's given you <i>EARWORMS!</i>", [[%0 <a href="]]..link..[[" style="color: green">{ Sing something worse! }</a>]])
+	end
 end)

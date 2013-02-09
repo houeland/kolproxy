@@ -227,11 +227,12 @@ local chess_href = add_automation_script("automate-chess-puzzle", function()
 		square = square + 1
 	end
 	local solution = solve(board, whitepiece, file(whitesquare), rank(whitesquare), pieces)
+	local ptf
 	for k, v in ipairs(solution) do
 		local xy = ("%d,%d"):format(file(v) - 1, 8 - rank(v))
-		text, url = get_page("/choice.php", { pwd = session.pwd, whichchoice = "443", option = "1", xy = xy })
+		ptf = async_get_page("/choice.php", { pwd = session.pwd, whichchoice = "443", option = "1", xy = xy })
 	end
-	return text, url
+	return ptf()
 end)
 
 add_printer("/choice.php", function()

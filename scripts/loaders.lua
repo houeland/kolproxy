@@ -70,6 +70,7 @@ load_file("interface", "interface/chatpane.lua")
 load_file("interface", "interface/inventory-collapse.lua")
 load_file("interface", "interface/custom-charpane.lua")
 load_file("interface", "interface/preview-chat-commands.lua")
+load_file("interface", "interface/tracked-variables.lua")
 
 load_file("automation", "automation/setup.lua")
 load_file("automation", "automation/daily-visits.lua")

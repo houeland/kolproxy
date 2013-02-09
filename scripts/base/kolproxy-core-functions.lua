@@ -93,19 +93,22 @@ function intercept_warning(warning)
 	if not warning.id then
 		error "No warning id!"
 	end
-	if session["warning-" .. warning.id] then return end
+	if session["warning-" .. warning.id] == "skip" then return end
+	if session["warning-turn-" .. turnsthisrun() .. "-" .. warning.id] == "skip" then return end
 	local head = [[<head><script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
 <script>top.charpane.location = "charpane.php"</script></head>]]
 	local extratext = ""
 	if not warning.norepeat then
 		extratext = [[<p><a href="]]..raw_make_href(requestpath, parse_params_raw(input_params))..[[">I fixed it, try again.</a></p>]]
 	end
-	local msgtext = make_kol_html_frame([[<p>]] ..
-		(warning.customwarningprefix or "Warning: ") .. warning.message .. [[</p>]] ..
---		[[<p><a href="http://www.houeland.com/kolproxy/wiki/Adventure_warnings" target="_blank">Help</a> (opens adventure warning documentation in a new tab)</p>]] ..
-		extratext ..
-		[[<p><small><a href="#" onclick="var link = this; $.post('custom-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-]] .. warning.id .. [[', stateset: 'session', value: 'skip', ajax: 1 }, function (res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..raw_make_href(requestpath, parse_params_raw(input_params))..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it anyway and disable this warning until I log out.") .. [[</a></small></p>]] ..
-		[[]], (warning.customwarningprefix or "Warning: "), (warning.customdisablecolor or "darkorange"))
+	local session_disable_msg = [[<p><small><a href="#" onclick="var link = this; $.post('custom-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-]] .. warning.id .. [[', stateset: 'session', value: 'skip', ajax: 1 }, function (res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..raw_make_href(requestpath, parse_params_raw(input_params))..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it anyway and disable this warning until I log out.") .. [[</a></small></p>]]
+	local one_turn_disable_msg = [[<p><small><a href="#" onclick="var link = this; $.post('custom-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-turn-]] .. turnsthisrun() .. [[-]] .. warning.id .. [[', stateset: 'session', value: 'skip', ajax: 1 }, function (res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..raw_make_href(requestpath, parse_params_raw(input_params))..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it for this turn.") .. [[</a></small></p>]]
+	if warning.customdisablemsg then
+		one_turn_disable_msg = ""
+	end
+
+	local msgtext = make_kol_html_frame([[<p>]] .. (warning.customwarningprefix or "Warning: ") .. warning.message .. [[</p>]] ..
+		extratext .. session_disable_msg .. one_turn_disable_msg, (warning.customwarningprefix or "Warning: "), (warning.customdisablecolor or "darkorange"))
 	text = [[<html>]] .. head .. [[<body>]] .. msgtext .. [[</body></html>]]
 	return text, "/kolproxy-warning"
 end

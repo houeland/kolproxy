@@ -131,7 +131,6 @@ download_data_files = do
 		filedata <- load_data_file x ("http://www.houeland.com/kolproxy/files/data-mirror/" ++ basename)
 		doWriteDataFile ("cache/files/" ++ basename) filedata
 
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/adventures.txt"
 	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/classskills.txt"
 	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/concoctions.txt"
 	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/equipment.txt"

@@ -111,7 +111,7 @@ end)
 
 add_printer("/mchat.php", function()
 	if setting_enabled("rewrite PRIVATE: chat commands") then
-		text = text:gsub([[if %(parts%[0%] == 'public'%) return '/' %+ parts%[1%] %+ ' ' %+ msg;]], [[if (parts[0] == 'public' && !(mparts[0].match(/^\//) && parts[1].match(/ /))) return '/' + parts[1] + ' ' + msg;]])
+		text = text:gsub([[if %(parts%[0%] == 'public'%) return '/' %+ parts%[1%] %+ ' ' %+ msg;]], [[if (parts[0] == 'public' && !(mparts[0].match(/^\//) && (parts[1].match(/ /) && !parts[1].match(/clan /)))) return '/' + parts[1] + ' ' + msg;]])
 	end
 end)
 

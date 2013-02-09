@@ -37,7 +37,7 @@ function setup_variables()
 
 	for x in text:gmatch([[<tr><td style="color: white;" align=center bgcolor=blue.-><b>([^<]*)</b></td></tr>]]) do
 		if x ~= "Results:" and x ~= "Adventure Again:" then
-			adventure_title = x
+			adventure_title = x:gsub(" %(#[0-9]*%)$", "")
 		end
 	end
 	choice_adventure_number = tonumber(text:match([[<input type=hidden name=whichchoice value=([0-9]+)>]]))

@@ -137,7 +137,7 @@ add_automator("/beerpong.php", function()
 	solve_beerpong(3)
 end)
 
-add_printer("/cove.php", function ()
+add_printer("/cove.php", function()
 	if not text:contains([[title="The F'c'le (1)"]]) then
 		local tbl = ascension["zone.pirates.insults"] or {}
 		local count = table.maxn(tbl)

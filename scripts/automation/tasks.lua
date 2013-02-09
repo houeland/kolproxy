@@ -475,8 +475,10 @@ mark m_done
 						if get_resistance_levels().stench < 4 then
 							switch_familiarid(72)
 						end
+						local force_advagain = false
 						result, resulturl, advagain = autoadventure { zoneid = 297, macro = macro_noodlecannon(), noncombatchoices = nil, specialnoncombatfunction = function(advtitle, choicenum, pagetext)
 							if advtitle == "Welcome to the Great Overlook Lodge" then
+								force_advagain = true
 								return "", 1
 							elseif advtitle == "Lost in the Great Overlook Lodge" then
 								for _, x in ipairs { "Investigate Room 237", "Search the pantry", "Follow the faint sound of music", "Wait -- who's that?" } do
@@ -492,7 +494,10 @@ mark m_done
 								return "", 1
 							end
 						end, ignorewarnings = true }
-						-- TODO: set advagain on initial twin peak visit
+						if force_advagain then
+							-- TODO: Why is this necessary?
+							advagain = true
+						end
 						return result, resulturl, advagain
 					end
 				}
