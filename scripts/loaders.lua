@@ -134,6 +134,7 @@ load_file("interface", "other/nion/basement.lua")
 
 load_file("interface", "other/chickencha/lvl12.lua")
 load_file("interface", "other/chickencha/chess.lua")
+load_file("interface", "other/chickencha/chibibuddy.lua")
 
 load_file("interface", "other/superbachelor/blank-out.lua")
 
