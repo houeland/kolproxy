@@ -8,6 +8,17 @@ add_chat_command("/kolproxy_example_test_chat_command", "Testing things.", funct
 	return "Hello, world."
 end)
 
+add_chat_command("/arrowme", "Kmailing time's arrow to kbay.", function()
+	if not ascensionstatus("Aftercore") then
+		return "Not in aftercore."
+	elseif not have_item("time's arrow") then
+		return "No time's arrows to send."
+	else
+		post_page("/sendmessage.php", { action = "send", pwd = session.pwd, towho = "kbay", whichitem1 = get_itemid("time's arrow"), howmany1 = 1 })
+		return "Sent."
+	end
+end)
+
 add_chat_trigger("/stop", function()
 	block_lua_scripting()
 	return [[<span style="color: green">{ Page loading halted! }</span><br>]]

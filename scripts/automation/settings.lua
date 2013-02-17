@@ -115,8 +115,10 @@ function get_ascension_automation_settings(want_bonus)
 				"double-ice cap",
 				"reinforced beaded headband",
 				"beer helmet",
+--				"Jarlsberg's hat",
 				"fuzzy busby",
 				"worn tophat",
+				"fuzzy earmuffs",
 				"powdered wig",
 				"miner's helmet",
 				"Van der Graaf helmet",
@@ -198,6 +200,8 @@ function get_ascension_automation_settings(want_bonus)
 				"observational glasses",
 				"pirate fledges",
 				"Codpiece of the Goblin King",
+				"baconstone pendant",
+				"baconstone ring",
 				"badass belt",
 				"shiny ring",
 			}
@@ -210,6 +214,7 @@ function get_ascension_automation_settings(want_bonus)
 			"ice sickle",
 			"haiku katana",
 			"right bear arm",
+			"Staff of the Healthy Breakfast",
 			"hilarious comedy prop",
 			"rubber band gun",
 		}

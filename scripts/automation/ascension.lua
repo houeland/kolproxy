@@ -269,8 +269,81 @@ endif
 		function make_cannonsniff_macro(name)
 			return macro_softcore_zombie()
 		end
+	elseif ascensionpath("Avatar of Jarlsberg") then
+		-- TODO: pull third wine bottle
+		challenge = "jarlsberg"
+		if ascensionstatus() == "Hardcore" then
+			macro_softcore_boris = macro_hardcore_boris
+		end
+		macro_softcore = macro_softcore_boris
+		macro_autoattack = macro_softcore_boris
+		macro_stasis = macro_softcore_boris
+		macro_8bit_realm = macro_softcore_boris
+		macro_noodlecannon = macro_softcore_boris
+		macro_ppnoodlecannon = macro_softcore_boris
+		macro_noodleserpent = macro_softcore_boris
+		macro_barrr = macro_softcore_boris
+		macro_spookyraven = macro_softcore_boris
+		function macro_noodlegeyser() return macro_softcore_boris() end
+		make_gremlin_macro = macro_softcore_boris_gremlin
+
+		boris_action = function()
+			return [[
+
+jiggle
+if hasskill Throw Shield
+  cast Throw Shield
+endif
+if hasskill Blend
+  cast Blend
+endif
+cast Curdle
+if hasskill Boil
+  cast Boil
+endif
+
+]]
+		end
+
+		elemental_damage_action = boris_action
+		cannon_action = boris_action
+		serpent_action = boris_cleave_action
+		geyser_action = boris_cleave_action
+		function make_cannonsniff_macro(name)
+			if name == "dairy goat" then
+				return macro_softcore_boris()
+			elseif name == "dirty old lihc" then
+				return macro_softcore_boris()
+			elseif name == "zombie waltzers" then
+				return macro_softcore_boris()
+			elseif name == "Hellion" then
+				return macro_softcore_boris()
+			elseif name == "Astronomer" and ascensionstatus() == "Hardcore" then
+				return macro_softcore_boris()
+			elseif name == "gaudy pirate" then
+				if not have("gaudy key") and not have("snakehead charrrm") and not have("Talisman o' Nam") and ascensionstatus() ~= "Hardcore" then
+					if have("Rain-Doh black box") then
+						return macro_softcore_boris([[
+
+if monstername gaudy pirate
+  use Rain-Doh black box
+endif
+
+]])
+					end
+					stop "TODO: fight and copy gaudy pirate to make talisman"
+				else
+					return macro_softcore_boris()
+				end
+			else
+				critical("Trying to sniff " .. name .. " in Boris")
+			end
+		end
 	elseif ascensionpathid() == 0 then
 		highskill_at_run = check_for_highskill_run()
+		if not have_skill("Stringozzi Serpent") and have_skill("Cannelloni Cannon") then
+			serpent_action = cannon_action
+		end
 	end
 	if not have_skill("Saucy Salve") then
 		conditional_salve_action = function() return [[
@@ -281,7 +354,7 @@ endif
 		end
 	end
 
-	if ascensionpathid() == 8 then
+	if ascensionpathid() == 8 or ascensionpath("Avatar of Jarlsberg") then
 		can_change_familiar = false
 	else
 		can_change_familiar = true
@@ -375,13 +448,17 @@ endif
 	end
 
 	kgs_available = cached_stuff.learned_lab_password and have("Cobb's Knob lab key")
-	mmj_available = cached_stuff.mox_guild_is_open and (get_mainstat() == "Mysticality" or (classid() == 6 and level() >= 9))
+	mmj_available = cached_stuff.mox_guild_is_open and (classid() == 3 or classid() == 4 or (classid() == 6 and level() >= 9))
 
 	script.bonus_target {}
 	script.set_runawayfrom(nil)
 
-	if challenge == "boris" and (have_intrinsic("Gaze of the Trickster God") or have_intrinsic("Gaze of the Lightning God")) then
+	if get_mainstat() == "Muscle" and (have_intrinsic("Gaze of the Trickster God") or have_intrinsic("Gaze of the Lightning God")) then
 		stop "Non-volcanic gaze active!"
+	elseif get_mainstat() == "Mysticality" and (have_intrinsic("Gaze of the Trickster God") or have_intrinsic("Gaze of the Volcano God")) then
+		stop "Non-lightning gaze active!"
+	elseif get_mainstat() == "Moxie" and (have_intrinsic("Gaze of the Volcano God") or have_intrinsic("Gaze of the Lightning God")) then
+		stop "Non-trickster gaze active!"
 	end
 
 	if not cached_stuff.visited_hermit and challenge == "zombie" then
@@ -1687,6 +1764,7 @@ endif
 		}
 	}
 
+	-- TODO: generalize
 	add_task {
 		when = challenge == "boris" and
 			quest("The Goblin Who Wouldn't Be King") and
@@ -1806,11 +1884,11 @@ endif
 
 	add_task {
 		when = not (
-			(have("Rock and Roll Legend") or challenge == "boris") and
+			(have("Rock and Roll Legend") or challenge == "boris" or challenge == "zombie" or challenge == "jarlsberg") and
 			have("turtle totem") and
 			have("saucepan") and
 			have("seal tooth")
-		) and challenge ~= "fist" and challenge ~= "zombie",
+		) and challenge ~= "fist",
 		task = tasks.get_starting_items,
 	}
 
@@ -2422,17 +2500,17 @@ endif
 	}
 
 	add_task {
-		prereq = level() < 4 and get_mainstat() == "Moxie" and not have("tonic water") and challenge ~= "fist",
+		prereq = level() < 4 and (classid() == 5 or classid() == 6) and not have("tonic water") and challenge ~= "fist",
 		f = script.unlock_guild_and_get_tonic_water,
 	}
 
 	add_task {
-		prereq = level() < 5 and get_mainstat() == "Moxie" and not have("tonic water") and challenge == "fist" and fist_level > 0 and meat() >= 100,
+		prereq = level() < 5 and (classid() == 5 or classid() == 6) and not have("tonic water") and challenge == "fist" and fist_level > 0 and meat() >= 100,
 		f = script.unlock_guild_and_get_tonic_water,
 	}
 
 	add_task {
-		prereq = get_mainstat() == "Mysticality" and session["__script.opened myst guild store"] ~= "yes",
+		prereq = (classid() == 3 or classid() == 4) and session["__script.opened myst guild store"] ~= "yes",
 		f = script.open_myst_guildstore,
 	}
 
@@ -2710,7 +2788,7 @@ endwhile
 	}
 
 	add_task {
-		when = level() < 6 and (challenge ~= "fist" or fist_level >= 3) and challenge ~= "boris" and challenge ~= "zombie" and ascensionstatus() == "Hardcore",
+		when = level() < 6 and (challenge ~= "fist" or fist_level >= 3) and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and ascensionstatus() == "Hardcore",
 		task = tasks.do_sewerleveling,
 	}
 
@@ -2825,7 +2903,8 @@ endwhile
 		prereq = quest("The Goblin Who Wouldn't Be King") and
 			not have_guard_outfit() and
 			challenge ~= "fist" and
-			challenge ~= "boris",
+			challenge ~= "boris" and
+			challenge ~= "jarlsberg",
 		f = function()
 			if script.get_photocopied_monster() ~= "Knob Goblin Elite Guard Captain" then
 				inform "get KGE captain from faxbot"
@@ -3069,7 +3148,7 @@ endwhile
 	end }
 
 	add_task {
-		prereq = not have("time halo") and challenge ~= "boris" and challenge ~= "zombie" and daysthisrun() >= 2,
+		prereq = not have("time halo") and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and daysthisrun() >= 2,
 		f = function()
 			inform "using tome summons"
 
@@ -3158,7 +3237,7 @@ endwhile
 	}
 
 	add_task {
-		when = not have("digital key") and ascensionstatus() == "Hardcore" and challenge ~= "boris" and challenge ~= "zombie" and not script.have_familiar("Angry Jung Man"),
+		when = not have("digital key") and ascensionstatus() == "Hardcore" and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and not script.have_familiar("Angry Jung Man"),
 		task = function()
 			if highskill_at_run then
 				return tasks.do_8bit_realm()
@@ -3242,7 +3321,7 @@ endwhile
 	}
 
 --	add_task {
---		when = (level() < 9 or quest("There Can Be Only One Topping")) and ascensionstatus() == "Hardcore" and challenge ~= "boris" and challenge ~= "zombie" and script.have_familiar("Obtuse Angel"),
+--		when = (level() < 9 or quest("There Can Be Only One Topping")) and ascensionstatus() == "Hardcore" and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and script.have_familiar("Obtuse Angel"),
 --		task = function()
 --			return {
 --				message = "arrow pervert",
@@ -3402,7 +3481,7 @@ endwhile
 	}
 
 	add_task {
-		prereq = not have("Spookyraven ballroom key") and ((challenge ~= "boris" and challenge ~= "zombie") or level() >= 7),
+		prereq = not have("Spookyraven ballroom key") and ((challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg") or level() >= 7),
 		f = script.get_ballroom_key,
 		message = "ballroom key",
 	}
@@ -3517,7 +3596,8 @@ endwhile
 			can_yellow_ray() and
 			unlocked_island() and
 			challenge ~= "boris" and
-			challenge ~= "zombie",
+			challenge ~= "zombie" and
+			challenge ~= "jarlsberg",
 		f = function()
 			-- TODO: Want +combat%
 			-- TODO: Should do this before level 9 to avoid noncombats!
@@ -3766,7 +3846,7 @@ endwhile
 	}
 
 	add_task {
-		prereq = (challenge == "boris" or challenge == "zombie") and not have("Spookyraven gallery key"),
+		prereq = get_mainstat() == "Muscle" and not have("Spookyraven gallery key"),
 		f = script.do_muscle_powerleveling,
 	}
 
@@ -4181,35 +4261,11 @@ endwhile
 		}
 	}
 
---	add_task {
---		when = quest("A Quest, LOL") and count("334 scroll") >= 2 and have("30669 scroll") and have("33398 scroll"),
---		task = {
---			message = "do orc chasm",
---			nobuffing = true,
---			action = function()
---				ignore_buffing_and_outfit = false
--- 				if challenge == "boris" and not have_skill("Banishing Shout") then
--- 					script.bonus_target { "item" }
--- 					script.ensure_buffs {}
--- 					script.wear {}
--- 					stop "TODO: do boris orc chasm"
--- 				end
---				script.bonus_target { "item" }
---				script.go("doing orc chasm", 80, (challenge == "boris" and macro_softcore_boris_orc_chasm or macro_orc_chasm), {}, {}, "Rogue Program", 50)
---			end
---		}
---	}
-
 	add_task { prereq = true, f = function ()
 		if ((advs() < 50 and turnsthisrun() + advs() < 850) or (advs() < 10)) and fullness() >= 12 and drunkenness() >= 19 and not highskill_at_run then
 			if script.spooky_forest_runaways() then return end -- TODO: do earlier as a task
 			if script.trade_for_clover() then return end
 			stop "TODO: end of day 4. (pvp,) overdrink"
---		elseif quest("A Quest, LOL") then
---			if ascensionstatus() ~= "Hardcore" then
---				stop "Do orc chasm"
---			end
---			script.do_orc_chasm()
 		elseif level() < 13 then
 			if ascensionstatus() ~= "Hardcore" then
 				stop "Level to 13."
@@ -4555,21 +4611,6 @@ use gauze garter, gauze garter
 
 			if advagain then
 				did_action = true
-			end
-			if not did_action then
-				local need_mainstat = tonumber(get_result():match("<center>%(You must have at least ([0-9]+) [A-Za-z]+ to adventure here.%)</center>"))
-				if need_mainstat and need_mainstat > buffedmainstat() then
-					if get_mainstat() == "Muscle" then
-						script.ensure_buffs { "Go Get 'Em, Tiger!" }
-					elseif get_mainstat() == "Mysticality" then
-						script.ensure_buffs { "Glittering Eyelashes" }
-					elseif get_mainstat() == "Moxie" then
-						script.ensure_buffs { "Butt-Rock Hair" }
-					end
-					if buffedmainstat() >= need_mainstat then
-						did_action = true
-					end
-				end
 			end
 
 			ensure_empty_config_table(x)

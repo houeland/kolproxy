@@ -1,10 +1,10 @@
+-- TODO: Don't load all of these
 dofile("scripts/base/base-lua-functions.lua")
 dofile("scripts/base/state.lua")
 dofile("scripts/base/kolproxy-core-functions.lua")
 dofile("scripts/base/script-functions.lua")
 dofile("scripts/base/charpane.lua")
 dofile("scripts/base/api.lua")
-
 
 
 -- TODO: redo the rest of this code

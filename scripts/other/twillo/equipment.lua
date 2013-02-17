@@ -38,7 +38,7 @@ end
 
 local add_bonuses = add_modifier_bonuses
 
-function get_equipment_bonuses()
+function estimate_equipment_bonuses()
 	local bonuses = {}
 
 	local itemarray = {

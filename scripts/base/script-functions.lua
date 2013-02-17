@@ -413,6 +413,8 @@ function estimate_max_fullness()
 	local mf = 15
 	if ascensionpathid() == 8 then
 		mf = 20
+	elseif ascensionpath("Avatar of Jarlsberg") then
+		mf = 10
 	end
 	if have_skill("Stomach of Steel") then
 		mf = mf + 5
@@ -424,6 +426,9 @@ function estimate_max_fullness()
 		mf = mf + 5
 	end
 	if have_skill("Ravenous Pounce") then
+		mf = mf + 5
+	end
+	if have_skill("Lunch Like a King") then
 		mf = mf + 5
 	end
 	if have_skill("Gluttony") then
@@ -442,21 +447,27 @@ function estimate_max_safe_drunkenness()
 	if ascensionpathname() == "Teetotaler" or ascensionpathname() == "Oxygenarian" then
 		return 0
 	end
+	local msd = 14
 	if ascensionpathid() == 8 or ascensionpathid() == 10 then
-		return 4
-	elseif have_skill("Liver of Steel") then
-		return 19
-	else
-		return 14
+		msd = 4
+	elseif ascensionpath("Avatar of Jarlsberg") then
+		msd = 10
 	end
+	if have_skill("Liver of Steel") then
+		msd = msd + 5
+	end
+	if have_skill("Nightcap") then
+		msd = msd + 5
+	end
+	return msd
 end
 
 function estimate_max_spleen()
+	local ms = 15
 	if have_skill("Spleen of Steel") then
-		return 20
-	else
-		return 15
+		ms = ms + 5
 	end
+	return ms
 end
 
 function spleen_display_string()
@@ -483,6 +494,7 @@ end
 function can_equip_item(item)
 	-- TODO: boris/fist
 	local name = maybe_get_itemname(item)
+	if not name then return true end
 	local eqreqs = datafile("items")[name].equip_requirement or {}
 	for a, b in pairs(eqreqs) do
 		if a == "muscle" and basemuscle() < b then

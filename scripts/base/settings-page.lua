@@ -16,6 +16,13 @@ function register_setting(tbl)
 	settings_order[tbl.name] = settings_order_counter
 end
 
+--register_setting {
+--	name = "show charpane lines",
+--	description = "Show additional information (semirare, turns played) on charpane",
+--	group = "charpane",
+--	default_level = "limited",
+--}
+
 register_setting {
 	name = "run automation scripts",
 	description = "Allow the kolproxy scripts to download pages (required for everything else)",
@@ -42,7 +49,7 @@ register_setting {
 	name = "enable adventure warnings",
 	description = "Enable adventuring mistake warnings about semirares, not enough meat, etc.",
 	group = "warnings",
-	default_level = "standard",
+	default_level = "limited",
 }
 
 register_setting {

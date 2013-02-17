@@ -357,7 +357,9 @@ function verify_items(data)
 	if data["Orcish Frat House blueprints"] and data["Boris's Helm"] then
 		if data["Hell ramen"].fullness == 6 and data["water purification pills"].drunkenness == 3 and data["beastly paste"].spleen == 4 then
 			if data["leather chaps"].equip_requirement.moxie == 65 then
-				return data
+				if data["dried gelatinous cube"].id == 6256 then
+					return data
+				end
 			end
 		end
 	end
@@ -435,30 +437,6 @@ function verify_enthroned_familiars(data)
 		return data
 	end
 end
-
---function parse_zones()
---	local zones = {}
---	-- Fix wrong data file entries
---	zones["The Dungeons of Doom"] = { zoneid = 39 }
---	for l in io.lines("cache/files/adventures.txt") do
---		local tbl = split_tabbed_line(l)
---		local skillid, name, mpcost = tonumber(tbl[1]), tbl[2], tonumber(tbl[4])
---
---		local zoneid, name = tonumber(tbl[2]:match("^adventure=([0-9]+)$")), tbl[4]
---		if zoneid and name and not blacklist[name] then
---			zones[name] = { zoneid = zoneid }
---		end
---	end
---	return zones
---end
---
---function verify_zones()
---	if zones["The Dungeons of Doom"].zoneid == 39 then
---		if zones["McMillicancuddy's Farm"].zoneid == 155 then
---			return data
---		end
---	end
---end
 
 function xml_findelements(elem, name)
 	local tbl = {}
@@ -588,6 +566,38 @@ function verify_consumables(data)
 	end
 end
 
+function parse_zones()
+	local fobj = io.open("cache/files/zones.json")
+	local zones_datafile = fobj:read("*a")
+	fobj:close()
+	return json_to_table(zones_datafile)
+end
+
+function verify_zones(data)
+	if data["The Dungeons of Doom"].zoneid == 39 then
+		if data["McMillicancuddy's Farm"].zoneid == 155 then
+			if data["The Spooky Forest"].zoneid == 15 and data["The Spooky Forest"]["combat rate"] == 85 then
+				return data
+			end
+		end
+	end
+end
+
+function parse_mine_aggregate_prediction()
+	local fobj = io.open("cache/files/mine-aggregate-prediction.json")
+	local datafile = fobj:read("*a")
+	fobj:close()
+	return json_to_table(datafile)
+end
+
+function verify_mine_aggregate_prediction(data)
+	if data["1111????????????????????"] >= 0.019 and data["1111????????????????????"] <= 0.020 then
+		if data["???????????????8?????888"] >= 0.0016 and data["???????????????8?????888"] <= 0.0017 then
+				return data
+		end
+	end
+end
+
 function parse_choice_spoilers()
 	local jsonlines = {}
 	local found_adv_options = false
@@ -663,4 +673,5 @@ process("semirares")
 process("mallprices")
 process("consumables")
 
---process("zones")
+process("zones")
+process("mine aggregate prediction")

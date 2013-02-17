@@ -1,4 +1,4 @@
-local function get_fam_init()
+local function estimate_fam_init()
 	if familiarid() == 159 then -- happy medium
 		return buffedfamiliarweight()
 	elseif familiarid() == 168 then -- oily woim
@@ -8,7 +8,7 @@ local function get_fam_init()
 	end
 end
 
-local function get_skill_init()
+local function estimate_skill_init()
 	local tw_init = 0
 	local skillarray = {
 		["Legendary Impatience"] = 100,
@@ -27,7 +27,7 @@ local function get_skill_init()
 end
 
 function estimate_other_init()
-	local init = get_fam_init() + get_skill_init()
+	local init = estimate_fam_init() + estimate_skill_init()
 	if moonsign("Vole") then
 		init = init + 20
 	end

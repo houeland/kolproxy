@@ -55,7 +55,7 @@ local vanilla_fairy = {
 	jungman = true,
 }
 
-local function get_fam_item()
+local function estimate_fam_item()
 	if ascensionpathid() == 8 then
 		if clancy_instrumentid() == 3 then
 			return fairy_bonus(clancy_level() * 5)
@@ -79,7 +79,7 @@ local function get_fam_item()
 	end
 end
 
-local function get_skill_item()
+local function estimate_skill_item()
 	local tw_item = 0
 	local skillarray = {
 		["Mad Looting Skillz"] = 20,
@@ -97,7 +97,7 @@ local function get_skill_item()
 end
 
 function estimate_other_item()
-	local item = get_fam_item() + get_skill_item()
+	local item = estimate_fam_item() + estimate_skill_item()
 	if ascension["zone.manor.quartet song"] == "Le Mie Cose Favorite" then
 		item = item + 5
 	end

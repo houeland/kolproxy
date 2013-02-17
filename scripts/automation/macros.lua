@@ -334,7 +334,7 @@ end
 
 function macro_softcore_boris(extrastuff)
   local set_gaze = ""
-  if not have_intrinsic("Gaze of the Volcano God") and have_equipped("Juju Mojo Mask") then
+  if not have_intrinsic("Gaze of the Volcano God") and have_equipped("Juju Mojo Mask") and (challenge == "boris" or challenge == "zombie") then
     if have_intrinsic("Gaze of the Trickster God") or have_intrinsic("Gaze of the Lightning God") then
       stop("TODO: Somehow have the wrong gaze on!")
     end

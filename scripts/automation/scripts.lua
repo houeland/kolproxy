@@ -92,14 +92,20 @@ function get_automation_scripts(cached_stuff)
 					end
 				end
 			end
+			if not famname then
+				famname = famname_input[1]
+			end
 		elseif type(famname_input) == "string" then
 			famname = famname_input
 		else
 			error("Unknown familiar input: " .. tostring(famname_input))
 		end
+		if famname == "(ignore familiar)" then
+			return
+		end
 		local d = familiar_data[famname]
 		if not d then
-			print("DEBUG, no familiar data for", famname, "from", famname_input)
+			critical("DEBUG, no familiar data for " ..tostring(famname).." from "..tostring(famname_input))
 		end
 		if missing_fams[famname] or (d.needsequip and not have(d.familiarequip)) then
 			if famname == "Rogue Program" and spleen() < 12 then
@@ -3230,7 +3236,7 @@ mark m_done
 	end
 
 	function f.make_meatcar()
-		if not have("Degrassi Knoll shopping list") and challenge ~= "boris" and challenge ~= "zombie" then
+		if not have("Degrassi Knoll shopping list") and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" then
 			inform "get shopping list"
 			async_get_page("/guild.php", { place = "paco" })
 			if have("Degrassi Knoll shopping list") then

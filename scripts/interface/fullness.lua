@@ -1,5 +1,13 @@
+register_setting {
+	name = "show spleen counter",
+	description = "Show spleen counter",
+	group = "charpane",
+	default_level = "limited",
+}
+
 add_printer("/charpane.php", function()
 	if setting_enabled("use custom kolproxy charpane") then return end
+	if not setting_enabled("show spleen counter") then return end
 
 	if tonumber(api_flag_config().compactchar) == 1 then
 		text = text:gsub([[(<hr width=50%%>.-)(</table><hr width=50%%><table align=center cellpadding=1 cellspacing=1>)]], function (a, b)
@@ -16,7 +24,7 @@ add_printer("/charpane.php", function()
 			end
 		end)
 	else
-		text = text:gsub([[^(.-)(<table cellpadding=3 align=center>)]], function (a, b)
+		local function addit(a, b)
 			local spleentext = ""
 			if spleen() > 0 then
 				local spleen_description = random_choice { "Spleen", "Melancholy", "Moroseness" }
@@ -30,7 +38,9 @@ add_printer("/charpane.php", function()
 				return a:gsub("</table>$", function() return spleentext .. "</table>" .. b end)
 			end
 			return a .. b
-		end)
+		end
+		text = text:gsub([[^(.-)(<table cellpadding=3 align=center>)]], addit)
+		text = text:gsub([[^(.-)(<table><tr><td><img src=http://images.kingdomofloathing.com/itemimages/slimhp.gif)]], addit)
 	end
 end)
 

@@ -13,21 +13,34 @@ function datafile(name)
 	return datafile_cache[name]
 end
 
-local items_datafile = load_datafile("items")
 local itemid_name_lookup = {}
-for x, y in pairs(items_datafile) do
-	itemid_name_lookup[y.id] = x
+function reset_datafile_cache()
+	datafile_cache = {}
+	itemid_name_lookup = {}
+	for x, y in pairs(datafile("items")) do
+		itemid_name_lookup[y.id] = x
+	end
 end
 
+reset_datafile_cache()
+
+datafile("items")
+datafile("outfits")
+
 local function get_item_data_by_name(name)
-	return items_datafile[name]
+	return datafile("items")[name]
 end
 
 local function get_item_data_by_id(id)
-	return get_item_data_by_name(itemid_name_lookup[id])
+	local name = itemid_name_lookup[id]
+	if name then
+		return get_item_data_by_name(name)
+	end
 end
 
 function maybe_get_itemid(name)
+	if name == "Staff of the Healthy Breakfast" then return 6258 end -- TODO: HACK!
+
 	if name == nil then
 		return nil
 	end
@@ -406,6 +419,7 @@ function add_formatted_colored_message_to_page(pagetext, msg, color) -- TODO: De
 	return add_message_to_page(pagetext, msg, "Result:", color)
 end
 
+local have_loaded_main = false
 function run_functions(p, pagetext, run)
 	original_page_text = pagetext
 
@@ -484,7 +498,8 @@ multiuse -> multiuse
 
 	pagetext = run(p, pagetext)
 
-	if (p ~= "/charpane.php") then
+	-- TODO: Redo, assistance automation should only run on some pages
+	if p ~= "/charpane.php" and p ~= "/game.php" and not p:contains("chat.php") and not p:contains("menu.php") then
 		pagetext = run("all pages", pagetext)
 	end
 

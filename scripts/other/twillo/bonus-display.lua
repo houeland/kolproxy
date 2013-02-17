@@ -5,17 +5,40 @@ register_setting {
 	default_level = "standard",
 }
 
-function estimate_modifier_bonuses()
-	local bonuses = {}
-	add_modifier_bonuses(bonuses, get_equipment_bonuses())
-	add_modifier_bonuses(bonuses, get_outfit_bonuses())
-	add_modifier_bonuses(bonuses, get_buff_bonuses())
+function estimate_companion_bonuses()
+        local jarlcompanion = tonumber(status().jarlcompanion)
+	if not jarlcompanion then return {} end
+	local working_lunch = have_skill("Working Lunch") and 1 or 0
+        if jarlcompanion == 1 then
+		return { ["Item Drops from Monsters"] = 50 + 25 * working_lunch }
+        elseif jarlcompanion == 2 then
+		return { ["Combat Initiative"] = 50 + 25 * working_lunch }
+        elseif jarlcompanion == 3 then
+		return {}
+        elseif jarlcompanion == 4 then
+		return { ["Monster Level"] = 20 + 10 * working_lunch }
+	else
+		return {}
+        end
+end
 
+function estimate_other_bonuses()
+	local bonuses = {}
 	add_modifier_bonuses(bonuses, { ["Monsters will be more attracted to you"] = estimate_other_combat() })
 	add_modifier_bonuses(bonuses, { ["Item Drops from Monsters"] = estimate_other_item() })
 	add_modifier_bonuses(bonuses, { ["Monster Level"] = estimate_other_ml() })
 	add_modifier_bonuses(bonuses, { ["Combat Initiative"] = estimate_other_init() })
 	add_modifier_bonuses(bonuses, { ["Meat from Monsters"] = estimate_other_meat() })
+	return bonuses
+end
+
+function estimate_modifier_bonuses()
+	local bonuses = {}
+	add_modifier_bonuses(bonuses, estimate_equipment_bonuses())
+	add_modifier_bonuses(bonuses, estimate_outfit_bonuses())
+	add_modifier_bonuses(bonuses, estimate_buff_bonuses())
+	add_modifier_bonuses(bonuses, estimate_companion_bonuses())
+	add_modifier_bonuses(bonuses, estimate_other_bonuses())
 
 	if bonuses["Monsters will be more attracted to you"] then
 		bonuses["Monsters will be more attracted to you"] = adjust_combat(bonuses["Monsters will be more attracted to you"])

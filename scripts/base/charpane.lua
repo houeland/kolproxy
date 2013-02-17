@@ -36,6 +36,8 @@ end
 
 function print_charpane_lines(text)
 	if text:contains("http://images.kingdomofloathing.com/otherimages/inf_small.gif") then return end
+	--if not setting_enabled("show charpane lines") then return end
+
 	for y in table.values(familiar_counters) do table.insert(fam_values, { value = y }) end
 	for y in table.values(infolines) do table.insert(fam_values, { value = y }) end
 

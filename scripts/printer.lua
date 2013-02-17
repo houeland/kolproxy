@@ -34,9 +34,9 @@ if path == "/login.php" then
 --		[ [[<input class=button type=submit value="Log In" name=submitbutton id=submitbutton>]] ] = [[<input class="button" type="submit" value="Log In" style="color: gray" name="submitbutton" id="submitbutton" disabled="disabled">]],
 --		["<font size=1>If you've forgotten your password"] = [[<div id="jswarning" style="color: red">You have to turn on javascript, otherwise you'll submit your password in cleartext!</div><script type="text/javascript">if (md5s) { document.getElementById('jswarning').style.display = 'none'; document.getElementById('submitbutton').value = 'Log In'; document.getElementById('submitbutton').disabled = ''; document.getElementById('submitbutton').style.color = 'black'; }</script>%0]],
 	}
-	if current_version ~= "3.7-2" then
+	if current_version ~= "3.8-prealpha" then
 		mods["/login.php"]["An Adventurer is You!<br>"] = [[An Adventurer is You!<br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; text-decoration: none;">{ Kolproxy v]]..current_version..[[ incorrect installation. }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; font-size: smaller;">{ Click here to download a working version. }</a>]]
-	elseif latest_version and current_version ~= latest_version then
+	elseif latest_version and current_version ~= latest_version and latest_version ~= "3.7-2" then
 		print("current version", current_version, "latest version", latest_version)
 		mods["/login.php"]["An Adventurer is You!<br>"] = [[An Adventurer is You!<br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; text-decoration: none;">{ Kolproxy v]]..current_version..[[, latest version is v]]..latest_version..[[ }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; font-size: smaller;">{ Click here to upgrade. }</a>]]
 	else
@@ -106,6 +106,7 @@ end
 if path == "/charpane.php" then
 	text = text:gsub([[(<td align=right>Meat:.-)(</table>)]], "%1<!-- charpane compact text space -->%2")
 	text = text:gsub([[(src="http://images.kingdomofloathing.com/itemimages/hourglass.gif".-</table>)]], "%1<!-- charpane normal text space -->")
+	text = text:gsub([[(src=http://images.kingdomofloathing.com/itemimages/slimhourglass.gif.-</table>)]], "%1<!-- charpane normal text space -->")
 
 	text = text:gsub([[(<a target=mainpane href="familiar.php" class="familiarpick"><img src="http://images.kingdomofloathing.com/itemimages/)([^"]-)(.gif" width=30 height=30 border=0></a><br>)([0-9]+)( lb.-)(</center>)]], "%1%2%3%4%5<!-- charpane compact familiar text space type{%2} weight{%4} -->%6") -- TODO-future: redo without .-?
 	text = text:gsub([[(<a target=mainpane href="familiar.php" class="familiarpick"><img src="http://images.kingdomofloathing.com/itemimages/)([^"]-)(.gif" width=30 height=30 border=0>.- <b>)([0-9]+)(</b> pound .-)(</table></center>)]], "%1%2%3%4%5<!-- charpane normal familiar text space type{%2} weight{%4} -->%6") -- TODO-future: redo without .-!

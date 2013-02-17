@@ -77,7 +77,7 @@ do
 end
 
 -- Clear cache whenever we gain (or lose) a skill
-if text:contains("You acquire a skill") or text:contains("You leargn a new skill") then
+if text:contains("You acquire a skill") or text:contains("You leargn a new skill") or text:contains("You learn a new skill") then
 	print("INFO: Clearing skill cache!")
 	clear_cached_skills()
 end

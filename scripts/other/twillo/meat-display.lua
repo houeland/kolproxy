@@ -29,7 +29,7 @@ local vanilla_lep = {
 	jungman = true,
 }
 
-local function get_fam_meat()
+local function estimate_fam_meat()
 	-- TODO: Use familiar IDs/names instead
 	if vanilla_lep[familiarpicture()] then
 		return lep_bonus(buffedfamiliarweight())
@@ -40,7 +40,7 @@ local function get_fam_meat()
 	end
 end
 
-local function get_skill_meat()
+local function estimate_skill_meat()
 	local tw_meat = 0
 	local skillarray = {
 		["Greed"] = 50,
@@ -60,7 +60,7 @@ local function get_skill_meat()
 end
 
 function estimate_other_meat()
-	local meat = get_fam_meat() + get_skill_meat()
+	local meat = estimate_fam_meat() + estimate_skill_meat()
 	if moonsign("Wombat") then
 		meat = meat + 20
 	end

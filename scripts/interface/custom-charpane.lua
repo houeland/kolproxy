@@ -10,7 +10,7 @@
 
 register_setting {
 	name = "use custom kolproxy charpane",
-	description = "Use faster custom kolproxy charpane (set compact or normal-mode charpane in KoL options)",
+	description = "Replace character pane with speedy custom kolproxy version",
 	group = "charpane",
 	default_level = "standard",
 }
@@ -60,6 +60,29 @@ local function get_clancy_display()
 	else
 		return [[Clancy (lvl ]] .. clancy_level() .. ", " .. (instruments[clancy_instrumentid()] or "?") .. ")"
 	end
+end
+
+function get_companion_display()
+	local jarlcompanion = tonumber(status().jarlcompanion)
+	local working_lunch = have_skill("Working Lunch") and 1 or 0
+	local name = "ID: " .. (status().jarlcompanion or "?")
+	local bonus = "?"
+	if jarlcompanion == 1 then
+		name = "Eggman"
+		bonus = string.format("+%d%%&nbsp;items", 50 + 25 * working_lunch)
+	elseif jarlcompanion == 2 then
+		name = "Horse"
+		bonus = string.format("+%d%%&nbsp;initiative", 50 + 25 * working_lunch)
+	elseif jarlcompanion == 3 then
+		name = "Hippo"
+		bonus = "+" .. (3 + working_lunch * 1.5) .. "&nbsp;stats"
+	elseif jarlcompanion == 4 then
+		name = "Puff"
+		bonus = string.format("+%d&nbsp;ML", 20 + 10 * working_lunch)
+	else
+		return [[Companion ID: ]] .. (status().jarlcompanion or "?")
+	end
+	return string.format("Companion: %s (%s)", name, bonus)
 end
 
 local function kolproxy_custom_charpane_mode()
@@ -186,8 +209,8 @@ end
 
 local function classdesc()
 	local descs = {
-		compact = { "SC", "TT", "PM", "S", "DB", "AT", nil, nil, nil, nil, "AoB", "ZM" },
-		normal = { "Seal Clubber", "Turtle Tamer", "Pastamancer", "Sauceror", "Disco Bandit", "Accordion Thief", nil, nil, nil, nil, "Avatar of Boris", "Zombie Master" },
+		compact = { "SC", "TT", "PM", "S", "DB", "AT", nil, nil, nil, nil, "AoB", "ZM", nil, "AoJ" },
+		normal = { "Seal Clubber", "Turtle Tamer", "Pastamancer", "Sauceror", "Disco Bandit", "Accordion Thief", nil, nil, nil, nil, "Avatar of Boris", "Zombie Master", nil, "Avatar of Jarlsberg" },
 	}
 	return descs[kolproxy_custom_charpane_mode()][classid()] or "?"
 end
@@ -584,6 +607,8 @@ add_interceptor("/charpane.php", function()
 		table.insert(lines, string.format([[<center>%s lbs.<!-- kolproxy charpane familiar text area --></center><br>]], buffedfamiliarweight()))
 	elseif ascensionpathid() == 8 then
 		table.insert(lines, [[<center>]] .. get_clancy_display() .. [[</center><br>]])
+	elseif ascensionpath("Avatar of Jarlsberg") then
+		table.insert(lines, [[<center>]] .. get_companion_display() .. [[</center><br>]])
 	else
 		table.insert(lines, [[<center><a href="familiar.php" target="mainpane">No familiar</a></center><br>]])
 	end
@@ -785,6 +810,8 @@ add_interceptor("/charpane.php", function()
 		table.insert(lines, string.format([[<center><font size=2>%s lbs.<!-- kolproxy charpane familiar text area --></font></center>]], buffedfamiliarweight()))
 	elseif ascensionpathid() == 8 then
 		table.insert(lines, [[<center>]] .. get_clancy_display() .. [[</center><br>]])
+	elseif ascensionpath("Avatar of Jarlsberg") then
+		table.insert(lines, [[<center>]] .. get_companion_display() .. [[</center><br>]])
 	else
 		table.insert(lines, [[<center><a href="familiar.php" target="mainpane">No familiar</a></center>]])
 	end

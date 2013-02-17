@@ -3,48 +3,70 @@
 
 -- TODO: make this work more like ascension-automation
 
-local href = add_automation_script("automate-nemesis", function ()
+local required_items_perclass = {
+	{ lew = "Hammer of Smiting", ew = "Bjorn's Hammer", extra = "distilled seal blood", door = { "viking helmet", "insanely spicy bean burrito", "clown whip" } },
+	{ lew = "Chelonian Morningstar", ew = "Mace of the Tortoise", extra = "turtle chain", door = { "viking helmet", "insanely spicy bean burrito", "clownskin buckler" } },
+	{ lew = "Greek Pasta of Peril", ew = "Pasta of Peril", extra = "high-octane liver oil", door = { "stalk of asparagus", "insanely spicy enchanted bean burrito", "boring spaghetti" } },
+	{ lew = "17-alarm Saucepan", ew = "5-Alarm Saucepan", extra = "Peppercorns of Power", door = { "stalk of asparagus", "insanely spicy enchanted bean burrito", "tomato juice of powerful power" } },
+	{ lew = "Shagadelic Disco Banjo", ew = "Disco Banjo", extra = "vial of mojo", door = { "dirty hobo gloves", "insanely spicy jumping bean burrito", "fuzzbump" } },
+	{ lew = "Squeezebox of the Ages", ew = "Rock and Roll Legend", extra = "golden reeds", door = { "dirty hobo gloves", "insanely spicy jumping bean burrito" } },
+}
+
+local href = add_automation_script("automate-nemesis", function()
+	local required_items = required_items_perclass[classid()]
+	if not required_items then
+		critical "Class not supported for nemesis script."
+	end
+
 	if not autoattack_is_set() then
 		stop "Set a macro on autoattack to use for scripting this quest."
 	end
+
+	script = get_automation_scripts()
+
 -- TODO: continue after successfully completing one step
 	text, url = "??? Nothing to do right now ???", requestpath
-	local pwd = get_session_state("pwd") -- inserting pwd, boo!
-	-- pull stuff
-	--~ posting page /storage.php params: Just [("pwd","c52682cbfb2ed7825b5b479e76b36c35"),("action","take"),("howmany1","1"),("whichitem1","4508"),("howmany2","1"),("whichitem2","3137")]
+	local pwd = session.pwd
+
+	local need_items = { "clown whip", "clownskin buckler", "ring of conflict" }
+	if not have_item(required_items.lew) then
+		table.insert(need_items, required_items.ew)
+	end
+	for _, x in ipairs(required_items.door) do
+		table.insert(need_items, x)
+	end
+
+	pull_storage_items(need_items)
+
+	local missing_items = {}
+	for _, x in ipairs(need_items) do
+		if not have_item(x) then
+			table.insert(missing_items, x)
+		end
+	end
+	if next(missing_items) then
+		stop("Missing items: " .. table.concat(missing_items, ", "))
+	end
+
 	local function dorefresh()
 		scg = get_page("/guild.php", { place = "scg" })
 		scg = get_page("/guild.php", { place = "scg" })
 		questlog = get_page("/questlog.php", { which = 1 })
 	end
 	dorefresh()
-	if scg:match([[Have you not completed your Epic Weapon yet]]) or scg:match([[not yet completed your Epic Weapon]]) or scg:match([[delay on that Epic Weapon]]) then
-		text = "pulling items"
---~ 		TODO: make it if you can't pull it, or at least warn that it's missing!
-		ews = {
-			[1] = "Bjorn's Hammer",
-			[2] = "Mace of the Tortoise",
-			[3] = "Pasta of Peril",
-			[4] = "5-Alarm Saucepan",
-			[5] = "Disco Banjo",
-			[6] = "Rock and Roll Legend",
-		}
-		needew = ews[classid()]
-		pull_storage_items { needew }
-		dorefresh()
-	end
+
 	if scg:match([[How goes your quest to restore the Legendary Epic Weapon]]) or scg:match([[acquire the Legendary Epic Weapon soon]]) or scg:match([[going with that Legendary Epic Weapon]]) then
 		text = "make LEW"
 		if questlog:match("you must defeat Beelzebozo") then
-	--~ 		TODO: make robust
+			-- TODO: make robust
 			text = "adventuring at clown house"
-			pull_storage_items { 2477, 2478, 1298 }
--- 			"Peppercorns of Power"
-			if have("clown whip") and have("clownskin buckler") and have("ring of conflict") then
-				-- wear stuff
-				equip_item("clown whip")
-				equip_item("clownskin buckler")
-				equip_item("ring of conflict", 3)
+			-- wear stuff
+			equip_item("clown whip")
+			equip_item("clownskin buckler")
+			equip_item("ring of conflict", 3)
+			-- TODO: check that we're wearing them
+			-- adventure repeatedly
+			for i = 1, 100 do
 				-- buff up
 				if not buff("The Sonata of Sneakiness") then
 					cast_skillid(6015, 2) -- sonata of sneakiness
@@ -52,45 +74,97 @@ local href = add_automation_script("automate-nemesis", function ()
 				if not buff("Smooth Movements") then
 					cast_skillid(5017, 2) -- smooth moves
 				end
-				-- adventure repeatedly
-				for i = 1, 100 do
-					text, url, advagain = autoadventure { zoneid = 20 }
-					if not url:match("fight.php") or not advagain then
-						break
-					end
+				-- TODO: do noncombat and win against beelz
+				text, url, advagain = autoadventure { zoneid = 20 }
+				if not url:match("fight.php") or not advagain then
+					break
 				end
-			else
-				stop("Error: Clown items not found")
+			end
+		elseif not have_item(required_items.lew) and have_item(required_items.ew) and have_item(required_items.extra) then
+			smith_items(required_items.ew, required_items.extra)
+			if not have_item(required_items.lew) then
+				smith_items_craft(required_items.ew, required_items.extra)
+			end
+			if not have_item(required_items.lew) then
+				critical "Failed to smith Legendary Epic Weapon."
 			end
 		else
-			stop("TODO: Make LEW")
+			critical "Failed to make Legendary Epic Weapon."
 		end
 		dorefresh()
 	end
 	if scg:match([[Have you defeated your Nemesis yet]]) or scg:match([[We need you to defeat your Nemesis]]) or scg:match([[Haven't beat your Nemesis yet]]) then
 		text = "pass cave doors"
-		pull_storage_items { 37, 560, 565, 316, 319, 1256, 2478, 2477, 420, 579, 799 }
 		cast_skillid(6006) -- polka of plenty
 		text, url = get_page("/cave.php")
--- 		TODO: pass caves automatically
---~ 		TODO: farm scraps and stuff
---~ 		TODO: equip weapon and fight nemesis
+
+		if not text:contains("A Large Chamber") then
+			-- TODO: check each step
+			async_post_page("/cave.php", { action = "door1", pwd = session.pwd, action = "dodoor1", whichitem = get_itemid(required_items.door[1]) })
+			async_post_page("/cave.php", { action = "door2", pwd = session.pwd, action = "dodoor2", whichitem = get_itemid(required_items.door[2]) })
+			if required_items.door[3] then
+				async_post_page("/cave.php", { action = "door3", pwd = session.pwd, action = "dodoor3", whichitem = get_itemid(required_items.door[3]) })
+			else
+				async_get_page("/cave.php", { action = "door3", pwd = session.pwd })
+			end
+			text, url = get_page("/cave.php")
+		end
+
+		local function need_paper_strips()
+			for _, x in ipairs { "a creased paper strip", "a crinkled paper strip", "a crumpled paper strip", "a folded paper strip", "a ragged paper strip", "a ripped paper strip", "a rumpled paper strip", "a torn paper strip" } do
+				if not have_item(x) then
+					return true
+				end
+			end
+			return false
+		end
+
+		script.want_familiar "Slimeling"
+
+		for i = 1, 100 do
+			if need_paper_strips() then
+				script.ensure_buffs { "Leash of Linguini", "Empathy", "Fat Leon's Phat Loot Lyric" }
+				script.ensure_mp(40)
+
+				text, url = get_page("/cave.php", { action = "cavern", pwd = session.pwd })
+				text, url, advagain = handle_adventure_result(text, url, "?")
+				if not url:match("fight.php") or not advagain then
+					break
+				end
+			else
+				break
+			end
+		end
+
+		if not need_paper_strips() then
+			check_nemesis_paper_strips()
+			local count, solution = determine_nemesis_paper_strips_password()
+			async_post_page("/cave.php", { action = "door4", pwd = session.pwd, action = "dodoor4", say = solution })
+			equip_item(required_items.lew)
+			text, url = get_page("/cave.php", { action = "sanctum", pwd = session.pwd })
+			text, url, advagain = handle_adventure_result(text, url, "?")
+			text, url = cast_autoattack_macro()
+		end
+
 		dorefresh()
 	end
+
+	-- TODO: Act reasonably while waiting for assassins
+
 	if questlog:contains "found a map to the secret tropical island" then
 		text = "do poop deck"
 		-- wear stuff
 		equip_item("pirate fledges", 2)
 		equip_item("ring of conflict", 3)
-		-- buff up
-		if not buff("The Sonata of Sneakiness") then
-			cast_skillid(6015, 2) -- sonata of sneakiness
-		end
-		if not buff("Smooth Movements") then
-			cast_skillid(5017, 2) -- smooth moves
-		end
 		-- adventure repeatedly
 		for i = 1, 100 do
+			-- buff up
+			if not buff("The Sonata of Sneakiness") then
+				cast_skillid(6015, 2) -- sonata of sneakiness
+			end
+			if not buff("Smooth Movements") then
+				cast_skillid(5017, 2) -- smooth moves
+			end
 			text, url, advagain = autoadventure { zoneid = 159 }
 -- choice	O Cap'm, My Cap'm	189
 -- opt	1	Front the meat and take the wheel

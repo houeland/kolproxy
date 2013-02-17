@@ -16,15 +16,10 @@ import qualified Data.ByteString.Char8
 
 doWriteDataFile filename filedata = best_effort_atomic_file_write filename "." filedata
 
-load_data_file url backupurl = ((getHTTPFileData kolproxy_version_string $ mkuri url) `catch` (\e -> do
-	putStrLn $ "WARNING: load_data_file exception: " ++ (show (e :: SomeException))
-	getHTTPFileData kolproxy_version_string $ mkuri backupurl))
-
-raw_load_mafia_file url = do
-	load_data_file ("http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/" ++ url) ("http://www.houeland.com/kolproxy/files/data-mirror/" ++ url)
+load_data_file url = getHTTPFileData kolproxy_version_string $ mkuri url
 
 load_mafia_file url func = do
-	text <- raw_load_mafia_file url
+	text <- load_data_file ("http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/" ++ url)
 	let filtered = filter (\x -> case x of
 		"" -> False
 		'#':_ -> False
@@ -80,32 +75,19 @@ update_data_files = do
 					return ())
 
 download_data_files = do
---	do
---		mix_concoctions <- load_mafia_file "concoctions.txt" (\x -> case x of
---			name:"MIX":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
---			name:"ACOCK":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
---			name:"SCOCK":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
---			name:"BSTILL":[source] -> Just (name, [("type", "still"), ("ingredient", show source)])
---			name:"MSTILL":[source] -> Just (name, [("type", "still"), ("ingredient", show source)])
---			_ -> Nothing)
---		doWriteDataFile "cache/data/recipes" (show mix_concoctions)
-
---	do
---		choicespoilers <- do
---			jstext <- load_data_file "http://userscripts.org/scripts/source/68727.user.js" "http://www.houeland.com/kolproxy/files/data-mirror/68727.user.js"
---			let choices = takeWhile (\x -> not (x =~ "};")) $ dropWhile (\x -> not (x =~ "var advOptions")) $ (lines jstext)
---			let fx y = case matchGroups "([0-9]+):(\\[.*\\])," y of
---				[] -> Nothing
---				[[choicenum, spoilers]] -> case read_as spoilers of
---					Just (_:xs) -> Just [("choice number", choicenum), ("spoilers", show $ (xs :: [String]))]
---					_ -> Nothing
---				_ -> throw $ InternalError $ "Error parsing choice spoiler data"
---			return $ mapMaybe fx choices
---		doWriteDataFile "cache/data/choice-spoilers" (show choicespoilers)
+	do
+		mix_concoctions <- load_mafia_file "concoctions.txt" (\x -> case x of
+			name:"MIX":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
+			name:"ACOCK":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
+			name:"SCOCK":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
+			name:"BSTILL":[source] -> Just (name, [("type", "still"), ("ingredient", show source)])
+			name:"MSTILL":[source] -> Just (name, [("type", "still"), ("ingredient", show source)])
+			_ -> Nothing)
+		doWriteDataFile "cache/data/recipes" (show mix_concoctions)
 
 	do
 		pulverizegroups <- do
-			jstext <- load_data_file "http://userscripts.org/scripts/source/67792.user.js" "http://www.houeland.com/kolproxy/files/data-mirror/67792.user.js"
+			jstext <- load_data_file "http://userscripts.org/scripts/source/67792.user.js"
 			let groupslines = takeWhile (\x -> not (x =~ "}\\);")) $ dropWhile (\x -> not (x =~ "var groupList")) $ lines jstext
 			let groups = map head $ matchGroups "([0-9]+:\\[[0-9,]+\\])" $ concat groupslines
 			let [groupnamesline] = filter (\x -> x =~ "var groupNames") $ lines jstext
@@ -128,26 +110,12 @@ download_data_files = do
 
 	let dldatafile x = do
 		let [[basename]] = matchGroups ".*/([^/]+)$" x
-		filedata <- load_data_file x ("http://www.houeland.com/kolproxy/files/data-mirror/" ++ basename)
+		filedata <- load_data_file x
 		doWriteDataFile ("cache/files/" ++ basename) filedata
 
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/classskills.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/concoctions.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/equipment.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/familiars.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/foldgroups.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/fullness.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/inebriety.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/items.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/modifiers.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/monsters.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/npcstores.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/outfits.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/spleenhit.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/statuseffects.txt"
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/zapgroups.txt"
+	mapM_ (\x -> dldatafile ("http://svn.code.sf.net/p/kolmafia/code/src/data/" ++ x)) ["classskills.txt", "concoctions.txt", "equipment.txt", "familiars.txt", "foldgroups.txt", "fullness.txt", "inebriety.txt", "items.txt", "modifiers.txt", "monsters.txt", "npcstores.txt", "outfits.txt", "spleenhit.txt", "statuseffects.txt", "zapgroups.txt"]
 
-	dldatafile "http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/net/sourceforge/kolmafia/KoLmafia.java"
+	dldatafile "http://svn.code.sf.net/p/kolmafia/code/src/net/sourceforge/kolmafia/KoLmafia.java"
 
 	dldatafile "http://www.hogsofdestiny.com/faxbot/faxbot.xml"
 
@@ -156,6 +124,9 @@ download_data_files = do
 
 	dldatafile "http://www.houeland.com/kol/mallprices.json"
 	dldatafile "http://www.houeland.com/kol/consumable-advgain.json"
+	dldatafile "http://www.houeland.com/kol/zones.json"
+
+	dldatafile "http://www.houeland.com/kolproxy/files/mine-aggregate-prediction.json"
 
 	return ()
 
