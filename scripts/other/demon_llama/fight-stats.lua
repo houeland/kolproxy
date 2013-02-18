@@ -66,13 +66,11 @@ local function formatMonsterItems(monster)
 	for value in table.values(data) do
 		local dropinfo = ""
 		
-		if value["unknown drop rate"] then
-			dropinfo = "??"
+		local chance = value.Chance or 0
+		if chance > 0 then
+			dropinfo = chance .. "%"
 		else
-			local chance = tonumber(value.Chance) or 0
-			if chance > 0 then
-				dropinfo = chance .. "%"
-			end
+			dropinfo = "??"
 		end
 		
 		if value["conditional"] then

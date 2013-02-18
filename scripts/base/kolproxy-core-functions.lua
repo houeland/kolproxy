@@ -14,11 +14,18 @@ function datafile(name)
 end
 
 local itemid_name_lookup = {}
+local monster_image_lookup = {}
 function reset_datafile_cache()
 	datafile_cache = {}
 	itemid_name_lookup = {}
 	for x, y in pairs(datafile("items")) do
 		itemid_name_lookup[y.id] = x
+	end
+	for monster in table.values(datafile("monsters")) do
+		local image = monster.Stats.Image
+		if image then
+			monster_image_lookup[image] = monster
+		end
 	end
 end
 
@@ -71,6 +78,11 @@ end
 function maybe_get_itemdata(name)
 	local id = get_itemid(name)
 	return get_item_data_by_id(id)
+end
+
+
+function get_monster_by_image(image)
+	return monster_image_lookup[image]
 end
 
 
