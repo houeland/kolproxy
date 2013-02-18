@@ -365,6 +365,111 @@ function verify_items(data)
 	end
 end
 
+local function parse_monster_stats(stats)
+	if stats == "" then
+		return {}
+	end
+	local statstbl = {}
+	local i = 1
+	if stats:match("^BOSS ") then
+		statstbl.boss = true
+		i = i + 5
+	end
+	stats = stats .. " "
+	while i <= #stats do
+		local ch = stats:byte(i)
+		local name, value, pos
+		if ch == 0x22 then -- quoted string
+			name = "WatchOut"
+			value, pos = stats:match('^"([^"]*)" ()', i)
+		else
+			name, value, pos = stats:match("^([^:]+): ([^ ]+) ()", i)
+			if name and value then
+				local expr = value:match("^%[(.*)%]$")
+				if expr then
+					-- TODO: process expressions
+					value = 0
+				else
+					value = tonumber(value) or value
+				end
+				if name == "P" then
+					name = "Phylum"
+				elseif name == "E" or name == "ED" then
+					name = "Element"
+				end
+			end
+		end
+		if not name or not value then
+			print("ERROR: failed to parse monster stat", stats:sub(i))
+			return statstbl
+		end
+		statstbl[name] = value
+		i = pos
+	end
+	return statstbl
+end
+
+local prefixkeys = {
+	p = "pickpocket only",
+	n = "no pickpocket",
+	b = "bounty",
+	c = "conditional",
+	f = "fixed",
+}
+
+local function parse_monster_items(items)
+	if #items == 0 then return nil end
+	itemtbl = {}
+	for _, item in ipairs(items) do
+		local name, prefix, rate =  item:match("^(.*) %(([pnbcf]*)(%d+)%)$")
+		if not name then
+			-- a few items are missing drop rates
+			name = item
+		end
+		-- HACK: this notation allows using an itemid instead of
+		-- a name, but it's only used for this one item, so special
+		-- case it
+		if name == "[2528]" then
+			name = "filet of tangy gnat (&quot;fotelif&quot;)"
+		end
+		local itementry = {
+			Name = name,
+		}
+		rate = tonumber(rate)
+		if rate and rate > 0 then
+			itementry.Chance = rate
+		end
+		if prefix and prefix ~= "" then
+			itementry[prefixkeys[prefix]] = true
+		end
+		table.insert(itemtbl, itementry)
+	end
+	return itemtbl
+end
+
+function parse_monsters()
+	local monsters = {}
+	for l in io.lines("cache/files/monsters.txt") do
+		local tbl = split_tabbed_line(l)
+		local name, stats = tbl[1], tbl[2]
+		if name and stats then
+			--print("parsing monster", name)
+			table.remove(tbl, 1)
+			table.remove(tbl, 1)
+			local items = tbl
+			monsters[name:lower()] = {
+				Stats = parse_monster_stats(stats),
+				Items = parse_monster_items(items),
+			}
+		end
+	end
+	return monsters
+end
+
+function verify_monsters(data)
+	return data
+end
+
 function parse_hatrack()
 	local hatrack = {}
 
@@ -665,6 +770,8 @@ process("hatrack")
 process("buffs")
 process("skills")
 process("buff recast skills")
+
+process("monsters")
 
 process("faxbot monsters")
 
