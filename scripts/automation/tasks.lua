@@ -8,7 +8,7 @@ function get_automation_tasks(script, cached_stuff)
 
 	t.summon_clip_art = {
 		nobuffing = true,
-		action = function ()
+		action = function()
 			inform "using clip art tome summons"
 
 			if not have("shining halo") then
@@ -41,7 +41,7 @@ function get_automation_tasks(script, cached_stuff)
 
 	t.get_starting_items = {
 		nobuffing = true,
-		action = function ()
+		action = function()
 			if not ((have("stolen accordion") or have("Rock and Roll Legend")) and have("turtle totem") and have("saucepan")) then
 				local pt, pturl, advagain
 				while not ((have("stolen accordion") or have("Rock and Roll Legend")) and have("turtle totem") and have("saucepan")) do
@@ -115,7 +115,7 @@ function get_automation_tasks(script, cached_stuff)
 	t.extend_tmm_and_mojo = {
 		message = "extending tmm+mojo",
 		nobuffing = true,
-		action = function ()
+		action = function()
 			script.ensure_buffs { "The Moxious Madrigal", "The Magical Mojomuscular Melody" }
 			script.ensure_buff_turns("The Moxious Madrigal", 10)
 			script.ensure_buff_turns("The Magical Mojomuscular Melody", 10)
@@ -446,7 +446,7 @@ mark m_done
 					minmp = 5,
 					action = adventure {
 						zoneid = 296,
-						choice_function = function (advtitle, choicenum)
+						choice_function = function(advtitle, choicenum)
 							if advtitle == "The Horror..." then
 								return "", 1
 							end

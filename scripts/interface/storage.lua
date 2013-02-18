@@ -275,7 +275,7 @@ local function extract_itemdata(itd)
 	return name, id, n
 end
 
-local closet_href = add_automation_script("automate-closet", function ()
+local closet_href = add_automation_script("automate-closet", function()
 	local keep_items = {}
 	for _, x in ipairs(aftercore_items_list) do
 		keep_items[get_itemid(x)] = true
@@ -292,7 +292,7 @@ local closet_href = add_automation_script("automate-closet", function ()
 	return get_page("/closet.php")
 end)
 
-add_printer("/closet.php", function ()
+add_printer("/closet.php", function()
 	local pwd = text:match[[name="pwd" *value="(%x-)"]]
 	if pwd then
 		text = text:gsub([[%[Fill Your Closet%]</a>]], [[%0 <a href="]].. closet_href { pwd = pwd } ..[[" style="color:green">{ Closet some items }</a>]])
@@ -300,7 +300,7 @@ add_printer("/closet.php", function ()
 end)
 
 
-local pull_href = add_automation_script("automate-aftercore-pulls", function ()
+local pull_href = add_automation_script("automate-aftercore-pulls", function()
 	local items = {}
 	for which in table.values { 1, 2, 3 } do
 		local pt, pturl = get_page("/storage.php", { which = which })
@@ -327,7 +327,7 @@ local pull_href = add_automation_script("automate-aftercore-pulls", function ()
 	return get_page("/storage.php", { which = 5 })
 end)
 
-add_printer("/storage.php", function ()
+add_printer("/storage.php", function()
 	local pwd = text:match[[name=pwd value='(%x-)']]
 	if pwd then
 		text = text:gsub([[<input type=submit class=button value="Take all your stuff out of Hagnk's">]], [[<center><a href="]].. pull_href { pwd = pwd } ..[[" style="color:green">{ Pull some items }</a></center><p>%0]])

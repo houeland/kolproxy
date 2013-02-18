@@ -22,7 +22,7 @@ local function get_aftercore_buffs(tbl)
 	end
 end
 
-local automate_zone_href = add_automation_script("automate-zone", function ()
+local automate_zone_href = add_automation_script("automate-zone", function()
 	if not autoattack_is_set() then
 		stop "Setting an Auto-Attack is required for automated re-adventuring. This can be done in KoL options &rarr; Combat, or with the /autoattack chat command (or the /aa abbreviation)."
 	end
@@ -119,28 +119,28 @@ local function autohref(z)
 	return automate_zone_href { pwd = session.pwd, zoneid = z }
 end
 
-add_printer("/choice.php", function ()
+add_printer("/choice.php", function()
 	show_links([[<a href="adventure.php%?snarfblat=([0-9]+)">Adventure [^<]+</a>]], autohref)
 end)
 
-add_printer("/adventure.php", function ()
+add_printer("/adventure.php", function()
 	show_links([[<a href="adventure.php%?snarfblat=([0-9]+)">Adventure [^<]+</a>]], autohref)
 end)
 
-add_printer("/fight.php", function ()
+add_printer("/fight.php", function()
 	show_links([[<a href="adventure.php%?snarfblat=([0-9]+)">Adventure [^<]+</a>]], autohref)
 end)
 
-add_printer("/ocean.php", function ()
+add_printer("/ocean.php", function()
 	show_links([[<a href="adventure.php%?snarfblat=([0-9]+)">Adventure [^<]+</a>]], autohref)
 end)
 
-add_printer("/tiles.php", function ()
+add_printer("/tiles.php", function()
 	show_links([[<a href="adventure.php%?snarfblat=([0-9]+)">Adventure [^<]+</a>]], autohref)
 end)
 
 -- TODO: merge!
-local automate_rats_href = add_automation_script("automate-rats", function ()
+local automate_rats_href = add_automation_script("automate-rats", function()
 	local numtimes = tonumber(params.numtimes)
 	if numtimes then
 		for i = 1, numtimes do
@@ -163,14 +163,14 @@ add_printer("/fight.php", function()
 	end)
 end)
 
---	add_printer("/lair3.php", function ()
+--	add_printer("/lair3.php", function()
 --		show_links([[<a href="lair3.php%?action=hedge">Adventure [^<]+</a>]], "...")
 --	end)
 
---	add_printer("/fight.php", function ()
+--	add_printer("/fight.php", function()
 --		show_links([[<a href="inv_use.php%?pwd=[0-9a-f]+&whichitem=2328">Use another drum machine</a>]], "automate-sandworms?")
 --	end)
 
---	add_printer("/trickortreat.php", function ()
+--	add_printer("/trickortreat.php", function()
 --		show_links([[value="Hit the Streets %(1%)">]], "automate-trickortreat?")
 --	end)

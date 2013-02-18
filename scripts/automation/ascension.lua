@@ -471,7 +471,7 @@ endif
 		task = {
 			message = "hide ten-leaf clover",
 			nobuffing = true,
-			action = function ()
+			action = function()
 				set_result(use_item("ten-leaf clover"))
 				did_action = not have("ten-leaf clover")
 			end
@@ -483,7 +483,7 @@ endif
 		task = {
 			message = "shrugging anapests",
 			nobuffing = true,
-			action = function ()
+			action = function()
 				async_get_page("/charsheet.php", { pwd = get_pwd(), ajax = 1, action = "unbuff", whichbuff = 1003 })
 				did_action = not buff("Just the Best Anapests")
 			end
@@ -495,7 +495,7 @@ endif
 		task = {
 			message = "using letter from king",
 			nobuffing = true,
-			action = function ()
+			action = function()
 				set_result(use_item("letter from King Ralph XI"))
 				did_action = not have("letter from King Ralph XI")
 			end
@@ -632,7 +632,7 @@ endif
 		task = {
 			message = "using newbiesport tent",
 			nobuffing = true,
-			action = function ()
+			action = function()
 				set_result(use_item("Newbiesport&trade; tent"))
 				did_action = not have("Newbiesport&trade; tent")
 			end
@@ -644,7 +644,7 @@ endif
 		task = {
 			message = "buying detuned radio",
 			nobuffing = true,
-			action = function ()
+			action = function()
 				set_result(buy_item("detuned radio", "5"))
 				did_action = have("detuned radio")
 			end
@@ -865,7 +865,7 @@ endif
 		task = {
 			message = "use mojo filter",
 			nobuffing = true,
-			action = function ()
+			action = function()
 				print("free spleen before", estimate_max_spleen() - spleen())
 				set_result(use_item("mojo filter"))
 				print("free spleen after", estimate_max_spleen() - spleen())
@@ -881,7 +881,7 @@ endif
 		task = {
 			message = "use astral energy drink",
 			nobuffing = true,
-			action = function ()
+			action = function()
 				local a = advs()
 				set_result(use_item("astral energy drink"))
 				did_action = advs() > a
@@ -894,7 +894,7 @@ endif
 		task = {
 			message = "use astral energy drink",
 			nobuffing = true,
-			action = function ()
+			action = function()
 				local a = advs()
 				set_result(use_item("astral energy drink"))
 				did_action = advs() > a
@@ -907,7 +907,7 @@ endif
 		task = {
 			message = "drink Crimbojito",
 			nobuffing = true,
-			action = function ()
+			action = function()
 				local a = advs()
 				set_result(drink_item("Crimbojito"))
 				did_action = advs() > a
@@ -920,7 +920,7 @@ endif
 		task = {
 			message = "use glimmering roc feather",
 			nobuffing = true,
-			action = function ()
+			action = function()
 				local a = advs()
 				set_result(use_item("glimmering roc feather"))
 				did_action = advs() > a
@@ -933,7 +933,7 @@ endif
 		task = {
 			message = "use not-a-pipe",
 			nobuffing = true,
-			action = function ()
+			action = function()
 				local a = advs()
 				set_result(use_item("not-a-pipe"))
 				did_action = advs() > a
@@ -946,7 +946,7 @@ endif
 		task = {
 			message = "use groose grease",
 			nobuffing = true,
-			action = function ()
+			action = function()
 				local a = advs()
 				set_result(use_item("groose grease"))
 				did_action = advs() > a
@@ -959,7 +959,7 @@ endif
 		task = {
 			message = "use agua de vida",
 			nobuffing = true,
-			action = function ()
+			action = function()
 				local a = advs()
 				set_result(use_item("agua de vida"))
 				did_action = advs() > a
@@ -2284,7 +2284,7 @@ endif
 			when = DD_keys < 1 and level() >= 6,
 			task = {
 				message = "get DD key",
-				action = function ()
+				action = function()
 					stop "TODO: get DD key day 1, and shore"
 				end
 			}
@@ -2363,7 +2363,7 @@ endif
 						action = adventure {
 							zoneid = 104,
 							macro_function = macro_noodlecannon,
-							choice_function = function (advtitle, choicenum)
+							choice_function = function(advtitle, choicenum)
 								if advtitle == "Take a Look, it's in a Book!" then
 									return "", 99
 								elseif advtitle == "Melvil Dewey Would Be Ashamed" then
@@ -2386,7 +2386,7 @@ endif
 -- 			when = true,
 -- 			task = {
 -- 				message = "end of highskill AT script",
--- 				action = function ()
+-- 				action = function()
 -- 					stop "TODO: end of highskill AT script"
 -- 				end
 -- 			}
@@ -2440,10 +2440,10 @@ endif
 	use_dancecard = nil
 	if get_mainstat() == "Muscle" then
 		do_powerleveling = script.do_muscle_powerleveling
-		use_dancecard = function () end
+		use_dancecard = function() end
 	elseif get_mainstat() == "Mysticality" then
 		do_powerleveling = script.do_mysticality_powerleveling
-		use_dancecard = function () end
+		use_dancecard = function() end
 	elseif get_mainstat() == "Moxie" then
 		do_powerleveling = script.do_moxie_powerleveling
 		use_dancecard = script.do_moxie_use_dancecard
@@ -2563,7 +2563,7 @@ endif
 	add_task {
 		prereq = have("pretentious palette") and have("pretentious paintbrush") and have("pail of pretentious paint"),
 		message = "turn in rat whiskers",
-		action = function ()
+		action = function()
 			async_get_page("/town_wrong.php", { place = "artist" })
 			async_post_page("/town_wrong.php", { action = "whisker" })
 			if not have("pail") or have("pail of pretentious paint") then
@@ -2753,7 +2753,7 @@ endif
 			else
 				local f = adventure {
 					zoneid = 240,
-					macro_function = function ()
+					macro_function = function()
 						return [[
 ]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
 pickpocket
@@ -3107,7 +3107,7 @@ endwhile
 			else
 				local f = adventure {
 					zoneid = 260,
-					macro_function = function ()
+					macro_function = function()
 						return [[
 ]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
 pickpocket
@@ -3129,7 +3129,7 @@ endwhile
 		end
 	}
 
-	add_task { prereq = (whichday == 1) and challenge ~= "boris", f = function ()
+	add_task { prereq = (whichday == 1) and challenge ~= "boris", f = function()
 		if fullness() < 14 or drunkenness() < 19 or (spleen() < 12 and challenge ~= "trendy") then
 			stop "Unexpected fullness/drunkenness/spleen at end of day 1"
 		else
@@ -3244,7 +3244,7 @@ endwhile
 			else
 				return {
 					message = "find blooper",
-					action = function ()
+					action = function()
 						if script.get_photocopied_monster() ~= "Blooper" then
 							print("photocopied:", script.get_photocopied_monster())
 							inform "get blooper from faxbot"
@@ -3325,7 +3325,7 @@ endwhile
 --		task = function()
 --			return {
 --				message = "arrow pervert",
---				action = function ()
+--				action = function()
 --					if script.get_photocopied_monster() ~= "smut orc pervert" then
 --						print("photocopied:", script.get_photocopied_monster())
 --						inform "get pervert from faxbot"
@@ -3347,7 +3347,7 @@ endwhile
 		when = quest("Am I My Trapper's Keeper?") and (not trailed or trailed == "dairy goat") and highskill_at_run,
 		task = {
 			message = "get milk early in highskill AT",
-			action = function ()
+			action = function()
 				if challenge == "fist" then
 					script.ensure_buffs { "Earthen Fist" }
 				else
@@ -3368,7 +3368,7 @@ endwhile
 		when = highskill_at_run and not have("barrel of gunpowder") and level() >= 8 and level() < 12 and script.have_familiar("Obtuse Angel"),
 		task = {
 			message = "fax and arrow lobsterfrogman",
-			action = function ()
+			action = function()
 				if script.get_photocopied_monster() ~= "lobsterfrogman" then
 					inform "get LFM from faxbot"
 					script.get_faxbot_fax("lobsterfrogman", "lobsterfrogman")
@@ -3532,7 +3532,7 @@ endwhile
 		}
 	end
 
-	add_task { prereq = (whichday == 2) and ((not highskill_at_run and advs() < 110) or (advs() < 20 and level() >= 8)), f = function ()
+	add_task { prereq = (whichday == 2) and ((not highskill_at_run and advs() < 110) or (advs() < 20 and level() >= 8)), f = function()
 		if drunkenness() < 19 then
 			if challenge == "fist" and have_hippy_outfit() and drunkenness() < 19 then
 				local kitchen = get_page("/campground.php", { action = "inspectkitchen" })
@@ -3601,7 +3601,7 @@ endwhile
 		f = function()
 			-- TODO: Want +combat%
 			-- TODO: Should do this before level 9 to avoid noncombats!
-			script.go("yellow raying hippy", 26, make_yellowray_macro("hippy"), {}, { "Carlweather's Cantata of Confrontation" }, "He-Boulder", 15, { choice_function = function (advtitle, choicenum)
+			script.go("yellow raying hippy", 26, make_yellowray_macro("hippy"), {}, { "Carlweather's Cantata of Confrontation" }, "He-Boulder", 15, { choice_function = function(advtitle, choicenum)
 				if advtitle == "Peace Wants Love" then
 					if not have("filthy corduroys") then
 						return "Agree to take his clothes"
@@ -3806,7 +3806,7 @@ endwhile
 			message = "get hippy outfit",
 			bonus_target = { "noncombat" },
 			action = function()
-				script.go("get hippy outfit", 26, macro_autoattack, {}, {}, "He-Boulder", 15, { choice_function = function (advtitle, choicenum)
+				script.go("get hippy outfit", 26, macro_autoattack, {}, {}, "He-Boulder", 15, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Peace Wants Love" then
 						if not have("filthy corduroys") then
 							return "Agree to take his clothes"
@@ -3941,7 +3941,7 @@ endwhile
 		message = "level to 11",
 	}
 
-	add_task { prereq = (whichday == 3) and not highskill_at_run and advs() < 100, f = function ()
+	add_task { prereq = (whichday == 3) and not highskill_at_run and advs() < 100, f = function()
 		if drunkenness() < 19 then
 			if challenge == "fist" then
 				script.wear { hat = "filthy knitted dread sack", pants = "filthy corduroys" }
@@ -4261,7 +4261,7 @@ endwhile
 		}
 	}
 
-	add_task { prereq = true, f = function ()
+	add_task { prereq = true, f = function()
 		if ((advs() < 50 and turnsthisrun() + advs() < 850) or (advs() < 10)) and fullness() >= 12 and drunkenness() >= 19 and not highskill_at_run then
 			if script.spooky_forest_runaways() then return end -- TODO: do earlier as a task
 			if script.trade_for_clover() then return end
@@ -4283,7 +4283,7 @@ endwhile
 				if have("plus sign") and meat() < 1000 then
 					stop "Need 1k meat for oracle"
 				end
-				script.go("do > sign", 226, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic" }, "Slimeling", 25, { choice_function = function (advtitle, choicenum)
+				script.go("do > sign", 226, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic" }, "Slimeling", 25, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Typographical Clutter" then
 						if not have("plus sign") then
 							return "The big apostrophe"
@@ -4768,7 +4768,7 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 	return text, requestpath
 end)
 
-add_printer("/main.php", function ()
+add_printer("/main.php", function()
 	if tonumber(status().freedralph) == 1 then return end
 	if not setting_enabled("enable turnplaying automation") then return end
 	if not setting_enabled("enable turnplaying automation in-run") then return end

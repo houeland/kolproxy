@@ -145,7 +145,7 @@ add_ascension_zone_check(136, function()
 	end
 end)
 
-add_printer("/bigisland.php", function ()
+add_printer("/bigisland.php", function()
 	if params.place == "nunnery" then
 		if text:contains("Our Lady of Perpetual Indecision") then
 			local meat = tonumber(ascension["zone.island.nun meat"]) or 0
@@ -213,8 +213,8 @@ add_processor("/fight.php", function()
 	end
 end)
 
-add_printer("/fight.php", function ()
-	text = text:gsub("(<!%-%-WINWINWIN%-%->.-<tr><td align=center valign=center><img src=\"http://images.kingdomofloathing.com/itemimages/meat.gif\" width=30 height=30></td><td valign=center>)(You gain [0-9]+ Meat)(</td></tr>.-approaches you and takes the Meat..-Thank you for recovering this Meat)", function (pre, nunmsg, post) -- TODO-future: re-do regex a bit?
+add_printer("/fight.php", function()
+	text = text:gsub("(<!%-%-WINWINWIN%-%->.-<tr><td align=center valign=center><img src=\"http://images.kingdomofloathing.com/itemimages/meat.gif\" width=30 height=30></td><td valign=center>)(You gain [0-9]+ Meat)(</td></tr>.-approaches you and takes the Meat..-Thank you for recovering this Meat)", function(pre, nunmsg, post) -- TODO-future: re-do regex a bit?
 		return pre .. nunmsg .. "<br><span style=\"color: green;\">{ Recovered " .. format_integer(get_ascension_counter("zone.island.nun meat")) .. " meat. }</span>" .. post
 	end)
 end)

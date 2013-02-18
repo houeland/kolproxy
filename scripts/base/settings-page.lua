@@ -418,15 +418,15 @@ add_printer("/custom-settings", function()
 			<script type="text/javascript">
 function changed_settings() {
 	if (document.getElementById("settingslimited").checked) {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'limited', ajax: 1 }, function (res) {
+		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'limited', ajax: 1 }, function(res) {
 			top.charpane.location = "charpane.php"
 		})
 	} else if (document.getElementById("settingsstandard").checked) {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'standard', ajax: 1 }, function (res) {
+		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'standard', ajax: 1 }, function(res) {
 			top.charpane.location = "charpane.php"
 		})
 	} else if (document.getElementById("settingsdetailed").checked) {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'detailed', ajax: 1 }, function (res) {
+		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'detailed', ajax: 1 }, function(res) {
 			top.charpane.location = "charpane.php"
 		})
 	}
@@ -436,14 +436,14 @@ function click_cb(cb, name, stateset) {
 	if (cb.checked) {
 		cur = "yes"
 	}
-	$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:name, stateset:stateset, value:cur, ajax: 1 }, function (res) {
+	$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:name, stateset:stateset, value:cur, ajax: 1 }, function(res) {
 		enableDiv(label);
 	});
 	return true;
 }
 function clear_lua_script_cache(button) {
 	var pwd = ']] .. session.pwd .. [['
-	$.post('custom-clear-lua-script-cache', { pwd: pwd }, function (res) {
+	$.post('custom-clear-lua-script-cache', { pwd: pwd }, function(res) {
 		button.value = 'Script cache cleared!'
 		setTimeout(function() { button.value = 'Reload Lua script files again' }, 3000)
 	});

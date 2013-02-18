@@ -129,7 +129,7 @@ end)
 
 -- Volcano
 
---~ 	add_processor("/volcanomaze.php", function ()
+--~ 	add_processor("/volcanomaze.php", function()
 --~ 	--~ 	set_ascension_state("zone.volcano.maze states", table_to_str({}))
 --~ 		platforms = {}
 --~ 		goal = nil
@@ -498,7 +498,7 @@ volcano_solutions[6] = [[
 7, 6
 ]]
 
-local href = add_automation_script("automate-volcanomaze", function ()
+local href = add_automation_script("automate-volcanomaze", function()
 	text, url = "Solving volcano puzzle", requestpath
 	volcano = get_page("/volcanomaze.php")
 	platforms = {}

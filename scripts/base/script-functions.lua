@@ -1,5 +1,5 @@
 function add_itemdrop_counter(name, f)
-	add_printer("item drop: " .. name, function ()
+	add_printer("item drop: " .. name, function()
 		local c = count_item(item_name)
 		local msg = f(c)
 		if msg then

@@ -16,7 +16,7 @@ local function init_highlights()
 	end
 end
 
-add_chat_printer(function (chatmsg)
+add_chat_printer(function(chatmsg)
 	init_highlights()
 --~ 	print("chat msg", pre, chatmsg, post)
 	local triggered = false
@@ -28,7 +28,7 @@ add_chat_printer(function (chatmsg)
 		end
 	end
 	if triggered == true then
-		highlight_msg = function (pre, msg)
+		highlight_msg = function(pre, msg)
 			br_last = msg:match("^(.+)<br>$")
 			if br_last then
 				return pre .. "<font color=" .. triggered_color .. ">" .. br_last .. "</font><br>"

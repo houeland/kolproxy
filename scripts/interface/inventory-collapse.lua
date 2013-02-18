@@ -23,7 +23,7 @@ function toggle_kolproxy(section, title, id) {
 }
 ]])
 		local id = 0
-		text = text:gsub([[<table  class="stuffbox"(.-)(<a class=nounder href=")javascript:toggle%('([^']-)'%)(;"><font color=white)>([^<]-)(<.-)(<div class="collapse"[^>]->)]], function (t, a, section, font, title, filler, div)
+		text = text:gsub([[<table  class="stuffbox"(.-)(<a class=nounder href=")javascript:toggle%('([^']-)'%)(;"><font color=white)>([^<]-)(<.-)(<div class="collapse"[^>]->)]], function(t, a, section, font, title, filler, div)
 			id = id + 1
 			local showtitle = title
 			local style = ""

@@ -2001,7 +2001,7 @@ mark m_done
 			}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic" }, "Slimeling", 30)
 		elseif not have("Lord Spookyraven's spectacles") then
 			script.bonus_target { "noncombat" }
-			go("get spectacles", 108, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Springy Fusilli", "Spirit of Garlic" }, "Rogue Program", 50, { choice_function = function (advtitle, choicenum)
+			go("get spectacles", 108, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Springy Fusilli", "Spirit of Garlic" }, "Rogue Program", 50, { choice_function = function(advtitle, choicenum)
 				if choicenum == 82 then
 					return "Kick it and see what happens"
 				elseif choicenum == 83 then
@@ -2109,7 +2109,7 @@ mark m_done
 			if buff("Stone-Faced") or ascensionstatus() == "Hardcore" then
 				ignore_buffing_and_outfit = true
 				if not have("the Nostril of the Serpent") and ascension["zone.hidden temple.placed Nostril of the Serpent"] ~= "yes" then
-					go("unlock hidden city", 280, macro_noodlecannon, {}, {}, "Mini-Hipster", 25, { choice_function = function (advtitle, choicenum, pagetext)
+					go("unlock hidden city", 280, macro_noodlecannon, {}, {}, "Mini-Hipster", 25, { choice_function = function(advtitle, choicenum, pagetext)
 						if advtitle == "Fitting In" then
 							return "Explore the higher levels"
 						elseif advtitle == "Such Great Heights" then
@@ -2125,7 +2125,7 @@ mark m_done
 						end
 					end })
 				else
-					go("unlock hidden city", 280, macro_noodlecannon, {}, {}, "Mini-Hipster", 25, { choice_function = function (advtitle, choicenum, pagetext)
+					go("unlock hidden city", 280, macro_noodlecannon, {}, {}, "Mini-Hipster", 25, { choice_function = function(advtitle, choicenum, pagetext)
 						if advtitle == "Fitting In" then
 							return "Poke around the ground floor"
 						elseif advtitle == "Such Great Heights" then
@@ -2531,7 +2531,7 @@ endif
 					did_action = count(want_ore) > got
 				end
 			else
-				go("get mining outfit", 270, macro_noodlecannon(), {}, { "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy", "Spirit of Garlic" }, "Slimeling", 35, { choice_function = function (advtitle, choicenum)
+				go("get mining outfit", 270, macro_noodlecannon(), {}, { "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy", "Spirit of Garlic" }, "Slimeling", 35, { choice_function = function(advtitle, choicenum)
 					if advtitle == "100% Legal" then
 						if not have("miner's helmet") then
 							return "Demand loot"
@@ -2567,7 +2567,7 @@ endif
 				did_action = true
 			else
 				script.bonus_target { "noncombat" }
-				go("explore the extreme slope", 273, macro_noodlecannon(), {}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Peppermint" }, "Slimeling", 35, { choice_function = function (advtitle, choicenum)
+				go("explore the extreme slope", 273, macro_noodlecannon(), {}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Peppermint" }, "Slimeling", 35, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Generic Teen Comedy Snowboarding Adventure" then
 						if not have("eXtreme mittens") then
 							return "Give him a pep-talk"
@@ -2676,7 +2676,7 @@ endif
 			go("pick up gallery key", 103, macro_stasis, {}, {}, "Mini-Hipster", 15)
 		else
 			script.bonus_target { "noncombat" }
-			go("unlock gallery key", 104, macro_stasis, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Butt-Rock Hair", "A Few Extra Pounds" }, "Rogue Program", 5, { choice_function = function (advtitle, choicenum)
+			go("unlock gallery key", 104, macro_stasis, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Butt-Rock Hair", "A Few Extra Pounds" }, "Rogue Program", 5, { choice_function = function(advtitle, choicenum)
 				if advtitle == "Take a Look, it's in a Book!" then
 					if choicenum == 80 then
 						return "Reading is for losers.  I'm outta here."
@@ -2812,7 +2812,7 @@ endif
 			end
 		else
 			script.bonus_target { "noncombat", "item" }
-			go("get swashbuckling outfit", 66, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric" }, "Slimeling", 25, { choice_function = function (advtitle, choicenum)
+			go("get swashbuckling outfit", 66, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric" }, "Slimeling", 25, { choice_function = function(advtitle, choicenum)
 				if advtitle == "Amatearrr Night" then
 					if not have("stuffed shoulder parrot") then
 						return "What's orange and sounds like a parrot?" -- stuffed shoulder parrot
@@ -2861,7 +2861,7 @@ endif
 			script.bonus_target { "noncombat" }
 			softcore_stoppable_action("unlock hidden temple")
 			script.set_runawayfrom { "bar", "spooky mummy", "spooky vampire", "triffid", "warwelf", "wolfman" }
-			go("get parts to unlock hidden temple", 15, macro_stasis, {}, { "Smooth Movements", "The Sonata of Sneakiness" }, "Rogue Program", 10, { choice_function = function (advtitle, choicenum)
+			go("get parts to unlock hidden temple", 15, macro_stasis, {}, { "Smooth Movements", "The Sonata of Sneakiness" }, "Rogue Program", 10, { choice_function = function(advtitle, choicenum)
 				if advtitle == "Arboreal Respite" then
 					if not have("Spooky Temple map") then
 						if not have("tree-holed coin") then
@@ -3403,7 +3403,7 @@ endif
 		if not manor:match("Stairs Up") then
 			script.bonus_target { "noncombat" }
 			go("unlock upstairs", 104, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Butt-Rock Hair", "A Few Extra Pounds", "Spirit of Garlic" }, "Rogue Program", 30, {
-				choice_function = function (advtitle, choicenum)
+				choice_function = function(advtitle, choicenum)
 					if advtitle == "Take a Look, it's in a Book!" then
 						return "", 99
 					elseif advtitle == "Melvil Dewey Would Be Ashamed" then
@@ -3446,7 +3446,7 @@ endif
 					stop "TODO: Do bedroom in challenge path at level < 7"
 				end
 			end
-			go("do bedroom", 108, macro, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Springy Fusilli", "Spirit of Garlic", "Jaba&ntilde;ero Saucesphere", "Jalape&ntilde;o Saucesphere" }, "Frumious Bandersnatch", 50, { choice_function = function (advtitle, choicenum)
+			go("do bedroom", 108, macro, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Springy Fusilli", "Spirit of Garlic", "Jaba&ntilde;ero Saucesphere", "Jalape&ntilde;o Saucesphere" }, "Frumious Bandersnatch", 50, { choice_function = function(advtitle, choicenum)
 				if choicenum == 82 then
 					return "Kick it and see what happens"
 				elseif choicenum == 83 then
@@ -3567,7 +3567,7 @@ endif
 				ensure_buffs { "Ode to Booze" }
 				stop "TODO: find oracle, then do DD to wear off teleportitis"
 			else
-				go("unlock dod", 226, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic" }, "Slimeling", 25, { choice_function = function (advtitle, choicenum)
+				go("unlock dod", 226, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic" }, "Slimeling", 25, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Typographical Clutter" then
 						if not have("plus sign") then
 							return "The big apostrophe"
@@ -3602,7 +3602,7 @@ endif
 	function f.do_castle()
 		-- TODO: buff +item% more?
 		script.bonus_target { "noncombat", "item" }
-		go("do castle in the sky", 82, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 50, { choice_function = function (advtitle, choicenum)
+		go("do castle in the sky", 82, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 50, { choice_function = function(advtitle, choicenum)
 			if advtitle == "Wheel in the Clouds in the Sky, Keep On Turning" then
 				if choicenum == 9 and get_mainstat() ~= "Mysticality" then
 					return "Turn the wheel counterclockwise"
@@ -3627,7 +3627,7 @@ endif
 			did_action = have("intragalactic rowboat")
 		elseif get_result():contains("have to figure out some way to get the guard away from the door") then
 			script.bonus_target { "noncombat", "item" }
-			go("unlock hits", 82, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function (advtitle, choicenum)
+			go("unlock hits", 82, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
 				if advtitle == "Wheel in the Clouds in the Sky, Keep On Turning" then
 					if choicenum == 9 and get_mainstat() ~= "Mysticality" then
 						return "Turn the wheel counterclockwise"
@@ -4028,7 +4028,7 @@ endif
 					stop "Not enough meat for spooky sapling"
 				end
 				script.bonus_target { "noncombat" }
-				go("runaways to unlock hidden temple, " .. buffedfamiliarweight() .. " lb, already done " .. get_daily_counter("familiar.free butt runaways") .. " runaways", 15, macro_spooky_forest_runaway, {}, { "Smooth Movements", "The Sonata of Sneakiness" }, "Pair of Stomping Boots", 10, { choice_function = function (advtitle, choicenum)
+				go("runaways to unlock hidden temple, " .. buffedfamiliarweight() .. " lb, already done " .. get_daily_counter("familiar.free butt runaways") .. " runaways", 15, macro_spooky_forest_runaway, {}, { "Smooth Movements", "The Sonata of Sneakiness" }, "Pair of Stomping Boots", 10, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Arboreal Respite" then
 						if not have("Spooky Temple map") then
 							if not have("tree-holed coin") then
@@ -4113,7 +4113,7 @@ endif
 		local rooms = {}
 
 		local function stat_test(statname, amount)
-			return function ()
+			return function()
 				local stats = {
 					Muscle = { f = buffedmuscle, buff = "Power Ballad of the Arrowsmith" },
 					Mysticality = { f = buffedmysticality, buff = "The Magical Mojomuscular Melody" },
@@ -4140,7 +4140,7 @@ endif
 		rooms["Smooth Criminal"] = stat_test("Moxie", 49)
 
 		local function resist_test(element)
-			return function ()
+			return function()
 				if get_page("/charsheet.php"):contains([[<td align=right>]]..element..[[ Protection:</td>]]) then return true end
 				f.want_familiar "Exotic Parrot"
 				ensure_buffs { "Astral Shell", "Leash of Linguini", "Empathy" }

@@ -71,7 +71,7 @@ end)
 
 -- TODO: apply to mchat too?
 add_printer("/lchat.php", function()
-	text = text:gsub("(onLoad=)(%b'')", function (prefix, onload)
+	text = text:gsub("(onLoad=)(%b'')", function(prefix, onload)
 		-- /r messages can scroll off the screen when logging on if we show too much
 -- 		onload = string.gsub(onload, ";'$", ";submitchat(\"/trivial && /updates && /who && /friends\");'%0")
 		req = [[submitchat("/friends");]]
@@ -85,7 +85,7 @@ end)
 
 -- $('#tabs').sortable({
 -- 		appendTo: 'body',
--- 		stop: function (e, ui) {
+-- 		stop: function(e, ui) {
 -- 			var diff = Math.abs(ui.position.left - ui.originalPosition.left);
 -- 			if (diff < 10) ui.item.click();
 -- 		}

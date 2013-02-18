@@ -80,7 +80,7 @@ end
 
 local folios_used = 0
 
-local dis_href = add_automation_script("automate-suburbandis", function ()
+local dis_href = add_automation_script("automate-suburbandis", function()
 	if autoattack_is_set() then
 		stop "Disable your autoattack. The Dis script will handle (most) combats automatically."
 	end
@@ -137,7 +137,7 @@ local dis_href = add_automation_script("automate-suburbandis", function ()
 	return run_turns()
 end)
 
-add_printer("/suburbandis.php", function ()
+add_printer("/suburbandis.php", function()
 	if not setting_enabled("enable turnplaying automation") or ascensionstatus() ~= "Aftercore" then return end
 	text = text:gsub([[(</table></center>)(</body>)]], [[%1<center><a href="]]..dis_href { pwd = session.pwd }..[[" style="color: green">{ Automate Dis }</a></center>%2]])
 end)

@@ -178,7 +178,7 @@ function get_casual_automation_scripts()
 				["Strung-Up Quartet"] = "&quot;Play nothing, please.&quot;",
 			}, nc_buffs(), "Hobo Monkey", 30)
 		elseif not have("Lord Spookyraven's spectacles") then
-			go("get spectacles", 108, casual_macro_runaway_all(), {}, ensure_nc_buffs(), "Hobo Monkey", 50, { choice_function = function (advtitle, choicenum)
+			go("get spectacles", 108, casual_macro_runaway_all(), {}, ensure_nc_buffs(), "Hobo Monkey", 50, { choice_function = function(advtitle, choicenum)
 				if choicenum == 82 then
 					return "Kick it and see what happens"
 				elseif choicenum == 83 then
@@ -612,7 +612,7 @@ function get_casual_automation_scripts()
 					["Random Lack of an Encounter"] = "Investigate the crew quarters",
 					["Hammering the Armory"] = "Blow this popsicle stand",
 				}, ensure_nc_buffs(), "Hobo Monkey", 35, ensure_nc_equip())
-				go("do castle in the sky", 82, runaway_all(), ensure_nc_equip, ensure_nc_buffs(), "Hobo Monkey", 40, { choice_function = function (advtitle, choicenum)
+				go("do castle in the sky", 82, runaway_all(), ensure_nc_equip, ensure_nc_buffs(), "Hobo Monkey", 40, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Wheel in the Clouds in the Sky, Keep On Turning" then
 						if choicenum == 9 then
 							return "Turn the wheel counterclockwise"
@@ -857,7 +857,7 @@ function get_casual_automation_scripts()
 			if meat() < 100 and have("Spooky Temple map") and have("Spooky-Gro fertilizer") then
 				stop "Not enough meat for spooky sapling"
 			end
-			go("Unlock Hidden Temple", 15, macro_runaway_all(), ensure_nc_equip(), { "Smooth Movements", "The Sonata of Sneakiness" }, "Hobo Monkey", 10, { choice_function = function (advtitle, choicenum)
+			go("Unlock Hidden Temple", 15, macro_runaway_all(), ensure_nc_equip(), { "Smooth Movements", "The Sonata of Sneakiness" }, "Hobo Monkey", 10, { choice_function = function(advtitle, choicenum)
 				if advtitle == "Arboreal Respite" then
 					if not have("Spooky Temple map") then
 						if not have("tree-holed coin") then
@@ -948,7 +948,7 @@ function get_casual_automation_scripts()
 	function f.get_ballroom_key()
 		local manor = get_page("/manor.php")
 		if not manor:match("Stairs Up") then
-			go("unlock upstairs", 104, macro_runaway_all(), {}, ensure_nc_buffs, "Hobo Monkey", 25, { choice_function = function (advtitle, choicenum)
+			go("unlock upstairs", 104, macro_runaway_all(), {}, ensure_nc_buffs, "Hobo Monkey", 25, { choice_function = function(advtitle, choicenum)
 				if advtitle == "Take a Look, it's in a Book!" then
 					return "", 99
 				elseif advtitle == "Melvil Dewey Would Be Ashamed" then
@@ -973,7 +973,7 @@ function get_casual_automation_scripts()
 		else
 			local manor = get_page("/manor.php")
 			if not manor:match("Stairs Up") then
-				go("unlock upstairs", 104, macro_runaway_all(), {}, ensure_nc_buffs(), "Hobo Monkey", 25, { choice_function = function (advtitle, choicenum)
+				go("unlock upstairs", 104, macro_runaway_all(), {}, ensure_nc_buffs(), "Hobo Monkey", 25, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Take a Look, it's in a Book!" then
 						return "", 99
 					elseif advtitle == "Melvil Dewey Would Be Ashamed" then

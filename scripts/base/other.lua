@@ -248,7 +248,7 @@ end)
 
 -- The Sleeper Has Awakened -> equip worm-riding hooks, use drum machine, equip weap/offhand again, return page
 
-automate_noncombat_href = add_automation_script("automate-noncombat", function ()
+automate_noncombat_href = add_automation_script("automate-noncombat", function()
 	text, url = "Trying to automate noncombat...", requestpath
 	local function f() return text, url end
 	for i = 1, 100 do

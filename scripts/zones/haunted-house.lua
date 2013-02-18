@@ -1,4 +1,4 @@
-add_choice_text("Dark in the Attic", function ()
+add_choice_text("Dark in the Attic", function()
 	local tbl = {
 		["Take some mimeographs"] = "Get 3 staff guides (once per dungeon)",
 		["Poke around in the broken appliances"] = { getitem = "ghost trap" },
@@ -13,7 +13,7 @@ add_choice_text("Dark in the Attic", function ()
 	return tbl
 end)
 
-add_choice_text("Debasement", function ()
+add_choice_text("Debasement", function()
 	local tbl = {
 		["Check out the props room"] = "Get a chain, shell, or mirror",
 		["Turn up the fog machine"] = { text = "Raise dungeon ML", good_choice = true },
@@ -33,7 +33,7 @@ add_choice_text("Prop Deportment", {
 	["Examine the mirror"] = { getitem = "funhouse mirror" },
 })
 
-add_choice_text("The Unliving Room", function ()
+add_choice_text("The Unliving Room", function()
 	local tbl = {
 		["Close the windows"] = { text = "Raise dungeon ML", good_choice = true },
 		["Open the windows"] = "Lower dungeon ML",

@@ -480,7 +480,7 @@ endif
 					if not choice_name then
 						stop "Explored all of nemesis AT barracks"
 					end
-					result, resulturl, advagain = handle_adventure_result(pt, url, 220, nil, {}, function (advtitle, choicenum)
+					result, resulturl, advagain = handle_adventure_result(pt, url, 220, nil, {}, function(advtitle, choicenum)
 						print("visiting", choice_name)
 						visited[choice_name] = "yes"
 						ascension["nemesis.at.visited"] = visited
@@ -523,7 +523,7 @@ endif
 	return text, url
 end)
 
-add_printer("/questlog.php", function ()
+add_printer("/questlog.php", function()
 	if not setting_enabled("enable turnplaying automation") or ascensionstatus() ~= "Aftercore" then return end
 	text = text:gsub("<b>Me and My Nemesis</b>", [[%0 <a href="]]..href { pwd = session.pwd }..[[" style="color:green">{ automate }</a>]])
 end)

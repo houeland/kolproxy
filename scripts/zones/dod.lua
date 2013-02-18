@@ -75,7 +75,7 @@ function get_dod_potion_status()
 	end
 end
 
-add_processor("used combat item", function ()
+add_processor("used combat item", function()
 	if item_image == "exclam.gif" then
 		local tbl = ascension["zone.dod.potions"] or {}
 		effects = {
@@ -134,7 +134,7 @@ function add_inventory_item_annotation(itemname, f)
 end
 
 add_printer("/inventory.php", function()
-	text = text:gsub([[(<b class="ircm">)(.-)(</b>&nbsp;<span>[^<]*</span>)]], function (pre, itemname, post)
+	text = text:gsub([[(<b class="ircm">)(.-)(</b>&nbsp;<span>[^<]*</span>)]], function(pre, itemname, post)
 		for checkname, f in pairs(inventory_item_annotations) do
 			-- Support both inventory images turned on and off
 			if itemname:contains(checkname) then
@@ -212,7 +212,7 @@ end)
 
 -- Auto-use plus sign
 
-add_automator("/choice.php", function ()
+add_automator("/choice.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 	if text:match("That plus sign.*It's actually a book") then
 -- 		print("just paid for major consultation!")

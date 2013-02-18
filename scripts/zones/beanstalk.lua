@@ -13,7 +13,7 @@ add_choice_text("Hammering the Armory", { -- choice adventure number: 178
 
 -- castle in the clouds in the sky
 
-add_choice_text("Wheel in the Clouds in the Sky, Keep On Turning", function ()
+add_choice_text("Wheel in the Clouds in the Sky, Keep On Turning", function()
 	if choice_adventure_number == 9 then
 		return {
 			["Turn the wheel clockwise"] = "Turn to mysticality",
@@ -41,7 +41,7 @@ add_choice_text("Wheel in the Clouds in the Sky, Keep On Turning", function ()
 	end
 end)
 
-add_printer("/starchart.php", function ()
+add_printer("/starchart.php", function()
 	local function make_link(name, stars, lines, name2, name3)
 		local got_it = have(name)
 		if not got_it and name2 and name3 then
@@ -70,7 +70,7 @@ add_itemdrop_counter("star chart", function(c)
 	return "{ " .. make_plural(c, "star chart", "star charts") .. " in inventory. }"
 end)
 
-add_printer("/beanstalk.php", function ()
+add_printer("/beanstalk.php", function()
 	local castle = text:match([[title="The Castle in the Clouds in the Sky %(1%)"]])
 	local hits = text:match([[title="The Hole in the Sky %(1%)"]])
 	if not castle then

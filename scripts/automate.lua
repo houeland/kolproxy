@@ -58,14 +58,14 @@ local function add_automator_raw(file, func, scriptname)
 end
 
 envstoreinfo.g_env.load_script_files {
-	add_processor = function () end,
-	add_printer = function () end,
-	add_choice_text_conditional = function () end,
-	add_choice_text = function () end,
-	add_choice_itemtext = function () end,
-	add_choice_function = function () end,
+	add_processor = function() end,
+	add_printer = function() end,
+	add_choice_text_conditional = function() end,
+	add_choice_text = function() end,
+	add_choice_itemtext = function() end,
+	add_choice_function = function() end,
 	add_automator = add_automator_raw,
-	add_interceptor = function () end,
+	add_interceptor = function() end,
 }
 
 function run_wrapped_function(f_env)

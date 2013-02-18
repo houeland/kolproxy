@@ -23,7 +23,7 @@ end
 local function use_map(mapname, mapzonetitle, choices)
 	local pt, url = use_item(mapname)()
 	pt, url = get_page("/choice.php")
-	result, resulturl, advagain = handle_adventure_result(pt, url, "?", nil, nil, function (advtitle, choicenum, pt)
+	result, resulturl, advagain = handle_adventure_result(pt, url, "?", nil, nil, function(advtitle, choicenum, pt)
 		if advtitle == mapzonetitle then
 			for c in table.values(choices) do
 				if pt:contains(c) then

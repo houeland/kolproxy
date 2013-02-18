@@ -6,7 +6,7 @@
 
 --~ 			local filters = {}
 
---~ 			filters["round"] = (function (test)
+--~ 			filters["round"] = (function(test)
 --~ 				test = string.gsub(test, " ", "")
 --~ 				local roundmin, roundmax = string.match(test, "^([0-9]+)%-(([0-9]+))$")
 --~ 				if not roundmin then
@@ -27,7 +27,7 @@
 --~ 				end
 --~ 			end)
 
---~ 			filters["zone"] = (function (test)
+--~ 			filters["zone"] = (function(test)
 --~ 				local z = tonumber(string.match(test, "^([0-9]+)$"))
 --~ 	-- 			print("testing zone", zone, z)
 --~ 				if adventure_zone ~= z then
@@ -35,7 +35,7 @@
 --~ 				end
 --~ 			end)
 
---~ 			filters["monster"] = (function (test)
+--~ 			filters["monster"] = (function(test)
 --~ 				if monster_name == test then
 --~ 					return true
 --~ 				else
@@ -43,7 +43,7 @@
 --~ 				end
 --~ 			end)
 
---~ 			filters["flag"] = (function (test)
+--~ 			filters["flag"] = (function(test)
 --~ 				local flag, value = string.match(test, "^(.-):(.+)$")
 --~ 				if flag and value then
 --~ 					if get_fight_state(flag) ~= value then
@@ -56,7 +56,7 @@
 
 --~ 			extra = extrain
 
---~ 			filters["once"] = (function (test)
+--~ 			filters["once"] = (function(test)
 --~ 				onceflag = "once." .. test
 --~ 				v = get_fight_state(onceflag)
 --~ 				if v == "" then
@@ -68,17 +68,17 @@
 --~ 				end
 --~ 			end)
 
---~ 			filters["icon"] = (function (test)
+--~ 			filters["icon"] = (function(test)
 --~ 				if not extra then extra = {} end
 --~ 				extra["icon"] = test
 --~ 			end)
 
---~ 			filters["first"] = (function (test)
+--~ 			filters["first"] = (function(test)
 --~ 				if not extra then extra = {} end
 --~ 				extra["first"] = test
 --~ 				return true
 --~ 			end)
---~ 			filters["second"] = (function (test)
+--~ 			filters["second"] = (function(test)
 --~ 				if not extra then extra = {} end
 --~ 				extra["second"] = test
 --~ 				return true

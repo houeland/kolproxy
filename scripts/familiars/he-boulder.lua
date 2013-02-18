@@ -1,5 +1,5 @@
 add_printer("familiar message: heboulder", function()
-	text = text:gsub([[([a-z]+ eye)]], function (eye)
+	text = text:gsub([[([a-z]+ eye)]], function(eye)
 		local colors = {
 			["red eye"] = "red",
 			["blue eye"] = "blue",
@@ -28,7 +28,7 @@ end)
 add_printer("/charpane.php", function() -- TODO: generalize! and work for normal?
 	if text:match("<!%-%- charpane normal") then
 	elseif text:match("<!%-%- charpane compact") then
-		text = text:gsub([[(<td><img src=%b"" class=hand alt=%b"" title="Everything Looks [A-Za-z]+" onClick=%b''[^>]-></td>)(<td>%b()</td>)]], function (img, duration)
+		text = text:gsub([[(<td><img src=%b"" class=hand alt=%b"" title="Everything Looks [A-Za-z]+" onClick=%b''[^>]-></td>)(<td>%b()</td>)]], function(img, duration)
 			local title = img:match([[title="([^"]+)"]])
 			local colors = {
 				["Everything Looks Red"] = "red",

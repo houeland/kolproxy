@@ -69,7 +69,7 @@
 -- 	text = text:gsub("(name=attacktype value=rank) checked", "%1"):gsub("name=attacktype value=flowers", "%0 checked")
 -- end)
 
-local automate_pvp_fights_href = add_automation_script("automate-pvp-fights", function ()
+local automate_pvp_fights_href = add_automation_script("automate-pvp-fights", function()
 	local numtimes = tonumber(params.numtimes)
 	if numtimes then
 -- 		local tbl = {}
@@ -371,7 +371,7 @@ local function compute_best_outfits(besteq)
 	return bestoutfits
 end
 
-local optimize_pvp_equipment_href = add_automation_script("optimize-pvp-equipment", function ()
+local optimize_pvp_equipment_href = add_automation_script("optimize-pvp-equipment", function()
 	local eqdata = load_equipment_data()
 	local besteq = compute_best_equipment(eqdata, { Muscle = 100, Mysticality = 100, Moxie = 100, plusitems = 285, hobopower = 400, pvpfights = 0, adventures = 0, namelength = 1000 })
 	local bestoutfits = compute_best_outfits(besteq)

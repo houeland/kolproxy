@@ -57,7 +57,7 @@ add_processor("/mining.php", function()
 	end
 end)
 
-add_processor("/place.php", function ()
+add_processor("/place.php", function()
 	if params.action == "trappercabin" then
 		local wantore = text:match([[some dagburned ([a-z]-) ore]]) or text:match([[bring me that cheese and ([a-z]-) ore]])
 		if wantore then
@@ -168,7 +168,7 @@ local mining_ids = {
 	[49] = 1, [50] = 0, [51] = 1, [52] = 0, [53] = 1, [54] = 0,
 }
 
-add_printer("/mining.php", function ()
+add_printer("/mining.php", function()
 	if not params.mine then return end
 	if not text:contains("mining.php") then return end
 	mine = params.mine:match("([0-9]+)")

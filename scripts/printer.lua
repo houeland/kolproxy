@@ -120,7 +120,7 @@ kolproxy_log_time_interval("do run_functions", function()
 if path == "/charpane.php" and text:contains("inf_small.gif") then
 	-- Hack for valhalla
 else
-	text = run_functions(path, text, function (target, pt)
+	text = run_functions(path, text, function(target, pt)
 		for _, x in ipairs(printers[target] or {}) do
 			getfenv(x.f).text = pt
 -- 			kolproxy_log_time_interval("run:" .. tostring(x.scriptname), x.f)

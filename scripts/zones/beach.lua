@@ -20,7 +20,7 @@ add_printer("/shore.php", function()
 	end
 end)
 
-add_processor("/shore.php", function ()
+add_processor("/shore.php", function()
 	if text:contains([[<b>Vacation Results:</b>]]) then
 		local trips_text = text:match("You have taken (.-) trip")
 		local found_combat_item = false
@@ -68,7 +68,7 @@ add_automator("/beach.php", function()
 	end
 end)
 
-add_automator("/shore.php", function ()
+add_automator("/shore.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 	if text:contains([[MacGuffin diary]]) then
 		text, url = get_page("/diary.php", { whichpage = "1" }) -- Should it display the shore page or the diary page?

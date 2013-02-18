@@ -1,7 +1,7 @@
-add_processor("/inv_eat.php", function ()
+add_processor("/inv_eat.php", function()
 	local cookienumbers = {}
 	local num_cookies = 0
-	local add_number = function (x)
+	local add_number = function(x)
 		if x > 200 then return end -- A semirare is never further than 200 turns away
 		if not cookienumbers[x] then cookienumbers[x] = 0 end
 		cookienumbers[x] = cookienumbers[x] + 1

@@ -388,7 +388,7 @@ add_automator("/lair1.php", function()
 	end
 end)
 
-add_printer("/lair2.php", function ()
+add_printer("/lair2.php", function()
 	if text:contains([[value="sorcriddle]]) then
 		text = text:gsub([[(<input type=hidden name=prepreaction value="sorcriddle1">What am I%? <input name=answer class=text type=text size=10)(>)]], [[%1 value="fish"%2]])
 		text = text:gsub([[(<input type=hidden name=prepreaction value="sorcriddle2">Who are we%? <input name=answer class=text type=text size=10)(>)]], [[%1 value="phish"%2]])
@@ -771,7 +771,7 @@ end)
 add_printer("/lair3.php", function()
 	local result = session["hedge maze result"]
 	if result then
-		text = text:gsub([[<center><table class="item" style="float: none" rel="[^"]*"><tr><td><img src="http://images.kingdomofloathing.com/itemimages/[^"]+.gif" alt="[^"]*" title="[^"]*" class=hand onClick='descitem%([0-9]+%)'></td><td valign=center class=effect>You acquire .-</td></tr></table></center>]], function (droptext)
+		text = text:gsub([[<center><table class="item" style="float: none" rel="[^"]*"><tr><td><img src="http://images.kingdomofloathing.com/itemimages/[^"]+.gif" alt="[^"]*" title="[^"]*" class=hand onClick='descitem%([0-9]+%)'></td><td valign=center class=effect>You acquire .-</td></tr></table></center>]], function(droptext)
 			return droptext .. [[<center style="color: green">{ ]] .. result .. [[ }</center>]]
 		end)
 	end
@@ -844,7 +844,7 @@ add_automator("/fight.php", function()
 	end
 end)
 
-add_processor("/lair6.php", function ()
+add_processor("/lair6.php", function()
 	if text:contains("As you approach the door, you notice that someone has scrawled a message on it with a pencil: &quot;BEWARE: One of the guards always tells the truth, one of them always lies, one of them alternates between the two, and one craves the taste of human flesh!&quot; Ominous.") then
 		if text:contains("You're full of it") then
 			first = text:match("&quot;Well,&quot; says South, &quot;the first digit is ([0-9]).&quot;")
@@ -866,7 +866,7 @@ add_processor("/lair6.php", function ()
 	end
 end)
 
-add_printer("/lair6.php", function ()
+add_printer("/lair6.php", function()
 	if text:contains("You approach the heavy door.  Next to it is a panel with a bunch of buttons on it.  On the buttons are numbers.") then
 		local code = session["zone.lair.doorcode"]
 		if code then
@@ -941,7 +941,7 @@ function automate_lair6_place(place, text)
 	return text
 end
 
-add_automator("/lair6.php", function ()
+add_automator("/lair6.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 
 	text = automate_lair6_place(tonumber(params.place), text)

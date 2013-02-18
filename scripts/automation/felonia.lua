@@ -44,7 +44,7 @@ local felonia_href = setup_turnplaying_script {
 				end
 				result, resulturl, advagain = autoadventure {
 					zoneid = 48,
-					specialnoncombatfunction = function (advtitle, choicenum, pt)
+					specialnoncombatfunction = function(advtitle, choicenum, pt)
 						if advtitle == "Heart of Very, Very Dark Darkness" then
 							if have_equipped("spooky glove") and have("inexplicably glowing rock") then
 								return "Enter the cave"
@@ -72,7 +72,7 @@ local felonia_href = setup_turnplaying_script {
 	end,
 }
 
-add_printer("/questlog.php", function ()
+add_printer("/questlog.php", function()
 	if not setting_enabled("enable turnplaying automation") or ascensionstatus() ~= "Aftercore" then return end
 	text = text:gsub("<b>A Bugbear of a Problem</b>", [[%0 <a href="]]..felonia_href { pwd = session.pwd }..[[" style="color:green">{ automate }</a>]])
 end)

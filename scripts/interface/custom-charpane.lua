@@ -318,7 +318,7 @@ local function get_common_js()
 							type: 'GET', url: 'charsheet.php?pwd=]] .. session.pwd .. [[&ajax=1&action=unbuff&whichbuff=' + whichbuff + '&noredirect=1',
 							cache: false,
 							global: false,
-							success: function (out) {
+							success: function(out) {
 								if (out.match(/no\|/)) {
 									var parts = out.split(/\|/)
 									alert("Unable to shrug " + buffname + " because you are " + parts[1] + ".")
@@ -357,7 +357,7 @@ local function get_common_js()
 				url: "/skills.php?whichskill=" + skillid + "&quantity=1&action=Skillz&ajax=1&targetplayer=]] .. playerid() .. [[&pwd=]] .. session.pwd .. [[",
 				cache: false,
 				global: false,
-				success: function (out) {
+				success: function(out) {
 					if (out.match(/no\|/)) {
 						var parts = out.split(/\|/)
 						alert("Error extending buff: " + parts[1] + ".")
