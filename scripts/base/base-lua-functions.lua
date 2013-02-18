@@ -13,6 +13,15 @@ if table then
 			return value
 		end
 	end
+
+	function table.keys(tbl)
+		local keys = {}
+		for k, _ in pairs(tbl) do
+			table.insert(keys, k)
+		end
+		table.sort(keys)
+		return keys
+	end
 end
 
 exported_raw_tostring = tostring

@@ -288,6 +288,16 @@ endif
 		make_gremlin_macro = macro_softcore_boris_gremlin
 
 		boris_action = function()
+			local maybe_boil_first = ""
+			if level() >= 7 then
+				maybe_boil_first = [[
+
+if hasskill Boil
+  cast Boil
+endif
+
+]]
+			end
 			return [[
 
 jiggle
@@ -297,9 +307,30 @@ endif
 if hasskill Blend
   cast Blend
 endif
-cast Curdle
+
+]] .. maybe_boil_first .. [[
+
+if !monstername hippy
+  cast Curdle
+endif
 if hasskill Boil
   cast Boil
+endif
+
+]]
+		end
+
+		function noodles_action()
+			return [[
+
+if hascombatitem Rain-Doh blue balls
+  use Rain-Doh blue balls
+  use Rain-Doh indigo cup
+endif
+if !hascombatitem Rain-Doh blue balls
+  if hasskill Blend
+    cast Blend
+  endif
 endif
 
 ]]

@@ -92,7 +92,7 @@ load_api_status_to_mv ref mv = do
 				case decodeStrict x of
 					Ok jsobj -> return jsobj
 					Error err -> do
--- 						putStrLn $ "HTTP API load returned: " ++ x
+						writeFile "DEBUG-invalid-api-result.json" x
 						throwIO $ ApiPageException err
 			"/login.php" -> throwIO $ NotLoggedInException
 			"/maint.php" -> throwIO $ NotLoggedInException

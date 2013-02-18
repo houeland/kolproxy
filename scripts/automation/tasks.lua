@@ -523,16 +523,16 @@ mark m_done
 							use_item("bubblin' crude", 12)
 						end
 						script.ensure_buffs { "Fat Leon's Phat Loot Lyric", "Astral Shell", "Elemental Saucesphere" }
-						if get_resistance_levels().stench < 4 and not have_buff("Red Door Syndrome") then
+						if (get_resistance_levels().stench or 0) < 4 and not have_buff("Red Door Syndrome") then
 							script.ensure_buffs { "Red Door Syndrome" }
 						end
-						if get_resistance_levels().stench < 4 then
+						if (get_resistance_levels().stench or 0) < 4 then
 							switch_familiarid(72)
 						end
 						if familiarid() ~= 72 then
 							switch_familiarid(1)
 						end
-						if get_resistance_levels().stench >= 4 and (familiarid() == 1 or familiarid() == 72) and estimate_modifier_bonuses()["Item Drops from Monsters"] >= 50 and have_item("jar of oil") and estimate_modifier_bonuses()["Combat Initiative"] >= 40 then
+						if (get_resistance_levels().stench or 0) >= 4 and (familiarid() == 1 or familiarid() == 72) and estimate_modifier_bonuses()["Item Drops from Monsters"] >= 50 and have_item("jar of oil") and estimate_modifier_bonuses()["Combat Initiative"] >= 40 then
 							session["__script.automate twin peak"] = "yes"
 							did_action = true
 						else

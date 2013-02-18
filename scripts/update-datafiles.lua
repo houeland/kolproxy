@@ -263,12 +263,10 @@ function parse_items()
 	local itemslots = { hat = "hat", shirt = "shirt", container = "container", weapon = "weapon", offhand = "offhand", pants = "pants", accessory = "accessory", familiar = "familiarequip" }
 	for l in io.lines("cache/files/items.txt") do
 		local tbl = split_tabbed_line(l)
-		local itemid, name, picture, itemusestr, plural = tonumber(tbl[1]), tbl[2], tbl[4], tbl[5], tbl[8]
-		if picture then
-			picture = picture:gsub("%.gif$", "")
-		end
+		local itemid, name, picturestr, itemusestr, plural = tonumber(tbl[1]), tbl[2], tbl[4], tbl[5], tbl[8]
+		local picture = (picturestr or ""):match("^(.-)%.gif$")
 		if itemid and name and not blacklist[name] then
-			items[name] = { id = itemid }
+			items[name] = { id = itemid, picture = picture }
 			lowercasemap[name:lower()] = name
 			for _, u in ipairs(split_commaseparated(itemusestr or "")) do
 				items[name].equipment_slot = itemslots[u]
@@ -388,9 +386,18 @@ local function parse_monster_stats(stats)
 				local expr = value:match("^%[(.*)%]$")
 				if expr then
 					-- TODO: process expressions
-					value = 0
-				else
-					value = tonumber(value) or value
+					value = "?"
+				elseif tonumber(value) then
+					value = tonumber(value)
+				elseif name == "Meat" then
+					local lo, hi = value:match("^([0-9]+)%-([0-9]+)$")
+					lo, hi = tonumber(lo), tonumber(hi)
+					if lo and hi then
+						value = math.floor((lo + hi) / 2)
+						--if value * 2 ~= lo + hi then
+						--	print("DEBUG meat value", value, lo, hi)
+						--end
+					end
 				end
 				if name == "P" then
 					name = "Phylum"
@@ -422,16 +429,20 @@ local function parse_monster_items(items)
 	itemtbl = {}
 	for _, item in ipairs(items) do
 		local name, prefix, rate =  item:match("^(.*) %(([pnbcf]*)(%d+)%)$")
+
 		if not name then
 			-- a few items are missing drop rates
 			name = item
 		end
-		-- HACK: this notation allows using an itemid instead of
-		-- a name, but it's only used for this one item, so special
-		-- case it
-		if name == "[2528]" then
-			name = "filet of tangy gnat (&quot;fotelif&quot;)"
+		local nameitemid = tonumber(name:match("^%[([0-9]+)%]$"))
+		if nameitemid then
+			for n, d in pairs(processed_datafiles["items"]) do
+				if d.id == nameitemid then
+					name = n
+				end
+			end
 		end
+
 		local itementry = {
 			Name = name,
 		}
@@ -441,6 +452,9 @@ local function parse_monster_items(items)
 		end
 		if prefix and prefix ~= "" then
 			itementry[prefixkeys[prefix]] = true
+			if prefix == "b" then
+				itementry.Chance = 100
+			end
 		end
 		table.insert(itemtbl, itementry)
 	end
@@ -452,8 +466,8 @@ function parse_monsters()
 	for l in io.lines("cache/files/monsters.txt") do
 		local tbl = split_tabbed_line(l)
 		local name, stats = tbl[1], tbl[2]
-		if name and stats then
-			--print("parsing monster", name)
+		if not l:match("^#") and name and stats then
+			--print("DEBUG parsing monster", name)
 			table.remove(tbl, 1)
 			table.remove(tbl, 1)
 			local items = tbl
@@ -467,7 +481,27 @@ function parse_monsters()
 end
 
 function verify_monsters(data)
-	return data
+	for xi, x in pairs(data) do
+		for _, y in ipairs(x.Items or {}) do
+			if not processed_datafiles["items"][y.Name] then
+				hardwarn("monster:item does not exist", y.Name, "(from " .. tostring(xi) .. ")")
+			end
+		end
+	end
+
+	local cube_ok = false
+	for _, x in ipairs(data["hellion"].Items) do
+		if x.Name == "hellion cube" then
+			cube_ok = true
+		end
+	end
+	if data["hellion"].Stats.Element == "hot" and data["hellion"].Stats.Phylum == "demon" and data["hellion"].Stats.HP == 52 then
+		if data["hank north, photojournalist"].Stats.HP == 180 then
+			if data["beefy bodyguard bat"].Stats.Meat == 250 then
+				return data
+			end
+		end
+	end
 end
 
 function parse_hatrack()
@@ -688,21 +722,6 @@ function verify_zones(data)
 	end
 end
 
-function parse_mine_aggregate_prediction()
-	local fobj = io.open("cache/files/mine-aggregate-prediction.json")
-	local datafile = fobj:read("*a")
-	fobj:close()
-	return json_to_table(datafile)
-end
-
-function verify_mine_aggregate_prediction(data)
-	if data["1111????????????????????"] >= 0.019 and data["1111????????????????????"] <= 0.020 then
-		if data["???????????????8?????888"] >= 0.0016 and data["???????????????8?????888"] <= 0.0017 then
-				return data
-		end
-	end
-end
-
 function parse_choice_spoilers()
 	local jsonlines = {}
 	local found_adv_options = false
@@ -781,4 +800,3 @@ process("mallprices")
 process("consumables")
 
 process("zones")
-process("mine aggregate prediction")

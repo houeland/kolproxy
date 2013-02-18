@@ -650,6 +650,9 @@ function setup_functions()
 			session["cached player skills.ascensionpathid"] = nil
 		end
 		function have_skill(name)
+			if not name or name == "" then
+				error("Invalid name for have_skill: " .. tostring(name))
+			end
 			local skills = get_player_skills()
 			if skills then
 				return skills[name] ~= nil

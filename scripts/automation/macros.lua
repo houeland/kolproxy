@@ -430,6 +430,10 @@ if monstername procrastination giant
   endif
   while !times 5
 ]] .. maybe_belch .. [[
+
+    if hasskill Boil
+      cast Boil
+    endif
   endwhile
   abort no SC spell for procrastination giant
 endif

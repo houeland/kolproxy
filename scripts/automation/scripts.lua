@@ -577,6 +577,7 @@ function get_automation_scripts(cached_stuff)
 							critical "Failed to restore all HP with hot tub!"
 						end
 					end
+				elseif ascensionpath("Avatar of Jarlsberg") then
 				else
 					critical "Failed to restore HP!"
 				end
@@ -3647,7 +3648,7 @@ endif
 	function f.find_black_market()
 		use_dancecard()
 		local have_blackbird_parts = (have("broken wings") and have("sunken eyes")) or have("reassembled blackbird")
-		if have("black market map") and (challenge ~= "boris" or have_blackbird_parts) then
+		if have("black market map") and ((challenge ~= "boris" and challenge ~= "jarlsberg") or have_blackbird_parts) then
 			inform "locate black market"
 			meatpaste_items("broken wings", "sunken eyes")
 			fam "Reassembled Blackbird"

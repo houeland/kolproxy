@@ -47,6 +47,7 @@ end
 
 function maybe_get_itemid(name)
 	if name == "Staff of the Healthy Breakfast" then return 6258 end -- TODO: HACK!
+	if name == "mediocre lager" then return 6215 end -- TODO: HACK!
 
 	if name == nil then
 		return nil

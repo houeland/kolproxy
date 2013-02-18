@@ -291,8 +291,9 @@ loadSettingsFromServer ref = do
 				return $ Just $ show what_list
 			Nothing -> return Nothing
 		Error err -> do
-			putStrLn $ "Error loading actionbar data: " ++ err
--- 			putStrLn $ ""
--- 			putStrLn $ json
--- 			putStrLn $ ""
+			putStrLn $ "ERROR: Invalid actionbar data: " ++ err
+			putStrLn $ "  Your server data has most likely gotten corrupted by a buggy GreaseMonkey script."
+			putStrLn $ "  To reset it, first turn on the combat bar by going to KoL options -> Combat -> Enable Combat Bar."
+			putStrLn $ "  Then, fight a monster, drag some skills onto the combat bar, win the fight, and log out. That should fix it."
+			writeFile "DEBUG-invalid-actionbar-data.json" json
 			throwIO StateException

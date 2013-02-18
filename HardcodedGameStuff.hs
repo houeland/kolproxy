@@ -126,8 +126,6 @@ download_data_files = do
 	dldatafile "http://www.houeland.com/kol/consumable-advgain.json"
 	dldatafile "http://www.houeland.com/kol/zones.json"
 
-	dldatafile "http://www.houeland.com/kolproxy/files/mine-aggregate-prediction.json"
-
 	return ()
 
 add_colored_message_to_page color msg pt =

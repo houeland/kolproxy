@@ -21,7 +21,7 @@ import Data.Time
 import Network.CGI (formEncode)
 import Network.URI
 import System.Directory (doesFileExist, createDirectoryIfMissing)
---import System.Environment (getArgs)
+import System.Environment (getArgs)
 import System.IO
 import qualified Data.ByteString.Char8
 import qualified Data.Map
@@ -235,9 +235,7 @@ kolProxyHandler uri params baseref = do
 				putStrLn $ "DEBUG login.php contents: " ++ (Data.ByteString.Char8.unpack pt)
 				makeRedirectResponse pt uri hdrs) `catch` (\e -> do
 					putStrLn $ "Error: Failed to log in. Exception: " ++ (show (e :: Control.Exception.SomeException))
-					-- TODO: Eeek! When this happens, there's no proper session, stuff gets fucked
 					makeResponse pt uri hdrs)
--- 					return $ Response (5,0,0) "" (hdrs ++ [Header HdrContentType "text/html; charset=UTF-8", Header HdrCacheControl "no-cache"]) "Error: Failed to log in. This can happen if you try to log in for the first time in a day while in combat, in a choice adventure or in valhalla.")
 
 	let response = case uriPath uri of
 		"/login.php" -> fmap handle_login params
@@ -362,14 +360,11 @@ runKolproxy = do
 
 main = platform_init $ do
 	hSetBuffering stdout LineBuffering
---	args <- getArgs
-	let args = []
+	args <- getArgs
 	case args of
-		[] -> runKolproxy
 		["--runbotscript", botscriptfilename] -> do
 			botscriptcode <- readFile botscriptfilename
 			runBotScript botscriptcode
-		_ -> do
-			putStrLn $ "ERROR: Unsupported command-line options!"
+		_ -> runKolproxy
 	putStrLn $ "INFO: Done! (main finished)"
 	return ()

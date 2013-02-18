@@ -108,9 +108,6 @@ local function formatMonsterStats(monster)
 	statData = statData .. formatStat("Atk", data.ModAtk, nil, "Starting Atk: " .. data.Atk)
 
 	local defTooltip = data.Def
-	if tonumber(data.Def) then
-		defTooltip = math.max(math.floor(tonumber(data.Def) * 0.9), 1)
-	end
 	
 	statData = statData .. formatStat("Def", data.ModDef, nil, "Starting Def: " .. defTooltip)
 	statData = statData .. formatStat("Meat", data.Meat)
@@ -214,7 +211,7 @@ function getCurrentMonster()
 	if monster then
 		monster.Stats.ModHP = adjustStat(monster.Stats.HP, tonumber(fight["damage inflicted"]), nil, nil)
 		monster.Stats.ModAtk = adjustStat(monster.Stats.Atk, tonumber(fight["attack decrease"]), 1, nil)
-		monster.Stats.ModDef = adjustStat(monster.Stats.Def, tonumber(fight["defense decrease"]), 1, 0.9)
+		monster.Stats.ModDef = adjustStat(monster.Stats.Def, tonumber(fight["defense decrease"]), 1, nil)
 	end
 
 	local first_serverdata = fight["currently fighting first serverdata"]

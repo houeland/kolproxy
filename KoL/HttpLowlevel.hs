@@ -340,9 +340,8 @@ mkconnthing server = do
 	-- TODO: merge stale-check and max-requests-check?
 	connmv <- newEmptyMVar
 	let open_conn = do
-		-- TODO: what happens if this fail? can it fail?
 		tnow <- getCurrentTime
-		c <- kolproxy_openTCPConnection server
+		c <- kolproxy_openTCPConnection server -- TODO: Handle connection errors, timeout
 		rchan <- newChan
 		req_counter <- newIORef 0
 		let run = do

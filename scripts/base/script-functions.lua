@@ -447,19 +447,21 @@ function estimate_max_safe_drunkenness()
 	if ascensionpathname() == "Teetotaler" or ascensionpathname() == "Oxygenarian" then
 		return 0
 	end
-	local msd = 14
+	local dlimit = 15
 	if ascensionpathid() == 8 or ascensionpathid() == 10 then
-		msd = 4
+		dlimit = 5
 	elseif ascensionpath("Avatar of Jarlsberg") then
-		msd = 10
+		dlimit = 10
 	end
+
 	if have_skill("Liver of Steel") then
-		msd = msd + 5
+		dlimit = dlimit + 5
 	end
 	if have_skill("Nightcap") then
-		msd = msd + 5
+		dlimit = dlimit + 5
 	end
-	return msd
+
+	return dlimit - 1
 end
 
 function estimate_max_spleen()

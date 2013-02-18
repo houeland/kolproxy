@@ -14,6 +14,7 @@ local function estimate_skill_init()
 		["Legendary Impatience"] = 100,
 		["Hunter's Sprint"] = 100,
 		["Lust"] = 50,
+		["Never Late for Dinner"] = 50,
 		["Overdeveloped Sense of Self Preservation"] = 20,
 		["Slimy Shoulders"] = 20,
 		["Sloth"] = -25,

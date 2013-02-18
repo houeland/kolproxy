@@ -960,7 +960,7 @@ end)
 
 add_always_warning("/lair6.php", function()
 	if tonumber(params.place) == 5 and not have("Wand of Nagamar") then
-		if ascensionpathid() == 8 or ascensionpathid() == 10 then return end
+		if ascensionpathid() == 8 or ascensionpathid() == 10 or ascensionpath("Avatar of Jarlsberg") then return end
 		return "A Wand of Nagamar is recommended for the sorceress fight.", "sorceress-wand-of-nagamar"
 	end
 end)
