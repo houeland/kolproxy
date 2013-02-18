@@ -12,36 +12,7 @@ function deepcopy(t)
 	return res
 end
 
---TODO: Resolve as many ambiguous names as you can find
--- orcish frat boy
--- slimetube
--- hobopolis 
--- more...
-local ambiguousNames = {
-	[ [[animated nightstand]] ] = { 
-		[ [[darkstand.gif]] ] = [[animated nightstand (mahogany)]],
-		[ [[nightstand.gif]] ] =[[animated nightstand (white)]],
-	},
-	[ [[ed the undying]] ] = { 
-		[ [[ed.gif]] ] = [[ed the undying (1)]],
-		[ [[ed2.gif]] ] = [[ed the undying (2)]],
-		[ [[ed3.gif]] ] = [[ed the undying (3)]],
-		[ [[ed4.gif]] ] = [[ed the undying (4)]],
-		[ [[ed5.gif]] ] = [[ed the undying (5)]],
-		[ [[ed6.gif]] ] = [[ed the undying (6)]],
-		[ [[ed7.gif]] ] = [[ed the undying (7)]],
-	},
-	[ [[ninja snowman]] ] = {
-		[ [[snowman.gif]] ] = [[ninja snowman (hilt/mask)]],
-		[ [[ninjarice.gif]] ] =[[ninja snowman (chopsticks)]],
-	},
-	[ [[knight]] ] = {
-		[ [[snaknight.gif]] ] = [[knight (snake)]],
-		[ [[wolfknight.gif]] ] = [[knight (wolf)]],
-	}
-}
-
-local function parseMonsterNameIntoMafiaFormat(monsterName, fightText)
+local function parseMonsterNameIntoMafiaFormat(monsterName)
 	--mafia's table doesn't precede the names of the monsters
 	--with "a " or "an " or spaces, this function attempts to
 	--strip out those things
@@ -53,14 +24,6 @@ local function parseMonsterNameIntoMafiaFormat(monsterName, fightText)
 	mafiaMonsterName = mafiaMonsterName:gsub("^a ", "")
 	mafiaMonsterName = mafiaMonsterName:gsub("^an ", "")
 	mafiaMonsterName = mafiaMonsterName:gsub("^ ", "")
-
-	if ambiguousNames[mafiaMonsterName] then
-		for lookFor, actualName in pairs(ambiguousNames[mafiaMonsterName]) do
-			if fightText:contains(lookFor) then
-				return actualName
-			end
-		end	
-	end
 
 	return mafiaMonsterName
 end
@@ -89,9 +52,36 @@ local function beesIncreaser(monster_name, base_data)
 	return base_data
 end
 
-function getMonsterData(monsterName, fightText)
-	local monsterDataName = parseMonsterNameIntoMafiaFormat(monsterName, fightText)
-	local monster = datafile("monsters")[monsterDataName]
+local monster_image_prefixes = {
+	nhobo = "normal hobo",
+	hothobo = "hot hobo",
+	coldhobo = "cold hobo",
+	stenchhobo = "stench hobo",
+	spookyhobo = "spooky hobo",
+	slhobo = "sleaze hobo",
+	slime1 = "slime1",
+	slime2 = "slime2",
+	slime3 = "slime3",
+	slime4 = "slime4",
+	slime5 = "slime5",
+}
+
+function getMonsterData(monster_name, fight_text)
+	local monster_data_name = parseMonsterNameIntoMafiaFormat(monster_name)
+	local monster = datafile("monsters")[monster_data_name]
+
+	if not monster then
+		local monster_image = fight_text:match([[<img id='monpic' src="http://images.kingdomofloathing.com/adventureimages/([^"]+)"]])
+		monster = get_monster_by_image(monster_image)
+		if not monster then
+			for prefix, name in pairs(monster_image_prefixes) do
+				if monster_image:match("^" .. prefix) then
+					monster = datafile("monsters")[name]
+					break
+				end
+			end
+		end
+	end
 
 	if not monster then return nil end
 	monster = deepcopy(monster)
@@ -104,7 +94,7 @@ function getMonsterData(monsterName, fightText)
 
 	local modifiers = estimate_modifier_bonuses()
 	local ml = modifiers["Monster Level"] or 0
-	if monsterDataName == "tomb rat king" then ml = 0 end -- ML doesn't get reapplied when using rat tangles
+	if monster_data_name == "tomb rat king" then ml = 0 end -- ML doesn't get reapplied when using rat tangles
 
 	for a, b in pairs(monster.Stats or {}) do
 		if b == 0 then
@@ -117,7 +107,7 @@ function getMonsterData(monsterName, fightText)
 	--In a bees hate you, monster's with b in their names get increased by 20% per b
 	--This is AFTER ML is applied
 	if ascensionpathid() == 4 then
-		monster.Stats = beesIncreaser(monsterName, monster.Stats)
+		monster.Stats = beesIncreaser(monster_name, monster.Stats)
 	end
 
 	local item = modifiers["Item Drops from Monsters"] or 0
