@@ -47,6 +47,7 @@ cosmic_kitchen_recipes = {
 	{ product = "Ultimate Breakfast Sandwich", ingredients = { "consummate fried egg", "consummate bagel", "consummate cheese slice", "consummate bacon" } },
 	{ product = "Loaded Baked Potato", ingredients = { "consummate baked potato", "consummate bacon", "consummate melted cheese", "consummate sour cream" } },
 	{ product = "Omega Sundae", ingredients = { "consummate ice cream", "consummate whipped cream", "consummate strawberries", "consummate brownie" } },
+	{ divider = true },
 	{ product = "Die Sauerlager", ingredients = { "mediocre lager", "consummate sauerkraut" } },
 	{ product = "Bologna Lambic", ingredients = { "passable stout", "consummate cold cuts" } },
 	{ product = "Vodka Dog", ingredients = { "acceptable vodka", "consummate hot dog bun" } },
@@ -55,6 +56,37 @@ cosmic_kitchen_recipes = {
 	{ product = "Nachojito", ingredients = { "adequate rum", "consummate melted cheese" } },
 	{ product = "Le Roi", ingredients = { "adequate rum", "consummate french fries" } },
 	{ product = "Over Easy Rider", ingredients = { "adequate rum", "consummate fried egg" } },
+	{ divider = true },
+	{ baseproduct = "consummate hard-boiled egg" },
+	{ baseproduct = "consummate fried egg" },
+	{ baseproduct = "consummate egg salad" },
+	{ baseproduct = "consummate bagel" },
+	{ baseproduct = "consummate sliced bread" },
+	{ baseproduct = "consummate hot dog bun" },
+	{ baseproduct = "consummate brownie" },
+	{ baseproduct = "consummate toast" },
+	{ baseproduct = "consummate soup" },
+	{ baseproduct = "consummate corn chips" },
+	{ baseproduct = "consummate salad" },
+	{ baseproduct = "consummate salsa" },
+	{ baseproduct = "consummate sauerkraut" },
+	{ baseproduct = "consummate cheese slice" },
+	{ baseproduct = "consummate melted cheese" },
+	{ baseproduct = "consummate bacon" },
+	{ baseproduct = "consummate meatloaf" },
+	{ baseproduct = "consummate steak" },
+	{ baseproduct = "consummate cold cuts" },
+	{ baseproduct = "consummate frankfurter" },
+	{ baseproduct = "consummate french fries" },
+	{ baseproduct = "consummate baked potato" },
+	{ baseproduct = "consummate ice cream" },
+	{ baseproduct = "consummate whipped cream" },
+	{ baseproduct = "consummate sour cream" },
+	{ baseproduct = "consummate strawberries" },
+	{ baseproduct = "consummate sorbet" },
+	{ baseproduct = "passable stout" },
+	{ baseproduct = "acceptable vodka" },
+	{ baseproduct = "adequate rum" },
 }
 
 cosmic_kitchen_items = {
@@ -159,64 +191,216 @@ cosmic_kitchen_skills = {
   ["Best Served Cold"] = "jarl_revenge",
 }
 
+local scanned_itemids = {}
+local function scan_itemids()
+	local pt = get_page("/shop.php", { whichshop = "jarl" })
+	for itemid, name in pt:gmatch([[<input type=radio name=whichitem value=([0-9]+)>.-<b>(.-)</b>]]) do
+		if tonumber(itemid) and cosmic_kitchen_items[name] then
+			scanned_itemids[name] = tonumber(itemid)
+		end
+	end
+end
+
+add_automation_script("custom-cosmic-kitchen-crafting", function()
+	local need_ingredients = {}
+	local want_products = {}
+	for _, x in pairs(cosmic_kitchen_recipes) do
+		local product = x.product or x.baseproduct
+		if product and tonumber(params[product]) and tonumber(params[product]) > 0 then
+			local count = tonumber(params[product])
+			if x.baseproduct then
+				need_ingredients[product] = (need_ingredients[product] or 0) + count
+			elseif x.product then
+				for _, iname in ipairs(x.ingredients) do
+					need_ingredients[iname] = (need_ingredients[iname] or 0) + count
+				end
+				want_products[product] = count
+			end
+		end
+	end
+
+	scan_itemids()
+
+	for x, y in pairs(need_ingredients) do
+		async_post_page("/shop.php", { pwd = params.pwd, whichshop = "jarl", action = "buyitem", whichitem = scanned_itemids[x], quantity = y })
+	end
+
+	scan_itemids()
+
+	for x, y in pairs(want_products) do
+		async_post_page("/shop.php", { pwd = params.pwd, whichshop = "jarl", action = "buyitem", whichitem = scanned_itemids[x], quantity = y })
+	end
+
+	return "Done!", requestpath
+end)
+
 local cosmic_kitchen_href = add_automation_script("custom-cosmic-kitchen", function()
 	local tbl = {}
+	local jsrecipes = {}
+	local jspossible = {}
+	local jscosmiccounts = {}
+	-- TODO?: jsingredientcounts when itemids are available
 	for _, recipe in ipairs(cosmic_kitchen_recipes) do
 		local need_ingredients = {}
 		local ingredient_amounts = {}
 		local missing_skills = {}
-		for _, xname in ipairs(recipe.ingredients) do
+		local product = nil
+		local function need_ingredient(xname)
 			local x = cosmic_kitchen_ingredients[xname]
-			if true then -- TODO: remove when itemids are available
-			--if not have_item(xname) then
-				table.insert(need_ingredients, xname)
-				ingredient_amounts[x.ingredient] = (ingredient_amounts[x.ingredient] or 0) + 1
-			end
+			table.insert(need_ingredients, xname)
+			ingredient_amounts[x.ingredient] = (ingredient_amounts[x.ingredient] or 0) + 1
 			if not have_skill(x.skill) then
 				missing_skills[x.skill] = true
 			end
 		end
-		table.sort(need_ingredients)
-		local productdata = cosmic_kitchen_items[recipe.product]
-		local ingredient_list = {}
-		local possible = true
-		for _, x in ipairs(need_ingredients) do
-			local xdata = cosmic_kitchen_ingredients[x]
-			local ingredientdata = cosmic_kitchen_items[x]
-			local baseingredientdata = cosmic_kitchen_items[xdata.ingredient]
-			local picture = ingredientdata.picture
-			local bordercolor = "gray"
-			if false then -- TODO: remove when itemids are available
-			--if count_item(x) >= ingredient_amounts[xdata.ingredient] then
-				bordercolor = "green"
-			elseif not have_skill(baseingredientdata.summonskill) then
-				picture = baseingredientdata.picture
-				bordercolor = "red"
-				possible = false
-			elseif not have_skill(xdata.skill) then
-				picture = baseingredientdata.picture
-				possible = false
+		local function add_product_line()
+			table.sort(need_ingredients)
+			local productdata = cosmic_kitchen_items[product]
+			local ingredient_list = {}
+			local possible = true
+			for _, x in ipairs(need_ingredients) do
+				local xdata = cosmic_kitchen_ingredients[x]
+				local ingredientdata = cosmic_kitchen_items[x]
+				local baseingredientdata = cosmic_kitchen_items[xdata.ingredient]
+				local picture = ingredientdata.picture
+				local bordercolor = "gray"
+				if false then -- TODO: remove when itemids are available
+				--if count_item(x) >= ingredient_amounts[xdata.ingredient] then
+					bordercolor = "green"
+				elseif not have_skill(baseingredientdata.summonskill) then
+					picture = baseingredientdata.picture
+					bordercolor = "red"
+					possible = false
+				elseif not have_skill(xdata.skill) then
+					picture = baseingredientdata.picture
+					possible = false
+				end
+				table.insert(ingredient_list, string.format([[<img style="border: 2px solid %s" src="http://images.kingdomofloathing.com/itemimages/%s.gif">]], bordercolor, picture))
 			end
-			table.insert(ingredient_list, string.format([[<img style="border: 2px solid %s" src="http://images.kingdomofloathing.com/itemimages/%s.gif">]], bordercolor, picture))
+			local skill_list = {}
+			for x, _ in pairs(missing_skills) do
+				possible = false
+				table.insert(skill_list, string.format([[<img style="border: 2px solid red" src="http://images.kingdomofloathing.com/itemimages/%s.gif">]], cosmic_kitchen_skills[x]))
+			end
+			local sizeinfo = "?"
+			if productdata.size then
+				sizeinfo = "size: " .. productdata.size
+			elseif productdata.potency then
+				sizeinfo = "potency: " .. productdata.potency
+			end
+			local trstyle = ""
+			if not possible then
+				trstyle = [[ style="opacity: 0.4; background-color: rgba(120, 0, 0, 0.2)"]]
+			end
+			local plusminusbuttons = string.format([[<img style="vertical-align: middle" src="http://images.kingdomofloathing.com/otherimages/letters/plussign.gif" onclick="add_item('%s')"><img style="vertical-align: middle" src="http://images.kingdomofloathing.com/otherimages/letters/hyphen.gif" onclick="remove_item('%s')">]], product, product)
+			jsrecipes[product] = ingredient_amounts
+			jspossible[product] = possible
+			if not maybe_get_itemid(product) then print("DEBUG: missing itemid", product) end
+			table.insert(tbl, string.format([[<tr%s><td>%s</td><td><img style="vertical-align: middle" src="http://images.kingdomofloathing.com/itemimages/%s.gif"> %s %s, %s</td><td>%s%s</td></tr>]], trstyle, plusminusbuttons, productdata.picture, product, productdata.quality, sizeinfo, table.concat(ingredient_list), table.concat(skill_list)))
 		end
-		local skill_list = {}
-		for x, _ in pairs(missing_skills) do
-			possible = false
-			table.insert(skill_list, string.format([[<img style="border: 2px solid red" src="http://images.kingdomofloathing.com/itemimages/%s.gif">]], cosmic_kitchen_skills[x]))
+		if recipe.baseproduct then
+			product = recipe.baseproduct
+			need_ingredient(product)
+			add_product_line()
+		elseif recipe.product then
+			product = recipe.product
+			for _, xname in ipairs(recipe.ingredients) do
+				need_ingredient(xname)
+			end
+			add_product_line()
+		elseif recipe.divider then
+			table.insert(tbl, [[<tr style="background-color: gray"><td></td><td></td><td></td></tr>]])
 		end
-		local sizeinfo = "?"
-		if productdata.size then
-			sizeinfo = "size: " .. productdata.size
-		elseif productdata.potency then
-			sizeinfo = "potency: " .. productdata.potency
-		end
-		local trstyle = ""
-		if not possible then
-			trstyle = [[ style="opacity: 0.4; background-color: rgba(120, 0, 0, 0.2)"]]
-		end
-		table.insert(tbl, string.format([[<tr%s><td><img style="vertical-align: middle" src="http://images.kingdomofloathing.com/itemimages/%s.gif"> %s %s, %s</td><td>%s%s</td></tr>]], trstyle, productdata.picture, recipe.product, productdata.quality, sizeinfo, table.concat(ingredient_list), table.concat(skill_list)))
 	end
-	return "<html><body><table>" .. table.concat(tbl, "\n") .. "</table></body></html>", requestpath
+	for x, y in pairs(cosmic_kitchen_items) do
+		if y.summonskill then
+			jscosmiccounts[x] = count_item(x)
+		end
+	end
+	local divtext = [[<div style="position:fixed; bottom:0px; right:0px; padding:5px; border: thin solid black; z-index: 100; background-color: white;"><div id="planitems"></div><div id="plansubmit" style="display: none"><button type="button" onclick="doit()">Make dinner</button></div><div>Size: <span id="plansize">0</span>, potency: <span id="planpotency">0</span></div></div>]]
+	return [[<html>
+<head>
+<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
+<script type="text/javascript">
+var cosmic_kitchen_items = ]] .. table_to_json(cosmic_kitchen_items) .. [[
+
+var jsrecipes = ]] .. table_to_json(jsrecipes) .. [[
+
+var jspossible = ]] .. table_to_json(jspossible) .. [[
+
+var jscosmiccounts = ]] .. table_to_json(jscosmiccounts) .. [[
+
+var selected_items = {}
+
+function change(what, amount) {
+	var val = parseInt($("#plan" + what).text())
+	$("#plan" + what).text(val + amount)
+}
+
+function doit() {
+	var params = { "pwd": "]] .. session.pwd .. [[", "automation-script": "custom-cosmic-kitchen-crafting" }
+	for (xi in selected_items) {
+		params[xi] = selected_items[xi]
+	}
+	window.location.href = "/kolproxy-automation-script?" + $.param(params)
+}
+
+function update_display() {
+	var output = ""
+	var needingredients = {}
+	var allok = true
+	for (xi in cosmic_kitchen_items) {
+		var x = cosmic_kitchen_items[xi]
+		if (selected_items[xi] > 0) {
+			if (jspossible[xi]) {
+				output += '<div><img style="vertical-align: middle" src="http://images.kingdomofloathing.com/itemimages/' + x.picture + '.gif"> ' + x.quality + ': ' + selected_items[xi] + '</div>'
+			} else {
+				allok = false
+				output += '<div style="border: solid 2px red"><img style="vertical-align: middle" src="http://images.kingdomofloathing.com/itemimages/' + x.picture + '.gif"> ' + x.quality + ': ' + selected_items[xi] + '</div>'
+			}
+			for (ii in jsrecipes[xi]) {
+				var i = jsrecipes[xi][ii]
+				needingredients[ii] = (needingredients[ii] || 0) + i * selected_items[xi]
+			}
+		}
+	}
+	for (xi in jscosmiccounts) {
+		if (needingredients[xi]) {
+			var x = needingredients[xi]
+			if (x <= jscosmiccounts[xi]) {
+				output += '<div><img style="vertical-align: middle" src="http://images.kingdomofloathing.com/itemimages/' + cosmic_kitchen_items[xi].picture + '.gif">: ' + x + ' / ' + jscosmiccounts[xi] + '</div>'
+			} else {
+				allok = false
+				output += '<div style="border: solid 2px red"><img style="vertical-align: middle" src="http://images.kingdomofloathing.com/itemimages/' + cosmic_kitchen_items[xi].picture + '.gif">: ' + x + ' / ' + jscosmiccounts[xi] + '</div>'
+			}
+		}
+	}
+	$("#planitems").html(output)
+	if (allok && output != "") {
+		$("#plansubmit").show()
+	} else {
+		$("#plansubmit").hide()
+	}
+}
+
+function add_item(product) {
+	selected_items[product] = (selected_items[product] || 0) + 1
+	change("size", cosmic_kitchen_items[product].size || 0)
+	change("potency", cosmic_kitchen_items[product].potency || 0)
+	update_display()
+}
+
+function remove_item(product) {
+	if (selected_items[product] > 0) {
+		selected_items[product] -= 1
+		change("size", -(cosmic_kitchen_items[product].size || 0))
+		change("potency", -(cosmic_kitchen_items[product].potency || 0))
+	}
+	update_display()
+}
+</script>
+</head>
+<body>]] .. divtext .. "<table>" .. table.concat(tbl, "\n") .. "</table></body></html>", requestpath
 end)
 
 add_printer("/shop.php", function()

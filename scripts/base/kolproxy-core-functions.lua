@@ -21,6 +21,7 @@ function reset_datafile_cache()
 	for x, y in pairs(datafile("items")) do
 		itemid_name_lookup[y.id] = x
 	end
+	datafile("outfits")
 	for monster in table.values(datafile("monsters")) do
 		local image = monster.Stats.Image
 		if image then
@@ -30,9 +31,6 @@ function reset_datafile_cache()
 end
 
 reset_datafile_cache()
-
-datafile("items")
-datafile("outfits")
 
 local function get_item_data_by_name(name)
 	return datafile("items")[name]
@@ -69,6 +67,25 @@ function get_itemid(name)
 		error("No itemid found for: " .. tostring(name))
 	end
 	return id
+end
+
+function get_skillid(name)
+	if name == nil then
+		return nil
+	end
+
+	local t = type(name)
+	if t == "number" then
+		return name
+	elseif t ~= "string" then
+		error("Invalid itemid type: " .. t)
+	end
+
+	local skill = datafile("skills")[name]
+	if not skill then
+		error("No skillid found for: " .. tostring(name))
+	end
+	return skill.skillid
 end
 
 function maybe_get_itemname(name)

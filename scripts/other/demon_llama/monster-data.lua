@@ -97,10 +97,8 @@ function getMonsterData(monster_name, fight_text)
 	if monster_data_name == "tomb rat king" then ml = 0 end -- ML doesn't get reapplied when using rat tangles
 
 	for a, b in pairs(monster.Stats or {}) do
-		if b == 0 then
-			monster.Stats[a] = "?"
-		elseif ml_increases[a] then
-			monster.Stats[a] = math.max(b + ml, 1)
+		if ml_increases[a] and tonumber(b) then
+			monster.Stats[a] = math.max(tonumber(b) + ml, 1)
 		end
 	end
 

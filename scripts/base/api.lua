@@ -503,12 +503,14 @@ function setup_functions()
 			return async_get_page("/sellstuff.php", { action = "sell", ajax = 1, type = "quant", ["whichitem[]"] = get_itemid(name), howmany = amount or 1, pwd = session.pwd })
 		end
 
-		function cast_skillid(skillid, quantity, targetid)
+		function cast_skill(skill, quantity, targetid)
+			local skillid = get_skillid(skill)
 			targetid = targetid or playerid()
 			assert(targetid and targetid ~= "")
 			local tbl = { whichskill = skillid, ajax = 1, action = "Skillz", pwd = session.pwd, targetplayer = targetid, quantity = quantity }
 			return async_get_page("/skills.php", tbl)
 		end
+		cast_skillid = cast_skill
 
 		function switch_familiarid(id)
 			return async_get_page("/familiar.php", { action = "newfam", ajax = 1, newfam = id })

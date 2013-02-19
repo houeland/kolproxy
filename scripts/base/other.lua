@@ -539,7 +539,22 @@ end)
 add_printer("/da.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 	if params.place == "gate1" and text:contains("You can learn 30 more skills") then
-		text = text:gsub("You can learn 30 more skills.", [[%0</p><p><a href="]] .. learn_all_boris_skills_href { pwd = session.pwd } .. [[" style="color:green">{ Learn all Boris skills }</a>]])
+		text = text:gsub("You can learn 30 more skills.", [[%0</p><p><a href="]] .. learn_all_boris_skills_href { pwd = session.pwd } .. [[" style="color:green">{ Learn all Boris skills. }</a>]])
+	end
+end)
+
+local learn_all_jarlsberg_skills_href = add_automation_script("learn-all-jarlsberg-skills", function()
+	for _, skillid in ipairs { 14003, 14007, 14001, 14005, 14002, 14006, 14004, 14008, 14011, 14015, 14014, 14012, 14013, 14016, 14017, 14018, 14023, 14022, 14026, 14025, 14021, 14027, 14024, 14028, 14032, 14037, 14033, 14036, 14031, 14034, 14035, 14038 } do
+		async_get_page("/jarlskills.php", { action = "getskill", getskid = skillid })
+	end
+
+	return get_page("/jarlskills.php")
+end)
+
+add_printer("/jarlskills.php", function()
+	if not setting_enabled("automate simple tasks") then return end
+	if text:contains("You have 32 skill points to spend.") then
+		text = text:gsub("You have 32 skill points to spend.", [[%0</p><p><a href="]] .. learn_all_jarlsberg_skills_href { pwd = session.pwd } .. [[" style="color:green">{ Learn all Jarlsberg skills. }</a>]])
 	end
 end)
 

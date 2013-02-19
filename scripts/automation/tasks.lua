@@ -409,6 +409,7 @@ mark m_done
 				if not have_buff("Well-Oiled") and have_item("Oil of Parrrlay") then
 					use_item("Oil of Parrrlay")
 				end
+				use_item("A-Boo clue")
 -- 				wear { weapon = "titanium assault umbrella" }
 -- 				wear { weapon = "double-barreled sling" }
 -- 				wear { weapon = "broken sword" }
