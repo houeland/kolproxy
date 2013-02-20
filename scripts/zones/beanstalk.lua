@@ -4,6 +4,7 @@ add_choice_text("Random Lack of an Encounter", { -- choice adventure number: 182
 	["Investigate the crew quarters"] = "Fight airship monster (MagiMechTech MechaMech if you have +20 ML or more)",
 	["Check the cargo hold"] = { getitem = "Penultimate Fantasy chest" },
 	["Head down to the galley"] = "Lose 40-50 HP, gain 18-40ish stats",
+	["Gallivant down to the head"] = { getitem = "model airship" },
 })
 
 add_choice_text("Hammering the Armory", { -- choice adventure number: 178

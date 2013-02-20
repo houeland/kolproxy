@@ -509,3 +509,7 @@ function can_equip_item(item)
 	end
 	return true
 end
+
+function estimate_basement_level()
+	-- TODO: Implement, processor that sets session[...]
+end

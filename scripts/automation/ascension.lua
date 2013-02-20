@@ -1528,7 +1528,7 @@ endif
 			end
 		elseif DD_keys < 3 then
 			script.do_daily_dungeon()
-		elseif countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") < 3 then
+		elseif countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") < 3 and not have_item("makeshift SCUBA gear") then
 			-- TODO: if not enough fat loot tokens, and no wand, hmm(?)
 			inform "trading for legend keys"
 			for x in table.values { "Boris's key", "Jarlsberg's key", "Sneaky Pete's key" } do
@@ -3925,7 +3925,7 @@ endwhile
 	}
 
 	add_task {
-		prereq = quest("The Rain on the Plains is Mainly Garbage") or (level() >= 10 and not have("intragalactic rowboat") and ascensionstatus() == "Hardcore"),
+		prereq = quest("The Rain on the Plains is Mainly Garbage") or (level() >= 10 and not have("steam-powered model rocketship") and ascensionstatus() == "Hardcore"),
 		f = function()
 			if have("BitterSweetTarts") and not buff("Full of Wist") then
 				use_item("BitterSweetTarts")
@@ -3952,15 +3952,13 @@ endwhile
 					["Random Lack of an Encounter"] = "Investigate the crew quarters",
 					["Hammering the Armory"] = "Blow this popsicle stand",
 				}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Ur-Kel's Aria of Annoyance", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "Mini-Hipster", 35)
-			elseif not have("heavy D") then
-				script.do_castle()
-			elseif have("awful poetry journal") and have("giant needle") and have("furry fur") and not have("intragalactic rowboat") and ascensionstatus() == "Hardcore" then
+			elseif not have("steam-powered model rocketship") and ascensionstatus() == "Hardcore" then
 				script.unlock_hits()
 			else
 				script.do_castle()
 			end
 		end,
-		message = "get intragalactic rowboat",
+		message = "get steam-powered model rocketship",
 	}
 
 	add_task {
@@ -4223,7 +4221,7 @@ endwhile
 			(challenge ~= "boris" or count("star chart") < 2) and
 			not have("Richard's star key") and
 			(not trailed or trailed == "Astronomer") and
-			have("intragalactic rowboat") and ascensionstatus() == "Hardcore",
+			have("steam-powered model rocketship") and ascensionstatus() == "Hardcore",
 		f = function()
 			if have("BitterSweetTarts") and not buff("Full of Wist") then
 				use_item("BitterSweetTarts")

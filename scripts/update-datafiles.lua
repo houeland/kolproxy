@@ -133,6 +133,7 @@ local function parse_mafia_bonuslist(bonuslist)
 
 	local bonuses = {}
 	for x, y in (", "..bonuslist):gmatch(", ([^,:]+): ([^,]+)") do
+		-- TODO: Do more complicated parsing for expressions
 		if checks[x] then
 			bonuses[checks[x]] = tonumber(y)
 		end
@@ -383,12 +384,10 @@ local function parse_monster_stats(stats)
 		else
 			name, value, pos = stats:match("^([^:]+): ([^ ]+) ()", i)
 			if name and value then
-				local expr = value:match("^%[(.*)%]$")
-				if expr then
-					-- TODO: process expressions
-					value = "?"
-				elseif tonumber(value) then
+				if tonumber(value) then
 					value = tonumber(value)
+				elseif value:match("^%[.*%]$") then
+					value = "mafiaexpression:" .. value
 				elseif name == "Meat" then
 					local lo, hi = value:match("^([0-9]+)%-([0-9]+)$")
 					lo, hi = tonumber(lo), tonumber(hi)

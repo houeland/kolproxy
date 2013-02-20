@@ -3601,6 +3601,7 @@ endif
 
 	-- TODO: merge with unlock_hits
 	function f.do_castle()
+		stop "TODO: Do new castle"
 		-- TODO: buff +item% more?
 		script.bonus_target { "noncombat", "item" }
 		go("do castle in the sky", 82, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 50, { choice_function = function(advtitle, choicenum)
@@ -3621,6 +3622,7 @@ endif
 	end
 
 	function f.unlock_hits()
+		stop "TODO: Do new hole in the sky unlock"
 		result, resulturl = use_item("giant castle map")()
 		if have("quantum egg") then
 			inform "make rowboat"

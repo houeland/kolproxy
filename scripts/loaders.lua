@@ -1,6 +1,7 @@
 load_file("base", "base/settings-page.lua")
 load_file("base", "base/fight-page.lua")
 load_file("base", "base/other.lua")
+load_file("base", "base/mafiaexpression-evaluator.lua")
 
 load_file("data", "data/mine-aggregate-prediction.lua")
 

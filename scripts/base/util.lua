@@ -49,7 +49,7 @@ function monstername(name)
 		return name == monstername()
 	end
 	if monster_name then
-		return monster_name:gsub("^a ", ""):gsub("^an ", ""):gsub("^ ", "")
+		return monster_name:gsub("^[^ ]* ", "")
 	end
 end
 

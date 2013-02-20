@@ -13,17 +13,10 @@ function deepcopy(t)
 end
 
 local function parseMonsterNameIntoMafiaFormat(monsterName)
-	--mafia's table doesn't precede the names of the monsters
-	--with "a " or "an " or spaces, this function attempts to
-	--strip out those things
-	--mafia's table was also inconsistent with cases, 
+	--mafia's table was inconsistent with cases, 
 	--so I lowercased everything and will have to do so here as well
-	
-	local mafiaMonsterName = monsterName:lower()
 
-	mafiaMonsterName = mafiaMonsterName:gsub("^a ", "")
-	mafiaMonsterName = mafiaMonsterName:gsub("^an ", "")
-	mafiaMonsterName = mafiaMonsterName:gsub("^ ", "")
+	local mafiaMonsterName = monsterName:lower()
 
 	return mafiaMonsterName
 end
@@ -66,14 +59,14 @@ local monster_image_prefixes = {
 	slime5 = "slime5",
 }
 
-function getMonsterData(monster_name, fight_text)
+function buildCurrentFightMonsterDataCache(monster_name, fight_text)
 	local monster_data_name = parseMonsterNameIntoMafiaFormat(monster_name)
 	local monster = datafile("monsters")[monster_data_name]
 
 	if not monster then
 		local monster_image = fight_text:match([[<img id='monpic' src="http://images.kingdomofloathing.com/adventureimages/([^"]+)"]])
 		monster = get_monster_by_image(monster_image)
-		if not monster then
+		if monster_image and not monster then
 			for prefix, name in pairs(monster_image_prefixes) do
 				if monster_image:match("^" .. prefix) then
 					monster = datafile("monsters")[name]
@@ -94,11 +87,12 @@ function getMonsterData(monster_name, fight_text)
 
 	local modifiers = estimate_modifier_bonuses()
 	local ml = modifiers["Monster Level"] or 0
-	if monster_data_name == "tomb rat king" then ml = 0 end -- ML doesn't get reapplied when using rat tangles
 
 	for a, b in pairs(monster.Stats or {}) do
 		if ml_increases[a] and tonumber(b) then
 			monster.Stats[a] = math.max(tonumber(b) + ml, 1)
+		elseif type(b) == "string" and b:match("^mafiaexpression:%[.*%]$") then
+			monster.Stats[a] = evaluate_mafiaexpression(b)
 		end
 	end
 

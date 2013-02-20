@@ -46,7 +46,7 @@ end
 local function make_monster_hp_meter(monster, width)
 	local data = monster.Stats
 	if not data then return "" end
-	if data.HP == "?" then return "" end
+	if not tonumber(data.HP) or not tonumber(data.ModHP) then return "" end
 
 	if not width then width = 100 end
 	local hpFrac = math.max(0, data.ModHP) / data.HP
@@ -201,7 +201,7 @@ local function adjustStat(originalStat, modifier, maxval, adjust)
 	return returnVal	
 end
 
-function getCurrentMonster()
+function getCurrentFightMonster()
 	-- something is screwed up if this returns nil
 	local current_fight = fight["currently fighting"]
 	if not current_fight then return nil end
@@ -277,7 +277,7 @@ add_printer("/fight.php", function()
 			$('#phylumToggle').html('[+]')
 	}
 </script>%0]])		
-		local monster = getCurrentMonster()
+		local monster = getCurrentFightMonster()
 	
 		if monster then
 			text = text:gsub([[(id='monname'.-)(</td>)]], function(prefix, suffix)
@@ -352,7 +352,7 @@ add_printer("/fight.php", function()
 		);
 	}
 </style>%0]])
-		local monster = getCurrentMonster()
+		local monster = getCurrentFightMonster()
 		if monster then
 			local monpic = text:match([[<img id='monpic'.->]]) or text:match([[sorcblob.gif".->]])
 

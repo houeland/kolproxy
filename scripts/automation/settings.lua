@@ -95,6 +95,7 @@ function get_ascension_automation_settings(want_bonus)
 			"empty Cloaca-Cola bottle", "valuable trinket",
 			"enormous belt buckle",
 			"flimsy clipboard", "stolen office supplies",
+			"awful poetry journal", "furry fur",
 		},
 		sell_except_one = {
 			"yeti fur",
@@ -248,10 +249,6 @@ function get_ascension_automation_settings(want_bonus)
 	end
 	if have("pirate fledges") then
 		table.insert(tbl.sell_items, "The Big Book of Pirate Insults")
-	end
-	if have("intragalactic rowboat") then
-		table.insert(tbl.sell_items, "awful poetry journal")
-		table.insert(tbl.sell_items, "furry fur")
 	end
 	if meat() < 2000 then
 		table.insert(tbl.sell_items, "commemorative war stein")
