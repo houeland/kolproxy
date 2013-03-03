@@ -292,7 +292,7 @@ endif
 			if level() >= 7 then
 				maybe_boil_first = [[
 
-if hasskill Boil
+if hasskill Boil && !monstername imp
   cast Boil
 endif
 

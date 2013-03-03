@@ -1,6 +1,7 @@
 register_setting {
 	name = "rewrite PRIVATE: chat commands",
 	description = "Make chat commands work for PRIVATE: and OFFTOPIC: tabs",
+	hidden = true,
 	group = "chat",
 	default_level = "limited",
 }
@@ -110,7 +111,7 @@ add_printer("/mchat.php", function()
 end)
 
 add_printer("/mchat.php", function()
-	if setting_enabled("rewrite PRIVATE: chat commands") then
+	if setting_enabled("rewrite PRIVATE: chat commands") or true then
 		text = text:gsub([[if %(parts%[0%] == 'public'%) return '/' %+ parts%[1%] %+ ' ' %+ msg;]], [[if (parts[0] == 'public' && !(mparts[0].match(/^\//) && (parts[1].match(/ /) && !parts[1].match(/clan /)))) return '/' + parts[1] + ' ' + msg;]])
 	end
 end)

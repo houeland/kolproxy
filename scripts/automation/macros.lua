@@ -440,6 +440,9 @@ endif
 
 if monstername animated nightstand
   while !times 7
+    if hasskill Slice
+      cast Slice
+    endif
     use orange agent
   endwhile
 endif

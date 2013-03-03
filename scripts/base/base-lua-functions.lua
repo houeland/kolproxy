@@ -1,7 +1,7 @@
 pretty_print_tables = true
 
 if string then
-	function string.contains(a, b) return a:find(b, 1, true) end
+	function string.contains(a, b) return not not a:find(b, 1, true) end
 end
 
 if table then

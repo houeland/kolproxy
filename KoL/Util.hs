@@ -20,7 +20,7 @@ import qualified Data.Digest.Pure.MD5
 import qualified Database.SQLite3
 
 
-kolproxy_version_number = "3.8-alpha"
+kolproxy_version_number = "3.8-beta"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 

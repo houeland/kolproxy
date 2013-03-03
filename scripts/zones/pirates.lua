@@ -51,6 +51,15 @@ add_choice_text("That Explains All The Eyepatches", function()
 	end
 end)
 
+add_warning {
+	message = "You don't have an insult book.",
+	severity = "warning",
+	zone = "Barrrney's Barrr",
+	check = function()
+		return not ascensionstatus("Aftercore") and not have_item("The Big Book of Pirate Insults") and not have_item("Massive Manual of Marauder Mockery")
+	end,
+}
+
 add_processor("/fight.php", function()
 	if text:contains("The pirate sneers at you and replies") or text:contains("The pirate stammers for a moment") then
 		fight["item.The Big Book of Pirate Insults"] = "used"

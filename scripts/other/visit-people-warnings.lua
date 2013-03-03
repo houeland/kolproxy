@@ -5,7 +5,7 @@
 -- end)
 
 add_extra_ascension_adventure_warning(function(zoneid)
-	if ascensionpathid() == 8 or ascensionpathid() == 10 then return end
+	if ascensionpathid() == 8 or ascensionpathid() == 10 or ascensionpath("Avatar of Jarlsberg") then return end
 	if daysthisrun() == 1 or level() < 5 then
 		if (zoneid == 114 and get_mainstat() == "Muscle") or (zoneid == 113 and get_mainstat() == "Mysticality") or (zoneid == 112 and get_mainstat() == "Moxie") then
 			return "The guild quest is in your mainstat starting zone, you might want to start it first.", "pick up guild quest"
@@ -19,7 +19,13 @@ add_ascension_adventure_warning(function(zoneid)
 	end
 end)
 
+local have_degrassi = nil
 add_extra_ascension_adventure_warning(function(zoneid)
+	if not have_degrassi then
+		local pt = get_page("/questlog.php", { which = 1 })
+		have_degrassi = pt:contains("<b>Driven Crazy</b>")
+	end
+	if have_degrassi then return end
 	if zoneid == 18 then
 		return "The untinker quest is at the degrassi knoll. Make sure to pick it up first if you want to complete it.", "untinker quest"
 	end

@@ -104,17 +104,14 @@ local function formatMonsterStats(monster)
 	else
 		statData = statData .. "<div style='font-size:12px;'>Estimate</div>"
 	end
-	statData = statData .. formatStat("HP", data.ModHP, nil, "Starting HP: " .. data.HP)
-	statData = statData .. formatStat("Atk", data.ModAtk, nil, "Starting Atk: " .. data.Atk)
-
-	local defTooltip = data.Def
-	
-	statData = statData .. formatStat("Def", data.ModDef, nil, "Starting Def: " .. defTooltip)
+	statData = statData .. formatStat("HP", data.ModHP, nil, "Starting HP: " .. (data.HP or "?"))
+	statData = statData .. formatStat("Atk", data.ModAtk, nil, "Starting Atk: " .. (data.Atk or "?"))
+	statData = statData .. formatStat("Def", data.ModDef, nil, "Starting Def: " .. (data.Def or "?"))
 	statData = statData .. formatStat("Meat", data.Meat)
 	statData = statData .. formatStat("Element", data.Element, elementColor[data.Element])
 	statData = statData .. formatStat("Init", data.Init)
 
-	if phlyumFamiliars[familiarid()] and data.Phylum then	
+	if phlyumFamiliars[familiarid()] and data.Phylum then
 		statData = statData .. [[<div onclick='togglePhylum();' style='cursor:hand;' class='stat'><span style='margin-right:5px;'><span id='phylumToggle'>[+]</span> Phylum:</span><span>]] .. data.Phylum .. [[</span></div>]]
 	end	
 	
@@ -190,12 +187,13 @@ end
 local function adjustStat(originalStat, modifier, maxval, adjust)
 	local returnVal = originalStat
 	if modifier == nil then return returnVal end
+	if not returnVal then returnVal = "?" end
 
 	if type(originalStat) == "number" then
 		returnVal = math.floor(originalStat * (adjust or 1.0)) - (modifier or 0)
 		returnVal = math.max(maxval or returnVal, returnVal)
 	elseif modifier ~= 0 then
-		returnVal = returnVal .. " (" .. -modifier ..")"
+		returnVal = tostring(returnVal) .. " (" .. -modifier ..")"
 	end
 	
 	return returnVal	

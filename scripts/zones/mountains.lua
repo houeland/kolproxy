@@ -23,6 +23,15 @@ add_choice_text("More Locker Than Morlock", { -- choice adventure number: 556
 	["Get to the choppa' (which is outside)"] = { leave_noturn = true },
 })
 
+add_warning {
+	message = "You already have the mining outfit.",
+	severity = "warning",
+	zone = "Itznotyerzitz Mine",
+	check = function()
+		return not ascensionstatus("Aftercore") and have_item("7-Foot Dwarven mattock") and have_item("miner's helmet") and have_item("miner's pants")
+	end,
+}
+
 add_processor("/mining.php", function()
 	if not params.mine then return end
 	if not text:contains("mining.php") then return end

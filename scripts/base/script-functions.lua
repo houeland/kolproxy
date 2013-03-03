@@ -169,25 +169,27 @@ do
 	end
 
 	local function get_zoneid(name)
-		-- TODO: Make a datafile
-		if name == "The Dungeons of Doom" then
-			return 39
-		else
-			error "TODO: get_zoneid() is not ready yet"
+		local zoneid = (datafile("zones")[name] or {}).zoneid
+		if not zoneid then
+			error("Unknown zone: " .. tostring(name))
 		end
+		return zoneid
 	end
 
 	function add_warning(tbl)
-		check_supported_table_values(tbl, {}, { "message", "check", "level", "zone" })
-		if tbl.level == "extra" then
---			localtable.insert(__raw_extra_adventure_warnings, f)
-			__raw_add_extra_warning("/adventure.php", function()
-				if tonumber(params.snarfblat) == get_zoneid(tbl.zone) and tbl.check() then
-					return tbl.message, tbl.zone .. "/" .. tbl.message
-				end
-			end)
-		else
-			error "TODO: tbl.level ~= extra not supported yet"
+		check_supported_table_values(tbl, {}, { "message", "check", "severity", "zone" })
+		local zoneid = get_zoneid(tbl.zone)
+		local function f()
+			if tonumber(params.snarfblat) == zoneid and tbl.check() then
+				return tbl.message, tbl.zone .. "/" .. tbl.message
+			end
+		end
+		if tbl.severity == "extra" then
+			localtable.insert(__raw_extra_adventure_warnings, f)
+			__raw_add_extra_warning("/adventure.php", f)
+		elseif tbl.severity == "warning" then
+			localtable.insert(__raw_adventure_warnings, f)
+			__raw_add_warning("/adventure.php", f)
 		end
 	end
 

@@ -809,36 +809,36 @@ add_automator("/fight.php", function()
 		local lair4pt = get_page("/lair4.php")
 		if lair4pt:contains([[value="level1"]]) and known_win(1) then
 			print("goto lair4:level1")
-			text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair4.php?action=level1">Climb to the next floor (Level 1)</a>%0]])
+			text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair4.php?action=level1" style="color: green">{ Climb to the next floor (Level 1) }</a>%0]])
 		elseif lair4pt:contains([[value="level2"]]) and known_win(2) then
 			print("goto lair4:level2")
-			text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair4.php?action=level2">Climb to the next floor (Level 2)</a>%0]])
+			text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair4.php?action=level2" style="color: green">{ Climb to the next floor (Level 2) }</a>%0]])
 		elseif lair4pt:contains([[value="level3"]]) and known_win(3) then
 			print("goto lair4:level3")
-			text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair4.php?action=level3">Climb to the next floor (Level 3)</a>%0]])
+			text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair4.php?action=level3" style="color: green">{ Climb to the next floor (Level 3) }</a>%0]])
 		else
 			local lair5pt = get_page("/lair5.php")
 			if lair5pt:contains([[value="level1"]])  and known_win(4) then
 				print("goto lair5:level1")
-				text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level1">Climb to the next floor (Level 4)</a>%0]])
+				text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level1" style="color: green">{ Climb to the next floor (Level 4) }</a>%0]])
 			end
 		end
 	elseif text:contains([[<a href="lair5.php">Go back to the Sorceress' Tower</a>]]) and text:contains("WINWINWIN") then
 		local lair4pt = get_page("/lair5.php")
 		if lair4pt:contains([[value="level1"]]) and known_win(4) then
 			print("goto lair5:level1")
-			text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level1">Climb to the next floor (Level 4)</a>%0]])
+			text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level1" style="color: green">{ Climb to the next floor (Level 4) }</a>%0]])
 		elseif lair4pt:contains([[value="level2"]]) and known_win(5) then
 			print("goto lair5:level2")
-			text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level2">Climb to the next floor (Level 5)</a>%0]])
+			text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level2" style="color: green">{ Climb to the next floor (Level 5) }</a>%0]])
 		elseif lair4pt:contains([[value="level3"]]) and known_win(6) then
 			print("goto lair5:level3")
-			text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level3">Climb to the next floor (Level 6)</a>%0]])
+			text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level3" style="color: green">{ Climb to the next floor (Level 6) }</a>%0]])
 		else
 			local lair6pt = get_page("/lair6.php")
 			if lair6pt:contains([[lair6.php]]) then
 				print("goto lair6")
-				text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair6.php">Climb to the top of the tower</a>%0]])
+				text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair6.php" style="color: green">{ Climb to the top of the tower }</a>%0]])
 			end
 		end
 	end
@@ -978,9 +978,21 @@ add_printer("/lair6.php", function()
 		"Defeat the Naughty Sorceress",
 		"Free the king",
 	}
+	if ascensionpath("Avatar of Jarlsberg") then
+		placedescs = {
+			"Pass the heavy and light door riddle",
+			"Avoid the electrical attack",
+			"Defeat your own shadow",
+			"Defeat Clancy",
+			"(skipped)",
+			"Defeat The Avatar of Boris",
+			"Free the king",
+		}
+	end
 	local status = "<b>Chamber progress</b><br>"
 	for x, y in ipairs(placedescs) do
-		if nextplace >= x then
+		if y == "(skipped)" then
+		elseif nextplace >= x then
 			status = status .. [[<span style="color: gray;">]] .. y .. [[</span><br>]]
 		elseif nextplace == x - 1 then
 			status = status .. [[&rarr; <span style="color: darkgreen;">]] .. y .. [[</span> &larr;<br>]]

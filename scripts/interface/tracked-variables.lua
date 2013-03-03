@@ -10,6 +10,13 @@ local href = add_automation_script("display-tracked-variables", function()
 	table.insert(asctbl, { title = "Island war arena ML progress", value = string.format("Frat = %d, Hippy = %d", ascension["zone.island.frat arena flyerML"] or 0, ascension["zone.island.hippy arena flyerML"] or 0) })
 -- Battlefield kills?
 
+	for _, x in ipairs(sugar_sheet_items) do
+		local v = ascension["sugar sheet." .. x .. ".fights used"]
+		if v then
+			table.insert(asctbl, { title = "Fights using " .. x, value = v })
+		end
+	end
+
 	table.insert(daytbl, { title = "Nanorhino banished monster", value = day["nanorhino banished monster"] })
 -- Familiar item drops?
 

@@ -194,10 +194,19 @@ local function get_customize_features_page()
 	for _, x in ipairs(setting_groups) do
 		grouped[x.name] = {}
 	end
+	local children = {}
 	for _, x in pairs(settings) do
 		local g = x.group
 		if not grouped[g] then g = "other" end
-		table.insert(grouped[g], x)
+		local parent = x.name:match("(.+)/")
+		if parent then
+			if not children[parent] then
+				children[parent] = {}
+			end
+			table.insert(children[parent], x)
+		else
+			table.insert(grouped[g], x)
+		end
 	end
 	local featurerows = {}
 	local radio_ctr = 0
@@ -206,7 +215,7 @@ local function get_customize_features_page()
 			table.sort(grouped[x.name], function(a, b) return settings_order[a.name] < settings_order[b.name] end)
 			table.insert(featurerows, [[<tr class="trheader"><th colspan="4">]] .. x.title .. [[</th></tr>]])
 		end
-		for _, y in ipairs(grouped[x.name]) do
+		local function insert_setting_row(y, ischild)
 			radio_ctr = radio_ctr + 1
 			local radio_name = "radio_" .. radio_ctr
 			local onchecked = (character["setting: " .. y.name] == "on") and [[checked="checked"]] or ""
@@ -215,11 +224,21 @@ local function get_customize_features_page()
 			local baselevel = character["settings base level"] or "limited"
 			local defaultvalue = (setting_levels[y.default_level or "enthusiast"] <= setting_levels[baselevel]) and "on" or "off"
 			local featuredesc = y.description and ([[<span title="Lua scripting syntax: setting_enabled(&quot;]] .. y.name .. [[&quot)">]] .. y.description .. [[</span>]]) or ([[<span style="color: red">No description (<tt>]] .. y.name .. [[</tt>)</span>]])
+			local trstyle = ""
+			if ischild then
+--				trstyle = [[ style="background-color: lightgray;"]]
+			end
 			if not y.hidden then
-				table.insert(featurerows, [[<tr data-feature-name="]]..y.name..[["><td class="tdname">]] .. featuredesc .. [[</td>]] ..
+				table.insert(featurerows, [[<tr data-feature-name="]]..y.name..[["]]..trstyle..[[><td class="tdname">]] .. featuredesc .. [[</td>]] ..
 					[[<td class="tdon"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..onchecked..[[>On</td>]] ..
 					[[<td class="tdoff"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..offchecked..[[>Off</td>]] ..
 					[[<td class="tddefault"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..defaultchecked..[[>Default (]]..defaultvalue..[[)</td></tr>]])
+			end
+		end
+		for _, y in ipairs(grouped[x.name]) do
+			insert_setting_row(y)
+			for _, z in ipairs(children[y.name] or {}) do
+				insert_setting_row(z, true)
 			end
 		end
 	end
@@ -371,6 +390,7 @@ add_printer("/custom-settings", function()
 			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-ascension-checklist&pwd=]]..session.pwd..[[">Pre-ascension pull stocking checklist</a></center></td></tr>
 			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-aftercore-automation&pwd=]]..session.pwd..[[">Aftercore automation scripts</a></center></td></tr>
 			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-cosmic-kitchen&pwd=]]..session.pwd..[[">Cosmic kitchen dinner planner</a></center></td></tr>
+			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-choose-mad-tea-party-hat&pwd=]]..session.pwd..[[">Choose hat for mad tea party</a></center></td></tr>
 			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-mix-drinks&pwd=]]..session.pwd..[[">List advanced cocktails you can craft (preview)</a></center></td></tr>
 			<tr><td><center><a href="kolproxy-automation-script?automation-script=display-tracked-variables&pwd=]]..session.pwd..[[">Display tracked game variables (preview)</a></center></td></tr>
 			<tr><td><center><a href="http://www.houeland.com/kolproxy/wiki/" target="_blank">Kolproxy documentation</a> (opens in a new tab)</center></td></tr>

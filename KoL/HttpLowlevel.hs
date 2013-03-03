@@ -26,6 +26,7 @@ import Network.TLS.Extra
 import Network.URI
 import Numeric (readHex)
 import System.IO
+--import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.ByteString
 import qualified Data.ByteString.Char8
 import qualified Data.ByteString.Lazy
@@ -41,6 +42,14 @@ doHTTPLOWLEVEL_DEBUG _ = return ()
 doHTTPLOWLEVEL_DEBUGexception _ = return ()
 --doHTTPLOWLEVEL_DEBUGexception x = putStrLn $ "HTTPlow DEBUGexc: " ++ x
 
+connDoMutexed a = a
+
+--{-# NOINLINE connmutexref #-}
+--connmutexref = unsafePerformIO (newMVar ())
+
+--connDoMutexed a = withMVar connmutexref (\_ -> a)
+
+
 class ConnFunctionsBundle a b | a -> b where
 	connGetBlock :: a -> Int -> IO b
 	connGetLine :: a -> IO String
@@ -49,18 +58,18 @@ class ConnFunctionsBundle a b | a -> b where
 	connGetContents :: a -> IO b
 
 instance ConnFunctionsBundle Handle Data.ByteString.ByteString where
-	connGetBlock conn size = Data.ByteString.hGet conn size
+	connGetBlock conn size = connDoMutexed $ Data.ByteString.hGet conn size
 
-	connGetLine conn = do
+	connGetLine conn = connDoMutexed $ do
 		x <- Data.ByteString.hGetLine conn
 -- 		putStrLn $ "connGetLine: " ++ (Data.ByteString.Char8.unpack x)
 		return $ (Data.ByteString.Char8.unpack x) ++ "\n"
 
-	connPut conn d = Data.ByteString.hPut conn (Data.ByteString.Char8.pack $ d)
+	connPut conn d = connDoMutexed $ Data.ByteString.hPut conn (Data.ByteString.Char8.pack $ d)
 
-	connFlush conn = hFlush conn
+	connFlush conn = connDoMutexed $ hFlush conn
 
-	connGetContents conn = Data.ByteString.hGetContents conn
+	connGetContents conn = connDoMutexed $ Data.ByteString.hGetContents conn
 
 data SslConn = SslConn {
 	sslconn_c :: TLSCtx,

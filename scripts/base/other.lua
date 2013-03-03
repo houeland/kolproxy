@@ -309,52 +309,6 @@ add_printer("/choice.php", function()
 	text = text:gsub("</form>", function(x) return x .. [[<span style="color: green">{ ]] .. make_vamp_link("Muscle") .. ", " .. make_vamp_link("Mysticality") .. ", " .. make_vamp_link("Moxie") .. [[ }</span><br>]] end)
 end)
 
--- tea party
-
-add_choice_text("The Mad Tea Party", function()
-	local hatid = equipment().hat
-	if not hatid then
-		return {
-			["Try to get a seat"] = "Get hat-based buff: None (you get turned away)",
-			["Slouch away"] = "Leave",
-		}
-	else
-		local hatname = item_api_data(hatid).name
-		local hatchars = hatname:gsub(" ", ""):len()
-		local hatbuffs = {
-			[4] = "+20 to Monster Level",
-			[5] = nil,
-			[6] = "+3 Familiar Experience Per Combat",
-			[7] = "Moxie +10",
-			[8] = "Muscle +10",
-			[9] = "Weapon Damage +15",
-			[10] = "Mysticality +10",
-			[11] = "Spell Damage +30%",
-			[12] = "Maximum HP +50",
-			[13] = "Maximum MP +25",
-			[14] = "+10 Sleaze Damage",
-			[15] = "Spell Damage +15",
-			[16] = "+10 Cold Damage",
-			[17] = "+10 Spooky Damage",
-			[18] = "+10 Stench Damage",
-			[19] = "+10 Hot Damage",
-			[20] = "Weapon Damage +30%",
-			[21] = nil,
-			[22] = "+40% Meat from Monsters",
-			[23] = "Mysticality +20%",
-			[24] = "+5 to Familiar Weight",
-			[25] = "+3 Stats Per Fight",
-			[26] = "Moxie +20%",
-			[27] = "Muscle +20%",
-			[28] = "+20% Item Drops from Monsters",
-		}
-		return {
-			["Try to get a seat"] = "Get hat-based buff: " .. (hatbuffs[hatchars] or "?") .. " (" .. hatchars .. " characters)",
-			["Slouch away"] = "Leave",
-		}
-	end
-end)
-
 -- show banished monsters
 
 add_automator("/fight.php", function()

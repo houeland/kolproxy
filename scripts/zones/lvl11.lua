@@ -32,7 +32,7 @@ add_automator("/fight.php", function()
 		local which = hctext:match([[<a href='hiddencity.php%?which=([0-9]-)'><img src="http://images.kingdomofloathing.com/otherimages/hiddencity/map_unruins]])
 		if which then
 --~ 			print("next which tile is", which)
-			text = text:gsub([[<p><a href="hiddencity.php">Go back to The Hidden City</a></center>]], [[<p><a href="hiddencity.php?which=]]..which..[[" style="color: green">{ Continue Exploring (The Hidden City) }</a>%0]])
+			text = text:gsub([[<p><a href="hiddencity.php">Go back to The Hidden City</a></center>]], [[<p><a href="hiddencity.php?which=]]..which..[[" style="color: green">{ Continue exploring (The Hidden City) }</a>%0]])
 		end
 	end
 end)
@@ -43,7 +43,7 @@ add_automator("/adventure.php", function()
 		local which = hctext:match([[<a href='hiddencity.php%?which=([0-9]-)'><img src="http://images.kingdomofloathing.com/otherimages/hiddencity/map_unruins]])
 		if which then
 --~ 			print("next which tile is", which)
-			text = text:gsub([[<p><a href="hiddencity.php">Go back to The Hidden City</a></center>]], [[<p><a href="hiddencity.php?which=]]..which..[[">Continue Exploring (The Hidden City)</a>%0]])
+			text = text:gsub([[<p><a href="hiddencity.php">Go back to The Hidden City</a></center>]], [[<p><a href="hiddencity.php?which=]]..which..[[" style="color: green">{ Continue exploring (The Hidden City) }</a>%0]])
 		end
 	end
 end)

@@ -1,5 +1,5 @@
 add_printer("/clan_hobopolis.php", function()
-	text = string.gsub(text, "<a href=\"adventure.php%?snarfblat=[0-9]+\"><img src=\"http://images.kingdomofloathing.com/otherimages/hobopolis/.-([0-9]+).gif\" width=500 height=.- border=0 alt=\".-\" title=\".-\"></a>", "%0<p>Image %1/10") -- TODO-future: redo regex a bit?
+	text = text:gsub([[<a href="adventure.php%?snarfblat=[0-9]+"><img src="http://images.kingdomofloathing.com/otherimages/hobopolis/.-([0-9]+).gif" width=500 height=.-></a>]], [[%0<p><span style="color: green">{ Image %1/10 }</span>]]) -- TODO-future: redo regex a bit?
 end)
 
 add_choice_text("Hot Dog!  I Mean... Door!", {

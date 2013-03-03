@@ -190,22 +190,22 @@ end
 
 add_ascension_warning("use item", function()
 	if can_be_potion(tonumber(params.whichitem), "booze") and drunkenness() <= estimate_max_safe_drunkenness() and drunkenness() + 3 > estimate_max_safe_drunkenness() then
-		return "Using this potion could make you overdrunk", "dod potion could make overdrunk"
+		return "Using this potion could make you overdrunk.", "dod potion could make overdrunk"
 	end
 end)
 
 add_extra_ascension_warning("use item", function()
 	if can_be_potion(tonumber(params.whichitem), "booze") then
-		return "This potion could be booze", "dod potion could be booze"
+		return "This potion could be booze.", "dod potion could be booze"
 	end
 end)
 
 add_extra_ascension_warning("use item", function()
 	if can_be_potion(tonumber(params.whichitem), "teleportation") then
 		if have_item("soft green echo eyedrop antidote") then
-			return "This potion could be teleportation", "dod potion could be teleportation"
+			return "This potion could be teleportation.", "dod potion could be teleportation"
 		else
-			return "This potion could be teleportation and you don't have a soft green echo eyedrop antidote", "dod potion could be teleportation without sgeea"
+			return "This potion could be teleportation and you don't have a soft green echo eyedrop antidote.", "dod potion could be teleportation without sgeea"
 		end
 	end
 end)
@@ -231,7 +231,7 @@ end)
 
 add_warning {
 	message = "Fighting the mimic costs 5000 meat.",
-	level = "extra",
+	severity = "extra",
 	zone = "The Dungeons of Doom",
 	check = function() return meat() < 5000 end,
 }

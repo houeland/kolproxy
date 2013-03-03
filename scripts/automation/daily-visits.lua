@@ -1,13 +1,13 @@
 register_setting {
 	name = "automate daily visits",
-	description = "Automate daily visits (rumpus room, etc.)",
+	description = "Automate daily visits (rumpus room, use daily items, etc.)",
 	group = "automation",
 	default_level = "standard",
 }
 
 register_setting {
-	name = "automate daily visits/use bookshelf skills in aftercore",
-	description = "Use daily items as part of daily visits and bookshelf skills in aftercore",
+	name = "automate daily visits/do lazy aftercore daily tasks",
+	description = "Automate daily tasks in aftercore",
 	group = "automation",
 	default_level = "detailed",
 }
@@ -18,13 +18,6 @@ register_setting {
 	group = "automation",
 	default_level = "enthusiast",
 }
-
---register_setting {
---	name = "automate daily visits/perform lazy aftercore automation",
---	description = "Also perform other lazy aftercore automation as part of daily visits",
---	group = "automation",
---	default_level = "enthusiast",
---}
 
 function setup_automation_scan_page_results()
 	local extracts = {
@@ -165,42 +158,68 @@ function do_daily_visits()
 	dopage("/choice.php", { whichchoice = 585, pwd = pwd, option = 1, action = "treasure" })
 	dopage("/choice.php", { whichchoice = 585, pwd = pwd, option = 1, action = "leave" })
 
-	if setting_enabled("automate daily visits/use bookshelf skills in aftercore") then
-		if ascensionstatus("Aftercore") then
-			dopage("/campground.php", { preaction = "summonsnowcone", quantity = 3 })
-			dopage("/campground.php", { preaction = "summonstickers", quantity = 3 })
-			dopage("/campground.php", { preaction = "summonsugarsheets", quantity = 3 })
-			-- TODO: clip art
-			dopage("/campground.php", { preaction = "summonradlibs", quantity = 3 })
-			dopage("/campground.php", { preaction = "summonhilariousitems" })
-			dopage("/campground.php", { preaction = "summonspencersitems" })
-			dopage("/campground.php", { preaction = "summonaa" })
-			dopage("/campground.php", { preaction = "summonthinknerd" })
-			-- TODO: librams
+	if setting_enabled("automate daily visits/do lazy aftercore daily tasks") and ascensionstatus("Aftercore") then
+		dopage("/campground.php", { preaction = "summonsnowcone", quantity = 3 })
+		dopage("/campground.php", { preaction = "summonstickers", quantity = 3 })
+		dopage("/campground.php", { preaction = "summonsugarsheets", quantity = 3 })
+		-- TODO: clip art
+		dopage("/campground.php", { preaction = "summonradlibs", quantity = 3 })
+		dopage("/campground.php", { preaction = "summonhilariousitems" })
+		dopage("/campground.php", { preaction = "summonspencersitems" })
+		dopage("/campground.php", { preaction = "summonaa" })
+		dopage("/campground.php", { preaction = "summonthinknerd" })
+		-- TODO: librams
 
-			-- TODO: cast class skills
-			-- TODO: trade with hermit
-			-- TODO: use still
-		end
+		queue_page_result(cast_skill("Lunch Break"))
+		queue_page_result(cast_skill("Summon Crimbo Candy"))
 
-		for _, x in ipairs(daily_items) do
-			queue_page_result(use_item(x))
-		end
+		queue_page_result(cast_skill("Pastamastery", 16))
+		queue_page_result(cast_skill("Pastamastery", 8))
+		queue_page_result(cast_skill("Pastamastery", 4))
+		queue_page_result(cast_skill("Pastamastery", 2))
+		queue_page_result(cast_skill("Pastamastery", 1))
+		queue_page_result(cast_skill("Advanced Saucecrafting", 16))
+		queue_page_result(cast_skill("Advanced Saucecrafting", 8))
+		queue_page_result(cast_skill("Advanced Saucecrafting", 4))
+		queue_page_result(cast_skill("Advanced Saucecrafting", 2))
+		queue_page_result(cast_skill("Advanced Saucecrafting", 1))
+		queue_page_result(cast_skill("Advanced Cocktailcrafting", 16))
+		queue_page_result(cast_skill("Advanced Cocktailcrafting", 8))
+		queue_page_result(cast_skill("Advanced Cocktailcrafting", 4))
+		queue_page_result(cast_skill("Advanced Cocktailcrafting", 2))
+		queue_page_result(cast_skill("Advanced Cocktailcrafting", 1))
+		-- TODO: use still
+		queue_page_result(cast_skill("Request Sandwich"))
+		queue_page_result(cast_skill("Request Sandwich"))
+		queue_page_result(cast_skill("Request Sandwich"))
+		queue_page_result(cast_skill("Request Sandwich"))
+		queue_page_result(cast_skill("Request Sandwich"))
+	end
+
+	for _, x in ipairs(daily_items) do
+		queue_page_result(use_item(x))
 	end
 
 	for _, f in ipairs(tocall) do
 		f()
 	end
 
+	local clover_before = count_item("ten-leaf clover")
 	if ascensionpathid() == 10 then
-		local clover_before = count_item("ten-leaf clover")
 		get_page("/hermit.php")
-		if count_item("ten-leaf clover") > clover_before then
-			scan_results(use_item("ten-leaf clover")())
-		end
-		if count_item("ten-leaf clover") ~= clover_before then
-			print("WARNING: unexpected result trying to pick up hermit clover")
-		end
+	end
+	if setting_enabled("automate daily visits/do lazy aftercore daily tasks") and ascensionstatus("Aftercore") then
+		async_post_page("/hermit.php", { action = "trade", whichitem = get_itemid("ten-leaf clover"), quantity = 8 })
+		async_post_page("/hermit.php", { action = "trade", whichitem = get_itemid("ten-leaf clover"), quantity = 4 })
+		async_post_page("/hermit.php", { action = "trade", whichitem = get_itemid("ten-leaf clover"), quantity = 2 })
+		post_page("/hermit.php", { action = "trade", whichitem = get_itemid("ten-leaf clover"), quantity = 1 })
+	end
+
+	if count_item("ten-leaf clover") > clover_before then
+		scan_results(use_item("ten-leaf clover", count_item("ten-leaf clover") - clover_before)())
+	end
+	if count_item("ten-leaf clover") ~= clover_before then
+		print("WARNING: unexpected result trying to pick up hermit clovers")
 	end
 
 	return results
@@ -219,8 +238,8 @@ add_automator("/main.php", function()
 	if setting_enabled("automate daily visits/harvest garden") then
 		table.insert(want_tbl, "garden")
 	end
-	if ascensionstatus("Aftercore") and setting_enabled("automate daily visits/use bookshelf skills in aftercore") then
-		table.insert(want_tbl, "bookshelf")
+	if ascensionstatus("Aftercore") and setting_enabled("automate daily visits/do lazy aftercore daily tasks") then
+		table.insert(want_tbl, "aftercore")
 	end
 	local want_string = table.concat(want_tbl, "+")
 
@@ -234,16 +253,6 @@ end)
 
 -- do_aftercore_dailyvisits ref withskills = do
 -- 	when withskills (do
--- 		castSkill 4006 3 ref -- Advanced Saucecrafting
--- 		castSkill 4006 3 ref
--- 		castSkill 4006 2 ref
-
--- 		castSkill 5014 3 ref -- Advanced Cocktailcrafting
--- 		castSkill 5014 2 ref
-
--- 		castSkill 3006 3 ref -- Pastamastery
--- 		castSkill 3006 2 ref
-
 -- 		castSkill 53 1 ref -- summon crimbo candy
 
 -- 		castSkillMax 8103 ref -- summon brickos
