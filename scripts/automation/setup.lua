@@ -89,12 +89,12 @@ automation_script_details_list["automate-dungeonfist"] = { simple_link = "arcade
 automation_script_details_list["automate-porko"] = { simple_link = "spaaace.php", description = string.format("Automate playing Porko (link to spaaace%s)", porko_mpastr) }
 automation_script_details_list["get-faxbot-monster"] = { simple_link = "clan_viplounge.php?action=faxmachine", description = "Request monster from FaxBot (link to fax machine)" }
 automation_script_details_list["custom-ascension-checklist"] = { simple = true, description = "Ascension checklist" }
-automation_script_details_list["automate-nemesis"] = { when = function() return true end, description = "Automate Nemesis quest" }
-automation_script_details_list["automate-suburbandis"] = { when = function() return true end, description = "Automate Suburban Dis quest" }
+automation_script_details_list["automate-suburbandis"] = { when = function() return ascension["suburbandis.defeated thing with no name"] ~= "yes" end, description = "Automate Suburban Dis quest" }
 automation_script_details_list["castle-farming"] = { simple_link = "beanstalk.php", description = "Automate Castle meat farming (link to beanstalk)" }
 automation_script_details_list["lua-console"] = { simple = true, description = "Go to Lua console" }
 automation_script_details_list["add-log-notes"] = { simple = true, description = "Add note to ascension log" }
 automation_script_details_list["automate-aftercore-pulls"] = { when = function() return true end, description = "Pull a selection of useful aftercore items from Hagnks storage" }
+automation_script_details_list["setup-ascension-automation"] = { simple = true, description = "Setup ascension automation script" }
 
 add_automation_script("custom-aftercore-automation", function()
 	local questlogcompleted_page = get_page("/questlog.php", { which = 2 })

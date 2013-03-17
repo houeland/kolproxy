@@ -1,9 +1,11 @@
 function get_ascension_automation_settings(want_bonus)
 	local tbl = {
 		should_wear_weapons = challenge ~= "fist" and (
+				have_item("Jarlsberg's pan (Cosmic portal mode)") or
 				have_item("Operation Patriot Shield") or
 				have_item("Trusty") or
 				challenge == "zombie" or
+				challenge == "jarlsberg" or
 				have_item("Brimstone Bludgeon") or
 				have_item("Brimstone Bunker") or
 				have_item("right bear arm") or
@@ -109,6 +111,7 @@ function get_ascension_automation_settings(want_bonus)
 		-- TODO: add a non-hardcoded place to look up equip requirements
 		default_equipment = {
 			hat = {
+				{ name = "silent beret", check = function() return want_bonus.noncombat end },
 				{ name = "spangly sombrero", check = function() return (get_mainstat() == "Moxie" and level() < 13) end },
 				{ name = "Boris's Helm (askew)", check = function() return (level() < 13) end },
 				{ name = "Spooky Putty mitre", check = function() return (level() < 13) end },
@@ -116,7 +119,7 @@ function get_ascension_automation_settings(want_bonus)
 				"double-ice cap",
 				"reinforced beaded headband",
 				"beer helmet",
---				"Jarlsberg's hat",
+				"Jarlsberg's hat",
 				"fuzzy busby",
 				"worn tophat",
 				"fuzzy earmuffs",
@@ -139,6 +142,7 @@ function get_ascension_automation_settings(want_bonus)
 				"Rain-Doh red wings",
 				"barskin cloak",
 				"vampire cape",
+				"giant gym membership card",
 			},
 			shirt = {
 				{ name = "cane-mail shirt", check = function() return (level() < 13) end },
@@ -172,6 +176,7 @@ function get_ascension_automation_settings(want_bonus)
 				"old sweatpants",
 			},
 			accessories = {
+				{ name = "ring of conflict", check = function() return want_bonus.noncombat end },
 				{ name = "Juju Mojo Mask", check = function() return (level() < 13 and not want_bonus.extraplusitems) end },
 				{ name = "plastic vampire fangs", check = function() return (level() < 6 and not want_bonus.extraplusitems) end },
 				{ name = "Jekyllin hide belt", check = function() return want_bonus.plusitems end },
@@ -215,11 +220,16 @@ function get_ascension_automation_settings(want_bonus)
 			"ice sickle",
 			"haiku katana",
 			"right bear arm",
+			"Staff of the Staff of Life",
+			"Staff of the All-Steak",
 			"Staff of the Healthy Breakfast",
+			"Staff of Fruit Salad",
 			"hilarious comedy prop",
 			"rubber band gun",
 		}
 		tbl.default_equipment.offhand = {
+			"Jarlsberg's pan (Cosmic portal mode)",
+			"Jarlsberg's pan",
 			"Operation Patriot Shield",
 			"Brimstone Bunker",
 			"left bear arm",

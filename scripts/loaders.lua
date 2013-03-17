@@ -85,6 +85,7 @@ load_file("automation", "automation/daily-visits.lua")
 
 load_file("other", "other/mmg-blocker.lua")
 load_file("other", "other/visit-people-warnings.lua")
+load_file("other", "other/adventure-notices.lua")
 -- load_file("other", "other/chrome-volcano.lua")
 -- load_file("other", "other/nemesis-fight-music.lua")
 -- load_file("other", "other/hookah-printer.lua")

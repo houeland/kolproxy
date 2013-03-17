@@ -53,7 +53,7 @@ function get_automation_tasks(script, cached_stuff)
 				return pt, pturl
 			end
 
-			if not have("Rock and Roll Legend") and challenge ~= "boris" then
+			if not have("Rock and Roll Legend") and have_skill("Ode to Booze") then
 				inform "pick up RnR"
 				script.ensure_worthless_item()
 				if not have("hermit permit") then
@@ -339,6 +339,17 @@ mark m_done
 							did_action = count_item("smut orc keepsake box") == c - 1
 						end
 					}
+				elseif ascensionstatus("Softcore") then
+					return {
+						message = "pull keepsake box",
+						fam = "Slimeling",
+						nobuffing = true,
+						minmp = 0,
+						action = function()
+							pull_in_softcore("smut orc keepsake box")
+							did_action = have_item("smut orc keepsake box")
+						end
+					}
 				else
 					return {
 						message = "get bridge parts (" .. pieces .. ")",
@@ -390,6 +401,13 @@ mark m_done
 				-- spiky turtle helmet or crown of thrones w/ el vibrato megadrone
 				-- astral belt, C.A.R.N.I.V.O.R.E. button, grumpy old man charrrm bracelet, ring of aggravate monster
 				-- Boris: Song of Cockiness, Overconfident
+			local ml = estimate_bonus("Monster Level")
+			if ml < 20 then
+				stop "Not enough +ML for Oil Peak (want 20+ for automation)"
+			elseif not ascensionstatus("Hardcore") and ml < 50 and not challenge then
+				-- TODO: Trigger this if script options set to go fast
+				stop "Not enough +ML for Oil Peak (want 50+ for SCNP automation)"
+			end
 			return {
 				message = "do oil peak",
 				fam = "Baby Bugged Bugbear",
@@ -401,7 +419,8 @@ mark m_done
 				}
 			}
 		elseif quest_text("should check out A-Boo Peak and see") or quest_text("should keep clearing the ghosts out of A-Boo Peak") then
-			if have_item("A-Boo clue") then
+			local hauntedness = get_aboo_peak_hauntedness()
+			if hauntedness - count_item("A-Boo clue") * 30 <= 0 then
 				if not buff("Super Structure") and have("Greatest American Pants") then
 					script.wear { pants = "Greatest American Pants" }
 					script.get_gap_buff("Super Structure")
@@ -409,21 +428,12 @@ mark m_done
 				if not have_buff("Well-Oiled") and have_item("Oil of Parrrlay") then
 					use_item("Oil of Parrrlay")
 				end
+				script.ensure_buffs { "Red Door Syndrome" }
+				if predict_aboo_peak_banish() < 30 then
+					stop "TODO: Buff up and finish A-Boo Peak clues"
+				end
 				use_item("A-Boo clue")
--- 				wear { weapon = "titanium assault umbrella" }
--- 				wear { weapon = "double-barreled sling" }
--- 				wear { weapon = "broken sword" }
--- 				wear { offhand = "battered hubcap" }
--- 				wear { weapon = "coffin lid" }
--- 				wear { shirt = "eXtreme Bi-Polar Fleece Vest" }
--- 				wear { acc2 = "enchanted handwarmer" }
--- 				wear { acc1 = "glowing red eye" }
--- 				wear { hat = "eXtreme scarf", pants = "snowboarder pants", acc3 = "eXtreme mittens" }
--- 				wear { hat = "antique helmet" }
--- 				wear { hat = "lihc face" }
 -- 				-- TODO: handle other towel versions
--- 				wear { hat = "makeshift turban" }
--- 				wear { hat = "wool hat" }
 
 -- 				-- TODO: buff max hp
 
@@ -441,7 +451,7 @@ mark m_done
 -- 				end
 				-- TODO: heal up fully
 				return {
-					message = "follow a-boo clue",
+					message = string.format("follow a-boo clue (%d%% haunted)", hauntedness),
 					fam = "Exotic Parrot",
 					buffs = { "Astral Shell", "Elemental Saucesphere", "Scarysauce", "A Few Extra Pounds", "Go Get 'Em, Tiger!" },
 					minmp = 5,
@@ -455,8 +465,9 @@ mark m_done
 					}
 				}
 			else
+				-- TODO: use a clover?
 				return {
-					message = "do a-boo peak",
+					message = string.format("do a-boo peak (%d%% haunted)", hauntedness),
 					fam = "Slimeling",
 					buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
 					minmp = 50,
@@ -467,6 +478,8 @@ mark m_done
 				}
 			end
 		elseif quest_text("need to solve the mystery of Twin Peak") then
+--			-- TODO: track steps!
+
 -- 			-- TODO: boost item drops & noncombats, sniff either topiary
 -- 			-- TODO: ensure 4+ stench resistance
 -- 			-- TODO: one choice adv
@@ -482,12 +495,13 @@ mark m_done
 					message = "solve twin peak mystery",
 					fam = "Slimeling",
 					buffs = { "Fat Leon's Phat Loot Lyric", "Astral Shell", "Elemental Saucesphere" },
+					bonus_target = { "noncombat", "item" },
 					minmp = 50,
 					action = function()
-						if get_resistance_levels().stench < 4 and not have_buff("Red Door Syndrome") then
+						if (get_resistance_levels().stench or 0) < 4 and not have_buff("Red Door Syndrome") then
 							script.ensure_buffs { "Red Door Syndrome" }
 						end
-						if get_resistance_levels().stench < 4 then
+						if (get_resistance_levels().stench or 0) < 4 then
 							switch_familiarid(72)
 						end
 						local force_advagain = false
@@ -533,7 +547,7 @@ mark m_done
 						if familiarid() ~= 72 then
 							switch_familiarid(1)
 						end
-						if (get_resistance_levels().stench or 0) >= 4 and (familiarid() == 1 or familiarid() == 72) and estimate_modifier_bonuses()["Item Drops from Monsters"] >= 50 and have_item("jar of oil") and estimate_modifier_bonuses()["Combat Initiative"] >= 40 then
+						if (get_resistance_levels().stench or 0) >= 4 and (familiarid() == 0 or familiarid() == 1 or familiarid() == 72) and estimate_modifier_bonuses()["Item Drops from Monsters"] >= 50 and have_item("jar of oil") and estimate_modifier_bonuses()["Combat Initiative"] >= 40 then
 							session["__script.automate twin peak"] = "yes"
 							did_action = true
 						else

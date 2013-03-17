@@ -71,7 +71,7 @@ local function automate_hcnp_day(whichday)
 		if challenge == "zombie" then
 			mpstr = string.format("%s horde", horde_size())
 		end
-		local formatted = string.format("[%s] %s (level %s.%02d, %s turns remaining, %s full, %s drunk, %s spleen, %s meat, %s)", turnsthisrun(), tostring(msg), level(), level_progress() * 100, advs(), fullness(), drunkenness(), spleen(), meat(), mpstr)
+		local formatted = string.format("[%s] %s (level %s.%02d, %s turns remaining, %s full, %s drunk, %s spleen, %s meat, %s / %s HP, %s)", turnsthisrun(), tostring(msg), level(), level_progress() * 100, advs(), fullness(), drunkenness(), spleen(), meat(), hp(), maxhp(), mpstr)
 		print(formatted)
 		write_log_line(formatted)
 	end
@@ -288,19 +288,56 @@ endif
 		make_gremlin_macro = macro_softcore_boris_gremlin
 
 		boris_action = function()
-			local maybe_boil_first = ""
-			if level() >= 7 then
-				maybe_boil_first = [[
+			local killspell = ""
+			local maybe_jiggle = ""
+			local cfm = getCurrentFightMonster()
+			if cfm and cfm.Stats and cfm.Stats.Element then
+				monster_element = cfm.Stats.Element
+			end
+			if (level() >= 7 or mp() >= 25) and monster_element ~= "hot" then
+				killspell = [[
 
-if hasskill Boil && !monstername imp
+if hasskill Boil
+  cast Boil
+endif
+
+]]
+			elseif level() >= 9 or (mp() >= 40 and have_skill("Slice")) then
+				killspell = [[
+
+if hasskill Slice
+  cast Slice
+endif
+
+]]
+			elseif monster_element ~= "stench" then
+				killspell = [[
+
+if hasskill Curdle
+  cast Curdle
+endif
+
+]]
+			else
+				killspell = [[
+
+if hasskill Boil
   cast Boil
 endif
 
 ]]
 			end
-			return [[
+			if false then -- TODO
+				maybe_jiggle = [[
 
 jiggle
+
+]]
+			end
+			return [[
+
+]] .. maybe_jiggle .. [[
+
 if hasskill Throw Shield
   cast Throw Shield
 endif
@@ -308,14 +345,7 @@ if hasskill Blend
   cast Blend
 endif
 
-]] .. maybe_boil_first .. [[
-
-if !monstername hippy
-  cast Curdle
-endif
-if hasskill Boil
-  cast Boil
-endif
+]] .. killspell .. [[
 
 ]]
 		end
@@ -366,6 +396,8 @@ endif
 				else
 					return macro_softcore_boris()
 				end
+			elseif name == "morbid skull" then
+				return macro_softcore_boris()
 			else
 				critical("Trying to sniff " .. name .. " in Boris")
 			end
@@ -574,6 +606,20 @@ endif
 				freepull_item("Boris's Helm")
 				freepull_item("Boris's Helm (askew)")
 				cached_stuff.gotten_boris_helm = true
+				did_action = true
+			end
+		}
+	}
+
+	add_task {
+		when = (challenge == "jarlsberg") and not have_item("Jarlsberg's pan") and not have_item("Jarlsberg's pan (Cosmic portal mode)") and not cached_stuff.gotten_jarlsberg_pan,
+		task = {
+			message = "pull Jarlsberg's pan",
+			nobuffing = true,
+			action = function()
+				freepull_item("Jarlsberg's pan")
+				freepull_item("Jarlsberg's pan (Cosmic portal mode)")
+				cached_stuff.gotten_jarlsberg_pan = true
 				did_action = true
 			end
 		}
@@ -921,6 +967,18 @@ endif
 	}
 
 	add_task {
+		when = challenge and not ascensionstatus("Hardcore") and estimate_max_spleen() - spleen() == 7 and have("astral energy drink") and level() >= 11 and not have("mojo filter") and not cached_stuff["ignore pull: mojo filter"],
+		task = {
+			message = "pull mojo filter",
+			action = function()
+				cached_stuff["ignore pull: mojo filter"] = "yes"
+				pull_in_softcore("mojo filter")
+				did_action = have_item("mojo filter")
+			end
+		}
+	}
+
+	add_task {
 		when = challenge == "boris" and daysthisrun() == 1 and estimate_max_spleen() - spleen() >= 8 and have("astral energy drink") and level() >= 9,
 		task = {
 			message = "use astral energy drink",
@@ -1240,14 +1298,14 @@ endif
 		}
 	}
 
-	function ascension_automation_pull_item(name)
+	local function ascension_automation_pull_item(name)
 		softcore_stoppable_action("pulling " .. tostring(name))
 		print("  pulling " .. tostring(name))
 		set_result(pull_storage_items { name })
 	end
 
 	function pull_in_softcore(item)
-		if not have(item) and ascensionstatus() ~= "Hardcore" then
+		if not have(item) and not ascensionstatus("Hardcore") then
 			ascension_automation_pull_item(item)
 			if not have(item) then
 				critical("Failed to pull " .. tostring(item))
@@ -1418,12 +1476,15 @@ endif
 	want_softcore_item_oneof { "stinky cheese diaper", "stinky cheese wheel", "stinky cheese eye", "Staff of Queso Escusado", "stinky cheese sword" }
 	want_softcore_item("Greatest American Pants")
 	want_softcore_item("Camp Scout backpack")
-	if not have_item("astral mask") then
+	if not have_item("astral mask") and not have_item("Jekyllin hide belt") then
 		want_softcore_item("Mr. Accessory Jr.")
 	end
 	want_softcore_item_oneof { "Boris's Helm (askew)", "Boris's Helm", "Spooky Putty mitre" }
-	if challenge ~= "boris" and challenge ~= "fist" then
+	if challenge ~= "boris" and challenge ~= "fist" and not have_item("Jarlsberg's pan (Cosmic portal mode)") and not have_item("Jarlsberg's pan") then
 		want_softcore_item("Operation Patriot Shield")
+	end
+	if ascensionpath("Avatar of Jarlsberg") then
+		want_softcore_item("ring of conflict")
 	end
 
 	add_task {
@@ -1441,7 +1502,7 @@ endif
 					sell_item("facsimile dictionary")
 					did_action = meat() >= 5000
 				else
-					ascension_automation_pull_item("facsimile dictionary")
+					pull_in_softcore("facsimile dictionary")
 					did_action = have("facsimile dictionary")
 				end
 			end
@@ -1504,6 +1565,18 @@ endif
 			action = function()
 				buy_item("Clancy's crumhorn", "p")
 				did_action = have_item("Clancy's crumhorn")
+			end
+		}
+	}
+
+	add_task {
+		when = not unlocked_island() and count_item("skeleton") >= 7,
+		task = {
+			message = "make skiff",
+			nobuffing = true,
+			action = function()
+				use_item("skeleton", 7)
+				did_action = unlocked_island()
 			end
 		}
 	}
@@ -1778,7 +1851,7 @@ endif
 					script.want_familiar "Frumious Bandersnatch"
 					set_mcd(7) -- TODO: moxie-specific
 					local pt, url = get_page("/cobbsknob.php", { action = "throneroom" })
-					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_softcore_boris())
+					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_softcore_boris)
 					did_action = advagain
 				elseif have("Knob Goblin perfume") then
 					use_item("Knob Goblin perfume")
@@ -1810,7 +1883,7 @@ endif
 					script.want_familiar "Frumious Bandersnatch"
 					set_mcd(7) -- TODO: moxie-specific
 					local pt, url = get_page("/cobbsknob.php", { action = "throneroom" })
-					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_softcore_boris())
+					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_softcore_boris)
 					did_action = advagain
 				elseif have("Knob Goblin perfume") then
 					use_item("Knob Goblin perfume")
@@ -1833,7 +1906,7 @@ endif
 			message = "clancy fight luter",
 			action = function()
 				local pt, url = get_page("/place.php", { whichplace = "plains", action = "lutersgrave" })
-				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_softcore_boris())
+				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_softcore_boris)
 				did_action = have("Clancy's lute")
 			end
 		}
@@ -2262,7 +2335,7 @@ endif
 					return {
 						message = "kill goblin king",
 						action = function()
-							return script.knob_goblin_king_with_cake(macro_noodlecannon())
+							return script.knob_goblin_king_with_cake(macro_noodlecannon)
 						end
 					}
 				else
@@ -2501,7 +2574,7 @@ endif
 	end
 
 	add_task {
-		when = (not have("shining halo") or level() == 1) and not get_ascension_automation_settings().should_wear_weapons,
+		when = not have("shining halo") and level() == 1 and not get_ascension_automation_settings().should_wear_weapons,
 		task = tasks.summon_clip_art,
 	}
 
@@ -2829,7 +2902,7 @@ endwhile
 	}
 
 	add_task {
-		prereq = quest_text("this is Azazel in Hell") and (ascensionstatus() == "Hardcore" and daysthisrun() <= 2),
+		prereq = quest_text("this is Azazel in Hell") and ascension_script_option("do azazel"),
 		f = script.do_azazel,
 	}
 
@@ -2899,7 +2972,7 @@ endwhile
 			challenge ~= "fist" and
 			challenge ~= "boris",
 		f = function()
-			script.knob_goblin_king_with_cake(macro_noodlecannon())
+			script.knob_goblin_king_with_cake(macro_noodlecannon)
 		end,
 	}
 
@@ -2914,7 +2987,7 @@ endwhile
 				script.want_familiar "Frumious Bandersnatch"
 				set_mcd(7) -- TODO: moxie-specific
 				local pt, url = get_page("/cobbsknob.php", { action = "throneroom" })
-				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodleserpent())
+				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodleserpent)
 				did_action = advagain
 			elseif have("Knob Goblin perfume") then
 				use_item("Knob Goblin perfume")
@@ -2946,7 +3019,7 @@ endwhile
 				script.ensure_mp(30)
 				use_item("photocopied monster")
 				local pt, url = get_page("/fight.php")
-				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodlecannon())
+				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodlecannon)
 				if advagain then
 					did_action = true
 				end
@@ -3160,7 +3233,7 @@ endwhile
 		end
 	}
 
-	add_task { prereq = (whichday == 1) and challenge ~= "boris", f = function()
+	add_task { prereq = (whichday == 1) and challenge ~= "boris" and challenge ~= "jarlsberg", f = function()
 		if fullness() < 14 or drunkenness() < 19 or (spleen() < 12 and challenge ~= "trendy") then
 			stop "Unexpected fullness/drunkenness/spleen at end of day 1"
 		else
@@ -3308,7 +3381,7 @@ endwhile
 
 	-- TODO: check campground, not session[]
 	add_task {
-		when = not have_item("digital key") and cached_stuff.campground_psychoses == "mystic" and count_item("white pixel") < 30,
+		when = not have_item("digital key") and cached_stuff.campground_psychoses == "mystic" and count("white pixel") + math.min(count("red pixel"), count("green pixel"), count("blue pixel")) < 30,
 		task = {
 			message = "get digital key",
 			fam = "Slimeling",
@@ -3318,6 +3391,9 @@ endwhile
 			action = adventure {
 				zoneid = 302,
 				macro_function = function() return make_cannonsniff_macro("morbid skull") end,
+				noncombats = {
+					["Snakes."] = "No.  No no no.",
+				}
 			},
 		}
 	}
@@ -3335,7 +3411,7 @@ endwhile
 	}
 
 	add_task {
-		when = not have_item("digital key") and have_item("psychoanalytic jar") and advs() >= 80 and not trailed,
+		when = not have_item("digital key") and (have_item("psychoanalytic jar") or have_item("jar of psychoses (The Crackpot Mystic)")) and advs() >= 80 and not trailed,
 		task = {
 			message = "use mystic jar",
 			nobuffing = true,
@@ -3788,17 +3864,17 @@ endwhile
 					return
 				end
 				if quest_text("gather up some cheese and ore") and count_item("goat cheese") >= 3 then
-					if daysthisrun() >= 2 and ascensionstatus() ~= "Hardcore" then
+					if daysthisrun() >= 2 and not ascensionstatus("Hardcore") then
 						local want_ore = questlog_page:match("bring him back 3 chunks of ([a-z]+ ore)")
 						if want_ore and get_itemid(want_ore) then
 							local got = count(want_ore)
 							if got < 3 then
 								if want_ore == "chrome ore" and not have("acoustic guitarrr") and not have("heavy metal thunderrr guitarrr") then
-									ascension_automation_pull_item("heavy metal thunderrr guitarrr")
+									pull_in_softcore("heavy metal thunderrr guitarrr")
 									did_action = have("heavy metal thunderrr guitarrr")
 									return
 								else
-									ascension_automation_pull_item(want_ore)
+									pull_in_softcore(want_ore)
 									did_action = count(want_ore) > got
 									return
 								end
@@ -3946,16 +4022,28 @@ endwhile
 				return result, resulturl, did_action
 			end
 			script.bonus_target { "noncombat" }
-			local beanstalkpt = get_page("/beanstalk.php")
-			if not beanstalkpt:match("Castle") then
-				script.go("do airship", 81, macro_noodlecannon, {
-					["Random Lack of an Encounter"] = "Investigate the crew quarters",
-					["Hammering the Armory"] = "Blow this popsicle stand",
-				}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Ur-Kel's Aria of Annoyance", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "Mini-Hipster", 35)
+
+			if not have_item("S.O.C.K.") then
+				script.go("do airship", 81, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Ur-Kel's Aria of Annoyance", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "Mini-Hipster", 35, { choice_function = function(advtitle, choicenum)
+					if advtitle == "Random Lack of an Encounter" then
+						if not have_item("model airship") then
+							return "Gallivant down to the head"
+						else
+							return "Investigate the crew quarters"
+						end
+					elseif advtitle == "Hammering the Armory" then
+						return "Blow this popsicle stand"
+					elseif advtitle == "F-F-Fantastic!" then
+						return "Give him the spirits"
+					end
+				end })
+				if have_item("S.O.C.K.") then
+					did_action = true
+				end
+			elseif quest("The Rain on the Plains is Mainly Garbage") then
+				script.do_castle()
 			elseif not have("steam-powered model rocketship") and ascensionstatus() == "Hardcore" then
 				script.unlock_hits()
-			else
-				script.do_castle()
 			end
 		end,
 		message = "get steam-powered model rocketship",
@@ -3999,7 +4087,7 @@ endwhile
 					script.ensure_mp(40)
 					use_item("photocopied monster")
 					local pt, url = get_page("/fight.php")
-					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodlecannon())
+					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodlecannon)
 					if advagain then
 						did_action = true
 					end
@@ -4053,9 +4141,9 @@ endwhile
 			message = "pull frat war outfit",
 			action = function()
 				if daysthisrun() >= 3 then
-					ascension_automation_pull_item("beer helmet")
-					ascension_automation_pull_item("distressed denim pants")
-					ascension_automation_pull_item("bejeweled pledge pin")
+					pull_in_softcore("beer helmet")
+					pull_in_softcore("distressed denim pants")
+					pull_in_softcore("bejeweled pledge pin")
 					did_action = have_frat_war_outfit()
 				else
 					if not have("pumpkin") and not have("pumpkin bomb") then
@@ -4158,18 +4246,6 @@ endwhile
 	add_task {
 		prereq = quest("A Pyramid Scheme") and not quest_text("you've found the little pyramid") and not have("Staff of Ed"),
 		f = script.do_oasis_and_desert,
-	}
-
-	add_task {
-		when = challenge == "boris" and ascensionstatus() ~= "Hardcore" and estimate_max_spleen() - spleen() == 7 and have("astral energy drink") and not have("mojo filter") and not cached_stuff["ignore pull: mojo filter"],
-		task = {
-			message = "pull mojo filter",
-			action = function()
-				cached_stuff["ignore pull: mojo filter"] = "yes"
-				pull_in_scboris("mojo filter")
-				did_action = have_item("mojo filter")
-			end
-		}
 	}
 
 	add_task {
@@ -4496,7 +4572,7 @@ use gauze garter, gauze garter
 				script.heal_up()
 				script.ensure_mp(100)
 				local pt, url = post_page("/lair3.php", { action = "hedge" })
-				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodleserpent())
+				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodleserpent)
 				if have_item("hedge maze puzzle") then
 					advagain = true
 				end
@@ -4765,22 +4841,44 @@ ascension_automation_script_href = add_automation_script("automate-ascension", f
 	return do_loop(tonumber(params.whichday))
 end)
 
+local ascension_script_options_tbl = {
+	["stop on imported beer"] = true,
+	["do azazel"] = true,
+}
+
+function ascension_script_option(name)
+	if not ascension_script_options_tbl[name] then
+		critical("Unsupported script option: " .. tostring(name))
+	end
+	local opts = ascension["__script.ascension script options"] or {}
+	return opts[name]
+end
+
 ascension_automation_setup_href = add_automation_script("setup-ascension-automation", function()
 	if params.confirm == "yes" then
-		ascension["__script.ascension script enabled"] = "yes/" .. get_current_kolproxy_version()
-		if params.stop_on_imported_beer == "yes" then
-			ascension["__script.stop on imported beer"] = "yes"
+		local opts = {}
+		for x, _ in pairs(ascension_script_options_tbl) do
+			if params[x] then
+				opts[x] = true
+			end
 		end
+		opts["do azazel"] = true
+		ascension["__script.ascension script enabled"] = true
+		ascension["__script.ascension script options"] = opts
 		return get_page("/main.php")
 	end
 
-	local ok_paths = { [0] = true, [6] = true, [8] = true, [10] = true }
+	local ok_paths = { [0] = true, [6] = true, [8] = true, [10] = true, ["Avatar of Jarlsberg"] = true }
 	local path_support_text = ""
 	local pathdesc = string.format([[%s %s]], ascensionstatus(), ascensionpathname())
 	if ascensionpathid() == 0 then
 		pathdesc = ascensionstatus()
 	end
-	if not ok_paths[ascensionpathid()] or (ascensionpathid() == 0 and ascensionstatus() ~= "Hardcore") then
+	local path_is_ok = true
+	if (not ok_paths[ascensionpathid()] and not ok_paths[ascensionpathname()]) or (ascensionpathid() == 0 and ascensionstatus() ~= "Hardcore") then
+		path_is_ok = false
+	end
+	if not path_is_ok then
 		path_support_text = string.format([[<p style="color: darkorange">You are currently in %s. This is not a well supported path for the ascension script.</p>]], pathdesc)
 	else
 		path_support_text = string.format([[<p>You are currently in %s.</p>]], pathdesc)
@@ -4802,7 +4900,7 @@ add_printer("/main.php", function()
 	if not setting_enabled("enable turnplaying automation") then return end
 	if not setting_enabled("enable turnplaying automation in-run") then return end
 
-	if ascension["__script.ascension script enabled"] == "yes/" .. get_current_kolproxy_version() then
+	if ascension["__script.ascension script enabled"] == true then
 		local links = {
 			{ titleday = " day 1", whichday = 1 },
 			{ titleday = " day 2", whichday = 2 },

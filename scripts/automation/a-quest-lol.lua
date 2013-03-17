@@ -10,8 +10,7 @@ abort pastround 20
 abort hppercentbelow 50
 
 if monstername rampaging adding machine
-  use 668 scroll
-  use 64067 scroll
+  use 668 scroll, 64067 scroll
 endif
 
 while !times 5

@@ -40,6 +40,18 @@ do
 		end)
 	end
 
+	function __raw_add_notice(filename, f)
+		add_interceptor(filename, function()
+			if not setting_enabled("enable adventure warnings") then return end
+			if not setting_enabled("show extra warnings") then return end
+			if not setting_enabled("show extra notices") then return end
+			local message, warningid, custommsg, customdisablecolor, customwarningprefix = f()
+			if message then
+				return intercept_warning { message = message, id = warningid, customdisablemsg = custommsg, customdisablecolor = customdisablecolor or "rgb(51, 153, 51)", customwarningprefix = customwarningprefix or "Notice: " }
+			end
+		end)
+	end
+
 	function add_ascension_warning(filename, f)
 		if filename == "/adventure.php" then error("Use add_ascension_adventure_warning instead of warning on /adventure.php") end
 		__raw_add_warning(filename, function()
@@ -81,8 +93,9 @@ do
 
 	local __raw_adventure_warnings = {}
 	local __raw_extra_adventure_warnings = {}
+	local __raw_adventure_notices = {}
 	function get_raw_adventure_warnings()
-		return __raw_adventure_warnings, __raw_extra_adventure_warnings
+		return __raw_adventure_warnings, __raw_extra_adventure_warnings, __raw_adventure_notices
 	end
 	local function add_raw_adventure_warning(f)
 		localtable.insert(__raw_adventure_warnings, f)
@@ -168,7 +181,7 @@ do
 		raw_add_zone_check(zid, f)
 	end
 
-	local function get_zoneid(name)
+	function get_zoneid(name)
 		local zoneid = (datafile("zones")[name] or {}).zoneid
 		if not zoneid then
 			error("Unknown zone: " .. tostring(name))
@@ -177,11 +190,27 @@ do
 	end
 
 	function add_warning(tbl)
-		check_supported_table_values(tbl, {}, { "message", "check", "severity", "zone" })
-		local zoneid = get_zoneid(tbl.zone)
+		check_supported_table_values(tbl, {}, { "message", "check", "severity", "zone", "when", "idgenerator" })
+		local want_zoneid
+		if tbl.zone then
+			want_zoneid = get_zoneid(tbl.zone)
+		end
 		local function f()
-			if tonumber(params.snarfblat) == zoneid and tbl.check() then
-				return tbl.message, tbl.zone .. "/" .. tbl.message
+			if tbl.when == "ascension" and ascensionstatus("Aftercore") then return end
+			local zoneid = tonumber(params.snarfblat)
+			if want_zoneid and zoneid ~= want_zoneid then return end
+			local check, checkid = tbl.check(zoneid)
+			if check then
+				local msg = tbl.message
+				local warnid = (tbl.zone or "everywhere") .. "/" .. msg
+				if msg == "custom" and type(check) == "string" then
+					msg = check
+					warnid = checkid
+				end
+				if tbl.idgenerator then
+					warnid = warnid .. "#" .. tbl.idgenerator()
+				end
+				return msg, warnid
 			end
 		end
 		if tbl.severity == "extra" then
@@ -190,6 +219,11 @@ do
 		elseif tbl.severity == "warning" then
 			localtable.insert(__raw_adventure_warnings, f)
 			__raw_add_warning("/adventure.php", f)
+		elseif tbl.severity == "notice" then
+			localtable.insert(__raw_adventure_notices, f)
+			__raw_add_notice("/adventure.php", f)
+		else
+			error("Invalid warning severity: " .. tostring(tbl.severity))
 		end
 	end
 

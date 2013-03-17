@@ -65,7 +65,7 @@ function setup_functions()
 			local cid = classid()
 			if cid == 1 or cid == 2 or cid == 11 or cid == 12 then
 				return "Muscle"
-			elseif cid == 3 or cid == 4 then
+			elseif cid == 3 or cid == 4 or cid == 14 then
 				return "Mysticality"
 			elseif cid == 5 or cid == 6 then
 				return "Moxie"
@@ -77,6 +77,14 @@ function setup_functions()
 				}
 				table.sort(tbl, function(a, b) return a[2] > b[2] end)
 				return tbl[1][1]
+			end
+		end
+
+		function mainstat_type(which)
+			if which then
+				return get_mainstat() == which
+			else
+				return get_mainstat()
 			end
 		end
 
@@ -103,6 +111,9 @@ function setup_functions()
 		function turnsthisrun() return tonumber(status().turnsthisrun) end
 		function familiarid() return tonumber(status().familiar) end
 		function familiarpicture() return status().familiarpic end
+		function familiar(name)
+			return familiarid() == get_familiarid(name)
+		end
 		function buffedfamiliarweight() return tonumber(status().famlevel) end
 		function have_buff(name)
 			if not datafile("buffs")[name] then
@@ -173,7 +184,10 @@ function setup_functions()
 			return status().sign
 		end
 		function freedralph() return tonumber(status().freedralph) == 1 end
-		function moonsign_area()
+		function moonsign_area(name)
+			if name then
+				return moonsign_area() == name
+			end
 			local areas = {
 				Mongoose = "Degrassi Knoll",
 				Wallaby = "Degrassi Knoll",
@@ -477,13 +491,11 @@ function setup_functions()
 		end
 
 		function pull_storage_items(xs)
-			local tbl = { pwd = session.pwd, action = "pull", ajax = 1 }
-			for nr, name in pairs(xs) do
-				tbl["howmany" .. tostring(nr)] = 1
-				tbl["whichitem" .. tostring(nr)] = get_itemid(name)
+			local pf
+			for _, name in ipairs(xs) do
+				pf = async_post_page("/storage.php", { pwd = session.pwd, action = "pull", ajax = 1, howmany1 = 1, whichitem1 = get_itemid(name) })
 			end
-			-- TODO!: split up more than 11
-			return async_post_page("/storage.php", tbl)
+			return pf
 		end
 
 		function freepull_item(name)
@@ -516,6 +528,7 @@ function setup_functions()
 			return async_get_page("/familiar.php", { action = "newfam", ajax = 1, newfam = id })
 		end
 
+		-- TODO: move procedure
 		function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
 			if url:contains("/fight.php") then -- TODO: hmmmm? -- and url:match("ireallymeanit") then
 				local advagain = nil
@@ -530,7 +543,11 @@ function setup_functions()
 				end
 				if advagain == nil then
 					if macro then
-						local pt, url = post_page("/fight.php", { action = "macro", macrotext = macro })
+						local macrotext = macro
+						if type(macrotext) ~= "string" then
+							macrotext = macro()
+						end
+						local pt, url = post_page("/fight.php", { action = "macro", macrotext = macrotext })
 -- 						print("recurse with macro")
 						return handle_adventure_result(pt, url, zoneid, nil, noncombatchoices, specialnoncombatfunction)
 					else
@@ -573,7 +590,7 @@ function setup_functions()
 					end
 				end
 				if optname and not pickchoice then
-					print("Warning: option " .. tostring(optname) .. " not found for " .. tostring(adventure_title) .. ".")
+					print("ERROR: option " .. tostring(optname) .. " not found for " .. tostring(adventure_title) .. ".")
 				end
 				if pickchoice then
 					local pt, url = post_page("/choice.php", { pwd = session.pwd, whichchoice = choice_adventure_number, option = pickchoice })

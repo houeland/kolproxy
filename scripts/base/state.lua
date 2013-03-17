@@ -15,6 +15,7 @@ function set_character_state(name, value) error("No set_character_state from Lua
 
 
 local function setup_state_table(getf, setf)
+	-- TODO: Encode/decode JSON instead
 	local tbl = {}
 	setmetatable(tbl, { __index = function(t, k)
 		local function parse_value(v)
@@ -22,6 +23,10 @@ local function setup_state_table(getf, setf)
 			local pref = v:sub(1, 1)
 			if pref == "[" then
 				return str_to_table(v)
+			elseif v == "::BOOL:true::" then
+				return true
+			elseif v == "::BOOL:false::" then
+				return false
 			else
 				return v
 			end
@@ -42,6 +47,8 @@ local function setup_state_table(getf, setf)
 			p = tostring(v)
 		elseif type(v) == "string" then
 			p = v
+		elseif type(v) == "boolean" then
+			p = "::BOOL:" .. tostring(v) .. "::"
 		else
 			error("Unknown value " .. tostring(v) .. " of type " .. type(v))
 		end

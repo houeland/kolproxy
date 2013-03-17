@@ -27,6 +27,7 @@ register_setting {
 	description = "Show up-arrows for extending buffs (currently only on custom charpane)",
 	group = "charpane",
 	default_level = "standard",
+	parent = "use custom kolproxy charpane",
 }
 
 register_setting {
@@ -34,6 +35,7 @@ register_setting {
 	description = "Show multiple previous-adventure links (currently only on custom charpane)",
 	group = "charpane",
 	default_level = "detailed",
+	parent = "use custom kolproxy charpane",
 }
 
 add_printer("/game.php", function()

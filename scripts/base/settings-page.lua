@@ -53,17 +53,26 @@ register_setting {
 }
 
 register_setting {
-	name = "enable experimental implementations",
-	description = "Enable (beta) features that are still in development (<b>Not always accurate</b>, currently: mining prediction)",
-	group = "other",
-	default_level = "enthusiast",
+	name = "show extra warnings",
+	description = "Add many extra adventure warnings for things that are worth thinking about but not necessarily mistakes",
+	group = "warnings",
+	default_level = "detailed",
+	parent = "enable adventure warnings",
 }
 
 register_setting {
-	name = "show extra warnings",
-	description = "Add many extra optional adventure warnings for things that are worth thinking about (but are often not actually mistakes)",
+	name = "show extra notices",
+	description = "Also show extra informational notices that just provide alerts and don't indicate mistakes at all",
 	group = "warnings",
-	default_level = "detailed",
+	default_level = "enthusiast",
+	parent = "enable adventure warnings",
+}
+
+register_setting {
+	name = "enable experimental implementations",
+	description = "Enable (beta) features that are still in development (<b>Not always accurate</b>, currently: none)",
+	group = "other",
+	default_level = "enthusiast",
 }
 
 register_setting {
@@ -162,33 +171,6 @@ function character_setting(name, default)
 	end
 end
 
--- add_printer("/account.php", function()
--- 	table = [[
--- 	<table  width=95%%  cellspacing=0 cellpadding=0>
--- 		<tr><td style="color: white;" align=center bgcolor=green><b>Kolproxy Options</b></td></tr>
--- 		<tr><td style="padding: 5px; border: 1px solid green;">
--- 			<center><table><tr><td>
--- 				<p><a href="custom-settings?pwd=]] .. session.pwd .. [[">Go to kolproxy settings</a></p>
--- 			</td></tr></table></center>
--- 		</td></tr>
--- 		<tr><td height=4></td></tr>
--- 	</table>
--- 	]]
--- 	text = string.gsub(text, [[<span id="ro">]], "\n" .. table .. "%0")
--- end)
-
--- function make_buttons(valuestr, value, options)
--- 	buttons = ""
--- 	for _, v in ipairs(options) do
--- 		if value == v.value then
--- 			buttons = buttons .. [[<input type="radio" name="]]..valuestr..[[" value="]] .. v.value .. [[" checked="yes">]] .. v.text
--- 		else
--- 			buttons = buttons .. [[<input type="radio" name="]]..valuestr..[[" value="]] .. v.value .. [[">]] .. v.text
--- 		end
--- 	end
--- 	return buttons
--- end
-
 local function get_customize_features_page()
 	local grouped = {}
 	for _, x in ipairs(setting_groups) do
@@ -198,7 +180,7 @@ local function get_customize_features_page()
 	for _, x in pairs(settings) do
 		local g = x.group
 		if not grouped[g] then g = "other" end
-		local parent = x.name:match("(.+)/")
+		local parent = x.name:match("(.+)/") or x.parent
 		if parent then
 			if not children[parent] then
 				children[parent] = {}
@@ -210,14 +192,19 @@ local function get_customize_features_page()
 	end
 	local featurerows = {}
 	local radio_ctr = 0
+	local feature_radio_names = {}
+	local all_radio_names = {}
+	local all_default_values = {}
 	for _, x in ipairs(setting_groups) do
 		if #grouped[x.name] > 0 then
 			table.sort(grouped[x.name], function(a, b) return settings_order[a.name] < settings_order[b.name] end)
 			table.insert(featurerows, [[<tr class="trheader"><th colspan="4">]] .. x.title .. [[</th></tr>]])
 		end
-		local function insert_setting_row(y, ischild)
+		local function insert_setting_row(y, parentname)
 			radio_ctr = radio_ctr + 1
 			local radio_name = "radio_" .. radio_ctr
+			feature_radio_names[y.name] = radio_name
+			table.insert(all_radio_names, radio_name)
 			local onchecked = (character["setting: " .. y.name] == "on") and [[checked="checked"]] or ""
 			local offchecked = (character["setting: " .. y.name] == "off") and [[checked="checked"]] or ""
 			local defaultchecked = (character["setting: " .. y.name] == nil) and [[checked="checked"]] or ""
@@ -225,9 +212,11 @@ local function get_customize_features_page()
 			local defaultvalue = (setting_levels[y.default_level or "enthusiast"] <= setting_levels[baselevel]) and "on" or "off"
 			local featuredesc = y.description and ([[<span title="Lua scripting syntax: setting_enabled(&quot;]] .. y.name .. [[&quot)">]] .. y.description .. [[</span>]]) or ([[<span style="color: red">No description (<tt>]] .. y.name .. [[</tt>)</span>]])
 			local trstyle = ""
-			if ischild then
---				trstyle = [[ style="background-color: lightgray;"]]
+			if parentname then
+				trstyle = string.format([[ class="childof_%s"]], feature_radio_names[parentname])
+				featuredesc = "&ndash;&nbsp;" .. featuredesc
 			end
+			all_default_values[y.name] = defaultvalue
 			if not y.hidden then
 				table.insert(featurerows, [[<tr data-feature-name="]]..y.name..[["]]..trstyle..[[><td class="tdname">]] .. featuredesc .. [[</td>]] ..
 					[[<td class="tdon"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..onchecked..[[>On</td>]] ..
@@ -238,7 +227,7 @@ local function get_customize_features_page()
 		for _, y in ipairs(grouped[x.name]) do
 			insert_setting_row(y)
 			for _, z in ipairs(children[y.name] or {}) do
-				insert_setting_row(z, true)
+				insert_setting_row(z, y.name)
 			end
 		end
 	end
@@ -266,6 +255,31 @@ local function get_customize_features_page()
 			</style>
 			<script language="Javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
 			<script type="text/javascript">
+var all_default_values = ]] .. table_to_json(all_default_values) .. [[
+
+var all_radio_names = ]] .. table_to_json(all_radio_names) .. [[
+
+function refresh_visibility() {
+	for (var i_ in all_radio_names) {
+		for (var whichradio = 0; whichradio <= 2; whichradio += 1) {
+			var radio = $("[name=" + all_radio_names[i_] + "]")[whichradio]
+			if ($(radio).attr("checked")) {
+				var fname = $($(radio).parents("tr")[0]).attr("data-feature-name")
+				var c = $(radio).parent("td").attr("class")
+				var isenabled = false
+				if (c == "tdon") isenabled = true
+				else if (c == "tddefault" && all_default_values[fname] == "on") isenabled = true
+				if (isenabled) {
+					$(".childof_" + all_radio_names[i_]).show()
+				} else {
+					console.log("hiding " + ".childof_" + all_radio_names[i_])
+					$(".childof_" + all_radio_names[i_]).hide()
+				}
+			}
+		}
+	}
+}
+
 function changed_feature_setting(what) {
 	var setting = $($(what).parents("tr")[0]).attr("data-feature-name")
 	var c = $(what).parent("td").attr("class")
@@ -276,10 +290,11 @@ function changed_feature_setting(what) {
 	} else if (c == "tddefault") {
 		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'', ajax: 1 })
 	}
+	refresh_visibility()
 }
 			</script>
 		</head>
-		<body>]] .. text .. [[
+		<body onload="refresh_visibility()">]] .. text .. [[
 		</body>
 		</html>]]
 	return text

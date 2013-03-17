@@ -299,8 +299,7 @@ add_printer("/closet.php", function()
 	end
 end)
 
-
-local pull_href = add_automation_script("automate-aftercore-pulls", function()
+function automate_aftercore_pulls()
 	local items = {}
 	for which in table.values { 1, 2, 3 } do
 		local pt, pturl = get_page("/storage.php", { which = which })
@@ -325,7 +324,9 @@ local pull_href = add_automation_script("automate-aftercore-pulls", function()
 	repeat_send_form("/storage.php", "pull", "1", params.pwd, itemids)
 
 	return get_page("/storage.php", { which = 5 })
-end)
+end
+
+local pull_href = add_automation_script("automate-aftercore-pulls", automate_aftercore_pulls)
 
 add_printer("/storage.php", function()
 	local pwd = text:match[[name=pwd value='(%x-)']]

@@ -414,7 +414,7 @@ add_printer("/shop.php", function()
 end)
 
 add_printer("/jarlskills.php", function()
-	if text:contains("a complicated-looking plaque") then
+	if text:contains("Jarlsbergin' Around") then
 		text = text:gsub([[<p><A href=da.php>]], function(x)
 			return [[<p><center><a href="javascript:poop('kolproxy-automation-script?pwd=]]..session.pwd..[[&amp;automation-script=custom-cosmic-kitchen','plandinner', 600, 750, 'scrollbars=1')" style="color: green">{ Show dinner planner. }</a></center></p>]] .. x
 		end)

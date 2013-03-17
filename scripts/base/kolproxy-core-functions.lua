@@ -307,6 +307,7 @@ function run_file_with_environment(filename, orgenv, prefillenv, f_notfound)
 		"add_itemdrop_counter",
 		"__raw_add_warning",
 		"__raw_add_extra_warning",
+		"__raw_add_notice",
 		"add_ascension_zone_check",
 		"add_aftercore_zone_check",
 		"add_always_zone_check",
@@ -422,7 +423,7 @@ end
 
 
 function make_kol_html_frame(contents, title, bgcolor)
-	return [[<center><table  width=95%  cellspacing=0 cellpadding=0><tr><td style="color: white;" align=center bgcolor=]] .. (bgcolor or "green") .. [[><b>]] .. (title or "Results:") .. [[</b></td></tr><tr><td style="padding: 5px; border: 1px solid ]]..(bgcolor or "green")..[[;"><center><table><tr><td>]] .. contents .. [[</td></tr></table></center></td></tr><tr><td height=4></td></tr></table></center>]]
+	return [[<center><table  width=95%  cellspacing=0 cellpadding=0><tr><td style="color: white; background-color: ]] .. (bgcolor or "green") .. [[;" align=center><b>]] .. (title or "Results:") .. [[</b></td></tr><tr><td style="padding: 5px; border: 1px solid ]]..(bgcolor or "green")..[[;"><center><table><tr><td>]] .. contents .. [[</td></tr></table></center></td></tr><tr><td height=4></td></tr></table></center>]]
 end
 
 function add_raw_message_to_page(pagetext, msg)

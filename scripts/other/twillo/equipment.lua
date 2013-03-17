@@ -2,15 +2,19 @@ add_processor("/familiar.php", function()
 	session["cached enthroned familiar"] = nil
 end)
 
+function cache_enthroned_familiar()
+	local pt = get_page("/desc_item.php", { whichitem = 239178788 })
+	local line = pt:match([[>Current Occupant.-<br>]])
+	local famtype = line:match("<b>.+, the (.-)</b><br>")
+	if line:match([[<b>Nobody</b>]]) then
+		famtype = "none"
+	end
+	session["cached enthroned familiar"] = famtype
+end
+
 add_automator("all pages", function()
 	if have_equipped("Crown of Thrones") and not session["cached enthroned familiar"] then
-		local pt = get_page("/desc_item.php", { whichitem = 239178788 })
-		local line = pt:match([[>Current Occupant.-<br>]])
-		local famtype = line:match("<b>.+, the (.-)</b><br>")
-		if line:match([[<b>Nobody</b>]]) then
-			famtype = "none"
-		end
-		session["cached enthroned familiar"] = famtype
+		cache_enthroned_familiar()
 	end
 end)
 

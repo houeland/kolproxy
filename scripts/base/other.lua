@@ -19,6 +19,17 @@ end)
 -- adventure mistake warnings
 
 add_always_adventure_warning(function()
+	if have_equipped("Crown of Thrones") then
+		if (session["cached enthroned familiar"] or "none") == "none" then
+			cache_enthroned_familiar()
+		end
+		if session["cached enthroned familiar"] == "none" then
+			return "You might want to put a familiar in your Crown of Thrones.", "familiar in CoT"
+		end
+	end
+end)
+
+add_always_adventure_warning(function()
 	if drunkenness() > estimate_max_safe_drunkenness() then
 		return "You might not want to adventure while this drunk.", "overdrunk"
 	end
@@ -390,7 +401,8 @@ add_ascension_assistance(function() return true end, function()
 end)
 
 -- Pick up free pulls and talk to Toot
-add_ascension_assistance(function() return true end, function()
+local picked_up_free_pulls = false
+add_ascension_assistance(function() return not picked_up_free_pulls end, function()
 	async_post_page("/campground.php", { action = "telescopelow" })
 	if not have_item("Clan VIP Lounge key") then
 		freepull_item("Clan VIP Lounge key")
@@ -401,6 +413,15 @@ add_ascension_assistance(function() return true end, function()
 		freepull_item("Boris's Helm")
 		freepull_item("Boris's Helm (askew)")
 	end
+	if ascensionpath("Avatar of Jarlsberg") and not have_item("Jarlsberg's pan") and not have_item("Jarlsberg's pan (Cosmic portal mode)") then
+		freepull_item("Jarlsberg's pan")
+		freepull_item("Jarlsberg's pan (Cosmic portal mode)")
+	end
+	picked_up_free_pulls = true
+end)
+
+local talked_to_toot = false
+add_ascension_assistance(function() return not talked_to_toot end, function()
 	if level() == 1 then
 		async_get_page("/tutorial.php", { action = "toot" })
 		use_item("letter from King Ralph XI")
@@ -408,6 +429,7 @@ add_ascension_assistance(function() return true end, function()
 			use_item("Newbiesport&trade; tent")
 		end
 	end
+	talked_to_toot = true
 end)
 
 -- Use Cobb's Knob map

@@ -774,6 +774,18 @@ if monstername procrastination giant
   endif
   while !times 5
 ]] .. maybe_belch .. [[
+    if hasskill Slice
+      cast Slice
+    endif
+    if hasskill Fry
+      cast Fry
+    endif
+    if hasskill Grill
+      cast Grill
+    endif
+    if hasskill Boil
+      cast Boil
+    endif
   endwhile
 ]] .. maybe_zombify .. [[
   abort no HC spell for procrastination giant
@@ -808,6 +820,9 @@ if (monstername chalkdust wraith)
   endif
   if hasskill Bilious Burst
     cast Bilious Burst
+  endif
+  if hasskill Curdle
+    cast Curdle
   endif
   cast Heroic Belch
 endif
@@ -1280,6 +1295,40 @@ endif
 ]]..conditional_salve_action()..[[
 
 while !times 3
+]] .. serpent_action() .. [[
+endwhile
+
+]]
+end
+
+function macro_softcore_lfm()
+  local maybe_blackbox = [[
+
+if monstername lobsterfrogman
+  use Rain-Doh black box
+endif
+
+]]
+  if count_item("barrel of gunpowder") >= 4 then
+    maybe_blackbox = ""
+  end
+  return [[
+
+if hascombatitem Rain-Doh indigo cup
+  use Rain-Doh indigo cup
+endif
+
+]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
+
+if hascombatitem Rain-Doh blue balls
+  use Rain-Doh blue balls
+endif
+
+]] .. COMMON_MACROSTUFF_FLYERS .. [[
+
+]] .. maybe_blackbox .. [[
+
+while !times 5
 ]] .. serpent_action() .. [[
 endwhile
 

@@ -74,7 +74,7 @@ local function split_tabbed_line(l)
 end
 
 local function split_commaseparated(l)
-	return split_line_on(",", l)
+	return split_line_on(",", l:gsub(", ", ","))
 end
 
 local function parse_mafia_bonuslist(bonuslist)
@@ -127,6 +127,9 @@ local function parse_mafia_bonuslist(bonuslist)
 		["HP Regen Max"] = "Regenerate maximum HP per adventure",
 		["MP Regen Min"] = "Regenerate minimum MP per adventure",
 		["MP Regen Max"] = "Regenerate maximum MP per adventure",
+
+		["Food Drop"] = "Food Drops from Monsters",
+		["Booze Drop"] = "Booze Drops from Monsters",
 
 		-- TODO: add more modifiers
 	}
@@ -357,7 +360,9 @@ function verify_items(data)
 		if data["Hell ramen"].fullness == 6 and data["water purification pills"].drunkenness == 3 and data["beastly paste"].spleen == 4 then
 			if data["leather chaps"].equip_requirement.moxie == 65 then
 				if data["dried gelatinous cube"].id == 6256 then
-					return data
+					if data["flaming pink shirt"].equipment_slot == "shirt" then
+						return data
+					end
 				end
 			end
 		end

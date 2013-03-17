@@ -32,6 +32,11 @@ function estimate_other_bonuses()
 	return bonuses
 end
 
+function estimate_bonus(name)
+	-- TODO: check for valid name
+	return estimate_modifier_bonuses()[name] or 0
+end
+
 function estimate_modifier_bonuses()
 	local bonuses = {}
 	add_modifier_bonuses(bonuses, estimate_equipment_bonuses())
@@ -65,12 +70,17 @@ add_printer("/charpane.php", function()
 	local adjusted_init = initial_init - ml_init_penalty
 	local meat = bonuses["Meat from Monsters"] or 0
 
+	local foodbonusstr = ""
+	if (bonuses["Food Drops from Monsters"] or 0) ~= 0 then
+		foodbonusstr = string.format(" (%+d%% food)", bonuses["Food Drops from Monsters"] or 0)
+	end
+
 	local uncertaintystr = ""
 	if not have_cached_data() then
 		uncertaintystr = " ?"
 	end
 	print_charpane_value { normalname = "(Non)combat", compactname = "C/NC", value = string.format("%+d%%", com) .. uncertaintystr }
-	print_charpane_value { normalname = "Item drops", compactname = "Item", value = string.format("%+.1f%%", floor_to_places(item, 1)) .. uncertaintystr }
+	print_charpane_value { normalname = "Item drops", compactname = "Item", value = string.format("%+.1f%%", floor_to_places(item, 1)) .. uncertaintystr .. foodbonusstr }
 	print_charpane_value { normalname = "ML", compactname = "ML", value = string.format("%+d", ml) .. uncertaintystr }
 	print_charpane_value { normalname = "Initiative", compactname = "Init", value = string.format("%+d%%", adjusted_init) .. uncertaintystr, tooltip = string.format("%+d%% initiative - %d%% ML penalty = %+d%% combined", initial_init, ml_init_penalty, adjusted_init) }
 	print_charpane_value { normalname = "Meat drops", compactname = "Meat", value = string.format("%+.1f%%", floor_to_places(meat, 1)) .. uncertaintystr }

@@ -304,15 +304,6 @@ equipment_items = {
 	{ false, { "ninja pirate zombie robot head" } },
 }
 
-local function extract_itemdata(itd)
-	local rel = itd:match([[rel=".-"]])
-	local id = tonumber(rel:match("id=([0-9]+)"))
-	local n = tonumber(rel:match("n=([0-9]+)"))
-	local ircmtext = itd:match([[<b class="ircm">(.-)</b>]])
-	local name = ircmtext:match([[<a.->(.-)</a>]]) or ircmtext
-	return name, id, n
-end
-
 function ascension_checklist_get_questitem_text()
 	if not freedralph() then return "" end
 	ordered_items = {}
@@ -355,7 +346,16 @@ local cook_key_href = add_automation_script("custom-ascension-checklist-cook-key
 	end
 end)
 
-local href = add_automation_script("custom-ascension-checklist", function()
+function retrieve_all_item_locations()
+	local function extract_itemdata(itd)
+		local rel = itd:match([[rel=".-"]])
+		local id = tonumber(rel:match("id=([0-9]+)"))
+		local n = tonumber(rel:match("n=([0-9]+)"))
+		local ircmtext = itd:match([[<b class="ircm">(.-)</b>]])
+		local name = ircmtext:match([[<a.->(.-)</a>]]) or ircmtext
+		return name, id, n
+	end
+
 	local inventory = {}
 	local storage = {}
 	local closet = {}
@@ -395,6 +395,11 @@ local href = add_automation_script("custom-ascension-checklist", function()
 			end
 		end
 	end
+	return inventory, storage, closet
+end
+
+local href = add_automation_script("custom-ascension-checklist", function()
+	local inventory, storage, closet = retrieve_all_item_locations()
 
 	sorted_need_text = ""
 	sorted_have_text = ""

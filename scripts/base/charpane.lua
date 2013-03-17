@@ -112,7 +112,7 @@ function print_charpane_lines(text)
 </font>
 ]] end)
 				end
-				text = text:gsub("(<!%-%- kolproxy value printing area %-%->)", function(one) return one .. tr end)
+				text = text:gsub("(<!%-%- kolproxy value printing area %-%->)", function(one) return tr .. one end)
 			end
 		end
 	elseif text:contains("<!-- charpane compact") then -- compact mode

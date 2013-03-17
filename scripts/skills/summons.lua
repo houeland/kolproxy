@@ -23,7 +23,7 @@ end)
 
 add_printer("/skills.php", function()
 	text = text:gsub("Summon BRICKOs", function(x) return x .. string.format(" {%s/3 eyes}", get_daily_counter("skill.summon brickos.eye bricks")) end)
-	text = text:gsub("Summon Party Favor", function(x) return x .. string.format(" {%s rares}", get_daily_counter("skill.summon party favor.rares")) end)
+	text = text:gsub("Summon Party Favor", function(x) return x .. string.format(" {%s}", make_plural(get_daily_counter("skill.summon party favor.rares"), "rare", "rares")) end)
 end)
 
 add_printer("/topmenu.php", function()

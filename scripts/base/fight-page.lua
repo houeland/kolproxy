@@ -29,126 +29,68 @@ add_printer("/fight.php", function()
 	end
 
 	awesome_monsters = {
-		[" Bob Racecar"] = "ketchup hound",
-		["a gaudy pirate"] = "gaudy key",
-		["some zombie waltzers"] = "dance card",
-		["a blur"] = "drum machine",
-		["a rampaging adding machine"] = "64735 scroll",
-		["a cleanly pirate"] = "rigging shampoo",
-		["a creamy pirate"] = "ball polish",
-		["a curmudgeonly pirate"] = "mizzenmast mop",
-		["a dairy goat"] = "goat cheese",
-		["a Brainsweeper"] = "disembodied brain",
-		["a Blooper"] = "white pixel",
-		["a tomb rat"] = "tomb ratchet",
-		["a lobsterfrogman"] = "barrel of gunpowder",
-		["a Hellion"] = "hellion cube",
-		["a dirty old lihc"] = "",
-		["a rampaging adding machine"] = "",
-		["The Astronomer"] = "star chart",
+		["Bob Racecar"] = "ketchup hound",
+		["Racecar Bob"] = "ketchup hound",
+		["gaudy pirate"] = "gaudy key",
+		["zombie waltzers"] = "dance card",
+		["blur"] = "drum machine",
+		["rampaging adding machine"] = "64735 scroll",
+		["cleanly pirate"] = "rigging shampoo",
+		["creamy pirate"] = "ball polish",
+		["curmudgeonly pirate"] = "mizzenmast mop",
+		["dairy goat"] = "goat cheese",
+		["Brainsweeper"] = "disembodied brain",
+		["Blooper"] = "white pixel",
+		["tomb rat"] = "tomb ratchet",
+		["lobsterfrogman"] = "barrel of gunpowder",
+		["Hellion"] = "hellion cube",
+		["dirty old lihc"] = "",
+		["rampaging adding machine"] = "",
+		["Astronomer"] = "star chart",
 	}
-
--- 	other_item_dropping_monsters = {
--- 		["a bar"] = { "bar skin" },
-
--- 		["a drunken rat king"] = { "tangle of rat tails" },
-
--- 		["a baseball bat"] = { "sonar-in-a-biscuit", "baseball" },
--- 		["a briefcase bat"] = { "sonar-in-a-biscuit" },
--- 		["a doughbat"] = { "sonar-in-a-biscuit" },
--- 		["a perpendicular bat"] = { "sonar-in-a-biscuit" },
--- 		["a skullbat"] = { "sonar-in-a-biscuit", "broken skull", "loose teeth" },
--- 		["a vampire bat"] = { "sonar-in-a-biscuit" },
--- 		["a batrat"] = { "sonar-in-a-biscuit" },
--- 		["a ratbat"] = { "sonar-in-a-biscuit" },
--- 		["a beanbat"] = { "enchanted bean", "sonar-in-a-biscuit" },
-
--- 		["an off-duty Knob Goblin Elite Guard"] = { "Knob Goblin elite polearm", "Knob Goblin elite pants" },
--- 		["a Knob Goblin Elite Guard"] = { "Knob Goblin elite helm", "Knob Goblin elite pants" },
--- 		["a Knob Goblin Elite Guard Captain"] = { "Knob Goblin elite helm", "Knob Goblin elite pants", "Knob Goblin elite polearm" },
--- 		["a Knob Goblin Harem Girl"] = { "Knob Goblin harem pants", "Knob Goblin harem veil", "disease" },
--- 		["a Knob Goblin Madam"] = { "Knob Goblin perfume" },
-
--- 		["a G Imp"] = { "hot wing" },
--- 		["a P Imp"] = { "hot wing" },
--- 		["a W Imp"] = { "ruby W", "wussiness potion" },
-
--- 		["a spiny skelelton"] = { "evil eye", "skeleton bone", "smart skull" },
--- 		["a toothy sklelton"] = { "evil eye", "loose teeth", "loose teeth", "skeleton bone" },
--- 		["a giant skeelton"] = { "skeleton bone", "skeleton bone", "skeleton bone" },
--- 		["a senile lihc"] = { "shimmering tendrils" },
--- 		["a slick lihc"] = { "shimmering tendrils" },
--- 		["a corpulent zobmie"] = { "loose teeth", "cranberries", "cranberries" },
--- 		["a grave rober zmobie"] = { "dead guy's watch", "loose teeth", "paranormal ricotta" },
-
--- 		["a 7-Foot Dwarf"] = { "7-Foot Dwarven mattock", "miner's helmet", "miner's pants" },
--- 		["a 7-Foot Dwarf Foreman"] = { "7-Foot Dwarven mattock", "miner's helmet", "miner's pants" },
--- 		["a drunk goat"] = { "bottle of whiskey" },
-
--- 		["a 1335 HaXx0r"] = { "334 scroll" },
--- 		["an Anime Smiley"] = { "334 scroll", "Tasty Fun Good rice candy" },
--- 		["Some Bad ASCII Art"] = { "30669 scroll", "33398 scroll", "334 scroll", "334 scroll" },
--- 		["a Lamz0r n00b"] = { "33398 scroll", "plastic guitar" },
--- 		["a me4t begZ0r"] = { "meat vortex" },
--- 		["a Spam Witch"] = { "30669 scroll" },
--- 		["a XXX pr0n"] = { "lowercase N" },
-
--- 		["an Irritating Series of Random Encounters"] = { "soft green echo eyedrop antidote" },
--- 		["a MagiMechTech MechaMech"] = { "metallic A" },
--- 		["a protagonist"] = { "phonics down", "super-spiky hair gel" },
--- 		["a Quiet Healer"] = { "soft green echo eyedrop antidote" },
--- 		["an Alphabet Giant"] = { "heavy D", "original G" },
--- 		["a Furry Giant"] = { "furry fur" },
--- 		["a Goth Giant"] = { "awful poetry journal", "thin black candle", "Warm Subject gift certificate" },
--- 		["a Possibility Giant"] = { "chaos butterfly", "plot hole" },
--- 		["a Raver Giant"] = { "giant needle", "Mick's IcyVapoHotness Rub", "Angry Farmer candy" },
---		...hits...
---		...lvl11...
---		...lvl12...
--- 	}
 
 	-- yossarian's tools / gremlins, TODO-future: move to lvl12 zone file
 	local drop_uncertainty = {}
 	if fight["gremlin.has tool"] == "yes" then
-		awesome_monsters["a batwinged gremlin"] = "molybdenum hammer"
-		awesome_monsters["an erudite gremlin"] = "molybdenum crescent wrench"
-		awesome_monsters["a spider gremlin"] = "molybdenum pliers"
-		awesome_monsters["a vegetable gremlin"] = "molybdenum screwdriver"
+		awesome_monsters["batwinged gremlin"] = "molybdenum hammer"
+		awesome_monsters["erudite gremlin"] = "molybdenum crescent wrench"
+		awesome_monsters["spider gremlin"] = "molybdenum pliers"
+		awesome_monsters["vegetable gremlin"] = "molybdenum screwdriver"
 	elseif fight["gremlin.has tool"] ~= "no" then
 		if adventure_zone == 182 then
-			awesome_monsters["a batwinged gremlin"] = "molybdenum hammer"
-			drop_uncertainty["a batwinged gremlin"] = true
+			awesome_monsters["batwinged gremlin"] = "molybdenum hammer"
+			drop_uncertainty["batwinged gremlin"] = true
 		elseif adventure_zone == 184 then
-			awesome_monsters["an erudite gremlin"] = "molybdenum crescent wrench"
-			drop_uncertainty["an erudite gremlin"] = true
+			awesome_monsters["erudite gremlin"] = "molybdenum crescent wrench"
+			drop_uncertainty["erudite gremlin"] = true
 		elseif adventure_zone == 183 then
-			awesome_monsters["a spider gremlin"] = "molybdenum pliers"
-			drop_uncertainty["a spider gremlin"] = true
+			awesome_monsters["spider gremlin"] = "molybdenum pliers"
+			drop_uncertainty["spider gremlin"] = true
 		elseif adventure_zone == 185 then
-			awesome_monsters["a vegetable gremlin"] = "molybdenum screwdriver"
-			drop_uncertainty["a vegetable gremlin"] = true
+			awesome_monsters["vegetable gremlin"] = "molybdenum screwdriver"
+			drop_uncertainty["vegetable gremlin"] = true
 		end
 	end
 
 -- 	local color = "darkslategray"
 	local color = nil
 	local extra = ""
-	if awesome_monsters[monster_name] then
+	if awesome_monsters[monstername()] then
 		color = "royalblue"
-		if awesome_monsters[monster_name] ~= "" then
-			local numitems = count(awesome_monsters[monster_name])
+		if awesome_monsters[monstername()] ~= "" then
+			local numitems = count(awesome_monsters[monstername()])
 			if monstername("Blooper") then
 				numitems = count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel"))
 			end
-			if drop_uncertainty[monster_name] then
-				extra = extra .. [[<br><center style="font-size: 75%%; color: green">?? []] .. awesome_monsters[monster_name] .. ":" .. numitems .. "] ??</center>"
+			if drop_uncertainty[monstername()] then
+				extra = extra .. [[<br><center style="font-size: 75%%; color: green">?? []] .. awesome_monsters[monstername()] .. ":" .. numitems .. "] ??</center>"
 			else
-				extra = extra .. [[<br><center style="font-size: 75%%; color: green">[]] .. awesome_monsters[monster_name] .. ":" .. numitems .. "]</center>"
+				extra = extra .. [[<br><center style="font-size: 75%%; color: green">[]] .. awesome_monsters[monstername()] .. ":" .. numitems .. "]</center>"
 			end
 		end
--- 	elseif other_item_dropping_monsters[monster_name] then
+-- 	elseif other_item_dropping_monsters[monstername()] then
 -- 		local dropdata = {}
--- 		for i table.values(other_item_dropping_monsters[monster_name]) do
+-- 		for i table.values(other_item_dropping_monsters[monstername()]) do
 -- 			table.insert(dropdata, i .. ":" .. count(i)
 -- 		end
 -- 		extra = extra .. [[<br><center style="font-size: 75%%; color: gray">[]] .. table.concat(dropdata, ", ") .. [[]</center>]]
@@ -163,34 +105,34 @@ add_printer("/fight.php", function()
 
 	-- TODO-future: this should be in lair.lua
 	local tower_monster_items = {
-		["a Beer Batter"] = "baseball",
-		["a best-selling novelist"] = "plot hole",
-		["a Big Meat Golem"] = "meat vortex",
-		["a Bowling Cricket"] = "sonar-in-a-biscuit",
-		["a Bronze Chef"] = "leftovers of indeterminate origin",
-		["a concert pianist"] = "Knob Goblin firecracker",
-		[" El Diablo"] = "mariachi G-string",
-		["a fancy bath slug"] = "fancy bath salts",
-		["a Flaming Samurai"] = "frigid ninja stars",
-		["a giant fried egg"] = "black pepper",
-		["a Giant Desktop Globe"] = "NG",
-		["a malevolent crop circle"] = "bronzed locust",
-		["a possessed pipe-organ"] = "powdered organs",
-		["a Pretty Fly"] = "spider web",
-		["a Tyrannosaurus Tex"] = "chaos butterfly",
-		["a Vicious Easel"] = "disease",
-		["an Electron Submarine"] = "photoprotoneutron torpedo",
-		["an endangered inflatable white tiger"] = "pygmy blowgun",
-		["an Ice Cube"] = "hair spray",
-		["the darkness"] = "inkwell",
-		["the Fickle Finger of F8"] = "razor-sharp can lid",
+		["Beer Batter"] = "baseball",
+		["best-selling novelist"] = "plot hole",
+		["Big Meat Golem"] = "meat vortex",
+		["Bowling Cricket"] = "sonar-in-a-biscuit",
+		["Bronze Chef"] = "leftovers of indeterminate origin",
+		["concert pianist"] = "Knob Goblin firecracker",
+		["darkness"] = "inkwell",
+		["El Diablo"] = "mariachi G-string",
+		["Electron Submarine"] = "photoprotoneutron torpedo",
+		["endangered inflatable white tiger"] = "pygmy blowgun",
+		["fancy bath slug"] = "fancy bath salts",
+		["Fickle Finger of F8"] = "razor-sharp can lid",
+		["Flaming Samurai"] = "frigid ninja stars",
+		["giant fried egg"] = "black pepper",
+		["Giant Desktop Globe"] = "NG",
+		["Ice Cube"] = "hair spray",
+		["malevolent crop circle"] = "bronzed locust",
+		["possessed pipe-organ"] = "powdered organs",
+		["Pretty Fly"] = "spider web",
+		["Tyrannosaurus Tex"] = "chaos butterfly",
+		["Vicious Easel"] = "disease",
 
-		["a collapsed mineshaft golem"] = "stick of dynamite",
-		["a giant bee"] = "tropical orchid",
-		["an Enraged Cow"] = "barbed-wire fence",
+		["collapsed mineshaft golem"] = "stick of dynamite",
+		["Enraged Cow"] = "barbed-wire fence",
+		["giant bee"] = "tropical orchid",
 	}
-	if tower_monster_items[monster_name] then
-		local item_name = tower_monster_items[monster_name]
+	if tower_monster_items[monstername()] then
+		local item_name = tower_monster_items[monstername()]
 		local item_id = get_itemid(item_name)
 		if have(item_name) then
 			-- TODO: use make_href

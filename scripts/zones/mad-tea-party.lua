@@ -86,4 +86,3 @@ end)
 add_printer("/rabbithole.php", function()
 	text = text:gsub([[</body>]], [[<center><a href="]]..tea_party_href { pwd = session.pwd }..[[" style="color: green">{ Choose hat }</a></center>%0]])
 end)
-
