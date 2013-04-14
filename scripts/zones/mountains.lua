@@ -93,11 +93,13 @@ local function which_to_idx(which)
 	init_remap()
 	return remap_id[which]
 end
+mining_which_to_idx = which_to_idx
 
 local function idx_to_which(idx)
 	init_remap()
 	return remap_id_inverse[idx]
 end
+mining_idx_to_which = idx_to_which
 
 local function are_distant_sparkles_visible(minetext)
 	local x = minetext:match([[<table cellpadding=0 cellspacing=0 border=0 background='http://images.kingdomofloathing.com/otherimages/mine/mine_background.gif'>(.-)</table>]])
@@ -151,7 +153,7 @@ local function get_minestr(minetext, foundtbl)
 	return table.concat(minestrtbl)
 end
 
-local function compute_mine_spoiler(minetext, foundtbl, wantore)
+function compute_mine_spoiler(minetext, foundtbl, wantore)
 	local inputminestr = get_minestr(minetext, foundtbl)
 	local pcond = compute_mine_aggregate_pcond(inputminestr)
 	local values = compute_mine_aggregate_values(wantore, inputminestr, pcond)
@@ -164,7 +166,7 @@ end
 add_automator("/mining.php", function()
 	if not session["trapper.ore"] and not session["trapper.visited"] then
 		get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
-		session["trapper.visited"] = "yes"
+		session["trapper.visited"] = true
 	end
 end)
 
@@ -200,7 +202,7 @@ add_printer("/mining.php", function()
 			pcond, values = compute_mine_spoiler(text, tbl, wantore)
 			local x = text:match([[<table cellpadding=0 cellspacing=0 border=0 background='http://images.kingdomofloathing.com/otherimages/mine/mine_background.gif'>(.-)</table>]])
 			for celltext in x:gmatch([[<td[^>]*>(.-)</td>]]) do
-				which = tonumber(celltext:match([[<a href='mining.php%?mine=[0-9]+&which=([0-9]+)&pwd=[0-9a-f]+'>]]))
+				local which = tonumber(celltext:match([[<a href='mining.php%?mine=[0-9]+&which=([0-9]+)&pwd=[0-9a-f]+'>]]))
 				if which then
 					best_value = math.max(best_value, values[which_to_idx(which)])
 				end
@@ -356,9 +358,9 @@ add_choice_text("Cabin Fever", { -- choice adventure number: 618
 	["Burn this mother-goddamning hotel to the ground."] = { text = "Skip the mystery and light the signal fire", good_choice = true },
 })
 
-add_processor("used item: A-Boo clue", function()
+add_processor("use item: A-Boo clue", function()
 	if text:contains("A-Boo Peak") then
-		ascension["zone.aboo peak.clue active"] = "yes"
+		ascension["zone.aboo peak.clue active"] = true
 	end
 end)
 
@@ -393,7 +395,7 @@ function predict_aboo_peak_banish()
 			local dmgtext = markup_damagetext(accumuldmg)
 			table.insert(msglines, string.format("%d%% (beaten up): %d (%s + %s)", accumulbanish, accumuldmg.cold + accumuldmg.spooky, dmgtext.cold, dmgtext.spooky))
 		end
---		print("DEBUG: accumuldmg", accumuldmg, "accumulbanish", accumulbanish)
+		--print("DEBUG: accumuldmg", accumuldmg, "accumulbanish", accumulbanish)
 	end
 	return accumulbanish, accumuldmg, msglines
 end

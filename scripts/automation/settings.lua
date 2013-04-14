@@ -54,7 +54,6 @@ function get_ascension_automation_settings(want_bonus)
 			"Knob Goblin lunchbox",
 			"chest of the Bonerdagon",
 			"small box", "dead mimic",
--- 			"large box",
 			"canopic jar",
 			"old coin purse", "old leather wallet",
 			"Warm Subject gift certificate",
@@ -64,6 +63,9 @@ function get_ascension_automation_settings(want_bonus)
 			"briefcase",
 			"astral hot dog dinner", "astral six-pack", "carton of astral energy drinks",
 			"CSA discount card",
+		},
+		use_except_one = {
+			"large box",
 		},
 		sell_items = {
 			"baconstone", "hamethyst", "porquoise",
@@ -108,7 +110,6 @@ function get_ascension_automation_settings(want_bonus)
 			"metallic A",
 			"original G",
 		},
-		-- TODO: add a non-hardcoded place to look up equip requirements
 		default_equipment = {
 			hat = {
 				{ name = "silent beret", check = function() return want_bonus.noncombat end },
@@ -141,7 +142,6 @@ function get_ascension_automation_settings(want_bonus)
 				"Misty Robe",
 				"Rain-Doh red wings",
 				"barskin cloak",
-				"vampire cape",
 				"giant gym membership card",
 			},
 			shirt = {
@@ -203,7 +203,8 @@ function get_ascension_automation_settings(want_bonus)
 				"stinky cheese eye",
 				"Mr. Accessory",
 				"Nickel Gamma of Frugality",
-				"observational glasses",
+				{ name = "observational glasses", check = function() return not want_bonus.easy_combat end },
+				"bejeweled pledge pin",
 				"pirate fledges",
 				"Codpiece of the Goblin King",
 				"baconstone pendant",
@@ -220,6 +221,10 @@ function get_ascension_automation_settings(want_bonus)
 			"ice sickle",
 			"haiku katana",
 			"right bear arm",
+			{ name = "Staff of the Standalone Cheese", check = function() return want_bonus.plusinitiative end },
+			{ name = "Staff of the Light Lunch", check = function() return want_bonus.plusinitiative end },
+			{ name = "Staff of the All-Steak", check = function() return want_bonus.easy_combat end },
+			{ name = "Staff of the Cream of the Cream", check = function() return want_bonus.easy_combat end },
 			"Staff of the Staff of Life",
 			"Staff of the All-Steak",
 			"Staff of the Healthy Breakfast",
@@ -248,7 +253,10 @@ function get_ascension_automation_settings(want_bonus)
 			end
 		elseif type(x) == "table" then
 			if have(x.name) and x.check and x.check() and can_equip_item(x.name) then
-				itemname = x.name
+				if want_bonus.easy_combat and datafile("items")[x.name] and ((datafile("items")[x.name].equip_bonuses or {})["Monster Level"] or 0) > 0 then
+				else
+					itemname = x.name
+				end
 			end
 		end
 		return itemname

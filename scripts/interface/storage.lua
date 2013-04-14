@@ -45,6 +45,8 @@ aftercore_items_list = {
 	"stainless steel suspenders",
 
 	"aerated diving helmet",
+	"fishy pipe",
+
 	"bounty-hunting helmet",
 	"bounty-hunting rifle",
 	"bounty-hunting pants",

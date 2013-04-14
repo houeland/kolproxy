@@ -53,6 +53,9 @@ if hascombatitem rock band flyers
   if (hasskill Broadside) && (!hascombatitem Rain-Doh blue balls)
     cast Broadside
   endif
+  if (hasskill Blend) && (!hascombatitem Rain-Doh blue balls)
+    cast Blend
+  endif
   use rock band flyers
 endif
 
@@ -708,6 +711,10 @@ goto start_loop
 end
 
 function macro_hardcore_boris(extrastuff)
+  local hplevel = 35
+  if challenge == "jarlsberg" then
+    hplevel = 10
+  end
   local maybe_bellow = [[
 
 ]]
@@ -758,7 +765,7 @@ endif
   end
   return [[
 
-]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
+]] .. COMMON_MACROSTUFF_START(20, hplevel) .. [[
 
 ]] .. maybe_broadside .. [[
 
@@ -906,6 +913,9 @@ sub stall
 endsub
 
 sub do_yellowray
+  if hascombatitem unbearable light
+    use unbearable light
+  endif
   while !times 15
 	if match "yellow eye"
 	  cast Point at your opponent

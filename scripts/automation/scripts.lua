@@ -231,12 +231,15 @@ function get_automation_scripts(cached_stuff)
 				if have_skill("Song of Solitude") then
 					want_bonus.boris_song = "Song of Solitude"
 				end
+				want_bonus.jarlsberg_sphere = "Chocolatesphere"
 			elseif t == "combat" then
 				want_bonus.combat = true
 				if have_skill("Song of Battle") then
 					want_bonus.boris_song = "Song of Battle"
 				end
+				want_bonus.jarlsberg_sphere = "Coffeesphere"
 			elseif t == "easy combat" then
+				want_bonus.easy_combat = true
 				want_bonus.boris_song = "Song of Accompaniment"
 				if have_intrinsic("Overconfident") then
 					set_result(script.cast_buff("Pep Talk"))
@@ -244,6 +247,8 @@ function get_automation_scripts(cached_stuff)
 				if have_intrinsic("Overconfident") then
 					critical "Failed to remove Overconfident"
 				end
+				want_bonus.jarlsberg_sphere = "Oilsphere"
+				set_mcd(0)
 			elseif t == "initiative" then
 				want_bonus.plusinitiative = true
 			else
@@ -321,8 +326,9 @@ function get_automation_scripts(cached_stuff)
 		local hermitpt = get_page("/hermit.php")
 		if hermitpt:contains("left in stock") then
 			inform "trading for clover"
+			local c = count_item("ten-leaf clover")
 			result, resulturl = post_page("/hermit.php", { action = "trade", whichitem = get_itemid("ten-leaf clover"), quantity = 1 })
-			if count("ten-leaf clover") == 0 then
+			if count_item("ten-leaf clover") <= c then
 				critical "Failed to trade for ten-leaf clover"
 			end
 			if ascensionpathid() == 4 then
@@ -330,7 +336,7 @@ function get_automation_scripts(cached_stuff)
 			else
 				use_item("ten-leaf clover")
 			end
-			if count("ten-leaf clover") > 0 then
+			if count("ten-leaf clover") > c then
 				critical "Failed to hide ten-leaf clover"
 			end
 			did_action = true
@@ -340,10 +346,20 @@ function get_automation_scripts(cached_stuff)
 
 	function f.use_and_sell_items()
 		local use_items = get_ascension_automation_settings().use_items
+		local use_except_one = get_ascension_automation_settings().use_except_one
 
 		-- TODO: don't use wallets on fist path
 		for w in table.values(use_items) do
 			if have(w) then
+				if count(w) >= 100 then
+					stop("Somehow have 100+ of " .. tostring(w) .. " when trying to use items")
+				end
+				set_result(use_item(w))
+				did_action = true
+			end
+		end
+		for w in table.values(use_except_one) do
+			if count_item(w) >= 2 then
 				if count(w) >= 100 then
 					stop("Somehow have 100+ of " .. tostring(w) .. " when trying to use items")
 				end
@@ -592,6 +608,19 @@ function get_automation_scripts(cached_stuff)
 		end
 	end
 
+	function f.force_heal_up()
+		f.heal_up()
+		if hp() < maxhp() then
+			use_hottub()
+		end
+		if hp() < maxhp() then
+			post_page("/galaktik.php", { action = "curehp", pwd = get_pwd(), quantity = maxhp() - hp() })
+			if hp() < maxhp() then
+				stop("Failed to reach full HP using galaktik")
+			end
+		end
+	end
+
 	local buffs = {
 		["Go Get 'Em, Tiger!"] = function()
 			buy_item("Ben-Gal&trade; Balm", "m", 5)
@@ -639,6 +668,9 @@ function get_automation_scripts(cached_stuff)
 		["Simply Invisible"] = function()
 			return use_item("invisibility potion")
 		end,
+		["Standard Issue Bravery"] = function()
+			return use_item("CSA bravery badge")
+		end,
 		["Brother Flying Burrito's Blessing"] = function()
 			return async_post_page("/friars.php", { pwd = get_pwd(), action = "buffs", bro = 1 })
 		end,
@@ -656,6 +688,23 @@ function get_automation_scripts(cached_stuff)
 		end,
 		["Hustlin'"] = function()
 			return async_get_page("/clan_viplounge.php", { preaction = "poolgame", stance = 3 })
+		end,
+		["Silent Running"] = function()
+			return async_post_page("/clan_viplounge.php", { preaction = "goswimming", subaction = "submarine" })
+		end,
+		["Lapdog"] = function()
+			return async_post_page("/clan_viplounge.php", { preaction = "goswimming", subaction = "laps" })
+		end,
+		["Pisces in the Skyces"] = function()
+			if not have("tobiko marble soda") then
+				script.ensure_mp(5)
+				cast_skill("Summon Alice's Army Cards")
+				async_get_page("/forestvillage.php")
+				async_get_page("/gamestore.php")
+				async_get_page("/gamestore.php", { place = "cashier" })
+				async_post_page("/gamestore.php", { action = "buysnack", whichsnack = get_itemid("tobiko marble soda") })
+			end
+			return use_item("tobiko marble soda")
 		end,
 		["Cat-Alyzed"] = function()
 			if cached_stuff.used_hatter_buff_today then return end
@@ -767,6 +816,10 @@ function get_automation_scripts(cached_stuff)
 			end
 			if want_bonus.clancy_item and have(want_bonus.clancy_item) then
 				use_item(want_bonus.clancy_item)
+			end
+		elseif ascensionpath("Avatar of Jarlsberg") and not ignore_buffing_and_outfit then
+			if want_bonus.jarlsberg_sphere and have_skill(want_bonus.jarlsberg_sphere) then
+				table.insert(xs, want_bonus.jarlsberg_sphere)
 			end
 		end
 		if not even_in_fist and not ignore_buffing_and_outfit then
@@ -1055,8 +1108,9 @@ function get_automation_scripts(cached_stuff)
 			if turnsthisrun() == tonumber(b) then
 				print "  checking for SR"
 
-				local lastsemi = ascension["last semirare encounter"]
-				local lastturn = ascension["last semirare turn"]
+				local ls = ascension["last semirare"] or {}
+				local lastsemi = ls.encounter
+				local lastturn = ls.turn
 
 				if (turnsthisrun() < 70) or (lastturn and lastturn + 159 > turnsthisrun()) then
 					print("  skipping impossible SR", b, turnsthisrun(), "last", lastsemi, lastturn)
@@ -1344,10 +1398,71 @@ endif
 	end
 
 	function f.eat_food(whichday)
+		if ascension_script_option("eat manually") then return end
 		if challenge == "fist" then return end
 		if challenge == "boris" then return end
 		if challenge == "zombie" then return end
-		if challenge == "jarlsberg" then return end
+		if challenge == "jarlsberg" then
+			if fullness() == estimate_max_fullness() then
+				return
+			elseif estimate_max_fullness() == 15 and fullness() == 0 and have_skill("Conjure Meat Product") and have_skill("Slice") and have_skill("Conjure Cheese") and have_skill("Fry") then
+				if count_item("Ultimate Breakfast Sandwich") >= 2 and count_item("consummate sauerkraut") >= 1 then
+					if not have_skill("The Most Important Meal") then
+						return
+					end
+					if not ascensionstatus("Hardcore") then
+						script.ensure_buffs { "Got Milk" }
+					end
+					eat_item("Ultimate Breakfast Sandwich")
+					eat_item("Ultimate Breakfast Sandwich")
+					eat_item("consummate sauerkraut")
+					if fullness() == 15 then
+						return f.eat_food(whichday)
+					else
+						critical "Failed to eat food"
+					end
+				elseif count_item("cosmic egg") >= 2 and count_item("cosmic potted meat product") >= 2 and count_item("cosmic cheese") >= 2 and count_item("cosmic dough") >= 2 and count_item("cosmic vegetable") >= 1 then
+					craft_cosmic_kitchen { pwd = session.pwd, ["Ultimate Breakfast Sandwich"] = 2, ["consummate sauerkraut"] = 1 }
+					shop_buyitem({ ["Staff of Fruit Salad"] = 1, ["Staff of the Healthy Breakfast"] = 1, ["Staff of the Hearty Dinner"] = 1, ["Staff of the Light Lunch"] = 1, ["Staff of the All-Steak"] = 1, ["Staff of the Cream of the Cream"] = 1, ["Staff of the Staff of Life"] = 1, ["Staff of the Standalone Cheese"] = 1 }, "jarl")
+					if count_item("Ultimate Breakfast Sandwich") >= 2 and count_item("consummate sauerkraut") >= 1 then
+						return f.eat_food(whichday)
+					else
+						critical "Failed to cook food"
+					end
+				elseif have_skill("Food Coma") then
+					if maxmp() < 30 then
+						stop "TODO: Buff maxmp (use +100 from clip art?)"
+					end
+					local function r()
+						if mp() < 30 then
+							get_page("/campground.php", { action = "rest" })
+						end
+					end
+					r() cast_skill("Conjure Meat Product")
+					r() cast_skill("Conjure Cheese")
+					r() cast_skill("Conjure Dough")
+					r() cast_skill("Conjure Potato")
+					r() cast_skill("Conjure Vegetables")
+					r() cast_skill("Conjure Eggs")
+					if level() <= 3 then
+						r() cast_skill("Hippotatomous")
+					else
+						r() cast_skill("Egg Man")
+					end
+					r() cast_skill("Conjure Cream")
+					r() cast_skill("Conjure Fruit")
+					if count_item("cosmic egg") >= 2 and count_item("cosmic potted meat product") >= 2 and count_item("cosmic cheese") >= 2 and count_item("cosmic dough") >= 2 and count_item("cosmic vegetable") >= 1 then
+						return f.eat_food(whichday)
+					else
+						critical "Failed to conjure cosmic ingredients"
+					end
+				else
+					stop "TODO: Conjure cosmic ingredients"
+				end
+			elseif cached_stuff.trained_jarlsberg_skills_level == level() then
+				stop "TODO: Eat food in jarlsberg"
+			end
+		end
 		if highskill_at_run then return end
 		if ascensionstatus() ~= "Hardcore" then return end
 -- 		TODO: handle without explicitly checking day
@@ -1514,10 +1629,35 @@ endif
 -- 			end
 -- 			return false
 -- 		end
+		if ascension_script_option("eat manually") then return end
 		if challenge == "fist" then return end
 		if challenge == "boris" then return end
 		if challenge == "zombie" then return end
-		if challenge == "jarlsberg" then return end
+		if challenge == "jarlsberg" then
+			if estimate_max_safe_drunkenness() == 19 and drunkenness() == 0 and have_skill("Blend") and have_skill("Freeze") and have_skill("Bake") and have_skill("Fry") then
+				if count_item("Bologna Lambic") >= 2 and count_item("Chunky Mary") >= 2 and count_item("Nachojito") >= 1 and count_item("Le Roi") >= 1 and count_item("Over Easy Rider") >= 1 then
+					drink_item("Bologna Lambic")
+					drink_item("Bologna Lambic")
+					drink_item("Chunky Mary")
+					drink_item("Nachojito")
+					drink_item("Le Roi")
+					drink_item("Over Easy Rider")
+					if drunkenness() == 19 then
+						return f.drink_booze(whichday)
+					else
+						critical "Failed to drink booze"
+					end
+				elseif count_item("cosmic egg") >= 1 and count_item("cosmic fruit") >= 3 and count_item("cosmic potted meat product") >= 2 and count_item("cosmic potato") >= 3 and count_item("cosmic cheese") >= 1 and count_item("cosmic vegetable") >= 2 and count_item("cosmic dough") >= 2 then
+					craft_cosmic_kitchen { pwd = session.pwd, ["Bologna Lambic"] = 2, ["Chunky Mary"] = 2, ["Nachojito"] = 1, ["Le Roi"] = 1, ["Over Easy Rider"] = 1 }
+					if count_item("Bologna Lambic") >= 2 and count_item("Chunky Mary") >= 2 and count_item("Nachojito") >= 1 and count_item("Le Roi") >= 1 and count_item("Over Easy Rider") >= 1 then
+						return f.drink_booze(whichday)
+					else
+						critical "Failed to mix booze"
+					end
+				end
+			end
+			return
+		end
 		if highskill_at_run then return end
 		if ascensionstatus() ~= "Hardcore" then return end
 		if whichday == 1 then
@@ -1889,9 +2029,13 @@ endif
 -- 		error "TODO use PADL"
 		use_dancecard()
 		function macro_battlefield()
+			local geys = macro_noodlegeyser(3)
+			if type(geys) ~= "string" then
+				geys = geys()
+			end
 			return [[
 if monstername green ops
-]] .. macro_noodlegeyser(3) .. [[
+]] .. geys .. [[
 
   goto m_done
 endif
@@ -1940,7 +2084,14 @@ mark m_done
 						stop "TODO: Fight hippy boss in Boris"
 					end
 				elseif challenge == "jarlsberg" then
-					stop "TODO: Fight hippy boss in AoJ"
+					async_post_page("/campground.php", { action = "telescopehigh" })
+					script.maybe_ensure_buffs { "Mental A-cue-ity", "Pisces in the Skyces" }
+					script.ensure_buffs { "Go Get 'Em, Tiger!", "Butt-Rock Hair" }
+					script.force_heal_up()
+					if have_buff("Mental A-cue-ity") and have_buff("Pisces in the Skyces") and hp() / maxhp() >= 0.9 and have_skill("Blend") then
+					else
+						stop "TODO: Fight hippy boss in AoJ"
+					end
 				end
 				ensure_mp(150)
 				ensure_buffs { "Jalape&ntilde;o Saucesphere", "Jaba&ntilde;ero Saucesphere", "Spirit of Garlic", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
@@ -2493,15 +2644,17 @@ endif
 			end
 			if challenge and (not buff("Super Structure") or not have_skill("Tao of the Terrapin")) then
 				script.bonus_target { "easy combat" }
-				if not have_buff("Standard Issue Bravery") and have_item("CSA bravery badge") then
-					use_item("CSA bravery badge")
-				end
+				script.maybe_ensure_buffs { "Standard Issue Bravery" }
+				script.ensure_buffs { "Go Get 'Em, Tiger!", "Butt-Rock Hair" }
 			end
 			inform(i)
 			ensure_buffs { "Spirit of Bacon Grease", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
 			fam "Frumious Bandersnatch"
 			wear {}
-			f.heal_up()
+			script.heal_up()
+			if challenge and (not buff("Super Structure") or not have_skill("Tao of the Terrapin")) then
+				script.force_heal_up()
+			end
 			ensure_mp(60)
 			result, resulturl, did_action = autoadventure { zoneid = z, macro = m, ignorewarnings = true }
 		else
@@ -2514,6 +2667,25 @@ endif
 				did_action = true
 			end
 		end
+	end
+
+	function f.get_mining_whichid()
+		result, resulturl = get_page("/mining.php", { mine = 1 })
+		local tbl = ascension["mining.results.1"] or {}
+		local trapper_wants = { asbestos = "2", chrome = "3", linoleum = "1" }
+		local wantore = trapper_wants[session["trapper.ore"]]
+		local pcond, values = compute_mine_spoiler(result, tbl, wantore)
+		local x = result:match([[<table cellpadding=0 cellspacing=0 border=0 background='http://images.kingdomofloathing.com/otherimages/mine/mine_background.gif'>(.-)</table>]])
+		local best_value = -1000
+		local best_which = nil
+		for celltext in x:gmatch([[<td[^>]*>(.-)</td>]]) do
+			local which = tonumber(celltext:match([[<a href='mining.php%?mine=[0-9]+&which=([0-9]+)&pwd=[0-9a-f]+'>]]))
+			if which and values[mining_which_to_idx(which)] > best_value then
+				best_value = values[mining_which_to_idx(which)]
+				best_which = which
+			end
+		end
+		return best_which
 	end
 
 	function f.do_trapper_quest()
@@ -2539,15 +2711,16 @@ endif
 				end
 				go("get goat cheese for trapper", 271, make_cannonsniff_macro("dairy goat"), nil, bufftbl, famchoice, 35, { olfact = "dairy goat" })
 			elseif (challenge == "fist") or (have_item("miner's helmet") and have_item("7-Foot Dwarven mattock") and have_item("miner's pants")) then
-				inform "TODO: mine for ore"
 				if challenge == "fist" then
 					ensure_buffs { "Earthen Fist" }
 				else
 					wear { hat = "miner's helmet", weapon = "7-Foot Dwarven mattock", pants = "miner's pants" }
 				end
-				result, resulturl = get_page("/mining.php", { mine = 1 })
-				result = add_colored_message_to_page(get_result(), "TODO: get 3x " .. (session["trapper.ore"] or "unknown") .. " ore, then run script again", "darkorange")
-				did_action = false
+				local best_which = script.get_mining_whichid()
+				inform("mine for ore [tile " .. tostring(best_which) .. "]")
+				script.heal_up()
+				set_result(get_page("/mining.php", { mine = 1, which = best_which, pwd = session.pwd }))
+				did_action = script.get_mining_whichid() ~= best_which
 			elseif not ascensionstatus("Hardcore") then
 				local want_ore = trappercabin:match("fix the lift until you bring me that cheese and ([a-z]+ ore)")
 				local got = count_item(want_ore)
@@ -3150,6 +3323,10 @@ endif
 		if not challenge then
 			maybe_ensure_buffs { "Mental A-cue-ity" }
 		end
+		if ascensionpath("Avatar of Jarlsberg") and tonumber(status().jarlcompanion) ~= 1 and have_skill("Egg Man") and have_item("cosmic egg") then
+			script.ensure_mp(15)
+			cast_skill("Egg Man")
+		end
 		if not have("Azazel's lollipop") then
 			if count("imp air") >= 5 and have("observational glasses") then
 				inform "solve mourn"
@@ -3246,7 +3423,11 @@ mark m_done
 					use_item("disassembled clover")
 				end
 				if have("ten-leaf clover") then
-					if not buff("Super Structure") and have("Greatest American Pants") then
+					script.ensure_buffs { "Astral Shell" }
+					if not get_resistance_levels().stench then
+						script.maybe_ensure_buffs { "Elemental Saucesphere", "Oilsphere" }
+					end
+					if not get_resistance_levels().stench and not buff("Super Structure") and have_item("Greatest American Pants") then
 						wear { pants = "Greatest American Pants" }
 						script.get_gap_buff("Super Structure")
 					end
@@ -3527,6 +3708,7 @@ endif
 			maybe_ensure_buffs { "Mental A-cue-ity" }
 			zone_stasis_macro = macro_noodlecannon
 		end
+		script.maybe_ensure_buffs { "Silent Running" }
 		script.bonus_target { "noncombat", "item" }
 		if fullness() + count("hellion cube") * 6 + 6 <= estimate_max_fullness() and ascensionstatus() == "Hardcore" and challenge ~= "zombie" then
 			go("getting hellion cubes", 239, make_cannonsniff_macro("Hellion"), nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
@@ -3690,6 +3872,10 @@ endif
 	end
 
 	function f.do_castle()
+		if ascension_script_option("manual castle quest") then
+			stop "STOPPED: Ascension script option set to do castle quest manually" 
+		end
+
 		script.bonus_target { "noncombat", "item" }
 		castlego(script.unlock_top_floor, "finish castle quest", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
 			if advtitle == "Copper Feel" then
@@ -3728,6 +3914,10 @@ endif
 	end
 
 	function f.unlock_hits()
+		if ascension_script_option("manual castle quest") then
+			stop "STOPPED: Ascension script option set to do castle quest manually" 
+		end
+
 		script.bonus_target { "noncombat", "item" }
 		castlego(script.unlock_top_floor, "unlock hits", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
 			if advtitle == "Copper Feel" then
@@ -4250,6 +4440,8 @@ endif
 				f.want_familiar "Exotic Parrot"
 				ensure_buffs { "Astral Shell", "Leash of Linguini", "Empathy" }
 				maybe_ensure_buffs_in_fist { "Astral Shell" }
+				if get_page("/charsheet.php"):contains([[<td align=right>]]..element..[[ Protection:</td>]]) then return true end
+				maybe_ensure_buffs { "Oilsphere" }
 				if get_page("/charsheet.php"):contains([[<td align=right>]]..element..[[ Protection:</td>]]) then return true end
 				return false, "No " .. element .. " Protection"
 			end

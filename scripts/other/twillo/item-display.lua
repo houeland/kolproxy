@@ -8,6 +8,12 @@ add_processor("/inv_equip.php", function()
 	session["cached stinky cheese eye bonus"] = nil
 end)
 
+add_processor("/choice.php", function()
+	if text:contains("snow suit") then
+		session["cached Snow Suit bonus"] = nil
+	end
+end)
+
 add_automator("all pages", function()
 	if have_equipped("stinky cheese eye") and not session["cached stinky cheese eye bonus"] then
 		local pt = get_page("/desc_item.php", { whichitem = 548672093 })
@@ -21,6 +27,17 @@ add_automator("all pages", function()
 		local pt = get_page("/desc_item.php", { whichitem = 253195678 })
 		local bonus = pt:match([[>%+([0-9]+)%% Item Drops from Monsters<]])
 		session["cached Jekyllin hide belt bonus"] = bonus
+	end
+end)
+
+add_automator("all pages", function()
+	if have_equipped("Snow Suit") and not session["cached Snow Suit bonus"] then
+		local pt = get_page("/charpane.php")
+		if pt:contains("/snowface3.gif") then
+			session["cached Snow Suit bonus"] = 10
+		else
+			session["cached Snow Suit bonus"] = 0
+		end
 	end
 end)
 

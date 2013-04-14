@@ -2,6 +2,7 @@ load_file("base", "base/settings-page.lua")
 load_file("base", "base/fight-page.lua")
 load_file("base", "base/other.lua")
 load_file("base", "base/mafiaexpression-evaluator.lua")
+load_file("base", "base/npc-stores.lua")
 
 load_file("data", "data/mine-aggregate-prediction.lua")
 
@@ -17,6 +18,7 @@ load_file("interface", "interface/pulverize-groups.lua")
 load_file("interface", "interface/semirare.lua")
 load_file("interface", "interface/shop-item-count.lua")
 load_file("interface", "interface/cosmic-kitchen.lua")
+load_file("interface", "interface/modifier-maximizer.lua")
 
 load_file("item", "items/scary-copying.lua")
 load_file("item", "items/fly-away.lua")

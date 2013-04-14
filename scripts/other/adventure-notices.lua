@@ -57,3 +57,19 @@ add_warning {
 		end
 	end
 }
+
+local have_war_quest = nil
+add_warning {
+	message = "You do not have the quest to start the war.",
+	severity = "warning",
+	when = "ascension",
+	check = function(zoneid)
+		if have_war_quest then return end
+		if zoneid == 26 or zoneid == 27 or zoneid == 131 or zoneid == 133 or zoneid == 134 or zoneid == 135 then
+			if level() >= 12 then
+				have_war_quest = get_page("/questlog.php", { which = 1 }):contains("<b>Make War, Not")
+				return not have_war_quest
+			end
+		end
+	end
+}

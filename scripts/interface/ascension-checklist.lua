@@ -83,6 +83,8 @@ consumable_items_high_impact = {
 	{ 1, { "Black No. 2" } },
 
 	{ 3, { "hot wing" } },
+
+	{ 6, { "smut orc keepsake box" } },
 }
 
 consumable_items_normal_impact = {
@@ -282,7 +284,7 @@ equipment_items = {
 	{ false, { "spangly mariachi pants" } },
 	{ false, { "quake of arrows" } },
 
-	{ false, { "Spooky Putty leotard", "Spooky Putty mitre", "Spooky Putty sheet", "Spooky Putty snake" } },
+	{ false, { "Spooky Putty leotard", "Spooky Putty mitre", "Spooky Putty sheet", "Spooky Putty snake", "Spooky Putty monster" } },
 	{ false, { "moveable feast" } },
 	{ false, { "jewel-eyed wizard hat" } },
 	{ false, { "stinky cheese ball", "stinky cheese sword", "stinky cheese diaper", "stinky cheese wheel", "stinky cheese eye", "Staff of Queso Escusado" } },

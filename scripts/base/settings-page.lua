@@ -408,6 +408,7 @@ add_printer("/custom-settings", function()
 			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-choose-mad-tea-party-hat&pwd=]]..session.pwd..[[">Choose hat for mad tea party</a></center></td></tr>
 			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-mix-drinks&pwd=]]..session.pwd..[[">List advanced cocktails you can craft (preview)</a></center></td></tr>
 			<tr><td><center><a href="kolproxy-automation-script?automation-script=display-tracked-variables&pwd=]]..session.pwd..[[">Display tracked game variables (preview)</a></center></td></tr>
+			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-modifier-maximizer&pwd=]]..session.pwd..[[">Modifier maximizer (preview)</a></center></td></tr>
 			<tr><td><center><a href="http://www.houeland.com/kolproxy/wiki/" target="_blank">Kolproxy documentation</a> (opens in a new tab)</center></td></tr>
 			</td></tr></table></center>
 ]], "Kolproxy special pages") .. make_kol_html_frame([[

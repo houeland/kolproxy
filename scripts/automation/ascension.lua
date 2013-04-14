@@ -80,6 +80,10 @@ local function automate_hcnp_day(whichday)
 		return not buff("Everything Looks Yellow")
 	end
 
+	local function can_photocopy()
+		return true
+	end
+
 	local function unlocked_beach()
 		return have_item("bitchin' meatcar") or have_item("Desert Bus pass") or have_item("pumpkin carriage")
 	end
@@ -111,15 +115,6 @@ local function automate_hcnp_day(whichday)
 		challenge = "trendy"
 		serpent_action = geyser_action
 		function make_yellowray_macro(name)
-			if not have("unbearable light") then -- TODO: Don't do this here!
-				-- TODO: do this if we don't have a boulder for any reason, not just trendy
-				inform "summoning unbearable light (no he-boulder in trendy)"
-				async_post_page("/campground.php", { preaction = "summoncliparts" })
-				async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "06", clip2 = "06", clip3 = "06" })
-			end
-			if not have("unbearable light") then
-				critical "No he-boulder in trendy, and failed to summon unbearable light"
-			end
 			return [[
 ]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
 sub stall
@@ -159,7 +154,7 @@ mark m_done
 		macro_noodleserpent = macro_softcore_boris
 		macro_barrr = macro_softcore_boris
 		macro_spookyraven = macro_softcore_boris
-		function macro_noodlegeyser() return macro_softcore_boris() end
+		function macro_noodlegeyser() return macro_softcore_boris end
 		make_gremlin_macro = macro_softcore_boris_gremlin
 		function noodles_action()
 			return [[
@@ -215,6 +210,8 @@ endif
 				else
 					return macro_softcore_boris()
 				end
+			elseif name == "morbid skull" then
+				return macro_softcore_boris()
 			else
 				critical("Trying to sniff " .. name .. " in Boris")
 			end
@@ -265,7 +262,7 @@ endif
 		macro_noodleserpent = macro_softcore_zombie
 		macro_barrr = macro_softcore_zombie
 		macro_spookyraven = macro_softcore_zombie
-		function macro_noodlegeyser() return macro_softcore_zombie() end
+		function macro_noodlegeyser() return macro_softcore_zombie end
 		function make_cannonsniff_macro(name)
 			return macro_softcore_zombie()
 		end
@@ -284,17 +281,38 @@ endif
 		macro_noodleserpent = macro_softcore_boris
 		macro_barrr = macro_softcore_boris
 		macro_spookyraven = macro_softcore_boris
-		function macro_noodlegeyser() return macro_softcore_boris() end
+		function macro_noodlegeyser() return macro_softcore_boris end
 		make_gremlin_macro = macro_softcore_boris_gremlin
 
 		boris_action = function()
 			local killspell = ""
 			local maybe_jiggle = ""
 			local cfm = getCurrentFightMonster()
+			local monster_element = ""
+			local physresist = 0
+			local cfmhp = 10
+			local cfmatt = 10
 			if cfm and cfm.Stats and cfm.Stats.Element then
 				monster_element = cfm.Stats.Element
 			end
-			if (level() >= 7 or mp() >= 25) and monster_element ~= "hot" then
+			if cfm and cfm.Stats and cfm.Stats.Phys then
+				physresist = tonumber(cfm.Stats.Phys)
+			end
+			if cfm and cfm.Stats and cfm.Stats.HP then
+				cfmhp = tonumber(cfm.Stats.HP)
+			end
+			if cfm and cfm.Stats and cfm.Stats.Atk then
+				cfmatt = tonumber(cfm.Stats.Atk)
+			end
+			if (mp() >= 20 and have_skill("Slice")) and cfmhp >= 90 and physresist == 0 and (cfmatt > buffedmoxie() + 30) then
+				killspell = [[
+
+if hasskill Slice
+  cast Slice
+endif
+
+]]
+			elseif (level() >= 7 or mp() >= 25) and monster_element ~= "hot" then
 				killspell = [[
 
 if hasskill Boil
@@ -327,7 +345,7 @@ endif
 
 ]]
 			end
-			if false then -- TODO
+			if have_equipped_item("Staff of the Healthy Breakfast") then
 				maybe_jiggle = [[
 
 jiggle
@@ -469,6 +487,24 @@ endif
 			end
 		end
 		return unpack(ret)
+	end
+
+	local tried_to_summon_unbearable_light = false
+	local function ensure_yellow_ray()
+		if not can_yellow_ray() then
+			return false
+		end
+		if script.have_familiar("He-Boulder") then
+			return true
+		end
+		if not have("unbearable light") and not tried_to_summon_unbearable_light then
+			inform "summoning unbearable light (no he-boulder)"
+			script.ensure_mp(5)
+			async_post_page("/campground.php", { preaction = "summoncliparts" })
+			async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "06", clip2 = "06", clip3 = "06" })
+			tried_to_summon_unbearable_light = true
+		end
+		return have_item("unbearable light")
 	end
 
 	local tasks_list = {}
@@ -1233,6 +1269,71 @@ endif
 	}
 
 	add_task {
+		when = challenge == "jarlsberg" and cached_stuff.trained_jarlsberg_skills_level ~= level(),
+		task = {
+			message = "train jarlsberg skill",
+			nobuffing = true,
+			action = function()
+				local function get_available_points()
+					local jarlspt = get_page("/da.php", { place = "gate2" })
+					return tonumber(jarlspt:match("You have ([0-9]*) skill point")) or 0
+				end
+				local points = get_available_points()
+				if points <= 0 then
+					cached_stuff.trained_jarlsberg_skills_level = level()
+					did_action = true
+				else
+					if ascension_script_option("train skills manually") then
+						stop "STOPPED: Ascension script option set to train skills manually"
+					end
+					local skill_list = {
+						"Bake",
+						"Conjure Potato",
+						"Hippotatomous",
+						"Boil",
+						"Conjure Vegetables",
+						"Chop",
+						"Slice",
+						"Conjure Meat Product",
+						"Conjure Eggs",
+						"Conjure Dough",
+						"Conjure Cheese",
+						"Fry",
+						"Lunch Like a King",
+						"Food Coma",
+						"The Most Important Meal",
+						"Never Late for Dinner",
+						"Coffeesphere",
+						"Egg Man",
+						"Working Lunch",
+						"Oilsphere",
+						"Conjure Fruit",
+						"Best Served Cold",
+						"Freeze",
+						"Nightcap",
+						"Conjure Cream",
+						"Blend",
+						"Cream Puff",
+						"Chocolatesphere",
+						"Grill",
+						"Gristlesphere",
+						"Early Riser",
+						"Radish Horse",
+					}
+					for _, x in ipairs(skill_list) do
+						async_get_page("/jarlskills.php", { action = "getskill", getskid = datafile("skills")[x].skillid })
+					end
+					if get_available_points() < points then
+						did_action = true
+					else
+						critical "Tried to learn Jarlsberg skills"
+					end
+				end
+			end
+		}
+	}
+
+	add_task {
 		when = challenge == "boris" and ascensionstatus() ~= "Hardcore" and meat() >= 3000 and buffturns("Go Get 'Em, Tiger!") < 10,
 		task = {
 			message = "use ben-gal",
@@ -1289,7 +1390,7 @@ endif
 	add_task {
 		when = challenge == "boris" and level() >= 13 and have_intrinsic("Overconfident"),
 		task = {
-			message = "use pep talk",
+			message = "remove pep talk",
 			nobuffing = true,
 			action = function()
 				set_result(script.cast_buff("Pep Talk"))
@@ -1476,9 +1577,7 @@ endif
 	want_softcore_item_oneof { "stinky cheese diaper", "stinky cheese wheel", "stinky cheese eye", "Staff of Queso Escusado", "stinky cheese sword" }
 	want_softcore_item("Greatest American Pants")
 	want_softcore_item("Camp Scout backpack")
-	if not have_item("astral mask") and not have_item("Jekyllin hide belt") then
-		want_softcore_item("Mr. Accessory Jr.")
-	end
+	want_softcore_item_oneof { "Jekyllin hide belt", "Mr. Accessory Jr.", "astral mask" }
 	want_softcore_item_oneof { "Boris's Helm (askew)", "Boris's Helm", "Spooky Putty mitre" }
 	if challenge ~= "boris" and challenge ~= "fist" and not have_item("Jarlsberg's pan (Cosmic portal mode)") and not have_item("Jarlsberg's pan") then
 		want_softcore_item("Operation Patriot Shield")
@@ -1604,9 +1703,9 @@ endif
 		elseif countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") < 3 and not have_item("makeshift SCUBA gear") then
 			-- TODO: if not enough fat loot tokens, and no wand, hmm(?)
 			inform "trading for legend keys"
-			for x in table.values { "Boris's key", "Jarlsberg's key", "Sneaky Pete's key" } do
-				if not have(x) then
-					async_post_page("/shop.php", { pwd = get_pwd(), whichshop = "damachine", action = "buyitem", whichitem = get_itemid(x), quantity = 1 })
+			for _, x in ipairs { "Boris's key", "Jarlsberg's key", "Sneaky Pete's key" } do
+				if not have_item(x) then
+					shop_buyitem(x, "damachine")
 				end
 			end
 			if countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") >= 3 then
@@ -1988,7 +2087,7 @@ endif
 
 	add_task {
 		when = not (
-			(have("Rock and Roll Legend") or challenge == "boris" or challenge == "zombie" or challenge == "jarlsberg") and
+			(have("Rock and Roll Legend") or not have_skill("The Ode to Booze")) and
 			have("turtle totem") and
 			have("saucepan") and
 			have("seal tooth")
@@ -2892,6 +2991,20 @@ endwhile
 	}
 
 	add_task {
+		when = not cached_stuff.got_hermit_clovers,
+		task = {
+			message = "get clovers from hermit",
+			nobuffing = true,
+			action = function()
+				if not script.trade_for_clover() then
+					cached_stuff.got_hermit_clovers = true
+				end
+				did_action = true
+			end
+		}
+	}
+
+	add_task {
 		when = level() < 6 and (challenge ~= "fist" or fist_level >= 3) and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and ascensionstatus() == "Hardcore",
 		task = tasks.do_sewerleveling,
 	}
@@ -2902,7 +3015,7 @@ endwhile
 	}
 
 	add_task {
-		prereq = quest_text("this is Azazel in Hell") and ascension_script_option("do azazel"),
+		prereq = quest_text("this is Azazel in Hell") and not ascension_script_option("skip azazel quest"),
 		f = script.do_azazel,
 	}
 
@@ -3032,6 +3145,16 @@ endwhile
 			challenge == "fist" and
 			not have_harem_outfit() and
 			can_yellow_ray(),
+		f = function()
+			script.go("yellow raying harem girl", 259, make_yellowray_macro("harem girl"), {}, {}, "He-Boulder", 15)
+		end,
+	}
+
+	add_task {
+		prereq = quest("The Goblin Who Wouldn't Be King") and
+			challenge == "jarlsberg" and
+			not have_harem_outfit() and
+			ensure_yellow_ray(),
 		f = function()
 			script.go("yellow raying harem girl", 259, make_yellowray_macro("harem girl"), {}, {}, "He-Boulder", 15)
 		end,
@@ -3639,7 +3762,7 @@ endwhile
 		}
 	end
 
-	add_task { prereq = (whichday == 2) and ((not highskill_at_run and advs() < 110) or (advs() < 20 and level() >= 8)), f = function()
+	add_task { prereq = (whichday == 2) and ((not highskill_at_run and advs() < 110) or (advs() < 20 and level() >= 8)) and challenge ~= "jarlsberg", f = function()
 		if drunkenness() < 19 then
 			if challenge == "fist" and have_hippy_outfit() and drunkenness() < 19 then
 				local kitchen = get_page("/campground.php", { action = "inspectkitchen" })
@@ -3992,6 +4115,40 @@ endwhile
 	}
 
 	add_task {
+		when = not cached_stuff.unlocked_upstairs and not have("Spookyraven ballroom key"),
+		task = function()
+			local manor = get_page("/manor.php")
+			if not manor:match("Stairs Up") then
+				return {
+					message = "unlock upstairs",
+					fam = "Rogue Program",
+					buffs = { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic", "A Few Extra Pounds", "The Moxious Madrigal" },
+					bonus_target = { "noncombat" },
+					minmp = 30,
+					action = adventure {
+						zoneid = 104,
+						macro_function = macro_noodlecannon,
+						choice_function = function(advtitle, choicenum)
+							if advtitle == "Take a Look, it's in a Book!" then
+								return "", 99
+							elseif advtitle == "Melvil Dewey Would Be Ashamed" then
+								return "Gaffle the purple-bound book"
+							end
+						end
+					},
+				}
+			else
+				cached_stuff.unlocked_upstairs = true
+				return {
+					message = "already unlocked upstairs",
+					action = function() did_action = true end,
+				}
+			end
+		end
+	}
+
+
+	add_task {
 		prereq = level() < 10,
 		f = function()
 			use_dancecard()
@@ -4022,6 +4179,7 @@ endwhile
 				return result, resulturl, did_action
 			end
 			script.bonus_target { "noncombat" }
+			script.maybe_ensure_buffs { "Silent Running" }
 
 			if not have_item("S.O.C.K.") then
 				script.go("do airship", 81, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Ur-Kel's Aria of Annoyance", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "Mini-Hipster", 35, { choice_function = function(advtitle, choicenum)
@@ -4058,7 +4216,7 @@ endwhile
 		message = "level to 11",
 	}
 
-	add_task { prereq = (whichday == 3) and not highskill_at_run and advs() < 100, f = function()
+	add_task { prereq = (whichday == 3) and not highskill_at_run and advs() < 100 and challenge ~= "jarlsberg", f = function()
 		if drunkenness() < 19 then
 			if challenge == "fist" then
 				script.wear { hat = "filthy knitted dread sack", pants = "filthy corduroys" }
@@ -4624,10 +4782,16 @@ use gauze garter, gauze garter
 
 			if x.mcd then
 				set_mcd(x.mcd)
-			elseif mcd() < 10 and level() < 13 and have("detuned radio") then
-				set_mcd(10)
-			elseif mcd() ~= 0 and level() >= 13 and have("detuned radio") then
-				set_mcd(0)
+			elseif have_item("detuned radio") or (moonsign_area() == "Little Canadia") or (moonsign_area() == "Gnomish Gnomad Camp" and unlocked_beach()) then
+				if mcd() < 10 and level() < 13 then
+					if moonsign_area() == "Little Canadia" then
+						set_mcd(11)
+					else
+						set_mcd(10)
+					end
+				elseif mcd() ~= 0 and level() >= 13 then
+					set_mcd(0)
+				end
 			end
 			x.mcd = nil
 
@@ -4723,7 +4887,7 @@ use gauze garter, gauze garter
 	end
 
 	for _, x in ipairs(tasks_list) do
--- 		print("check", { message = x.message, task = x.task, prereq = x.prereq, when = x.when, when_function = type(x.when) == "function" and x.when() })
+		--print("check", { message = x.message, task = x.task, prereq = x.prereq, when = x.when, when_function = type(x.when) == "function" and x.when() })
 		if x.task ~= nil then
 			local triggered = false
 			if type(x.when) == "function" then
@@ -4842,8 +5006,12 @@ ascension_automation_script_href = add_automation_script("automate-ascension", f
 end)
 
 local ascension_script_options_tbl = {
-	["stop on imported beer"] = true,
-	["do azazel"] = true,
+	["stop on imported beer"] = { yes = "stop", no = "drink as fallback booze" },
+	["skip azazel quest"] = { yes = "skip quest", no = "get steel organ" },
+	["manual lvl 9 quest"] = { yes = "stop and do manually", no = "automate" },
+	["manual castle quest"] = { yes = "stop and do manually", no = "automate" },
+	["eat manually"] = { yes = "eat manually", no = "automate consumption" },
+	["train skills manually"] = { yes = "train manually", no = "automate training", when = function() return ascensionpath("Avatar of Jarlsberg") end },
 }
 
 function ascension_script_option(name)
@@ -4851,18 +5019,15 @@ function ascension_script_option(name)
 		critical("Unsupported script option: " .. tostring(name))
 	end
 	local opts = ascension["__script.ascension script options"] or {}
-	return opts[name]
+	return opts[name] == "yes"
 end
 
 ascension_automation_setup_href = add_automation_script("setup-ascension-automation", function()
 	if params.confirm == "yes" then
 		local opts = {}
 		for x, _ in pairs(ascension_script_options_tbl) do
-			if params[x] then
-				opts[x] = true
-			end
+			opts[x] = params[x]
 		end
-		opts["do azazel"] = true
 		ascension["__script.ascension script enabled"] = true
 		ascension["__script.ascension script options"] = opts
 		return get_page("/main.php")
@@ -4883,13 +5048,25 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 	else
 		path_support_text = string.format([[<p>You are currently in %s.</p>]], pathdesc)
 	end
+	local setting_buttons = {}
+	for x, y in pairs(ascension_script_options_tbl) do
+		if not y.when or y.when() then
+			table.insert(setting_buttons, string.format([[%s: <input type="radio" name="%s" value="no" checked>%s]], x, x, y.no))
+			table.insert(setting_buttons, string.format([[| %s<input type="radio" name="%s" value="yes"><br>]], y.yes, x))
+		end
+	end
 	text = [[
 <html>
 <body>
 <p>Are you sure you want to enable ascension automation for this run?</p>
 ]] .. path_support_text .. [[
-<p><a style="color: green" href="]]..ascension_automation_setup_href { pwd = session.pwd, confirm = "yes" }..[[">I am sure!</a></p>
-<p><small><a style="color: green" href="]]..ascension_automation_setup_href { pwd = session.pwd, confirm = "yes", stop_on_imported_beer = "yes" }..[[">I am sure! And stop instead of drinking imported beer as fallback booze!</a></small></p>
+<form action="/kolproxy-automation-script" method="get">
+<input type="hidden" name="pwd" value="]]..session.pwd..[[">
+<input type="hidden" name="confirm" value="yes">
+<input type="hidden" name="automation-script" value="setup-ascension-automation">
+]] .. table.concat(setting_buttons, "\n") .. [[
+<input type="submit">
+</form>
 </body>
 </html>]]
 	return text, requestpath

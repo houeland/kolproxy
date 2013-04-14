@@ -48,7 +48,7 @@ end)
 function get_semirare_info(turn)
 	local isoxy = (ascensionpathname() == "Oxygenarian")
 
-	local lastturn = tonumber(ascension["last semirare turn"])
+	local lastturn = tonumber((ascension["last semirare"] or {}).turn)
 	local is_first_semi = false
 	local SRmin = nil
 	local SRmax = nil
@@ -91,7 +91,7 @@ function get_semirare_info(turn)
 		end
 	end
 
-	local lastsemi = ascension["last semirare encounter"]
+	local lastsemi = (ascension["last semirare"] or {}).encounter
 
 	return SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi
 end

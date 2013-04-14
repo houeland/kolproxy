@@ -40,6 +40,7 @@ function get_automation_tasks(script, cached_stuff)
 	}
 
 	t.get_starting_items = {
+		message = "get starting items",
 		nobuffing = true,
 		action = function()
 			if not ((have("stolen accordion") or have("Rock and Roll Legend")) and have("turtle totem") and have("saucepan")) then
@@ -53,7 +54,7 @@ function get_automation_tasks(script, cached_stuff)
 				return pt, pturl
 			end
 
-			if not have("Rock and Roll Legend") and have_skill("Ode to Booze") then
+			if not have("Rock and Roll Legend") and have_skill("The Ode to Booze") then
 				inform "pick up RnR"
 				script.ensure_worthless_item()
 				if not have("hermit permit") then
@@ -164,7 +165,7 @@ function get_automation_tasks(script, cached_stuff)
 				nobuffing = true,
 				action = function()
 					local to_make = 30 - count("white pixel")
-					async_post_page("/shop.php", { whichshop = "mystic", pwd = get_pwd(), action = "buyitem", whichitem = get_itemid("white pixel"), quantity = to_make })
+					shop_buyitem({ ["white pixel"] = to_make }, "mystic")
 					did_action = (count("white pixel") >= 30)
 				end
 			}
@@ -173,7 +174,7 @@ function get_automation_tasks(script, cached_stuff)
 				message = "make digital key",
 				nobuffing = true,
 				action = function()
-					async_post_page("/shop.php", { whichshop = "mystic", pwd = get_pwd(), action = "buyitem", whichitem = get_itemid("digital key"), quantity = to_make })
+					shop_buyitem("digital key", "mystic")
 					did_action = have("digital key")
 				end
 			}
@@ -312,6 +313,9 @@ mark m_done
 -- TODO: fax & arrow smut orc instead of ascii art (day 3)
 -- TODO: lvl 9 quest on day 4 & after the bridge is untinkered
 	function t.there_can_be_only_one_topping()
+		if ascension_script_option("manual lvl 9 quest") then
+			stop "STOPPED: Ascension script option set to do lvl 9 quest manually"
+		end
 		if quest_text("should seek him out, in the Highlands beyond the Orc Chasm") then
 			local pt, pturl = get_page("/place.php", { whichplace = "orc_chasm" })
 			local pieces = tonumber(pt:match("action=bridge([0-9]*)"))
@@ -321,7 +325,8 @@ mark m_done
 			if not have_item("dictionary") then
 				if have_item("abridged dictionary") then
 					async_post_page("/forestvillage.php", { pwd = get_pwd(), action = "untinker", whichitem = get_itemid("abridged dictionary") })
-				else
+				end
+				if not have_item("dictionary") then
 					stop "Missing bridge from pirates"
 				end
 			end
@@ -401,6 +406,9 @@ mark m_done
 				-- spiky turtle helmet or crown of thrones w/ el vibrato megadrone
 				-- astral belt, C.A.R.N.I.V.O.R.E. button, grumpy old man charrrm bracelet, ring of aggravate monster
 				-- Boris: Song of Cockiness, Overconfident
+			if have_skill("Gristlesphere") then
+				script.ensure_buffs { "Gristlesphere" }
+			end
 			local ml = estimate_bonus("Monster Level")
 			if ml < 20 then
 				stop "Not enough +ML for Oil Peak (want 20+ for automation)"

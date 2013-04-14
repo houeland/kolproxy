@@ -5,13 +5,13 @@ import Lua
 import PlatformLowlevel
 import KoL.Http
 import KoL.Util
-import KoL.UtilTypes
+--import KoL.UtilTypes
 import Control.Exception
 import Control.Monad
 import Data.Maybe
 import Data.Time.Clock
 import System.Directory
-import Text.Regex.TDFA
+--import Text.Regex.TDFA
 import qualified Data.ByteString.Char8
 
 doWriteDataFile filename filedata = best_effort_atomic_file_write filename "." filedata
@@ -75,38 +75,38 @@ update_data_files = do
 					return ())
 
 download_data_files = do
-	do
-		mix_concoctions <- load_mafia_file "concoctions.txt" (\x -> case x of
-			name:"MIX":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
-			name:"ACOCK":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
-			name:"SCOCK":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
-			name:"BSTILL":[source] -> Just (name, [("type", "still"), ("ingredient", show source)])
-			name:"MSTILL":[source] -> Just (name, [("type", "still"), ("ingredient", show source)])
-			_ -> Nothing)
-		doWriteDataFile "cache/data/recipes" (show mix_concoctions)
+--	when False $ do
+--		mix_concoctions <- load_mafia_file "concoctions.txt" (\x -> case x of
+--			name:"MIX":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
+--			name:"ACOCK":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
+--			name:"SCOCK":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
+--			name:"BSTILL":[source] -> Just (name, [("type", "still"), ("ingredient", show source)])
+--			name:"MSTILL":[source] -> Just (name, [("type", "still"), ("ingredient", show source)])
+--			_ -> Nothing)
+--		doWriteDataFile "cache/data/recipes" (show mix_concoctions)
 
-	do
-		pulverizegroups <- do
-			jstext <- load_data_file "http://userscripts.org/scripts/source/67792.user.js"
-			let groupslines = takeWhile (\x -> not (x =~ "}\\);")) $ dropWhile (\x -> not (x =~ "var groupList")) $ lines jstext
-			let groups = map head $ matchGroups "([0-9]+:\\[[0-9,]+\\])" $ concat groupslines
-			let [groupnamesline] = filter (\x -> x =~ "var groupNames") $ lines jstext
-			let groupnames = map head $ matchGroups "\"([^\"]+)\"" groupnamesline
-			let worthlesslines = takeWhile (\x -> not (x =~ "}\\);")) $ dropWhile (\x -> not (x =~ "var worthless")) $ lines jstext
-			let worthless = map head $ matchGroups "([0-9]+):1" $ concat worthlesslines
-			let items = map (\x -> case matchGroups "([0-9]+):\\[([0-9]+)" x of
-				[[ids, gs]] -> (a :: Integer, b :: Int)
-					where
-						(Just a, Just b) = (read_as ids, read_as gs)
-				_ -> throw $ InternalError $ "Error parsing pulverize data") groups
-			let regrouped = map (\(gx, y) -> (y, (mapMaybe (\(a,b) -> if b == gx
-				then Just a
-				else Nothing) items) ++
-				if y == "Worthless"
-					then map (\ix -> read_e ix :: Integer) worthless
-					else [])) (zip [0..] groupnames)
-			return regrouped
-		doWriteDataFile "cache/data/pulverize-groups" (show pulverizegroups)
+--	when False $ do
+--		pulverizegroups <- do
+--			jstext <- load_data_file "http://userscripts.org/scripts/source/67792.user.js"
+--			let groupslines = takeWhile (\x -> not (x =~ "}\\);")) $ dropWhile (\x -> not (x =~ "var groupList")) $ lines jstext
+--			let groups = map head $ matchGroups "([0-9]+:\\[[0-9,]+\\])" $ concat groupslines
+--			let [groupnamesline] = filter (\x -> x =~ "var groupNames") $ lines jstext
+--			let groupnames = map head $ matchGroups "\"([^\"]+)\"" groupnamesline
+--			let worthlesslines = takeWhile (\x -> not (x =~ "}\\);")) $ dropWhile (\x -> not (x =~ "var worthless")) $ lines jstext
+--			let worthless = map head $ matchGroups "([0-9]+):1" $ concat worthlesslines
+--			let items = map (\x -> case matchGroups "([0-9]+):\\[([0-9]+)" x of
+--				[[ids, gs]] -> (a :: Integer, b :: Int)
+--					where
+--						(Just a, Just b) = (read_as ids, read_as gs)
+--				_ -> throw $ InternalError $ "Error parsing pulverize data") groups
+--			let regrouped = map (\(gx, y) -> (y, (mapMaybe (\(a,b) -> if b == gx
+--				then Just a
+--				else Nothing) items) ++
+--				if y == "Worthless"
+--					then map (\ix -> read_e ix :: Integer) worthless
+--					else [])) (zip [0..] groupnames)
+--			return regrouped
+--		doWriteDataFile "cache/data/pulverize-groups" (show pulverizegroups)
 
 	let dldatafile x = do
 		let [[basename]] = matchGroups ".*/([^/]+)$" x

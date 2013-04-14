@@ -273,7 +273,9 @@ function parse_items()
 			items[name] = { id = itemid, picture = picture }
 			lowercasemap[name:lower()] = name
 			for _, u in ipairs(split_commaseparated(itemusestr or "")) do
-				items[name].equipment_slot = itemslots[u]
+				if itemslots[u] then
+					items[name].equipment_slot = itemslots[u]
+				end
 			end
 		end
 	end
@@ -367,6 +369,11 @@ function verify_items(data)
 			end
 		end
 	end
+	local testitems = {}
+	for _, x in ipairs { "Orcish Frat House blueprints", "Hell ramen", "water purification pills", "beastly paste", "leather chaps", "dried gelatinous cube", "flaming pink shirt" } do
+		testitems[x] = data[x]
+	end
+	hardwarn("verify_items failure:", table_to_json(testitems))
 end
 
 local function parse_monster_stats(stats)

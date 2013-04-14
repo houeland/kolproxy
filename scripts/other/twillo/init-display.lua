@@ -16,7 +16,7 @@ local function estimate_skill_init()
 		["Lust"] = 50,
 		["Never Late for Dinner"] = 50,
 		["Overdeveloped Sense of Self Preservation"] = 20,
-		["Slimy Shoulders"] = 20,
+		["Slimy Shoulders"] = 20, -- TODO: Check actual value
 		["Sloth"] = -25,
 	}
 	for skill, init in pairs(skillarray) do

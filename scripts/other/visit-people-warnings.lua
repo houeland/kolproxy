@@ -34,7 +34,7 @@ add_warning {
 			local pt = get_page("/questlog.php", { which = 1 })
 			have_degrassi = pt:contains("<b>Driven Crazy</b>")
 		end
-		if have_degrassi then
+		if not have_degrassi then
 			return true
 		end
 	end,

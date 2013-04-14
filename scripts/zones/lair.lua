@@ -258,6 +258,7 @@ add_printer("/campground.php", function()
 			table.insert(otherlines, check_items(guitar_items))
 			table.insert(otherlines, check_items(accordion_items))
 			table.insert(otherlines, check_items(drum_items))
+			table.insert(otherlines, check_items { "Wand of Nagamar" })
 			return otherlines
 		end
 
@@ -473,9 +474,9 @@ function automate_lair_statues(text)
 			if count("white pixel") + math.min(count("red pixel"), count("green pixel"), count("blue pixel")) >= 30 then
 				if count("white pixel") < 30 then
 					local to_make = 30 - count("white pixel")
-					async_post_page("/shop.php", { whichshop = "mystic", pwd = get_pwd(), action = "buyitem", whichitem = get_itemid("white pixel"), quantity = to_make })
+					shop_buyitem({ ["white pixel"] = to_make }, "mystic")
 				end
-				async_post_page("/shop.php", { whichshop = "mystic", pwd = get_pwd(), action = "buyitem", whichitem = get_itemid("digital key"), quantity = 1 })
+				shop_buyitem("digital key", "mystic")
 			end
 		end
 		if have("digital key") then

@@ -69,8 +69,8 @@ do
 	for _, x in ipairs(datafile("semirares")) do
 		if matches(x) then
 			print("INFO: SEMIRARE!!!", x)
-			ascension["last semirare encounter"] = x
-			ascension["last semirare turn"] = turnsthisrun()
+			--ascension["last semirare encounter"] = x
+			--ascension["last semirare turn"] = turnsthisrun()
 			ascension["last semirare"] = { encounter = x, turn = turnsthisrun() }
 		end
 	end

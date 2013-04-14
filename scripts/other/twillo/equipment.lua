@@ -56,6 +56,7 @@ function estimate_equipment_bonuses()
 		["jalape&ntilde;o slices"] = { ["Meat from Monsters"] = 2 * fairy_bonus(10) },
 		["navel ring of navel gazing"] = { item_upto = 20, meat_upto = 20 },
 		["parasitic tentacles"] = { ["Combat Initiative"] = math.min(30, level() * 2) },
+		["Snow Suit"] = { ["Item Drops from Monsters"] = session["cached Snow Suit bonus"] or "?" },
 
 		["Mayflower bouquet"] = { item_upto = 10, meat_upto = 40, ["Item Drops from Monsters"] = "?" }, -- not sufficiently spaded
 		["Tuesday's ruby"] = { ["Item Drops from Monsters"] = "?", ["Meat from Monsters"] = "?" }, -- varies by day

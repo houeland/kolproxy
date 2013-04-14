@@ -48,7 +48,7 @@ cosmic_kitchen_recipes = {
 	{ product = "Loaded Baked Potato", ingredients = { "consummate baked potato", "consummate bacon", "consummate melted cheese", "consummate sour cream" } },
 	{ product = "Omega Sundae", ingredients = { "consummate ice cream", "consummate whipped cream", "consummate strawberries", "consummate brownie" } },
 	{ divider = true },
-	{ product = "Die Sauerlager", ingredients = { "mediocre lager", "consummate sauerkraut" } },
+	{ product = "Das Sauerlager", ingredients = { "mediocre lager", "consummate sauerkraut" } },
 	{ product = "Bologna Lambic", ingredients = { "passable stout", "consummate cold cuts" } },
 	{ product = "Vodka Dog", ingredients = { "acceptable vodka", "consummate hot dog bun" } },
 	{ product = "Disappointed Russian", ingredients = { "acceptable vodka", "consummate sour cream" } },
@@ -95,7 +95,7 @@ cosmic_kitchen_items = {
   ["consummate cheese slice"] = { ["picture"] = "jarl_cheeseslice", ["quality"] = "(decent)", ["size"] = 2 },
   ["cosmic cream"] = { ["picture"] = "cosmic_cream", summonskill = "Conjure Cream" },
   ["consummate cold cuts"] = { ["picture"] = "jarl_coldcuts", ["quality"] = "(decent)", ["size"] = 3 },
-  ["Die Sauerlager"] = { ["potency"] = 3, ["picture"] = "jarl_sauerlager", ["quality"] = "(decent)" },
+  ["Das Sauerlager"] = { ["potency"] = 3, ["picture"] = "jarl_sauerlager", ["quality"] = "(decent)" },
   ["sublime nachos"] = { ["picture"] = "jarl_nachos", ["quality"] = "<font color=blue>(awesome)</font>", ["size"] = 6 },
   ["cosmic potato"] = { ["picture"] = "cosmic_potato", summonskill = "Conjure Potato" },
   ["consummate fried egg"] = { ["picture"] = "jarl_friedegg", ["quality"] = "(decent)", ["size"] = 3 },
@@ -191,17 +191,7 @@ cosmic_kitchen_skills = {
   ["Best Served Cold"] = "jarl_revenge",
 }
 
-local scanned_itemids = {}
-local function scan_itemids()
-	local pt = get_page("/shop.php", { whichshop = "jarl" })
-	for itemid, name in pt:gmatch([[<input type=radio name=whichitem value=([0-9]+)>.-<b>(.-)</b>]]) do
-		if tonumber(itemid) and cosmic_kitchen_items[name] then
-			scanned_itemids[name] = tonumber(itemid)
-		end
-	end
-end
-
-add_automation_script("custom-cosmic-kitchen-crafting", function()
+function craft_cosmic_kitchen(params)
 	local need_ingredients = {}
 	local want_products = {}
 	for _, x in pairs(cosmic_kitchen_recipes) do
@@ -219,19 +209,15 @@ add_automation_script("custom-cosmic-kitchen-crafting", function()
 		end
 	end
 
-	scan_itemids()
+	shop_buyitem(need_ingredients, "jarl")
 
-	for x, y in pairs(need_ingredients) do
-		async_post_page("/shop.php", { pwd = params.pwd, whichshop = "jarl", action = "buyitem", whichitem = scanned_itemids[x], quantity = y })
-	end
-
-	scan_itemids()
-
-	for x, y in pairs(want_products) do
-		async_post_page("/shop.php", { pwd = params.pwd, whichshop = "jarl", action = "buyitem", whichitem = scanned_itemids[x], quantity = y })
-	end
+	shop_buyitem(want_products, "jarl")
 
 	return "Done!", requestpath
+end
+
+add_automation_script("custom-cosmic-kitchen-crafting", function()
+	return craft_cosmic_kitchen(params)
 end)
 
 local cosmic_kitchen_href = add_automation_script("custom-cosmic-kitchen", function()
