@@ -345,7 +345,7 @@ kolproxy_openTCPConnection server = do
 			catchIO (Network.BSD.getHostByName h)
 				(\ _ -> throwIO $ NetworkError $ ("openTCPConnection: host lookup failure for " ++ show h))
 
-mkconnthing server = do
+fast_mkconnthing server = do
 	-- TODO: merge stale-check and max-requests-check?
 	connmv <- newEmptyMVar
 	let open_conn = do
@@ -458,8 +458,31 @@ mkconnthing server = do
 			cf x
 -- 			putStrLn $ "DEBUG connmv cfed x!: " ++ show debug_absuri
 			return (cf, t, p + 1, k)) `catch` (\e -> doHTTPLOWLEVEL_DEBUGexception $ "connchan error: " ++ (show (e :: SomeException))))
+
 	return connchan :: IO ConnChanType
 
+slow_mkconnthing _server = do
+	slowconnchan <- newChan
+	forkIO_ "HTTPlow:slowconnchan" $ forever $ ((do
+		(absuri, rq, mvdest, _ref) <- (readChan slowconnchan) `catch` (\e -> do
+			doHTTPLOWLEVEL_DEBUGexception $ "slowconnchan read exception: " ++ (show (e :: SomeException))
+			throwIO e)
+		use_proxy <- getEnvironmentSetting "KOLPROXY_USE_PROXY_SERVER"
+		auth <- case use_proxy of
+			Nothing -> getAuth rq
+			Just p -> getAuth $ Request { rqURI = fromJust $ parseURI $ ("proxy://" ++ p ++ "/"), rqMethod = GET, rqHeaders = [], rqBody = "" }
+		s <- openStream (host auth) $ fromMaybe 80 (port auth)
+		let nrq = normalizeRequest (defaultNormalizeRequestOptions { normDoClose = True, normForProxy = True }) rq
+		r <- Network.HTTP.HandleStream.sendHTTP s nrq
+		answer <- (try $ case r of
+			Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, rspCode resp, resp)
+			Left ce -> throwIO $ NetworkError $ "slowHTTP error: [" ++ (show ce) ++ "]") :: IO ConnChanActionType
+		putMVar mvdest answer) `catch` (\e -> doHTTPLOWLEVEL_DEBUGexception $ "slowconnchan error: " ++ (show (e :: SomeException))))
+
+	return slowconnchan :: IO ConnChanType
+
+mkconnthing = fast_mkconnthing
+--mkconnthing = slow_mkconnthing
 
 send_http_response h resp = do
 	-- TODO: check for errors?

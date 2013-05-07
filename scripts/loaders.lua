@@ -19,6 +19,7 @@ load_file("interface", "interface/semirare.lua")
 load_file("interface", "interface/shop-item-count.lua")
 load_file("interface", "interface/cosmic-kitchen.lua")
 load_file("interface", "interface/modifier-maximizer.lua")
+load_file("interface", "interface/compute-net-worth.lua")
 
 load_file("item", "items/scary-copying.lua")
 load_file("item", "items/fly-away.lua")
@@ -120,6 +121,7 @@ load_file("automation", "automation/felonia.lua")
 load_file("automation", "automation/castle-farming.lua")
 load_file("automation", "automation/dungeon-fist.lua")
 load_file("automation", "automation/a-quest-lol.lua")
+load_file("automation", "automation/sea.lua")
 
 load_file("interface", "other/twillo/buffs.lua")
 load_file("interface", "other/twillo/outfits.lua")
@@ -152,6 +154,8 @@ load_file("interface", "other/superbachelor/blank-out.lua")
 load_file("chat", "other/add-log-notes.lua")
 
 load_file("interface", "other/lua-console.lua")
+
+load_file("other", "paths/jarlsberg.lua")
 
 for _, f in ipairs(list_custom_autoload_script_files()) do
 	load_file("custom autoload", "custom-autoload/" .. f)

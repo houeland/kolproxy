@@ -91,7 +91,7 @@ local dis_href = add_automation_script("automate-suburbandis", function()
 		stop "Disable your autoattack. The Dis script will handle (most) combats automatically."
 	end
 	script = get_automation_scripts()
-	maybe_pull_item("ring of conflict")
+	maybe_pull_item("ring of conflict", 1)
 	maybe_pull_item("sea salt scrubs")
 	maybe_pull_item("Space Trip safety headphones")
 	maybe_pull_item("clumsiness bark", 20)

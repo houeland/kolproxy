@@ -73,3 +73,13 @@ add_warning {
 		end
 	end
 }
+
+add_warning {
+	message = "You are still Consumed by Fear (click the face in the middle of the Mystic's Psychoses).",
+	severity = "warning",
+	when = "ascension",
+	check = function(zoneid)
+		if not have_buff("Consumed by Fear") then return end
+		return zoneid ~= 302
+	end
+}

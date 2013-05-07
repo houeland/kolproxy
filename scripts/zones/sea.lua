@@ -12,3 +12,20 @@ add_printer("/choice.php", function()
 		text = text:gsub("(You head down the tunnel into the cave, and manage to find another seaode.  Sweet!  I mean... salty!)", [[<span style="color: darkorange">%1</span> (]]..seaodes.." / 3 seaodes today)")
 	end
 end)
+
+-- Outpost
+
+add_processor("item drop: Mer-kin lockkey", function()
+	print("Mer-kin lockkey dropped from", monstername())
+	ascension["zones.sea.outpost lockkey monster"] = monstername()
+end)
+
+-- deepcity
+
+add_extra_always_warning("/sea_merkin.php", function()
+	if params.action == "temple" and have_equipped_item("Mer-kin scholar mask") and have_equipped_item("Mer-kin scholar tailpiece") then
+		if count_equipped_item("Mer-kin prayerbeads") < 3 then
+			return "You may want to wear 3 Mer-kin prayerbeads for the Yog-Urt fight.", "equip 3 prayerbeads for yog-urt"
+		end
+	end
+end)

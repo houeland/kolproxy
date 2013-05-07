@@ -64,7 +64,7 @@ add_itemdrop_counter("evil eye", function(c)
 end)
 
 local function parse_evilometer()
-	if have("Evilometer") then
+	if have_item("Evilometer") then
 		local pagetext = use_item("Evilometer")()
 		local evilometer = {}
 		for zonename, amount in pagetext:gmatch(">([A-Za-z ]*): <b>([0-9]*)</b>") do

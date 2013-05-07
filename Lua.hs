@@ -730,8 +730,8 @@ runInterceptScript ref uri allparams reqtype = do
 		Right xs -> Left ("Lua intercept call error, return values = " ++ (show xs), "")
 		Left err -> Left err
 
-runBotScript {-ref-} _code = do
---	setup_lua_instance level filename setupref
+runBotScript baseref filename = do
+	run_lua_code INTERCEPT filename baseref (setvars [] "" [])
 	return ()
 
 runLogParsingScript log_db = do

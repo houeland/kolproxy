@@ -164,14 +164,14 @@ make_globalref = do
 		h <- openFile ("logs/info/" ++ filename) AppendMode
 		hSetBuffering h LineBuffering
 		return h
-	
+
 	indentref <- newIORef 0
 	blockluaref <- newIORef False
 	hfiles <- openlog "files-downloaded.txt"
 	htiming <- openlog "timing-log.txt"
 	hlua <- openlog "lua-log.txt"
 	hhttp <- openlog "http-log.txt"
-	shutdown_secret <- get_md5 <$> show <$> (randomIO :: IO Integer) -- TODO: Not really important, but use stronger randomness here?
+	shutdown_secret <- get_md5 <$> show <$> (randomIO :: IO Integer)
 	shutdown_ref <- newIORef False
 
 	chatopendb <- create_db "sqlite3 chatlog" "chat-log.sqlite3"
@@ -198,21 +198,21 @@ make_globalref = do
 		doChatLogAction_ = \action -> writeChan chatlogchan action
 	}
 
-runProxyServer r rwhenever portnum = do
+kolproxy_setup_refstuff = do
 	(logchan, dropping_logchan) <- do
 		dropping_logchan <- newChan
 		forkIO_ "kps:droplogchan" $ forever $ readChan dropping_logchan
-		v <- getEnvironmentSetting "KOLPROXY_DISABLE_LOGGING"
-		case v of
-			-- TODO: not right, we get code we need to run! Should just disable the actual file writing?
-			Just "I_PROMISE_I_AM_REALLY_SURE_I_WANT_TO_DISABLE_LOGGING" -> return (dropping_logchan, dropping_logchan)
-			_ -> do
-				logchan <- newChan
-				forkIO_ "kps:logchan" $ forever $ ((join $ readChan $ logchan) `catch` (\e -> do
-					putStrLn $ "writelog error: " ++ (show (e :: SomeException))))
-				return (logchan, dropping_logchan)
+		logchan <- newChan
+		forkIO_ "kps:logchan" $ forever $ ((join $ readChan $ logchan) `catch` (\e -> do
+			putStrLn $ "writelog error: " ++ (show (e :: SomeException))))
+		return (logchan, dropping_logchan)
 
 	globalref <- make_globalref
+
+	return (logchan, dropping_logchan, globalref)
+
+runProxyServer r rwhenever portnum = do
+	(logchan, dropping_logchan, globalref) <- kolproxy_setup_refstuff
 
 	-- TODO: get rid of fakeref here!
 	let _fake_other = OtherRefStuff {
@@ -234,7 +234,7 @@ runProxyServer r rwhenever portnum = do
 	forkIO_ "kps:mvwhen" $ forever $ do
 		(uri, params, cookie, mvresp) <- readChan mvwhenever
 		forkIO_ "kps:mvwhentry" $ do -- Serve asynced, possible private-message loss until server is fixed
--- 		do -- Serve synced, possible hang on timeouts
+-- 		do -- Serve synced, possible hang on timeouts, still can't guarantee private-messages
 			putMVar mvresp =<< (try $ rwhenever uri params cookie)
 
 	sessionmastermv <- newMVar Data.Map.empty

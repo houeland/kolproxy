@@ -3,7 +3,7 @@
 local required_items_perclass = {
 	{ lew = "Hammer of Smiting", ew = "Bjorn's Hammer", extra = "distilled seal blood", door = { "viking helmet", "insanely spicy bean burrito", "clown whip" } },
 	{ lew = "Chelonian Morningstar", ew = "Mace of the Tortoise", extra = "turtle chain", door = { "viking helmet", "insanely spicy bean burrito", "clownskin buckler" } },
-	{ lew = "Greek Pasta of Peril", ew = "Pasta of Peril", extra = "high-octane liver oil", door = { "stalk of asparagus", "insanely spicy enchanted bean burrito", "boring spaghetti" } },
+	{ lew = "Greek Pasta of Peril", ew = "Pasta of Peril", extra = "high-octane olive oil", door = { "stalk of asparagus", "insanely spicy enchanted bean burrito", "boring spaghetti" } },
 	{ lew = "17-alarm Saucepan", ew = "5-Alarm Saucepan", extra = "Peppercorns of Power", door = { "stalk of asparagus", "insanely spicy enchanted bean burrito", "tomato juice of powerful power" } },
 	{ lew = "Shagadelic Disco Banjo", ew = "Disco Banjo", extra = "vial of mojo", door = { "dirty hobo gloves", "insanely spicy jumping bean burrito", "fuzzbump" } },
 	{ lew = "Squeezebox of the Ages", ew = "Rock and Roll Legend", extra = "golden reeds", door = { "dirty hobo gloves", "insanely spicy jumping bean burrito" } },
@@ -72,7 +72,9 @@ local href = setup_turnplaying_script {
 			if not have_item(required_items.lew) then
 				smith_items_craft(required_items.ew, required_items.extra)
 			end
-			if not have_item(required_items.lew) then
+			if have_item(required_items.lew) then
+				advagain = true
+			else
 				critical "Failed to smith Legendary Epic Weapon."
 			end
 		else
@@ -160,6 +162,7 @@ local href = setup_turnplaying_script {
 				if not have("encoded cult documents") then
 					get_page("/volcanoisland.php", { pwd = pwd, action = "npc" })
 				end
+				stop "TODO: Automate pastamancer island"
 -- "proxy:/volcanoisland.php?pwd=a412cd1e0a0d040806269162e564fcb1&action=tuba"  Nothing (get info)
 -- "proxy:/volcanoisland.php?pwd=a412cd1e0a0d040806269162e564fcb1&action=tuba"  Nothing
 -- "proxy:/adventure.php?snarfblat=217"
@@ -174,6 +177,7 @@ local href = setup_turnplaying_script {
 -- "proxy:/volcanoisland.php?pwd=a412cd1e0a0d040806269162e564fcb1&action=tniat"  Nothing
 -- "proxy:/volcanomaze.php?"  Nothing
 			elseif classid() == 4 then -- sauceror
+				stop "TODO: Automate sauceror island"
 			elseif classid() == 5 then -- disco bandit
 				automate_DB_nemesis_island()
 				result, resulturl = text, url
@@ -198,8 +202,16 @@ local href = setup_turnplaying_script {
 				else
 					stop "TODO: Do moxie guild quest"
 				end
+			elseif pt:contains("Have you captured the poltersandwich") then
+				result, resulturl, advagain = autoadventure { zoneid = 113, noncombatchoices = {
+					["A Sandwich Appears!"] = "sudo exorcise me a sandwich",
+					["Oh No, Hobo"] = "Give him a beating",
+					["Trespasser"] = "Tackle him",
+					["The Singing Tree"] = "&quot;No singing, thanks.&quot;",
+					["The Baker's Dilemma"] = "&quot;Sorry, I'm busy right now.&quot;",
+				} }
 			else
-				stop "TODO: Wait for nemesis assassins???"
+				stop "TODO: Wait for nemesis assassins??? Or missing guild quest? Or missing nemesis quest?"
 			end
 		else
 			stop "TODO: Next quest step???"
@@ -509,7 +521,7 @@ function automate_AT_nemesis_island()
 							end
 						end
 					end)
-					if not advagain then
+					if not advagain and resulturl:contains("fight.php") then
 						print("volcano:tuba:fight")
 						pt, url = get_page("/fight.php")
 						result, resulturl, advagain = handle_adventure_result(pt, url, 220, nil)

@@ -37,8 +37,6 @@ end
 
 local debug_show_empty_messages = false
 
-local last_inform_msglist = {}
-
 local cached_stuff = {}
 
 local function write_log_line(msg)
@@ -50,7 +48,7 @@ end
 local finished = false
 
 local function automate_hcnp_day(whichday)
-	last_inform_msglist = {}
+	reset_error_trace_steps()
 	finished = false
 
 	if show_spammy_automation_events then
@@ -61,12 +59,12 @@ local function automate_hcnp_day(whichday)
 	did_action = false
 
 	function hidden_inform(msg)
-		table.insert(last_inform_msglist, tostring(msg))
+		add_error_trace_step(msg)
 	end
 
 	function inform(msg)
 		result = "Tried to perform: " .. tostring(msg)
-		table.insert(last_inform_msglist, tostring(msg))
+		add_error_trace_step(msg)
 		local mpstr = string.format("%s / %s MP", mp(), maxmp())
 		if challenge == "zombie" then
 			mpstr = string.format("%s horde", horde_size())
@@ -489,7 +487,6 @@ endif
 		return unpack(ret)
 	end
 
-	local tried_to_summon_unbearable_light = false
 	local function ensure_yellow_ray()
 		if not can_yellow_ray() then
 			return false
@@ -497,14 +494,21 @@ endif
 		if script.have_familiar("He-Boulder") then
 			return true
 		end
-		if not have("unbearable light") and not tried_to_summon_unbearable_light then
+		if not have("unbearable light") and not cached_stuff.tried_to_summon_unbearable_light then
 			inform "summoning unbearable light (no he-boulder)"
 			script.ensure_mp(5)
 			async_post_page("/campground.php", { preaction = "summoncliparts" })
 			async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "06", clip2 = "06", clip3 = "06" })
-			tried_to_summon_unbearable_light = true
+			cached_stuff.tried_to_summon_unbearable_light = true
 		end
 		return have_item("unbearable light")
+	end
+
+	local function ensure_clover()
+		if not have_item("ten-leaf clover") and have_item("disassembled clover") then
+			use_item("disassembled clover")
+		end
+		return have_item("ten-leaf clover")
 	end
 
 	local tasks_list = {}
@@ -552,12 +556,14 @@ endif
 	script.bonus_target {}
 	script.set_runawayfrom(nil)
 
-	if get_mainstat() == "Muscle" and (have_intrinsic("Gaze of the Trickster God") or have_intrinsic("Gaze of the Lightning God")) then
-		stop "Non-volcanic gaze active!"
-	elseif get_mainstat() == "Mysticality" and (have_intrinsic("Gaze of the Trickster God") or have_intrinsic("Gaze of the Volcano God")) then
-		stop "Non-lightning gaze active!"
-	elseif get_mainstat() == "Moxie" and (have_intrinsic("Gaze of the Volcano God") or have_intrinsic("Gaze of the Lightning God")) then
-		stop "Non-trickster gaze active!"
+	if level() < 13 then
+		if get_mainstat() == "Muscle" and (have_intrinsic("Gaze of the Trickster God") or have_intrinsic("Gaze of the Lightning God")) then
+			stop "Non-volcanic gaze active! Set it manually and run again."
+		elseif get_mainstat() == "Mysticality" and (have_intrinsic("Gaze of the Trickster God") or have_intrinsic("Gaze of the Volcano God")) then
+			stop "Non-lightning gaze active! Set it manually and run again."
+		elseif get_mainstat() == "Moxie" and (have_intrinsic("Gaze of the Volcano God") or have_intrinsic("Gaze of the Lightning God")) then
+			stop "Non-trickster gaze active! Set it manually and run again."
+		end
 	end
 
 	if not cached_stuff.visited_hermit and challenge == "zombie" then
@@ -1399,7 +1405,7 @@ endif
 		}
 	}
 
-	local function ascension_automation_pull_item(name)
+	function ascension_automation_pull_item(name)
 		softcore_stoppable_action("pulling " .. tostring(name))
 		print("  pulling " .. tostring(name))
 		set_result(pull_storage_items { name })
@@ -2584,16 +2590,6 @@ endif
 				end
 			end
 		}
-
--- 		add_task {
--- 			when = true,
--- 			task = {
--- 				message = "end of highskill AT script",
--- 				action = function()
--- 					stop "TODO: end of highskill AT script"
--- 				end
--- 			}
--- 		}
 	end
 
 	if challenge == "fist" and have("Game Grid token") and not have("finger cuffs") and not (have("spangly sombrero") and have("spangly mariachi pants")) then
@@ -3357,12 +3353,12 @@ endwhile
 	}
 
 	add_task { prereq = (whichday == 1) and challenge ~= "boris" and challenge ~= "jarlsberg", f = function()
-		if fullness() < 14 or drunkenness() < 19 or (spleen() < 12 and challenge ~= "trendy") then
+		if fullness() < 14 or drunkenness() < estimate_max_safe_drunkenness() or (spleen() < 12 and challenge ~= "trendy") then
 			stop "Unexpected fullness/drunkenness/spleen at end of day 1"
 		else
 			if script.spooky_forest_runaways() then return end -- TODO: do earlier as a task
 			if script.trade_for_clover() then return end
-			if drunkenness() <= 19 then
+			if drunkenness() <= estimate_max_safe_drunkenness() then
 				script.ensure_buff_turns("Ode to Booze", 10)
 			end
 			result, resulturl = get_page("/inventory.php", { which = 1})
@@ -3416,7 +3412,7 @@ endwhile
 		end
 		for i = 1, 20 do
 			script.ensure_buffs { "Ode to Booze" }
-			if drunkenness() < 19 then
+			if drunkenness() < estimate_max_safe_drunkenness() then
 				if have("astral pilsner") and level() >= 11 then
 					drink_item("astral pilsner")
 				elseif have("thermos full of Knob coffee") then
@@ -3444,7 +3440,7 @@ endwhile
 	}
 
 	add_task {
-		prereq = challenge == "fist" and drunkenness() < 19 and have("astral pilsner") and level() >= 11,
+		prereq = challenge == "fist" and drunkenness() < estimate_max_safe_drunkenness() and have("astral pilsner") and level() >= 11,
 		f = function()
 			inform "drinking astral pilsners"
 			local d = drunkenness()
@@ -3464,7 +3460,10 @@ endwhile
 	}
 
 	add_task {
-		when = not have("digital key") and ascensionstatus() == "Hardcore" and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and not script.have_familiar("Angry Jung Man"),
+		when = not have("digital key") and
+			ascensionstatus() == "Hardcore" and
+			challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and
+			not script.have_familiar("Angry Jung Man"),
 		task = function()
 			if highskill_at_run then
 				return tasks.do_8bit_realm()
@@ -3502,7 +3501,75 @@ endwhile
 		end,
 	}
 
-	-- TODO: check campground, not session[]
+	add_task {
+		when = not have("digital key") and
+			ascensionstatus() == "Hardcore" and
+			not script.have_familiar("Angry Jung Man") and
+			have_item("Staff of the Standalone Cheese") and
+			can_equip_item("Staff of the Standalone Cheese") and
+			(cached_stuff.doing_8bit or advs() >= 40),
+		task = function()
+			cached_stuff.doing_8bit = true
+			local banished = retrieve_standalone_cheese_banished_monsters()
+			--print("DEBUG banished:", table_to_json(banished))
+			if not banished[4] then
+				return {
+                                        message = "fight and banish non-bloopers",
+                                        equipment = { weapon = "Staff of the Standalone Cheese", acc3 = "continuum transfunctioner" },
+					action = adventure {
+						zoneid = 73,
+						macro_function = function()
+							return [[
+
+if monstername Blooper
+]] .. boris_action() .. [[
+  goto done
+endif
+
+if (monstername Bullet Bill) || (monstername Keese) || (monstername Octorok) || (monstername Zol)
+  jiggle
+  goto done
+endif
+
+]] .. boris_action() .. [[
+
+mark done
+]]
+							end,
+					},
+                                }
+			elseif have_item("Staff of the Cream of the Cream") and can_equip_item("Staff of the Cream of the Cream") and retrieve_cream_olfacted_monster() ~= "Blooper" then
+				return {
+                                        message = "sniff blooper",
+                                        equipment = { weapon = "Staff of the Cream of the Cream", acc3 = "continuum transfunctioner" },
+					action = adventure {
+						zoneid = 73,
+						macro_function = function()
+							return [[
+
+if monstername Blooper
+  jiggle
+endif
+
+]] .. boris_action() .. [[
+
+]]
+							end,
+					},
+                                }
+			else
+				return {
+                                        message = "fight in 8-bit realm",
+                                        equipment = { acc3 = "continuum transfunctioner" },
+					action = adventure {
+						zoneid = 73,
+						macro_function = macro_8bit_realm,
+					},
+                                }
+			end
+		end,
+	}
+
 	add_task {
 		when = not have_item("digital key") and cached_stuff.campground_psychoses == "mystic" and count("white pixel") + math.min(count("red pixel"), count("green pixel"), count("blue pixel")) < 30,
 		task = {
@@ -3534,7 +3601,7 @@ endwhile
 	}
 
 	add_task {
-		when = not have_item("digital key") and (have_item("psychoanalytic jar") or have_item("jar of psychoses (The Crackpot Mystic)")) and advs() >= 80 and not trailed,
+		when = not have_item("digital key") and (have_item("psychoanalytic jar") or have_item("jar of psychoses (The Crackpot Mystic)")) and advs() >= 40 and not trailed,
 		task = {
 			message = "use mystic jar",
 			nobuffing = true,
@@ -3546,6 +3613,34 @@ endwhile
 				cached_stuff.campground_psychoses = nil
 				use_item("jar of psychoses (The Crackpot Mystic)")
 				did_action = not have_item("jar of psychoses (The Crackpot Mystic)")
+			end
+		}
+	}
+
+	add_task {
+		when = challenge and
+			level() >= 6 and
+			level() < 13 and
+			advs() <= 20 and
+			fullness() == estimate_max_fullness() and
+			drunkenness() == estimate_max_safe_drunkenness(),
+		task = {
+			message = "end of day",
+			nobuffing = true,
+			action = function()
+				script.maybe_ensure_buffs { "Ode to Booze" }
+				if have_buff("Ode to Booze") then
+					script.ensure_buff_turns("Ode to Booze", 10)
+				end
+				if not have_item("time halo") then
+					script.ensure_mp(2)
+					async_post_page("/campground.php", { preaction = "summoncliparts" })
+					async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "01", clip2 = "09", clip3 = "09" })
+				end
+				script.wear { weapon = have_item("time halo") and "empty", offhand = have_item("time halo") and "empty", acc1 = have_item("time halo") and "time halo", acc2 = have_item("dead guy's watch") and "dead guy's watch" or nil }
+				result, resulturl = get_page("/inventory.php", { which = 1 })
+				result = add_message_to_page(get_result(), "<p>End of day.</p><p>(PvP,) overdrink, then done.</p>", "Ascension script:")
+				finished = true
 			end
 		}
 	}
@@ -3578,18 +3673,7 @@ endwhile
 		task = {
 			message = "get milk early in highskill AT",
 			action = function()
-				if challenge == "fist" then
-					script.ensure_buffs { "Earthen Fist" }
-				else
-					script.wear { hat = "miner's helmet", weapon = "7-Foot Dwarven mattock", pants = "miner's pants" }
-				end
-				local mined = do_day_2_mining()
-				script.wear {}
-				if mined then
-					return result, resulturl, did_action
-				else
-					script.do_trapper_quest()
-				end
+				script.do_trapper_quest()
 			end
 		}
 	}
@@ -3747,7 +3831,8 @@ endwhile
 		add_task {
 			prereq = want_shore() and
 				not unlocked_island() and
-				turns_to_next_sr >= 5,
+				turns_to_next_sr >= 5 and
+				not have_frat_war_outfit(),
 			f = script.get_dinghy,
 			message = "get dinghy",
 		}
@@ -3763,8 +3848,8 @@ endwhile
 	end
 
 	add_task { prereq = (whichday == 2) and ((not highskill_at_run and advs() < 110) or (advs() < 20 and level() >= 8)) and challenge ~= "jarlsberg", f = function()
-		if drunkenness() < 19 then
-			if challenge == "fist" and have_hippy_outfit() and drunkenness() < 19 then
+		if drunkenness() < estimate_max_safe_drunkenness() then
+			if challenge == "fist" and have_hippy_outfit() and drunkenness() < estimate_max_safe_drunkenness() then
 				local kitchen = get_page("/campground.php", { action = "inspectkitchen" })
 				if kitchen:contains("My First Shaker") and not kitchen:contains("Du Coq cocktailcrafting") then
 					if not have("Queue Du Coq cocktailcrafting kit") and meat() < 1000 then
@@ -3781,7 +3866,7 @@ endwhile
 					end
 				end
 				script.wear { hat = "filthy knitted dread sack", pants = "filthy corduroys" }
-				stop "TODO: mix and drink SHCs to 19 drunk"
+				stop "TODO: mix and drink SHCs to max drunk"
 			else
 				inform "drinking at end of day 2"
 				local pt, pturl, drank = script.drink_booze(whichday, true)
@@ -3789,7 +3874,7 @@ endwhile
 					return pt, pturl, drank
 				end
 			end
-		elseif fullness() >= 12 and drunkenness() >= 19 then
+		elseif fullness() >= 12 and drunkenness() >= estimate_max_safe_drunkenness() then
 			if script.spooky_forest_runaways() then return end -- TODO: do earlier as a task
 			if script.trade_for_clover() then return end
 			if DD_keys < 1 then
@@ -3810,7 +3895,7 @@ endwhile
 			script.maybe_ensure_buffs { "Brother Flying Burrito's Blessing" }
 			unequip_slot("familiarequip")
 			script.wear { acc3 = "time halo", acc2 = have("dead guy's watch") and "dead guy's watch" or nil }
-			if drunkenness() <= 19 then
+			if drunkenness() <= estimate_max_safe_drunkenness() then
 				script.ensure_buff_turns("Ode to Booze", 10)
 			end
 			result, resulturl = get_page("/inventory.php", { which = 1})
@@ -3823,15 +3908,41 @@ endwhile
 
 	add_task {
 		prereq = not have_hippy_outfit() and
+			unlocked_island() and
+			ensure_yellow_ray() and
+			not have_frat_war_outfit(),
+		f = function()
+			-- TODO: Should do this before level 9 to avoid noncombats!
+			script.bonus_target { "combat" }
+			script.go("yellow raying hippy", 26, make_yellowray_macro("hippy"), {}, { "Musk of the Moose", "Carlweather's Cantata of Confrontation" }, "He-Boulder", 15, { choice_function = function(advtitle, choicenum)
+				if advtitle == "Peace Wants Love" then
+					if not have("filthy corduroys") then
+						return "Agree to take his clothes"
+					else
+						return "Say &quot;No thanks.&quot;"
+					end
+				elseif advtitle == "An Inconvenient Truth" then
+					if not have("filthy knitted dread sack") then
+						return "Check out the clothing"
+					else
+						return "Avert your eyes"
+					end
+				end
+			end })
+		end,
+	}
+
+	add_task {
+		prereq = not have_hippy_outfit() and
 			can_yellow_ray() and
 			unlocked_island() and
 			challenge ~= "boris" and
 			challenge ~= "zombie" and
-			challenge ~= "jarlsberg",
+			challenge ~= "jarlsberg" and
+			level() >= 9,
 		f = function()
-			-- TODO: Want +combat%
-			-- TODO: Should do this before level 9 to avoid noncombats!
-			script.go("yellow raying hippy", 26, make_yellowray_macro("hippy"), {}, { "Carlweather's Cantata of Confrontation" }, "He-Boulder", 15, { choice_function = function(advtitle, choicenum)
+			script.bonus_target { "noncombat" }
+			script.go("yellow raying hippy", 26, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "He-Boulder", 15, { choice_function = function(advtitle, choicenum)
 				if advtitle == "Peace Wants Love" then
 					if not have("filthy corduroys") then
 						return "Agree to take his clothes"
@@ -3936,13 +4047,13 @@ endwhile
 					if not have("frilly skirt") then
 						buy_item("frilly skirt", "5")
 					end
-					if not have("frilly skirt") and moonsign_area() ~= "Degrassi Knoll" then
+					if not have("frilly skirt") and moonsign_area() ~= "Degrassi Knoll" and not ascensionstatus("Hardcore") then
 						if challenge == "boris" then
-							if have("clockwork maid") then
+							if have_item("clockwork maid") then
 								stop "Already have clockwork maid!"
 							end
-							pull_in_softcore("clockwork maid")
-							if have("clockwork maid") then
+							ascension_automation_pull_item("clockwork maid")
+							if have_item("clockwork maid") then
 								did_action = true
 								return
 							end
@@ -4207,6 +4318,48 @@ endwhile
 		message = "get steam-powered model rocketship",
 	}
 
+	local function have_wand_or_parts()
+		if have_item("Wand of Nagamar") then
+			return true
+		else
+			local wa = have_item("WA") or (have_item("ruby W") and have_item("metallic A"))
+			local nd = have_item("ND") or (have_item("lowercase N") and have_item("heavy D"))
+			return wa and nd
+		end
+	end
+
+	add_task {
+		when = not ascensionstatus("Aftercore") and
+			level() >= 10 and
+			requires_wand_of_nagamar() and
+			not have_wand_or_parts() and
+			ensure_clover(),
+		task = {
+			message = "clovering for wand",
+			nobuffing = true,
+			action = function()
+				result, resulturl = autoadventure { zoneid = 322 }
+				did_action = have_wand_or_parts()
+			end
+		}
+	}
+
+	add_task {
+		when = not have_item("Wand of Nagamar") and
+			requires_wand_of_nagamar() and
+			have_wand_or_parts(),
+		task = {
+			message = "pasting wand",
+			nobuffing = true,
+			action = function()
+				meatpaste_items("ruby W", "metallic A")
+				meatpaste_items("lowercase N", "heavy D")
+				meatpaste_items("WA", "ND")
+				did_action = have_item("Wand of Nagamar")
+			end
+		}
+	}
+
 	add_task {
 		prereq = level() < 11,
 		f = function()
@@ -4217,10 +4370,10 @@ endwhile
 	}
 
 	add_task { prereq = (whichday == 3) and not highskill_at_run and advs() < 100 and challenge ~= "jarlsberg", f = function()
-		if drunkenness() < 19 then
+		if drunkenness() < estimate_max_safe_drunkenness() then
 			if challenge == "fist" then
 				script.wear { hat = "filthy knitted dread sack", pants = "filthy corduroys" }
-				stop "TODO: mix and drink SHC to 19 drunk"
+				stop "TODO: mix and drink SHCs to max drunk"
 			else
 				inform "drinking at end of day 3"
 				local pt, pturl, drank = script.drink_booze(whichday, true)
@@ -4228,7 +4381,7 @@ endwhile
 					return pt, pturl, drank
 				end
 			end
-		elseif fullness() >= 12 and drunkenness() >= 19 then
+		elseif fullness() >= 12 and drunkenness() >= estimate_max_safe_drunkenness() then
 			if script.spooky_forest_runaways() then return end -- TODO: do earlier as a task
 			if script.trade_for_clover() then return end
 			-- TODO: move out, check for scrolls and level() and quest()
@@ -4252,7 +4405,7 @@ endwhile
 				end
 				return result, resulturl, did_action
 			else
-				if drunkenness() <= 19 and not have("bucket of wine") then
+				if drunkenness() <= estimate_max_safe_drunkenness() and not have("bucket of wine") then
 					inform "using tome summons"
 
 					if not have("bucket of wine") then
@@ -4278,7 +4431,7 @@ endwhile
 
 					did_action = true
 				else
-					if drunkenness() <= 19 then
+					if drunkenness() <= estimate_max_safe_drunkenness() then
 						script.ensure_buff_turns("Ode to Booze", 10)
 					end
 					unequip_slot("familiarequip")
@@ -4326,17 +4479,22 @@ endwhile
 	}
 
 	add_task {
-		prereq = can_yellow_ray() and quest("Make War, Not... Oh, Wait") and not have_frat_war_outfit(),
+		prereq = quest("Make War, Not... Oh, Wait") and
+			not have_frat_war_outfit() and
+			ensure_yellow_ray(),
 		f = function()
-			-- TODO: buffs
-			if challenge == "boris" then
-				stop "TODO: Get frat war outfit in boris"
-			end
 			script.go("yellow raying frat house", 134, make_yellowray_macro("War"), {
 				["Catching Some Zetas"] = "Wake up the pledge and throw down",
 				["Fratacombs"] = "Wander this way",
 				["One Less Room Than In That Movie"] = "Officers' Lounge",
 			}, {}, "He-Boulder", 20, { equipment = { hat = "filthy knitted dread sack", pants = "filthy corduroys" } })
+		end,
+	}
+
+	add_task {
+		prereq = quest("Make War, Not... Oh, Wait") and not have_frat_war_outfit() and challenge == "boris",
+		f = function()
+			stop "TODO: Get frat war outfit in boris"
 		end,
 	}
 
@@ -4525,7 +4683,7 @@ endwhile
 	}
 
 	add_task { prereq = true, f = function()
-		if ((advs() < 50 and turnsthisrun() + advs() < 850) or (advs() < 10)) and fullness() >= 12 and drunkenness() >= 19 and not highskill_at_run then
+		if ((advs() < 50 and turnsthisrun() + advs() < 850) or (advs() < 10)) and fullness() >= 12 and drunkenness() >= estimate_max_safe_drunkenness() and not highskill_at_run then
 			if script.spooky_forest_runaways() then return end -- TODO: do earlier as a task
 			if script.trade_for_clover() then return end
 			stop "TODO: end of day 4. (pvp,) overdrink"
@@ -4966,7 +5124,7 @@ use gauze garter, gauze garter
 	end
 
 	if not did_action and not finished then
-		result = add_message_to_page(get_result(), "Automation stopped while trying to do: <tt>" .. table.concat(last_inform_msglist, " &rarr; ") .. "</tt>", "Automation stopped:", "darkorange")
+		result = add_message_to_page(get_result(), "Automation stopped while trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt>", "Automation stopped:", "darkorange")
 	end
 
 	return result, resulturl, did_action

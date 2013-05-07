@@ -104,18 +104,27 @@ function get_automation_scripts(cached_stuff)
 			return
 		end
 		local d = familiar_data[famname]
-		if not d then
-			critical("DEBUG, no familiar data for " ..tostring(famname).." from "..tostring(famname_input))
-		end
-		if missing_fams[famname] or (d.needsequip and not have(d.familiarequip)) then
+		if missing_fams[famname] or (d and d.needsequip and not have(d.familiarequip)) then
 			if famname == "Rogue Program" and spleen() < 12 then
 				return raw_want_familiar("Bloovian Groose")
 			else
 				if not familiar_data[famname].fallback or highskill_at_run then
 					critical("No fallback familiar for " .. famname)
 				end
-				return raw_want_familiar(next_famname_input or familiar_data[famname].fallback)
+				return raw_want_familiar(next_famname_input or (d and d.fallback))
 			end
+		end
+		if not d then
+			local df = datafile("familiars")[famname]
+			if df and df.famid then
+				if df.famid ~= familiarid() then
+					switch_familiarid(df.famid)
+				end
+				if df.famid == familiarid() then
+					return {}
+				end
+			end
+			critical("Don't have familiar " .. tostring(famname) .. ", and no fallback data (from "..tostring(famname_input) .. ")")
 		end
 		if d then
 			if d.id ~= familiarid() then
@@ -401,6 +410,9 @@ function get_automation_scripts(cached_stuff)
 			if level() >= 10 then
 				need_extra = 40
 			end
+		end
+		if highskill_at_run and level() >= 6 then
+			need_extra = 20
 		end
 		if challenge == "boris" then
 			if have_skill("Banishing Shout") and maxmp() >= 60 and level() >= 6 then
@@ -727,10 +739,13 @@ function get_automation_scripts(cached_stuff)
 			return function() return pt, pturl end
 		end,
 		["Red Door Syndrome"] = function()
-			if not have("can of black paint") then
+			if not have_item("can of black paint") then
 				buy_item("can of black paint", "l")
 			end
 			return use_item("can of black paint")
+		end,
+		["Got Milk"] = function()
+			return use_item("milk of magnesium")
 		end,
 	}
 	local spells = {
@@ -844,7 +859,7 @@ function get_automation_scripts(cached_stuff)
 			local function tabledel(t)
 				for x, y in pairs(t) do
 					-- TODO: do more generally?
-					if (spells[y] and spells[y].item) or y == "Heavy Petting" or y == "Peeled Eyeballs" or y == "A Few Extra Pounds" or y == "Butt-Rock Hair" then
+					if (spells[y] and spells[y].item) or y == "Heavy Petting" or y == "Peeled Eyeballs" or y == "A Few Extra Pounds" or y == "Butt-Rock Hair" or y == "Red Door Syndrome" then
 						table.remove(t, x)
 						return tabledel(t)
 					end
@@ -1421,7 +1436,7 @@ endif
 					else
 						critical "Failed to eat food"
 					end
-				elseif count_item("cosmic egg") >= 2 and count_item("cosmic potted meat product") >= 2 and count_item("cosmic cheese") >= 2 and count_item("cosmic dough") >= 2 and count_item("cosmic vegetable") >= 1 then
+				elseif count_item("cosmic egg") >= 2 and count_item("cosmic potted meat product") >= 2 and count_item("cosmic cheese") >= 2 and count_item("cosmic dough") >= 2 and count_item("cosmic vegetable") >= 1 and cached_stuff.summoned_jarlsberg_ingredients then
 					craft_cosmic_kitchen { pwd = session.pwd, ["Ultimate Breakfast Sandwich"] = 2, ["consummate sauerkraut"] = 1 }
 					shop_buyitem({ ["Staff of Fruit Salad"] = 1, ["Staff of the Healthy Breakfast"] = 1, ["Staff of the Hearty Dinner"] = 1, ["Staff of the Light Lunch"] = 1, ["Staff of the All-Steak"] = 1, ["Staff of the Cream of the Cream"] = 1, ["Staff of the Staff of Life"] = 1, ["Staff of the Standalone Cheese"] = 1 }, "jarl")
 					if count_item("Ultimate Breakfast Sandwich") >= 2 and count_item("consummate sauerkraut") >= 1 then
@@ -1430,6 +1445,14 @@ endif
 						critical "Failed to cook food"
 					end
 				elseif have_skill("Food Coma") then
+					if maxmp() < 30 then
+						if not have_item("Bright Water") then
+							script.ensure_mp(2)
+							async_post_page("/campground.php", { preaction = "summoncliparts" })
+							async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "06", clip2 = "06", clip3 = "04" })
+						end
+						use_item("Bright Water")
+					end
 					if maxmp() < 30 then
 						stop "TODO: Buff maxmp (use +100 from clip art?)"
 					end
@@ -1451,6 +1474,7 @@ endif
 					end
 					r() cast_skill("Conjure Cream")
 					r() cast_skill("Conjure Fruit")
+					cached_stuff.summoned_jarlsberg_ingredients = true
 					if count_item("cosmic egg") >= 2 and count_item("cosmic potted meat product") >= 2 and count_item("cosmic cheese") >= 2 and count_item("cosmic dough") >= 2 and count_item("cosmic vegetable") >= 1 then
 						return f.eat_food(whichday)
 					else
@@ -2210,15 +2234,13 @@ mark m_done
 				fam "Frumious Bandersnatch"
 				use_hottub()
 				ensure_mp(50)
-				if buff("Astral Shell") or challenge == "boris" or buff("Red Door Syndrome") then
+				if have_buff("Astral Shell") or challenge == "boris" or have_buff("Red Door Syndrome") then
+					-- TODO: check resistance instead
 					local pt, url = get_page("/manor3.php", { place = "chamber" })
 					result, resulturl, did_action = handle_adventure_result(pt, url, "?", macro_spookyraven)
 				elseif meat() >= 3000 then
-					if not have_item("can of black paint") then
-						buy_item("can of black paint", "l")
-					end
-					use_item("can of black paint")
-					did_action = buff("Red Door Syndrome")
+					script.ensure_buffs { "Red Door Syndrome" }
+					did_action = have_buff("Red Door Syndrome")
 				else
 					stop "TODO: Beat Lord Spookyraven"
 				end
@@ -2703,13 +2725,11 @@ endif
 				script.bonus_target { "item" }
 				maybe_ensure_buffs { "Brother Flying Burrito's Blessing" }
 				local bufftbl = { "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy", "Spirit of Garlic" }
-				local famchoice = "Slimeling"
 				if count("glass of goat's milk") < 2 or not buff("Brother Flying Burrito's Blessing") then
 					table.insert(bufftbl, "Heavy Petting")
 					table.insert(bufftbl, "Peeled Eyeballs")
-					famchoice = "Slimeling even in fist" -- ??? why?
 				end
-				go("get goat cheese for trapper", 271, make_cannonsniff_macro("dairy goat"), nil, bufftbl, famchoice, 35, { olfact = "dairy goat" })
+				go("get goat cheese for trapper", 271, make_cannonsniff_macro("dairy goat"), nil, bufftbl, "Slimeling", 35, { olfact = "dairy goat" })
 			elseif (challenge == "fist") or (have_item("miner's helmet") and have_item("7-Foot Dwarven mattock") and have_item("miner's pants")) then
 				if challenge == "fist" then
 					ensure_buffs { "Earthen Fist" }
@@ -2732,7 +2752,7 @@ endif
 					pull_in_softcore("heavy metal thunderrr guitarrr")
 					did_action = have("heavy metal thunderrr guitarrr")
 				else
-					pull_in_softcore(want_ore)
+					ascension_automation_pull_item(want_ore)
 					did_action = count(want_ore) > got
 				end
 			else
@@ -3223,18 +3243,18 @@ endif
 		if got_enough then
 			inform "make star stuff"
 			if not have("Richard's star key") then
-				async_post_page("/starchart.php", { action = "makesomething", pwd = get_pwd(), numstars = "8", numlines = "7" })
+				shop_buyitem("Richard's star key", "starchart")
 			end
 			if not have("star hat") then
-				async_post_page("/starchart.php", { action = "makesomething", pwd = get_pwd(), numstars = "5", numlines = "3" })
+				shop_buyitem("star hat", "starchart")
 			end
 			if not have("star crossbow") and not have("star staff") and not have("star sword") and challenge ~= "fist" and challenge ~= "boris" then
 				if count("star") >= 5 and count("line") >= 6 then
-					async_post_page("/starchart.php", { action = "makesomething", pwd = get_pwd(), numstars = "5", numlines = "6" })
+					shop_buyitem("star crossbow", "starchart")
 				elseif count("star") >= 6 and count("line") >= 5 then
-					async_post_page("/starchart.php", { action = "makesomething", pwd = get_pwd(), numstars = "6", numlines = "5" })
+					shop_buyitem("star staff", "starchart")
 				elseif count("star") >= 7 and count("line") >= 4 then
-					async_post_page("/starchart.php", { action = "makesomething", pwd = get_pwd(), numstars = "7", numlines = "4" })
+					shop_buyitem("star sword", "starchart")
 				end
 			end
 			if have("Richard's star key") and have("star hat") and (have("star crossbow") or have("star staff") or have("star sword") or challenge == "fist" or challenge == "boris") then
@@ -3295,7 +3315,7 @@ endif
 			if pt:contains("First bottle's free") and pt:contains("for free!") then
 				local m = meat()
 				async_post_page("/tavern.php", { action = "buygoofballs" })
-				if not have("goofballs") or meat() ~= m then
+				if not have_item("bottle of goofballs") or meat() ~= m then
 					critical "Error getting free goofballs"
 				end
 			end
@@ -3471,15 +3491,23 @@ mark m_done
 			end
 		else
 			inform "build meatcar"
-			if not have("meat stack") then
+			if not have_item("meat stack") then
 				async_get_page("/inventory.php", { quantity = 1, action = "makestuff", pwd = get_pwd(), whichitem = get_itemid("meat stack"), ajax = 1 })
 			end
-			buy_item("cog", "5")
-			buy_item("empty meat tank", "5")
-			buy_item("tires", "5")
-			buy_item("spring", "5")
-			buy_item("sprocket", "5")
-			buy_item("sweet rims", "m")
+			local function check_buy_item(name, where)
+				if not have_item(name) then
+					buy_item(name, where)
+				end
+				if not have_item(name) then
+					stop("Failed to buy item: " .. tostring(name))
+				end
+			end
+			check_buy_item("cog", "5")
+			check_buy_item("empty meat tank", "5")
+			check_buy_item("tires", "5")
+			check_buy_item("spring", "5")
+			check_buy_item("sprocket", "5")
+			check_buy_item("sweet rims", "m")
 			meatpaste_items("empty meat tank", "meat stack")
 			meatpaste_items("spring", "sprocket")
 			meatpaste_items("sprocket assembly", "cog")
@@ -4197,53 +4225,6 @@ endif
 					end
 				end
 			end
-		end
-	end
-
-	function f.do_orc_chasm()
-		local can_make_64735_scroll = (count("334 scroll") >= 2 or have("668 scroll")) and (have("64067 scroll") or (have("30669 scroll") and have("33398 scroll")))
-		if have("64735 scroll") then
-			inform "using scroll"
-			set_result(use_item("64735 scroll"))
-			did_action = have("facsimile dictionary")
-		elseif quest_text("You must find your way past the Orc Chasm") then
-			inform "unlock baron's valley"
-			result, resulturl = post_page("/forestvillage.php", { pwd = get_pwd(), action = "untinker", whichitem = get_itemid("abridged dictionary") })
-			result, resulturl = get_page("/mountains.php", { pwd = get_pwd(), orcs = 1 })
-			refresh_quest()
-			did_action = not quest_text("You must find your way past the Orc Chasm")
-		elseif have("Wand of Nagamar") and can_make_64735_scroll then
-			if f.get_photocopied_monster() ~= "rampaging adding machine" then
-				inform "get adding machine from faxbot"
-				f.get_faxbot_fax("rampaging adding machine", "adding_machine")
-			else
-				inform "fight adding machine"
-				f.heal_up()
-				f.ensure_mp(30)
-				wear {}
-				fam "Llama Lama"
-				local pt, url = use_item("photocopied monster")()
-				pt, url = get_page("/fight.php")
-				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_orc_chasm)
-				did_action = (advagain and have("64735 scroll"))
-				-- TODO: print error if unsuccessful
-			end
-		elseif have("lowercase N") then
-			if not have("ruby W") then stop "Missing ruby W" end
-			if not have("metallic A") then stop "Missing metallic A" end
-			if not have("lowercase N") then stop "Missing lowercase N" end
-			if not have("heavy D") then stop "Missing heavy D" end
-			inform "meatpasting wand"
-			meatpaste_items("ruby W", "metallic A")
-			meatpaste_items("lowercase N", "heavy D")
-			meatpaste_items("WA", "ND")
-			did_action = have("Wand of Nagamar")
---		elseif count("334 scroll") >= 2 and have("30669 scroll") and have("33398 scroll") then
---			script.bonus_target { "item" }
---			go("doing orc chasm", 80, macro_orc_chasm, {}, { "Spirit of Bacon Grease", "Heavy Petting", "Leash of Linguini", "Empathy", "Ur-Kel's Aria of Annoyance" }, "Jumpsuited Hound Dog", 50, { equipment = { familiarequip = "sugar shield" }, olfact = "XXX pr0n" })
-		else
-			script.bonus_target { "item" }
-			go("getting scrolls in the orc chasm", 80, macro_orc_chasm, {}, { "Spirit of Bacon Grease", "Heavy Petting", "Leash of Linguini", "Empathy", "Ur-Kel's Aria of Annoyance" }, "Jumpsuited Hound Dog", 50, { equipment = { familiarequip = "sugar shield" }, olfact = "XXX pr0n" })
 		end
 	end
 

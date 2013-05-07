@@ -39,8 +39,8 @@ data SessionDataType = SessionDataType {
 	lastStoredState_ :: IORef (Maybe String)
 }
 
-type ConnChanActionType = MVar (Either SomeException (URI, Data.ByteString.ByteString, [(String, String)], Network.HTTP.ResponseCode, Network.HTTP.Response Data.ByteString.ByteString))
-type ConnChanType = Chan (URI, Network.HTTP.Request Data.ByteString.ByteString, ConnChanActionType, RefType)
+type ConnChanActionType = (Either SomeException (URI, Data.ByteString.ByteString, [(String, String)], Network.HTTP.ResponseCode, Network.HTTP.Response Data.ByteString.ByteString))
+type ConnChanType = Chan (URI, Network.HTTP.Request Data.ByteString.ByteString, MVar ConnChanActionType, RefType)
 
 data ServerSessionType = ServerSessionType {
 	wheneverConnection_ :: ConnChanType,
@@ -129,4 +129,3 @@ instance Show KolproxyException where
 	show (InternalError str) = "Internal error: " ++ str
 	show (LuaError str) = "Lua error: " ++ str
 	show (NetworkError str) = "Network error: " ++ str
-

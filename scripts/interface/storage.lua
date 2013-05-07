@@ -24,6 +24,11 @@ aftercore_items_list = {
 	"stinky cheese eye",
 	"ice sickle",
 	"Crown of Thrones",
+	"right bear arm",
+	"left bear arm",
+	"Snow Suit",
+	"Jarlsberg's pan",
+	"Jarlsberg's pan (Cosmic portal mode)",
 
 	"plexiglass pants",
 	"plexiglass pendant",
@@ -168,7 +173,10 @@ aftercore_items_list = {
 	"offensive moustache",
 
 	"can of Rain-Doh",
+
 	"Trivial Avocations board game",
+	"Jackass Plumber home game",
+
 	"KoL Con Six Pack",
 }
 

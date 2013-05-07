@@ -11,6 +11,7 @@ import Control.Concurrent
 import Control.Exception
 import Control.Monad
 import Data.IORef
+import Data.List (intercalate)
 import Data.Maybe
 import Data.Time
 import Network.URI
@@ -178,3 +179,15 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 			Left e -> throwIO (e :: SomeException)
 
 	return (xf, mvf)
+
+login (login_useragent, login_host) name pass = do
+        (text, _effuri, _headers) <- internalKolRequest (mkuri "/") Nothing (Nothing, login_useragent, login_host, Nothing) False
+        let [[challenge]] = matchGroups "<input type=hidden name=challenge value=\"([0-9a-f]*)\">" (Data.ByteString.Char8.unpack text)
+        let response = get_md5 (pass ++ ":" ++ challenge)
+	let p_sensitive = [("loginname", name), ("challenge", challenge), ("response", response), ("secure", "1"), ("loggingin", "Yup.")]
+	(_pt, _effuri, allhdrs) <- internalKolRequest (mkuri "/login.php") (Just p_sensitive) (Nothing, login_useragent, login_host, Nothing) True
+	let hdrs = filter (\(x, _y) -> (x == "Set-Cookie" || x == "Location")) allhdrs
+	let new_cookie = case filter (\(a, _b) -> a == "Set-Cookie") hdrs of
+		[] -> Nothing
+		(x:xs) -> Just $ intercalate "; " (map ((takeWhile (/= ';')) . snd) (x:xs)) -- TODO: Make readable
+	return new_cookie

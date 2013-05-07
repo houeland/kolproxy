@@ -110,13 +110,32 @@ function shieldbutt_action()
 end
 
 function noodles_action()
-	return [[
+	if have_skill("Ambidextrous Funkslinging") then
+		return [[
 
   if hasskill Entangling Noodles
     cast Entangling Noodles
   endif
 
+  if hascombatitem Rain-Doh blue balls
+    use Rain-Doh blue balls, Rain-Doh indigo cup
+  endif
+
 ]]
+	else
+		return [[
+
+  if hasskill Entangling Noodles
+    cast Entangling Noodles
+  endif
+
+  if hascombatitem Rain-Doh blue balls
+    use Rain-Doh blue balls
+    use Rain-Doh indigo cup
+  endif
+
+]]
+	end
 end
 
 

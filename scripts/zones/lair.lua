@@ -104,9 +104,54 @@ add_processor("/campground.php", function()
 	end
 end)
 
+add_automator("/campground.php", function()
+	if session["zone.lair.gates"] then return end
+	if text:contains("peer into the eyepiece of the telescope") or (text:contains("Nope.") and params.action == "telescopelow") then
+		if level() >= 13 then
+			get_page("/lair1.php", { action = "gates" })
+		end
+	end
+end)
+
+function requires_wand_of_nagamar()
+	return ascensionpathid() ~= 8 and ascensionpathid() ~= 10 and not ascensionpath("Avatar of Jarlsberg")
+end
+
 add_printer("/campground.php", function()
 	if text:contains("peer into the eyepiece of the telescope") or (text:contains("Nope.") and params.action == "telescopelow") then
 		-- telescope lair info
+
+		local function get_gates_display_lines()
+			local gate_lines = {}
+			local gatestatus = session["zone.lair.gates"] or {}
+			local scopeitems = session["zone.lair.itemsneeded"] or {}
+
+			local function mkline(gate_input)
+				if not gate_input then
+					return [[<span style="color: darkorange">(Unknown)</span>]]
+				end
+				local gate = gate_input
+				if not lair_gateitems[gate_input] then
+					for a, b in pairs(lair_gateitems) do
+						if b.item == gate_input then
+							gate = a
+						end
+					end
+				end
+				local gatedata = lair_gateitems[gate]
+				if gatedata then
+					return string.format([[%s: %s]], gate, gate_status_display(gate, gatedata))
+				else
+					return [[<span style="color: red">{ Unknown gate type: ]] .. gate .. [[ }</span>]]
+				end
+			end
+
+			table.insert(gate_lines, mkline(gatestatus[1] or scopeitems[1]))
+			table.insert(gate_lines, mkline(gatestatus[2]))
+			table.insert(gate_lines, mkline(gatestatus[3]))
+
+			return gate_lines
+		end
 
 		local dod_gate_effects = {
 			"acuity",
@@ -134,8 +179,17 @@ add_printer("/campground.php", function()
 				end
 				return [[<span style="color: ]] .. (overridecolor or color) .. [[">]] .. string.format("%s = ?", eff) .. [[</span>]]
 			end
+			local want_type = nil
+			local gatestatus = session["zone.lair.gates"] or {}
+			if gatestatus[3] and lair_gateitems[gatestatus[3]] then
+				want_type = lair_gateitems[gatestatus[3]].potion
+			end
 			for eff in table.values(dod_gate_effects) do
-				table.insert(dodpotstatus, handle_eff(eff))
+				local overridecolor = nil
+				if want_type and want_type ~= eff then
+					overridecolor = "gray"
+				end
+				table.insert(dodpotstatus, handle_eff(eff, overridecolor))
 			end
 			for eff in table.values(dod_potion_effects) do
 				local skip = false
@@ -255,29 +309,54 @@ add_printer("/campground.php", function()
 				end
 				return string.format([[<span style="color: darkorange">%s</span>]], table.concat(list, ", "))
 			end
+			local function check_wand()
+				if have_item("Wand of Nagamar") then
+					table.insert(otherlines, check_items { "Wand of Nagamar" })
+					return true
+				end
+				local parts = {}
+				if have_item("WA") then
+					table.insert(parts, "WA")
+				else
+					table.insert(parts, "ruby W")
+					table.insert(parts, "metallic A")
+				end
+				if have_item("ND") then
+					table.insert(parts, "ND")
+				else
+					table.insert(parts, "lowercase N")
+					table.insert(parts, "heavy D")
+				end
+				local missing = false
+				local strtbl = {}
+				for _, x in ipairs(parts) do
+					if have_item(x) then
+						table.insert(strtbl, string.format([[<span style="color: green">%s</span>]], x))
+					else
+						table.insert(strtbl, string.format([[<span style="color: darkorange">%s</span>]], x))
+						missing = true
+					end
+				end
+				table.insert(otherlines, string.format([[<span style="color: darkorange">Wand of Nagamar</span> (%s)]], table.concat(strtbl, " + ")))
+			end
 			table.insert(otherlines, check_items(guitar_items))
 			table.insert(otherlines, check_items(accordion_items))
 			table.insert(otherlines, check_items(drum_items))
-			table.insert(otherlines, check_items { "Wand of Nagamar" })
+			if requires_wand_of_nagamar() then
+				check_wand()
+			end
 			return otherlines
 		end
 
 		local extratext = {}
 		if ascensionpathid() ~= 4 then
+			table.insert(extratext, [[<h4>Lair gates</h4>]] .. table.concat(get_gates_display_lines(), "<br>") .. [[</p>]])
 			table.insert(extratext, [[<h4>Dungeons of Doom potions</h4><p>]] .. table.concat(get_dod_display_lines(), "<br>") .. [[</p>]])
 		end
 		table.insert(extratext, [[<h4>Mariachi statue keys</h4><p>]] .. table.concat(get_statues_display_lines(), "<br>") .. [[</p>]])
 		table.insert(extratext, [[<h4>Other items</h4><p>]] .. table.concat(get_other_display_lines(), "<br>") .. [[</p>]])
 
-		local isfirst = true
-		text = text:gsub([[<table[^>]*width=95%%]], function(x)
-			if isfirst then
-				isfirst = false
-				return x
-			else
-				return make_kol_html_frame(table.concat(extratext, "\n"), "Lair Checklist:") .. x
-			end
-		end, 2)
+		text = add_message_to_page(text, table.concat(extratext, "\n"), "Lair Checklist:", color)
 	end
 end)
 
@@ -307,13 +386,77 @@ lair_gateitems = {
 	["Gate that is Not a Gate"] = { effect = "Teleportitis", potion = "teleportation" },
 }
 
-add_printer("/lair1.php", function()
-	local need = {}
-	local dod_tbl = get_dod_potion_status()
+add_processor("/lair1.php", function()
+	local whereidx = {}
+	local gates = {}
+	for a, b in pairs(lair_gateitems) do
+		local where = text:find(a)
+		if where then
+			whereidx[a] = where
+			table.insert(gates, a)
+		end
+	end
+
+	table.sort(gates, function(a, b) return whereidx[a] < whereidx[b] end)
+
+	if next(gates) then
+		session["zone.lair.gates"] = gates
+	end
+end)
+
+function gate_status_display(from, to)
 	local dod_reverse = {}
-	for a, b in pairs(dod_tbl) do
+	for a, b in pairs(get_dod_potion_status()) do
 		dod_reverse[b] = a
 	end
+
+	local effect_status = "(???)"
+	local effect_link = nil
+	if have_buff(to.effect) then
+		effect_status = [[(<span style="color: gray;">have ]]..to.effect..[[</span>)]]
+	elseif to.effect == "Teleportitis" and have("ring of teleportation") then
+		if have_equipped("ring of teleportation") then
+			effect_status = [[(<span style="color: gray;">have ]]..to.effect..[[</span>)]]
+		else
+			effect_status = [[(wear ring for <span style="color: green;">(]]..to.effect..[[)</span>)]]
+		end
+	elseif to.effect == "Sugar Rush" then
+		local have_any = false
+		local have_usable = nil
+		for _, item in ipairs(sugar_rush_items) do
+			if have_item(item.name) then
+				have_any = true
+				if item.usable and not have_usable then
+					have_usable = item.name
+				end
+			end
+		end
+		if have_usable then
+			effect_status = [[(<span style="color: green">use ]]..have_usable.." ("..to.effect..")".. [[</span>)]]
+			effect_link = [[(<span class="kolproxy_gate_item_spoiler">use <a href="#" onclick="use_item(this, ]]..get_itemid(have_usable)..[[, &quot;]] .. to.effect .. [[&quot;); return false;" style="color: green;">]]..have_usable..[[</a>]] .." ("..to.effect..")".. [[</span>)]]
+		elseif have_it then
+			effect_status = [[(get <span style="color: green;">(]]..to.effect..[[)</span>)]]
+		else
+			effect_status = [[<b>(need <span style="color: darkorange;">(]]..to.effect..[[)</span>)</b>]]
+		end
+	elseif to.item or (to.potion and dod_reverse[to.potion]) then
+		local name = to.item or dod_reverse[to.potion]
+		if have_item(name) then
+			effect_status = [[(<span style="color: green;">use ]]..name .." ("..to.effect..")".. [[</span>)]]
+			effect_link = [[(<span class="kolproxy_gate_item_spoiler">use <a href="#" onclick="use_item(this, ]]..get_itemid(name)..[[, &quot;]] .. to.effect .. [[&quot;); return false;" style="color: green;">]]..name..[[</a>]] .." ("..to.effect..")".. [[</span>)]]
+		elseif to.gnomish_buyable and moonsign_area() == "Gnomish Gnomad Camp" then
+			effect_status = [[<b>(buy <span>]]..name..[[</span>]].." ("..to.effect..")"..[[)</b>]]
+		else
+			effect_status = [[<b>(need <span style="color: darkorange;">]]..name..[[</span>]].." ("..to.effect..")"..[[)</b>]]
+		end
+	else
+		effect_status = [[<b>(need <span style="color: darkorange;">(]]..to.effect..[[)</span>)</b>]]
+	end
+	return effect_status, effect_link
+end
+
+add_printer("/lair1.php", function()
+	local need = {}
 	local pwd = session.pwd -- Inserting pwd, boo!
 	text = text:gsub([[</head>]], [[<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
 <script type="text/javascript">
@@ -331,46 +474,8 @@ add_printer("/lair1.php", function()
 </script>%0]])
 	for from, to in pairs(lair_gateitems) do
 		if text:contains("<p>&quot;Through the "..from) then
-			local effect_status = "(???)"
-			if buff(to.effect) then
-				effect_status = [[(<span style="color: gray;">have ]]..to.effect..[[</span>)]]
-			elseif to.effect == "Teleportitis" and have("ring of teleportation") then
-				if have_equipped("ring of teleportation") then
-					effect_status = [[(<span style="color: gray;">have ]]..to.effect..[[</span>)]]
-				else
-					effect_status = [[(wear ring for <span style="color: green;">(]]..to.effect..[[)</span>)]]
-				end
-			elseif to.effect == "Sugar Rush" then
-				local have_any = false
-				local have_usable = nil
-				for _, item in ipairs(sugar_rush_items) do
-					if have_item(item.name) then
-						have_any = true
-						if item.usable and not have_usable then
-							have_usable = item.name
-						end
-					end
-				end
-				if have_usable then
-					effect_status = [[(<span class="kolproxy_gate_item_spoiler">use <a href="#" onclick="use_item(this, ]]..get_itemid(have_usable)..[[, &quot;]] .. to.effect .. [[&quot;); return false;" style="color: green;">]]..have_usable..[[</a>]] .." ("..to.effect..")".. [[</span>)]]
-				elseif have_it then
-					effect_status = [[(get <span style="color: green;">(]]..to.effect..[[)</span>)]]
-				else
-					effect_status = [[<b>(need <span style="color: darkorange;">(]]..to.effect..[[)</span>)</b>]]
-				end
-			elseif to.item or (to.potion and dod_reverse[to.potion]) then
-				local name = to.item or dod_reverse[to.potion]
-				if have(name) then
-					effect_status = [[(<span class="kolproxy_gate_item_spoiler">use <a href="#" onclick="use_item(this, ]]..get_itemid(name)..[[, &quot;]] .. to.effect .. [[&quot;); return false;" style="color: green;">]]..name..[[</a>]] .." ("..to.effect..")".. [[</span>)]]
-				elseif to.gnomish_buyable and moonsign_area() == "Gnomish Gnomad Camp" then
-					effect_status = [[<b>(buy <span>]]..name..[[</span>]].." ("..to.effect..")"..[[)</b>]]
-				else
-					effect_status = [[<b>(need <span style="color: darkorange;">]]..name..[[</span>]].." ("..to.effect..")"..[[)</b>]]
-				end
-			else
-				effect_status = [[<b>(need <span style="color: darkorange;">(]]..to.effect..[[)</span>)</b>]]
-			end
-			text = text:gsub("(<p>&quot;Through the "..from..".-&quot;)( <p>)", "%1 " .. effect_status .. "%2")
+			local effect_status, effect_link = gate_status_display(from, to)
+			text = text:gsub("(<p>&quot;Through the "..from..".-&quot;)( <p>)", "%1 " .. (effect_link or effect_status) .. "%2")
 			table.insert(need, to)
 		end
 	end
@@ -401,6 +506,38 @@ add_printer("/lair2.php", function()
 			text = text:gsub([[(<select name=]]..a..[[>.-<option value=".-")(>]]..b..[[</option>.-</select>)]], [[%1 selected="selected"%2]])
 		end
 	end
+end)
+
+local smith_stone_banjo_href = add_automation_script("smith-stone-banjo", function()
+	if have_item("stone banjo") then
+		return make_kol_html_frame("Error: Already have stone banjo.", "Automation results:", "darkorange"), requestpath
+	end
+
+	if not have_item("big rock") then
+		if have_buff("Teleportitis") or have_equipped_item("ring of teleportation") then
+			return make_kol_html_frame("Error: Cannot pick up big rock while under the effect of teleportitis.", "Automation results:", "darkorange"), requestpath
+		end
+		if not have_item("ten-leaf clover") then
+			use_item("disassembled clover")
+		end
+		if have_item("ten-leaf clover") then
+			if not have_item("casino pass") then
+				buy_item("casino pass", "m")
+			end
+			get_page("/casino.php", { action = "slot", whichslot = 11 })
+		end
+	end
+	if not have_item("big rock") then
+		return make_kol_html_frame("Error: Failed to pick up big rock.", "Automation results:", "darkorange"), requestpath
+	end
+
+	if not have_item("banjo strings") then
+		local script = get_automation_scripts()
+		script.ensure_worthless_item()
+		post_page("/hermit.php", { action = "trade", whichitem = get_itemid("banjo strings"), quantity = 1 })
+	end
+
+	return smith_items("banjo strings", "big rock")()
 end)
 
 function automate_lair_statues(text)
@@ -521,7 +658,7 @@ function automate_lair_statues(text)
 
 	if text:contains("no instrument to give to the first") then
 		if have("ten-leaf clover") or have("disassembled clover") or have("big rock") then
-			table.insert(missing_stuff, [[a guitar <span style="color:green">(smith a stone banjo)</span>]])
+			table.insert(missing_stuff, string.format([[a guitar <span style="color: green">(smith a stone banjo)</span> <a href="%s" style="color: green">{ automate (1) }</a>]], smith_stone_banjo_href { pwd = session.pwd }))
 		else
 			table.insert(missing_stuff, "a guitar")
 		end

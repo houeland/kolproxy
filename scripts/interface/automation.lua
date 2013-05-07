@@ -34,8 +34,6 @@ local automate_zone_href = add_automation_script("automate-zone", function()
 		autochoices["Having a Medicine Ball"] = "Gaze deeply into the mirror"
 		autochoices["Out in the Garden"] = "None of the above"
 		if ascensionstatus() == "Aftercore" then
-			autochoices["Wheel in the Clouds in the Sky, Keep On Turning"] = "Leave the wheel alone"
-
 			autochoices["Disgustin' Junction"] = "Head down the tunnel"
 			autochoices["The Former or the Ladder"] = "Take the tunnel"
 			autochoices["Somewhat Higher and Mostly Dry"] = "Head down the dark tunnel"
@@ -49,23 +47,27 @@ local automate_zone_href = add_automation_script("automate-zone", function()
 			autochoices["You May Be on Thin Ice"] = "Fight Back Your Chills"
 			autochoices["Some Sounds Most Unnerving"] = "Infernal Pachyderms Sound Pretty Neat"
 			autochoices["One More Demon to Slay"] = "Sure! I'll be wearing its guts like a wreath!"
+
+			if playername() == "Eleron" and numtimes > 10 then
+				autochoices["Heavily Invested in Pun Futures"] = "Leave"
+			end
 		end
 		for i = 1, numtimes do
 			print("going for adv " .. i .. " / " .. numtimes)
 
 			-- ...prepare, heal up, spend mp, etc...
 
--- 			if playername() == "Eleron" then
+			if playername() == "Eleron" then
 -- 				burn_aftercore_mp(100)
 -- 				get_aftercore_buffs { "Beaten Up", "Sleepy" }
--- 				if hp() < maxhp() / 2 then
--- 					cast_skillid(3012)
--- 				end
+				if hp() < maxhp() / 0.75 then
+					cast_skill("Cannelloni Cocoon")
+				end
 -- 				if mp() < 200 then
 -- 					use_item("ancient Magi-Wipes")
 -- 					use_item("ancient Magi-Wipes")
 -- 				end
--- 			end
+			end
 
 			-- adventure
 			text, url, advagain = autoadventure { zoneid = zoneid, noncombatchoices = autochoices }

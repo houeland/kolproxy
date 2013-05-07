@@ -63,6 +63,7 @@ function get_ascension_automation_settings(want_bonus)
 			"briefcase",
 			"astral hot dog dinner", "astral six-pack", "carton of astral energy drinks",
 			"CSA discount card",
+			"Squat-Thrust Magazine",
 		},
 		use_except_one = {
 			"large box",
@@ -113,13 +114,15 @@ function get_ascension_automation_settings(want_bonus)
 		default_equipment = {
 			hat = {
 				{ name = "silent beret", check = function() return want_bonus.noncombat end },
+				"Crown of Thrones",
 				{ name = "spangly sombrero", check = function() return (get_mainstat() == "Moxie" and level() < 13) end },
 				{ name = "Boris's Helm (askew)", check = function() return (level() < 13) end },
 				{ name = "Spooky Putty mitre", check = function() return (level() < 13) end },
 				"Boris's Helm",
+				{ name = "miner's helmet", check = function() return want_bonus.extraplusitems end },
 				"double-ice cap",
 				"reinforced beaded headband",
-				"beer helmet",
+				{ name = "beer helmet", check = function() return (not want_bonus.extraplusitems) end },
 				"Jarlsberg's hat",
 				"fuzzy busby",
 				"worn tophat",
@@ -145,8 +148,10 @@ function get_ascension_automation_settings(want_bonus)
 				"giant gym membership card",
 			},
 			shirt = {
+				{ name = "flaming pink shirt", check = function() return want_bonus.plusitems end },
 				{ name = "cane-mail shirt", check = function() return (level() < 13) end },
 				"astral shirt",
+				"flaming pink shirt",
 				{ name = "sugar shirt", check = function() return (level() < 13) end },
 				{ name = "hipposkin poncho", check = function() return (level() < 13) end },
 				"yak anorak",
@@ -176,6 +181,8 @@ function get_ascension_automation_settings(want_bonus)
 				"old sweatpants",
 			},
 			accessories = {
+				{ name = "Fuzzy Slippers of Hatred", check = function() return want_bonus.noncombat end },
+				{ name = "Space Trip safety headphones", check = function() return want_bonus.noncombat end },
 				{ name = "ring of conflict", check = function() return want_bonus.noncombat end },
 				{ name = "Juju Mojo Mask", check = function() return (level() < 13 and not want_bonus.extraplusitems) end },
 				{ name = "plastic vampire fangs", check = function() return (level() < 6 and not want_bonus.extraplusitems) end },
@@ -217,6 +224,10 @@ function get_ascension_automation_settings(want_bonus)
 	if tbl.should_wear_weapons then
 		tbl.default_equipment.weapon = {
 			"Trusty",
+			"Staff of Simmering Hatred",
+			"Staff of the Walk-In Freezer",
+			"Staff of the Woodfire",
+			"Staff of Queso Escusado",
 			"Brimstone Bludgeon",
 			"ice sickle",
 			"haiku katana",

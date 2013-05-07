@@ -428,7 +428,7 @@ mark m_done
 			}
 		elseif quest_text("should check out A-Boo Peak and see") or quest_text("should keep clearing the ghosts out of A-Boo Peak") then
 			local hauntedness = get_aboo_peak_hauntedness()
-			if hauntedness - count_item("A-Boo clue") * 30 <= 0 then
+			if hauntedness > 0 and hauntedness - count_item("A-Boo clue") * 30 <= 0 then
 				if not buff("Super Structure") and have("Greatest American Pants") then
 					script.wear { pants = "Greatest American Pants" }
 					script.get_gap_buff("Super Structure")
@@ -438,7 +438,7 @@ mark m_done
 				end
 				script.ensure_buffs { "Red Door Syndrome" }
 				if predict_aboo_peak_banish() < 30 then
-					stop "TODO: Buff up and finish A-Boo Peak clues"
+					stop "TODO: Buff up and finish A-Boo Peak clues (couldn't banish 30%)"
 				end
 				use_item("A-Boo clue")
 -- 				-- TODO: handle other towel versions

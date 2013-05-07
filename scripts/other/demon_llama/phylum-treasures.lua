@@ -101,7 +101,7 @@ local phylumTreasureEffects = {
 			summary = "5 Damage Reduction",
 		},
 	},
-	["humanoid"] = {
+	["dude"] = {
 		siphon = {
 			name = "none",
 			summary = "Restores HP",
@@ -111,7 +111,7 @@ local phylumTreasureEffects = {
 			summary = "none",
 		},
 	},
-	["demihuman"] = {
+	["humanoid"] = {
 		siphon = {
 			name = "World's Shortest Giant",
 			summary = "So-so Resistance to all elements",
@@ -161,7 +161,7 @@ local phylumTreasureEffects = {
 			summary = "Lets you breathe underwater",
 		},
 	},
-	["object"] = {
+	["construct"] = {
 		siphon = {
 			name = "Mortarfied",
 			summary = "+100 Damage Absorption",
@@ -337,7 +337,7 @@ local phylumTreasureNames = {
 		},
 		paste = "goblin paste",
 	},
-	["humanoid"] = {
+	["dude"] = {
 		siphon = {
 			blue = "Humanitini",
 			orange = "More Humanitini than Humanitini",
@@ -345,7 +345,7 @@ local phylumTreasureNames = {
 		},
 		paste = "gooey paste",
 	},
-	["demihuman"] = {
+	["humanoid"] = {
 		siphon = {
 			blue = "Red Dwarf",
 			orange = "Golden Mean",
@@ -385,7 +385,7 @@ local phylumTreasureNames = {
 		},
 		paste = "Mer-kin paste",
 	},
-	["object"] = {
+	["construct"] = {
 		siphon = {
 			blue = "Cement Mixer",
 			orange = "Jackhammer",

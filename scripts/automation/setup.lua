@@ -12,6 +12,17 @@ function get_result()
 	end
 end
 
+function first_wearable(tbl)
+	if type(tbl) == "string" then
+		tbl = { tbl }
+	end
+	for _, x in ipairs(tbl) do
+		if have_item(x) and can_equip_item(x) then
+			return x
+		end
+	end
+end
+
 function run_automation_script(f, pwdsrc, scriptname)
 	result = "??? No automation done ???"
 	resulturl = "/automation-script"
@@ -29,6 +40,16 @@ function run_automation_script(f, pwdsrc, scriptname)
 		stopped_err = true
 		error(e, 2)
 	end
+	local error_trace_steps = {}
+	function reset_error_trace_steps()
+		error_trace_steps = {}
+	end
+	function get_error_trace_steps()
+		return error_trace_steps
+	end
+	function add_error_trace_step(msg)
+		table.insert(error_trace_steps, tostring(msg))
+	end
 
 	local ok, text, url = xpcall(f, function(e) return { msg = e, trace = debug.traceback(e) } end)
 	if ok then
@@ -38,30 +59,34 @@ function run_automation_script(f, pwdsrc, scriptname)
 		if critical_err then
 			print("Something unexpected happened: " .. errmsg)
 			print(e.trace)
---				write_log_line("Something unexpected happened: " .. errmsg)
 			result = get_result()
 			if result == "??? No action found ???" or result == "??? No automation done ???" then
-				return [[<script>top.charpane.location = "charpane.php"</script><p style="color: darkorange">]] .. "Something unexpected happened: " .. errmsg .. "<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>", requestpath
+				result = [[<script>top.charpane.location = "charpane.php"</script><p style="color: darkorange">]] .. "Something unexpected happened: " .. errmsg .. "<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>"
 			else
-				return [[<script>top.charpane.location = "charpane.php"</script>]] .. add_formatted_colored_message_to_page(result, "Something unexpected happened: " .. errmsg .. "<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>", "darkorange"), requestpath
+				result = [[<script>top.charpane.location = "charpane.php"</script>]] .. add_formatted_colored_message_to_page(result, "Something unexpected happened: " .. errmsg .. "<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>", "darkorange")
 			end
+			local steptrace = get_error_trace_steps()
+			if next(steptrace) then
+				result = add_message_to_page(get_result(), "While trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt>", "Automation stopped:", "darkorange")
+			end
+			return result, requestpath
 		elseif stopped_err then
 			if errmsg:match("End of day.-then done") then -- TODO: redo this
 				print("Finished: " .. errmsg)
 				print(e.trace)
---					write_log_line("Finished: " .. errmsg)
-				--.. "<br><br><pre>Technical details:\n\n" .. e.trace ..
 				return [[<script>top.charpane.location = "charpane.php"</script>]] .. "Finished: " .. errmsg .. "</pre>", requestpath
 			else
 				print("Manual intervention required: " .. errmsg)
 				print(e.trace)
---					write_log_line("Manual intervention required: " .. errmsg)
--- 				return [[<script>top.charpane.location = "charpane.php"</script>]] .. "Manual intervention required: " .. errmsg .. "<br><br>Fix this and click the link again to continue automating.<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>", requestpath
 				local runagain_href = make_href("/kolproxy-automation-script", params)
-				return [[<script>top.charpane.location = "charpane.php"</script>Manual intervention required: ]] .. errmsg .. [[<br><br>Fix this and run the script again to continue automating.<br><br><a href="]]..runagain_href..[[" style="color: green">{ I have fixed it, run the script again now! }</a>]], requestpath
+				result = [[<script>top.charpane.location = "charpane.php"</script>Manual intervention required: ]] .. errmsg .. [[<br><br>Fix this and run the script again to continue automating.<br><br><a href="]]..runagain_href..[[" style="color: green">{ I have fixed it, run the script again now! }</a>]]
+				local steptrace = get_error_trace_steps()
+				if next(steptrace) then
+					result = add_message_to_page(get_result(), "While trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt>", "Automation stopped:", "darkorange")
+				end
+				return result, requestpath
 			end
 		else
---				write_log_line("Error: " .. tostring(e.msg))
 			error(e.trace, 0)
 		end
 	end
@@ -178,12 +203,17 @@ function setup_turnplaying_script(tbl)
 		end
 		questlog_page = questlog_page_async()
 
+		function hidden_inform(msg)
+			add_error_trace_step(msg)
+		end
+
 		function inform(msg)
+			add_error_trace_step(msg)
 			local mpstr = string.format("%s / %s MP", mp(), maxmp())
 			if challenge == "zombie" then
 				mpstr = string.format("%s horde", horde_size())
 			end
-			local formatted = string.format("[%s] %s (level %s.%02d, %s turns remaining, %s full, %s drunk, %s spleen, %s meat, %s)", turnsthisrun(), tostring(msg), level(), level_progress() * 100, advs(), fullness(), drunkenness(), spleen(), meat(), mpstr)
+			local formatted = string.format("[%s] %s (level %s.%02d, %s turns remaining, %s full, %s drunk, %s spleen, %s meat, %s / %s HP, %s)", turnsthisrun(), tostring(msg), level(), level_progress() * 100, advs(), fullness(), drunkenness(), spleen(), meat(), hp(), maxhp(), mpstr)
 			print(formatted)
 		end
 
@@ -192,7 +222,7 @@ function setup_turnplaying_script(tbl)
 		end
 
 		advagain = true
-		while advagain do
+		while advagain and not locked() do
 			advagain = false
 			result, resulturl = nil, nil
 			result, resulturl = "Automation failed", requestpath
@@ -200,7 +230,10 @@ function setup_turnplaying_script(tbl)
 				stop "Out of adventures."
 			end
 			refresh_quest()
-			inform(tbl.name)
+			if tbl.autoinform ~= false then
+				inform(tbl.name)
+			end
+			reset_error_trace_steps()
 			tbl.adventuring()
 		end
 		return result, resulturl

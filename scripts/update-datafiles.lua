@@ -351,6 +351,27 @@ function parse_items()
 			else
 				hardwarn("modifiers:item does not exist", name)
 			end
+		elseif section == "Everything Else" and name and bonuslist and bonuslist:contains("Effect:") then
+			local effect = bonuslist:match([[Effect: "(.-)"]])
+			if not effect then
+				hardwarn("modifiers:useitem effect does not exist", name, effect)
+			elseif items[name] then
+				items[name].use_effect = effect
+			elseif not name:match("^# ") then
+				hardwarn("modifiers:useitem does not exist", name, effect)
+			end
+		end
+	end
+
+	for l in io.lines("cache/files/statuseffects.txt") do
+		local n, i = l:match("[0-9]*	([^	]+)	.*use 1 (.+)")
+		if n and i and items[i] then
+			if not processed_datafiles["buffs"][n] then
+				softwarn("statuseffects:buff does not exist", n)
+			elseif not items[i].use_effect then
+				softwarn("modifiers/statuseffects mismatch", i, n)
+				items[i].use_effect = n
+			end
 		end
 	end
 
@@ -793,11 +814,12 @@ process("choice spoilers")
 process("familiars")
 process("enthroned familiars")
 
+process("buffs")
+
 process("items")
 process("outfits")
 process("hatrack")
 
-process("buffs")
 process("skills")
 process("buff recast skills")
 

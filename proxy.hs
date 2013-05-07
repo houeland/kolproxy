@@ -86,11 +86,13 @@ doProcessPageWhenever ref uri params = do
 
 statusfunc ref = do
 	mv <- readIORef $ jsonStatusPageMVarRef_ $ sessionData $ ref
-	return $ do
+	return $ ((do
 		x <- readMVar mv
 		case x of
 			Right r -> return r
-			Left err -> throwIO err
+			Left err -> throwIO err) `catch` (\e -> do
+                        	putStrLn $ "statusfunc exception: " ++ show (e :: SomeException)
+                        	throwIO e))
 
 -- TODO: Redo how scripts are run and used to do chat, make it more similar to normal pages
 kolProxyHandlerWhenever uri params baseref = do
@@ -267,9 +269,7 @@ kolProxyHandler uri params baseref = do
 				zz <- runInterceptScript origref uri allparams reqtype
 				case zz of
 					Right (text, effuri) -> return (text, effuri, [])
-					Left (msg, trace) -> do
-						putStrLn $ "intercept.lua error: " ++ msg ++ "\n" ++ trace
-						return (add_error_message_to_page ("intercept.lua error: " ++ msg ++ "\n" ++ trace) (Data.ByteString.Char8.pack "{ Kolproxy automation script. }"), mkuri "/error", [])
+					Left (msg, trace) -> return (add_error_message_to_page ("intercept.lua error: " ++ msg ++ "\n" ++ trace) (Data.ByteString.Char8.pack "{ Kolproxy automation script. }"), mkuri "/error", [])
 			handleRequest origref uri effuri hdrs params pt
 		_ -> Nothing
 
@@ -306,9 +306,7 @@ kolProxyHandler uri params baseref = do
 					zz <- log_time_interval origref ("intercepting: " ++ (show uri)) $ runInterceptScript origref uri allparams reqtype
 					case zz of
 						Right (pt, effuri) -> return $ Right (pt, effuri, [])
-						Left (msg, trace) -> do
-							putStrLn $ "intercept.lua error: " ++ msg ++ "\n" ++ trace
-							return $ Left (add_error_message_to_page ("intercept.lua error: " ++ msg ++ "\n" ++ trace) (Data.ByteString.Char8.pack "{ No page loaded. }"), mkuri "/error", [])
+						Left (msg, trace) -> return $ Left (add_error_message_to_page ("intercept.lua error: " ++ msg ++ "\n" ++ trace) (Data.ByteString.Char8.pack "{ No page loaded. }"), mkuri "/error", [])
 				else log_time_interval origref ("run getpage for: " ++ (show uri)) $ getpage
 
 			(new_page, newref) <- case downloaded_page of
@@ -325,9 +323,7 @@ kolProxyHandler uri params baseref = do
 							y <- log_time_interval newref ("automating: " ++ (show uri)) $ runAutomateScript newref uri effuri pt allparams
 							case y of
 								Right autotext -> return $ Right (autotext, effuri, hdrs)
-								Left (msg, trace) -> do
-									putStrLn $ "automate.lua error: " ++ msg ++ "\n" ++ trace
-									return $ Left (add_error_message_to_page ("automate.lua error: " ++ msg ++ "\n" ++ trace) pt, effuri, hdrs)
+								Left (msg, trace) -> return $ Left (add_error_message_to_page ("automate.lua error: " ++ msg ++ "\n" ++ trace) pt, effuri, hdrs)
 						else return $ Right (pt, effuri, hdrs)
 					return (x, newref)
 
@@ -363,9 +359,40 @@ main = platform_init $ do
 	hSetBuffering stdout LineBuffering
 	args <- getArgs
 	case args of
-		["--runbotscript", botscriptfilename] -> do
-			botscriptcode <- readFile botscriptfilename
-			runBotScript botscriptcode
+		["--runbotscript", botscriptfilename] -> runbot botscriptfilename
 		_ -> runKolproxy
 	putStrLn $ "INFO: Done! (main finished)"
 	return ()
+
+runbot filename = do
+	(logchan, dropping_logchan, globalref) <- kolproxy_setup_refstuff
+
+	let login_useragent = kolproxy_version_string ++ " (" ++ platform_name ++ ")" ++ " BotScript/0.1 (" ++ filename ++ ")"
+	let login_host = fromJust $ parseURI $ "http://www.kingdomofloathing.com/"
+
+	sc <- make_sessionconn "http://www.kingdomofloathing.com/" (error "dblogstuff") (error "statestuff")
+
+	cookie <- login (login_useragent, login_host) "username" "password-md5hash"
+
+	let baseref = RefType {
+		logstuff_ = LogRefStuff { logchan_ = dropping_logchan, solid_logchan_ = logchan },
+		processingstuff_ = error "processing",
+		otherstuff_ = OtherRefStuff {
+			connection_ = ConnectionType {
+				cookie_ = cookie,
+				useragent_ = login_useragent,
+				hostUri_ = login_host,
+				lastRetrieve_ = sequenceLastRetrieve_ sc,
+				connLogSymbol_ = "b",
+				getconn_ = sequenceConnection_ sc
+			},
+			sessionData_ = sessConnData_ sc
+		},
+		stateValid_ = False,
+		globalstuff_ = globalref,
+		skipRunningPrinters_ = False
+	}
+
+	okref <- make_ref baseref
+
+	runBotScript okref filename

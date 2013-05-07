@@ -28,7 +28,7 @@ function setup_variables()
 			encounter_source = "Obtuse Angel"
 		elseif text:contains("<td bgcolor=black align=center><font color=white size=1>") then
 			encounter_source = "Mini-Hipster"
-		elseif monster_name:contains("Black Crayon") then
+		elseif monster_name and monster_name:contains("Black Crayon") then
 			encounter_source = "Artistic Goth Kid"
 		else
 			encounter_source = "adventure"
