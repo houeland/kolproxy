@@ -1,4 +1,4 @@
-whichboard = 16 -- load jarlsberg leaderboard
+whichboard = 17 -- load BIG leaderboard
 
 register_setting {
 	name = "enable super-compact menupane",
