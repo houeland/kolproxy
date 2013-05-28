@@ -64,8 +64,14 @@ local href = setup_turnplaying_script {
 				if not buff("Smooth Movements") then
 					cast_skillid(5017, 2) -- smooth moves
 				end
-				-- TODO: do noncombat and win against beelz
-				result, resulturl, advagain = autoadventure { zoneid = 20 }
+				script.ensure_mp(50)
+				result, resulturl, advagain = autoadventure { zoneid = 20, noncombatchoices = {
+					["Adventurer, $1.99"] = "Push the nose",
+					["Lurking at the Threshold"] = "Open the door",
+				} }
+				if not advagain then
+					break
+				end
 			end
 		elseif not have_item(required_items.lew) and have_item(required_items.ew) and have_item(required_items.extra) then
 			smith_items(required_items.ew, required_items.extra)
@@ -82,7 +88,6 @@ local href = setup_turnplaying_script {
 		end
 	elseif scg:match([[Have you defeated your Nemesis yet]]) or scg:match([[We need you to defeat your Nemesis]]) or scg:match([[Haven't beat your Nemesis yet]]) then
 		result = "do nemesis cave"
-		cast_skillid(6006) -- polka of plenty
 		result, resulturl = get_page("/cave.php")
 
 		if not result:contains("A Large Chamber") then
@@ -92,6 +97,7 @@ local href = setup_turnplaying_script {
 			if required_items.door[3] then
 				async_post_page("/cave.php", { action = "door3", pwd = session.pwd, action = "dodoor3", whichitem = get_itemid(required_items.door[3]) })
 			else
+				script.ensure_buffs { "Polka of Plenty" }
 				async_get_page("/cave.php", { action = "door3", pwd = session.pwd })
 			end
 			result, resulturl = get_page("/cave.php")
@@ -177,7 +183,7 @@ local href = setup_turnplaying_script {
 -- "proxy:/volcanoisland.php?pwd=a412cd1e0a0d040806269162e564fcb1&action=tniat"  Nothing
 -- "proxy:/volcanomaze.php?"  Nothing
 			elseif classid() == 4 then -- sauceror
-				stop "TODO: Automate sauceror island"
+				automate_S_nemesis_island()
 			elseif classid() == 5 then -- disco bandit
 				automate_DB_nemesis_island()
 				result, resulturl = text, url
@@ -224,6 +230,77 @@ add_printer("/questlog.php", function()
 	if not setting_enabled("enable turnplaying automation") or ascensionstatus() ~= "Aftercore" then return end
 	text = text:gsub("<b>Me and My Nemesis</b>", [[%0 <a href="]]..href { pwd = session.pwd }..[[" style="color:green">{ automate }</a>]])
 end)
+
+function nemesis_try_sauceror_potions()
+	local goal_potions = {
+		["vial of amber slime"] = { "vial of yellow slime", "vial of orange slime" },
+		["vial of chartreuse slime"] = { "vial of yellow slime", "vial of green slime" },
+		["vial of indigo slime"] = { "vial of blue slime", "vial of violet slime" },
+		["vial of purple slime"] = { "vial of red slime", "vial of violet slime" },
+		["vial of teal slime"] = { "vial of blue slime", "vial of green slime" },
+		["vial of vermilion slime"] = { "vial of red slime", "vial of orange slime" },
+	}
+	local secondary_potions = {
+		["vial of green slime"] = { "vial of blue slime", "vial of yellow slime" },
+		["vial of orange slime"] = { "vial of red slime", "vial of yellow slime" },
+		["vial of violet slime"] = { "vial of blue slime", "vial of red slime" },
+	}
+	local known_potion_effects = ascension["nemesis.sauceror potions"] or {}
+	for x, y in pairs(known_potion_effects) do
+		if y == "Slimeform" then
+			stop("Slimeform already found: use a " .. x)
+		end
+	end
+	for x, y in pairs(goal_potions) do
+		if not known_potion_effects[x] then
+			if have_item(x) then
+				local bl = buffslist()
+				use_item(x)
+				for a, b in pairs(buffslist()) do
+					if b > (bl[a] or 0) then
+						print("potion effect", x, "=", a)
+						known_potion_effects[x] = a
+						ascension["nemesis.sauceror potions"] = known_potion_effects
+						return nemesis_try_sauceror_potions()
+					end
+				end
+				critical("Failed to detect " .. x .. " effect")
+			end
+			local z = secondary_potions[y[2]]
+			if count_item(y[1]) >= 2 and have_item(z[1]) and have_item(z[2]) then
+				cook_items(z[1], z[2])
+				cook_items(y[1], y[2])
+				return nemesis_try_sauceror_potions()
+			end
+		end
+	end
+end
+
+function automate_S_nemesis_island()
+	if have_buff("Slimeform") then
+		stop "TODO: kill nemesis"
+	end
+	nemesis_try_sauceror_potions()
+	get_page("/account.php", { action = "autoattack", whichattack = 0, ajax = 1, pwd = session.pwd }) -- unset autoattack, bleh
+	script.bonus_target { "easy combat" }
+	script.ensure_buffs {}
+	script.wear { acc1 = first_wearable { "Space Trip safety headphones" } }
+	script.want_familiar "Baby Gravy Fairy"
+	local function macro_nemesis_sauceror()
+		return [[
+
+if hasskill Entangling Noodles
+  cast Entangling Noodles
+endif
+
+use 3898
+repeat
+
+]]
+	end
+	local pt, url = get_page("/volcanoisland.php", { pwd = session.pwd, action = "tuba" })
+	result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_nemesis_sauceror)
+end
 
 function automate_DB_nemesis_island()
 			text = "automate DB island!"
@@ -457,6 +534,7 @@ endif
 end
 
 function automate_AT_nemesis_island()
+			local pwd = get_session_state("pwd") -- inserting pwd, boo!
 			get_page("/volcanoisland.php", { pwd = pwd, action = "npc" })
 			if count("hacienda key") < 5 then
 				text = "explore barracks"

@@ -1,6 +1,8 @@
 --v.2.1a
 
-local phylumTreasureEffects = {
+-- TODO: Merge effects and names
+
+phylumTreasureEffects = {
 	["beast"] = {
 		siphon = {
 			name = "Rampage!",
@@ -41,7 +43,7 @@ local phylumTreasureEffects = {
 			summary = "+10% to critical spell chance",
 		},
 	},
-	["crimbo"] = {
+	["elf"] = {
 		siphon = {
 			name = "Holiday Bliss",
 			summary = "+20% item & meat drops",
@@ -211,7 +213,7 @@ local phylumTreasureEffects = {
 			summary = "+10 Sleaze Damage, So-So Sleaze Resistance",
 		},
 	},
-	["strange"] = {
+	["weird"] = {
 		siphon = {
 			name = "Heisenberglary",
 			summary = "+/- Stats Randomly",
@@ -223,7 +225,7 @@ local phylumTreasureEffects = {
 	},
 }
 
-local phylumTreasureQualities = {
+phylumTreasureQualities = {
 	blue = {
 		["quality"] = "Good",
 		["color"] = "blue",
@@ -256,7 +258,7 @@ local phylumTreasureQualities = {
 	},
 }
 
-local phylumTreasureNames = {
+phylumTreasureNames = {
 	["beast"] = {
 		siphon = {
 			blue = "Zoodriver",
@@ -289,7 +291,7 @@ local phylumTreasureNames = {
 		},
 		paste = "cosmic paste",
 	},
-	["crimbo"] = {
+	["elf"] = {
 		siphon = {
 			blue = "Lollipop Drop",
 			orange = "Candy Alexander",
@@ -425,7 +427,7 @@ local phylumTreasureNames = {
 		},
 		paste = "slimy paste",
 	},
-	["strange"] = {
+	["weird"] = {
 		siphon = {
 			blue = "Drunken Philosopher",
 			orange = "Drunken Neurologist",
@@ -437,6 +439,12 @@ local phylumTreasureNames = {
 
 function get_phylum_treasure(phylum)
 	if not phylum then return nil end
+	if phylum == "crimbo" then phylum = "elf" end
+	if phylum == "strange" then phylum = "weird" end
+	if not phylumTreasureNames[phylum] or not phylumTreasureEffects[phylum] then
+		print("ERROR: phylum not recognized:", phylum)
+		return nil
+	end
 	return {
 		siphon = {
 			blue = {

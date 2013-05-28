@@ -1,4 +1,4 @@
-function estimate_outfit_bonuses()
+function estimate_current_outfit_bonuses()
 	local bonuses = {}
 	for _, x in pairs(datafile("outfits")) do
 		local wearing = true

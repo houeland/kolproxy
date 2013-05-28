@@ -58,6 +58,7 @@ function setup_automation_display_page_results(scan, text)
 	return text
 end
 
+-- TODO: register a scanner instead of dopage()
 function do_daily_visits()
 	local extracts = {
 		[[<center><table><tr><td><img src="http://images.kingdomofloathing.com/itemimages/meat.gif" height=30 width=30 alt="Meat"></td><td valign=center>You gain [0-9,]+ Meat.</td></tr></table></center>]],
@@ -102,6 +103,7 @@ function do_daily_visits()
 		"cheap toaster",
 		"cheap toaster",
 		"Chester's bag of candy",
+		"creepy voodoo doll",
 		"cursed microwave",
 		"cursed pony keg",
 		"Emblem of Ak'gyxoth",
@@ -114,7 +116,6 @@ function do_daily_visits()
 		"Trivial Avocations board game",
 	}
 	-- TODO? neverending soda
-	-- TODO? creepy voodoo doll
 
 	local daily_items = {}
 	for _, x in ipairs(possible_daily_items) do
@@ -162,13 +163,29 @@ function do_daily_visits()
 		dopage("/campground.php", { preaction = "summonsnowcone", quantity = 3 })
 		dopage("/campground.php", { preaction = "summonstickers", quantity = 3 })
 		dopage("/campground.php", { preaction = "summonsugarsheets", quantity = 3 })
-		-- TODO: clip art
+
+		local cliparts = table.keys(get_recipes_by_type("cliparts"))
+		table.sort(cliparts, function(a, b)
+			if not estimate_mallsell_profit(b) then return true end
+			if not estimate_mallsell_profit(a) then return false end
+			return estimate_mallsell_profit(a) > estimate_mallsell_profit(b)
+		end)
+		queue_page_result(summon_clipart(cliparts[1]))
+		queue_page_result(summon_clipart(cliparts[2]))
+		queue_page_result(summon_clipart(cliparts[3]))
+
 		dopage("/campground.php", { preaction = "summonradlibs", quantity = 3 })
+
 		dopage("/campground.php", { preaction = "summonhilariousitems" })
 		dopage("/campground.php", { preaction = "summonspencersitems" })
 		dopage("/campground.php", { preaction = "summonaa" })
 		dopage("/campground.php", { preaction = "summonthinknerd" })
+
 		-- TODO: librams
+-- 		castSkillMax 8103 ref -- summon brickos
+-- 		castSkillMax 8100 ref -- summon candy hearts
+-- 		castSkillMax 8101 ref -- summon party favors
+-- 		castSkillMax 8102 ref -- summon love songs
 
 		queue_page_result(cast_skill("Lunch Break"))
 		queue_page_result(cast_skill("Summon Crimbo Candy"))
@@ -189,6 +206,11 @@ function do_daily_visits()
 		queue_page_result(cast_skill("Advanced Cocktailcrafting", 2))
 		queue_page_result(cast_skill("Advanced Cocktailcrafting", 1))
 		-- TODO: use still
+		queue_page_result(cast_skill("Request Sandwich"))
+		queue_page_result(cast_skill("Request Sandwich"))
+		queue_page_result(cast_skill("Request Sandwich"))
+		queue_page_result(cast_skill("Request Sandwich"))
+		queue_page_result(cast_skill("Request Sandwich"))
 		queue_page_result(cast_skill("Request Sandwich"))
 		queue_page_result(cast_skill("Request Sandwich"))
 		queue_page_result(cast_skill("Request Sandwich"))
@@ -232,33 +254,21 @@ add_automator("/main.php", function()
 
 	local want_tbl = {}
 	table.insert(want_tbl, "visit")
-	if ascensionstatus("Aftercore") then
-		table.insert(want_tbl, "aftercore")
-	end
 	if setting_enabled("automate daily visits/harvest garden") then
 		table.insert(want_tbl, "garden")
 	end
-	if ascensionstatus("Aftercore") and setting_enabled("automate daily visits/do lazy aftercore daily tasks") then
+	if ascensionstatus("Aftercore") then
 		table.insert(want_tbl, "aftercore")
+	end
+	if ascensionstatus("Aftercore") and setting_enabled("automate daily visits/do lazy aftercore daily tasks") then
+		table.insert(want_tbl, "lazy")
 	end
 	local want_string = table.concat(want_tbl, "+")
 
 	if day["done daily visits"] ~= want_string then
-		print "INFO: doing daily visits"
+		print("INFO: doing daily visits (" .. want_string .. ")")
 		local dailythings = do_daily_visits()
 		day["done daily visits"] = want_string
 		text = add_message_to_page(text, dailythings, "Daily visits:")
 	end
 end)
-
--- do_aftercore_dailyvisits ref withskills = do
--- 	when withskills (do
--- 		castSkill 53 1 ref -- summon crimbo candy
-
--- 		castSkillMax 8103 ref -- summon brickos
--- 		castSkillMax 8100 ref -- summon candy hearts
--- 		castSkillMax 8101 ref -- summon party favors
--- 		castSkillMax 8102 ref -- summon love songs
-
--- 		-- use other rumpus equipment
--- 		return ())

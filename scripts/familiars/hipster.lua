@@ -18,9 +18,7 @@ add_printer("/charpane.php", function()
 end)
 
 add_extra_ascension_adventure_warning(function(zoneid)
-	if familiarid() == 136 and level() < 13 then
-		if equipment().familiarequip == get_itemid("ironic moustache") then
-			return "You might want to pawn the ironic moustache for a fixed-gear bicycle.", "pawn ironic moustache"
-		end
+	if familiar("Mini-Hipster") and level() < 13 and have_equipped_item("ironic moustache") then
+		return "You might want to pawn the ironic moustache for a fixed-gear bicycle.", "pawn ironic moustache"
 	end
 end)

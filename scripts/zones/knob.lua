@@ -34,6 +34,6 @@ end)
 
 add_extra_ascension_warning("/cobbsknob.php", function()
 	if params.action == "throneroom" then
-		return "Remember to set the MCD if you want a specific boss drop", "set mcd for goblin king"
+		return "Remember to set the MCD if you want a specific boss drop.", "set mcd for goblin king"
 	end
 end)

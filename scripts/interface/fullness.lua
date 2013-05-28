@@ -49,16 +49,21 @@ end)
 -- TODO: warn when drinking from cafes
 --   /cafe.php [("cafeid","1"),("pwd","..."),("action","CONSUME!"),("whichitem","1257")]
 
-local function retrieve_itemid_potency(itemid)
---	local item = maybe_get_itemdata(itemid)
---	if item and item.drunkenness then
---		return item.drunkenness
---	else
-		local descid = item_api_data(itemid).descid
+function retrieve_item_potency(item)
+	if not item then
+		print("WARNING: called retrieve_item_potency(" .. tostring(item) .. ")")
+		return
+	end
+	local d = maybe_get_itemdata(item)
+	local dn = maybe_get_itemname(item)
+	if d and d.drunkenness and dn and dn:contains("dusty bottle of") then
+		return d.drunkenness
+	else
+		local descid = item_api_data(get_itemid(item)).descid
 		local pt = get_page("/desc_item.php", { whichitem = descid })
 		local potency = tonumber(pt:match([[>Potency: <b>([0-9]*)</b><]]))
 		return potency
---	end
+	end
 end
 
 add_always_warning("/inv_booze.php", function()
@@ -71,7 +76,7 @@ add_always_warning("/inv_booze.php", function()
 		if not buff("Ode to Booze") then
 			return "You do not have Ode to Booze active.", "drinking without ode"
 		end
-		local potency = retrieve_itemid_potency(tonumber(params.whichitem))
+		local potency = retrieve_item_potency(tonumber(params.whichitem))
 		if not potency then
 			return "You might not have enough turns of Ode to Booze active (unspecified potency).", "drinking unspecified potency without enough turns of ode to booze"
 		end
@@ -84,7 +89,8 @@ end)
 
 add_always_warning("/inv_booze.php", function()
 	local safe = false
-	local potency = retrieve_itemid_potency(tonumber(params.whichitem))
+	local whichitem = tonumber(params.whichitem)
+	local potency = retrieve_item_potency(whichitem)
 	if potency and drunkenness() + potency * (tonumber(params.quantity) or 1) <= estimate_max_safe_drunkenness() then
 		safe = true
 	elseif whichitem == get_itemid("steel margarita") then
@@ -98,7 +104,8 @@ end)
 
 add_extra_always_warning("/inv_booze.php", function()
 	local safe = false
-	local potency = retrieve_itemid_potency(tonumber(params.whichitem))
+	local whichitem = tonumber(params.whichitem)
+	local potency = retrieve_item_potency(whichitem)
 
 	if not potency then
 		return "This booze could make you fallen-down drunk (unspecified potency).", "overdrinking unspecified potency"

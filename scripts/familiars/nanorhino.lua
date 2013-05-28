@@ -5,3 +5,19 @@ add_processor("/fight.php", function()
 		day["nanorhino banished monster"] = monstername()
 	end
 end)
+
+add_warning {
+	message = "Make sure you use the correct skill to trigger the nanorhino.",
+	severity = "notice",
+	check = function()
+		return familiar("Nanorhino")
+	end
+}
+
+add_warning {
+	message = "You have autoattack enabled while using the nanorhino.",
+	severity = "extra",
+	check = function()
+		return familiar("Nanorhino") and autoattack_is_set()
+	end
+}

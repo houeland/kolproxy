@@ -178,6 +178,28 @@ aftercore_items_list = {
 	"Jackass Plumber home game",
 
 	"KoL Con Six Pack",
+
+	"Goggles of Loathing",
+	"Stick-Knife of Loathing",
+	"Scepter of Loathing",
+	"Jeans of Loathing",
+	"Treads of Loathing",
+	"Belt of Loathing",
+	"Pocket Square of Loathing",
+
+	"Lens of Hatred",
+	"Staff of Simmering Hatred",
+	"Cold Stone of Hatred",
+	"Pantaloons of Hatred",
+	"Fuzzy Slippers of Hatred",
+	"Girdle of Hatred",
+
+	"Lens of Violence",
+	"Pigsticker of Violence",
+	"Brand of Violence",
+	"Jodhpurs of Violence",
+	"Ass-Stompers of Violence",
+	"Novelty Belt Buckle of Violence",
 }
 
 maybe_pvp_stealable = {

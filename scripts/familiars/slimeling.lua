@@ -1,3 +1,4 @@
+-- TODO: remove this functionality?
 dont_slime = {
 	"coconut shell",
 	"little paper umbrella",

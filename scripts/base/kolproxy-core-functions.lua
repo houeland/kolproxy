@@ -88,9 +88,17 @@ function get_skillid(name)
 	return skill.skillid
 end
 
-function maybe_get_itemname(name)
-	local id = maybe_get_itemid(name)
+function maybe_get_itemname(item)
+	local id = maybe_get_itemid(item)
 	return itemid_name_lookup[id]
+end
+
+function get_itemname(item)
+	local name = maybe_get_itemname(item)
+	if not name then
+		error("No item name found for: " .. tostring(item))
+	end
+	return name
 end
 
 function maybe_get_itemdata(name)
@@ -126,6 +134,37 @@ function get_familiarid(name)
 	return id
 end
 
+function get_recipe(item)
+	local name = get_itemname(item)
+	local recipes = datafile("recipes")[name]
+	if not recipes then
+		error("No recipe found for: " .. tostring(item))
+	end
+	if not recipes[1] or recipes[2] then
+		error("No unique recipe for: " .. tostring(item))
+	end
+	return recipes[1]
+end
+
+function get_recipes_by_type(typename)
+	local recipes = {}
+	local ambiguous = {}
+	for name, rs in pairs(datafile("recipes")) do
+		for _, r in ipairs(rs) do
+			if not typename or r.type == typename then
+				if recipes[name] then
+					ambiguous[name] = true
+				else
+					recipes[name] = r
+				end
+			end
+		end
+	end
+	for a, _ in pairs(ambiguous) do
+		recipes[a] = nil
+	end
+	return recipes
+end
 
 local semirares_datafile = load_datafile("semirares")
 function get_semirare_encounters()
@@ -136,23 +175,24 @@ function intercept_warning(warning)
 	if not warning.id then
 		error "No warning id!"
 	end
-	if session["warning-" .. warning.id] == "skip" then return end
-	if session["warning-turn-" .. turnsthisrun() .. "-" .. warning.id] == "skip" then return end
-	local head = [[<head><script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
-<script>top.charpane.location = "charpane.php"</script></head>]]
+	local warningid = warning.id:gsub("'", "")
+	if session["warning-" .. warningid] == "skip" then return end
+	if session["warning-turn-" .. turnsthisrun() .. "-" .. warningid] == "skip" then return end
+	local head = [[<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
+<script>top.charpane.location = "charpane.php"</script>]]
 	local extratext = ""
 	if not warning.norepeat then
 		extratext = [[<p><a href="]]..raw_make_href(requestpath, parse_params_raw(input_params))..[[">I fixed it, try again.</a></p>]]
 	end
-	local session_disable_msg = [[<p><small><a href="#" onclick="var link = this; $.post('custom-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-]] .. warning.id .. [[', stateset: 'session', value: 'skip', ajax: 1 }, function(res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..raw_make_href(requestpath, parse_params_raw(input_params))..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it anyway and disable this warning until I log out.") .. [[</a></small></p>]]
-	local one_turn_disable_msg = [[<p><small><a href="#" onclick="var link = this; $.post('custom-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-turn-]] .. turnsthisrun() .. [[-]] .. warning.id .. [[', stateset: 'session', value: 'skip', ajax: 1 }, function(res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..raw_make_href(requestpath, parse_params_raw(input_params))..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it for this turn.") .. [[</a></small></p>]]
+	local session_disable_msg = [[<p><small><a href="#" onclick="var link = this; $.post('custom-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-]] .. warningid .. [[', stateset: 'session', value: 'skip', ajax: 1 }, function(res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..raw_make_href(requestpath, parse_params_raw(input_params))..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it anyway and disable this warning until I log out.") .. [[</a></small></p>]]
+	local one_turn_disable_msg = [[<p><small><a href="#" onclick="var link = this; $.post('custom-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-turn-]] .. turnsthisrun() .. [[-]] .. warningid .. [[', stateset: 'session', value: 'skip', ajax: 1 }, function(res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..raw_make_href(requestpath, parse_params_raw(input_params))..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it for this turn.") .. [[</a></small></p>]]
 	if warning.customdisablemsg then
 		one_turn_disable_msg = ""
 	end
 
 	local msgtext = make_kol_html_frame([[<p>]] .. (warning.customwarningprefix or "Warning: ") .. warning.message .. [[</p>]] ..
 		extratext .. session_disable_msg .. one_turn_disable_msg, (warning.customwarningprefix or "Warning: "), (warning.customdisablecolor or "darkorange"))
-	text = [[<html>]] .. head .. [[<body>]] .. msgtext .. [[</body></html>]]
+	text = [[<html><head>]] .. head .. [[</head><body>]] .. msgtext .. [[</body></html>]]
 	return text, "/kolproxy-warning"
 end
 

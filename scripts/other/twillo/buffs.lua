@@ -1,4 +1,4 @@
-function estimate_buff_bonuses()
+function estimate_current_buff_bonuses()
 	local bonuses = {}
 	local buffarray = {
 		["Sole Soul"] = { ["Item Drops from Monsters"] = math.min(buffturns("Sole Soul"), 300) },

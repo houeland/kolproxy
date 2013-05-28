@@ -42,8 +42,8 @@ end
 
 local add_bonuses = add_modifier_bonuses
 
-function estimate_equipment_bonuses()
-	local bonuses = {}
+function estimate_item_equip_bonuses(item)
+	-- TODO: force session bonus computations
 
 	local itemarray = {
 		["Jekyllin hide belt"] = { ["Item Drops from Monsters"] = session["cached Jekyllin hide belt bonus"] or "?" },
@@ -55,7 +55,7 @@ function estimate_equipment_bonuses()
 		["hairshirt"] = { ["Monster Level"] = session["cached hairshirt bonus"] or "?" },
 		["jalape&ntilde;o slices"] = { ["Meat from Monsters"] = 2 * fairy_bonus(10) },
 		["navel ring of navel gazing"] = { item_upto = 20, meat_upto = 20 },
-		["parasitic tentacles"] = { ["Combat Initiative"] = math.min(30, level() * 2) },
+		["parasitic tentacles"] = { ["Combat Initiative"] = math.min(15, level()) * (2 + (have_buff("Yuletide Mutations") and 1 or 0)) },
 		["Snow Suit"] = { ["Item Drops from Monsters"] = session["cached Snow Suit bonus"] or "?" },
 
 		["Mayflower bouquet"] = { item_upto = 10, meat_upto = 40, ["Item Drops from Monsters"] = "?" }, -- not sufficiently spaded
@@ -63,16 +63,9 @@ function estimate_equipment_bonuses()
 		["spooky little girl"] = { ["Item Drops from Monsters"] = "?" }, -- varies with grimacite
 
 		["card sleeve"] = { ["Combat Initiative"] = "?", ["Item Drops from Monsters"] = "?", ["Meat from Monsters"] = "?" }, -- varies by card
+
+		["frosty halo"] = { ["Item Drops from Monsters"] = (not equipment().weapon and not equipment().offhand) and 25 or nil },
 	}
-
-	if not equipment().weapon and not equipment().offhand then
-		-- bonus for unarmed characters only
-		itemarray["frosty halo"] = { ["Item Drops from Monsters"] = 25 }
-	end
-
-	if have_buff("Yuletide Mutations") then
-		itemarray["parasitic tentacles"] = { ["Combat Initiative"] = math.min(45, level() * 3) }
-	end
 
 	if have_equipped_item("scratch 'n' sniff sword") or have_equipped_item("scratch 'n' sniff crossbow") then
 		local scratchnsniff_bonuses = {}
@@ -95,18 +88,24 @@ function estimate_equipment_bonuses()
 		end
 	end
 
-	-- TODO: hobo power
+	local name = maybe_get_itemname(item)
+	if not name then
+		-- ..unknown..
+	elseif itemarray[name] then
+		return itemarray[name]
+	elseif datafile("items")[name] then
+		return datafile("items")[name].equip_bonuses or {}
+	end
+end
+
+function estimate_current_equipment_bonuses()
+	local bonuses = {}
 
 	for _, itemid in pairs(equipment()) do
-		local name = maybe_get_itemname(itemid)
-		if not name then
-			-- ..unknown..
-		elseif itemarray[name] then
-			add_bonuses(bonuses, itemarray[name])
-		elseif datafile("items")[name] then
-			add_bonuses(bonuses, datafile("items")[name].equip_bonuses or {})
-		end
+		add_bonuses(bonuses, estimate_item_equip_bonuses(itemid))
 	end
+
+	-- TODO: hobo power
 
 	if have_equipped_item("snake shield") and have_equipped_item("serpentine sword") then
 		add_bonuses(bonuses, { ["Monster Level"] = 10 })

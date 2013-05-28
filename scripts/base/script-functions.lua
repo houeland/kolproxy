@@ -518,14 +518,28 @@ function remaining_spleen_display_string()
 	return estimate_max_spleen() - spleen()
 end
 
-function estimate_mallbuy_cost(item)
-	return datafile("mallprices")[maybe_get_itemname(item)]
+function estimate_mallbuy_cost(item, amount)
+	amount = amount or 1
+	local d = datafile("mallprices")[maybe_get_itemname(item)] or {}
+	if type(d) ~= "table" and tonumber(d) then return tonumber(d) * amount end -- TODO: support for old datafile, remove in a future version
+	local function try(num)
+		--print("try", item, num)
+		local c = d["buy "..num]
+		if c and num <= amount then
+			return try(num * 10) or c
+		end
+	end
+	local c = try(1)
+	if c then
+		return c * amount
+	end
 end
 
-function estimate_mallsell_profit(item)
-	local buyprice = estimate_mallbuy_cost(item)
-	if buyprice then
-		return buyprice * 0.85
+function estimate_mallsell_profit(item, amount)
+	amount = amount or 1
+	local buyoneprice = estimate_mallbuy_cost(item, 10)
+	if buyoneprice then
+		return buyoneprice * amount/10 * 0.85
 	end
 end
 
@@ -548,4 +562,12 @@ end
 
 function estimate_basement_level()
 	-- TODO: Implement, processor that sets session[...]
+end
+
+function take_stash_item(item)
+	return async_post_page("/clan_stash.php", { pwd = session.pwd, action = "takegoodies", quantity = 1, whichitem = get_itemid(item) })
+end
+
+function add_stash_item(item)
+	return async_post_page("/clan_stash.php", { pwd = session.pwd, action = "addgoodies", qty1 = 1, item1 = get_itemid(item) })
 end

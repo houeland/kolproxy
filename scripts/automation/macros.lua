@@ -53,7 +53,7 @@ if hascombatitem rock band flyers
   if (hasskill Broadside) && (!hascombatitem Rain-Doh blue balls)
     cast Broadside
   endif
-  if (hasskill Blend) && (!hascombatitem Rain-Doh blue balls)
+  if hasskill Blend
     cast Blend
   endif
   use rock band flyers
@@ -400,7 +400,6 @@ endif
 ]]
   end
 
--- 
   local maybe_runaway = [[
 
 ]]
@@ -436,7 +435,7 @@ endif
 
 ]] .. maybe_runaway .. [[
 
-if hascombatitem Rain-Doh blue balls
+if (hascombatitem Rain-Doh blue balls) && (!monstername oil tycoon)
   use Rain-Doh blue balls
 endif
 

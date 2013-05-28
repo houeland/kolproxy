@@ -1,23 +1,23 @@
 __allow_global_writes = true
 
-function set_result(x)
+function set_result(x, xurl)
 	result = x
+	if type(x) == "string" and xurl then
+		resulturl = xurl
+	end
 end
 
 function get_result()
 	if type(result) == "string" then
-		return result
+		return result, resulturl
 	else
 		return result()
 	end
 end
 
 function first_wearable(tbl)
-	if type(tbl) == "string" then
-		tbl = { tbl }
-	end
 	for _, x in ipairs(tbl) do
-		if have_item(x) and can_equip_item(x) then
+		if x and have_item(x) and can_equip_item(x) then
 			return x
 		end
 	end

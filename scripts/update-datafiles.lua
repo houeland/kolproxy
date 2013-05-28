@@ -557,6 +557,31 @@ function verify_hatrack(data)
 	end
 end
 
+function parse_recipes()
+	local recipes = {}
+	local function add_recipe(item, tbl)
+		if not recipes[item] then
+			recipes[item] = {}
+		end
+		table.insert(recipes[item], tbl)
+	end
+	for l in io.lines("cache/files/concoctions.txt") do
+		local tbl = split_tabbed_line(l)
+		if tbl[2] == "CLIPART" then
+			add_recipe(tbl[1], { type = "cliparts", clips = { tonumber(tbl[3]), tonumber(tbl[4]), tonumber(tbl[5]) } })
+		end
+	end
+
+	return recipes
+end
+
+function verify_recipes(data)
+	local xray = data["potion of X-ray vision"][1]
+	if xray.clips[1] == 4 and xray.clips[2] == 6 and xray.clips[3] == 8 then
+		return data
+	end
+end
+
 function parse_familiars()
 	local familiars = {}
 	for l in io.lines("cache/files/familiars.txt") do
@@ -716,7 +741,7 @@ function parse_mallprices()
 end
 
 function verify_mallprices(data)
-	if data["Mr. Accessory"] >= 1000000 and data["Mr. Accessory"] <= 100000000 and data["Mick's IcyVapoHotness Inhaler"] >= 200 and data["Mick's IcyVapoHotness Inhaler"] <= 200000 then
+	if data["Mr. Accessory"]["buy 10"] >= 1000000 and data["Mr. Accessory"]["buy 10"] <= 100000000 and data["Mick's IcyVapoHotness Inhaler"]["buy 10"] >= 200 and data["Mick's IcyVapoHotness Inhaler"]["buy 10"] <= 200000 then
 		return data
 	end
 end
@@ -819,6 +844,7 @@ process("buffs")
 process("items")
 process("outfits")
 process("hatrack")
+process("recipes")
 
 process("skills")
 process("buff recast skills")

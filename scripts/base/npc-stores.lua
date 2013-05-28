@@ -26,6 +26,7 @@ function shop_buyitem(items, whichshop)
 		if not itemrows[x] then
 			print("WARNING: couldn't find row for item", x)
 			print("  itemrows:", itemrows)
+			print("WARNING: couldn't find row for item", x)
 		end
 		async_post_page("/shop.php", { pwd = session.pwd, whichshop = whichshop, action = "buyitem", whichrow = itemrows[x], quantity = y })
 	end

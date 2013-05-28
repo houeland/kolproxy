@@ -25,7 +25,7 @@ ignore_buffing_and_outfit = nil
 
 local function check_for_highskill_run()
 	if classid() == 6 and have("astral belt") and moonsign() == "Vole" and current_ascension_number() >= 100 and ascensionpathid() == 0 then
-		return true
+		--return true
 	end
 end
 
@@ -357,7 +357,7 @@ jiggle
 if hasskill Throw Shield
   cast Throw Shield
 endif
-if hasskill Blend
+if (hasskill Blend) && (!monstername oil tycoon)
   cast Blend
 endif
 
@@ -369,11 +369,11 @@ endif
 		function noodles_action()
 			return [[
 
-if hascombatitem Rain-Doh blue balls
+if (hascombatitem Rain-Doh blue balls) && (!monstername oil tycoon)
   use Rain-Doh blue balls
   use Rain-Doh indigo cup
 endif
-if !hascombatitem Rain-Doh blue balls
+if (!hascombatitem Rain-Doh blue balls) && (!monstername oil tycoon)
   if hasskill Blend
     cast Blend
   endif
@@ -578,7 +578,7 @@ endif
 			nobuffing = true,
 			action = function()
 				set_result(use_item("ten-leaf clover"))
-				did_action = not have("ten-leaf clover")
+				did_action = not have_item("ten-leaf clover")
 			end
 		}
 	}
@@ -1412,7 +1412,7 @@ endif
 	end
 
 	function pull_in_softcore(item)
-		if not have(item) and not ascensionstatus("Hardcore") then
+		if not have_item(item) and not ascensionstatus("Hardcore") then
 			ascension_automation_pull_item(item)
 			if not have(item) then
 				critical("Failed to pull " .. tostring(item))
@@ -2699,12 +2699,7 @@ endif
 	}
 
 	add_task {
-		prereq = level() < 4 and (classid() == 5 or classid() == 6) and not have("tonic water") and challenge ~= "fist",
-		f = script.unlock_guild_and_get_tonic_water,
-	}
-
-	add_task {
-		prereq = level() < 5 and (classid() == 5 or classid() == 6) and not have("tonic water") and challenge == "fist" and fist_level > 0 and meat() >= 100,
+		prereq = not cached_stuff.have_moxie_guild_access and (classid() == 5 or classid() == 6) and not have("tonic water") and meat() >= 100,
 		f = script.unlock_guild_and_get_tonic_water,
 	}
 
@@ -3147,10 +3142,10 @@ endwhile
 	}
 
 	add_task {
-		prereq = quest("The Goblin Who Wouldn't Be King") and
+		prereq = function() return quest("The Goblin Who Wouldn't Be King") and
 			challenge == "jarlsberg" and
 			not have_harem_outfit() and
-			ensure_yellow_ray(),
+			ensure_yellow_ray() end,
 		f = function()
 			script.go("yellow raying harem girl", 259, make_yellowray_macro("harem girl"), {}, {}, "He-Boulder", 15)
 		end,
@@ -3637,7 +3632,7 @@ endif
 					async_post_page("/campground.php", { preaction = "summoncliparts" })
 					async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "01", clip2 = "09", clip3 = "09" })
 				end
-				script.wear { weapon = have_item("time halo") and "empty", offhand = have_item("time halo") and "empty", acc1 = have_item("time halo") and "time halo", acc2 = have_item("dead guy's watch") and "dead guy's watch" or nil }
+				script.wear { weapon = have_item("time halo") and "empty" or nil, offhand = have_item("time halo") and "empty" or nil, acc1 = have_item("time halo") and "time halo" or nil, acc2 = have_item("dead guy's watch") and "dead guy's watch" or nil }
 				result, resulturl = get_page("/inventory.php", { which = 1 })
 				result = add_message_to_page(get_result(), "<p>End of day.</p><p>(PvP,) overdrink, then done.</p>", "Ascension script:")
 				finished = true
@@ -3672,7 +3667,9 @@ endif
 		when = quest("Am I My Trapper's Keeper?") and (not trailed or trailed == "dairy goat") and highskill_at_run,
 		task = {
 			message = "get milk early in highskill AT",
+			nobuffing = true,
 			action = function()
+				ignore_buffing_and_outfit = false
 				script.do_trapper_quest()
 			end
 		}
@@ -3907,10 +3904,10 @@ endif
 	end }
 
 	add_task {
-		prereq = not have_hippy_outfit() and
+		prereq = function() return not have_hippy_outfit() and
 			unlocked_island() and
 			ensure_yellow_ray() and
-			not have_frat_war_outfit(),
+			not have_frat_war_outfit() end,
 		f = function()
 			-- TODO: Should do this before level 9 to avoid noncombats!
 			script.bonus_target { "combat" }
@@ -3978,6 +3975,7 @@ endif
 	add_task {
 		prereq = quest("Am I My Trapper's Keeper?") and (not trailed or trailed == "dairy goat") and whichday >= 3 and challenge ~= "boris",
 		f = function()
+			ignore_buffing_and_outfit = false
 			script.do_trapper_quest()
 		end,
 		message = "trapper quest",
@@ -4290,9 +4288,9 @@ endif
 				return result, resulturl, did_action
 			end
 			script.bonus_target { "noncombat" }
-			script.maybe_ensure_buffs { "Silent Running" }
 
 			if not have_item("S.O.C.K.") then
+				script.maybe_ensure_buffs { "Ur-Kel's Aria of Annoyance", "Silent Running" }
 				script.go("do airship", 81, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Ur-Kel's Aria of Annoyance", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "Mini-Hipster", 35, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Random Lack of an Encounter" then
 						if not have_item("model airship") then
@@ -4310,8 +4308,10 @@ endif
 					did_action = true
 				end
 			elseif quest("The Rain on the Plains is Mainly Garbage") then
+				script.maybe_ensure_buffs { "Silent Running" }
 				script.do_castle()
 			elseif not have("steam-powered model rocketship") and ascensionstatus() == "Hardcore" then
+				script.maybe_ensure_buffs { "Silent Running" }
 				script.unlock_hits()
 			end
 		end,
@@ -4329,11 +4329,11 @@ endif
 	end
 
 	add_task {
-		when = not ascensionstatus("Aftercore") and
+		when = function() return not ascensionstatus("Aftercore") and
 			level() >= 10 and
 			requires_wand_of_nagamar() and
 			not have_wand_or_parts() and
-			ensure_clover(),
+			ensure_clover() end,
 		task = {
 			message = "clovering for wand",
 			nobuffing = true,
@@ -4479,9 +4479,9 @@ endif
 	}
 
 	add_task {
-		prereq = quest("Make War, Not... Oh, Wait") and
+		prereq = function() return quest("Make War, Not... Oh, Wait") and
 			not have_frat_war_outfit() and
-			ensure_yellow_ray(),
+			ensure_yellow_ray() end,
 		f = function()
 			script.go("yellow raying frat house", 134, make_yellowray_macro("War"), {
 				["Catching Some Zetas"] = "Wake up the pledge and throw down",
@@ -4579,7 +4579,7 @@ endif
 	}
 
 	add_task {
-		prereq = (challenge == "boris") and basemoxie() < 70 and level() >= 12,
+		prereq = challenge and basemoxie() < 70 and level() >= 12,
 		f = script.do_moxie_powerleveling,
 	}
 
@@ -4683,7 +4683,7 @@ endif
 	}
 
 	add_task { prereq = true, f = function()
-		if ((advs() < 50 and turnsthisrun() + advs() < 850) or (advs() < 10)) and fullness() >= 12 and drunkenness() >= estimate_max_safe_drunkenness() and not highskill_at_run then
+		if ((advs() < 50 and turnsthisrun() + advs() < 650) or (advs() < 10)) and fullness() >= 12 and drunkenness() >= estimate_max_safe_drunkenness() and not highskill_at_run then
 			if script.spooky_forest_runaways() then return end -- TODO: do earlier as a task
 			if script.trade_for_clover() then return end
 			stop "TODO: end of day 4. (pvp,) overdrink"
@@ -4719,8 +4719,16 @@ endif
 					end
 				})
 			else
-				inform "TODO: do lair entrance"
-				result, resulturl = get_page("/lair1.php", { action = "gates" })
+				inform "do lair entrance"
+				set_result(get_page("/lair1.php", { action = "gates" }))
+				if get_result():contains([[value="mirror"]]) then
+					inform "break mirror"
+					set_equipment {}
+					result, resulturl = get_page("/lair1.php", { action = "mirror" })
+					script.wear {}
+					did_action = result:contains("huge mirror shard")
+					return
+				end
 				local dod_tbl = get_dod_potion_status()
 				local dod_reverse = {}
 				for a, b in pairs(dod_tbl) do
@@ -4745,7 +4753,7 @@ endif
 				if got_items then
 					print("woo got them!")
 				end
-				result = add_colored_message_to_page(get_result(), "TODO: do lair entrance, pass mirror, then run script again", "darkorange")
+				result = add_colored_message_to_page(get_result(), "TODO: do lair gates, then run script again", "darkorange")
 				finished = true
 			end
 		else
@@ -4889,11 +4897,9 @@ use gauze garter, gauze garter
 				script.ensure_mp(100)
 				local pt, url = post_page("/lair3.php", { action = "hedge" })
 				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodleserpent)
-				if have_item("hedge maze puzzle") then
-					advagain = true
-				end
-				if not locked() then
+				if have_item("hedge maze puzzle") and not locked() then
 					solve_hedge_maze_puzzle()
+					advagain = true
 				end
 				did_action = advagain
 			else
@@ -5191,7 +5197,7 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 		return get_page("/main.php")
 	end
 
-	local ok_paths = { [0] = true, [6] = true, [8] = true, [10] = true, ["Avatar of Jarlsberg"] = true }
+	local ok_paths = { [0] = true, [6] = true, [8] = true, [10] = true, ["Avatar of Jarlsberg"] = true, ["BIG!"] = true }
 	local path_support_text = ""
 	local pathdesc = string.format([[%s %s]], ascensionstatus(), ascensionpathname())
 	if ascensionpathid() == 0 then

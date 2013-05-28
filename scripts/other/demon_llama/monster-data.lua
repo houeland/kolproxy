@@ -88,6 +88,10 @@ function buildCurrentFightMonsterDataCache(monster_name, fight_text)
 	local modifiers = estimate_modifier_bonuses()
 	local ml = modifiers["Monster Level"] or 0
 
+	if ascensionpath("BIG!") then
+		ml = ml + 150
+	end
+
 	for a, b in pairs(monster.Stats or {}) do
 		if ml_increases[a] and tonumber(b) then
 			monster.Stats[a] = math.max(tonumber(b) + ml, 1)

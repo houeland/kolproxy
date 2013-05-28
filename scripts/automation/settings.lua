@@ -168,6 +168,7 @@ function get_ascension_automation_settings(want_bonus)
 				"astral trousers",
 				{ name = "buoybottoms", check = function() return (level() < 13) end },
 				"Greatest American Pants",
+				"big pants",
 				"leather chaps",
 				"distressed denim pants",
 				"bullet-proof corduroys",

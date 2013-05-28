@@ -84,7 +84,7 @@ function sendchat_run_command_raw(cmd, rest)
 	end
 end
 
-local cmd, rest = allparams.graf:match("(/[^ ]+)(.*)")
+local cmd, rest = allparams.graf:match("(/[^ ]+) *(.*)")
 
 -- print("DEBUG sendchat: ", allparams, "cmd is", cmd, "|", rest)
 

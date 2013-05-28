@@ -1,12 +1,4 @@
 add_warning {
-	message = "Make sure you use the correct skill to trigger the nanorhino.",
-	severity = "notice",
-	check = function()
-		return familiar("Nanorhino")
-	end
-}
-
-add_warning {
 	message = "Make sure you use the correct skill to trigger the Juju Mojo Mask.",
 	severity = "notice",
 	check = function()
@@ -16,6 +8,7 @@ add_warning {
 	end
 }
 
+-- TODO: in-run only(?)
 add_warning {
 	message = "Your Juju Mojo Mask gaze does not correspond to your primary stat.",
 	severity = "extra",

@@ -377,13 +377,13 @@ function setup_functions()
 				tbl.action = "dualwield"
 			elseif slot == "offhand" then
 				tbl.action = "dualwield"
-				local f = get_page("/inv_equip.php", tbl)
+				local f, furl = get_page("/inv_equip.php", tbl)
 				if equipment().offhand ~= itemid then
 					tbl.action = "equip"
 					tbl.slot = tostring(slot)
 					return async_get_page("/inv_equip.php", tbl)
 				else
-					return f()
+					return f, furl
 				end
 			elseif slot == "acc1" then
 				tbl.slot = "1"
@@ -393,13 +393,13 @@ function setup_functions()
 				tbl.slot = "3"
 			elseif slot == "familiarequip" then
 				tbl.action = "hatrack"
-				local f = async_get_page("/inv_equip.php", tbl)
+				local f, furl = get_page("/inv_equip.php", tbl)
 				if equipment().familiarequip ~= itemid then
 					tbl.action = "equip"
 					tbl.slot = tostring(slot)
 					return async_get_page("/inv_equip.php", tbl)
 				else
-					return f()
+					return f, furl
 				end
 			elseif slot then
 				tbl.slot = tostring(slot)
@@ -423,19 +423,23 @@ function setup_functions()
 		end
 
 		function set_equipment(tbl)
--- 			print("setting equipment to", tbl)
+--			print("setting equipment to", tbl)
 			local eq = equipment()
 			for a, b in pairs(eq) do
--- 				print("checking", b, "vs[", a, "]", tbl[a])
+--				print("checking", b, "vs[", a, "]", tbl[a])
 				if b ~= tbl[a] then
 					unequip_slot(a)
--- 					print("unequipping slot", a)
+--					print("unequipping slot", a)
 				end
 			end
 			local eq = equipment()
+			if eq.weapon ~= tbl.weapon then
+				equip_item(tbl.weapon, "weapon")
+				eq = equipment()
+			end
 			for a, b in pairs(tbl) do
 				if eq[a] ~= b then
--- 					print("equipping", b, a)
+--					print("equipping", b, a)
 					equip_item(b, a)
 				end
 			end

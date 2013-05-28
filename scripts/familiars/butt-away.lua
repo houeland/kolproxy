@@ -1,9 +1,5 @@
 local function add_buttaway_message(pattern, runaways)
-	if runaways == 1 then
-		text = text:gsub(pattern, [[>%1 <span style="color: green">(]]..runaways..[[ free runaway today.)</span><]])
-	else
-		text = text:gsub(pattern, [[>%1 <span style="color: green">(]]..runaways..[[ free runaways today.)</span><]])
-	end
+	text = text:gsub(pattern, [[>%1 <span style="color: green">(]]..make_plural(runaways, "free runaway", "free runaways")..[[ today.)</span><]])
 end
 
 add_processor("familiar message: bandersnatch", function()
@@ -24,6 +20,12 @@ add_processor("familiar message: stompboots", function()
 	end
 end)
 
+add_processor("familiar message: stompboots", function()
+	if text:contains("feet flying, heels stomping, buckles jangling") and text:contains("Thank goodness there wasn't a mudhole nearby.") then
+		increase_daily_counter("familiar.pair of stomping boots.stomps")
+	end
+end)
+
 add_printer("familiar message: stompboots", function()
 	if text:contains("kicks you in the butt to speed your escape.") then
 		add_buttaway_message(">([^<]* kicks you in the butt to speed your escape.-)<", get_daily_counter("familiar.free butt runaways"))
@@ -34,12 +36,16 @@ add_printer("/charpane.php", function()
 	if familiarpicture() == "bandersnatch" or familiarpicture() == "stompboots" then
 		runaways = get_daily_counter("familiar.free butt runaways")
 
-		compact = runaways.." / " .. math.floor(buffedfamiliarweight() / 5)
+		compact = runaways.." / " .. math.floor(buffedfamiliarweight() / 5) .. " runs"
 		normal = runaways.." / " .. math.floor(buffedfamiliarweight() / 5) .. " runaways"
 
 		color = nil
 		if familiarpicture() == "bandersnatch" and not buff("Ode to Booze") then
 			color = "gray"
+		end
+		if familiarpicture() == "stompboots" then
+			compact = compact .. string.format("<br>%d / 7 stomps", get_daily_counter("familiar.pair of stomping boots.stomps"))
+			normal = normal .. string.format("<br>%d / 7 stomps", get_daily_counter("familiar.pair of stomping boots.stomps"))
 		end
 		print_familiar_value({ compactvalue = compact, normalvalue = normal, color = color })
 	end

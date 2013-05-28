@@ -1,3 +1,5 @@
+-- TODO: Really Deep Breath support
+
 sea_automation_kill_macro = function()
 	local use_lasso = ""
 	if have_equipped_item("sea cowboy hat") and have_equipped_item("sea chaps") then
@@ -62,6 +64,11 @@ if monstername sea cow
   use pulled indigo taffy
 endif
 
+if monstername tumbleweed
+  attack
+  attack
+endif
+
 abort Unexpected fight in corral
 
 ]]
@@ -98,7 +105,7 @@ function automate_sea_find_castle()
 	script.bonus_target { "item" }
 	script.wear {
 		hat = first_wearable { "Mer-kin scholar mask", "Mer-kin gladiator mask", "aerated diving helmet" },
-		shirt = first_wearable("sea salt scrubs"),
+		shirt = first_wearable { "sea salt scrubs" },
 	}
 	set_result(get_page("/monkeycastle.php"))
 	if get_result():contains("Sea Monkee Castle") then
@@ -120,9 +127,9 @@ end
 function automate_sea_find_big_brother()
 	script.bonus_target { "noncombat" }
 	script.wear {
-		hat = not expertly_trained() and "sea cowboy hat" or first_wearable { "Mer-kin sneakmask" },
-		shirt = first_wearable("sea salt scrubs"),
-		pants = not expertly_trained() and "sea chaps" or nil,
+		hat = first_wearable { not expertly_trained() and "sea cowboy hat" or nil, "Mer-kin sneakmask" },
+		shirt = first_wearable { "sea salt scrubs" },
+		pants = first_wearable { not expertly_trained() and "sea chaps" or nil },
 		acc1 = "makeshift SCUBA gear",
 	}
 	set_result(get_page("/monkeycastle.php"))
@@ -149,9 +156,9 @@ end
 function automate_sea_find_grandpa()
 	script.bonus_target { "noncombat" }
 	script.wear {
-		hat = not expertly_trained() and "sea cowboy hat" or first_wearable { "Mer-kin sneakmask" },
-		shirt = first_wearable("sea salt scrubs"),
-		pants = not expertly_trained() and "sea chaps" or nil,
+		hat = first_wearable { not expertly_trained() and "sea cowboy hat" or nil, "Mer-kin sneakmask" },
+		shirt = first_wearable { "sea salt scrubs" },
+		pants = first_wearable { not expertly_trained() and "sea chaps" or nil },
 		acc1 = "makeshift SCUBA gear",
 	}
 	set_result(get_page("/monkeycastle.php"))
@@ -169,9 +176,9 @@ function automate_sea_find_grandpa()
 	script.ensure_mp(100)
 	local zoneid = nil
 	if mainstat_type("Muscle") then
-		stop "TODO: Muscle grandpa"
+		zoneid = 196
 	elseif mainstat_type("Mysticality") then
-		stop "TODO: Mysticality grandpa"
+		zoneid = 195
 	elseif mainstat_type("Moxie") then
 		zoneid = 197
 	end
@@ -179,6 +186,10 @@ function automate_sea_find_grandpa()
 		zoneid = zoneid,
 		macro = automation_macro,
 		noncombatchoices = {
+			["Not a Micro Fish"] = "Watch in horror",
+			["A Vent Horizon"] = "Leave",
+			["There is Sauce at the Bottom of the Ocean"] = "Leave",
+			["You've Hit Bottom"] = "See what he wants to show you.",
 			["Barback"] = "Leave it beaode",
 			["Boxing the Juke"] = "Listen to the Music",
 		},
@@ -209,9 +220,9 @@ function automate_sea_find_currents()
 	if have_item("Mer-kin lockkey") then
 		script.bonus_target { "noncombat" }
 		script.wear {
-			hat = not expertly_trained() and "sea cowboy hat" or first_wearable { "Mer-kin sneakmask" },
-			shirt = first_wearable("sea salt scrubs"),
-			pants = not expertly_trained() and "sea chaps" or nil,
+			hat = first_wearable { not expertly_trained() and "sea cowboy hat" or nil, "Mer-kin sneakmask" },
+			shirt = first_wearable { "sea salt scrubs" },
+			pants = first_wearable { not expertly_trained() and "sea chaps" or nil },
 			acc1 = "makeshift SCUBA gear",
 		}
 		script.ensure_buffs { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "Ghostly Shell", "Astral Shell", "Leash of Linguini", "Empathy", "Smooth Movements", "The Sonata of Sneakiness" }
@@ -226,7 +237,7 @@ function automate_sea_find_currents()
 					if m == "Mer-kin raider" then
 						return "Infiltrate the skull-bedecked tent"
 					elseif m == "Mer-kin healer" then
-						return " Insinuate yourself into the glyphed tent"
+						return "Insinuate yourself into the glyphed tent"
 					elseif m == "Mer-kin burglar" then
 						return "Sneak into the camouflaged tent"
 					end
@@ -242,7 +253,7 @@ function automate_sea_find_currents()
 		script.bonus_target { "item" }
 		script.wear {
 			hat = first_wearable { "Mer-kin scholar mask", "Mer-kin gladiator mask", "aerated diving helmet" },
-			shirt = first_wearable("sea salt scrubs"),
+			shirt = first_wearable { "sea salt scrubs" },
 		}
 		use_plusitem_items()
 		script.ensure_buffs { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "Ghostly Shell", "Astral Shell", "Leash of Linguini", "Empathy", "Donho's Bubbly Ballad" }
@@ -273,7 +284,7 @@ function automate_sea_tame_seahorse()
 		script.bonus_target { "item" }
 		script.wear {
 			hat = "sea cowboy hat",
-			shirt = first_wearable("sea salt scrubs"),
+			shirt = first_wearable { "sea salt scrubs" },
 			pants = "sea chaps",
 			acc1 = "makeshift SCUBA gear",
 		}
@@ -293,7 +304,7 @@ function automate_sea_tame_seahorse()
 	script.bonus_target { "easy combat" }
 	script.wear {
 		hat = first_wearable { "Mer-kin scholar mask", "Mer-kin gladiator mask", "aerated diving helmet" },
-		shirt = first_wearable("sea salt scrubs"),
+		shirt = first_wearable { "sea salt scrubs" },
 	}
 	script.ensure_buffs { "Ghostly Shell", "Astral Shell" }
 	script.heal_up()
@@ -305,9 +316,9 @@ function automate_sea_tame_seahorse()
 end
 
 local violence_href = setup_turnplaying_script {
-	name = "automate-sea-violence",
+	name = "automate-sea-tame-seahorse",
 	description = "Automate sea (tame seahorse)",
-	when = function() return true end,
+	when = function() return not ascension["zones.sea.deepcity reached"] end,
 	macro = sea_automation_kill_macro,
 	preparation = function()
 		maybe_pull_item("sea salt scrubs")
@@ -317,7 +328,9 @@ local violence_href = setup_turnplaying_script {
 		maybe_pull_item("Fuzzy Slippers of Hatred")
 		maybe_pull_item("silent beret")
 		maybe_pull_item("Mer-kin scholar mask")
+		maybe_pull_item("Mer-kin scholar tailpiece")
 		maybe_pull_item("Mer-kin gladiator mask")
+		maybe_pull_item("Mer-kin gladiator tailpiece")
 		maybe_pull_item("aerated diving helmet")
 		if not expertly_trained() then
 			maybe_pull_item("sea cowboy hat", 1)
@@ -331,6 +344,7 @@ local violence_href = setup_turnplaying_script {
 	end,
 	autoinform = false,
 	adventuring = function()
+		result = "??? Didn't do anything ???"
 		advagain = false
 		script.want_familiar "Grouper Groupie"
 		hidden_inform "getting seahorse"
@@ -359,7 +373,7 @@ local violence_href = setup_turnplaying_script {
 			inform "taming seahorse"
 			automate_sea_tame_seahorse()
 		else
-			stop "TODO: Do deepcity"
+			stop "Already tamed seahorse."
 		end
 		set_result(result)
 		result = get_result()
@@ -374,7 +388,6 @@ local violence_href = setup_turnplaying_script {
 	end,
 }
 
--- pull Mer-kin scholar tailpiece
 -- pull 10 Mer-kin wordquiz & 10 Mer-kin cheatsheet
 -- outfit scholar, adv at 208
 -- use killscroll and healscroll and cast deep dark and use knucklebone and record everything and use dreadscroll

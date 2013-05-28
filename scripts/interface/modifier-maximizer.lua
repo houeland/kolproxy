@@ -1,4 +1,8 @@
-function maximize_equipment_slot_bonuses(slot, scoref)
+function maximize_equipment_slot_bonuses(slot, scoref_raw)
+	function scoref(tbl)
+		return scoref_raw(make_bonuses_table(tbl))
+	end
+
 	local options = {}
 
 	for wornslot, itemid in pairs(equipment()) do
@@ -74,8 +78,7 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 	end
 	if whichbonus == "HP & cold/spooky resistance" then
 		scoref = function(bonuses)
-			-- TODO: HP % modifiers
-			return (bonuses["Maximum HP"] or 0) + (bonuses["Muscle"] or 0) + (bonuses["Muscle %"] or 0)/100 * basemuscle() + (bonuses["Spooky Resistance"] or 0) * 20 + (bonuses["Cold Resistance"] or 0) * 20
+			return estimate_maxhp_increases(bonuses) + bonuses["Spooky Resistance"] * 20 + bonuses["Cold Resistance"] * 20
 		end
 	end
 

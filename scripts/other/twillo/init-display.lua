@@ -35,7 +35,7 @@ function estimate_other_init()
 	return init
 end
 
-function estimate_init_penalty(ml)
+function compute_monster_initiative_bonus(ml)
 	local penalty = 0
 	if 20 < ml and ml <= 40 then
 		penalty = 0 + 1 * (ml - 20)

@@ -15,12 +15,10 @@ function compute_net_worth()
 	local itemlines = {}
 	local totalsum = 0
 	for a, b in pairs(allitems) do
-		table.insert(itemlines, { name = a, amount = b, value = estimate_mallbuy_cost(a) or 0 })
+		table.insert(itemlines, { name = a, amount = b, value = estimate_mallbuy_cost(a, b) or 0 })
 	end
 	table.sort(itemlines, function(a, b)
-		if a.value * a.amount ~= b.value * b.amount then
-			return a.value * a.amount > b.value * b.amount
-		elseif a.value ~= b.value then
+		if a.value ~= b.value then
 			return a.value > b.value
 		else
 			return a.name < b.name
@@ -37,7 +35,7 @@ add_automation_script("custom-compute-net-worth", function()
 		return display_value(math.floor(x + 0.5))
 	end
 	for _, x in ipairs(itemlines) do
-		table.insert(tablerows, string.format([[<tr><td style="text-align: right">%s</td><td>&nbsp;&nbsp;%s (%s)</td></tr>]], disp(x.value * x.amount), x.name, disp(x.amount)))
+		table.insert(tablerows, string.format([[<tr><td style="text-align: right">%s</td><td>&nbsp;&nbsp;%s (%s)</td></tr>]], disp(x.value), x.name, disp(x.amount)))
 		totalsum = totalsum + x.value * x.amount
 	end
 	return make_kol_html_frame("<table>" .. string.format([[<tr><td style="text-align: right">%s</td><td>&nbsp;&nbsp;%s</td></tr>]], disp(totalsum), "<i>(Total)</i>") .. table.concat(tablerows, "\n") .. "</table>", "Approximate net worth (estimated cost to buy everything from the mall)"), requestpath

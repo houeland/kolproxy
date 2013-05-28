@@ -409,6 +409,7 @@ mark m_done
 			if have_skill("Gristlesphere") then
 				script.ensure_buffs { "Gristlesphere" }
 			end
+			script.ensure_buffs { "Ur-Kel's Aria of Annoyance" }
 			local ml = estimate_bonus("Monster Level")
 			if ml < 20 then
 				stop "Not enough +ML for Oil Peak (want 20+ for automation)"
@@ -436,7 +437,8 @@ mark m_done
 				if not have_buff("Well-Oiled") and have_item("Oil of Parrrlay") then
 					use_item("Oil of Parrrlay")
 				end
-				script.ensure_buffs { "Red Door Syndrome" }
+				script.ensure_buffs { "Go Get 'Em, Tiger!", "Red Door Syndrome", "Astral Shell", "Elemental Saucesphere" }
+				script.force_heal_up()
 				if predict_aboo_peak_banish() < 30 then
 					stop "TODO: Buff up and finish A-Boo Peak clues (couldn't banish 30%)"
 				end

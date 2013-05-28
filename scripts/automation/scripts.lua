@@ -435,8 +435,10 @@ function get_automation_scripts(cached_stuff)
 			if show_spammy_automation_events and not recursed then
 				print("  restoring MP to " .. (amount + need_extra) .. "+, need " .. need)
 			end
-			if need > 100 then
-				stop "Trying to restore more than 100 MP at once"
+			if need > 1000 then
+				stop "Trying to restore more than 1000 MP at once"
+			elseif need > 100 and not ascensionstatus("Aftercore") then
+				stop "Trying to restore more than 100 MP at once (in-run)"
 			end
 			local restore_items = {
 				["natural fennel soda"] = 120,
@@ -564,9 +566,10 @@ function get_automation_scripts(cached_stuff)
 
 	local ensure_mp = f.ensure_mp
 
-	function f.heal_up()
+	function f.heal_up(target)
+		target = target or maxhp() * 0.8
 		--print("DEBUG: heal_up()", hp(), maxhp())
-		if hp() / maxhp() < 0.8 and (maxhp() - hp() >= 20 or maxhp() < 50) then
+		if hp() < target and (maxhp() - hp() >= 20 or maxhp() < 50) then
 			local oldhp = hp()
 			if maxhp() - hp() >= 70 and have_skill("Cannelloni Cocoon") then
 				ensure_mp(20)
@@ -621,7 +624,7 @@ function get_automation_scripts(cached_stuff)
 	end
 
 	function f.force_heal_up()
-		f.heal_up()
+		f.heal_up(maxhp())
 		if hp() < maxhp() then
 			use_hottub()
 		end
@@ -1426,6 +1429,7 @@ endif
 						return
 					end
 					if not ascensionstatus("Hardcore") then
+						pull_in_softcore("milk of magnesium")
 						script.ensure_buffs { "Got Milk" }
 					end
 					eat_item("Ultimate Breakfast Sandwich")
@@ -2664,7 +2668,7 @@ endif
 					stop "TODO: Do gremlins in challenge path without Super Structure"
 				end
 			end
-			if challenge and (not buff("Super Structure") or not have_skill("Tao of the Terrapin")) then
+			if challenge and not have_skill("Tao of the Terrapin") then
 				script.bonus_target { "easy combat" }
 				script.maybe_ensure_buffs { "Standard Issue Bravery" }
 				script.ensure_buffs { "Go Get 'Em, Tiger!", "Butt-Rock Hair" }
@@ -2740,6 +2744,11 @@ endif
 				inform("mine for ore [tile " .. tostring(best_which) .. "]")
 				script.heal_up()
 				set_result(get_page("/mining.php", { mine = 1, which = best_which, pwd = session.pwd }))
+				if challenge == "fist" then
+					ensure_buffs { "Earthen Fist" }
+				else
+					wear { hat = "miner's helmet", weapon = "7-Foot Dwarven mattock", pants = "miner's pants" }
+				end
 				did_action = script.get_mining_whichid() ~= best_which
 			elseif not ascensionstatus("Hardcore") then
 				local want_ore = trappercabin:match("fix the lift until you bring me that cheese and ([a-z]+ ore)")
@@ -3198,15 +3207,13 @@ endif
 		async_get_page("/guild.php", { place = "challenge" })
 		local guildpt = get_page("/guild.php")
 		if guildpt:match("scg") then
+			cached_stuff.have_moxie_guild_access = true
 			inform "get tonic water"
 			if challenge ~= "fist" then
 				buy_item("soda water", "m", 10)
 				async_post_page("/guild.php", { action = "stillfruit", whichitem = get_itemid("soda water"), quantity = 10 })
-			else
-				buy_item("soda water", "m", 1)
-				async_post_page("/guild.php", { action = "stillfruit", whichitem = get_itemid("soda water"), quantity = 1 })
 			end
-			did_action = have("tonic water")
+			did_action = true
 		else
 			if not quest("Suffering For His Art") then
 				async_get_page("/town_wrong.php", { place = "artist" })
@@ -3566,7 +3573,7 @@ mark m_done
 		if cyrpt:match("Defiled Alcove") then
 			if challenge == "boris" then
 				local alcove_macro = macro_softcore_boris()
-				if get_evilometer_data().Alcove >= 32 and have_item("Rain-Doh black box") then
+				if parse_evilometer().Alcove >= 32 and have_item("Rain-Doh black box") then
 					alcove_macro = macro_softcore_boris([[
 
 if monstername modern zmobie
@@ -3603,7 +3610,7 @@ endif
 			end
 		elseif cyrpt:match("Defiled Cranny") then
 			script.bonus_target { "noncombat" }
-			maybe_ensure_buffs { "Mental A-cue-ity" }
+			maybe_ensure_buffs { "Mental A-cue-ity", "Ur-Kel's Aria of Annoyance" }
 			go("do crypt cranny", 262, macro_noodlecannon, noncombattbl, { "Spirit of Garlic", "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Ur-Kel's Aria of Annoyance" }, "Baby Bugged Bugbear", 35)
 		elseif cyrpt:match("Defiled Niche") and (not trailed or trailed == "dirty old lihc") then
 			go("do crypt niche", 263, make_cannonsniff_macro("dirty old lihc"), noncombattbl, { "Spirit of Garlic", "Butt-Rock Hair", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Rogue Program", 25, { olfact = "dirty old lihc" })
@@ -3729,6 +3736,7 @@ endif
 	function f.do_friars()
 -- 		TODO: more buffs?
 		local zone_stasis_macro = macro_stasis
+		script.bonus_target { "noncombat", "item" }
 		if challenge == "fist" then
 			maybe_ensure_buffs { "Mental A-cue-ity" }
 			zone_stasis_macro = macro_fist
@@ -3737,7 +3745,6 @@ endif
 			zone_stasis_macro = macro_noodlecannon
 		end
 		script.maybe_ensure_buffs { "Silent Running" }
-		script.bonus_target { "noncombat", "item" }
 		if fullness() + count("hellion cube") * 6 + 6 <= estimate_max_fullness() and ascensionstatus() == "Hardcore" and challenge ~= "zombie" then
 			go("getting hellion cubes", 239, make_cannonsniff_macro("Hellion"), nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
 		elseif not have("box of birthday candles") then

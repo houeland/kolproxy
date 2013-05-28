@@ -16,11 +16,11 @@ function run_castle_turns(numturns, preferfamid)
 		switch_familiarid(get_familiarid(a))
 		if familiarid() == get_familiarid(a) then
 			table.insert(have_familiars, a)
-			print(a, daily_familiars[a].item, datafile("mallprices")[daily_familiars[a].item], get_daily_counter(b.counter))
+			print(a, daily_familiars[a].item, estimate_mallsell_profit(daily_familiars[a].item), get_daily_counter(b.counter))
 		end
 	end
 	table.sort(have_familiars, function(a, b)
-		return datafile("mallprices")[daily_familiars[a].item] < datafile("mallprices")[daily_familiars[b].item]
+		return estimate_mallsell_profit(daily_familiars[a].item) < estimate_mallsell_profit(daily_familiars[b].item)
 	end)
 	for i = 1, 1000 do
 		print("automating turn "..tostring(start_advs - adventures() + 1).. " / " .. numturns)
