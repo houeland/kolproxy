@@ -95,6 +95,8 @@ local function estimate_fam_item()
 		return 0
 	end
 end
+__DONOTUSE_estimate_familiar_item_drop_bonus = estimate_fam_item
+
 
 local function estimate_skill_item()
 	local tw_item = 0

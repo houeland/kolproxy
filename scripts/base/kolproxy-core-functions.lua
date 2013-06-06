@@ -15,6 +15,7 @@ end
 
 local itemid_name_lookup = {}
 local monster_image_lookup = {}
+local monster_name_lookup = {}
 function reset_datafile_cache()
 	datafile_cache = {}
 	itemid_name_lookup = {}
@@ -22,11 +23,12 @@ function reset_datafile_cache()
 		itemid_name_lookup[y.id] = x
 	end
 	datafile("outfits")
-	for monster in table.values(datafile("monsters")) do
+	for monstername, monster in pairs(datafile("monsters")) do
 		local image = monster.Stats.Image
 		if image then
-			monster_image_lookup[image] = monster
+			monster_image_lookup[image] = monstername
 		end
+		monster_name_lookup[monstername:lower()] = monstername
 	end
 end
 
@@ -107,10 +109,15 @@ function maybe_get_itemdata(name)
 end
 
 
-function get_monster_by_image(image)
-	return monster_image_lookup[image]
+function maybe_get_monsterdata(name, image)
+	local realname = nil
+	if image then
+		realname = monster_image_lookup[image]
+	else
+		realname = monster_name_lookup[name:lower()]
+	end
+	return datafile("monsters")[realname]
 end
-
 
 function maybe_get_familiarid(name)
 	if name == nil then
@@ -181,8 +188,10 @@ function intercept_warning(warning)
 	local head = [[<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
 <script>top.charpane.location = "charpane.php"</script>]]
 	local extratext = ""
-	if not warning.norepeat then
+	if not warning.norepeat and not warning.customaction then
 		extratext = [[<p><a href="]]..raw_make_href(requestpath, parse_params_raw(input_params))..[[">I fixed it, try again.</a></p>]]
+	elseif warning.customaction then
+		extratext = [[<p>{ ]] .. warning.customaction .. [[ }</p>]]
 	end
 	local session_disable_msg = [[<p><small><a href="#" onclick="var link = this; $.post('custom-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-]] .. warningid .. [[', stateset: 'session', value: 'skip', ajax: 1 }, function(res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..raw_make_href(requestpath, parse_params_raw(input_params))..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it anyway and disable this warning until I log out.") .. [[</a></small></p>]]
 	local one_turn_disable_msg = [[<p><small><a href="#" onclick="var link = this; $.post('custom-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-turn-]] .. turnsthisrun() .. [[-]] .. warningid .. [[', stateset: 'session', value: 'skip', ajax: 1 }, function(res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..raw_make_href(requestpath, parse_params_raw(input_params))..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it for this turn.") .. [[</a></small></p>]]

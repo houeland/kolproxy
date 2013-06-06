@@ -51,6 +51,7 @@ add_choice_text("That Explains All The Eyepatches", function()
 	end
 end)
 
+-- TODO: check if fcle is unlocked instead?
 add_warning {
 	message = "You don't have an insult book.",
 	severity = "warning",

@@ -346,7 +346,7 @@ submit_page_func ref l = do
 					one <- peekJust l 1
 					two <- peekJust l 2
 					params <- parse_keyvalue_luatbl l 3
-					(pt, puri, _hdrs) <- join $ async_submit_page ref one two params
+					(pt, puri, _hdrs, _code) <- join $ async_submit_page ref one two params
 					Lua.pushbytestring l pt
 					Lua.pushstring l (show puri)
 					lua_log_line ref ("< submit_page_func " ++ (show puri)) (return ())
@@ -370,7 +370,7 @@ async_submit_page_func ref l1 = do
 					f <- async_submit_page ref one two params
 					lua_log_line ref "< async_submit_page_func requested" (return ())
 					push_function l1 (\l2 -> do
-						(pt, puri, _hdrs) <- f
+						(pt, puri, _hdrs, _code) <- f
 						lua_log_line ref ("< async_submit_page_func result " ++ (show puri)) (return ())
 						Lua.pushbytestring l2 pt
 						Lua.pushstring l2 (show puri)

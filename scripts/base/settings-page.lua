@@ -70,7 +70,7 @@ register_setting {
 
 register_setting {
 	name = "enable experimental implementations",
-	description = "Enable (beta) features that are still in development (<b>Not always accurate</b>, currently: none)",
+	description = "Enable (beta) features that are still in development (<b>Not always accurate</b>)",
 	group = "other",
 	default_level = "enthusiast",
 }

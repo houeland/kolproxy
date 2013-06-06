@@ -51,7 +51,7 @@ doProcessPage ref uri params = do
 
 	forkIO_ "proxy:process" $ do
 		x <- try $ do
-			(pagetext, effuri, hdrs) <- log_time_interval ref ("fetchpage: " ++ (show uri)) $ xf
+			(pagetext, effuri, hdrs, code) <- log_time_interval ref ("fetchpage: " ++ (show uri)) $ xf
 
 			let allparams = concat $ catMaybes $ [decodeUrlParams uri, decodeUrlParams effuri, params]
 			y <- log_time_interval ref ("processing: " ++ (show uri)) $ runProcessScript ref uri effuri pagetext allparams
@@ -65,16 +65,16 @@ doProcessPage ref uri params = do
 				log_page_result ref (Right status_before) log_time state_before uri params effuri (Data.ByteString.Char8.unpack pagetext) status_after state_after
 				return ()) `catch` (\e -> putStrLn $ "processpage logging error: " ++ (show (e :: KolproxyException)))
 
-			return (y, pagetext, effuri, hdrs)
+			return (y, pagetext, effuri, hdrs, code)
 		putMVar mv =<< case x of
-			Right (Right msg, _, effuri, hdrs) -> do
-				return $ Right (msg, effuri, hdrs)
-			Right (Left (msg, trace), pagetext, effuri, hdrs) -> do
+			Right (Right msg, _, effuri, hdrs, code) -> do
+				return $ Right (msg, effuri, hdrs, code)
+			Right (Left (msg, trace), pagetext, effuri, hdrs, code) -> do
 				putStrLn $ "Error processing page[" ++ show uri ++ "]: " ++ msg ++ "\n" ++ trace
-				return $ Left (add_error_message_to_page ("process-page.lua error: " ++ msg ++ "\n" ++ trace) pagetext, effuri, hdrs)
+				return $ Left (add_error_message_to_page ("process-page.lua error: " ++ msg ++ "\n" ++ trace) pagetext, effuri, hdrs, code)
 			Left e -> do
 				putStrLn $ "Exception while processing page[" ++ show uri ++ "]: " ++ (show (e :: SomeException))
-				return $ Left (add_error_message_to_page ("process-page.lua exception: " ++ (show e)) (Data.ByteString.Char8.pack "{ Kolproxy page processing. }"), mkuri "/error", [])
+				return $ Left (add_error_message_to_page ("process-page.lua exception: " ++ (show e)) (Data.ByteString.Char8.pack "{ Kolproxy page processing. }"), mkuri "/error", [], 500)
 
 	return $ do
 		readMVar mv
@@ -103,13 +103,13 @@ kolProxyHandlerWhenever uri params baseref = do
 			getstatusfunc_ = statusfunc
 		}
 	}
-	Right (text, effuri, _hdrs) <- case uriPath uri of -- TODO: handle Left here?
+	Right (text, effuri, _hdrs, _code) <- case uriPath uri of -- TODO: handle Left here?
 		"/submitnewchat.php" -> do
 			let allparams = concat $ catMaybes $ [decodeUrlParams uri, params]
 			let handle_normally msguri msgparams = do
 				y <- join $ (processPage ref) ref msguri msgparams
 				case y of
-					Right (msg, _, _) -> do
+					Right (msg, _, _, _) -> do
 						log_chat_messages ref (Data.ByteString.Char8.unpack msg)
 						runSentChatScript ref msg
 					_ -> return ()
@@ -130,7 +130,7 @@ kolProxyHandlerWhenever uri params baseref = do
 --								putStrLn $ "DEBUG: send chat params: " ++ show newparams
 --								putStrLn $ "DEBUG:   want to graf: " ++ show (Data.ByteString.Char8.drop 20 msg)
 								handle_normally newuri newparams
-							else return $ Right (msg, uri, [])
+							else return $ Right (msg, uri, [], 200)
 				Left (msg, trace) -> do
 					putStrLn $ "sendchat error: " ++ (msg ++ "\n" ++ trace)
 					handle_normally uri params
@@ -204,7 +204,7 @@ kolProxyHandler uri params baseref = do
 			_ -> do
 				putStrLn $ "Logging in over https..."
 				return internalKolHttpsRequest
-		(pt, effuri, allhdrs) <- loginrequestfunc uri (Just p_sensitive) (Nothing, useragent_ $ connection $ origref, hostUri_ $ connection $ origref, Nothing) True
+		(pt, effuri, allhdrs, code) <- loginrequestfunc uri (Just p_sensitive) (Nothing, useragent_ $ connection $ origref, hostUri_ $ connection $ origref, Nothing) True
 		let hdrs = filter (\(x, _y) -> (x == "Set-Cookie" || x == "Location")) allhdrs
 		putStrLn $ "DEBUG: Login requested " ++ (show $ uriPath uri) ++ ", got " ++ (show $ uriPath effuri)
 		putStrLn $ "  hdrs: " ++ show hdrs
@@ -237,7 +237,9 @@ kolProxyHandler uri params baseref = do
 				putStrLn $ "DEBUG login.php contents: " ++ (Data.ByteString.Char8.unpack pt)
 				makeRedirectResponse pt uri hdrs) `catch` (\e -> do
 					putStrLn $ "Error: Failed to log in. Exception: " ++ (show (e :: Control.Exception.SomeException))
-					makeResponse pt uri hdrs)
+					if (code >= 300 && code < 400)
+						then makeRedirectResponse pt uri hdrs
+						else makeResponse pt uri hdrs)
 
 	let response = case uriPath uri of
 		"/login.php" -> fmap handle_login params
@@ -284,8 +286,8 @@ kolProxyHandler uri params baseref = do
 					putStrLn $ "Error: Can't read state! Don't log in for the first time in a day while in a fight or choice noncombat, and don't log in while in valhalla!"
 					gp <- getpage
 					case gp of
-						Left (pt, effuri, _hdrs) -> makeResponse pt effuri []
-						Right (pt, effuri, hdrs) -> if (uriPath effuri) `elem` ["/fight.php", "/choice.php"]
+						Left (pt, effuri, _hdrs, _code) -> makeResponse pt effuri []
+						Right (pt, effuri, hdrs, _code) -> if (uriPath effuri) `elem` ["/fight.php", "/choice.php"]
 							then makeResponse (add_error_message_to_page "Error: kolproxy can't read state!" pt) effuri []
 							else handleRequest origref uri effuri hdrs params pt
 				else r
@@ -305,13 +307,13 @@ kolProxyHandler uri params baseref = do
 					let reqtype = if isJust params then "POST" else "GET"
 					zz <- log_time_interval origref ("intercepting: " ++ (show uri)) $ runInterceptScript origref uri allparams reqtype
 					case zz of
-						Right (pt, effuri) -> return $ Right (pt, effuri, [])
-						Left (msg, trace) -> return $ Left (add_error_message_to_page ("intercept.lua error: " ++ msg ++ "\n" ++ trace) (Data.ByteString.Char8.pack "{ No page loaded. }"), mkuri "/error", [])
+						Right (pt, effuri) -> return $ Right (pt, effuri, [], 200)
+						Left (msg, trace) -> return $ Left (add_error_message_to_page ("intercept.lua error: " ++ msg ++ "\n" ++ trace) (Data.ByteString.Char8.pack "{ No page loaded. }"), mkuri "/error", [], 503)
 				else log_time_interval origref ("run getpage for: " ++ (show uri)) $ getpage
 
 			(new_page, newref) <- case downloaded_page of
 				Left dl -> return (Left dl, origref)
-				Right (pt, effuri, hdrs) -> do
+				Right (pt, effuri, hdrs, code) -> do
 					newref <- if canread_before && (uriPath effuri /= "/afterlife.php")
 						then return origref
 						else log_time_interval _fake_log_ref ("make ref-2 for: " ++ (show uri)) $ make_ref baseref
@@ -322,14 +324,14 @@ kolProxyHandler uri params baseref = do
 						then do
 							y <- log_time_interval newref ("automating: " ++ (show uri)) $ runAutomateScript newref uri effuri pt allparams
 							case y of
-								Right autotext -> return $ Right (autotext, effuri, hdrs)
-								Left (msg, trace) -> return $ Left (add_error_message_to_page ("automate.lua error: " ++ msg ++ "\n" ++ trace) pt, effuri, hdrs)
-						else return $ Right (pt, effuri, hdrs)
+								Right autotext -> return $ Right (autotext, effuri, hdrs, 200)
+								Left (msg, trace) -> return $ Left (add_error_message_to_page ("automate.lua error: " ++ msg ++ "\n" ++ trace) pt, effuri, hdrs, 503)
+						else return $ Right (pt, effuri, hdrs, code)
 					return (x, newref)
 
 			case new_page of
-				Left (pt, effuri, _hdrs) -> makeResponse pt effuri []
-				Right (pt, effuri, _hdrs) -> log_time_interval newref ("run handle request for: " ++ (show uri)) $ handleRequest newref uri effuri [] params pt
+				Left (pt, effuri, _hdrs, _code) -> makeResponse pt effuri []
+				Right (pt, effuri, _hdrs, _code) -> log_time_interval newref ("run handle request for: " ++ (show uri)) $ handleRequest newref uri effuri [] params pt
 	return retresp
 
 runKolproxy = do

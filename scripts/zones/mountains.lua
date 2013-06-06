@@ -345,13 +345,18 @@ end)
 
 -- highlands 
 
-add_choice_text("Lost in the Great Overlook Lodge", { -- choice adventure number: 606
-	["Investigate Room 237"] = "Requires level 4 stench resistance",
-	["Search the pantry"] = "Requires +50% items from monsters (not counting familiar)",
-	["Follow the faint sound of music"] = "Requires jar of oil (from using 12 bubblin' crude)",
-	["Wait -- who's that?"] = "Requires +40% initiative",
-	["Leave the hotel"] = { leave_noturn = true },
-})
+add_choice_text("Lost in the Great Overlook Lodge", function()
+	local cur_item = estimate_bonus("Item Drops from Monsters") - __DONOTUSE_estimate_familiar_item_drop_bonus() + estimate_bonus("Food Drops from Monsters")
+	local cur_init = estimate_bonus("Combat Initiative")
+	local pantry_text = string.format([[<span style="color: %s">%s. Currently: %+d%%</span><br>%s]], cur_item >= 50 and "green" or "darkorange", "Requires +50% items from monsters", cur_item, "(+food% bonuses help here, but familiars giving +item% bonus are not included.)")
+	return { -- choice adventure number: 606
+		["Investigate Room 237"] = "Requires level 4 stench resistance",
+		["Search the pantry"] = pantry_text,
+		["Follow the faint sound of music"] = string.format([[<span style="color: %s">%s</span>]], have_item("jar of oil") and "green" or "darkorange", "Requires jar of oil (from using 12 bubblin' crude)"),
+		["Wait -- who's that?"] = string.format([[<span style="color: %s">%s. Currently: %+d%%</span>]], cur_init >= 40 and "green" or "darkorange", "Requires +40% initiative", cur_init),
+		["Leave the hotel"] = { leave_noturn = true },
+	}
+end)
 
 add_choice_text("Cabin Fever", { -- choice adventure number: 618
 	["A path is formed by laying one stone at a time."] = { text = "Keep trying to solve the mystery" },

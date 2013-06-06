@@ -356,6 +356,20 @@ function get_resistance_levels()
 	return resists
 end
 
+function get_elemental_weaknesses(element)
+	if element == "Cold" then
+		return "Hot", "Spooky"
+	elseif element == "Hot" then
+		return "Sleaze", "Stench"
+	elseif element == "Sleaze" then
+		return "Spooky", "Cold"
+	elseif element == "Spooky" then
+		return "Stench", "Hot"
+	elseif element == "Stench" then
+		return "Cold", "Sleaze"
+	end
+end
+
 function elemental_resist_level_multiplier(level)
 	local myst_resist = 0
 	if get_mainstat() == "Mysticality" then

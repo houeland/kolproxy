@@ -595,7 +595,11 @@ add_interceptor("/kolproxy-frame-page", function()
 	return [[<html style="margin: 0px; padding: 0px;"><head><script language=Javascript src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script></head><body style="margin: 0px; padding: 0px;"><iframe src="]] .. params.url .. [[" style="width: 100%; height: 100%; border: none; margin: 0px; padding: 0px;"></iframe></body></html>]], requestpath
 end)
 
-add_interceptor("use item: Degrassi Knoll shopping list", function()
+--add_printer("use item: Degrassi Knoll shopping list", function()
+--end)
+
+--[--[--
+add_interceptor("__IGNORE__ use item: Degrassi Knoll shopping list", function()
 	-- TODO: redo this entirely?
 	if setting_enabled("automate simple tasks") then
 				stuff = {}
@@ -621,16 +625,13 @@ add_interceptor("use item: Degrassi Knoll shopping list", function()
 					return ret
 				end
 				function try_to_create(name)
-	-- 					print("try_to_create", name)
-					if have(name) then
+					if _itemhave(name) then
 						return { have = { name }, buy = {}, missing = {}, order = {} }
 					end
 					if can_buy[name] then
-	-- 						print("buying", name)
 						return { have = {}, buy = { name }, missing = {}, order = {} }
 					end
 					if stuff[name] then
-	-- 						print(name, "pasting", stuff[name][1], stuff[name][2])
 						local a = try_to_create(stuff[name][1])
 						local b = try_to_create(stuff[name][2])
 						local have = combine_tables(a.have, b.have)
@@ -638,15 +639,11 @@ add_interceptor("use item: Degrassi Knoll shopping list", function()
 						local missing = combine_tables(a.missing, b.missing)
 						local order = combine_tables(a.order, b.order)
 						table.insert(order, { stuff[name][1], stuff[name][2] })
-	-- 						print(name, "pasted", printstr(have), printstr(buy), printstr(missing), printstr(order))
 						return { have = have, buy = buy, missing = missing, order = order }
 					end
-	-- 					print("missing", name)
 					return { have = {}, buy = {}, missing = { name }, order = {} }
 				end
 				meatcar = try_to_create("bitchin' meatcar")
-	-- 				print("need to buy", printstr(meatcar.buy))
-	-- 				print("missing", printstr(meatcar.missing))
 				if next(meatcar.missing) then
 					local missing_list = {}
 					for a, b in pairs(meatcar.missing) do table.insert(missing_list, [[<span style="color: darkorange;">]] .. b .. [[</span>]]) end
@@ -655,7 +652,6 @@ add_interceptor("use item: Degrassi Knoll shopping list", function()
 					text, url = get_page("/inv_use.php", params):gsub("<blockquote>.+</blockquote>", "<blockquote>Needed items:<p><blockquote><p>" .. table.concat(missing_list, "<br>") .. "</p></blockquote></blockquote>")
 				else
 					for x, name in pairs(meatcar.buy) do
-	-- 						print("buying", name)
 						if name == "meat stack" then
 							async_get_page("/inventory.php", { quantity = 1, action = "makestuff", pwd = params.pwd, whichitem = get_itemid(name), ajax = 1 })
 						else
@@ -663,7 +659,6 @@ add_interceptor("use item: Degrassi Knoll shopping list", function()
 						end
 					end
 					for x, name in pairs(meatcar.order) do
-	-- 						print("pasting", name[1], name[2])
 						meatpaste_items(name[1], name[2])
 					end
 
@@ -680,6 +675,7 @@ add_interceptor("use item: Degrassi Knoll shopping list", function()
 		return text, url
 	end
 end)
+--]--]--
 
 add_interceptor("use item: black market map", function()
 	-- TODO: make this an automator? would hurt in bees

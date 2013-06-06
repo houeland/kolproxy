@@ -481,16 +481,18 @@ add_printer("/lair1.php", function()
 	end
 end)
 
-
 add_automator("/lair1.php", function()
 	if not setting_enabled("automate simple tasks") then return end
-	if params.action == "mirror" then
-		if text:contains("You try to break it") then
-			local eq = equipment()
-			set_equipment({})
-			text, url = get_page(path, params)
-			set_equipment(eq)
-		end
+	if params.action == "mirror" and text:contains("You try to break it") then
+		local eq = equipment()
+		set_equipment {}
+		text, url = get_page(path, params)
+		set_equipment(eq)
+	elseif params.action == "gates" and text:contains("cave1mirror.gif") then
+		local eq = equipment()
+		set_equipment {}
+		text, url = get_page("/lair1.php", { action = "mirror" })
+		set_equipment(eq)
 	end
 end)
 

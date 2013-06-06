@@ -234,6 +234,9 @@ simple_https_direct rq = do
 
 	return resresp
 
+mkCode resp = case rspCode resp of
+	(a, b, c) -> fromIntegral $ a * 100 + b * 10 + c
+
 doHTTPreq (absuri, rq) = do
 --	putStrLn $ "doHTTPreq: " ++ show absuri
 	use_proxy <- getEnvironmentSetting "KOLPROXY_USE_PROXY_SERVER"
@@ -241,7 +244,7 @@ doHTTPreq (absuri, rq) = do
 		(Nothing, "https:") -> simple_https_direct rq
 		_ -> simple_http_withproxy rq
 	case r of
-		Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, rspCode resp)
+		Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp)
 		Left ce -> do
 			putStrLn $ "doHTTPreq: " ++ (show ce)
 			throwIO $ InternalError $ "doHTTPreq[" ++ (show ce) ++ "]"
@@ -250,7 +253,7 @@ doHTTPSreq (absuri, rq) = do
 --	putStrLn $ "doHTTPSreq: " ++ show absuri
 	r <- simple_https_direct rq
 	case r of
-		Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, rspCode resp)
+		Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp)
 		Left ce -> do
 			putStrLn $ "doHTTPSreq: " ++ (show ce)
 			throwIO $ InternalError $ "doHTTPSreq[" ++ (show ce) ++ "]"
@@ -367,7 +370,7 @@ fast_mkconnthing server = do
 -- 								putStrLn $ "DEBUG: HTTP lowlevel GOT " ++ (show absuri) ++ " (" ++ show req_nr ++ ")"
 -- 								putStrLn $ "DEBUG: resp: " ++ show resp
 -- 								putStrLn $ "DEBUG: respbody: " ++ show (rspBody resp)
-								return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, rspCode resp, resp)) `catch` (\e -> do
+								return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)) `catch` (\e -> do
 									doHTTPLOWLEVEL_DEBUGexception $ "http read exception: " ++ (show (e :: SomeException))
 									throwIO e))
 							return (what, req_nr == 80)
@@ -475,14 +478,14 @@ slow_mkconnthing _server = do
 		let nrq = normalizeRequest (defaultNormalizeRequestOptions { normDoClose = True, normForProxy = True }) rq
 		r <- Network.HTTP.HandleStream.sendHTTP s nrq
 		answer <- (try $ case r of
-			Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, rspCode resp, resp)
+			Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)
 			Left ce -> throwIO $ NetworkError $ "slowHTTP error: [" ++ (show ce) ++ "]") :: IO ConnChanActionType
 		putMVar mvdest answer) `catch` (\e -> doHTTPLOWLEVEL_DEBUGexception $ "slowconnchan error: " ++ (show (e :: SomeException))))
 
 	return slowconnchan :: IO ConnChanType
 
-mkconnthing = fast_mkconnthing
---mkconnthing = slow_mkconnthing
+--mkconnthing = fast_mkconnthing
+mkconnthing = slow_mkconnthing
 
 send_http_response h resp = do
 	-- TODO: check for errors?

@@ -12,15 +12,6 @@ function deepcopy(t)
 	return res
 end
 
-local function parseMonsterNameIntoMafiaFormat(monsterName)
-	--mafia's table was inconsistent with cases, 
-	--so I lowercased everything and will have to do so here as well
-
-	local mafiaMonsterName = monsterName:lower()
-
-	return mafiaMonsterName
-end
-
 local function beesIncreaser(monster_name, base_data)
 	local bees = {
 		[" beebee gunners"] = true,
@@ -60,16 +51,15 @@ local monster_image_prefixes = {
 }
 
 function buildCurrentFightMonsterDataCache(monster_name, fight_text)
-	local monster_data_name = parseMonsterNameIntoMafiaFormat(monster_name)
-	local monster = datafile("monsters")[monster_data_name]
+	local monster = maybe_get_monsterdata(monster_name)
 
 	if not monster then
 		local monster_image = fight_text:match([[<img id='monpic' src="http://images.kingdomofloathing.com/adventureimages/([^"]+)"]])
-		monster = get_monster_by_image(monster_image)
+		monster = maybe_get_monsterdata(monster_name, monster_image)
 		if monster_image and not monster then
 			for prefix, name in pairs(monster_image_prefixes) do
 				if monster_image:match("^" .. prefix) then
-					monster = datafile("monsters")[name]
+					monster = maybe_get_monsterdata(name)
 					break
 				end
 			end

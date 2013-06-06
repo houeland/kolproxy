@@ -191,6 +191,7 @@ function automate_sea_find_grandpa()
 			["There is Sauce at the Bottom of the Ocean"] = "Leave",
 			["You've Hit Bottom"] = "See what he wants to show you.",
 			["Barback"] = "Leave it beaode",
+			["Ode to the Sea"] = "Let Grandpa Learn You Something",
 			["Boxing the Juke"] = "Listen to the Music",
 		},
 	}
@@ -317,7 +318,7 @@ end
 
 local violence_href = setup_turnplaying_script {
 	name = "automate-sea-tame-seahorse",
-	description = "Automate sea (tame seahorse)",
+	description = "Automate sea (tame seahorse, run this first)",
 	when = function() return not ascension["zones.sea.deepcity reached"] end,
 	macro = sea_automation_kill_macro,
 	preparation = function()

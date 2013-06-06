@@ -3,6 +3,7 @@ register_setting {
 	description = "Display number of items you already have for shop-type crafting (cosmic kitchen)",
 	group = "other",
 	default_level = "detailed",
+	hidden = true,
 }
 
 add_printer("/shop.php", function()

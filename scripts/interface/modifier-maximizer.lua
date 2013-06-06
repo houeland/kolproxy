@@ -60,7 +60,6 @@ function maximize_buff_bonuses(scoref)
 	return options
 end
 
-local modifier_maximizer_href
 modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", function()
 	local bonuses = {
 		"Monsters will be more attracted to you",

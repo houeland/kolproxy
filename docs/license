@@ -1,6 +1,6 @@
 Kolproxy is created by Tor Gunnar Houeland (houeland@pvv.org), player Eleron (#1564433) in the Kingdom of Loathing.
 
-The distribution also includes Lua script contributions by: bmaher, Demon Llama, floriSSanTTi, Nion, Evan Shaw (edszrf / Chickencha), Straha, SuperBachelor, Twillo.
+The distribution also includes Lua script contributions by: bmaher, Demon Llama, floriSSanTTi, Nion, NotJim, Evan Shaw (edszrf / Chickencha), Straha, SuperBachelor, Twillo.
 Contributors agree to let Eleron modify and redistribute their contributions as he sees fit.
 
 You are separately granted each of the following licenses for the kolproxy Haskell and Lua source code files: Apache, BSD, GPL, MIT, MPL. (You can use the one you like best, or any combination.)

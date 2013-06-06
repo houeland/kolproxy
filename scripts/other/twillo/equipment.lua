@@ -29,7 +29,10 @@ local function count_distinct_equipped_itemlist(itemlist)
 end
 
 function add_modifier_bonuses(target, source)
-	for a, b in pairs(source) do
+	if not source then
+		print("WARNING: no source for add_modifier_bonuses()")
+	end
+	for a, b in pairs(source or {}) do
 		if b == "?" then
 			target[a .. "_unknown"] = true
 		elseif b == true then
@@ -91,10 +94,13 @@ function estimate_item_equip_bonuses(item)
 	local name = maybe_get_itemname(item)
 	if not name then
 		-- ..unknown..
+		return {}
 	elseif itemarray[name] then
 		return itemarray[name]
 	elseif datafile("items")[name] then
 		return datafile("items")[name].equip_bonuses or {}
+	else
+		return {}
 	end
 end
 

@@ -1407,6 +1407,9 @@ endif
 
 	function ascension_automation_pull_item(name)
 		softcore_stoppable_action("pulling " .. tostring(name))
+		if ascension_script_option("ignore automatic pulls") then
+			return
+		end
 		print("  pulling " .. tostring(name))
 		set_result(pull_storage_items { name })
 	end
@@ -1414,6 +1417,9 @@ endif
 	function pull_in_softcore(item)
 		if not have_item(item) and not ascensionstatus("Hardcore") then
 			ascension_automation_pull_item(item)
+			if ascension_script_option("ignore automatic pulls") then
+				return
+			end
 			if not have(item) then
 				critical("Failed to pull " .. tostring(item))
 			end
@@ -1521,7 +1527,7 @@ endif
 
 	local function want_softcore_item(item, pullname, anytime)
 		add_task {
-			when = ascensionstatus() ~= "Hardcore" and not have(item) and not cached_stuff["ignore pull: " .. tostring(item)],
+			when = not ascensionstatus("Hardcore") and not ascension_script_option("ignore automatic pulls") and not have_item(item) and not cached_stuff["ignore pull: " .. tostring(item)],
 			task = {
 				message = "pull " .. item,
 				nobuffing = true,
@@ -1553,7 +1559,7 @@ endif
 			end
 		end
 		add_task {
-			when = ascensionstatus() ~= "Hardcore" and not gotone and not cached_stuff["ignore pull: " .. tostring(descitem)],
+			when = not ascensionstatus("Hardcore") and not ascension_script_option("ignore automatic pulls") and not gotone and not cached_stuff["ignore pull: " .. tostring(descitem)],
 			task = {
 				message = "pull " .. descitem,
 				nobuffing = true,
@@ -2093,7 +2099,7 @@ endif
 
 	add_task {
 		when = not (
-			(have("Rock and Roll Legend") or not have_skill("The Ode to Booze")) and
+			(have("Rock and Roll Legend") or not have_skill("The Ode to Booze") and have("stolen accordion")) and
 			have("turtle totem") and
 			have("saucepan") and
 			have("seal tooth")
@@ -2297,40 +2303,6 @@ endif
 		}
 
 		-- adventuring
-
-		add_task {
-			when = (have("Game Grid token") or count("finger cuffs") >= 5) and not have("spangly sombrero") and not have("spangly mariachi pants"),
-			task = function()
-				if count("finger cuffs") < 5 then
-					script.finger_cuffs()
-				end
-				return tasks.yellow_ray_sleepy_mariachi
-			end
-		}
-
-		add_task {
-			when = have("Cobb's Knob lab key") and not cached_stuff.learned_lab_password and not quest("The Goblin Who Wouldn't Be King"),
-			task = function()
-				local pt = get_page("/cobbsknob.php", { action = "dispensary" })
-				if pt:contains("FARQUAR") then
-					cached_stuff.learned_lab_password = true
-					return {
-						message = "already learned knob lab password",
-						action = function() did_action = true end,
-					}
-				else
-					if have("Knob Goblin elite helm") and have("Knob Goblin elite polearm") and have("Knob Goblin elite pants") then
-						return {
-							message = "learn knob lab password",
-							action = adventure { zoneid = 257 },
-							equipment = { hat = "Knob Goblin elite helm", weapon = "Knob Goblin elite polearm", pants = "Knob Goblin elite pants" },
-						}
-					else
-						critical "No goblin elite outfit to learn the lab password"
-					end
-				end
-			end
-		}
 
 		add_task {
 			when = not cached_stuff.mox_guild_is_open,
@@ -2678,6 +2650,7 @@ endif
 		task = tasks.extend_tmm_and_mojo,
 	}
 
+	-- TODO: do if we're in hardcore, can fax and have a rack-fam
 	add_task {
 		when = challenge == "fist" and not (have("spangly sombrero") and have("spangly mariachi pants")) and level() < 6 and count("finger cuffs") >= 5,
 		task = tasks.yellow_ray_sleepy_mariachi,
@@ -2999,6 +2972,8 @@ endwhile
 		when = level() < 6 and (challenge ~= "fist" or fist_level >= 3) and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and ascensionstatus() == "Hardcore",
 		task = tasks.do_sewerleveling,
 	}
+
+	-- TODO: get kgs first if needed
 
 	add_task {
 		prereq = quest("Trial By Friar"),
@@ -3368,7 +3343,7 @@ endwhile
 	add_task {
 		prereq = not have("time halo") and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and daysthisrun() >= 2,
 		f = function()
-			inform "using tome summons"
+			inform "using tome summons (time halo, bucket of wine, sugar shield)"
 
 			if not have("time halo") then
 				script.ensure_mp(2)
@@ -4185,7 +4160,7 @@ endif
 	}
 
 	add_task {
-		prereq = get_mainstat() == "Muscle" and not have("Spookyraven gallery key"),
+		prereq = get_mainstat() == "Muscle" and not have_item("Spookyraven gallery key") and level() < 13,
 		f = script.do_muscle_powerleveling,
 	}
 
@@ -4406,22 +4381,22 @@ endif
 				return result, resulturl, did_action
 			else
 				if drunkenness() <= estimate_max_safe_drunkenness() and not have("bucket of wine") then
-					inform "using tome summons"
+					inform "using tome summons (bucket of wine, borrowed time, sugar sheet)"
 
-					if not have("bucket of wine") then
+					if not have_item("bucket of wine") then
 						script.ensure_mp(2)
 						async_post_page("/campground.php", { preaction = "summoncliparts" })
 						async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "04", clip2 = "04", clip3 = "04" })
 					end
-					if not have("borrowed time") then
+					if not have_item("borrowed time") then
 						script.ensure_mp(2)
 						async_post_page("/campground.php", { preaction = "summoncliparts" })
 						async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "09", clip2 = "09", clip3 = "09" })
 					end
-					if count("sugar shield") < 2 then
+					if count_item("sugar shield") + count_item("sugar sheet") < 2 then
 						script.ensure_mp(2)
 						cast_skillid(8002, 1) -- summon sugar sheet
-						async_get_page("/sugarsheets.php", { pwd = get_pwd(), action = "fold", whichitem = get_itemid("sugar shield") })
+						--async_get_page("/sugarsheets.php", { pwd = get_pwd(), action = "fold", whichitem = get_itemid("sugar shield") })
 					end
 
 					if not have("bucket of wine") or not have("borrowed time") then --or not have("sugar shield") then
@@ -5067,9 +5042,17 @@ use gauze garter, gauze garter
 				end
 				break
 			end
-		elseif x.prereq then
-			run_task(x)
-			break
+		elseif x.prereq ~= nil then
+			local triggered = false
+			if type(x.prereq) == "function" then
+				triggered = x.prereq()
+			else
+				triggered = x.prereq
+			end
+			if triggered then
+				run_task(x)
+				break
+			end
 		end
 	end
 
@@ -5175,6 +5158,7 @@ local ascension_script_options_tbl = {
 	["manual lvl 9 quest"] = { yes = "stop and do manually", no = "automate" },
 	["manual castle quest"] = { yes = "stop and do manually", no = "automate" },
 	["eat manually"] = { yes = "eat manually", no = "automate consumption" },
+	["ignore automatic pulls"] = { yes = "only pull softcore items manually", no = "automate some pulls", when = function() return not ascensionstatus("Hardcore") end },
 	["train skills manually"] = { yes = "train manually", no = "automate training", when = function() return ascensionpath("Avatar of Jarlsberg") end },
 }
 

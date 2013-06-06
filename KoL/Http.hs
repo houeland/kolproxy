@@ -42,9 +42,9 @@ parseUriServerBugWorkaround rawuri = do
 internalKolHttpsRequest url params cu _noredirect = do
 	let (cucookie, useragent, host, _getconn) = cu
 	let Just reqabsuri = url `relativeTo` host
-	(effuri, body, hdrs, _code) <- doHTTPSreq (mkreq useragent cucookie reqabsuri params True)
+	(effuri, body, hdrs, code) <- doHTTPSreq (mkreq useragent cucookie reqabsuri params True)
 	let addheaders = filter (\(x, _y) -> x == "Set-Cookie") hdrs
-	return (body, effuri, addheaders)
+	return (body, effuri, addheaders, code)
 
 internalKolRequest url params cu noredirect = do
 	let (cucookie, useragent, host, getconn) = cu
@@ -53,9 +53,9 @@ internalKolRequest url params cu noredirect = do
 	(effuri, body, hdrs, code) <- doHTTPreq (mkreq useragent cucookie reqabsuri params True)
 
 	if noredirect
-		then return (body, effuri, hdrs)
-		else case code of
-			(3, _, _) -> do
+		then return (body, effuri, hdrs, code)
+		else case (code >= 300 && code < 400) of
+			True -> do
 				-- TODO: does this happen?
 				case lookup "Location" hdrs of
 					Just lochdruri -> do
@@ -74,19 +74,19 @@ internalKolRequest url params cu noredirect = do
 							Nothing -> do
 								Just to <- parseUriServerBugWorkaround lochdruri
 -- 								putStrLn $ "==> redirected " ++ (show url) ++ " -> " ++ (show to)
-								(text, effurl, headers) <- internalKolRequest to Nothing (cookie, useragent, host, getconn) noredirect
-								return (text, effurl, addheaders ++ headers)
+								(text, effurl, headers, c) <- internalKolRequest to Nothing (cookie, useragent, host, getconn) noredirect
+								return (text, effurl, addheaders ++ headers, c)
 							Just to -> do
 -- 								putStrLn $ "==> redirected " ++ (show url) ++ " -> " ++ (show to)
-								(text, effurl, headers) <- internalKolRequest to Nothing (cookie, useragent, host, getconn) noredirect
-								return (text, effurl, addheaders ++ headers)
+								(text, effurl, headers, c) <- internalKolRequest to Nothing (cookie, useragent, host, getconn) noredirect
+								return (text, effurl, addheaders ++ headers, c)
 					_ -> throwIO $ InternalError $ "Error parsing redirect: No location header"
-			_ -> return (body, effuri, hdrs)
+			_ -> return (body, effuri, hdrs, code)
 
 load_api_status_to_mv ref mv = do
 	apires <- (try $ do
 		(xf, _) <- internalKolRequest_pipelining ref (mkuri $ "/api.php?what=status,inventory&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") Nothing False
-		(xraw, xuri, _) <- xf
+		(xraw, xuri, _, _) <- xf
 		jsobj <- case uriPath xuri of
 			"/api.php" -> do
 				let x = Data.ByteString.Char8.unpack $ xraw
@@ -145,8 +145,8 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 				Just p -> show uri ++ " " ++ show p
 			log_retrieval ref showurl (max retrieval_start prev_retrieval_end) retrieval_end
 
-			case code of
-				(3, _, _) -> do
+			case (code >= 300 && code < 400) of
+				True -> do
 					let Just lochdruri = lookup "Location" hdrs
 					let addheaders = filter (\(x, _y) -> (x == "Set-Cookie" || x == "Location")) hdrs
 					-- TODO: respect new cookie header here?
@@ -155,16 +155,16 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 							Just to <- parseUriServerBugWorkaround lochdruri
 -- 							putStrLn $ "DEBUG --> local redirected " ++ (show retabsuri) ++ " -> " ++ (show to)
 							(y, mvy) <- internalKolRequest_pipelining ref to Nothing should_invalidate_cache
-							(a, b, c) <- y
+							(a, b, c, d) <- y
 							themv <- mvy
-							return ((a, b, addheaders ++ c), themv)
+							return ((a, b, addheaders ++ c, d), themv)
 						Just to -> do
 							-- TODO: does this happen?
 							putStrLn $ "DEBUG ==> remote redirected " ++ (show retabsuri) ++ " => " ++ (show to)
 							-- TODO: make new getconn and use pipelining
-							(a, b, c) <- internalKolRequest to Nothing (cookie_ $ connection $ ref, useragent_ $ connection $ ref, host, Nothing) False
-							return ((a, b, c), curjsonmv)
-				_ -> return ((body, retabsuri, hdrs), curjsonmv))
+							(a, b, c, d) <- internalKolRequest to Nothing (cookie_ $ connection $ ref, useragent_ $ connection $ ref, host, Nothing) False
+							return ((a, b, c, d), curjsonmv)
+				_ -> return ((body, retabsuri, hdrs, code), curjsonmv))
 
 	let xf = do
 		x <- readMVar mv_val
@@ -181,11 +181,11 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 	return (xf, mvf)
 
 login (login_useragent, login_host) name pass = do
-        (text, _effuri, _headers) <- internalKolRequest (mkuri "/") Nothing (Nothing, login_useragent, login_host, Nothing) False
+        (text, _effuri, _headers, _code) <- internalKolRequest (mkuri "/") Nothing (Nothing, login_useragent, login_host, Nothing) False
         let [[challenge]] = matchGroups "<input type=hidden name=challenge value=\"([0-9a-f]*)\">" (Data.ByteString.Char8.unpack text)
         let response = get_md5 (pass ++ ":" ++ challenge)
 	let p_sensitive = [("loginname", name), ("challenge", challenge), ("response", response), ("secure", "1"), ("loggingin", "Yup.")]
-	(_pt, _effuri, allhdrs) <- internalKolRequest (mkuri "/login.php") (Just p_sensitive) (Nothing, login_useragent, login_host, Nothing) True
+	(_pt, _effuri, allhdrs, _code) <- internalKolRequest (mkuri "/login.php") (Just p_sensitive) (Nothing, login_useragent, login_host, Nothing) True
 	let hdrs = filter (\(x, _y) -> (x == "Set-Cookie" || x == "Location")) allhdrs
 	let new_cookie = case filter (\(a, _b) -> a == "Set-Cookie") hdrs of
 		[] -> Nothing

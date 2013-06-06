@@ -83,12 +83,14 @@ function print_charpane_lines(text)
 			local ct_pre = name
 			local ct_value = "<b>" .. value .. "</b>"
 			local style = ""
-			if y["color"] then
-				style = [[ style="color:]] .. y["color"] .. [["]]
+			if y.color then
+				style = [[ style="color:]] .. y.color .. [["]]
 			end
-			if y["link"] then
-				ct_pre = [[<a target="mainpane" href="]] .. y["link"] .. [["]] .. style .. [[>]] .. name .. [[</a>]]
-				ct_value = [[<a target="mainpane" href="]] .. y["link"] .. [["]] .. style .. [[><b>]] .. value .. [[</b></a>]]
+			if y.link then
+				ct_pre = [[<a target="mainpane" href="]] .. y.link .. [["]] .. style .. [[>]] .. name .. [[</a>]]
+				if not y.link_name_only then
+					ct_value = [[<a target="mainpane" href="]] .. y.link .. [["]] .. style .. [[><b>]] .. value .. [[</b></a>]]
+				end
 			end
 			if kolproxy_custom_charpane_mode == "compact" then
 				local ct = ct_pre .. ": " .. ct_value
@@ -124,7 +126,7 @@ function print_charpane_lines(text)
 			if y["color"] then
 				style = " style=\"color:" .. y["color"] .. "\""
 			end
-			if y["link"] then
+			if y.link then
 				ct = [[<td align=right><a target="mainpane" href="]] .. y["link"] .. [["]] .. style .. [[>]] .. name .. [[</a>:</td><td align=left><a target="mainpane" href="]] .. y["link"] .. [["]] .. style .. [[><b>]] .. value .. [[</b></a></td>]]
 			end
 			if y["tooltip"] then

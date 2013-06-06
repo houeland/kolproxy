@@ -36,7 +36,7 @@ add_automation_script("custom-compute-net-worth", function()
 	end
 	for _, x in ipairs(itemlines) do
 		table.insert(tablerows, string.format([[<tr><td style="text-align: right">%s</td><td>&nbsp;&nbsp;%s (%s)</td></tr>]], disp(x.value), x.name, disp(x.amount)))
-		totalsum = totalsum + x.value * x.amount
+		totalsum = totalsum + x.value
 	end
 	return make_kol_html_frame("<table>" .. string.format([[<tr><td style="text-align: right">%s</td><td>&nbsp;&nbsp;%s</td></tr>]], disp(totalsum), "<i>(Total)</i>") .. table.concat(tablerows, "\n") .. "</table>", "Approximate net worth (estimated cost to buy everything from the mall)"), requestpath
 end)

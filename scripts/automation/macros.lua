@@ -861,7 +861,7 @@ endwhile
 ]]
 end
 
-function make_cannonsniff_macro(name)
+function make_sniff_macro(name, action)
 	local castolfaction = "cast Transcendent Olfaction"
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
@@ -881,16 +881,34 @@ endif
 ]]..conditional_salve_action()..[[
 
 while !times 3
-]] .. cannon_action() .. [[
+]] .. action() .. [[
 endwhile
 
 ]]..conditional_salve_action()..[[
 
 while !times 2
-]] .. cannon_action() .. [[
+]] .. action() .. [[
 endwhile
 
 ]]
+end
+
+function make_cannonsniff_macro(name)
+	local cfm = getCurrentFightMonster()
+	print("DEBUG: making cannonsniff macro for", name, "vs", cfm)
+	local physresist = 0
+	local cfmhp = 10
+	if cfm and cfm.Stats and cfm.Stats.Phys then
+		physresist = tonumber(cfm.Stats.Phys)
+	end
+	if cfm and cfm.Stats and cfm.Stats.HP then
+		cfmhp = tonumber(cfm.Stats.HP)
+	end
+	if physresist == 0 and cfmhp >= 100 then
+		return make_sniff_macro(name, serpent_action)
+	else
+		return make_sniff_macro(name, cannon_action)
+	end
 end
 
 function macro_8bit_realm()

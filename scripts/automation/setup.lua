@@ -16,7 +16,13 @@ function get_result()
 end
 
 function first_wearable(tbl)
-	for _, x in ipairs(tbl) do
+	local keys = {}
+	for a, _ in pairs(tbl) do
+		table.insert(keys, a)
+	end
+	table.sort(keys)
+	for _, xidx in ipairs(keys) do
+		local x = tbl[xidx]
 		if x and have_item(x) and can_equip_item(x) then
 			return x
 		end

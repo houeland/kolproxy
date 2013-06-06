@@ -15,7 +15,9 @@ local violence_href = setup_turnplaying_script {
 	macro = sea_automation_gladiator_macro,
 	preparation = function()
 		maybe_pull_item("sea salt scrubs", 1)
+		maybe_pull_item("sea shawl")
 		maybe_pull_item("can of Rain-Doh")
+		maybe_pull_item("Snow Suit")
 		maybe_pull_item("Space Trip safety headphones")
 		maybe_pull_item("Mer-kin gladiator mask", 1)
 		maybe_pull_item("Mer-kin gladiator tailpiece", 1)
@@ -29,12 +31,14 @@ local violence_href = setup_turnplaying_script {
 		if not ascension["zones.sea.defeated gladiators"] then
 			script.wear {
 				hat = "Mer-kin gladiator mask",
+				container = first_wearable { "sea shawl" },
 				shirt = "sea salt scrubs",
 				offhand = "Rain-Doh green lantern",
 			}
 			script.ensure_buffs { "Frigidalmatian", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds", "Reptilian Fortitude", "Pisces in the Skyces", "Spirit of Garlic" }
 			script.wear {
 				hat = "Mer-kin gladiator mask",
+				container = first_wearable { "sea shawl" },
 				shirt = "sea salt scrubs",
 				offhand = "Rain-Doh green lantern",
 				pants = "Mer-kin gladiator tailpiece",

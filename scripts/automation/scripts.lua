@@ -414,6 +414,9 @@ function get_automation_scripts(cached_stuff)
 		if highskill_at_run and level() >= 6 then
 			need_extra = 20
 		end
+		if ascensionpath("BIG!") then
+			need_extra = 20
+		end
 		if challenge == "boris" then
 			if have_skill("Banishing Shout") and maxmp() >= 60 and level() >= 6 then
 				amount = 55
@@ -1084,28 +1087,57 @@ function get_automation_scripts(cached_stuff)
 					if itemname and not do_not_wear[itemname] then
 						neweq[a] = get_itemid(itemname)
 						do_not_wear[itemname] = true
+						if halos[itemname] or a == "weapon" or a == "offhand" then
+							for h in pairs(halos) do
+								do_not_wear[h] = true
+							end
+						end
 						break
 					end
 				end
 			end
 		end
 
+		-- TODO: check 2h-ness
 		if neweq.weapon == get_itemid("Knob Goblin elite polearm") or neweq.weapon == get_itemid("Trusty") or neweq.weapon == get_itemid("7-Foot Dwarven mattock") then
 			neweq.offhand = nil
 		end
 
 		local currently_worn = equipment()
 		local function reuse_equipment_slots(neweq)
-			for x in table.values { "acc1", "acc2", "acc3" } do
+			local remap = {}
+			local used = {}
+			for _, x in ipairs { "acc1", "acc2", "acc3" } do
 				if neweq[x] then
-					for y in table.values { "acc1", "acc2", "acc3" } do
-						if x ~= y and neweq[x] ~= neweq[y] and neweq[x] == currently_worn[y] then
-							neweq[x], neweq[y] = neweq[y], neweq[x]
-							return reuse_equipment_slots(neweq)
+					for _, y in ipairs { "acc1", "acc2", "acc3" } do
+						if neweq[x] == currently_worn[y] and not used[y] then
+							remap[x] = y
+							used[y] = true
 						end
 					end
 				end
 			end
+			
+			for _, x in ipairs { "acc1", "acc2", "acc3" } do
+				if not remap[x] then
+					for _, y in ipairs { "acc1", "acc2", "acc3" } do
+						if not used[y] then
+							remap[x] = y
+							used[y] = true
+							break
+						end
+					end
+				end
+			end
+
+			local remapitems = {}
+			remapitems[remap.acc1] = neweq.acc1
+			remapitems[remap.acc2] = neweq.acc2
+			remapitems[remap.acc3] = neweq.acc3
+
+			neweq.acc1 = remapitems.acc1
+			neweq.acc2 = remapitems.acc2
+			neweq.acc3 = remapitems.acc3
 			return neweq
 		end
 
@@ -4280,8 +4312,9 @@ endif
 		end
 	end
 
-	-- TODO: 1 more with bander if possible
+	-- TODO: more with bander if heavier
 	function f.spooky_forest_runaways()
+		if ascensionpath("BIG!") then return end
 		local woodspt = get_page("/woods.php")
 		if woodspt:contains("The Hidden Temple") then return end
 		fam "Pair of Stomping Boots"
