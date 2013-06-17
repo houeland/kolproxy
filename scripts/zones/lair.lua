@@ -919,7 +919,7 @@ end)
 
 local function show_tower_items(levelidxs)
 	local itemsneeded = session["zone.lair.itemsneeded"] or {}
-	for level in table.values(levelidxs) do
+	for _, level in ipairs(levelidxs) do
 		local needitem = itemsneeded[level + 1]
 		if needitem then
 			local color = have(needitem) and "green" or "orange"
@@ -938,6 +938,43 @@ end)
 add_printer("/lair5.php", function()
 	show_tower_items { 4, 5, 6 }
 end)
+
+local function missing_tower_item()
+	local where1, where2
+	if requestpath == "/lair4.php" then
+		where1 = 0
+	elseif requestpath == "/lair5.php" then
+		where1 = 3
+	end
+	where2 = tonumber((params.action or ""):match("^level([0-9]+)$"))
+	if where1 and where2 then
+		local level = where1 + where2
+		local itemsneeded = session["zone.lair.itemsneeded"] or {}
+		if itemsneeded[level] then
+			return not have_item(itemsneeded[level + 1])
+		end
+	end
+end
+
+add_warning {
+	message = "You might want to buff up with Frigidalmatian before killing tower monsters.",
+	path = { "/lair4.php", "/lair5.php" },
+	severity = "extra",
+	when = "ascension",
+	check = function()
+		return params.action and missing_tower_item() and not have_buff("Frigidalmatian") and have_skill("Frigidalmatian")
+	end,
+}
+
+add_warning {
+	message = "You might want to buff up with Elron's Explosive Etude before killing tower monsters.",
+	path = { "/lair4.php", "/lair5.php" },
+	severity = "extra",
+	when = "ascension",
+	check = function()
+		return params.action and missing_tower_item() and not have_buff("Elron's Explosive Etude") and classid() == 6 and level() >= 15 and have_skill("Elron's Explosive Etude")
+	end,
+}
 
 add_automator("/fight.php", function()
 	local function known_win(level)

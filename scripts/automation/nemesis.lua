@@ -42,7 +42,7 @@ local href = setup_turnplaying_script {
 	local function dorefresh()
 		scg = get_page("/guild.php", { place = "scg" })
 		scg = get_page("/guild.php", { place = "scg" })
-		questlog = get_page("/questlog.php", { which = 1 })
+		refresh_quest()
 	end
 	dorefresh()
 
@@ -153,12 +153,15 @@ local href = setup_turnplaying_script {
 					cast_skillid(5017, 2) -- smooth moves
 				end
 				result, resulturl, advagain = autoadventure { zoneid = 159 }
+				if not advagain then
+					break
+				end
 -- choice	O Cap'm, My Cap'm	189
 -- opt	1	Front the meat and take the wheel
 -- opt	2	Step away from the helm
 -- opt	3	Show the tropical island volcano lair map to the navigator
 			end
-		elseif questlog:contains("put a stop to this Nemesis nonsense") then
+		elseif quest_text("put a stop to this Nemesis nonsense") then
 			if classid() == 1 then -- seal clubber
 			elseif classid() == 2 then -- turtle tamer
 				if not have("fouet de tortue-dressage") then
@@ -226,12 +229,15 @@ local href = setup_turnplaying_script {
 	end
 }
 
-add_printer("/questlog.php", function()
-	if not setting_enabled("enable turnplaying automation") or ascensionstatus() ~= "Aftercore" then return end
-	text = text:gsub("<b>Me and My Nemesis</b>", [[%0 <a href="]]..href { pwd = session.pwd }..[[" style="color:green">{ automate }</a>]])
-end)
+--add_printer("/questlog.php", function()
+--	if not setting_enabled("enable turnplaying automation") or ascensionstatus() ~= "Aftercore" then return end
+--	text = text:gsub("<b>Me and My Nemesis</b>", [[%0 <a href="]]..href { pwd = session.pwd }..[[" style="color:green">{ automate }</a>]])
+--end)
 
 function nemesis_try_sauceror_potions()
+	if have_buff("Slimeform") then
+		return
+	end
 	local goal_potions = {
 		["vial of amber slime"] = { "vial of yellow slime", "vial of orange slime" },
 		["vial of chartreuse slime"] = { "vial of yellow slime", "vial of green slime" },
@@ -277,10 +283,10 @@ function nemesis_try_sauceror_potions()
 end
 
 function automate_S_nemesis_island()
+	nemesis_try_sauceror_potions()
 	if have_buff("Slimeform") then
 		stop "TODO: kill nemesis"
 	end
-	nemesis_try_sauceror_potions()
 	get_page("/account.php", { action = "autoattack", whichattack = 0, ajax = 1, pwd = session.pwd }) -- unset autoattack, bleh
 	script.bonus_target { "easy combat" }
 	script.ensure_buffs {}

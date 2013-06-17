@@ -9,8 +9,8 @@ sea_automation_kill_macro = function()
 use sea lasso
 
 ]]
-		end
-		return [[
+	end
+	return [[
 scrollwhendone
 
 abort pastround 20
@@ -319,7 +319,7 @@ end
 local violence_href = setup_turnplaying_script {
 	name = "automate-sea-tame-seahorse",
 	description = "Automate sea (tame seahorse, run this first)",
-	when = function() return not ascension["zones.sea.deepcity reached"] end,
+	when = function() return not accomplishment_text("tamed the mighty seahorse") end,
 	macro = sea_automation_kill_macro,
 	preparation = function()
 		maybe_pull_item("sea salt scrubs")

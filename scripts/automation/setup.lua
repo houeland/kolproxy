@@ -59,6 +59,23 @@ function run_automation_script(f, pwdsrc, scriptname)
 
 	local ok, text, url = xpcall(f, function(e) return { msg = e, trace = debug.traceback(e) } end)
 	if ok then
+		if not text:contains("<html") then
+			text = [[
+<html>
+<head>
+</head>
+<body>
+]] .. text .. [[
+</body>
+</html>
+]]
+		end
+		if not text:contains("charpane.php") then
+			text = text:gsub("</head>", [[
+<script>top.charpane.location = "charpane.php"</script>
+%0
+]])
+		end
 		return text, url
 	else
 		local e = text
@@ -127,10 +144,14 @@ automation_script_details_list["add-log-notes"] = { simple = true, description =
 automation_script_details_list["automate-aftercore-pulls"] = { when = function() return true end, description = "Pull a selection of useful aftercore items from Hagnks storage" }
 automation_script_details_list["setup-ascension-automation"] = { simple = true, description = "Setup ascension automation script" }
 
-add_automation_script("custom-aftercore-automation", function()
+custom_aftercore_automation_href = add_automation_script("custom-aftercore-automation", function()
 	local questlogcompleted_page = get_page("/questlog.php", { which = 2 })
+	local accomplishments_page = get_page("/questlog.php", { which = 3 })
 	function quest_completed(name)
 		return questlogcompleted_page:contains([[<b>]] .. name .. [[</b>]])
+	end
+	function accomplishment_text(text)
+		return accomplishments_page:contains(text)
 	end
 
 	local goodlinks = {}
@@ -188,9 +209,9 @@ function setup_turnplaying_script(tbl)
 		end
 
 		if tbl.macro and autoattack_is_set() then
-			stop "Unset your autoattack for scripting this quest."
+			stop "Unset your autoattack for running this script."
 		elseif not tbl.macro and not autoattack_is_set() then
-			stop "Set a macro on autoattack to use for scripting this quest."
+			stop "Set a macro on autoattack to use for running this script."
 		end
 		automation_macro = tbl.macro
 
@@ -227,6 +248,13 @@ function setup_turnplaying_script(tbl)
 			result, resulturl, advagain = result_, resulturl_, advagain_
 		end
 
+		if locked() then
+			get_page("/main.php")
+			if locked() then
+				stop(string.format([[Currently locked in "%s" type adventure, finish that before automating.]], tostring(locked())))
+			end
+		end
+
 		advagain = true
 		while advagain and not locked() do
 			advagain = false
@@ -240,6 +268,7 @@ function setup_turnplaying_script(tbl)
 				inform(tbl.name)
 			end
 			reset_error_trace_steps()
+			script.bonus_target {}
 			tbl.adventuring()
 		end
 		return result, resulturl

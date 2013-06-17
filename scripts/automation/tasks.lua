@@ -1,7 +1,5 @@
 __allow_global_writes = true
 
-local previous_twin_peak_noncombat_pagetext = nil
-
 function get_automation_tasks(script, cached_stuff)
 	local t = {}
 	local task = t
@@ -129,9 +127,7 @@ function get_automation_tasks(script, cached_stuff)
 		nobuffing = true,
 		action = function()
 			get_page("/inv_use.php", { pwd = get_pwd(), whichitem = get_itemid("Frobozz Real-Estate Company Instant House (TM)"), ajax = 1, confirm = "true" })
-			if not have("Frobozz Real-Estate Company Instant House (TM)") then
-				did_action = true
-			end
+			did_action = not have_item("Frobozz Real-Estate Company Instant House (TM)")
 		end
 	}
 
@@ -512,29 +508,40 @@ mark m_done
 							script.ensure_buffs { "Red Door Syndrome" }
 						end
 						if (get_resistance_levels().stench or 0) < 4 then
-							switch_familiarid(72)
+							script.want_familiar "Exotic Parrot"
 						end
 						local force_advagain = false
-						result, resulturl, advagain = autoadventure { zoneid = 297, macro = macro_noodlecannon(), noncombatchoices = nil, specialnoncombatfunction = function(advtitle, choicenum, pagetext)
+						local function ncfunc(advtitle, choicenum, pagetext)
 							if advtitle == "Welcome to the Great Overlook Lodge" then
 								force_advagain = true
 								return "", 1
 							elseif advtitle == "Lost in the Great Overlook Lodge" then
 								for _, x in ipairs { "Investigate Room 237", "Search the pantry", "Follow the faint sound of music", "Wait -- who's that?" } do
 									if pagetext:contains(x) then
-										if pagetext == previous_twin_peak_noncombat_pagetext then
+										if pagetext == cached_stuff.previous_twin_peak_noncombat_pagetext then
 											stop "Failed to make progress in Twin Peak"
 										end
-										previous_twin_peak_noncombat_pagetext = pagetext
+										cached_stuff.previous_twin_peak_noncombat_pagetext = pagetext
 										return x
 									end
 								end
 							else
 								return "", 1
 							end
-						end, ignorewarnings = true }
+						end
+
+						if have_item("rusty hedge trimmers") then
+							set_result(use_item("rusty hedge trimmers"))
+							result, resulturl = get_page("/choice.php")
+							result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, nil, ncfunc)
+							if not have_item("rusty hedge trimmers") then
+								advagain = true
+							end
+						else
+							result, resulturl, advagain = autoadventure { zoneid = 297, macro = macro_noodlecannon(), noncombatchoices = nil, specialnoncombatfunction = ncfunc, ignorewarnings = true }
+						end
 						if force_advagain then
-							-- TODO: Why is this necessary?
+							-- TODO: Why is this necessary? No adventure again at great overlook? Do a test for page result instead?
 							advagain = true
 						end
 						return result, resulturl, advagain
@@ -552,12 +559,9 @@ mark m_done
 							script.ensure_buffs { "Red Door Syndrome" }
 						end
 						if (get_resistance_levels().stench or 0) < 4 then
-							switch_familiarid(72)
+							script.want_familiar "Exotic Parrot"
 						end
-						if familiarid() ~= 72 then
-							switch_familiarid(1)
-						end
-						if (get_resistance_levels().stench or 0) >= 4 and (familiarid() == 0 or familiarid() == 1 or familiarid() == 72) and estimate_modifier_bonuses()["Item Drops from Monsters"] >= 50 and have_item("jar of oil") and estimate_modifier_bonuses()["Combat Initiative"] >= 40 then
+						if (get_resistance_levels().stench or 0) >= 4 and estimate_bonus("Item Drops from Monsters") - __DONOTUSE_estimate_familiar_item_drop_bonus() + estimate_bonus("Food Drops from Monsters") >= 50 and have_item("jar of oil") and estimate_bonus("Combat Initiative") >= 40 then
 							session["__script.automate twin peak"] = "yes"
 							did_action = true
 						else

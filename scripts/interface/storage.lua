@@ -27,6 +27,8 @@ aftercore_items_list = {
 	"right bear arm",
 	"left bear arm",
 	"Snow Suit",
+	"Boris's Helm",
+	"Boris's Helm (askew)",
 	"Jarlsberg's pan",
 	"Jarlsberg's pan (Cosmic portal mode)",
 

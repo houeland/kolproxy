@@ -101,6 +101,7 @@ function get_ascension_automation_settings(want_bonus)
 			"enormous belt buckle",
 			"flimsy clipboard", "stolen office supplies",
 			"awful poetry journal", "furry fur",
+			"commemorative war stein",
 		},
 		sell_except_one = {
 			"yeti fur",
@@ -197,8 +198,8 @@ function get_ascension_automation_settings(want_bonus)
 				{ name = "Baron von Ratsworth's monocle", check = function() return want_bonus.plusitems end },
 				{ name = "Loathing Legion rollerblades", check = function() return want_bonus.plusinitiative end },
 				{ name = "Juju Mojo Mask", check = function() return level() < 13 end },
-				"Brimstone Brooch",
-				"Brimstone Bracelet",
+				{ name = "Brimstone Brooch", check = function() return not ascensionstatus("Aftercore") end },
+				{ name = "Brimstone Bracelet", check = function() return not ascensionstatus("Aftercore") end },
 				{ name = "plastic vampire fangs", check = function() return (mp() < 60 or level() < 9) end },
 				{ name = "hockey stick of furious angry rage", check = function() return level() < 13 end },
 				"astral ring",
@@ -294,9 +295,6 @@ function get_ascension_automation_settings(want_bonus)
 	end
 	if have("pirate fledges") then
 		table.insert(tbl.sell_items, "The Big Book of Pirate Insults")
-	end
-	if meat() < 2000 then
-		table.insert(tbl.sell_items, "commemorative war stein")
 	end
 	if count("meat paste") >= 10 or (moonsign_area() == "Degrassi Knoll" and challenge ~= "zombie") then
 		table.insert(tbl.sell_items, "meat paste")

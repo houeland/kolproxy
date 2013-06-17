@@ -121,6 +121,9 @@ local function decode_thing(x)
 	if eff1 and eff2 and eff3 then
 		return { eff1, eff2, eff3 }
 	end
+	if x == "[]" then
+		return {}
+	end
 	print("error: can't decode table value", x)
 end
 

@@ -747,12 +747,13 @@ endif
 	}
 
 	add_task {
-		when = have("Newbiesport&trade; tent"),
+		when = have("Newbiesport&trade; tent") and not cached_stuff.tried_using_newbiesport_tent,
 		task = {
 			message = "using newbiesport tent",
 			nobuffing = true,
 			action = function()
 				set_result(use_item("Newbiesport&trade; tent"))
+				cached_stuff.tried_using_newbiesport_tent = true
 				did_action = not have("Newbiesport&trade; tent")
 			end
 		}
@@ -1847,12 +1848,10 @@ endif
 	-- start of turn-spending things
 
 	local want_advs = 0
-	if highskill_at_run then
+	if highskill_at_run or challenge then
 		want_advs = 5
-	elseif not challenge then
-		want_advs = 10
 	else
-		want_advs = 5
+		want_advs = 10
 	end
 	add_task {
 		when = advs() < want_advs,
@@ -3588,9 +3587,9 @@ endif
 	}
 
 	add_task {
-		when = challenge and
+		when = ascensionpathid() ~= 0 and
 			level() >= 6 and
-			level() < 13 and
+			(level() < 13 or quest("Make War, Not... Oh, Wait") or quest("The Rain on the Plains is Mainly Garbage")) and
 			advs() <= 20 and
 			fullness() == estimate_max_fullness() and
 			drunkenness() == estimate_max_safe_drunkenness(),
@@ -3602,12 +3601,15 @@ endif
 				if have_buff("Ode to Booze") then
 					script.ensure_buff_turns("Ode to Booze", 10)
 				end
+				if not have("bucket of wine") then
+					script.ensure_mp(2)
+					summon_clipart("bucket of wine")
+				end
 				if not have_item("time halo") then
 					script.ensure_mp(2)
-					async_post_page("/campground.php", { preaction = "summoncliparts" })
-					async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "01", clip2 = "09", clip3 = "09" })
+					summon_clipart("time halo")
 				end
-				script.wear { weapon = have_item("time halo") and "empty" or nil, offhand = have_item("time halo") and "empty" or nil, acc1 = have_item("time halo") and "time halo" or nil, acc2 = have_item("dead guy's watch") and "dead guy's watch" or nil }
+				script.wear { acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" } }
 				result, resulturl = get_page("/inventory.php", { which = 1 })
 				result = add_message_to_page(get_result(), "<p>End of day.</p><p>(PvP,) overdrink, then done.</p>", "Ascension script:")
 				finished = true
@@ -3866,7 +3868,7 @@ endif
 			end
 			script.maybe_ensure_buffs { "Brother Flying Burrito's Blessing" }
 			unequip_slot("familiarequip")
-			script.wear { acc3 = "time halo", acc2 = have("dead guy's watch") and "dead guy's watch" or nil }
+			script.wear { acc3 = first_wearable { "time halo" } , acc2 = first_wearable { "dead guy's watch" } }
 			if drunkenness() <= estimate_max_safe_drunkenness() then
 				script.ensure_buff_turns("Ode to Booze", 10)
 			end
@@ -4266,7 +4268,7 @@ endif
 
 			if not have_item("S.O.C.K.") then
 				script.maybe_ensure_buffs { "Ur-Kel's Aria of Annoyance", "Silent Running" }
-				script.go("do airship", 81, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Ur-Kel's Aria of Annoyance", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "Mini-Hipster", 35, { choice_function = function(advtitle, choicenum)
+				script.go("do airship", 81, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Ur-Kel's Aria of Annoyance", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "Slimeling even in fist", 35, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Random Lack of an Encounter" then
 						if not have_item("model airship") then
 							return "Gallivant down to the head"
@@ -5160,6 +5162,7 @@ local ascension_script_options_tbl = {
 	["eat manually"] = { yes = "eat manually", no = "automate consumption" },
 	["ignore automatic pulls"] = { yes = "only pull softcore items manually", no = "automate some pulls", when = function() return not ascensionstatus("Hardcore") end },
 	["train skills manually"] = { yes = "train manually", no = "automate training", when = function() return ascensionpath("Avatar of Jarlsberg") end },
+	["100% familiar run"] = { yes = "don't change familiar", no = "automate familiar choice" },
 }
 
 function ascension_script_option(name)
@@ -5221,9 +5224,12 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 end)
 
 add_printer("/main.php", function()
-	if tonumber(status().freedralph) == 1 then return end
 	if not setting_enabled("enable turnplaying automation") then return end
 	if not setting_enabled("enable turnplaying automation in-run") then return end
+	if tonumber(status().freedralph) == 1 then
+		text = text:gsub([[title="Bottom Edge".-</table>]], [[%0<table><tr><td><center><a href="]]..custom_aftercore_automation_href { pwd = session.pwd }..[[" style="color: green">{ Setup/run automation scripts }</a></center></td></tr></table>]])
+		return
+	end
 
 	if ascension["__script.ascension script enabled"] == true then
 		local links = {

@@ -190,10 +190,12 @@ do
 	end
 
 	function add_warning(tbl)
-		check_supported_table_values(tbl, {}, { "message", "check", "severity", "zone", "when", "idgenerator" })
-		local want_zoneid
-		if tbl.zone then
-			want_zoneid = get_zoneid(tbl.zone)
+		-- TODO: deprecate some of these
+		check_supported_table_values(tbl, {}, { "message", "check", "severity", "zone", "when", "idgenerator", "path" })
+		local want_zoneid = tbl.zone and get_zoneid(tbl.zone)
+		local path = tbl.path or "/adventure.php"
+		if type(path) ~= "table" then
+			path = { path }
 		end
 		local function f()
 			if tbl.when == "ascension" and ascensionstatus("Aftercore") then return end
@@ -214,14 +216,21 @@ do
 			end
 		end
 		if tbl.severity == "extra" then
+			-- TODO: redo these local tables with warnings, at least give them paths, or preferably reuse normal stuff
 			localtable.insert(__raw_extra_adventure_warnings, f)
-			__raw_add_extra_warning("/adventure.php", f)
+			for _, p in ipairs(path) do
+				__raw_add_extra_warning(p, f)
+			end
 		elseif tbl.severity == "warning" then
 			localtable.insert(__raw_adventure_warnings, f)
-			__raw_add_warning("/adventure.php", f)
+			for _, p in ipairs(path) do
+				__raw_add_warning(p, f)
+			end
 		elseif tbl.severity == "notice" then
 			localtable.insert(__raw_adventure_notices, f)
-			__raw_add_notice("/adventure.php", f)
+			for _, p in ipairs(path) do
+				__raw_add_notice(p, f)
+			end
 		else
 			error("Invalid warning severity: " .. tostring(tbl.severity))
 		end

@@ -448,7 +448,7 @@ function URLEncode(x)
 
 	<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
 
-]]
+]] .. get_outfit_slots_script()
 end
 
 local buff_extension_info = nil
@@ -462,7 +462,7 @@ end
 local cached_workarounds = {}
 local function work_around_broken_status_lastadv(advdata)
 	if advdata.container == "place.php" then
-		print "WARNING: Working around status lastadv.container server API bug. Shout at CDMoyer!"
+		print [[INFO: Working around server API bug. Shout at CDMoyer about lastadv.container for place.php!]]
 		if not cached_workarounds[advdata.name] then
 			async_post_page("/account.php", { am = 1, pwd = session.pwd, action = "flag_compactchar", value = 0, ajax = 1 })
 			local pt = get_page("/charpane.php")
@@ -579,6 +579,7 @@ add_interceptor("/charpane.php", function()
 
 	table.insert(lines, "<br>")
 
+	table.insert(lines, "<center>" .. get_outfit_slots_line() .. "</center>")
 	local function get_equip_line(tbl)
 		local equipstr = ""
 		local eq = equipment()

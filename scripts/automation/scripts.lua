@@ -1,3 +1,41 @@
+function reuse_equipment_slots(neweq)
+	local remap = {}
+	local used = {}
+	for _, x in ipairs { "acc1", "acc2", "acc3" } do
+		if neweq[x] then
+			for _, y in ipairs { "acc1", "acc2", "acc3" } do
+				if neweq[x] == equipment()[y] and not used[y] then
+					remap[x] = y
+					used[y] = true
+				end
+			end
+		end
+	end
+
+	for _, x in ipairs { "acc1", "acc2", "acc3" } do
+		if not remap[x] then
+			for _, y in ipairs { "acc1", "acc2", "acc3" } do
+				if not used[y] then
+					remap[x] = y
+					used[y] = true
+					break
+				end
+			end
+		end
+	end
+
+	local remapitems = {}
+	remapitems[remap.acc1] = neweq.acc1
+	remapitems[remap.acc2] = neweq.acc2
+	remapitems[remap.acc3] = neweq.acc3
+
+	neweq.acc1 = remapitems.acc1
+	neweq.acc2 = remapitems.acc2
+	neweq.acc3 = remapitems.acc3
+	return neweq
+end
+
+
 __allow_global_writes = true
 
 local script_cached_stuff = {}
@@ -175,7 +213,7 @@ function get_automation_scripts(cached_stuff)
 
 	-- TODO: set the familiar equipment here
 	function f.want_familiar(famname)
-		if can_change_familiar == false then
+		if can_change_familiar == false or ascension_script_option("100% familiar run") then
 			return {}
 		end
 		if challenge == "zombie" and famname ~= "Reassembled Blackbird" then
@@ -414,8 +452,8 @@ function get_automation_scripts(cached_stuff)
 		if highskill_at_run and level() >= 6 then
 			need_extra = 20
 		end
-		if ascensionpath("BIG!") then
-			need_extra = 20
+		if ascensionpath("BIG!") and amount < 50 then
+			amount = 50
 		end
 		if challenge == "boris" then
 			if have_skill("Banishing Shout") and maxmp() >= 60 and level() >= 6 then
@@ -1068,6 +1106,8 @@ function get_automation_scripts(cached_stuff)
 
 		local halos = { ["frosty halo"] = true, ["furry halo"] = true, ["shining halo"] = true, ["time halo"] = true }
 
+		local ignore_slots = {}
+
 		for a, b in pairs(tbl) do
 			if b ~= "empty" then
 				neweq[a] = get_itemid(b)
@@ -1077,11 +1117,15 @@ function get_automation_scripts(cached_stuff)
 						do_not_wear[h] = true
 					end
 				end
+				if halos[b] then
+					ignore_slots.weapon = true
+					ignore_slots.offhand = true
+				end
 			end
 		end
 
 		for _, a in ipairs(wear_slots) do
-			if not tbl[a] and not neweq[a] then
+			if not tbl[a] and not neweq[a] and not ignore_slots[a] then
 				for _, x in ipairs(defaults[a] or {}) do
 					local itemname = canwear_itemname(x)
 					if itemname and not do_not_wear[itemname] then
@@ -1098,47 +1142,8 @@ function get_automation_scripts(cached_stuff)
 			end
 		end
 
-		-- TODO: check 2h-ness
-		if neweq.weapon == get_itemid("Knob Goblin elite polearm") or neweq.weapon == get_itemid("Trusty") or neweq.weapon == get_itemid("7-Foot Dwarven mattock") then
+		if neweq.weapon and ((maybe_get_itemdata(neweq.weapon) or {}).weapon_hands or 0) >= 2 then
 			neweq.offhand = nil
-		end
-
-		local currently_worn = equipment()
-		local function reuse_equipment_slots(neweq)
-			local remap = {}
-			local used = {}
-			for _, x in ipairs { "acc1", "acc2", "acc3" } do
-				if neweq[x] then
-					for _, y in ipairs { "acc1", "acc2", "acc3" } do
-						if neweq[x] == currently_worn[y] and not used[y] then
-							remap[x] = y
-							used[y] = true
-						end
-					end
-				end
-			end
-			
-			for _, x in ipairs { "acc1", "acc2", "acc3" } do
-				if not remap[x] then
-					for _, y in ipairs { "acc1", "acc2", "acc3" } do
-						if not used[y] then
-							remap[x] = y
-							used[y] = true
-							break
-						end
-					end
-				end
-			end
-
-			local remapitems = {}
-			remapitems[remap.acc1] = neweq.acc1
-			remapitems[remap.acc2] = neweq.acc2
-			remapitems[remap.acc3] = neweq.acc3
-
-			neweq.acc1 = remapitems.acc1
-			neweq.acc2 = remapitems.acc2
-			neweq.acc3 = remapitems.acc3
-			return neweq
 		end
 
 		neweq = reuse_equipment_slots(neweq)
@@ -2828,10 +2833,15 @@ endif
 				slope_outfit = { hat = "eXtreme scarf", pants = "snowboarder pants", acc3 = "eXtreme mittens" }
 				wear(slope_outfit)
 			end
-			async_get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak" })
+			if have_item("ninja rope") and have_item("ninja crampons") and have_item("ninja carabiner") then
+				script.ensure_buffs { "Elemental Saucesphere", "Astral Shell" }
+			end
+			get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak" })
 			refresh_quest()
 			if not quest_text("like you to investigate the summit") then
 				did_action = true
+			elseif have_item("ninja rope") and have_item("ninja crampons") and have_item("ninja carabiner") then
+				stop "TODO: Buff up cold resistance and climb peak."
 			else
 				script.bonus_target { "noncombat" }
 				go("explore the extreme slope", 273, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Peppermint" }, "Slimeling", 35, { choice_function = function(advtitle, choicenum)
@@ -2871,7 +2881,12 @@ endif
 			if not quest_text("ready to ascend to the Icy Peak") and not quest_text("close to figuring out what's going on at the Icy Peak") then
 				did_action = true
 			else
-				wear { hat = "eXtreme scarf", pants = "snowboarder pants", acc3 = "eXtreme mittens" }
+				if have_item("eXtreme mittens") and have_item("eXtreme scarf") and have_item("snowboarder pants") then
+					wear { hat = "eXtreme scarf", pants = "snowboarder pants", acc3 = "eXtreme mittens" }
+				else
+					wear {}
+					script.ensure_buffs { "Elemental Saucesphere", "Astral Shell" }
+				end
 				fam "Frumious Bandersnatch"
 				ensure_buffs { "Springy Fusilli", "Spirit of Cayenne" }
 				ensure_mp(40)

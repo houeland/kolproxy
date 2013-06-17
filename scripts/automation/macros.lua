@@ -895,7 +895,7 @@ end
 
 function make_cannonsniff_macro(name)
 	local cfm = getCurrentFightMonster()
-	print("DEBUG: making cannonsniff macro for", name, "vs", cfm)
+	--print("DEBUG: making cannonsniff macro for", name, "vs", cfm)
 	local physresist = 0
 	local cfmhp = 10
 	if cfm and cfm.Stats and cfm.Stats.Phys then

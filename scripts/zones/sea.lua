@@ -20,12 +20,57 @@ add_processor("item drop: Mer-kin lockkey", function()
 	ascension["zones.sea.outpost lockkey monster"] = monstername()
 end)
 
+add_printer("/seafloor.php", function()
+	if ascension["zones.sea.outpost lockkey monster"] then
+		if text:contains("currents") then
+			text = text:gsub([[</body>]], [[<center style="color: gray">]] .. "Mer-kin lockkey dropped by: " .. tostring(ascension["zones.sea.outpost lockkey monster"]) .. [[ (already opened stashbox)</center>%0]])
+		else
+			text = text:gsub([[</body>]], [[<center style="color: green">]] .. "Mer-kin lockkey dropped by: " .. tostring(ascension["zones.sea.outpost lockkey monster"]) .. [[</center>%0]])
+		end
+	end
+end)
+
 -- deepcity
 
-add_processor("/sea_merkin.php", function()
-	if text:contains("navigating the intense currents atop your trusty seahorse") then
-		print("INFO: reached deepcity on seahorse")
-		ascension["zones.sea.deepcity reached"] = true
+local function learn_dreadscroll_word(word, source)
+	if word then
+		local words = ascension["zones.sea.dreadscroll words"] or {}
+		words[source] = word
+		ascension["zones.sea.dreadscroll words"] = words
+	end
+end
+
+add_processor("/fight.php", function()
+	local healword = text:match("tentacles squirming along the ocean floor, a magnificent <b>(.-)</b>, smiling warmly in the distance")
+	local killword = text:match("You actually <i>did</i> recognize one of them: <b>&quot;(.-)&quot;</b>.")
+	learn_dreadscroll_word(healword, "Mer-kin healscroll")
+	learn_dreadscroll_word(killword, "Mer-kin killscroll")
+end)
+
+add_processor("/choice.php", function()
+	local creature = text:match("a lot of references to <b>(.-)</b> creatures")
+	local phrase = text:match("consists of the phrase <b>(.-)</b> over and over")
+	local scrawl = text:match("somebody has scrawled &quot;<b>(.-)</b>&quot; on the inside of the front cover")
+	learn_dreadscroll_word(creature, "Noncombat creature")
+	learn_dreadscroll_word(phrase, "Noncombat phrase")
+	learn_dreadscroll_word(scrawl, "Noncombat scrawl")
+end)
+
+add_processor("/skills.php", function()
+	if text:contains("close your eyes and let Deep visions wash over you") then
+		local substr = text:match("close your eyes and let Deep visions wash over you.-center>") or ""
+		local house = substr:match("<b>(.-)</b>")
+		learn_dreadscroll_word(house, "Vision house")
+	end
+end)
+
+add_printer("/choice.php", function()
+	if text:contains("You unroll the dreadscroll and look it over") then
+		local lines = {}
+		for a, b in pairs(ascension["zones.sea.dreadscroll words"] or {}) do
+			table.insert(lines, string.format([[%s: <b>%s</b>]], a, b))
+		end
+		text = text:gsub("</body>", [[<center style="color: green">]] .. table.concat(lines, "<br>") .. [[</center>%0]])
 	end
 end)
 

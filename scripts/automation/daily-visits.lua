@@ -13,6 +13,13 @@ register_setting {
 }
 
 register_setting {
+	name = "automate daily visits/summon clip art",
+	description = "Summon clip art as part of daily visits",
+	group = "automation",
+	default_level = "enthusiast",
+}
+
+register_setting {
 	name = "automate daily visits/harvest garden",
 	description = "Harvest garden as part of daily visits",
 	group = "automation",
@@ -164,15 +171,19 @@ function do_daily_visits()
 		dopage("/campground.php", { preaction = "summonstickers", quantity = 3 })
 		dopage("/campground.php", { preaction = "summonsugarsheets", quantity = 3 })
 
-		local cliparts = table.keys(get_recipes_by_type("cliparts"))
-		table.sort(cliparts, function(a, b)
-			if not estimate_mallsell_profit(b) then return true end
-			if not estimate_mallsell_profit(a) then return false end
-			return estimate_mallsell_profit(a) > estimate_mallsell_profit(b)
-		end)
-		queue_page_result(summon_clipart(cliparts[1]))
-		queue_page_result(summon_clipart(cliparts[2]))
-		queue_page_result(summon_clipart(cliparts[3]))
+		if setting_enabled("automate daily visits/summon clip art") then
+			local cliparts = table.keys(get_recipes_by_type("cliparts"))
+			table.sort(cliparts, function(a, b)
+				if not estimate_mallsell_profit(b) then return true end
+				if not estimate_mallsell_profit(a) then return false end
+				return estimate_mallsell_profit(a) > estimate_mallsell_profit(b)
+			end)
+			queue_page_result(summon_clipart(cliparts[1]))
+			queue_page_result(summon_clipart(cliparts[2]))
+			queue_page_result(summon_clipart(cliparts[3]))
+		else
+			add_result("Skipped summoning clip art (can be enabled in settings).")
+		end
 
 		dopage("/campground.php", { preaction = "summonradlibs", quantity = 3 })
 

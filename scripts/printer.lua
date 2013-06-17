@@ -34,20 +34,15 @@ if path == "/login.php" then
 --		[ [[<input class=button type=submit value="Log In" name=submitbutton id=submitbutton>]] ] = [[<input class="button" type="submit" value="Log In" style="color: gray" name="submitbutton" id="submitbutton" disabled="disabled">]],
 --		["<font size=1>If you've forgotten your password"] = [[<div id="jswarning" style="color: red">You have to turn on javascript, otherwise you'll submit your password in cleartext!</div><script type="text/javascript">if (md5s) { document.getElementById('jswarning').style.display = 'none'; document.getElementById('submitbutton').value = 'Log In'; document.getElementById('submitbutton').disabled = ''; document.getElementById('submitbutton').style.color = 'black'; }</script>%0]],
 	}
-	if current_version ~= "3.10-alpha" and current_version ~= "3.10-alpha-slowhttp" then
+	if current_version ~= "3.10-beta" and current_version ~= "3.10-beta-slowhttp" then
 		mods["/login.php"]["An Adventurer is You!<br>"] = [[An Adventurer is You!<br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; text-decoration: none;">{ Kolproxy v]]..current_version..[[ incorrect installation. }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; font-size: smaller;">{ Click here to download a working version. }</a>]]
-	elseif latest_version and current_version ~= latest_version and latest_version ~= "3.9-2" then
+	elseif latest_version and current_version ~= latest_version and latest_version ~= "3.10-alpha" then
 		print("current version", current_version, "latest version", latest_version)
 		mods["/login.php"]["An Adventurer is You!<br>"] = [[An Adventurer is You!<br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; text-decoration: none;">{ Kolproxy v]]..current_version..[[, latest version is v]]..latest_version..[[ }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; font-size: smaller;">{ Click here to upgrade. }</a>]]
 	else
 		mods["/login.php"]["An Adventurer is You!<br>"] = [[An Adventurer is You!<br><span style="color: green">{ Kolproxy v]]..current_version..[[ }</span><br>]]
 	end
 end
-
--- mods["/bhh.php"] = {
--- 	["<form method=post action=bhh.php><input type=hidden name=pwd value=%x+><input type=hidden name=action value=\"abandonbounty\"><center><input type=submit class=button value=\"I Give Up!\"></center></form>"] =
--- 		"<center><a href=\"automate-bhh\" style=\"color:green\">{ automate }</a></center><p>%0",
--- }
 
 mods["/showplayer.php"] = { -- This can also be done by adding header_noframecheck=1 to the URL query
 	[ [[if %(parent.frames.length == 0%) location.href="game.php";]] ] = ""
@@ -64,14 +59,12 @@ if can_read_state() then
 end
 
 mods["/compactmenu.php"] = {
-	[ [[(<option value="logout.php">Log Out</option>.-)(</select>)]] ] = [[%1
-<option value="nothing">- Select -</option>%2]],
+	[ [[(<option value="logout.php">Log Out</option>.-)(</select>)]] ] = [[%1<option value="nothing">- Select -</option>%2]],
 	[ [[<option value="account.php">Account Menu</option>]] ] = [[%0<option value="custom-settings?pwd=]] .. pwd .. [[">Kolproxy Settings</option>]],
 }
 
 mods["/topmenu.php"] = {
-	[ [[(<option value="logout.php">Log Out</option>.-)(</select>)]] ] = [[%1
-<option value="nothing">- Select -</option>%2]],
+	[ [[(<option value="logout.php">Log Out</option>.-)(</select>)]] ] = [[%1<option value="nothing">- Select -</option>%2]],
 	[ [[<option value="account.php">Options</option>]] ] = [[%0<option value="custom-settings?pwd=]] .. pwd .. [[">Kolproxy Settings</option>]],
 }
 
@@ -134,7 +127,7 @@ end)
 
 if path == "/fight.php" then
 	if text:contains("state['fightover'] = true;") or text:contains("<!--WINWINWIN-->") or text:contains("You slink away, dejected and defeated.") then -- TODO: HACK! state fightover only works with combat bar enabled!!
--- 	print("resetting fight state!")
+-- 		print("resetting fight state!")
 		reset_fight_state()
 	end
 end

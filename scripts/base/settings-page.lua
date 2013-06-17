@@ -165,9 +165,9 @@ local function get_customize_features_page()
 			local radio_name = "radio_" .. radio_ctr
 			feature_radio_names[y.name] = radio_name
 			table.insert(all_radio_names, radio_name)
-			local onchecked = (character["setting: " .. y.name] == "on") and [[checked="checked"]] or ""
-			local offchecked = (character["setting: " .. y.name] == "off") and [[checked="checked"]] or ""
-			local defaultchecked = (character["setting: " .. y.name] == nil) and [[checked="checked"]] or ""
+			local onchecked = (character["setting: " .. y.name] == "on") and [[ checked="checked"]] or ""
+			local offchecked = (character["setting: " .. y.name] == "off") and [[ checked="checked"]] or ""
+			local defaultchecked = (character["setting: " .. y.name] == nil) and [[ checked="checked"]] or ""
 			local baselevel = character["settings base level"] or "limited"
 			local defaultvalue = (setting_levels[y.default_level or "enthusiast"] <= setting_levels[baselevel]) and "on" or "off"
 			local featuredesc = y.description and ([[<span title="Lua scripting syntax: setting_enabled(&quot;]] .. y.name .. [[&quot)">]] .. y.description .. [[</span>]]) or ([[<span style="color: red">No description (<tt>]] .. y.name .. [[</tt>)</span>]])
@@ -184,11 +184,15 @@ local function get_customize_features_page()
 					[[<td class="tddefault"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..defaultchecked..[[>Default (]]..defaultvalue..[[)</td></tr>]])
 			end
 		end
-		for _, y in ipairs(grouped[x.name]) do
-			insert_setting_row(y)
+		local function recurse(y)
 			for _, z in ipairs(children[y.name] or {}) do
 				insert_setting_row(z, y.name)
+				recurse(z)
 			end
+		end
+		for _, y in ipairs(grouped[x.name]) do
+			insert_setting_row(y)
+			recurse(y)
 		end
 	end
 	local explanation = [[<p>The base settings (limited/standard/detailed) activate different sets of features by default.<p>On this page, individual features can be customized. The settings work like this:<br>
@@ -220,7 +224,8 @@ var all_default_values = ]] .. table_to_json(all_default_values) .. [[
 var all_radio_names = ]] .. table_to_json(all_radio_names) .. [[
 
 function refresh_visibility() {
-	for (var i_ in all_radio_names) {
+	var hidden = {}
+	for (var i_ = 0; i_ < all_radio_names.length; i_ += 1) {
 		for (var whichradio = 0; whichradio <= 2; whichradio += 1) {
 			var radio = $("[name=" + all_radio_names[i_] + "]")[whichradio]
 			if ($(radio).attr("checked")) {
@@ -229,11 +234,11 @@ function refresh_visibility() {
 				var isenabled = false
 				if (c == "tdon") isenabled = true
 				else if (c == "tddefault" && all_default_values[fname] == "on") isenabled = true
-				if (isenabled) {
+				if (isenabled && !hidden[fname]) {
 					$(".childof_" + all_radio_names[i_]).show()
 				} else {
-					console.log("hiding " + ".childof_" + all_radio_names[i_])
 					$(".childof_" + all_radio_names[i_]).hide()
+					$(".childof_" + all_radio_names[i_]).each(function(x, y) { hidden[$(y).attr("data-feature-name")] = true })
 				}
 			}
 		}
@@ -267,9 +272,9 @@ add_printer("/custom-settings", function()
 	end
 
 	local baselevel = character["settings base level"] or "limited"
-	local limitedchecked = (baselevel == "limited") and [[checked="checked"]] or ""
-	local standardchecked = (baselevel == "standard") and [[checked="checked"]] or ""
-	local detailedchecked = (baselevel == "detailed") and [[checked="checked"]] or ""
+	local limitedchecked = (baselevel == "limited") and [[checked="checked" ]] or ""
+	local standardchecked = (baselevel == "standard") and [[checked="checked" ]] or ""
+	local detailedchecked = (baselevel == "detailed") and [[checked="checked" ]] or ""
 	text = make_kol_html_frame([[
 			<center><table><tr><td>
 				<form action="custom-settings" method="post">

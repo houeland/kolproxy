@@ -81,10 +81,14 @@ local function estimate_fam_item()
 		end
 	end
 	-- TODO: Use familiar names instead of pictures
-	if vanilla_fairy[familiarpicture()] then
+	if familiar("Jack-in-the-Box") then
+		if get_daily_counter("familiar.jack-in-the-box.crank turns") == 2 then
+			return 2 * fairy_bonus(buffedfamiliarweight())
+		else
+			return 0
+		end
+	elseif vanilla_fairy[familiarpicture()] then
 		return fairy_bonus(buffedfamiliarweight())
-	elseif familiarpicture() == "jackinthebox" then
-		return 2 * fairy_bonus(buffedfamiliarweight())
 	elseif familiarpicture() == "hounddog" then
 		return fairy_bonus(buffedfamiliarweight() * 1.25)
 	elseif familiarpicture() == "spanglehat" and familiarid() == 82 then

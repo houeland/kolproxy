@@ -484,8 +484,8 @@ slow_mkconnthing _server = do
 
 	return slowconnchan :: IO ConnChanType
 
---mkconnthing = fast_mkconnthing
-mkconnthing = slow_mkconnthing
+mkconnthing = fast_mkconnthing
+--mkconnthing = slow_mkconnthing
 
 send_http_response h resp = do
 	-- TODO: check for errors?

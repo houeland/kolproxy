@@ -1,9 +1,19 @@
+register_setting {
+	name = "show extra notices/check florist friar",
+	description = "Show florist friar notice if re-adventuring without plants",
+	group = "warnings",
+	default_level = "detailed",
+	parent = "enable adventure warnings",
+}
+
 local have_friar = nil
 local checked_zones = {}
 
 -- TODO: redo with add_warning?
 add_interceptor("/adventure.php", function()
+	if not setting_enabled("enable adventure warnings") then return end
 	if not setting_enabled("show extra notices") then return end
+	if not setting_enabled("show extra notices/check florist friar") then return end
 	local pt
 	if have_friar == false then
 		return

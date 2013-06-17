@@ -1,6 +1,6 @@
 register_setting {
         name = "enable experimental implementations/automatically tune flavour of magic",
-        description = "Automatically tune flavour to magic before adventuring (experimental)",
+        description = "Automatically tune flavour of magic before adventuring (experimental)",
         group = "other",
         default_level = "enthusiast",
 }
@@ -28,7 +28,7 @@ function determine_best_flavour_vs_monsterlist(monsterlist, default)
 			scores[w2] = scores[w2] + 10
 		end
 	end
-	print("DEBUG scores", scores)
+	--print("DEBUG scores", scores)
 
 	local best = default
 	local best_score = scores[default]

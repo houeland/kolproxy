@@ -10,8 +10,8 @@ mark done
 
 local violence_href = setup_turnplaying_script {
 	name = "automate-sea-violence",
-	description = "Automate sea (gladiator colosseum / violence boss)",
-	when = function() return ascension["zones.sea.deepcity reached"] and not ascension["zones.sea.deepcity temple finished"] end,
+	description = "Automate sea (gladiator colosseum / violence boss, needs seahorse)",
+	when = function() return accomplishment_text("tamed the mighty seahorse") and not ascension["zones.sea.deepcity temple finished"] end,
 	macro = sea_automation_gladiator_macro,
 	preparation = function()
 		maybe_pull_item("sea salt scrubs", 1)

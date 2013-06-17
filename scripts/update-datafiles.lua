@@ -318,7 +318,7 @@ function parse_items()
 
 	for l in io.lines("cache/files/equipment.txt") do
 		local tbl = split_tabbed_line(l)
-		local name, power, req = tbl[1], tonumber(tbl[2]), tbl[3]
+		local name, power, req, weaptype = tbl[1], tonumber(tbl[2]), tbl[3], tbl[4]
 		if name and req and not blacklist[name] then
 			if items[name] then
 				local reqtbl = {}
@@ -336,6 +336,7 @@ function parse_items()
 				end
 				items[name].equip_requirement = reqtbl
 				items[name].power = power
+				items[name].weapon_hands = tonumber((weaptype or ""):match("^([0-9]+)%-handed"))
 			else
 				hardwarn("equipment:item does not exist", name)
 			end

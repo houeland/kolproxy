@@ -1,3 +1,7 @@
+--- TODO ---
+-- 2-handed weapons
+-- outfit bonuses
+
 function maximize_equipment_slot_bonuses(slot, scoref_raw)
 	function scoref(tbl)
 		return scoref_raw(make_bonuses_table(tbl))
@@ -10,7 +14,7 @@ function maximize_equipment_slot_bonuses(slot, scoref_raw)
 		local d = maybe_get_itemdata(itemid)
 		if name and d and d.equipment_slot == slot then
 			local score = scoref(d.equip_bonuses or {})
-			table.insert(options, { name = name, score = score, worn = true, wornslot = wornslot })
+			table.insert(options, { name = name, score = score, worn = true, wornslot = wornslot, itemid = itemid })
 		end
 	end
 	for itemid, _ in pairs(inventory()) do
@@ -18,9 +22,12 @@ function maximize_equipment_slot_bonuses(slot, scoref_raw)
 		local d = maybe_get_itemdata(itemid)
 		if name and d and d.equipment_slot == slot then
 			local score = scoref(d.equip_bonuses or {})
-			table.insert(options, { name = name, score = score, worn = false })
+			table.insert(options, { name = name, score = score, worn = false, itemid = itemid })
 		end
 	end
+	table.insert(options, { name = "(none)", score = 0, worn = true, wornslot = "zzz1" })
+	table.insert(options, { name = "(none)", score = 0, worn = true, wornslot = "zzz2" })
+	table.insert(options, { name = "(none)", score = 0, worn = true, wornslot = "zzz3" })
 	table.sort(options, function(a, b)
 		if a.score ~= b.score then
 			return a.score > b.score
@@ -63,6 +70,7 @@ end
 modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", function()
 	local bonuses = {
 		"Monsters will be more attracted to you",
+		"Monsters will be less attracted to you",
 		"Item Drops from Monsters",
 		"Monster Level",
 		"Combat Initiative",
@@ -73,27 +81,47 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 	local whichbonus = params.whichbonus or "Item Drops from Monsters"
 
 	local scoref = function(bonuses)
+		bonuses = make_bonuses_table(bonuses)
 		return bonuses[whichbonus] or 0
 	end
 	if whichbonus == "HP & cold/spooky resistance" then
 		scoref = function(bonuses)
+			bonuses = make_bonuses_table(bonuses)
 			return estimate_maxhp_increases(bonuses) + bonuses["Spooky Resistance"] * 20 + bonuses["Cold Resistance"] * 20
+		end
+	end
+	if whichbonus == "Monsters will be less attracted to you" then
+		scoref = function(bonuses)
+			bonuses = make_bonuses_table(bonuses)
+			return -bonuses["Monsters will be more attracted to you"]
 		end
 	end
 
 	local equipmentlines = {}
 	for _, slot in ipairs { "hat", "container", "shirt", "weapon", "offhand", "pants", "accessory" } do
 		local items = maximize_equipment_slot_bonuses(slot, scoref)
-		if items[1] then
-			table.insert(equipmentlines, string.format("<tr><td>%s</td><td>%s (%+d)</td></tr>", slot, items[1].name, items[1].score))
+		local function add(itemid, where)
+			local item = { name = "(none)", score = 0 }
+			if itemid then
+				item = { name = maybe_get_itemname(itemid), score = scoref(maybe_get_itemdata(itemid).equip_bonuses or {}) }
+			end
+			if equipment()[where] == itemid then
+				table.insert(equipmentlines, string.format([[<tr style="color: gray"><td>%s</td><td>%s (%+d)</td></tr>]], slot, item.name, item.score))
+			else
+				table.insert(equipmentlines, string.format([[<tr style="color: green"><td>%s</td><td>%s (%+d)</td></tr>]], slot, item.name, item.score))
+			end
+		end
+		if slot == "accessory" then
+			local neweq = reuse_equipment_slots {
+				acc1 = items[1].itemid,
+				acc2 = items[2].itemid,
+				acc3 = items[3].itemid,
+			}
+			add(neweq.acc1, "acc1")
+			add(neweq.acc2, "acc2")
+			add(neweq.acc3, "acc3")
 		else
-			table.insert(equipmentlines, string.format("<tr><td>%s</td><td>(none)</td></tr>", slot))
-		end
-		if slot == "accessory" and items[2] then
-			table.insert(equipmentlines, string.format("<tr><td>%s</td><td>%s (%+d)</td></tr>", slot, items[2].name, items[2].score))
-		end
-		if slot == "accessory" and items[3] then
-			table.insert(equipmentlines, string.format("<tr><td>%s</td><td>%s (%+d)</td></tr>", slot, items[3].name, items[3].score))
+			add(items[1].itemid, slot)
 		end
 	end
 
