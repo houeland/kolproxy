@@ -10,7 +10,7 @@
 
 register_setting {
 	name = "use custom kolproxy charpane",
-	description = "Use faster custom kolproxy charpane (set compact or normal-mode charpane in KoL options)",
+	description = "Replace character pane with speedy custom kolproxy version",
 	group = "charpane",
 	default_level = "standard",
 }
@@ -27,6 +27,7 @@ register_setting {
 	description = "Show up-arrows for extending buffs (currently only on custom charpane)",
 	group = "charpane",
 	default_level = "standard",
+	parent = "use custom kolproxy charpane",
 }
 
 register_setting {
@@ -34,6 +35,7 @@ register_setting {
 	description = "Show multiple previous-adventure links (currently only on custom charpane)",
 	group = "charpane",
 	default_level = "detailed",
+	parent = "use custom kolproxy charpane",
 }
 
 add_printer("/game.php", function()
@@ -60,6 +62,29 @@ local function get_clancy_display()
 	else
 		return [[Clancy (lvl ]] .. clancy_level() .. ", " .. (instruments[clancy_instrumentid()] or "?") .. ")"
 	end
+end
+
+function get_companion_display()
+	local jarlcompanion = tonumber(status().jarlcompanion)
+	local working_lunch = have_skill("Working Lunch") and 1 or 0
+	local name = "ID: " .. (status().jarlcompanion or "?")
+	local bonus = "?"
+	if jarlcompanion == 1 then
+		name = "Eggman"
+		bonus = string.format("+%d%%&nbsp;items", 50 + 25 * working_lunch)
+	elseif jarlcompanion == 2 then
+		name = "Horse"
+		bonus = string.format("+%d%%&nbsp;initiative", 50 + 25 * working_lunch)
+	elseif jarlcompanion == 3 then
+		name = "Hippo"
+		bonus = "+" .. (3 + working_lunch * 1.5) .. "&nbsp;stats"
+	elseif jarlcompanion == 4 then
+		name = "Puff"
+		bonus = string.format("+%d&nbsp;ML", 20 + 10 * working_lunch)
+	else
+		return [[Companion ID: ]] .. (status().jarlcompanion or "?")
+	end
+	return string.format("Companion: %s (%s)", name, bonus)
 end
 
 local function kolproxy_custom_charpane_mode()
@@ -186,8 +211,8 @@ end
 
 local function classdesc()
 	local descs = {
-		compact = { "SC", "TT", "PM", "S", "DB", "AT", nil, nil, nil, nil, "AoB", "ZM" },
-		normal = { "Seal Clubber", "Turtle Tamer", "Pastamancer", "Sauceror", "Disco Bandit", "Accordion Thief", nil, nil, nil, nil, "Avatar of Boris", "Zombie Master" },
+		compact = { "SC", "TT", "PM", "S", "DB", "AT", nil, nil, nil, nil, "AoB", "ZM", nil, "AoJ" },
+		normal = { "Seal Clubber", "Turtle Tamer", "Pastamancer", "Sauceror", "Disco Bandit", "Accordion Thief", nil, nil, nil, nil, "Avatar of Boris", "Zombie Master", nil, "Avatar of Jarlsberg" },
 	}
 	return descs[kolproxy_custom_charpane_mode()][classid()] or "?"
 end
@@ -219,12 +244,7 @@ local function get_srdata(SRtitle)
 		color = "green"
 	end
 	if table.maxn(good_numbers) > 0 then
-		value = good_numbers[1]
-		for x, _ in pairs(good_numbers) do
-			if x > 1 then
-				value = value .. " +"
-			end
-		end
+		value = table.concat(good_numbers, ", ")
 	else
 		value = "?"
 	end
@@ -300,7 +320,7 @@ local function get_common_js()
 							type: 'GET', url: 'charsheet.php?pwd=]] .. session.pwd .. [[&ajax=1&action=unbuff&whichbuff=' + whichbuff + '&noredirect=1',
 							cache: false,
 							global: false,
-							success: function (out) {
+							success: function(out) {
 								if (out.match(/no\|/)) {
 									var parts = out.split(/\|/)
 									alert("Unable to shrug " + buffname + " because you are " + parts[1] + ".")
@@ -339,7 +359,7 @@ local function get_common_js()
 				url: "/skills.php?whichskill=" + skillid + "&quantity=1&action=Skillz&ajax=1&targetplayer=]] .. playerid() .. [[&pwd=]] .. session.pwd .. [[",
 				cache: false,
 				global: false,
-				success: function (out) {
+				success: function(out) {
 					if (out.match(/no\|/)) {
 						var parts = out.split(/\|/)
 						alert("Error extending buff: " + parts[1] + ".")
@@ -428,7 +448,7 @@ function URLEncode(x)
 
 	<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
 
-]]
+]] .. get_outfit_slots_script()
 end
 
 local buff_extension_info = nil
@@ -442,7 +462,7 @@ end
 local cached_workarounds = {}
 local function work_around_broken_status_lastadv(advdata)
 	if advdata.container == "place.php" then
-		print "WARNING: Working around status lastadv.container server API bug. Shout at CDMoyer!"
+		print [[INFO: Working around server API bug. Shout at CDMoyer about lastadv.container for place.php!]]
 		if not cached_workarounds[advdata.name] then
 			async_post_page("/account.php", { am = 1, pwd = session.pwd, action = "flag_compactchar", value = 0, ajax = 1 })
 			local pt = get_page("/charpane.php")
@@ -559,6 +579,7 @@ add_interceptor("/charpane.php", function()
 
 	table.insert(lines, "<br>")
 
+	table.insert(lines, "<center>" .. get_outfit_slots_line() .. "</center>")
 	local function get_equip_line(tbl)
 		local equipstr = ""
 		local eq = equipment()
@@ -589,6 +610,8 @@ add_interceptor("/charpane.php", function()
 		table.insert(lines, string.format([[<center>%s lbs.<!-- kolproxy charpane familiar text area --></center><br>]], buffedfamiliarweight()))
 	elseif ascensionpathid() == 8 then
 		table.insert(lines, [[<center>]] .. get_clancy_display() .. [[</center><br>]])
+	elseif ascensionpath("Avatar of Jarlsberg") then
+		table.insert(lines, [[<center>]] .. get_companion_display() .. [[</center><br>]])
 	else
 		table.insert(lines, [[<center><a href="familiar.php" target="mainpane">No familiar</a></center><br>]])
 	end
@@ -790,6 +813,8 @@ add_interceptor("/charpane.php", function()
 		table.insert(lines, string.format([[<center><font size=2>%s lbs.<!-- kolproxy charpane familiar text area --></font></center>]], buffedfamiliarweight()))
 	elseif ascensionpathid() == 8 then
 		table.insert(lines, [[<center>]] .. get_clancy_display() .. [[</center><br>]])
+	elseif ascensionpath("Avatar of Jarlsberg") then
+		table.insert(lines, [[<center>]] .. get_companion_display() .. [[</center><br>]])
 	else
 		table.insert(lines, [[<center><a href="familiar.php" target="mainpane">No familiar</a></center>]])
 	end

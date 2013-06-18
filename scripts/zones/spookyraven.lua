@@ -257,17 +257,30 @@ add_choice_text("History is Fun!", { -- choice adventure number: 87
 
 -- bathroom
 
-add_choice_text("Having a Medicine Ball", { -- choice adventure number: 105
-	["Gaze deeply into the mirror"] = { text = "Gain mysticality", good_choice = true },
-	["Open it and see what's inside"] = { text = "Get item or leave" },
-	["Say &quot;Guy made of bees.&quot;"] = { text = "Repeat 5 times to fight The Guy Made Of Bees" },
-})
+add_choice_text("Having a Medicine Ball", function() -- choice adventure number: 105
+	local tbl = {
+		["Gaze deeply into the mirror"] = { text = "Gain mysticality", good_choice = true },
+		["Open it and see what's inside"] = { text = "Get item or leave" },
+		["Say &quot;Guy made of bees.&quot;"] = { text = string.format("Repeat 5 times to fight The Guy Made Of Bees (%d/5)", get_ascension_counter("spookyraven.bathroom.said guy made of bees")) },
+	}
+	if get_ascension_counter("spookyraven.bathroom.said guy made of bees") == 4 then
+		tbl["Gaze deeply into the mirror"].good_choice = false
+		tbl["Say &quot;Guy made of bees.&quot;"].good_choice = true
+	end
+	return tbl
+end)
 
 add_choice_text("Don't Hold a Grudge", { -- choice adventure number: 402
 	["Armwrestle it"] = { text = "Gain muscle" },
 	["Declare a thumb war"] = { text = "Gain mysticality", good_choice = true },
 	["Shake it"] = { text = "Gain moxie" },
 })
+
+add_processor("/choice.php", function()
+	if text:contains(">You look into the mirror and say &quot;Guy made of bees.&quot;  Nothing happens.<") then
+		increase_ascension_counter("spookyraven.bathroom.said guy made of bees")
+	end
+end)
 
 -- bedroom
 
@@ -420,7 +433,7 @@ local lastlouvre = nil
 
 -- louvre
 add_processor("/choice.php", function()
-	if adventure_title:contains("Louvre It or Leave It") then
+	if (adventure_title or ""):contains("Louvre It or Leave It") then
 -- 		print("louvre", choice_adventure_number, table_to_str(params))
 		whichchoice = params.whichchoice
 		option = params.option
@@ -657,7 +670,7 @@ add_choice_text("Louvre It or Leave It ", function()
 end)
 
 add_printer("/choice.php", function()
-	if adventure_title == "Louvre It or Leave It " then
+	if (adventure_title or ""):contains("Louvre It or Leave It") then
 		text = text:gsub([[</head>]], [[
 <style type="text/css">
 .kolproxy_louvremapimage span { position: relative; }

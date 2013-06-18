@@ -46,7 +46,7 @@ end
 local function make_monster_hp_meter(monster, width)
 	local data = monster.Stats
 	if not data then return "" end
-	if data.HP == "?" then return "" end
+	if not tonumber(data.HP) or not tonumber(data.ModHP) then return "" end
 
 	if not width then width = 100 end
 	local hpFrac = math.max(0, data.ModHP) / data.HP
@@ -66,13 +66,11 @@ local function formatMonsterItems(monster)
 	for value in table.values(data) do
 		local dropinfo = ""
 		
-		if value["unknown drop rate"] then
-			dropinfo = "??"
+		local chance = value.Chance or 0
+		if chance > 0 then
+			dropinfo = chance .. "%"
 		else
-			local chance = tonumber(value.Chance) or 0
-			if chance > 0 then
-				dropinfo = chance .. "%"
-			end
+			dropinfo = "??"
 		end
 		
 		if value["conditional"] then
@@ -106,20 +104,14 @@ local function formatMonsterStats(monster)
 	else
 		statData = statData .. "<div style='font-size:12px;'>Estimate</div>"
 	end
-	statData = statData .. formatStat("HP", data.ModHP, nil, "Starting HP: " .. data.HP)
-	statData = statData .. formatStat("Atk", data.ModAtk, nil, "Starting Atk: " .. data.Atk)
-
-	local defTooltip = data.Def
-	if tonumber(data.Def) then
-		defTooltip = math.max(math.floor(tonumber(data.Def) * 0.9), 1)
-	end
-	
-	statData = statData .. formatStat("Def", data.ModDef, nil, "Starting Def: " .. defTooltip)
+	statData = statData .. formatStat("HP", data.ModHP, nil, "Starting HP: " .. (data.HP or "?"))
+	statData = statData .. formatStat("Atk", data.ModAtk, nil, "Starting Atk: " .. (data.Atk or "?"))
+	statData = statData .. formatStat("Def", data.ModDef, nil, "Starting Def: " .. (data.Def or "?"))
 	statData = statData .. formatStat("Meat", data.Meat)
 	statData = statData .. formatStat("Element", data.Element, elementColor[data.Element])
 	statData = statData .. formatStat("Init", data.Init)
 
-	if phlyumFamiliars[familiarid()] and data.Phylum then	
+	if phlyumFamiliars[familiarid()] and data.Phylum then
 		statData = statData .. [[<div onclick='togglePhylum();' style='cursor:hand;' class='stat'><span style='margin-right:5px;'><span id='phylumToggle'>[+]</span> Phylum:</span><span>]] .. data.Phylum .. [[</span></div>]]
 	end	
 	
@@ -195,18 +187,19 @@ end
 local function adjustStat(originalStat, modifier, maxval, adjust)
 	local returnVal = originalStat
 	if modifier == nil then return returnVal end
+	if not returnVal then returnVal = "?" end
 
 	if type(originalStat) == "number" then
 		returnVal = math.floor(originalStat * (adjust or 1.0)) - (modifier or 0)
 		returnVal = math.max(maxval or returnVal, returnVal)
 	elseif modifier ~= 0 then
-		returnVal = returnVal .. " (" .. -modifier ..")"
+		returnVal = tostring(returnVal) .. " (" .. -modifier ..")"
 	end
 	
 	return returnVal	
 end
 
-function getCurrentMonster()
+function getCurrentFightMonster()
 	-- something is screwed up if this returns nil
 	local current_fight = fight["currently fighting"]
 	if not current_fight then return nil end
@@ -216,7 +209,7 @@ function getCurrentMonster()
 	if monster then
 		monster.Stats.ModHP = adjustStat(monster.Stats.HP, tonumber(fight["damage inflicted"]), nil, nil)
 		monster.Stats.ModAtk = adjustStat(monster.Stats.Atk, tonumber(fight["attack decrease"]), 1, nil)
-		monster.Stats.ModDef = adjustStat(monster.Stats.Def, tonumber(fight["defense decrease"]), 1, 0.9)
+		monster.Stats.ModDef = adjustStat(monster.Stats.Def, tonumber(fight["defense decrease"]), 1, nil)
 	end
 
 	local first_serverdata = fight["currently fighting first serverdata"]
@@ -282,7 +275,7 @@ add_printer("/fight.php", function()
 			$('#phylumToggle').html('[+]')
 	}
 </script>%0]])		
-		local monster = getCurrentMonster()
+		local monster = getCurrentFightMonster()
 	
 		if monster then
 			text = text:gsub([[(id='monname'.-)(</td>)]], function(prefix, suffix)
@@ -357,7 +350,7 @@ add_printer("/fight.php", function()
 		);
 	}
 </style>%0]])
-		local monster = getCurrentMonster()
+		local monster = getCurrentFightMonster()
 		if monster then
 			local monpic = text:match([[<img id='monpic'.->]]) or text:match([[sorcblob.gif".->]])
 

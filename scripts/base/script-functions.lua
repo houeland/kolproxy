@@ -1,5 +1,5 @@
 function add_itemdrop_counter(name, f)
-	add_printer("item drop: " .. name, function ()
+	add_printer("item drop: " .. name, function()
 		local c = count_item(item_name)
 		local msg = f(c)
 		if msg then
@@ -36,6 +36,18 @@ do
 			local message, warningid, custommsg, customdisablecolor, customwarningprefix = f()
 			if message then
 				return intercept_warning { message = message, id = warningid, customdisablemsg = custommsg, customdisablecolor = customdisablecolor or "green", customwarningprefix = customwarningprefix or "Consider: " }
+			end
+		end)
+	end
+
+	function __raw_add_notice(filename, f)
+		add_interceptor(filename, function()
+			if not setting_enabled("enable adventure warnings") then return end
+			if not setting_enabled("show extra warnings") then return end
+			if not setting_enabled("show extra notices") then return end
+			local message, warningid, custommsg, customdisablecolor, customwarningprefix = f()
+			if message then
+				return intercept_warning { message = message, id = warningid, customdisablemsg = custommsg, customdisablecolor = customdisablecolor or "rgb(51, 153, 51)", customwarningprefix = customwarningprefix or "Notice: " }
 			end
 		end)
 	end
@@ -81,8 +93,9 @@ do
 
 	local __raw_adventure_warnings = {}
 	local __raw_extra_adventure_warnings = {}
+	local __raw_adventure_notices = {}
 	function get_raw_adventure_warnings()
-		return __raw_adventure_warnings, __raw_extra_adventure_warnings
+		return __raw_adventure_warnings, __raw_extra_adventure_warnings, __raw_adventure_notices
 	end
 	local function add_raw_adventure_warning(f)
 		localtable.insert(__raw_adventure_warnings, f)
@@ -166,6 +179,61 @@ do
 
 	function add_always_zone_check(zid, f)
 		raw_add_zone_check(zid, f)
+	end
+
+	function get_zoneid(name)
+		local zoneid = (datafile("zones")[name] or {}).zoneid
+		if not zoneid then
+			error("Unknown zone: " .. tostring(name))
+		end
+		return zoneid
+	end
+
+	function add_warning(tbl)
+		-- TODO: deprecate some of these
+		check_supported_table_values(tbl, {}, { "message", "check", "severity", "zone", "when", "idgenerator", "path" })
+		local want_zoneid = tbl.zone and get_zoneid(tbl.zone)
+		local path = tbl.path or "/adventure.php"
+		if type(path) ~= "table" then
+			path = { path }
+		end
+		local function f()
+			if tbl.when == "ascension" and ascensionstatus("Aftercore") then return end
+			local zoneid = tonumber(params.snarfblat)
+			if want_zoneid and zoneid ~= want_zoneid then return end
+			local check, checkid = tbl.check(zoneid)
+			if check then
+				local msg = tbl.message
+				local warnid = (tbl.zone or "everywhere") .. "/" .. msg
+				if msg == "custom" and type(check) == "string" then
+					msg = check
+					warnid = checkid
+				end
+				if tbl.idgenerator then
+					warnid = warnid .. "#" .. tbl.idgenerator()
+				end
+				return msg, warnid
+			end
+		end
+		if tbl.severity == "extra" then
+			-- TODO: redo these local tables with warnings, at least give them paths, or preferably reuse normal stuff
+			localtable.insert(__raw_extra_adventure_warnings, f)
+			for _, p in ipairs(path) do
+				__raw_add_extra_warning(p, f)
+			end
+		elseif tbl.severity == "warning" then
+			localtable.insert(__raw_adventure_warnings, f)
+			for _, p in ipairs(path) do
+				__raw_add_warning(p, f)
+			end
+		elseif tbl.severity == "notice" then
+			localtable.insert(__raw_adventure_notices, f)
+			for _, p in ipairs(path) do
+				__raw_add_notice(p, f)
+			end
+		else
+			error("Invalid warning severity: " .. tostring(tbl.severity))
+		end
 	end
 
 	local added_automation_handler = false
@@ -254,6 +322,7 @@ function add_chat_alias(newcmd, realcmd)
 end
 
 function autoadventure(tbl)
+	check_supported_table_values(tbl, { "ignorewarnings", "noncombatchoices", "specialnoncombatfunction" }, { "zoneid", "macro" })
 -- 	if not tbl.ignorewarnings and setting_enabled("enable adventure warnings") then
 	if not tbl.ignorewarnings and character["setting: enable adventure warnings"] ~= "no" then
 		local foo = { kolproxy_log_time_interval("check adv warnings", function()
@@ -296,6 +365,20 @@ function get_resistance_levels()
 	return resists
 end
 
+function get_elemental_weaknesses(element)
+	if element == "Cold" then
+		return "Hot", "Spooky"
+	elseif element == "Hot" then
+		return "Sleaze", "Stench"
+	elseif element == "Sleaze" then
+		return "Spooky", "Cold"
+	elseif element == "Spooky" then
+		return "Stench", "Hot"
+	elseif element == "Stench" then
+		return "Cold", "Sleaze"
+	end
+end
+
 function elemental_resist_level_multiplier(level)
 	local myst_resist = 0
 	if get_mainstat() == "Mysticality" then
@@ -308,8 +391,27 @@ function elemental_resist_level_multiplier(level)
 	end
 end
 
-local function check_supported_table_values()
-	-- TODO: implement, make global, use
+function check_supported_table_values(tbl, optional, mandatory)
+	if true then return true end
+	optional = optional or {}
+	mandatory = mandatory or {}
+	local ok_keys = {}
+	for _, x in ipairs(optional) do
+		ok_keys[x] = true
+	end
+	for _, x in ipairs(mandatory) do
+		ok_keys[x] = true
+		if not tbl[x] then
+--			if playername() == "Eleron" then print("DEBUG: missing mandatory param", x) end
+--			error("Missing mandatory table parameter value: " .. tostring(x))
+		end
+	end
+	for x, _ in pairs(tbl) do
+		if not ok_keys[x] then
+--			if playername() == "Eleron" then print("DEBUG: unsupported param", x, tbl[x]) end
+--			error("Unsupported table parameter value: " .. tostring(x))
+		end
+	end
 end
 
 local resistphials = {
@@ -370,6 +472,8 @@ function estimate_max_fullness()
 	local mf = 15
 	if ascensionpathid() == 8 then
 		mf = 20
+	elseif ascensionpath("Avatar of Jarlsberg") then
+		mf = 10
 	end
 	if have_skill("Stomach of Steel") then
 		mf = mf + 5
@@ -381,6 +485,9 @@ function estimate_max_fullness()
 		mf = mf + 5
 	end
 	if have_skill("Ravenous Pounce") then
+		mf = mf + 5
+	end
+	if have_skill("Lunch Like a King") then
 		mf = mf + 5
 	end
 	if have_skill("Gluttony") then
@@ -399,21 +506,29 @@ function estimate_max_safe_drunkenness()
 	if ascensionpathname() == "Teetotaler" or ascensionpathname() == "Oxygenarian" then
 		return 0
 	end
+	local dlimit = 15
 	if ascensionpathid() == 8 or ascensionpathid() == 10 then
-		return 4
-	elseif have_skill("Liver of Steel") then
-		return 19
-	else
-		return 14
+		dlimit = 5
+	elseif ascensionpath("Avatar of Jarlsberg") then
+		dlimit = 10
 	end
+
+	if have_skill("Liver of Steel") then
+		dlimit = dlimit + 5
+	end
+	if have_skill("Nightcap") then
+		dlimit = dlimit + 5
+	end
+
+	return dlimit - 1
 end
 
 function estimate_max_spleen()
+	local ms = 15
 	if have_skill("Spleen of Steel") then
-		return 20
-	else
-		return 15
+		ms = ms + 5
 	end
+	return ms
 end
 
 function spleen_display_string()
@@ -426,20 +541,35 @@ function remaining_spleen_display_string()
 	return estimate_max_spleen() - spleen()
 end
 
-function estimate_mallbuy_cost(item)
-	return datafile("mallprices")[maybe_get_itemname(item)]
+function estimate_mallbuy_cost(item, amount)
+	amount = amount or 1
+	local d = datafile("mallprices")[maybe_get_itemname(item)] or {}
+	if type(d) ~= "table" and tonumber(d) then return tonumber(d) * amount end -- TODO: support for old datafile, remove in a future version
+	local function try(num)
+		--print("try", item, num)
+		local c = d["buy "..num]
+		if c and num <= amount then
+			return try(num * 10) or c
+		end
+	end
+	local c = try(1)
+	if c then
+		return c * amount
+	end
 end
 
-function estimate_mallsell_profit(item)
-	local buyprice = estimate_mallbuy_cost(item)
-	if buyprice then
-		return buyprice * 0.85
+function estimate_mallsell_profit(item, amount)
+	amount = amount or 1
+	local buyoneprice = estimate_mallbuy_cost(item, 10)
+	if buyoneprice then
+		return buyoneprice * amount/10 * 0.85
 	end
 end
 
 function can_equip_item(item)
 	-- TODO: boris/fist
 	local name = maybe_get_itemname(item)
+	if not name then return true end
 	local eqreqs = datafile("items")[name].equip_requirement or {}
 	for a, b in pairs(eqreqs) do
 		if a == "muscle" and basemuscle() < b then
@@ -451,4 +581,16 @@ function can_equip_item(item)
 		end
 	end
 	return true
+end
+
+function estimate_basement_level()
+	-- TODO: Implement, processor that sets session[...]
+end
+
+function take_stash_item(item)
+	return async_post_page("/clan_stash.php", { pwd = session.pwd, action = "takegoodies", quantity = 1, whichitem = get_itemid(item) })
+end
+
+function add_stash_item(item)
+	return async_post_page("/clan_stash.php", { pwd = session.pwd, action = "addgoodies", qty1 = 1, item1 = get_itemid(item) })
 end

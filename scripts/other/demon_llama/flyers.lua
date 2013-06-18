@@ -6,7 +6,7 @@ add_processor("/fight.php", function()
 		local flyertext = text:match([[documents.gif" width=30 height=30 alt=.-You slap a flyer up on your opponent]])
 		local whichflyer = flyertext:match([[title="(.-)"]])
 		if whichflyer then
-			local monster = getCurrentMonster()
+			local monster = getCurrentFightMonster()
 			if monster and monster.Stats then
 				local atk = tonumber(monster.Stats.Atk)
 				if atk then

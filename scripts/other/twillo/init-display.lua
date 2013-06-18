@@ -1,4 +1,4 @@
-local function get_fam_init()
+local function estimate_fam_init()
 	if familiarid() == 159 then -- happy medium
 		return buffedfamiliarweight()
 	elseif familiarid() == 168 then -- oily woim
@@ -8,14 +8,15 @@ local function get_fam_init()
 	end
 end
 
-local function get_skill_init()
+local function estimate_skill_init()
 	local tw_init = 0
 	local skillarray = {
 		["Legendary Impatience"] = 100,
 		["Hunter's Sprint"] = 100,
 		["Lust"] = 50,
+		["Never Late for Dinner"] = 50,
 		["Overdeveloped Sense of Self Preservation"] = 20,
-		["Slimy Shoulders"] = 20,
+		["Slimy Shoulders"] = 20, -- TODO: Check actual value
 		["Sloth"] = -25,
 	}
 	for skill, init in pairs(skillarray) do
@@ -27,14 +28,14 @@ local function get_skill_init()
 end
 
 function estimate_other_init()
-	local init = get_fam_init() + get_skill_init()
+	local init = estimate_fam_init() + estimate_skill_init()
 	if moonsign("Vole") then
 		init = init + 20
 	end
 	return init
 end
 
-function estimate_init_penalty(ml)
+function compute_monster_initiative_bonus(ml)
 	local penalty = 0
 	if 20 < ml and ml <= 40 then
 		penalty = 0 + 1 * (ml - 20)

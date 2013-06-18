@@ -63,8 +63,8 @@ add_itemdrop_counter("evil eye", function(c)
 	end
 end)
 
-local function parse_evilometer()
-	if have("Evilometer") then
+function parse_evilometer()
+	if have_item("Evilometer") then
 		local pagetext = use_item("Evilometer")()
 		local evilometer = {}
 		for zonename, amount in pagetext:gmatch(">([A-Za-z ]*): <b>([0-9]*)</b>") do
@@ -82,8 +82,6 @@ local crypt_zone_names = {
 	[263] = "Niche",
 	[264] = "Nook",
 }
-
-get_evilometer_data = parse_evilometer
 
 local function add_zone_info(evilometer)
 	local function add_zone_info(zoneinfo, zoneid, leftoffset)
@@ -126,24 +124,36 @@ add_printer("/crypt.php", function()
 	end
 end)
 
-add_extra_ascension_adventure_warning(function(zoneid)
+-- TODO: split in two, remove message="custom" support
+add_warning {
+	message = "custom",
+	severity = "notice",
+	when = "ascension",
+	check = function(zoneid)
 	if zoneid and zoneid >= 261 and zoneid <= 264 then
 		local evilometer = parse_evilometer()
-		if evilometer then
-			local evil_here = evilometer[crypt_zone_names[zoneid]]
-			if evil_here <= 25 then
-				return "The boss is ready to be fought in this zone.", "crypt boss ready zone-" .. zoneid
-			elseif evil_here == 26 then
-				return "With 26 evil here, the boss will be ready no matter what you kill next.", "crypt evil at 26 zone-" .. zoneid
+			if evilometer then
+				local evil_here = evilometer[crypt_zone_names[zoneid]]
+				if evil_here <= 25 then
+					return "The boss is ready to be fought in this zone.", "crypt boss ready zone-" .. zoneid
+				elseif evil_here == 26 then
+					return "With 26 evil here, the boss will be ready no matter what you kill next.", "crypt evil at 26 zone-" .. zoneid
+				end
 			end
 		end
-	end
-end)
+	end,
+}
 
-add_ascension_adventure_warning(function(zoneid)
-	if zoneid == 261 and moonsign_area() == "Gnomish Gnomad Camp" then
-		if not buff("Sugar Rush") or not buff("Hombre Muerto Caminando") then
-			return "You might want to use marzipan skulls for +initiative%.", "use marzipan skulls in alcove"
-		end
-	end
-end)
+add_warning {
+	message = "You might want to use a marzipan skull for +initiative%.",
+	severity = "warning",
+	zone = "The Defiled Alcove",
+	check = function() return moonsign_area("Gnomish Gnomad Camp") and not (have_buff("Sugar Rush") and have_buff("Hombre Muerto Caminando")) end,
+}
+
+add_warning {
+	message = "You might want to cast Springy Fusilli.",
+	severity = "warning",
+	zone = "The Defiled Alcove",
+	check = function() return not have_buff("Springy Fusilli") and have_skill("Springy Fusilli") end,
+}

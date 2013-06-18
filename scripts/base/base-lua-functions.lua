@@ -1,7 +1,7 @@
 pretty_print_tables = true
 
 if string then
-	function string.contains(a, b) return a:find(b, 1, true) end
+	function string.contains(a, b) return not not a:find(b, 1, true) end
 end
 
 if table then
@@ -12,6 +12,15 @@ if table then
 			idx, value = next(tbl, idx)
 			return value
 		end
+	end
+
+	function table.keys(tbl)
+		local keys = {}
+		for k, _ in pairs(tbl) do
+			table.insert(keys, k)
+		end
+		table.sort(keys)
+		return keys
 	end
 end
 
@@ -111,6 +120,9 @@ local function decode_thing(x)
 	local eff1, eff2, eff3 = x:match([[^%("(.-)", *([0-9]-), *"(.-)"%)$]])
 	if eff1 and eff2 and eff3 then
 		return { eff1, eff2, eff3 }
+	end
+	if x == "[]" then
+		return {}
 	end
 	print("error: can't decode table value", x)
 end

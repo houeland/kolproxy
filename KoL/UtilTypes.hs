@@ -39,8 +39,8 @@ data SessionDataType = SessionDataType {
 	lastStoredState_ :: IORef (Maybe String)
 }
 
-type ConnChanActionType = MVar (Either SomeException (URI, Data.ByteString.ByteString, [(String, String)], Network.HTTP.ResponseCode, Network.HTTP.Response Data.ByteString.ByteString))
-type ConnChanType = Chan (URI, Network.HTTP.Request Data.ByteString.ByteString, ConnChanActionType, RefType)
+type ConnChanActionType = (Either SomeException (URI, Data.ByteString.ByteString, [(String, String)], Integer, Network.HTTP.Response Data.ByteString.ByteString))
+type ConnChanType = Chan (URI, Network.HTTP.Request Data.ByteString.ByteString, MVar ConnChanActionType, RefType)
 
 data ServerSessionType = ServerSessionType {
 	wheneverConnection_ :: ConnChanType,
@@ -66,8 +66,8 @@ data LogRefStuff = LogRefStuff {
 }
 
 data ProcessingRefStuff = ProcessingRefStuff {
-	processPage_ :: RefType -> URI -> Maybe [(String, String)] -> IO (IO (Either (Data.ByteString.ByteString, URI, [(String, String)]) (Data.ByteString.ByteString, URI, [(String, String)]))),
-	nochangeRawRetrievePageFunc_ :: RefType -> URI -> Maybe [(String, String)] -> Bool -> IO (IO (Data.ByteString.ByteString, URI, [(String, String)]), IO (MVar (Either SomeException (JSObject JSValue)))),
+	processPage_ :: RefType -> URI -> Maybe [(String, String)] -> IO (IO (Either (Data.ByteString.ByteString, URI, [(String, String)], Integer) (Data.ByteString.ByteString, URI, [(String, String)], Integer))),
+	nochangeRawRetrievePageFunc_ :: RefType -> URI -> Maybe [(String, String)] -> Bool -> IO (IO (Data.ByteString.ByteString, URI, [(String, String)], Integer), IO (MVar (Either SomeException (JSObject JSValue)))),
 	getstatusfunc_ :: RefType -> IO (IO (JSObject JSValue))
 }
 
@@ -129,4 +129,3 @@ instance Show KolproxyException where
 	show (InternalError str) = "Internal error: " ++ str
 	show (LuaError str) = "Lua error: " ++ str
 	show (NetworkError str) = "Network error: " ++ str
-

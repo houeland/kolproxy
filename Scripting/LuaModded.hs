@@ -463,15 +463,23 @@ atpanic = c_lua_atpanic
 
 -- | See @lua_tostring@ in Lua Reference Manual.
 tostring :: LuaState -> Int -> IO String
-tostring l n = c_lua_tolstring l (fromIntegral n) nullPtr >>= peekCString
+tostring l n = do
+	isstr <- isstring l n
+	if isstr
+		then c_lua_tolstring l (fromIntegral n) nullPtr >>= peekCString
+		else Control.Exception.throwIO $ userError $ "bad argument #1 to 'tostring' (string expected)"
 
 tobytestring :: LuaState -> Int -> IO Data.ByteString.ByteString
 tobytestring l n = do
-	lenptr <- Foreign.Marshal.Alloc.malloc :: IO (Ptr CInt)
-	ptr <- c_lua_tolstring l (fromIntegral n) lenptr
-	len <- F.peek lenptr
-	Foreign.Marshal.Alloc.free lenptr
-	Data.ByteString.packCStringLen (ptr, fromIntegral len)
+	isstr <- isstring l n
+	if isstr
+		then do
+			lenptr <- Foreign.Marshal.Alloc.malloc :: IO (Ptr CInt)
+			ptr <- c_lua_tolstring l (fromIntegral n) lenptr
+			len <- F.peek lenptr
+			Foreign.Marshal.Alloc.free lenptr
+			Data.ByteString.packCStringLen (ptr, fromIntegral len)
+		else Control.Exception.throwIO $ userError $ "bad argument #1 to 'tobytestring' (string expected)"
 
 -- | See @lua_tothread@ in Lua Reference Manual.
 tothread :: LuaState -> Int -> IO LuaState

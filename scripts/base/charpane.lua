@@ -36,6 +36,8 @@ end
 
 function print_charpane_lines(text)
 	if text:contains("http://images.kingdomofloathing.com/otherimages/inf_small.gif") then return end
+	--if not setting_enabled("show charpane lines") then return end
+
 	for y in table.values(familiar_counters) do table.insert(fam_values, { value = y }) end
 	for y in table.values(infolines) do table.insert(fam_values, { value = y }) end
 
@@ -81,12 +83,14 @@ function print_charpane_lines(text)
 			local ct_pre = name
 			local ct_value = "<b>" .. value .. "</b>"
 			local style = ""
-			if y["color"] then
-				style = [[ style="color:]] .. y["color"] .. [["]]
+			if y.color then
+				style = [[ style="color:]] .. y.color .. [["]]
 			end
-			if y["link"] then
-				ct_pre = [[<a target="mainpane" href="]] .. y["link"] .. [["]] .. style .. [[>]] .. name .. [[</a>]]
-				ct_value = [[<a target="mainpane" href="]] .. y["link"] .. [["]] .. style .. [[><b>]] .. value .. [[</b></a>]]
+			if y.link then
+				ct_pre = [[<a target="mainpane" href="]] .. y.link .. [["]] .. style .. [[>]] .. name .. [[</a>]]
+				if not y.link_name_only then
+					ct_value = [[<a target="mainpane" href="]] .. y.link .. [["]] .. style .. [[><b>]] .. value .. [[</b></a>]]
+				end
 			end
 			if kolproxy_custom_charpane_mode == "compact" then
 				local ct = ct_pre .. ": " .. ct_value
@@ -110,7 +114,7 @@ function print_charpane_lines(text)
 </font>
 ]] end)
 				end
-				text = text:gsub("(<!%-%- kolproxy value printing area %-%->)", function(one) return one .. tr end)
+				text = text:gsub("(<!%-%- kolproxy value printing area %-%->)", function(one) return tr .. one end)
 			end
 		end
 	elseif text:contains("<!-- charpane compact") then -- compact mode
@@ -122,7 +126,7 @@ function print_charpane_lines(text)
 			if y["color"] then
 				style = " style=\"color:" .. y["color"] .. "\""
 			end
-			if y["link"] then
+			if y.link then
 				ct = [[<td align=right><a target="mainpane" href="]] .. y["link"] .. [["]] .. style .. [[>]] .. name .. [[</a>:</td><td align=left><a target="mainpane" href="]] .. y["link"] .. [["]] .. style .. [[><b>]] .. value .. [[</b></a></td>]]
 			end
 			if y["tooltip"] then

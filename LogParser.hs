@@ -35,7 +35,8 @@ scan_through_database_lua_logparse filename basefilename = do
 			case matchGroups "logid: ([0-9a-z]{40})" ret of
 				[[logid]] -> do
 					let logurl = "http://www.houeland.com/kol/viewlog?logid=" ++ logid
-					return $ "<html><body><p>Log uploaded to server with ID: <tt>" ++ logid ++ "</tt></p><p>Link to view log: <a href=\"" ++ logurl ++ "\">" ++ logurl ++ "</a></p></body></html>"
+					let forumlogurl = "http://www.houeland.com/kol/viewlog-forumpost?logid=" ++ logid
+					return $ "<html><body><p>Log uploaded to server with ID: <tt>" ++ logid ++ "</tt></p><p>Link to view log: <a href=\"" ++ logurl ++ "\">" ++ logurl ++ "</a></p><p>View simplified log: <a href=\"" ++ forumlogurl ++ "\">BBCode formatted for forum posting</a></p></body></html>"
 				_ -> return "??? Failed to upload parsed log ???"
 		_ -> return "Log parsing error: No ascension turns found"
 

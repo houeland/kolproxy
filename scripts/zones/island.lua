@@ -37,3 +37,13 @@ add_choice_text("Amatearrr Night", {
 	["So a pirate walks into a bar..."] = { getmeat = 100 },
 	["What's gold and sounds like a pirate?"] = { getitem = "eyepatch" },
 })
+
+add_warning {
+	message = "You already have the pirate outfit.",
+	severity = "warning",
+	zone = "The Obligatory Pirate's Cove",
+	check = function()
+		return not ascensionstatus("Aftercore") and
+			((have_item("eyepatch") and have_item("swashbuckling pants") and have_item("stuffed shoulder parrot")) or have_item("pirate fledges"))
+	end,
+}

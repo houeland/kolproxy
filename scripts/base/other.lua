@@ -19,6 +19,17 @@ end)
 -- adventure mistake warnings
 
 add_always_adventure_warning(function()
+	if have_equipped("Crown of Thrones") then
+		if (session["cached enthroned familiar"] or "none") == "none" then
+			cache_enthroned_familiar()
+		end
+		if session["cached enthroned familiar"] == "none" then
+			return "You might want to put a familiar in your Crown of Thrones.", "familiar in CoT"
+		end
+	end
+end)
+
+add_always_adventure_warning(function()
 	if drunkenness() > estimate_max_safe_drunkenness() then
 		return "You might not want to adventure while this drunk.", "overdrunk"
 	end
@@ -248,7 +259,7 @@ end)
 
 -- The Sleeper Has Awakened -> equip worm-riding hooks, use drum machine, equip weap/offhand again, return page
 
-automate_noncombat_href = add_automation_script("automate-noncombat", function ()
+automate_noncombat_href = add_automation_script("automate-noncombat", function()
 	text, url = "Trying to automate noncombat...", requestpath
 	local function f() return text, url end
 	for i = 1, 100 do
@@ -309,52 +320,6 @@ add_printer("/choice.php", function()
 	text = text:gsub("</form>", function(x) return x .. [[<span style="color: green">{ ]] .. make_vamp_link("Muscle") .. ", " .. make_vamp_link("Mysticality") .. ", " .. make_vamp_link("Moxie") .. [[ }</span><br>]] end)
 end)
 
--- tea party
-
-add_choice_text("The Mad Tea Party", function()
-	local hatid = equipment().hat
-	if not hatid then
-		return {
-			["Try to get a seat"] = "Get hat-based buff: None (you get turned away)",
-			["Slouch away"] = "Leave",
-		}
-	else
-		local hatname = item_api_data(hatid).name
-		local hatchars = hatname:gsub(" ", ""):len()
-		local hatbuffs = {
-			[4] = "+20 to Monster Level",
-			[5] = nil,
-			[6] = "+3 Familiar Experience Per Combat",
-			[7] = "Moxie +10",
-			[8] = "Muscle +10",
-			[9] = "Weapon Damage +15",
-			[10] = "Mysticality +10",
-			[11] = "Spell Damage +30%",
-			[12] = "Maximum HP +50",
-			[13] = "Maximum MP +25",
-			[14] = "+10 Sleaze Damage",
-			[15] = "Spell Damage +15",
-			[16] = "+10 Cold Damage",
-			[17] = "+10 Spooky Damage",
-			[18] = "+10 Stench Damage",
-			[19] = "+10 Hot Damage",
-			[20] = "Weapon Damage +30%",
-			[21] = nil,
-			[22] = "+40% Meat from Monsters",
-			[23] = "Mysticality +20%",
-			[24] = "+5 to Familiar Weight",
-			[25] = "+3 Stats Per Fight",
-			[26] = "Moxie +20%",
-			[27] = "Muscle +20%",
-			[28] = "+20% Item Drops from Monsters",
-		}
-		return {
-			["Try to get a seat"] = "Get hat-based buff: " .. (hatbuffs[hatchars] or "?") .. " (" .. hatchars .. " characters)",
-			["Slouch away"] = "Leave",
-		}
-	end
-end)
-
 -- show banished monsters
 
 add_automator("/fight.php", function()
@@ -390,6 +355,21 @@ add_automator("/fight.php", function()
 end)
 
 
+-- Pick up filthy lucre
+add_automator("/fight.php", function()
+	if not setting_enabled("enable ascension assistance") then return end
+	local bounty1, bounty2 = text:match("%(([0-9]+) of ([0-9]+) found.%)")
+	if tonumber(bounty2) and bounty1 == bounty2 and not locked() then
+			local scan = setup_automation_scan_page_results()
+			active_automation_assistance_scanner = scan
+			pcall(function()
+				async_get_page("/bhh.php")
+			end)
+			active_automation_assistance_scanner = nil
+			text = setup_automation_display_page_results(scan, text)
+		end
+	end)
+
 active_automation_assistance_scanner = nil
 add_submit_page_listener(function(ptf)
 	if active_automation_assistance_scanner then
@@ -412,12 +392,19 @@ function add_ascension_assistance(checkf, f)
 	end)
 end
 
+-- Visit council
 add_ascension_assistance(function() return true end, function()
 	async_get_page("/council.php")
+	if level() == 8 then
+		async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
+	end
 end)
 
-add_ascension_assistance(function() return true end, function()
+-- Pick up free pulls and talk to Toot
+local picked_up_free_pulls = false
+add_ascension_assistance(function() return not picked_up_free_pulls end, function()
 	async_post_page("/campground.php", { action = "telescopelow" })
+	-- TODO: Only at level 1?
 	if not have_item("Clan VIP Lounge key") then
 		freepull_item("Clan VIP Lounge key")
 		freepull_item("cursed microwave")
@@ -427,15 +414,27 @@ add_ascension_assistance(function() return true end, function()
 		freepull_item("Boris's Helm")
 		freepull_item("Boris's Helm (askew)")
 	end
+	if ascensionpath("Avatar of Jarlsberg") and not have_item("Jarlsberg's pan") and not have_item("Jarlsberg's pan (Cosmic portal mode)") then
+		freepull_item("Jarlsberg's pan")
+		freepull_item("Jarlsberg's pan (Cosmic portal mode)")
+	end
+	picked_up_free_pulls = true
+end)
+
+local talked_to_toot = false
+add_ascension_assistance(function() return not talked_to_toot end, function()
 	if level() == 1 then
 		async_get_page("/tutorial.php", { action = "toot" })
 		use_item("letter from King Ralph XI")
+		async_post_page("/galaktik.php", { action = "startquest", pwd = session.pwd })
 		if ascensionpathid() ~= 4 then
 			use_item("Newbiesport&trade; tent")
 		end
 	end
+	talked_to_toot = true
 end)
 
+-- Use Cobb's Knob map
 add_ascension_assistance(function() return have_item("Knob Goblin encryption key") and have_item("Cobb's Knob map") and ascensionpathid() ~= 4 end, function()
 	use_item("Cobb's Knob map")
 end)
@@ -448,11 +447,13 @@ function pick_up_continuum_transfunctioner()
 	return async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 664, option = 1 })
 end
 
+-- Pick up transfunctioner
 add_ascension_assistance(function() return level() >= 2 and not have_item("continuum transfunctioner") end, function()
 	async_post_page("/forestvillage.php", { action = "screwquest" })
 	pick_up_continuum_transfunctioner()
 end)
 
+-- Use roflmao scrolls
 add_ascension_assistance(function() return level() >= 9 and have_item("64735 scroll") end, function()
 	use_item("64735 scroll")
 end)
@@ -486,7 +487,7 @@ end)
 add_printer("/hermit.php", function()
 	if not setting_enabled("enable ascension assistance") then return end
 	if text:contains("don't have anything worthless enough") then
-		text = text:gsub("worthless enough for him to want to trade for it.<P>", [[%0<a href="]] .. hermit_items_href { pwd = session.pwd } .. [[" style="color:green">{ Get trinket and permit }</a><p>]])
+		text = text:gsub("worthless enough for him to want to trade for it.<P>", [[%0<a href="]] .. hermit_items_href { pwd = session.pwd } .. [[" style="color:green">{ Get trinket and/or permit }</a><p>]])
 	end
 end)
 
@@ -516,7 +517,22 @@ end)
 add_printer("/da.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 	if params.place == "gate1" and text:contains("You can learn 30 more skills") then
-		text = text:gsub("You can learn 30 more skills.", [[%0</p><p><a href="]] .. learn_all_boris_skills_href { pwd = session.pwd } .. [[" style="color:green">{ Learn all Boris skills }</a>]])
+		text = text:gsub("You can learn 30 more skills.", [[%0</p><p><a href="]] .. learn_all_boris_skills_href { pwd = session.pwd } .. [[" style="color:green">{ Learn all Boris skills. }</a>]])
+	end
+end)
+
+local learn_all_jarlsberg_skills_href = add_automation_script("learn-all-jarlsberg-skills", function()
+	for _, skillid in ipairs { 14003, 14007, 14001, 14005, 14002, 14006, 14004, 14008, 14011, 14015, 14014, 14012, 14013, 14016, 14017, 14018, 14023, 14022, 14026, 14025, 14021, 14027, 14024, 14028, 14032, 14037, 14033, 14036, 14031, 14034, 14035, 14038 } do
+		async_get_page("/jarlskills.php", { action = "getskill", getskid = skillid })
+	end
+
+	return get_page("/jarlskills.php")
+end)
+
+add_printer("/jarlskills.php", function()
+	if not setting_enabled("automate simple tasks") then return end
+	if text:contains("You have 32 skill points to spend.") then
+		text = text:gsub("You have 32 skill points to spend.", [[%0</p><p><a href="]] .. learn_all_jarlsberg_skills_href { pwd = session.pwd } .. [[" style="color:green">{ Learn all Jarlsberg skills. }</a>]])
 	end
 end)
 
@@ -579,7 +595,11 @@ add_interceptor("/kolproxy-frame-page", function()
 	return [[<html style="margin: 0px; padding: 0px;"><head><script language=Javascript src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script></head><body style="margin: 0px; padding: 0px;"><iframe src="]] .. params.url .. [[" style="width: 100%; height: 100%; border: none; margin: 0px; padding: 0px;"></iframe></body></html>]], requestpath
 end)
 
-add_interceptor("use item: Degrassi Knoll shopping list", function()
+--add_printer("use item: Degrassi Knoll shopping list", function()
+--end)
+
+--[--[--
+add_interceptor("__IGNORE__ use item: Degrassi Knoll shopping list", function()
 	-- TODO: redo this entirely?
 	if setting_enabled("automate simple tasks") then
 				stuff = {}
@@ -605,16 +625,13 @@ add_interceptor("use item: Degrassi Knoll shopping list", function()
 					return ret
 				end
 				function try_to_create(name)
-	-- 					print("try_to_create", name)
-					if have(name) then
+					if _itemhave(name) then
 						return { have = { name }, buy = {}, missing = {}, order = {} }
 					end
 					if can_buy[name] then
-	-- 						print("buying", name)
 						return { have = {}, buy = { name }, missing = {}, order = {} }
 					end
 					if stuff[name] then
-	-- 						print(name, "pasting", stuff[name][1], stuff[name][2])
 						local a = try_to_create(stuff[name][1])
 						local b = try_to_create(stuff[name][2])
 						local have = combine_tables(a.have, b.have)
@@ -622,15 +639,11 @@ add_interceptor("use item: Degrassi Knoll shopping list", function()
 						local missing = combine_tables(a.missing, b.missing)
 						local order = combine_tables(a.order, b.order)
 						table.insert(order, { stuff[name][1], stuff[name][2] })
-	-- 						print(name, "pasted", printstr(have), printstr(buy), printstr(missing), printstr(order))
 						return { have = have, buy = buy, missing = missing, order = order }
 					end
-	-- 					print("missing", name)
 					return { have = {}, buy = {}, missing = { name }, order = {} }
 				end
 				meatcar = try_to_create("bitchin' meatcar")
-	-- 				print("need to buy", printstr(meatcar.buy))
-	-- 				print("missing", printstr(meatcar.missing))
 				if next(meatcar.missing) then
 					local missing_list = {}
 					for a, b in pairs(meatcar.missing) do table.insert(missing_list, [[<span style="color: darkorange;">]] .. b .. [[</span>]]) end
@@ -639,7 +652,6 @@ add_interceptor("use item: Degrassi Knoll shopping list", function()
 					text, url = get_page("/inv_use.php", params):gsub("<blockquote>.+</blockquote>", "<blockquote>Needed items:<p><blockquote><p>" .. table.concat(missing_list, "<br>") .. "</p></blockquote></blockquote>")
 				else
 					for x, name in pairs(meatcar.buy) do
-	-- 						print("buying", name)
 						if name == "meat stack" then
 							async_get_page("/inventory.php", { quantity = 1, action = "makestuff", pwd = params.pwd, whichitem = get_itemid(name), ajax = 1 })
 						else
@@ -647,7 +659,6 @@ add_interceptor("use item: Degrassi Knoll shopping list", function()
 						end
 					end
 					for x, name in pairs(meatcar.order) do
-	-- 						print("pasting", name[1], name[2])
 						meatpaste_items(name[1], name[2])
 					end
 
@@ -664,6 +675,7 @@ add_interceptor("use item: Degrassi Knoll shopping list", function()
 		return text, url
 	end
 end)
+--]--]--
 
 add_interceptor("use item: black market map", function()
 	-- TODO: make this an automator? would hurt in bees

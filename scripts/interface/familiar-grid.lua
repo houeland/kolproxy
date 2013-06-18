@@ -36,7 +36,7 @@ add_printer("/charpane.php", function()
 		local pwdhash = text:match([[var pwdhash = "([0-9a-f]+)";]])
 		local extra_js, fams = make_familiar_grid(favestr, pwdhash)
 		text = text:gsub("</head>", function(x) return extra_js .. x end)
-		text = text:gsub([[(<a target=mainpane href="familiar.php" class="familiarpick"><img src="http://images.kingdomofloathing.com/itemimages/)([^"]-)(.gif" width=30 height=30 )border=0(></a>)]], function (pre, fampic, y, z)
+		text = text:gsub([[(<a target=mainpane href="familiar.php" class="familiarpick"><img src="http://images.kingdomofloathing.com/itemimages/)([^"]-)(.gif" width=30 height=30 )border=0(></a>)]], function(pre, fampic, y, z)
 			fams[fampic] = { link = pre .. fampic .. y .. [[style="border: solid thin black"]] .. z }
 
 			local famnames = {}

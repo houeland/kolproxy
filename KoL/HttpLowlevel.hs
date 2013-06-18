@@ -26,6 +26,7 @@ import Network.TLS.Extra
 import Network.URI
 import Numeric (readHex)
 import System.IO
+--import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.ByteString
 import qualified Data.ByteString.Char8
 import qualified Data.ByteString.Lazy
@@ -41,6 +42,14 @@ doHTTPLOWLEVEL_DEBUG _ = return ()
 doHTTPLOWLEVEL_DEBUGexception _ = return ()
 --doHTTPLOWLEVEL_DEBUGexception x = putStrLn $ "HTTPlow DEBUGexc: " ++ x
 
+connDoMutexed a = a
+
+--{-# NOINLINE connmutexref #-}
+--connmutexref = unsafePerformIO (newMVar ())
+
+--connDoMutexed a = withMVar connmutexref (\_ -> a)
+
+
 class ConnFunctionsBundle a b | a -> b where
 	connGetBlock :: a -> Int -> IO b
 	connGetLine :: a -> IO String
@@ -49,18 +58,18 @@ class ConnFunctionsBundle a b | a -> b where
 	connGetContents :: a -> IO b
 
 instance ConnFunctionsBundle Handle Data.ByteString.ByteString where
-	connGetBlock conn size = Data.ByteString.hGet conn size
+	connGetBlock conn size = connDoMutexed $ Data.ByteString.hGet conn size
 
-	connGetLine conn = do
+	connGetLine conn = connDoMutexed $ do
 		x <- Data.ByteString.hGetLine conn
 -- 		putStrLn $ "connGetLine: " ++ (Data.ByteString.Char8.unpack x)
 		return $ (Data.ByteString.Char8.unpack x) ++ "\n"
 
-	connPut conn d = Data.ByteString.hPut conn (Data.ByteString.Char8.pack $ d)
+	connPut conn d = connDoMutexed $ Data.ByteString.hPut conn (Data.ByteString.Char8.pack $ d)
 
-	connFlush conn = hFlush conn
+	connFlush conn = connDoMutexed $ hFlush conn
 
-	connGetContents conn = Data.ByteString.hGetContents conn
+	connGetContents conn = connDoMutexed $ Data.ByteString.hGetContents conn
 
 data SslConn = SslConn {
 	sslconn_c :: TLSCtx,
@@ -225,6 +234,9 @@ simple_https_direct rq = do
 
 	return resresp
 
+mkCode resp = case rspCode resp of
+	(a, b, c) -> fromIntegral $ a * 100 + b * 10 + c
+
 doHTTPreq (absuri, rq) = do
 --	putStrLn $ "doHTTPreq: " ++ show absuri
 	use_proxy <- getEnvironmentSetting "KOLPROXY_USE_PROXY_SERVER"
@@ -232,7 +244,7 @@ doHTTPreq (absuri, rq) = do
 		(Nothing, "https:") -> simple_https_direct rq
 		_ -> simple_http_withproxy rq
 	case r of
-		Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, rspCode resp)
+		Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp)
 		Left ce -> do
 			putStrLn $ "doHTTPreq: " ++ (show ce)
 			throwIO $ InternalError $ "doHTTPreq[" ++ (show ce) ++ "]"
@@ -241,7 +253,7 @@ doHTTPSreq (absuri, rq) = do
 --	putStrLn $ "doHTTPSreq: " ++ show absuri
 	r <- simple_https_direct rq
 	case r of
-		Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, rspCode resp)
+		Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp)
 		Left ce -> do
 			putStrLn $ "doHTTPSreq: " ++ (show ce)
 			throwIO $ InternalError $ "doHTTPSreq[" ++ (show ce) ++ "]"
@@ -336,13 +348,12 @@ kolproxy_openTCPConnection server = do
 			catchIO (Network.BSD.getHostByName h)
 				(\ _ -> throwIO $ NetworkError $ ("openTCPConnection: host lookup failure for " ++ show h))
 
-mkconnthing server = do
+fast_mkconnthing server = do
 	-- TODO: merge stale-check and max-requests-check?
 	connmv <- newEmptyMVar
 	let open_conn = do
-		-- TODO: what happens if this fail? can it fail?
 		tnow <- getCurrentTime
-		c <- kolproxy_openTCPConnection server
+		c <- kolproxy_openTCPConnection server -- TODO: Handle connection errors, timeout
 		rchan <- newChan
 		req_counter <- newIORef 0
 		let run = do
@@ -359,7 +370,7 @@ mkconnthing server = do
 -- 								putStrLn $ "DEBUG: HTTP lowlevel GOT " ++ (show absuri) ++ " (" ++ show req_nr ++ ")"
 -- 								putStrLn $ "DEBUG: resp: " ++ show resp
 -- 								putStrLn $ "DEBUG: respbody: " ++ show (rspBody resp)
-								return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, rspCode resp, resp)) `catch` (\e -> do
+								return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)) `catch` (\e -> do
 									doHTTPLOWLEVEL_DEBUGexception $ "http read exception: " ++ (show (e :: SomeException))
 									throwIO e))
 							return (what, req_nr == 80)
@@ -450,8 +461,31 @@ mkconnthing server = do
 			cf x
 -- 			putStrLn $ "DEBUG connmv cfed x!: " ++ show debug_absuri
 			return (cf, t, p + 1, k)) `catch` (\e -> doHTTPLOWLEVEL_DEBUGexception $ "connchan error: " ++ (show (e :: SomeException))))
+
 	return connchan :: IO ConnChanType
 
+slow_mkconnthing _server = do
+	slowconnchan <- newChan
+	forkIO_ "HTTPlow:slowconnchan" $ forever $ ((do
+		(absuri, rq, mvdest, _ref) <- (readChan slowconnchan) `catch` (\e -> do
+			doHTTPLOWLEVEL_DEBUGexception $ "slowconnchan read exception: " ++ (show (e :: SomeException))
+			throwIO e)
+		use_proxy <- getEnvironmentSetting "KOLPROXY_USE_PROXY_SERVER"
+		auth <- case use_proxy of
+			Nothing -> getAuth rq
+			Just p -> getAuth $ Request { rqURI = fromJust $ parseURI $ ("proxy://" ++ p ++ "/"), rqMethod = GET, rqHeaders = [], rqBody = "" }
+		s <- openStream (host auth) $ fromMaybe 80 (port auth)
+		let nrq = normalizeRequest (defaultNormalizeRequestOptions { normDoClose = True, normForProxy = True }) rq
+		r <- Network.HTTP.HandleStream.sendHTTP s nrq
+		answer <- (try $ case r of
+			Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)
+			Left ce -> throwIO $ NetworkError $ "slowHTTP error: [" ++ (show ce) ++ "]") :: IO ConnChanActionType
+		putMVar mvdest answer) `catch` (\e -> doHTTPLOWLEVEL_DEBUGexception $ "slowconnchan error: " ++ (show (e :: SomeException))))
+
+	return slowconnchan :: IO ConnChanType
+
+mkconnthing = fast_mkconnthing
+--mkconnthing = slow_mkconnthing
 
 send_http_response h resp = do
 	-- TODO: check for errors?

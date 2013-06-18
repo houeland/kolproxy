@@ -53,6 +53,9 @@ if hascombatitem rock band flyers
   if (hasskill Broadside) && (!hascombatitem Rain-Doh blue balls)
     cast Broadside
   endif
+  if hasskill Blend
+    cast Blend
+  endif
   use rock band flyers
 endif
 
@@ -107,13 +110,32 @@ function shieldbutt_action()
 end
 
 function noodles_action()
-	return [[
+	if have_skill("Ambidextrous Funkslinging") then
+		return [[
 
   if hasskill Entangling Noodles
     cast Entangling Noodles
   endif
 
+  if hascombatitem Rain-Doh blue balls
+    use Rain-Doh blue balls, Rain-Doh indigo cup
+  endif
+
 ]]
+	else
+		return [[
+
+  if hasskill Entangling Noodles
+    cast Entangling Noodles
+  endif
+
+  if hascombatitem Rain-Doh blue balls
+    use Rain-Doh blue balls
+    use Rain-Doh indigo cup
+  endif
+
+]]
+	end
 end
 
 
@@ -179,7 +201,7 @@ end
 function fist_action()
   return [[
 
-if (monstername ghuol whelp || monstername chalkdust wraith)
+if (monstername ghuol whelp || monstername chalkdust wraith || monstername ghost)
   cast Cannelloni Cannon
 endif
 
@@ -334,7 +356,7 @@ end
 
 function macro_softcore_boris(extrastuff)
   local set_gaze = ""
-  if not have_intrinsic("Gaze of the Volcano God") and have_equipped("Juju Mojo Mask") then
+  if not have_intrinsic("Gaze of the Volcano God") and have_equipped("Juju Mojo Mask") and (challenge == "boris" or challenge == "zombie") then
     if have_intrinsic("Gaze of the Trickster God") or have_intrinsic("Gaze of the Lightning God") then
       stop("TODO: Somehow have the wrong gaze on!")
     end
@@ -378,7 +400,6 @@ endif
 ]]
   end
 
--- 
   local maybe_runaway = [[
 
 ]]
@@ -414,7 +435,7 @@ endif
 
 ]] .. maybe_runaway .. [[
 
-if hascombatitem Rain-Doh blue balls
+if (hascombatitem Rain-Doh blue balls) && (!monstername oil tycoon)
   use Rain-Doh blue balls
 endif
 
@@ -430,12 +451,19 @@ if monstername procrastination giant
   endif
   while !times 5
 ]] .. maybe_belch .. [[
+
+    if hasskill Boil
+      cast Boil
+    endif
   endwhile
   abort no SC spell for procrastination giant
 endif
 
 if monstername animated nightstand
   while !times 7
+    if hasskill Slice
+      cast Slice
+    endif
     use orange agent
   endwhile
 endif
@@ -701,6 +729,10 @@ goto start_loop
 end
 
 function macro_hardcore_boris(extrastuff)
+  local hplevel = 35
+  if challenge == "jarlsberg" then
+    hplevel = 10
+  end
   local maybe_bellow = [[
 
 ]]
@@ -751,7 +783,7 @@ endif
   end
   return [[
 
-]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
+]] .. COMMON_MACROSTUFF_START(20, hplevel) .. [[
 
 ]] .. maybe_broadside .. [[
 
@@ -767,6 +799,18 @@ if monstername procrastination giant
   endif
   while !times 5
 ]] .. maybe_belch .. [[
+    if hasskill Slice
+      cast Slice
+    endif
+    if hasskill Fry
+      cast Fry
+    endif
+    if hasskill Grill
+      cast Grill
+    endif
+    if hasskill Boil
+      cast Boil
+    endif
   endwhile
 ]] .. maybe_zombify .. [[
   abort no HC spell for procrastination giant
@@ -802,6 +846,9 @@ if (monstername chalkdust wraith)
   if hasskill Bilious Burst
     cast Bilious Burst
   endif
+  if hasskill Curdle
+    cast Curdle
+  endif
   cast Heroic Belch
 endif
 
@@ -814,11 +861,8 @@ endwhile
 ]]
 end
 
-function make_cannonsniff_macro(name)
-	local castolfaction = ""
-	if have_skill() then
-		castolfaction = "cast Transcendent Olfaction"
-	end
+function make_sniff_macro(name, action)
+	local castolfaction = "cast Transcendent Olfaction"
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
@@ -837,23 +881,38 @@ endif
 ]]..conditional_salve_action()..[[
 
 while !times 3
-]] .. cannon_action() .. [[
+]] .. action() .. [[
 endwhile
 
 ]]..conditional_salve_action()..[[
 
 while !times 2
-]] .. cannon_action() .. [[
+]] .. action() .. [[
 endwhile
 
 ]]
 end
 
-function macro_8bit_realm()
-	local castolfaction = ""
-	if have_skill() then
-		castolfaction = "cast Transcendent Olfaction"
+function make_cannonsniff_macro(name)
+	local cfm = getCurrentFightMonster()
+	--print("DEBUG: making cannonsniff macro for", name, "vs", cfm)
+	local physresist = 0
+	local cfmhp = 10
+	if cfm and cfm.Stats and cfm.Stats.Phys then
+		physresist = tonumber(cfm.Stats.Phys)
 	end
+	if cfm and cfm.Stats and cfm.Stats.HP then
+		cfmhp = tonumber(cfm.Stats.HP)
+	end
+	if physresist == 0 and cfmhp >= 100 then
+		return make_sniff_macro(name, serpent_action)
+	else
+		return make_sniff_macro(name, cannon_action)
+	end
+end
+
+function macro_8bit_realm()
+	local castolfaction = "cast Transcendent Olfaction"
 	return [[
 ]] .. COMMON_MACROSTUFF_START(25, 30) .. [[
 
@@ -890,6 +949,9 @@ sub stall
 endsub
 
 sub do_yellowray
+  if hascombatitem unbearable light
+    use unbearable light
+  endif
   while !times 15
 	if match "yellow eye"
 	  cast Point at your opponent
@@ -1210,10 +1272,7 @@ endif
 end
 
 function macro_orc_chasm()
-	local castolfaction = ""
-	if have_skill() then
-		castolfaction = "cast Transcendent Olfaction"
-	end
+	local castolfaction = "cast Transcendent Olfaction"
   local maybeuse334s = ""
   local function multiuse(item1, item2)
     if have_skill("Ambidextrous Funkslinging") then
@@ -1282,6 +1341,40 @@ endif
 ]]..conditional_salve_action()..[[
 
 while !times 3
+]] .. serpent_action() .. [[
+endwhile
+
+]]
+end
+
+function macro_softcore_lfm()
+  local maybe_blackbox = [[
+
+if monstername lobsterfrogman
+  use Rain-Doh black box
+endif
+
+]]
+  if count_item("barrel of gunpowder") >= 4 then
+    maybe_blackbox = ""
+  end
+  return [[
+
+if hascombatitem Rain-Doh indigo cup
+  use Rain-Doh indigo cup
+endif
+
+]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
+
+if hascombatitem Rain-Doh blue balls
+  use Rain-Doh blue balls
+endif
+
+]] .. COMMON_MACROSTUFF_FLYERS .. [[
+
+]] .. maybe_blackbox .. [[
+
+while !times 5
 ]] .. serpent_action() .. [[
 endwhile
 

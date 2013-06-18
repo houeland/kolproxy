@@ -83,6 +83,8 @@ consumable_items_high_impact = {
 	{ 1, { "Black No. 2" } },
 
 	{ 3, { "hot wing" } },
+
+	{ 6, { "smut orc keepsake box" } },
 }
 
 consumable_items_normal_impact = {
@@ -282,7 +284,7 @@ equipment_items = {
 	{ false, { "spangly mariachi pants" } },
 	{ false, { "quake of arrows" } },
 
-	{ false, { "Spooky Putty leotard", "Spooky Putty mitre", "Spooky Putty sheet", "Spooky Putty snake" } },
+	{ false, { "Spooky Putty leotard", "Spooky Putty mitre", "Spooky Putty sheet", "Spooky Putty snake", "Spooky Putty monster" } },
 	{ false, { "moveable feast" } },
 	{ false, { "jewel-eyed wizard hat" } },
 	{ false, { "stinky cheese ball", "stinky cheese sword", "stinky cheese diaper", "stinky cheese wheel", "stinky cheese eye", "Staff of Queso Escusado" } },
@@ -303,15 +305,6 @@ equipment_items = {
 	{ false, { "BRICKO airship" } },
 	{ false, { "ninja pirate zombie robot head" } },
 }
-
-local function extract_itemdata(itd)
-	local rel = itd:match([[rel=".-"]])
-	local id = tonumber(rel:match("id=([0-9]+)"))
-	local n = tonumber(rel:match("n=([0-9]+)"))
-	local ircmtext = itd:match([[<b class="ircm">(.-)</b>]])
-	local name = ircmtext:match([[<a.->(.-)</a>]]) or ircmtext
-	return name, id, n
-end
 
 function ascension_checklist_get_questitem_text()
 	if not freedralph() then return "" end
@@ -355,7 +348,16 @@ local cook_key_href = add_automation_script("custom-ascension-checklist-cook-key
 	end
 end)
 
-local href = add_automation_script("custom-ascension-checklist", function()
+function retrieve_all_item_locations()
+	local function extract_itemdata(itd)
+		local rel = itd:match([[rel=".-"]])
+		local id = tonumber(rel:match("id=([0-9]+)"))
+		local n = tonumber(rel:match("n=([0-9]+)"))
+		local ircmtext = itd:match([[<b class="ircm">(.-)</b>]])
+		local name = ircmtext:match([[<a.->(.-)</a>]]) or ircmtext
+		return name, id, n
+	end
+
 	local inventory = {}
 	local storage = {}
 	local closet = {}
@@ -395,6 +397,11 @@ local href = add_automation_script("custom-ascension-checklist", function()
 			end
 		end
 	end
+	return inventory, storage, closet
+end
+
+local href = add_automation_script("custom-ascension-checklist", function()
+	local inventory, storage, closet = retrieve_all_item_locations()
 
 	sorted_need_text = ""
 	sorted_have_text = ""
@@ -443,7 +450,7 @@ local href = add_automation_script("custom-ascension-checklist", function()
 		for _, x in ipairs(consumable_items_low_impact) do
 			handle_consumable(x, -100)
 		end
-		table.sort(sorted_mapped, function (a, b)
+		table.sort(sorted_mapped, function(a, b)
 			if a.importance ~= b.importance then return a.importance > b.importance end
 			if a.sortclass ~= b.sortclass then return a.sortclass < b.sortclass end
 			if a.total ~= b.total then return a.total < b.total end
@@ -498,7 +505,7 @@ local href = add_automation_script("custom-ascension-checklist", function()
 			end
 		end
 		if table.maxn(sorted_mapped) > 0 then
-			table.sort(sorted_mapped, function (a, b)
+			table.sort(sorted_mapped, function(a, b)
 				if a.sortclass ~= b.sortclass then return a.sortclass < b.sortclass end
 				return a.tr < b.tr
 			end)
@@ -561,6 +568,6 @@ function show_item_locations() {
 	return pt, requestpath
 end)
 
-add_printer("/ascend.php", function ()
+add_printer("/ascend.php", function()
 	text = text:gsub("Are you ready to take the plunge%?", [[%0 <a href="]] .. href { pwd = session.pwd } .. [[" style="color:green">{ Storage stocking checklist }</a>]])
 end)

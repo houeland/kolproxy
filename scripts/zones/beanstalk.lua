@@ -4,6 +4,7 @@ add_choice_text("Random Lack of an Encounter", { -- choice adventure number: 182
 	["Investigate the crew quarters"] = "Fight airship monster (MagiMechTech MechaMech if you have +20 ML or more)",
 	["Check the cargo hold"] = { getitem = "Penultimate Fantasy chest" },
 	["Head down to the galley"] = "Lose 40-50 HP, gain 18-40ish stats",
+	["Gallivant down to the head"] = { getitem = "model airship" },
 })
 
 add_choice_text("Hammering the Armory", { -- choice adventure number: 178
@@ -13,7 +14,7 @@ add_choice_text("Hammering the Armory", { -- choice adventure number: 178
 
 -- castle in the clouds in the sky
 
-add_choice_text("Wheel in the Clouds in the Sky, Keep On Turning", function ()
+add_choice_text("Wheel in the Clouds in the Sky, Keep On Turning", function()
 	if choice_adventure_number == 9 then
 		return {
 			["Turn the wheel clockwise"] = "Turn to mysticality",
@@ -41,36 +42,11 @@ add_choice_text("Wheel in the Clouds in the Sky, Keep On Turning", function ()
 	end
 end)
 
-add_printer("/starchart.php", function ()
-	local function make_link(name, stars, lines, name2, name3)
-		local got_it = have(name)
-		if not got_it and name2 and name3 then
-			got_it = have(name2) or have(name3)
-		end
-		if not got_it then
-			return [[<a href="javascript:makestaritem(]]..stars..[[, ]]..lines..[[)" style="color: green">{ ]]..name..[[ }</a>]]
-		else
-			return [[<span style="color: gray">{ ]]..name..[[ }</a>]]
-		end
-	end
-	text = string.gsub(text, "(name=)(num[a-z]+)(>)", "%1%2 id=%2%3") -- set IDs for inputs
-	text = string.gsub(text, [[<input class=button type=submit value="Combine!">]], [[%0<br>
-<script type="text/javascript">
-function makestaritem(stars, lines) {
-	document.getElementById('numstars').value = stars
-	document.getElementById('numlines').value = lines
-}
-</script>
-]]..make_link("Richard's star key", 8, 7)..[[<br>
-]]..make_link("star hat", 5, 3)..[[<br>
-]]..make_link("star crossbow", 5, 6, "star staff", "star sword")..[[ ]]..make_link("star staff", 6, 5, "star crossbow", "star sword")..[[ ]]..make_link("star sword", 7, 4, "star crossbow", "star staff"))
-end)
-
 add_itemdrop_counter("star chart", function(c)
 	return "{ " .. make_plural(c, "star chart", "star charts") .. " in inventory. }"
 end)
 
-add_printer("/beanstalk.php", function ()
+add_printer("/beanstalk.php", function()
 	local castle = text:match([[title="The Castle in the Clouds in the Sky %(1%)"]])
 	local hits = text:match([[title="The Hole in the Sky %(1%)"]])
 	if not castle then

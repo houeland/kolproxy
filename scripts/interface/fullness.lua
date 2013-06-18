@@ -1,14 +1,22 @@
+register_setting {
+	name = "show spleen counter",
+	description = "Show spleen counter",
+	group = "charpane",
+	default_level = "limited",
+}
+
 add_printer("/charpane.php", function()
 	if setting_enabled("use custom kolproxy charpane") then return end
+	if not setting_enabled("show spleen counter") then return end
 
 	if tonumber(api_flag_config().compactchar) == 1 then
-		text = text:gsub([[(<hr width=50%%>.-)(</table><hr width=50%%><table align=center cellpadding=1 cellspacing=1>)]], function (a, b)
+		text = text:gsub([[(<hr width=50%%>.-)(</table><hr width=50%%><table align=center cellpadding=1 cellspacing=1>)]], function(a, b)
 			local spleentext = ""
 			if spleen() > 0 then
 				spleentext = [[<tr><td align=right>Spleen:</td><td align=left><b>]] .. spleen() .. [[</b></td></tr>]]
 			end
 			if a:match(">Drunk:<") then
-				return a:gsub([[(.-)(<tr><td align=right>Drunk:</td><td align=left><b>[0-9,]-</b></td></tr>)]], function (x, y)
+				return a:gsub([[(.-)(<tr><td align=right>Drunk:</td><td align=left><b>[0-9,]-</b></td></tr>)]], function(x, y)
 					return x .. y .. spleentext
 				end) .. b
 			else
@@ -16,21 +24,23 @@ add_printer("/charpane.php", function()
 			end
 		end)
 	else
-		text = text:gsub([[^(.-)(<table cellpadding=3 align=center>)]], function (a, b)
+		local function addit(a, b)
 			local spleentext = ""
 			if spleen() > 0 then
 				local spleen_description = random_choice { "Spleen", "Melancholy", "Moroseness" }
 				spleentext = [[<tr><td align=right>]] .. spleen_description .. [[:</td><td><b>]] .. spleen() .. [[</b></td></tr>]]
 			end
 			if a:match("<tr><td align=right>[^<]-</td><td><b>[0-9,]-</b></td></tr>") then
-				return a:gsub([[(.-)(<tr><td align=right>[^<]-</td><td><b>[0-9,]-</b></td></tr>)]], function (x, y)
+				return a:gsub([[(.-)(<tr><td align=right>[^<]-</td><td><b>[0-9,]-</b></td></tr>)]], function(x, y)
 					return x .. y .. spleentext
 				end) .. b
 			else
 				return a:gsub("</table>$", function() return spleentext .. "</table>" .. b end)
 			end
 			return a .. b
-		end)
+		end
+		text = text:gsub([[^(.-)(<table cellpadding=3 align=center>)]], addit)
+		text = text:gsub([[^(.-)(<table><tr><td><img src=http://images.kingdomofloathing.com/itemimages/slimhp.gif)]], addit)
 	end
 end)
 
@@ -39,16 +49,21 @@ end)
 -- TODO: warn when drinking from cafes
 --   /cafe.php [("cafeid","1"),("pwd","..."),("action","CONSUME!"),("whichitem","1257")]
 
-local function retrieve_itemid_potency(itemid)
---	local item = maybe_get_itemdata(itemid)
---	if item and item.drunkenness then
---		return item.drunkenness
---	else
-		local descid = item_api_data(itemid).descid
+function retrieve_item_potency(item)
+	if not item then
+		print("WARNING: called retrieve_item_potency(" .. tostring(item) .. ")")
+		return
+	end
+	local d = maybe_get_itemdata(item)
+	local dn = maybe_get_itemname(item)
+	if d and d.drunkenness and dn and dn:contains("dusty bottle of") then
+		return d.drunkenness
+	else
+		local descid = item_api_data(get_itemid(item)).descid
 		local pt = get_page("/desc_item.php", { whichitem = descid })
 		local potency = tonumber(pt:match([[>Potency: <b>([0-9]*)</b><]]))
 		return potency
---	end
+	end
 end
 
 add_always_warning("/inv_booze.php", function()
@@ -61,7 +76,7 @@ add_always_warning("/inv_booze.php", function()
 		if not buff("Ode to Booze") then
 			return "You do not have Ode to Booze active.", "drinking without ode"
 		end
-		local potency = retrieve_itemid_potency(tonumber(params.whichitem))
+		local potency = retrieve_item_potency(tonumber(params.whichitem))
 		if not potency then
 			return "You might not have enough turns of Ode to Booze active (unspecified potency).", "drinking unspecified potency without enough turns of ode to booze"
 		end
@@ -74,7 +89,8 @@ end)
 
 add_always_warning("/inv_booze.php", function()
 	local safe = false
-	local potency = retrieve_itemid_potency(tonumber(params.whichitem))
+	local whichitem = tonumber(params.whichitem)
+	local potency = retrieve_item_potency(whichitem)
 	if potency and drunkenness() + potency * (tonumber(params.quantity) or 1) <= estimate_max_safe_drunkenness() then
 		safe = true
 	elseif whichitem == get_itemid("steel margarita") then
@@ -88,7 +104,8 @@ end)
 
 add_extra_always_warning("/inv_booze.php", function()
 	local safe = false
-	local potency = retrieve_itemid_potency(tonumber(params.whichitem))
+	local whichitem = tonumber(params.whichitem)
+	local potency = retrieve_item_potency(whichitem)
 
 	if not potency then
 		return "This booze could make you fallen-down drunk (unspecified potency).", "overdrinking unspecified potency"

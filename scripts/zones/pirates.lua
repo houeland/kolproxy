@@ -12,7 +12,7 @@ add_choice_text("A Test of Testarrrsterone", {
 	["Wuss out"] = "Gain moxie",
 })
 
-add_choice_text("Yes, You're a Rock Starrr", function ()
+add_choice_text("Yes, You're a Rock Starrr", function()
 	if drunkenness() == 0 then
 		return {
 			["Sing the high-pitched, densely harmonic &quot;Knob Goblin Rhapsody.&quot;"] = "Get 2-5 base booze",
@@ -50,6 +50,16 @@ add_choice_text("That Explains All The Eyepatches", function()
 		}
 	end
 end)
+
+-- TODO: check if fcle is unlocked instead?
+add_warning {
+	message = "You don't have an insult book.",
+	severity = "warning",
+	zone = "Barrrney's Barrr",
+	check = function()
+		return not ascensionstatus("Aftercore") and not have_item("The Big Book of Pirate Insults") and not have_item("Massive Manual of Marauder Mockery")
+	end,
+}
 
 add_processor("/fight.php", function()
 	if text:contains("The pirate sneers at you and replies") or text:contains("The pirate stammers for a moment") then
@@ -137,7 +147,7 @@ add_automator("/beerpong.php", function()
 	solve_beerpong(3)
 end)
 
-add_printer("/cove.php", function ()
+add_printer("/cove.php", function()
 	if not text:contains([[title="The F'c'le (1)"]]) then
 		local tbl = ascension["zone.pirates.insults"] or {}
 		local count = table.maxn(tbl)
@@ -147,11 +157,11 @@ add_printer("/cove.php", function ()
 		end
 		local status = string.format("<b>%s collected (%.1f%% chance)</b><br>", make_plural(count, "insult", "insults"), chance * 100)
 		status = status .. table.concat(tbl, "<br>")
-		text = text:gsub([[(</table>)(</body>)]], function (a, b) return a .. "<center>" .. status .. "</center>" .. b end)
+		text = text:gsub([[(</table>)(</body>)]], function(a, b) return a .. "<center>" .. status .. "</center>" .. b end)
 	end
 end)
 
-add_interceptor("use item: Orcish Frat House blueprints", function () -- TODO: split off warning and automation as separate things!
+add_interceptor("use item: Orcish Frat House blueprints", function() -- TODO: split off warning and automation as separate things!
 	if not setting_enabled("automate simple tasks") then return end
 	local options = {
 		{ choicenum = 1, equipment = { hat = "Orcish baseball cap", weapon = "homoerotic frat-paddle", pants = "Orcish cargo shorts" } },

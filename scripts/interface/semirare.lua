@@ -1,7 +1,7 @@
-add_processor("/inv_eat.php", function ()
+add_processor("/inv_eat.php", function()
 	local cookienumbers = {}
 	local num_cookies = 0
-	local add_number = function (x)
+	local add_number = function(x)
 		if x > 200 then return end -- A semirare is never further than 200 turns away
 		if not cookienumbers[x] then cookienumbers[x] = 0 end
 		cookienumbers[x] = cookienumbers[x] + 1
@@ -48,7 +48,7 @@ end)
 function get_semirare_info(turn)
 	local isoxy = (ascensionpathname() == "Oxygenarian")
 
-	local lastturn = tonumber(ascension["last semirare turn"])
+	local lastturn = tonumber((ascension["last semirare"] or {}).turn)
 	local is_first_semi = false
 	local SRmin = nil
 	local SRmax = nil
@@ -91,7 +91,7 @@ function get_semirare_info(turn)
 		end
 	end
 
-	local lastsemi = ascension["last semirare encounter"]
+	local lastsemi = (ascension["last semirare"] or {}).encounter
 
 	return SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi
 end

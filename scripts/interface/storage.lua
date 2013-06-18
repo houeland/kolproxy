@@ -24,6 +24,13 @@ aftercore_items_list = {
 	"stinky cheese eye",
 	"ice sickle",
 	"Crown of Thrones",
+	"right bear arm",
+	"left bear arm",
+	"Snow Suit",
+	"Boris's Helm",
+	"Boris's Helm (askew)",
+	"Jarlsberg's pan",
+	"Jarlsberg's pan (Cosmic portal mode)",
 
 	"plexiglass pants",
 	"plexiglass pendant",
@@ -45,6 +52,8 @@ aftercore_items_list = {
 	"stainless steel suspenders",
 
 	"aerated diving helmet",
+	"fishy pipe",
+
 	"bounty-hunting helmet",
 	"bounty-hunting rifle",
 	"bounty-hunting pants",
@@ -166,8 +175,33 @@ aftercore_items_list = {
 	"offensive moustache",
 
 	"can of Rain-Doh",
+
 	"Trivial Avocations board game",
+	"Jackass Plumber home game",
+
 	"KoL Con Six Pack",
+
+	"Goggles of Loathing",
+	"Stick-Knife of Loathing",
+	"Scepter of Loathing",
+	"Jeans of Loathing",
+	"Treads of Loathing",
+	"Belt of Loathing",
+	"Pocket Square of Loathing",
+
+	"Lens of Hatred",
+	"Staff of Simmering Hatred",
+	"Cold Stone of Hatred",
+	"Pantaloons of Hatred",
+	"Fuzzy Slippers of Hatred",
+	"Girdle of Hatred",
+
+	"Lens of Violence",
+	"Pigsticker of Violence",
+	"Brand of Violence",
+	"Jodhpurs of Violence",
+	"Ass-Stompers of Violence",
+	"Novelty Belt Buckle of Violence",
 }
 
 maybe_pvp_stealable = {
@@ -275,7 +309,7 @@ local function extract_itemdata(itd)
 	return name, id, n
 end
 
-local closet_href = add_automation_script("automate-closet", function ()
+local closet_href = add_automation_script("automate-closet", function()
 	local keep_items = {}
 	for _, x in ipairs(aftercore_items_list) do
 		keep_items[get_itemid(x)] = true
@@ -292,15 +326,14 @@ local closet_href = add_automation_script("automate-closet", function ()
 	return get_page("/closet.php")
 end)
 
-add_printer("/closet.php", function ()
+add_printer("/closet.php", function()
 	local pwd = text:match[[name="pwd" *value="(%x-)"]]
 	if pwd then
 		text = text:gsub([[%[Fill Your Closet%]</a>]], [[%0 <a href="]].. closet_href { pwd = pwd } ..[[" style="color:green">{ Closet some items }</a>]])
 	end
 end)
 
-
-local pull_href = add_automation_script("automate-aftercore-pulls", function ()
+function automate_aftercore_pulls()
 	local items = {}
 	for which in table.values { 1, 2, 3 } do
 		local pt, pturl = get_page("/storage.php", { which = which })
@@ -325,9 +358,11 @@ local pull_href = add_automation_script("automate-aftercore-pulls", function ()
 	repeat_send_form("/storage.php", "pull", "1", params.pwd, itemids)
 
 	return get_page("/storage.php", { which = 5 })
-end)
+end
 
-add_printer("/storage.php", function ()
+local pull_href = add_automation_script("automate-aftercore-pulls", automate_aftercore_pulls)
+
+add_printer("/storage.php", function()
 	local pwd = text:match[[name=pwd value='(%x-)']]
 	if pwd then
 		text = text:gsub([[<input type=submit class=button value="Take all your stuff out of Hagnk's">]], [[<center><a href="]].. pull_href { pwd = pwd } ..[[" style="color:green">{ Pull some items }</a></center><p>%0]])

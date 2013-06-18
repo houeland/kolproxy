@@ -92,7 +92,7 @@ getRawCharpaneText ref = nochangeGetPageRawNoScripts "/charpane.php" ref
 -- Downloading utility methods. TODO: put these elsewhere
 
 postPageRawNoScripts url params ref = do
-	(body, goturi, _) <- join $ fst <$> (nochangeRawRetrievePageFunc ref) ref (mkuri url) (Just params) True
+	(body, goturi, _, _) <- join $ fst <$> (nochangeRawRetrievePageFunc ref) ref (mkuri url) (Just params) True
 	if ((uriPath goturi) == (uriPath $ mkuri url))
 		then return body
 		else do
@@ -105,7 +105,7 @@ postPageRawNoScripts url params ref = do
 rawAsyncNochangeGetPageRawNoScripts url ref = do
 	f <- fst <$> (nochangeRawRetrievePageFunc ref) ref (mkuri url) Nothing False
 	return $ do
-		(body, goturi, _) <- f
+		(body, goturi, _, _) <- f
 		if ((uriPath goturi) == (uriPath $ mkuri url))
 			then return body
 			else do

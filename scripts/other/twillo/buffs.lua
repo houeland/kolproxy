@@ -1,25 +1,25 @@
-function get_buff_bonuses()
+function estimate_current_buff_bonuses()
 	local bonuses = {}
 	local buffarray = {
-		["Sole Soul"] = { item = math.min(buffturns("Sole Soul"), 300) },
-		["The HeyDezebound Heart"] = { item = math.min(buffturns("The HeyDezebound Heart"), 300) },
-		["Bubble Vision"] = { item = math.max(101 - buffturns("Bubble Vision"), 0) },
-		["Polka Face"] = { item = math.min(55, 5 * level()), meat = math.min(55, 5 * level()) },
-		["Withered Heart"] = { item = math.min(buffturns("Withered Heart"), 20) },
-		["Fortunate Resolve"] = { item = 5, meat = 5, initiative = 5 },
+		["Sole Soul"] = { ["Item Drops from Monsters"] = math.min(buffturns("Sole Soul"), 300) },
+		["The HeyDezebound Heart"] = { ["Item Drops from Monsters"] = math.min(buffturns("The HeyDezebound Heart"), 300) },
+		["Bubble Vision"] = { ["Item Drops from Monsters"] = math.max(101 - buffturns("Bubble Vision"), 0) },
+		["Polka Face"] = { ["Item Drops from Monsters"] = math.min(55, 5 * level()), ["Meat from Monsters"] = math.min(55, 5 * level()) },
+		["Withered Heart"] = { ["Item Drops from Monsters"] = math.min(buffturns("Withered Heart"), 20) },
+		["Fortunate Resolve"] = { ["Item Drops from Monsters"] = 5, ["Meat from Monsters"] = 5, ["Combat Initiative"] = 5 },
 		-- ["Limber as Mortimer"] = ...,
-		["Voracious Gorging"] = { item = math.min(40, math.ceil(fullness() / 5) * 10) },
+		["Voracious Gorging"] = { ["Item Drops from Monsters"] = math.min(40, math.ceil(fullness() / 5) * 10) },
 
-		["Cunctatitis"] = { initiative = -1000 },
+		["Cunctatitis"] = { ["Combat Initiative"] = -1000 },
 
-		["Buy!  Sell!  Buy!  Sell!"] = { meat = math.max(202 - 2 * buffturns("Buy!  Sell!  Buy!  Sell!"), 0) },
-		["Sweet Heart"] = { meat = math.min(2 * buffturns("Sweet Heart"), 40) },
+		["Buy!  Sell!  Buy!  Sell!"] = { ["Meat from Monsters"] = math.max(202 - 2 * buffturns("Buy!  Sell!  Buy!  Sell!"), 0) },
+		["Sweet Heart"] = { ["Meat from Monsters"] = math.min(2 * buffturns("Sweet Heart"), 40) },
 
-		["Ur-Kel's Aria of Annoyance"] = { ml = math.min(2 * level(), 60) },
-		["Mysteriously Handsome"] = { ml = 6 }, -- Not for men
-		["A Little Bit Evil"] = { ml = 2 },
+		["Ur-Kel's Aria of Annoyance"] = { ["Monster Level"] = math.min(2 * level(), 60) },
+		["Mysteriously Handsome"] = { ["Monster Level"] = 6 }, -- Not for men
+		["A Little Bit Evil"] = { ["Monster Level"] = 2 },
 
-		["Amorous Avarice"] = { meat = 25 * math.min(math.floor(drunkenness() / 5), 4) },
+		["Amorous Avarice"] = { ["Meat from Monsters"] = 25 * math.min(math.floor(drunkenness() / 5), 4) },
 	}
 	for buff, _ in pairs(buffslist()) do
 		if buffarray[buff] then
@@ -30,15 +30,15 @@ function get_buff_bonuses()
 	end
 	if equipment().weapon == nil and equipment().offhand == nil then -- unarmed
 		if have_intrinsic("Expert Timing") then
-			add_modifier_bonuses(bonuses, { item = 20 })
+			add_modifier_bonuses(bonuses, { ["Item Drops from Monsters"] = 20 })
 		end
 		if have_intrinsic("Fast as Lightning") then
-			add_modifier_bonuses(bonuses, { initiative = 50 })
+			add_modifier_bonuses(bonuses, { ["Combat Initiative"] = 50 })
 		end
 	end
 
 	if have_intrinsic("Overconfident") then
-		add_modifier_bonuses(bonuses, { ml = 30 })
+		add_modifier_bonuses(bonuses, { ["Monster Level"] = 30 })
 	end
 
 	return bonuses

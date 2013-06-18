@@ -10,7 +10,7 @@ local bees = {
 	["a Queen Bee"] = true,
 }
 
-add_processor("/fight.php", function ()
+add_processor("/fight.php", function()
 	if bees[monster_name] then
 		ascension["bee turn"] = turnsthisrun() + 15
 	end

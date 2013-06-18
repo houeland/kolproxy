@@ -41,11 +41,16 @@ local blacklist = {
 	["bonuses: frosty halo"] = true,
 
 	["recast buff warning: Overconfident"] = true,
+
+	["Dungeons of Doom"] = true,
 }
 
 local processed_datafiles = {}
 
-local softwarn = function() end
+local softwarn = function()
+	-- Errors that are just too frequent to spam warnings for
+end
+
 local function hardwarn(...)
 	print("WARNING: downloaded data files inconsistent,", ...)
 end
@@ -72,18 +77,16 @@ local function split_tabbed_line(l)
 end
 
 local function split_commaseparated(l)
-	return split_line_on(",", l)
+	return split_line_on(",", l:gsub(", ", ","))
 end
 
 local function parse_mafia_bonuslist(bonuslist)
 	local checks = {
-		-- TODO: +++ change these legacy ones +++
-		["Initiative"] = "initiative", -- Combat Initiative
-		["Item Drop"] = "item", -- Item Drops from Monsters
-		["Meat Drop"] = "meat", -- Meat from Monsters
-		["Monster Level"] = "ml", -- -100 to Monster Level
-		["Combat Rate"] = "combat", -- Monsters will be more attracted to you.
-		-- TODO: --- change these legacy ones ---
+		["Initiative"] = "Combat Initiative",
+		["Item Drop"] = "Item Drops from Monsters",
+		["Meat Drop"] = "Meat from Monsters",
+		["Monster Level"] = "Monster Level",
+		["Combat Rate"] = "Monsters will be more attracted to you",
 
 		["Muscle"] = "Muscle",
 		["Mysticality"] = "Mysticality",
@@ -124,15 +127,19 @@ local function parse_mafia_bonuslist(bonuslist)
 		["Maximum MP"] = "Maximum MP",
 
 		["HP Regen Min"] = "Regenerate minimum HP per adventure", -- Regenerate 10-15 HP and MP per adventure
-		["MP Regen Max"] = "Regenerate maximum HP per adventure",
+		["HP Regen Max"] = "Regenerate maximum HP per adventure",
 		["MP Regen Min"] = "Regenerate minimum MP per adventure",
 		["MP Regen Max"] = "Regenerate maximum MP per adventure",
+
+		["Food Drop"] = "Food Drops from Monsters",
+		["Booze Drop"] = "Booze Drops from Monsters",
 
 		-- TODO: add more modifiers
 	}
 
 	local bonuses = {}
 	for x, y in (", "..bonuslist):gmatch(", ([^,:]+): ([^,]+)") do
+		-- TODO: Do more complicated parsing for expressions
 		if checks[x] then
 			bonuses[checks[x]] = tonumber(y)
 		end
@@ -164,7 +171,7 @@ function parse_buffs()
 end
 
 function verify_buffs(data)
-	if data["Peppermint Twisted"].bonuses.initiative == 40 and data["Peppermint Twisted"].bonuses.ml == 10 and data["Peeled Eyeballs"].bonuses.meat == -20 then
+	if data["Peppermint Twisted"].bonuses["Combat Initiative"] == 40 and data["Peppermint Twisted"].bonuses["Monster Level"] == 10 and data["Peeled Eyeballs"].bonuses["Meat from Monsters"] == -20 then
 		return data
 	end
 end
@@ -201,7 +208,7 @@ function verify_outfits(data)
 		end
 	end
 
-	if data["Antique Arms and Armor"].bonuses.initiative == -10 and data["Pork Elf Prizes"].bonuses.item == 10 and data["Pork Elf Prizes"].items[2] == "pig-iron helm" then
+	if data["Antique Arms and Armor"].bonuses["Combat Initiative"] == -10 and data["Pork Elf Prizes"].bonuses["Item Drops from Monsters"] == 10 and data["Pork Elf Prizes"].items[2] == "pig-iron helm" then
 		return data
 	end
 end
@@ -263,15 +270,15 @@ function parse_items()
 	local itemslots = { hat = "hat", shirt = "shirt", container = "container", weapon = "weapon", offhand = "offhand", pants = "pants", accessory = "accessory", familiar = "familiarequip" }
 	for l in io.lines("cache/files/items.txt") do
 		local tbl = split_tabbed_line(l)
-		local itemid, name, picture, itemusestr, plural = tonumber(tbl[1]), tbl[2], tbl[4], tbl[5], tbl[8]
-		if picture then
-			picture = picture:gsub("%.gif$", "")
-		end
+		local itemid, name, picturestr, itemusestr, plural = tonumber(tbl[1]), tbl[2], tbl[4], tbl[5], tbl[8]
+		local picture = (picturestr or ""):match("^(.-)%.gif$")
 		if itemid and name and not blacklist[name] then
-			items[name] = { id = itemid }
+			items[name] = { id = itemid, picture = picture }
 			lowercasemap[name:lower()] = name
 			for _, u in ipairs(split_commaseparated(itemusestr or "")) do
-				items[name].equipment_slot = itemslots[u]
+				if itemslots[u] then
+					items[name].equipment_slot = itemslots[u]
+				end
 			end
 		end
 	end
@@ -311,7 +318,7 @@ function parse_items()
 
 	for l in io.lines("cache/files/equipment.txt") do
 		local tbl = split_tabbed_line(l)
-		local name, power, req = tbl[1], tbl[2], tbl[3]
+		local name, power, req, weaptype = tbl[1], tonumber(tbl[2]), tbl[3], tbl[4]
 		if name and req and not blacklist[name] then
 			if items[name] then
 				local reqtbl = {}
@@ -329,6 +336,7 @@ function parse_items()
 				end
 				items[name].equip_requirement = reqtbl
 				items[name].power = power
+				items[name].weapon_hands = tonumber((weaptype or ""):match("^([0-9]+)%-handed"))
 			else
 				hardwarn("equipment:item does not exist", name)
 			end
@@ -347,6 +355,27 @@ function parse_items()
 			else
 				hardwarn("modifiers:item does not exist", name)
 			end
+		elseif section == "Everything Else" and name and bonuslist and bonuslist:contains("Effect:") then
+			local effect = bonuslist:match([[Effect: "(.-)"]])
+			if not effect then
+				hardwarn("modifiers:useitem effect does not exist", name, effect)
+			elseif items[name] then
+				items[name].use_effect = effect
+			elseif not name:match("^# ") then
+				hardwarn("modifiers:useitem does not exist", name, effect)
+			end
+		end
+	end
+
+	for l in io.lines("cache/files/statuseffects.txt") do
+		local n, i = l:match("[0-9]*	([^	]+)	.*use 1 (.+)")
+		if n and i and items[i] then
+			if not processed_datafiles["buffs"][n] then
+				softwarn("statuseffects:buff does not exist", n)
+			elseif not items[i].use_effect then
+				softwarn("modifiers/statuseffects mismatch", i, n)
+				items[i].use_effect = n
+			end
 		end
 	end
 
@@ -356,7 +385,162 @@ end
 function verify_items(data)
 	if data["Orcish Frat House blueprints"] and data["Boris's Helm"] then
 		if data["Hell ramen"].fullness == 6 and data["water purification pills"].drunkenness == 3 and data["beastly paste"].spleen == 4 then
-			return data
+			if data["leather chaps"].equip_requirement.moxie == 65 then
+				if data["dried gelatinous cube"].id == 6256 then
+					if data["flaming pink shirt"].equipment_slot == "shirt" then
+						return data
+					end
+				end
+			end
+		end
+	end
+	local testitems = {}
+	for _, x in ipairs { "Orcish Frat House blueprints", "Hell ramen", "water purification pills", "beastly paste", "leather chaps", "dried gelatinous cube", "flaming pink shirt" } do
+		testitems[x] = data[x]
+	end
+	hardwarn("verify_items failure:", table_to_json(testitems))
+end
+
+local function parse_monster_stats(stats)
+	if stats == "" then
+		return {}
+	end
+	local statstbl = {}
+	local i = 1
+	if stats:match("^BOSS ") then
+		statstbl.boss = true
+		i = i + 5
+	end
+	stats = stats .. " "
+	while i <= #stats do
+		local ch = stats:byte(i)
+		local name, value, pos
+		if ch == 0x22 then -- quoted string
+			name = "WatchOut"
+			value, pos = stats:match('^"([^"]*)" ()', i)
+		else
+			name, value, pos = stats:match("^([^:]+): ([^ ]+) ()", i)
+			if name and value then
+				if tonumber(value) then
+					value = tonumber(value)
+				elseif value:match("^%[.*%]$") then
+					value = "mafiaexpression:" .. value
+				elseif name == "Meat" then
+					local lo, hi = value:match("^([0-9]+)%-([0-9]+)$")
+					lo, hi = tonumber(lo), tonumber(hi)
+					if lo and hi then
+						value = math.floor((lo + hi) / 2)
+						if value * 2 ~= lo + hi then
+							softwarn("bad monster meat value", value, lo, hi)
+						end
+					end
+				end
+
+				if name == "P" then
+					name = "Phylum"
+				elseif name == "E" or name == "ED" then
+					name = "Element"
+				end
+
+				if name == "Init" and value == -10000 then
+					value = 0
+				end
+			end
+		end
+		if not name or not value then
+			print("ERROR: failed to parse monster stat", stats:sub(i))
+			return statstbl
+		end
+		statstbl[name] = value
+		i = pos
+	end
+	return statstbl
+end
+
+local prefixkeys = {
+	p = "pickpocket only",
+	n = "no pickpocket",
+	b = "bounty",
+	c = "conditional",
+	f = "fixed",
+}
+
+local function parse_monster_items(items)
+	if #items == 0 then return nil end
+	itemtbl = {}
+	for _, item in ipairs(items) do
+		local name, prefix, rate =  item:match("^(.*) %(([pnbcf]*)(%d+)%)$")
+
+		if not name then
+			-- a few items are missing drop rates
+			name = item
+		end
+		local nameitemid = tonumber(name:match("^%[([0-9]+)%]$"))
+		if nameitemid then
+			for n, d in pairs(processed_datafiles["items"]) do
+				if d.id == nameitemid then
+					name = n
+				end
+			end
+		end
+
+		local itementry = {
+			Name = name,
+		}
+		rate = tonumber(rate)
+		if rate and rate > 0 then
+			itementry.Chance = rate
+		end
+		if prefix and prefix ~= "" then
+			itementry[prefixkeys[prefix]] = true
+			if prefix == "b" then
+				itementry.Chance = 100
+			end
+		end
+		table.insert(itemtbl, itementry)
+	end
+	return itemtbl
+end
+
+function parse_monsters()
+	local monsters = {}
+	for l in io.lines("cache/files/monsters.txt") do
+		local tbl = split_tabbed_line(l)
+		local name, stats = tbl[1], tbl[2]
+		if not l:match("^#") and name and stats then
+			--print("DEBUG parsing monster", name)
+			table.remove(tbl, 1)
+			table.remove(tbl, 1)
+			local items = tbl
+			monsters[name:lower()] = {
+				Stats = parse_monster_stats(stats),
+				Items = parse_monster_items(items),
+			}
+		end
+	end
+	return monsters
+end
+
+function verify_monsters(data)
+	for xi, x in pairs(data) do
+		for _, y in ipairs(x.Items or {}) do
+			if not processed_datafiles["items"][y.Name] then
+				hardwarn("monster:item does not exist", y.Name, "(from " .. tostring(xi) .. ")")
+			end
+		end
+	end
+
+	local cube_ok = false
+	for _, x in ipairs(data["hellion"].Items) do
+		if x.Name == "hellion cube" then
+			cube_ok = true
+		end
+	end
+	if data["hellion"].Stats.Element == "hot" and data["hellion"].Stats.Phylum == "demon" and data["hellion"].Stats.HP == 52 then
+		if data["hank north, photojournalist"].Stats.HP == 180 then
+			if data["beefy bodyguard bat"].Stats.Meat == 250 then
+				return data
+			end
 		end
 	end
 end
@@ -379,6 +563,31 @@ function verify_hatrack(data)
 		if data["asbestos helmet turtle"]:lower():contains("fairy") and data["asbestos helmet turtle"]:contains("20") then
 			return data
 		end
+	end
+end
+
+function parse_recipes()
+	local recipes = {}
+	local function add_recipe(item, tbl)
+		if not recipes[item] then
+			recipes[item] = {}
+		end
+		table.insert(recipes[item], tbl)
+	end
+	for l in io.lines("cache/files/concoctions.txt") do
+		local tbl = split_tabbed_line(l)
+		if tbl[2] == "CLIPART" then
+			add_recipe(tbl[1], { type = "cliparts", clips = { tonumber(tbl[3]), tonumber(tbl[4]), tonumber(tbl[5]) } })
+		end
+	end
+
+	return recipes
+end
+
+function verify_recipes(data)
+	local xray = data["potion of X-ray vision"][1]
+	if xray.clips[1] == 4 and xray.clips[2] == 6 and xray.clips[3] == 8 then
+		return data
 	end
 end
 
@@ -429,7 +638,7 @@ function verify_enthroned_familiars(data)
 		end
 	end
 
-	if data["Leprechaun"].meat == 20 and data["Feral Kobold"].item == 15 then
+	if data["Leprechaun"]["Meat from Monsters"] == 20 and data["Feral Kobold"]["Item Drops from Monsters"] == 15 then
 		return data
 	end
 end
@@ -541,7 +750,7 @@ function parse_mallprices()
 end
 
 function verify_mallprices(data)
-	if data["Mr. Accessory"] >= 1000000 and data["Mr. Accessory"] <= 100000000 and data["Mick's IcyVapoHotness Inhaler"] >= 200 and data["Mick's IcyVapoHotness Inhaler"] <= 200000 then
+	if data["Mr. Accessory"]["buy 10"] >= 1000000 and data["Mr. Accessory"]["buy 10"] <= 100000000 and data["Mick's IcyVapoHotness Inhaler"]["buy 10"] >= 200 and data["Mick's IcyVapoHotness Inhaler"]["buy 10"] <= 200000 then
 		return data
 	end
 end
@@ -558,6 +767,102 @@ function verify_consumables(data)
 	if data["Hell ramen"].type == "food" and data["Hell ramen"].size[1] == 6 and data["Hell ramen"].advmin == 22 and data["Hell ramen"].advmax == 28 then
 		if data["beastly paste"].type == "spleen" and data["beastly paste"].size[3] == 4 and data["beastly paste"].advmin == 5 and data["beastly paste"].advmax == 10 then
 				return data
+		end
+	end
+end
+
+function parse_zones()
+	local fobj = io.open("cache/files/zones.json")
+	local zones_datafile = fobj:read("*a")
+	fobj:close()
+	zones_datafile = json_to_table(zones_datafile)
+
+	local mafia_adventures = {}
+	local mafia_adventures_inverse = {}
+	for l in io.lines("cache/files/adventures.txt") do
+		local tbl = split_tabbed_line(l)
+		if tbl[2] and tbl[4] then
+			local zoneid = tonumber(tbl[2]:match("adventure=([0-9]*)"))
+			if zoneid then
+				mafia_adventures[tbl[4]] = zoneid
+				mafia_adventures_inverse[zoneid] = tbl[4]
+			end
+		end
+	end
+
+	local mafia_combats = {}
+	local found_valid = false
+	local mafia_zoneid_monsters = {}
+	for l in io.lines("cache/files/combats.txt") do
+		local tbl = split_tabbed_line(l)
+		if mafia_adventures[tbl[1]] then
+			local monsters = {}
+			for xidx, x in ipairs(tbl) do
+				if xidx >= 3 then
+					local xprefix = x:match("^(.+): [0-9oe-]+$")
+					table.insert(monsters, xprefix or x)
+				end
+			end
+			--print("DEBUG zone", tbl[1], mafia_adventures[tbl[1]], table.concat(monsters, " + "))
+			mafia_zoneid_monsters[mafia_adventures[tbl[1]]] = monsters
+			found_valid = true
+		elseif found_valid and tbl[1] and tbl[1] ~= "" and not l:match("^#") and tbl[2] ~= "0" then
+			softwarn("unknown adventure zone", tbl[1])
+		end
+	end
+
+	local zones_by_number = {}
+
+	local zones_datafile_inverse = {}
+	for a, b in pairs(zones_datafile) do
+		if not mafia_adventures[a] then
+			softwarn("Zone mismatch", a, "vs", mafia_adventures_inverse[b.zoneid])
+		end
+		if b.zoneid then
+			zones_datafile_inverse[b.zoneid] = a
+			zones_by_number[b.zoneid] = a
+		end
+	end
+
+	for a, b in pairs(mafia_adventures) do
+		if not zones_datafile[a] then
+			softwarn("Zone mismatch", zones_datafile_inverse[b], "vs", a)
+		end
+		if not zones_by_number[b] then
+			zones_by_number[b] = a
+		end
+	end
+
+	local zones = {}
+	for a, b in pairs(zones_by_number) do
+		local z = zones_datafile[b] or {}
+		z.zoneid = z.zoneid or a
+		if not mafia_zoneid_monsters[z.zoneid] then
+			softwarn("zones:unknown monsters in", z.zoneid, b)
+		end
+		local monsters = mafia_zoneid_monsters[z.zoneid] or {}
+		table.sort(monsters)
+		z.monsters = z.monsters or monsters
+		zones[b] = z
+	end
+
+	return zones
+end
+
+function verify_zones(data)
+	for a, b in pairs(data) do
+		for _, x in ipairs(b.monsters) do
+			if not processed_datafiles["monsters"][x:lower()] then
+				hardwarn("zones:unknown monster", x, "in", a)
+			end
+		end
+	end
+
+	if data["The Dungeons of Doom"].zoneid == 39 then
+		if data["McMillicancuddy's Farm"].zoneid == 155 then
+			if data["The Spooky Forest"].zoneid == 15 and data["The Spooky Forest"]["combat rate"] == 85 then
+				return data
+			end
 		end
 	end
 end
@@ -622,13 +927,17 @@ process("choice spoilers")
 process("familiars")
 process("enthroned familiars")
 
+process("buffs")
+
 process("items")
 process("outfits")
 process("hatrack")
+process("recipes")
 
-process("buffs")
 process("skills")
 process("buff recast skills")
+
+process("monsters")
 
 process("faxbot monsters")
 
@@ -636,3 +945,5 @@ process("semirares")
 
 process("mallprices")
 process("consumables")
+
+process("zones")

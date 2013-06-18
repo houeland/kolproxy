@@ -1,13 +1,53 @@
+add_processor("/desc_item.php", function()
+	name, left, right, word = text:match([[<b>(a [a-z]- paper strip)</b>.-title="A ([a-z-]-) tear".-title="A ([a-z-]-) tear".-<font size=%+1><b>([A-Z]-)</b></font>]])
+	if name and left and right and word then
+		local tbl = session["zone.cave.paper strips"] or {}
+		tbl[name] = { left = left, right = right, word = word }
+		session["zone.cave.paper strips"] = tbl
+	end
+end)
+
+function check_nemesis_paper_strips()
+	async_get_page("/desc_item.php", { whichitem = "776620628" })
+	async_get_page("/desc_item.php", { whichitem = "298163869" })
+	async_get_page("/desc_item.php", { whichitem = "564255755" })
+	async_get_page("/desc_item.php", { whichitem = "411336587" })
+	async_get_page("/desc_item.php", { whichitem = "626990413" })
+	async_get_page("/desc_item.php", { whichitem = "647825911" })
+	async_get_page("/desc_item.php", { whichitem = "153915446" })
+	get_page("/desc_item.php", { whichitem = "148513878" })
+end
+
+function determine_nemesis_paper_strips_password()
+	local tbl = session["zone.cave.paper strips"] or {}
+	local right_sides = {}
+	local left_sides = {}
+	local count = 0
+	local solution = nil
+	for a,b in pairs(tbl) do
+		right_sides[b.right] = a
+		left_sides[b.left] = a
+		count = count + 1
+	end
+	if count == 8 then
+		where = nil
+		for a, b in pairs(left_sides) do
+			if right_sides[a] == nil then
+				where = b
+			end
+		end
+		solution = ""
+		while where do
+			solution = solution .. tbl[where].word
+			where = left_sides[tbl[where].right]
+		end
+	end
+	return count, solution
+end
+
 add_automator("/cave.php", function()
 	if params.action == "door4" then
-		async_get_page("/desc_item.php", { whichitem = "776620628" })
-		async_get_page("/desc_item.php", { whichitem = "298163869" })
-		async_get_page("/desc_item.php", { whichitem = "564255755" })
-		async_get_page("/desc_item.php", { whichitem = "411336587" })
-		async_get_page("/desc_item.php", { whichitem = "626990413" })
-		async_get_page("/desc_item.php", { whichitem = "647825911" })
-		async_get_page("/desc_item.php", { whichitem = "153915446" })
-		get_page("/desc_item.php", { whichitem = "148513878" })
+		check_nemesis_paper_strips()
 	end
 end)
 
@@ -46,40 +86,11 @@ add_printer("/cave.php", function()
 	end
 
 	if text:match("SPEAK THE PASSWORD TO ENTER") then
-		local tbl = session["zone.cave.paper strips"] or {}
-		right_sides = {}
-		left_sides = {}
-		strips = {}
-		count = 0
-		for a,b in pairs(tbl) do
-			right_sides[b.right] = a
-			left_sides[b.left] = a
-			count = count + 1
-		end
-		if count == 8 then
-			where = nil
-			for a,b in pairs(left_sides) do
-				if right_sides[a] == nil then
-					where = b
-				end
-			end
-			solution = ""
-			while where do
-				solution = solution .. tbl[where].word
-				where = left_sides[tbl[where].right]
-			end
+		local count, solution = determine_nemesis_paper_strips_password()
+		if solution then
 			text = text:gsub([[(<input type="text" name="say" size="30")( />)]], [[%1 value="]]..solution..[["%2]])
 		end
 		text = text:gsub("This could be an excellent opportunity to voice your opinion on any grievances you might have.</p>", "%0<p>" .. count .. " / 8 strips found.</p>")
-	end
-end)
-
-add_processor("/desc_item.php", function()
-	name, left, right, word = text:match([[<b>(a [a-z]- paper strip)</b>.-title="A ([a-z-]-) tear".-title="A ([a-z-]-) tear".-<font size=%+1><b>([A-Z]-)</b></font>]])
-	if name and left and right and word then
-		local tbl = session["zone.cave.paper strips"] or {}
-		tbl[name] = { left = left, right = right, word = word }
-		session["zone.cave.paper strips"] = tbl
 	end
 end)
 
@@ -118,7 +129,7 @@ end)
 
 -- Volcano
 
---~ 	add_processor("/volcanomaze.php", function ()
+--~ 	add_processor("/volcanomaze.php", function()
 --~ 	--~ 	set_ascension_state("zone.volcano.maze states", table_to_str({}))
 --~ 		platforms = {}
 --~ 		goal = nil
@@ -487,7 +498,7 @@ volcano_solutions[6] = [[
 7, 6
 ]]
 
-local href = add_automation_script("automate-volcanomaze", function ()
+local href = add_automation_script("automate-volcanomaze", function()
 	text, url = "Solving volcano puzzle", requestpath
 	volcano = get_page("/volcanomaze.php")
 	platforms = {}
@@ -548,7 +559,14 @@ local href = add_automation_script("automate-volcanomaze", function ()
 	return text, url
 end)
 
-add_printer("/volcanomaze.php", function ()
+add_printer("/volcanomaze.php", function()
 	if not setting_enabled("run automation scripts") or not setting_enabled("automate simple tasks") then return end
 	text = text:gsub([[value="Swim Back to Shore".->]], [[%0<br><a href="]].. href { pwd = session.pwd } ..[[" style="color:green">{ solve }</a>]])
+end)
+
+add_printer("/fight.php", function()
+	if text:contains("In your ears! Earworms! He's given you <i>EARWORMS!</i>") then
+		link = make_href("/fight.php", { action = "skill", whichskill = 6025, pwd = session.pwd })
+		text = text:gsub("He's given you <i>EARWORMS!</i>", [[%0 <a href="]]..link..[[" style="color: green">{ Sing something worse! }</a>]])
+	end
 end)

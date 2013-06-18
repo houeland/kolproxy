@@ -8,6 +8,12 @@ add_processor("/inv_equip.php", function()
 	session["cached stinky cheese eye bonus"] = nil
 end)
 
+add_processor("/choice.php", function()
+	if text:contains("snow suit") then
+		session["cached Snow Suit bonus"] = nil
+	end
+end)
+
 add_automator("all pages", function()
 	if have_equipped("stinky cheese eye") and not session["cached stinky cheese eye bonus"] then
 		local pt = get_page("/desc_item.php", { whichitem = 548672093 })
@@ -21,6 +27,17 @@ add_automator("all pages", function()
 		local pt = get_page("/desc_item.php", { whichitem = 253195678 })
 		local bonus = pt:match([[>%+([0-9]+)%% Item Drops from Monsters<]])
 		session["cached Jekyllin hide belt bonus"] = bonus
+	end
+end)
+
+add_automator("all pages", function()
+	if have_equipped("Snow Suit") and not session["cached Snow Suit bonus"] then
+		local pt = get_page("/charpane.php")
+		if pt:contains("/snowface3.gif") then
+			session["cached Snow Suit bonus"] = 10
+		else
+			session["cached Snow Suit bonus"] = 0
+		end
 	end
 end)
 
@@ -55,7 +72,7 @@ local vanilla_fairy = {
 	jungman = true,
 }
 
-local function get_fam_item()
+local function estimate_fam_item()
 	if ascensionpathid() == 8 then
 		if clancy_instrumentid() == 3 then
 			return fairy_bonus(clancy_level() * 5)
@@ -64,10 +81,14 @@ local function get_fam_item()
 		end
 	end
 	-- TODO: Use familiar names instead of pictures
-	if vanilla_fairy[familiarpicture()] then
+	if familiar("Jack-in-the-Box") then
+		if get_daily_counter("familiar.jack-in-the-box.crank turns") == 2 then
+			return 2 * fairy_bonus(buffedfamiliarweight())
+		else
+			return 0
+		end
+	elseif vanilla_fairy[familiarpicture()] then
 		return fairy_bonus(buffedfamiliarweight())
-	elseif familiarpicture() == "jackinthebox" then
-		return 2 * fairy_bonus(buffedfamiliarweight())
 	elseif familiarpicture() == "hounddog" then
 		return fairy_bonus(buffedfamiliarweight() * 1.25)
 	elseif familiarpicture() == "spanglehat" and familiarid() == 82 then
@@ -78,8 +99,10 @@ local function get_fam_item()
 		return 0
 	end
 end
+__DONOTUSE_estimate_familiar_item_drop_bonus = estimate_fam_item
 
-local function get_skill_item()
+
+local function estimate_skill_item()
 	local tw_item = 0
 	local skillarray = {
 		["Mad Looting Skillz"] = 20,
@@ -97,7 +120,7 @@ local function get_skill_item()
 end
 
 function estimate_other_item()
-	local item = get_fam_item() + get_skill_item()
+	local item = estimate_fam_item() + estimate_skill_item()
 	if ascension["zone.manor.quartet song"] == "Le Mie Cose Favorite" then
 		item = item + 5
 	end

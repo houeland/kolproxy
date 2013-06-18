@@ -104,9 +104,54 @@ add_processor("/campground.php", function()
 	end
 end)
 
+add_automator("/campground.php", function()
+	if session["zone.lair.gates"] then return end
+	if text:contains("peer into the eyepiece of the telescope") or (text:contains("Nope.") and params.action == "telescopelow") then
+		if level() >= 13 then
+			get_page("/lair1.php", { action = "gates" })
+		end
+	end
+end)
+
+function requires_wand_of_nagamar()
+	return ascensionpathid() ~= 8 and ascensionpathid() ~= 10 and not ascensionpath("Avatar of Jarlsberg")
+end
+
 add_printer("/campground.php", function()
 	if text:contains("peer into the eyepiece of the telescope") or (text:contains("Nope.") and params.action == "telescopelow") then
 		-- telescope lair info
+
+		local function get_gates_display_lines()
+			local gate_lines = {}
+			local gatestatus = session["zone.lair.gates"] or {}
+			local scopeitems = session["zone.lair.itemsneeded"] or {}
+
+			local function mkline(gate_input)
+				if not gate_input then
+					return [[<span style="color: darkorange">(Unknown)</span>]]
+				end
+				local gate = gate_input
+				if not lair_gateitems[gate_input] then
+					for a, b in pairs(lair_gateitems) do
+						if b.item == gate_input then
+							gate = a
+						end
+					end
+				end
+				local gatedata = lair_gateitems[gate]
+				if gatedata then
+					return string.format([[%s: %s]], gate, gate_status_display(gate, gatedata))
+				else
+					return [[<span style="color: red">{ Unknown gate type: ]] .. gate .. [[ }</span>]]
+				end
+			end
+
+			table.insert(gate_lines, mkline(gatestatus[1] or scopeitems[1]))
+			table.insert(gate_lines, mkline(gatestatus[2]))
+			table.insert(gate_lines, mkline(gatestatus[3]))
+
+			return gate_lines
+		end
 
 		local dod_gate_effects = {
 			"acuity",
@@ -134,8 +179,17 @@ add_printer("/campground.php", function()
 				end
 				return [[<span style="color: ]] .. (overridecolor or color) .. [[">]] .. string.format("%s = ?", eff) .. [[</span>]]
 			end
+			local want_type = nil
+			local gatestatus = session["zone.lair.gates"] or {}
+			if gatestatus[3] and lair_gateitems[gatestatus[3]] then
+				want_type = lair_gateitems[gatestatus[3]].potion
+			end
 			for eff in table.values(dod_gate_effects) do
-				table.insert(dodpotstatus, handle_eff(eff))
+				local overridecolor = nil
+				if want_type and want_type ~= eff then
+					overridecolor = "gray"
+				end
+				table.insert(dodpotstatus, handle_eff(eff, overridecolor))
 			end
 			for eff in table.values(dod_potion_effects) do
 				local skip = false
@@ -255,28 +309,54 @@ add_printer("/campground.php", function()
 				end
 				return string.format([[<span style="color: darkorange">%s</span>]], table.concat(list, ", "))
 			end
+			local function check_wand()
+				if have_item("Wand of Nagamar") then
+					table.insert(otherlines, check_items { "Wand of Nagamar" })
+					return true
+				end
+				local parts = {}
+				if have_item("WA") then
+					table.insert(parts, "WA")
+				else
+					table.insert(parts, "ruby W")
+					table.insert(parts, "metallic A")
+				end
+				if have_item("ND") then
+					table.insert(parts, "ND")
+				else
+					table.insert(parts, "lowercase N")
+					table.insert(parts, "heavy D")
+				end
+				local missing = false
+				local strtbl = {}
+				for _, x in ipairs(parts) do
+					if have_item(x) then
+						table.insert(strtbl, string.format([[<span style="color: green">%s</span>]], x))
+					else
+						table.insert(strtbl, string.format([[<span style="color: darkorange">%s</span>]], x))
+						missing = true
+					end
+				end
+				table.insert(otherlines, string.format([[<span style="color: darkorange">Wand of Nagamar</span> (%s)]], table.concat(strtbl, " + ")))
+			end
 			table.insert(otherlines, check_items(guitar_items))
 			table.insert(otherlines, check_items(accordion_items))
 			table.insert(otherlines, check_items(drum_items))
+			if requires_wand_of_nagamar() then
+				check_wand()
+			end
 			return otherlines
 		end
 
 		local extratext = {}
 		if ascensionpathid() ~= 4 then
+			table.insert(extratext, [[<h4>Lair gates</h4>]] .. table.concat(get_gates_display_lines(), "<br>") .. [[</p>]])
 			table.insert(extratext, [[<h4>Dungeons of Doom potions</h4><p>]] .. table.concat(get_dod_display_lines(), "<br>") .. [[</p>]])
 		end
 		table.insert(extratext, [[<h4>Mariachi statue keys</h4><p>]] .. table.concat(get_statues_display_lines(), "<br>") .. [[</p>]])
 		table.insert(extratext, [[<h4>Other items</h4><p>]] .. table.concat(get_other_display_lines(), "<br>") .. [[</p>]])
 
-		local isfirst = true
-		text = text:gsub([[<table[^>]*width=95%%]], function(x)
-			if isfirst then
-				isfirst = false
-				return x
-			else
-				return make_kol_html_frame(table.concat(extratext, "\n"), "Lair Checklist:") .. x
-			end
-		end, 2)
+		text = add_message_to_page(text, table.concat(extratext, "\n"), "Lair Checklist:", color)
 	end
 end)
 
@@ -306,13 +386,77 @@ lair_gateitems = {
 	["Gate that is Not a Gate"] = { effect = "Teleportitis", potion = "teleportation" },
 }
 
-add_printer("/lair1.php", function()
-	local need = {}
-	local dod_tbl = get_dod_potion_status()
+add_processor("/lair1.php", function()
+	local whereidx = {}
+	local gates = {}
+	for a, b in pairs(lair_gateitems) do
+		local where = text:find(a)
+		if where then
+			whereidx[a] = where
+			table.insert(gates, a)
+		end
+	end
+
+	table.sort(gates, function(a, b) return whereidx[a] < whereidx[b] end)
+
+	if next(gates) then
+		session["zone.lair.gates"] = gates
+	end
+end)
+
+function gate_status_display(from, to)
 	local dod_reverse = {}
-	for a, b in pairs(dod_tbl) do
+	for a, b in pairs(get_dod_potion_status()) do
 		dod_reverse[b] = a
 	end
+
+	local effect_status = "(???)"
+	local effect_link = nil
+	if have_buff(to.effect) then
+		effect_status = [[(<span style="color: gray;">have ]]..to.effect..[[</span>)]]
+	elseif to.effect == "Teleportitis" and have("ring of teleportation") then
+		if have_equipped("ring of teleportation") then
+			effect_status = [[(<span style="color: gray;">have ]]..to.effect..[[</span>)]]
+		else
+			effect_status = [[(wear ring for <span style="color: green;">(]]..to.effect..[[)</span>)]]
+		end
+	elseif to.effect == "Sugar Rush" then
+		local have_any = false
+		local have_usable = nil
+		for _, item in ipairs(sugar_rush_items) do
+			if have_item(item.name) then
+				have_any = true
+				if item.usable and not have_usable then
+					have_usable = item.name
+				end
+			end
+		end
+		if have_usable then
+			effect_status = [[(<span style="color: green">use ]]..have_usable.." ("..to.effect..")".. [[</span>)]]
+			effect_link = [[(<span class="kolproxy_gate_item_spoiler">use <a href="#" onclick="use_item(this, ]]..get_itemid(have_usable)..[[, &quot;]] .. to.effect .. [[&quot;); return false;" style="color: green;">]]..have_usable..[[</a>]] .." ("..to.effect..")".. [[</span>)]]
+		elseif have_it then
+			effect_status = [[(get <span style="color: green;">(]]..to.effect..[[)</span>)]]
+		else
+			effect_status = [[<b>(need <span style="color: darkorange;">(]]..to.effect..[[)</span>)</b>]]
+		end
+	elseif to.item or (to.potion and dod_reverse[to.potion]) then
+		local name = to.item or dod_reverse[to.potion]
+		if have_item(name) then
+			effect_status = [[(<span style="color: green;">use ]]..name .." ("..to.effect..")".. [[</span>)]]
+			effect_link = [[(<span class="kolproxy_gate_item_spoiler">use <a href="#" onclick="use_item(this, ]]..get_itemid(name)..[[, &quot;]] .. to.effect .. [[&quot;); return false;" style="color: green;">]]..name..[[</a>]] .." ("..to.effect..")".. [[</span>)]]
+		elseif to.gnomish_buyable and moonsign_area() == "Gnomish Gnomad Camp" then
+			effect_status = [[<b>(buy <span>]]..name..[[</span>]].." ("..to.effect..")"..[[)</b>]]
+		else
+			effect_status = [[<b>(need <span style="color: darkorange;">]]..name..[[</span>]].." ("..to.effect..")"..[[)</b>]]
+		end
+	else
+		effect_status = [[<b>(need <span style="color: darkorange;">(]]..to.effect..[[)</span>)</b>]]
+	end
+	return effect_status, effect_link
+end
+
+add_printer("/lair1.php", function()
+	local need = {}
 	local pwd = session.pwd -- Inserting pwd, boo!
 	text = text:gsub([[</head>]], [[<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
 <script type="text/javascript">
@@ -330,65 +474,29 @@ add_printer("/lair1.php", function()
 </script>%0]])
 	for from, to in pairs(lair_gateitems) do
 		if text:contains("<p>&quot;Through the "..from) then
-			local effect_status = "(???)"
-			if buff(to.effect) then
-				effect_status = [[(<span style="color: gray;">have ]]..to.effect..[[</span>)]]
-			elseif to.effect == "Teleportitis" and have("ring of teleportation") then
-				if have_equipped("ring of teleportation") then
-					effect_status = [[(<span style="color: gray;">have ]]..to.effect..[[</span>)]]
-				else
-					effect_status = [[(wear ring for <span style="color: green;">(]]..to.effect..[[)</span>)]]
-				end
-			elseif to.effect == "Sugar Rush" then
-				local have_any = false
-				local have_usable = nil
-				for _, item in ipairs(sugar_rush_items) do
-					if have_item(item.name) then
-						have_any = true
-						if item.usable and not have_usable then
-							have_usable = item.name
-						end
-					end
-				end
-				if have_usable then
-					effect_status = [[(<span class="kolproxy_gate_item_spoiler">use <a href="#" onclick="use_item(this, ]]..get_itemid(have_usable)..[[, &quot;]] .. to.effect .. [[&quot;); return false;" style="color: green;">]]..have_usable..[[</a>]] .." ("..to.effect..")".. [[</span>)]]
-				elseif have_it then
-					effect_status = [[(get <span style="color: green;">(]]..to.effect..[[)</span>)]]
-				else
-					effect_status = [[<b>(need <span style="color: darkorange;">(]]..to.effect..[[)</span>)</b>]]
-				end
-			elseif to.item or (to.potion and dod_reverse[to.potion]) then
-				local name = to.item or dod_reverse[to.potion]
-				if have(name) then
-					effect_status = [[(<span class="kolproxy_gate_item_spoiler">use <a href="#" onclick="use_item(this, ]]..get_itemid(name)..[[, &quot;]] .. to.effect .. [[&quot;); return false;" style="color: green;">]]..name..[[</a>]] .." ("..to.effect..")".. [[</span>)]]
-				elseif to.gnomish_buyable and moonsign_area() == "Gnomish Gnomad Camp" then
-					effect_status = [[<b>(buy <span>]]..name..[[</span>]].." ("..to.effect..")"..[[)</b>]]
-				else
-					effect_status = [[<b>(need <span style="color: darkorange;">]]..name..[[</span>]].." ("..to.effect..")"..[[)</b>]]
-				end
-			else
-				effect_status = [[<b>(need <span style="color: darkorange;">(]]..to.effect..[[)</span>)</b>]]
-			end
-			text = text:gsub("(<p>&quot;Through the "..from..".-&quot;)( <p>)", "%1 " .. effect_status .. "%2")
+			local effect_status, effect_link = gate_status_display(from, to)
+			text = text:gsub("(<p>&quot;Through the "..from..".-&quot;)( <p>)", "%1 " .. (effect_link or effect_status) .. "%2")
 			table.insert(need, to)
 		end
 	end
 end)
 
-
 add_automator("/lair1.php", function()
 	if not setting_enabled("automate simple tasks") then return end
-	if params.action == "mirror" then
-		if text:contains("You try to break it") then
-			local eq = equipment()
-			set_equipment({})
-			text, url = get_page(path, params)
-			set_equipment(eq)
-		end
+	if params.action == "mirror" and text:contains("You try to break it") then
+		local eq = equipment()
+		set_equipment {}
+		text, url = get_page(path, params)
+		set_equipment(eq)
+	elseif params.action == "gates" and text:contains("cave1mirror.gif") then
+		local eq = equipment()
+		set_equipment {}
+		text, url = get_page("/lair1.php", { action = "mirror" })
+		set_equipment(eq)
 	end
 end)
 
-add_printer("/lair2.php", function ()
+add_printer("/lair2.php", function()
 	if text:contains([[value="sorcriddle]]) then
 		text = text:gsub([[(<input type=hidden name=prepreaction value="sorcriddle1">What am I%? <input name=answer class=text type=text size=10)(>)]], [[%1 value="fish"%2]])
 		text = text:gsub([[(<input type=hidden name=prepreaction value="sorcriddle2">Who are we%? <input name=answer class=text type=text size=10)(>)]], [[%1 value="phish"%2]])
@@ -400,6 +508,38 @@ add_printer("/lair2.php", function ()
 			text = text:gsub([[(<select name=]]..a..[[>.-<option value=".-")(>]]..b..[[</option>.-</select>)]], [[%1 selected="selected"%2]])
 		end
 	end
+end)
+
+local smith_stone_banjo_href = add_automation_script("smith-stone-banjo", function()
+	if have_item("stone banjo") then
+		return make_kol_html_frame("Error: Already have stone banjo.", "Automation results:", "darkorange"), requestpath
+	end
+
+	if not have_item("big rock") then
+		if have_buff("Teleportitis") or have_equipped_item("ring of teleportation") then
+			return make_kol_html_frame("Error: Cannot pick up big rock while under the effect of teleportitis.", "Automation results:", "darkorange"), requestpath
+		end
+		if not have_item("ten-leaf clover") then
+			use_item("disassembled clover")
+		end
+		if have_item("ten-leaf clover") then
+			if not have_item("casino pass") then
+				buy_item("casino pass", "m")
+			end
+			get_page("/casino.php", { action = "slot", whichslot = 11 })
+		end
+	end
+	if not have_item("big rock") then
+		return make_kol_html_frame("Error: Failed to pick up big rock.", "Automation results:", "darkorange"), requestpath
+	end
+
+	if not have_item("banjo strings") then
+		local script = get_automation_scripts()
+		script.ensure_worthless_item()
+		post_page("/hermit.php", { action = "trade", whichitem = get_itemid("banjo strings"), quantity = 1 })
+	end
+
+	return smith_items("banjo strings", "big rock")()
 end)
 
 function automate_lair_statues(text)
@@ -473,9 +613,9 @@ function automate_lair_statues(text)
 			if count("white pixel") + math.min(count("red pixel"), count("green pixel"), count("blue pixel")) >= 30 then
 				if count("white pixel") < 30 then
 					local to_make = 30 - count("white pixel")
-					async_post_page("/shop.php", { whichshop = "mystic", pwd = get_pwd(), action = "buyitem", whichitem = get_itemid("white pixel"), quantity = to_make })
+					shop_buyitem({ ["white pixel"] = to_make }, "mystic")
 				end
-				async_post_page("/shop.php", { whichshop = "mystic", pwd = get_pwd(), action = "buyitem", whichitem = get_itemid("digital key"), quantity = 1 })
+				shop_buyitem("digital key", "mystic")
 			end
 		end
 		if have("digital key") then
@@ -520,7 +660,7 @@ function automate_lair_statues(text)
 
 	if text:contains("no instrument to give to the first") then
 		if have("ten-leaf clover") or have("disassembled clover") or have("big rock") then
-			table.insert(missing_stuff, [[a guitar <span style="color:green">(smith a stone banjo)</span>]])
+			table.insert(missing_stuff, string.format([[a guitar <span style="color: green">(smith a stone banjo)</span> <a href="%s" style="color: green">{ automate (1) }</a>]], smith_stone_banjo_href { pwd = session.pwd }))
 		else
 			table.insert(missing_stuff, "a guitar")
 		end
@@ -771,7 +911,7 @@ end)
 add_printer("/lair3.php", function()
 	local result = session["hedge maze result"]
 	if result then
-		text = text:gsub([[<center><table class="item" style="float: none" rel="[^"]*"><tr><td><img src="http://images.kingdomofloathing.com/itemimages/[^"]+.gif" alt="[^"]*" title="[^"]*" class=hand onClick='descitem%([0-9]+%)'></td><td valign=center class=effect>You acquire .-</td></tr></table></center>]], function (droptext)
+		text = text:gsub([[<center><table class="item" style="float: none" rel="[^"]*"><tr><td><img src="http://images.kingdomofloathing.com/itemimages/[^"]+.gif" alt="[^"]*" title="[^"]*" class=hand onClick='descitem%([0-9]+%)'></td><td valign=center class=effect>You acquire .-</td></tr></table></center>]], function(droptext)
 			return droptext .. [[<center style="color: green">{ ]] .. result .. [[ }</center>]]
 		end)
 	end
@@ -779,7 +919,7 @@ end)
 
 local function show_tower_items(levelidxs)
 	local itemsneeded = session["zone.lair.itemsneeded"] or {}
-	for level in table.values(levelidxs) do
+	for _, level in ipairs(levelidxs) do
 		local needitem = itemsneeded[level + 1]
 		if needitem then
 			local color = have(needitem) and "green" or "orange"
@@ -799,6 +939,43 @@ add_printer("/lair5.php", function()
 	show_tower_items { 4, 5, 6 }
 end)
 
+local function missing_tower_item()
+	local where1, where2
+	if requestpath == "/lair4.php" then
+		where1 = 0
+	elseif requestpath == "/lair5.php" then
+		where1 = 3
+	end
+	where2 = tonumber((params.action or ""):match("^level([0-9]+)$"))
+	if where1 and where2 then
+		local level = where1 + where2
+		local itemsneeded = session["zone.lair.itemsneeded"] or {}
+		if itemsneeded[level] then
+			return not have_item(itemsneeded[level + 1])
+		end
+	end
+end
+
+add_warning {
+	message = "You might want to buff up with Frigidalmatian before killing tower monsters.",
+	path = { "/lair4.php", "/lair5.php" },
+	severity = "extra",
+	when = "ascension",
+	check = function()
+		return params.action and missing_tower_item() and not have_buff("Frigidalmatian") and have_skill("Frigidalmatian")
+	end,
+}
+
+add_warning {
+	message = "You might want to buff up with Elron's Explosive Etude before killing tower monsters.",
+	path = { "/lair4.php", "/lair5.php" },
+	severity = "extra",
+	when = "ascension",
+	check = function()
+		return params.action and missing_tower_item() and not have_buff("Elron's Explosive Etude") and classid() == 6 and level() >= 15 and have_skill("Elron's Explosive Etude")
+	end,
+}
+
 add_automator("/fight.php", function()
 	local function known_win(level)
 		local itemsneeded = session["zone.lair.itemsneeded"] or {}
@@ -809,42 +986,42 @@ add_automator("/fight.php", function()
 		local lair4pt = get_page("/lair4.php")
 		if lair4pt:contains([[value="level1"]]) and known_win(1) then
 			print("goto lair4:level1")
-			text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair4.php?action=level1">Climb to the next floor (Level 1)</a>%0]])
+			text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair4.php?action=level1" style="color: green">{ Climb to the next floor (Level 1) }</a>%0]])
 		elseif lair4pt:contains([[value="level2"]]) and known_win(2) then
 			print("goto lair4:level2")
-			text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair4.php?action=level2">Climb to the next floor (Level 2)</a>%0]])
+			text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair4.php?action=level2" style="color: green">{ Climb to the next floor (Level 2) }</a>%0]])
 		elseif lair4pt:contains([[value="level3"]]) and known_win(3) then
 			print("goto lair4:level3")
-			text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair4.php?action=level3">Climb to the next floor (Level 3)</a>%0]])
+			text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair4.php?action=level3" style="color: green">{ Climb to the next floor (Level 3) }</a>%0]])
 		else
 			local lair5pt = get_page("/lair5.php")
 			if lair5pt:contains([[value="level1"]])  and known_win(4) then
 				print("goto lair5:level1")
-				text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level1">Climb to the next floor (Level 4)</a>%0]])
+				text = text:gsub([[<center><a href="lair4.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level1" style="color: green">{ Climb to the next floor (Level 4) }</a>%0]])
 			end
 		end
 	elseif text:contains([[<a href="lair5.php">Go back to the Sorceress' Tower</a>]]) and text:contains("WINWINWIN") then
 		local lair4pt = get_page("/lair5.php")
 		if lair4pt:contains([[value="level1"]]) and known_win(4) then
 			print("goto lair5:level1")
-			text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level1">Climb to the next floor (Level 4)</a>%0]])
+			text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level1" style="color: green">{ Climb to the next floor (Level 4) }</a>%0]])
 		elseif lair4pt:contains([[value="level2"]]) and known_win(5) then
 			print("goto lair5:level2")
-			text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level2">Climb to the next floor (Level 5)</a>%0]])
+			text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level2" style="color: green">{ Climb to the next floor (Level 5) }</a>%0]])
 		elseif lair4pt:contains([[value="level3"]]) and known_win(6) then
 			print("goto lair5:level3")
-			text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level3">Climb to the next floor (Level 6)</a>%0]])
+			text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair5.php?action=level3" style="color: green">{ Climb to the next floor (Level 6) }</a>%0]])
 		else
 			local lair6pt = get_page("/lair6.php")
 			if lair6pt:contains([[lair6.php]]) then
 				print("goto lair6")
-				text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair6.php">Climb to the top of the tower</a>%0]])
+				text = text:gsub([[<center><a href="lair5.php">Go back to the Sorceress' Tower</a></center>]], [[<p><a href="lair6.php" style="color: green">{ Climb to the top of the tower }</a>%0]])
 			end
 		end
 	end
 end)
 
-add_processor("/lair6.php", function ()
+add_processor("/lair6.php", function()
 	if text:contains("As you approach the door, you notice that someone has scrawled a message on it with a pencil: &quot;BEWARE: One of the guards always tells the truth, one of them always lies, one of them alternates between the two, and one craves the taste of human flesh!&quot; Ominous.") then
 		if text:contains("You're full of it") then
 			first = text:match("&quot;Well,&quot; says South, &quot;the first digit is ([0-9]).&quot;")
@@ -866,7 +1043,7 @@ add_processor("/lair6.php", function ()
 	end
 end)
 
-add_printer("/lair6.php", function ()
+add_printer("/lair6.php", function()
 	if text:contains("You approach the heavy door.  Next to it is a panel with a bunch of buttons on it.  On the buttons are numbers.") then
 		local code = session["zone.lair.doorcode"]
 		if code then
@@ -917,7 +1094,7 @@ function automate_lair6_place(place, text)
 						weight = buffedfamiliarweight()
 					end
 					if weight and weight >= 20 then
-						newtext = get_page("/lair6.php", { place = params.place })
+						newtext = get_page("/lair6.php", { place = place })
 						if newtext:contains("You move further into the tower, while huge chunks of stone fall from the walls for no good reason.") then
 							text = newtext
 							print("INFO: Won vs NS familiar")
@@ -941,7 +1118,7 @@ function automate_lair6_place(place, text)
 	return text
 end
 
-add_automator("/lair6.php", function ()
+add_automator("/lair6.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 
 	text = automate_lair6_place(tonumber(params.place), text)
@@ -960,7 +1137,7 @@ end)
 
 add_always_warning("/lair6.php", function()
 	if tonumber(params.place) == 5 and not have("Wand of Nagamar") then
-		if ascensionpathid() == 8 or ascensionpathid() == 10 then return end
+		if ascensionpathid() == 8 or ascensionpathid() == 10 or ascensionpath("Avatar of Jarlsberg") then return end
 		return "A Wand of Nagamar is recommended for the sorceress fight.", "sorceress-wand-of-nagamar"
 	end
 end)
@@ -978,9 +1155,21 @@ add_printer("/lair6.php", function()
 		"Defeat the Naughty Sorceress",
 		"Free the king",
 	}
+	if ascensionpath("Avatar of Jarlsberg") then
+		placedescs = {
+			"Pass the heavy and light door riddle",
+			"Avoid the electrical attack",
+			"Defeat your own shadow",
+			"Defeat Clancy",
+			"(skipped)",
+			"Defeat The Avatar of Boris",
+			"Free the king",
+		}
+	end
 	local status = "<b>Chamber progress</b><br>"
 	for x, y in ipairs(placedescs) do
-		if nextplace >= x then
+		if y == "(skipped)" then
+		elseif nextplace >= x then
 			status = status .. [[<span style="color: gray;">]] .. y .. [[</span><br>]]
 		elseif nextplace == x - 1 then
 			status = status .. [[&rarr; <span style="color: darkgreen;">]] .. y .. [[</span> &larr;<br>]]

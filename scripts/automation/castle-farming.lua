@@ -16,11 +16,11 @@ function run_castle_turns(numturns, preferfamid)
 		switch_familiarid(get_familiarid(a))
 		if familiarid() == get_familiarid(a) then
 			table.insert(have_familiars, a)
-			print(a, daily_familiars[a].item, datafile("mallprices")[daily_familiars[a].item], get_daily_counter(b.counter))
+			print(a, daily_familiars[a].item, estimate_mallsell_profit(daily_familiars[a].item), get_daily_counter(b.counter))
 		end
 	end
 	table.sort(have_familiars, function(a, b)
-		return datafile("mallprices")[daily_familiars[a].item] < datafile("mallprices")[daily_familiars[b].item]
+		return estimate_mallsell_profit(daily_familiars[a].item) < estimate_mallsell_profit(daily_familiars[b].item)
 	end)
 	for i = 1, 1000 do
 		print("automating turn "..tostring(start_advs - adventures() + 1).. " / " .. numturns)
@@ -42,7 +42,12 @@ function run_castle_turns(numturns, preferfamid)
 			switch_familiarid(wantfamid)
 		end
 
-		text, url, advagain = autoadventure { zoneid = 82, noncombatchoices = { ["Wheel in the Clouds in the Sky, Keep On Turning"] = "Leave the wheel alone" } }
+		text, url, advagain = autoadventure { zoneid = 324, noncombatchoices = {
+			["Melon Collie and the Infinite Lameness"] = "End His Suffering",
+			["Yeah, You're for Me, Punk Rock Giant"] = "Get the Punk's Attention",
+			["Flavor of a Raver"] = "Pick a Fight",
+			["Copper Feel"] = "Go through the Crack",
+		} }
 
 		if not advagain then
 			return text, url
@@ -66,7 +71,8 @@ local castle_farming_href = add_automation_script("castle-farming", function()
 	end
 end)
 
-add_printer("/beanstalk.php", function()
+add_printer("/place.php", function()
+	if params.whichplace ~= "beanstalk" and params.whichplace ~= "giantcastle" then return end
 	if not setting_enabled("run automation scripts") or not setting_enabled("automate simple tasks") then return end
 	if not ascensionstatus("Aftercore") then return end
 	local scriptsource = [[

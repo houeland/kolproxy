@@ -1,6 +1,7 @@
 register_setting {
 	name = "rewrite PRIVATE: chat commands",
 	description = "Make chat commands work for PRIVATE: and OFFTOPIC: tabs",
+	hidden = true,
 	group = "chat",
 	default_level = "limited",
 }
@@ -71,7 +72,7 @@ end)
 
 -- TODO: apply to mchat too?
 add_printer("/lchat.php", function()
-	text = text:gsub("(onLoad=)(%b'')", function (prefix, onload)
+	text = text:gsub("(onLoad=)(%b'')", function(prefix, onload)
 		-- /r messages can scroll off the screen when logging on if we show too much
 -- 		onload = string.gsub(onload, ";'$", ";submitchat(\"/trivial && /updates && /who && /friends\");'%0")
 		req = [[submitchat("/friends");]]
@@ -85,7 +86,7 @@ end)
 
 -- $('#tabs').sortable({
 -- 		appendTo: 'body',
--- 		stop: function (e, ui) {
+-- 		stop: function(e, ui) {
 -- 			var diff = Math.abs(ui.position.left - ui.originalPosition.left);
 -- 			if (diff < 10) ui.item.click();
 -- 		}
@@ -110,8 +111,8 @@ add_printer("/mchat.php", function()
 end)
 
 add_printer("/mchat.php", function()
-	if setting_enabled("rewrite PRIVATE: chat commands") then
-		text = text:gsub([[if %(parts%[0%] == 'public'%) return '/' %+ parts%[1%] %+ ' ' %+ msg;]], [[if (parts[0] == 'public' && !(mparts[0].match(/^\//) && parts[1].match(/ /))) return '/' + parts[1] + ' ' + msg;]])
+	if setting_enabled("rewrite PRIVATE: chat commands") or true then
+		text = text:gsub([[if %(parts%[0%] == 'public'%) return '/' %+ parts%[1%] %+ ' ' %+ msg;]], [[if (parts[0] == 'public' && !(mparts[0].match(/^\//) && (parts[1].match(/ /) && !parts[1].match(/clan /)))) return '/' + parts[1] + ' ' + msg;]])
 	end
 end)
 

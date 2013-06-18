@@ -1,4 +1,4 @@
-local href = add_automation_script("custom-mix-drinks", function ()
+local href = add_automation_script("custom-mix-drinks", function()
 	-- TODO: make get_recipes return a table
 	local recp = str_to_table(get_recipes())
 	local cocktailcrafting_recipes = {}

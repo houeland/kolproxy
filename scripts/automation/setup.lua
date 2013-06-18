@@ -1,14 +1,31 @@
 __allow_global_writes = true
 
-function set_result(x)
+function set_result(x, xurl)
 	result = x
+	if type(x) == "string" and xurl then
+		resulturl = xurl
+	end
 end
 
 function get_result()
 	if type(result) == "string" then
-		return result
+		return result, resulturl
 	else
 		return result()
+	end
+end
+
+function first_wearable(tbl)
+	local keys = {}
+	for a, _ in pairs(tbl) do
+		table.insert(keys, a)
+	end
+	table.sort(keys)
+	for _, xidx in ipairs(keys) do
+		local x = tbl[xidx]
+		if x and have_item(x) and can_equip_item(x) then
+			return x
+		end
 	end
 end
 
@@ -29,39 +46,70 @@ function run_automation_script(f, pwdsrc, scriptname)
 		stopped_err = true
 		error(e, 2)
 	end
+	local error_trace_steps = {}
+	function reset_error_trace_steps()
+		error_trace_steps = {}
+	end
+	function get_error_trace_steps()
+		return error_trace_steps
+	end
+	function add_error_trace_step(msg)
+		table.insert(error_trace_steps, tostring(msg))
+	end
 
 	local ok, text, url = xpcall(f, function(e) return { msg = e, trace = debug.traceback(e) } end)
 	if ok then
+		if not text:contains("<html") then
+			text = [[
+<html>
+<head>
+</head>
+<body>
+]] .. text .. [[
+</body>
+</html>
+]]
+		end
+		if not text:contains("charpane.php") then
+			text = text:gsub("</head>", [[
+<script>top.charpane.location = "charpane.php"</script>
+%0
+]])
+		end
 		return text, url
 	else
 		local e = text
 		if critical_err then
 			print("Something unexpected happened: " .. errmsg)
 			print(e.trace)
---				write_log_line("Something unexpected happened: " .. errmsg)
 			result = get_result()
 			if result == "??? No action found ???" or result == "??? No automation done ???" then
-				return [[<script>top.charpane.location = "charpane.php"</script><p style="color: darkorange">]] .. "Something unexpected happened: " .. errmsg .. "<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>", requestpath
+				result = [[<script>top.charpane.location = "charpane.php"</script><p style="color: darkorange">]] .. "Something unexpected happened: " .. errmsg .. "<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>"
 			else
-				return [[<script>top.charpane.location = "charpane.php"</script>]] .. add_formatted_colored_message_to_page(result, "Something unexpected happened: " .. errmsg .. "<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>", "darkorange"), requestpath
+				result = [[<script>top.charpane.location = "charpane.php"</script>]] .. add_formatted_colored_message_to_page(result, "Something unexpected happened: " .. errmsg .. "<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>", "darkorange")
 			end
+			local steptrace = get_error_trace_steps()
+			if next(steptrace) then
+				result = add_message_to_page(get_result(), "While trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt>", "Automation stopped:", "darkorange")
+			end
+			return result, requestpath
 		elseif stopped_err then
 			if errmsg:match("End of day.-then done") then -- TODO: redo this
 				print("Finished: " .. errmsg)
 				print(e.trace)
---					write_log_line("Finished: " .. errmsg)
-				--.. "<br><br><pre>Technical details:\n\n" .. e.trace ..
 				return [[<script>top.charpane.location = "charpane.php"</script>]] .. "Finished: " .. errmsg .. "</pre>", requestpath
 			else
 				print("Manual intervention required: " .. errmsg)
 				print(e.trace)
---					write_log_line("Manual intervention required: " .. errmsg)
--- 				return [[<script>top.charpane.location = "charpane.php"</script>]] .. "Manual intervention required: " .. errmsg .. "<br><br>Fix this and click the link again to continue automating.<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>", requestpath
 				local runagain_href = make_href("/kolproxy-automation-script", params)
-				return [[<script>top.charpane.location = "charpane.php"</script>Manual intervention required: ]] .. errmsg .. [[<br><br>Fix this and run the script again to continue automating.<br><br><a href="]]..runagain_href..[[" style="color: green">{ I have fixed it, run the script again now! }</a>]], requestpath
+				result = [[<script>top.charpane.location = "charpane.php"</script>Manual intervention required: ]] .. errmsg .. [[<br><br>Fix this and run the script again to continue automating.<br><br><a href="]]..runagain_href..[[" style="color: green">{ I have fixed it, run the script again now! }</a>]]
+				local steptrace = get_error_trace_steps()
+				if next(steptrace) then
+					result = add_message_to_page(get_result(), "While trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt>", "Automation stopped:", "darkorange")
+				end
+				return result, requestpath
 			end
 		else
---				write_log_line("Error: " .. tostring(e.msg))
 			error(e.trace, 0)
 		end
 	end
@@ -89,17 +137,21 @@ automation_script_details_list["automate-dungeonfist"] = { simple_link = "arcade
 automation_script_details_list["automate-porko"] = { simple_link = "spaaace.php", description = string.format("Automate playing Porko (link to spaaace%s)", porko_mpastr) }
 automation_script_details_list["get-faxbot-monster"] = { simple_link = "clan_viplounge.php?action=faxmachine", description = "Request monster from FaxBot (link to fax machine)" }
 automation_script_details_list["custom-ascension-checklist"] = { simple = true, description = "Ascension checklist" }
-automation_script_details_list["automate-nemesis"] = { when = function() return true end, description = "Automate Nemesis quest" }
-automation_script_details_list["automate-suburbandis"] = { when = function() return true end, description = "Automate Suburban Dis quest" }
+automation_script_details_list["automate-suburbandis"] = { when = function() return ascension["suburbandis.defeated thing with no name"] ~= "yes" end, description = "Automate Suburban Dis quest" }
 automation_script_details_list["castle-farming"] = { simple_link = "beanstalk.php", description = "Automate Castle meat farming (link to beanstalk)" }
 automation_script_details_list["lua-console"] = { simple = true, description = "Go to Lua console" }
 automation_script_details_list["add-log-notes"] = { simple = true, description = "Add note to ascension log" }
 automation_script_details_list["automate-aftercore-pulls"] = { when = function() return true end, description = "Pull a selection of useful aftercore items from Hagnks storage" }
+automation_script_details_list["setup-ascension-automation"] = { simple = true, description = "Setup ascension automation script" }
 
-add_automation_script("custom-aftercore-automation", function()
+custom_aftercore_automation_href = add_automation_script("custom-aftercore-automation", function()
 	local questlogcompleted_page = get_page("/questlog.php", { which = 2 })
+	local accomplishments_page = get_page("/questlog.php", { which = 3 })
 	function quest_completed(name)
 		return questlogcompleted_page:contains([[<b>]] .. name .. [[</b>]])
+	end
+	function accomplishment_text(text)
+		return accomplishments_page:contains(text)
 	end
 
 	local goodlinks = {}
@@ -147,6 +199,7 @@ end
 result, resulturl = "?", "?"
 
 function setup_turnplaying_script(tbl)
+	check_supported_table_values(tbl, { "preparation", "macro" }, { "name", "adventuring" })
 	automation_script_details_list[tbl.name] = tbl
 	return add_automation_script(tbl.name, function()
 		-- TODO: limit global variables to script environments
@@ -156,9 +209,9 @@ function setup_turnplaying_script(tbl)
 		end
 
 		if tbl.macro and autoattack_is_set() then
-			stop "Unset your autoattack for scripting this quest."
+			stop "Unset your autoattack for running this script."
 		elseif not tbl.macro and not autoattack_is_set() then
-			stop "Set a macro on autoattack to use for scripting this quest."
+			stop "Set a macro on autoattack to use for running this script."
 		end
 		automation_macro = tbl.macro
 
@@ -177,12 +230,17 @@ function setup_turnplaying_script(tbl)
 		end
 		questlog_page = questlog_page_async()
 
+		function hidden_inform(msg)
+			add_error_trace_step(msg)
+		end
+
 		function inform(msg)
+			add_error_trace_step(msg)
 			local mpstr = string.format("%s / %s MP", mp(), maxmp())
 			if challenge == "zombie" then
 				mpstr = string.format("%s horde", horde_size())
 			end
-			local formatted = string.format("[%s] %s (level %s.%02d, %s turns remaining, %s full, %s drunk, %s spleen, %s meat, %s)", turnsthisrun(), tostring(msg), level(), level_progress() * 100, advs(), fullness(), drunkenness(), spleen(), meat(), mpstr)
+			local formatted = string.format("[%s] %s (level %s.%02d, %s turns remaining, %s full, %s drunk, %s spleen, %s meat, %s / %s HP, %s)", turnsthisrun(), tostring(msg), level(), level_progress() * 100, advs(), fullness(), drunkenness(), spleen(), meat(), hp(), maxhp(), mpstr)
 			print(formatted)
 		end
 
@@ -190,8 +248,15 @@ function setup_turnplaying_script(tbl)
 			result, resulturl, advagain = result_, resulturl_, advagain_
 		end
 
+		if locked() then
+			get_page("/main.php")
+			if locked() then
+				stop(string.format([[Currently locked in "%s" type adventure, finish that before automating.]], tostring(locked())))
+			end
+		end
+
 		advagain = true
-		while advagain do
+		while advagain and not locked() do
 			advagain = false
 			result, resulturl = nil, nil
 			result, resulturl = "Automation failed", requestpath
@@ -199,7 +264,11 @@ function setup_turnplaying_script(tbl)
 				stop "Out of adventures."
 			end
 			refresh_quest()
-			inform(tbl.name)
+			if tbl.autoinform ~= false then
+				inform(tbl.name)
+			end
+			reset_error_trace_steps()
+			script.bonus_target {}
 			tbl.adventuring()
 		end
 		return result, resulturl

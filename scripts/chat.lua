@@ -75,7 +75,7 @@ elseif text:contains("lastseen:") then
 	text = text:gsub([[<br>(<b><a target=mainpane href="showplayer%.php%?who=[0-9]+"><font color=[^>]+>[^<]+</font></b></a>)]], "<br><!-- separator:beforeD --><!-- separator:startD -->%1") -- normal chat
 	text = text:gsub([[<br>(<b><i><a target=mainpane href="showplayer%.php%?who=[0-9]+"><font color=[^>]+>[^<]+</b></font></a>)]], "<br><!-- separator:beforeE --><!-- separator:startE -->%1") -- emote in chat
 	text = text:gsub([[<a target=mainpane href="showplayer%.php%?who=[0-9]+"><font color=[^>]+><b>[^<]+</b></a>]], "<!-- separator:beforeF --><!-- separator:startF -->%0") -- private message
-	text = text:gsub("<!%-%- separator:start[A-Z] %-%->(.-)<!%-%- separator:before[A-Z] %-%->", function (msg)
+	text = text:gsub("<!%-%- separator:start[A-Z] %-%->(.-)<!%-%- separator:before[A-Z] %-%->", function(msg)
 		for _, printer in ipairs(chatprinters) do
 			msg = printer.f(msg)
 		end

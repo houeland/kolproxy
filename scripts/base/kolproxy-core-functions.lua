@@ -13,21 +13,42 @@ function datafile(name)
 	return datafile_cache[name]
 end
 
-local items_datafile = load_datafile("items")
 local itemid_name_lookup = {}
-for x, y in pairs(items_datafile) do
-	itemid_name_lookup[y.id] = x
+local monster_image_lookup = {}
+local monster_name_lookup = {}
+function reset_datafile_cache()
+	datafile_cache = {}
+	itemid_name_lookup = {}
+	for x, y in pairs(datafile("items")) do
+		itemid_name_lookup[y.id] = x
+	end
+	datafile("outfits")
+	for monstername, monster in pairs(datafile("monsters")) do
+		local image = monster.Stats.Image
+		if image then
+			monster_image_lookup[image] = monstername
+		end
+		monster_name_lookup[monstername:lower()] = monstername
+	end
 end
 
+reset_datafile_cache()
+
 local function get_item_data_by_name(name)
-	return items_datafile[name]
+	return datafile("items")[name]
 end
 
 local function get_item_data_by_id(id)
-	return get_item_data_by_name(itemid_name_lookup[id])
+	local name = itemid_name_lookup[id]
+	if name then
+		return get_item_data_by_name(name)
+	end
 end
 
 function maybe_get_itemid(name)
+	if name == "Staff of the Healthy Breakfast" then return 6258 end -- TODO: HACK!
+	if name == "mediocre lager" then return 6215 end -- TODO: HACK!
+
 	if name == nil then
 		return nil
 	end
@@ -50,9 +71,36 @@ function get_itemid(name)
 	return id
 end
 
-function maybe_get_itemname(name)
-	local id = maybe_get_itemid(name)
+function get_skillid(name)
+	if name == nil then
+		return nil
+	end
+
+	local t = type(name)
+	if t == "number" then
+		return name
+	elseif t ~= "string" then
+		error("Invalid itemid type: " .. t)
+	end
+
+	local skill = datafile("skills")[name]
+	if not skill then
+		error("No skillid found for: " .. tostring(name))
+	end
+	return skill.skillid
+end
+
+function maybe_get_itemname(item)
+	local id = maybe_get_itemid(item)
 	return itemid_name_lookup[id]
+end
+
+function get_itemname(item)
+	local name = maybe_get_itemname(item)
+	if not name then
+		error("No item name found for: " .. tostring(item))
+	end
+	return name
 end
 
 function maybe_get_itemdata(name)
@@ -60,6 +108,16 @@ function maybe_get_itemdata(name)
 	return get_item_data_by_id(id)
 end
 
+
+function maybe_get_monsterdata(name, image)
+	local realname = nil
+	if image then
+		realname = monster_image_lookup[image]
+	else
+		realname = monster_name_lookup[name:lower()]
+	end
+	return datafile("monsters")[realname]
+end
 
 function maybe_get_familiarid(name)
 	if name == nil then
@@ -83,6 +141,37 @@ function get_familiarid(name)
 	return id
 end
 
+function get_recipe(item)
+	local name = get_itemname(item)
+	local recipes = datafile("recipes")[name]
+	if not recipes then
+		error("No recipe found for: " .. tostring(item))
+	end
+	if not recipes[1] or recipes[2] then
+		error("No unique recipe for: " .. tostring(item))
+	end
+	return recipes[1]
+end
+
+function get_recipes_by_type(typename)
+	local recipes = {}
+	local ambiguous = {}
+	for name, rs in pairs(datafile("recipes")) do
+		for _, r in ipairs(rs) do
+			if not typename or r.type == typename then
+				if recipes[name] then
+					ambiguous[name] = true
+				else
+					recipes[name] = r
+				end
+			end
+		end
+	end
+	for a, _ in pairs(ambiguous) do
+		recipes[a] = nil
+	end
+	return recipes
+end
 
 local semirares_datafile = load_datafile("semirares")
 function get_semirare_encounters()
@@ -93,20 +182,26 @@ function intercept_warning(warning)
 	if not warning.id then
 		error "No warning id!"
 	end
-	if session["warning-" .. warning.id] then return end
-	local head = [[<head><script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
-<script>top.charpane.location = "charpane.php"</script></head>]]
+	local warningid = warning.id:gsub("'", "")
+	if session["warning-" .. warningid] == "skip" then return end
+	if session["warning-turn-" .. turnsthisrun() .. "-" .. warningid] == "skip" then return end
+	local head = [[<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
+<script>top.charpane.location = "charpane.php"</script>]]
 	local extratext = ""
-	if not warning.norepeat then
+	if not warning.norepeat and not warning.customaction then
 		extratext = [[<p><a href="]]..raw_make_href(requestpath, parse_params_raw(input_params))..[[">I fixed it, try again.</a></p>]]
+	elseif warning.customaction then
+		extratext = [[<p>{ ]] .. warning.customaction .. [[ }</p>]]
 	end
-	local msgtext = make_kol_html_frame([[<p>]] ..
-		(warning.customwarningprefix or "Warning: ") .. warning.message .. [[</p>]] ..
---		[[<p><a href="http://www.houeland.com/kolproxy/wiki/Adventure_warnings" target="_blank">Help</a> (opens adventure warning documentation in a new tab)</p>]] ..
-		extratext ..
-		[[<p><small><a href="#" onclick="var link = this; $.post('custom-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-]] .. warning.id .. [[', stateset: 'session', value: 'skip', ajax: 1 }, function (res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..raw_make_href(requestpath, parse_params_raw(input_params))..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it anyway and disable this warning until I log out.") .. [[</a></small></p>]] ..
-		[[]], (warning.customwarningprefix or "Warning: "), (warning.customdisablecolor or "darkorange"))
-	text = [[<html>]] .. head .. [[<body>]] .. msgtext .. [[</body></html>]]
+	local session_disable_msg = [[<p><small><a href="#" onclick="var link = this; $.post('custom-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-]] .. warningid .. [[', stateset: 'session', value: 'skip', ajax: 1 }, function(res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..raw_make_href(requestpath, parse_params_raw(input_params))..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it anyway and disable this warning until I log out.") .. [[</a></small></p>]]
+	local one_turn_disable_msg = [[<p><small><a href="#" onclick="var link = this; $.post('custom-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-turn-]] .. turnsthisrun() .. [[-]] .. warningid .. [[', stateset: 'session', value: 'skip', ajax: 1 }, function(res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..raw_make_href(requestpath, parse_params_raw(input_params))..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it for this turn.") .. [[</a></small></p>]]
+	if warning.customdisablemsg then
+		one_turn_disable_msg = ""
+	end
+
+	local msgtext = make_kol_html_frame([[<p>]] .. (warning.customwarningprefix or "Warning: ") .. warning.message .. [[</p>]] ..
+		extratext .. session_disable_msg .. one_turn_disable_msg, (warning.customwarningprefix or "Warning: "), (warning.customdisablecolor or "darkorange"))
+	text = [[<html><head>]] .. head .. [[</head><body>]] .. msgtext .. [[</body></html>]]
 	return text, "/kolproxy-warning"
 end
 
@@ -261,6 +356,7 @@ function run_file_with_environment(filename, orgenv, prefillenv, f_notfound)
 		"add_itemdrop_counter",
 		"__raw_add_warning",
 		"__raw_add_extra_warning",
+		"__raw_add_notice",
 		"add_ascension_zone_check",
 		"add_aftercore_zone_check",
 		"add_always_zone_check",
@@ -359,7 +455,7 @@ function load_script_files(env)
 	local global_env = {}
 	local function load_file(category, name)
 		local warn = true
-		run_file_with_environment(name, global_env, env, function (t, k, filename)
+		run_file_with_environment(name, global_env, env, function(t, k, filename)
 			if (warn and k ~= "register_setting" and k ~= "load_datafile" and k ~= "setup_turnplaying_script") or (k == "character" and not filename:contains("settings-page")) then
 --				print("Warning: using global variable", k, "in", filename)
 -- 				print(debug.traceback())
@@ -376,7 +472,7 @@ end
 
 
 function make_kol_html_frame(contents, title, bgcolor)
-	return [[<center><table  width=95%  cellspacing=0 cellpadding=0><tr><td style="color: white;" align=center bgcolor=]] .. (bgcolor or "green") .. [[><b>]] .. (title or "Results:") .. [[</b></td></tr><tr><td style="padding: 5px; border: 1px solid ]]..(bgcolor or "green")..[[;"><center><table><tr><td>]] .. contents .. [[</td></tr></table></center></td></tr><tr><td height=4></td></tr></table></center>]]
+	return [[<center><table  width=95%  cellspacing=0 cellpadding=0><tr><td style="color: white; background-color: ]] .. (bgcolor or "green") .. [[;" align=center><b>]] .. (title or "Results:") .. [[</b></td></tr><tr><td style="padding: 5px; border: 1px solid ]]..(bgcolor or "green")..[[;"><center><table><tr><td>]] .. contents .. [[</td></tr></table></center></td></tr><tr><td height=4></td></tr></table></center>]]
 end
 
 function add_raw_message_to_page(pagetext, msg)
@@ -403,11 +499,12 @@ function add_formatted_colored_message_to_page(pagetext, msg, color) -- TODO: De
 	return add_message_to_page(pagetext, msg, "Result:", color)
 end
 
+local have_loaded_main = false
 function run_functions(p, pagetext, run)
 	original_page_text = pagetext
 
 	if p == "/fight.php" then
-		pagetext = pagetext:gsub([[(<td[^>]-><img src="http://images.kingdomofloathing.com/itemimages/)([^"]+.gif)(" width=30 height=30 alt="[^"]+" title=")([^"]+)("></td><td[^>]->)(.-)(</td></tr>)]], function (pre, itemimage, mid, title, td, msg, post)
+		pagetext = pagetext:gsub([[(<td[^>]-><img src="http://images.kingdomofloathing.com/itemimages/)([^"]+.gif)(" width=30 height=30 alt="[^"]+" title=")([^"]+)("></td><td[^>]->)(.-)(</td></tr>)]], function(pre, itemimage, mid, title, td, msg, post)
 			item_image = itemimage
 			item_name = title
 			if item_name then
@@ -419,7 +516,7 @@ function run_functions(p, pagetext, run)
 			return pre .. itemimage .. mid .. title .. td .. msg .. post
 		end)
 
-		pagetext = pagetext:gsub([[(<!%-%-familiarmessage%-%-><center><table>.-</table></center>)]], function (msg)
+		pagetext = pagetext:gsub([[(<!%-%-familiarmessage%-%-><center><table>.-</table></center>)]], function(msg)
 			familiarmessage_picture = msg:match([[<!%-%-familiarmessage%-%-><center><table><tr><td align=center valign=center><img src="http://images.kingdomofloathing.com/itemimages/([^"]+).gif" width=30 height=30></td>]])
 			if familiarmessage_picture then
 				msg = run("familiar message: " .. familiarmessage_picture, msg)
@@ -430,7 +527,7 @@ function run_functions(p, pagetext, run)
 	end
 
 	if text:contains("You acquire an item") then
-		pagetext = pagetext:gsub([[<center><table class="item" style="float: none" rel="[^"]*"><tr><td><img src="http://images.kingdomofloathing.com/itemimages/[^"]+.gif" alt="[^"]*" title="[^"]*" class=hand onClick='descitem%([0-9]+%)'></td><td valign=center class=effect>You acquire .-</td></tr></table></center>]], function (droptext)
+		pagetext = pagetext:gsub([[<center><table class="item" style="float: none" rel="[^"]*"><tr><td><img src="http://images.kingdomofloathing.com/itemimages/[^"]+.gif" alt="[^"]*" title="[^"]*" class=hand onClick='descitem%([0-9]+%)'></td><td valign=center class=effect>You acquire .-</td></tr></table></center>]], function(droptext)
 			item_image = droptext:match([[src="http://images.kingdomofloathing.com/itemimages/([^"]+).gif"]])
 			item_name = droptext:match([[title="([^"]*)"]])
 			msg = droptext
@@ -481,7 +578,8 @@ multiuse -> multiuse
 
 	pagetext = run(p, pagetext)
 
-	if (p ~= "/charpane.php") then
+	-- TODO: Redo, assistance automation should only run on some pages
+	if p ~= "/charpane.php" and p ~= "/game.php" and not p:contains("chat.php") and not p:contains("menu.php") then
 		pagetext = run("all pages", pagetext)
 	end
 

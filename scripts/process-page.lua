@@ -69,20 +69,20 @@ do
 	for _, x in ipairs(datafile("semirares")) do
 		if matches(x) then
 			print("INFO: SEMIRARE!!!", x)
-			ascension["last semirare encounter"] = x
-			ascension["last semirare turn"] = turnsthisrun()
+			--ascension["last semirare encounter"] = x
+			--ascension["last semirare turn"] = turnsthisrun()
 			ascension["last semirare"] = { encounter = x, turn = turnsthisrun() }
 		end
 	end
 end
 
 -- Clear cache whenever we gain (or lose) a skill
-if text:contains("You acquire a skill") or text:contains("You leargn a new skill") then
+if text:contains("You acquire a skill") or text:contains("You leargn a new skill") or text:contains("You learn a new skill") then
 	print("INFO: Clearing skill cache!")
 	clear_cached_skills()
 end
 
-run_functions(path, text, function (target, pt)
+run_functions(path, text, function(target, pt)
 	for _, x in ipairs(processors[target] or {}) do
 		getfenv(x.f).text = pt
 -- 		kolproxy_log_time_interval("run:" .. tostring(x.scriptname), x.f)
@@ -117,13 +117,13 @@ end
 
 envstoreinfo.g_env.load_script_files {
 	add_processor_raw = add_processor_raw,
-	add_printer = function () end,
-	add_choice_text_conditional = function () end,
-	add_choice_text = function () end,
-	add_choice_itemtext = function () end,
-	add_choice_function = function () end,
-	add_interceptor = function () end,
-	add_automator = function () end,
+	add_printer = function() end,
+	add_choice_text_conditional = function() end,
+	add_choice_text = function() end,
+	add_choice_itemtext = function() end,
+	add_choice_function = function() end,
+	add_interceptor = function() end,
+	add_automator = function() end,
 }
 
 function run_wrapped_function(f_env)

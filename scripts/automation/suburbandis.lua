@@ -1,5 +1,11 @@
 local damageitem = "divine can of silly string"
 
+add_processor("/fight.php", function()
+	if text:contains(">The Thing with no Name is destroyed. Way to go!<") then
+		ascension["suburbandis.defeated thing with no name"] = "yes"
+	end
+end)
+
 function macro_dis()
   return [[
 ]] .. COMMON_MACROSTUFF_START(20, 40) .. [[
@@ -73,19 +79,19 @@ local function automate_dis_zone(zoneid)
 	script.ensure_mp(100)
 	result, resulturl, advagain = autoadventure {
 		zoneid = zoneid,
-		macro = macro_dis(),
+		macro = macro_dis,
 		noncombatchoices = noncombatchoices,
 	}
 end
 
 local folios_used = 0
 
-local dis_href = add_automation_script("automate-suburbandis", function ()
+local dis_href = add_automation_script("automate-suburbandis", function()
 	if autoattack_is_set() then
 		stop "Disable your autoattack. The Dis script will handle (most) combats automatically."
 	end
 	script = get_automation_scripts()
-	maybe_pull_item("ring of conflict")
+	maybe_pull_item("ring of conflict", 1)
 	maybe_pull_item("sea salt scrubs")
 	maybe_pull_item("Space Trip safety headphones")
 	maybe_pull_item("clumsiness bark", 20)
@@ -125,7 +131,7 @@ local dis_href = add_automation_script("automate-suburbandis", function ()
 			script.heal_up()
 			script.ensure_mp(100)
 			local pt, url = post_page("/suburbandis.php", { pwd = session.pwd, action = "dothis" })
-			result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_dis())
+			result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_dis)
 			return result, resulturl
 		end
 		if advagain then
@@ -137,7 +143,7 @@ local dis_href = add_automation_script("automate-suburbandis", function ()
 	return run_turns()
 end)
 
-add_printer("/suburbandis.php", function ()
+add_printer("/suburbandis.php", function()
 	if not setting_enabled("enable turnplaying automation") or ascensionstatus() ~= "Aftercore" then return end
 	text = text:gsub([[(</table></center>)(</body>)]], [[%1<center><a href="]]..dis_href { pwd = session.pwd }..[[" style="color: green">{ Automate Dis }</a></center>%2]])
 end)

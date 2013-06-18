@@ -1,10 +1,10 @@
+-- TODO: Don't load all of these
 dofile("scripts/base/base-lua-functions.lua")
 dofile("scripts/base/state.lua")
 dofile("scripts/base/kolproxy-core-functions.lua")
 dofile("scripts/base/script-functions.lua")
 dofile("scripts/base/charpane.lua")
 dofile("scripts/base/api.lua")
-
 
 
 -- TODO: redo the rest of this code
@@ -28,7 +28,7 @@ function setup_variables()
 			encounter_source = "Obtuse Angel"
 		elseif text:contains("<td bgcolor=black align=center><font color=white size=1>") then
 			encounter_source = "Mini-Hipster"
-		elseif monster_name:contains("Black Crayon") then
+		elseif monster_name and monster_name:contains("Black Crayon") then
 			encounter_source = "Artistic Goth Kid"
 		else
 			encounter_source = "adventure"
@@ -36,8 +36,8 @@ function setup_variables()
 	end
 
 	for x in text:gmatch([[<tr><td style="color: white;" align=center bgcolor=blue.-><b>([^<]*)</b></td></tr>]]) do
-		if x ~= "Results:" then
-			adventure_title = x
+		if x ~= "Results:" and x ~= "Adventure Again:" then
+			adventure_title = x:gsub(" %(#[0-9]*%)$", "")
 		end
 	end
 	choice_adventure_number = tonumber(text:match([[<input type=hidden name=whichchoice value=([0-9]+)>]]))
@@ -49,7 +49,7 @@ function monstername(name)
 		return name == monstername()
 	end
 	if monster_name then
-		return monster_name:gsub("^a ", ""):gsub("^an ", "")
+		return monster_name:gsub("^[^ ]* ", "")
 	end
 end
 

@@ -1,4 +1,4 @@
-local minelayout_href = add_automation_script("automate-spading-mine-layouts", function ()
+local minelayout_href = add_automation_script("automate-spading-mine-layouts", function()
 	equip_item("miner's helmet")
 	equip_item("7-Foot Dwarven mattock")
 	equip_item("miner's pants")
@@ -56,7 +56,7 @@ local minelayout_href = add_automation_script("automate-spading-mine-layouts", f
 	return text, url
 end)
 
-add_printer("/main.php", function ()
+add_printer("/main.php", function()
 	if ascensionstatus() == "Aftercore" then
 		local links = {
 			{ title = "Mine layout spading", url = minelayout_href { pwd = session.pwd } },

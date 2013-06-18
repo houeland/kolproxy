@@ -16,11 +16,8 @@ add_printer("/clan_viplounge.php", function()
 	messages = {}
 	function add_message(counter, maxcounter, msg)
 		local c = get_daily_counter(counter)
-		if c < maxcounter then
-			table.insert(messages, msg .. [[: used ]] .. c .. [[ / ]] .. maxcounter .. [[ times today.]])
-		else
-			table.insert(messages, [[<span style="color: gray">]] .. msg .. [[ used: ]] .. c .. [[ / ]] .. maxcounter .. [[ times today.</span>]])
-		end
+		local color = (c < maxcounter) and "green" or "gray"
+		table.insert(messages, string.format([[<span style="color: %s">{ %s used: %d / %d times today. }</span>]], color, msg, c, maxcounter))
 	end
 	add_message("zone.vip lounge.pool table", 3, "A Pool Table")
 -- 	add_message("zone.vip lounge.hot tub", 5, "A Relaxing Hot Tub")
@@ -97,6 +94,6 @@ add_printer("/clan_viplounge.php", function()
 			end
 			table.insert(optgroups, string.format([[<optgroup label="%s">%s</optgroup>]], c, table.concat(opts)))
 		end
-		return x .. [[<hr><form action="]] .. faxbot_href {} .. [[" method="post"><input type=hidden name=pwd value="]]..session.pwd..[["><span style="color: green;">Choose monster:</span> <select name="faxcommand"><option value="">-- nothing --</option>]] .. table.concat(optgroups) .. [[</select> <input class="button" type="submit" value="Get from FaxBot"></form>]]
+		return x .. [[<hr><form action="]] .. faxbot_href {} .. [[" method="post"><input type=hidden name=pwd value="]]..session.pwd..[["><span style="color: green;">{ Choose monster: }</span> <select name="faxcommand"><option value="">-- nothing --</option>]] .. table.concat(optgroups) .. [[</select> <input class="button" type="submit" value="Get from FaxBot"></form>]]
 	end)
 end)

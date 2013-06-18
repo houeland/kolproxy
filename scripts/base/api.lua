@@ -65,7 +65,7 @@ function setup_functions()
 			local cid = classid()
 			if cid == 1 or cid == 2 or cid == 11 or cid == 12 then
 				return "Muscle"
-			elseif cid == 3 or cid == 4 then
+			elseif cid == 3 or cid == 4 or cid == 14 then
 				return "Mysticality"
 			elseif cid == 5 or cid == 6 then
 				return "Moxie"
@@ -77,6 +77,14 @@ function setup_functions()
 				}
 				table.sort(tbl, function(a, b) return a[2] > b[2] end)
 				return tbl[1][1]
+			end
+		end
+
+		function mainstat_type(which)
+			if which then
+				return get_mainstat() == which
+			else
+				return get_mainstat()
 			end
 		end
 
@@ -103,6 +111,9 @@ function setup_functions()
 		function turnsthisrun() return tonumber(status().turnsthisrun) end
 		function familiarid() return tonumber(status().familiar) end
 		function familiarpicture() return status().familiarpic end
+		function familiar(name)
+			return familiarid() == get_familiarid(name)
+		end
 		function buffedfamiliarweight() return tonumber(status().famlevel) end
 		function have_buff(name)
 			if not datafile("buffs")[name] then
@@ -173,7 +184,10 @@ function setup_functions()
 			return status().sign
 		end
 		function freedralph() return tonumber(status().freedralph) == 1 end
-		function moonsign_area()
+		function moonsign_area(name)
+			if name then
+				return moonsign_area() == name
+			end
 			local areas = {
 				Mongoose = "Degrassi Knoll",
 				Wallaby = "Degrassi Knoll",
@@ -363,13 +377,13 @@ function setup_functions()
 				tbl.action = "dualwield"
 			elseif slot == "offhand" then
 				tbl.action = "dualwield"
-				local f = get_page("/inv_equip.php", tbl)
+				local f, furl = get_page("/inv_equip.php", tbl)
 				if equipment().offhand ~= itemid then
 					tbl.action = "equip"
 					tbl.slot = tostring(slot)
 					return async_get_page("/inv_equip.php", tbl)
 				else
-					return f()
+					return f, furl
 				end
 			elseif slot == "acc1" then
 				tbl.slot = "1"
@@ -379,13 +393,13 @@ function setup_functions()
 				tbl.slot = "3"
 			elseif slot == "familiarequip" then
 				tbl.action = "hatrack"
-				local f = async_get_page("/inv_equip.php", tbl)
+				local f, furl = get_page("/inv_equip.php", tbl)
 				if equipment().familiarequip ~= itemid then
 					tbl.action = "equip"
 					tbl.slot = tostring(slot)
 					return async_get_page("/inv_equip.php", tbl)
 				else
-					return f()
+					return f, furl
 				end
 			elseif slot then
 				tbl.slot = tostring(slot)
@@ -409,19 +423,23 @@ function setup_functions()
 		end
 
 		function set_equipment(tbl)
--- 			print("setting equipment to", tbl)
+--			print("setting equipment to", tbl)
 			local eq = equipment()
 			for a, b in pairs(eq) do
--- 				print("checking", b, "vs[", a, "]", tbl[a])
+--				print("checking", b, "vs[", a, "]", tbl[a])
 				if b ~= tbl[a] then
 					unequip_slot(a)
--- 					print("unequipping slot", a)
+--					print("unequipping slot", a)
 				end
 			end
 			local eq = equipment()
+			if eq.weapon ~= tbl.weapon then
+				equip_item(tbl.weapon, "weapon")
+				eq = equipment()
+			end
 			for a, b in pairs(tbl) do
 				if eq[a] ~= b then
--- 					print("equipping", b, a)
+--					print("equipping", b, a)
 					equip_item(b, a)
 				end
 			end
@@ -477,13 +495,11 @@ function setup_functions()
 		end
 
 		function pull_storage_items(xs)
-			local tbl = { pwd = session.pwd, action = "pull", ajax = 1 }
-			for nr, name in pairs(xs) do
-				tbl["howmany" .. tostring(nr)] = 1
-				tbl["whichitem" .. tostring(nr)] = get_itemid(name)
+			local pf
+			for _, name in ipairs(xs) do
+				pf = async_post_page("/storage.php", { pwd = session.pwd, action = "pull", ajax = 1, howmany1 = 1, whichitem1 = get_itemid(name) })
 			end
-			-- TODO!: split up more than 11
-			return async_post_page("/storage.php", tbl)
+			return pf
 		end
 
 		function freepull_item(name)
@@ -503,17 +519,20 @@ function setup_functions()
 			return async_get_page("/sellstuff.php", { action = "sell", ajax = 1, type = "quant", ["whichitem[]"] = get_itemid(name), howmany = amount or 1, pwd = session.pwd })
 		end
 
-		function cast_skillid(skillid, quantity, targetid)
+		function cast_skill(skill, quantity, targetid)
+			local skillid = get_skillid(skill)
 			targetid = targetid or playerid()
 			assert(targetid and targetid ~= "")
 			local tbl = { whichskill = skillid, ajax = 1, action = "Skillz", pwd = session.pwd, targetplayer = targetid, quantity = quantity }
 			return async_get_page("/skills.php", tbl)
 		end
+		cast_skillid = cast_skill
 
 		function switch_familiarid(id)
 			return async_get_page("/familiar.php", { action = "newfam", ajax = 1, newfam = id })
 		end
 
+		-- TODO: move procedure
 		function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
 			if url:contains("/fight.php") then -- TODO: hmmmm? -- and url:match("ireallymeanit") then
 				local advagain = nil
@@ -528,7 +547,11 @@ function setup_functions()
 				end
 				if advagain == nil then
 					if macro then
-						local pt, url = post_page("/fight.php", { action = "macro", macrotext = macro })
+						local macrotext = macro
+						if type(macrotext) ~= "string" then
+							macrotext = macro()
+						end
+						local pt, url = post_page("/fight.php", { action = "macro", macrotext = macrotext })
 -- 						print("recurse with macro")
 						return handle_adventure_result(pt, url, zoneid, nil, noncombatchoices, specialnoncombatfunction)
 					else
@@ -548,7 +571,7 @@ function setup_functions()
 						adventure_title = x
 					end
 				end
-				adventure_title = adventure_title:gsub(" %(#[0-9]*%)$", "")
+				adventure_title = (adventure_title or ""):gsub(" %(#[0-9]*%)$", "")
 				if found_results and zoneid and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
 					advagain = true
 					return pt, url, advagain
@@ -571,7 +594,7 @@ function setup_functions()
 					end
 				end
 				if optname and not pickchoice then
-					print("Warning: option " .. tostring(optname) .. " not found for " .. tostring(adventure_title) .. ".")
+					print("ERROR: option " .. tostring(optname) .. " not found for " .. tostring(adventure_title) .. ".")
 				end
 				if pickchoice then
 					local pt, url = post_page("/choice.php", { pwd = session.pwd, whichchoice = choice_adventure_number, option = pickchoice })
@@ -650,6 +673,9 @@ function setup_functions()
 			session["cached player skills.ascensionpathid"] = nil
 		end
 		function have_skill(name)
+			if not name or name == "" then
+				error("Invalid name for have_skill: " .. tostring(name))
+			end
 			local skills = get_player_skills()
 			if skills then
 				return skills[name] ~= nil
