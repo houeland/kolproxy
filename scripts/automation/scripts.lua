@@ -615,6 +615,9 @@ function get_automation_scripts(cached_stuff)
 			if maxhp() - hp() >= 70 and have_skill("Cannelloni Cocoon") then
 				ensure_mp(20)
 				cast_skillid(3012)
+			elseif have_skill("Tongue of the Otter") then
+				ensure_mp(7)
+				cast_skillid(1007)
 			elseif have_skill("Tongue of the Walrus") then
 				ensure_mp(10)
 				cast_skillid(1010)
@@ -762,7 +765,7 @@ function get_automation_scripts(cached_stuff)
 			end
 			return use_item("tobiko marble soda")
 		end,
-		["Cat-Alyzed"] = function()
+		["Dances with Tweedles"] = function()
 			if cached_stuff.used_hatter_buff_today then return end
 			local pt, pturl
 			if not buff("Down the Rabbit Hole") then
@@ -770,11 +773,10 @@ function get_automation_scripts(cached_stuff)
 				pt, pturl = use_item("&quot;DRINK ME&quot; potion")()
 			end
 			local previous_hat = equipment().hat
-			if not have("snorkel") then
-				buy_item("snorkel", "z")
+			if not have("filthy knitted dread sack") then
 			end
-			equip_item("snorkel")
-			if equipment().hat == get_itemid("snorkel") then
+			equip_item("filthy knitted dread sack")
+			if equipment().hat == get_itemid("filthy knitted dread sack") then
 				async_get_page("/rabbithole.php", { action = "teaparty" })
 				pt, pturl = post_page("/choice.php", { pwd = get_pwd(), whichchoice = "441", option = "1" }) -- get hatter buff
 				cached_stuff.used_hatter_buff_today = true
@@ -782,6 +784,26 @@ function get_automation_scripts(cached_stuff)
 			equip_item(previous_hat)
 			return function() return pt, pturl end
 		end,
+--		["Cat-Alyzed"] = function()
+--			if cached_stuff.used_hatter_buff_today then return end
+--			local pt, pturl
+--			if not buff("Down the Rabbit Hole") then
+--				async_get_page("/clan_viplounge.php", { action = "lookingglass" })
+--				pt, pturl = use_item("&quot;DRINK ME&quot; potion")()
+--			end
+--			local previous_hat = equipment().hat
+--			if not have("snorkel") then
+--				buy_item("snorkel", "z")
+--			end
+--			equip_item("snorkel")
+--			if equipment().hat == get_itemid("snorkel") then
+--				async_get_page("/rabbithole.php", { action = "teaparty" })
+--				pt, pturl = post_page("/choice.php", { pwd = get_pwd(), whichchoice = "441", option = "1" }) -- get hatter buff
+--				cached_stuff.used_hatter_buff_today = true
+--			end
+--			equip_item(previous_hat)
+--			return function() return pt, pturl end
+--		end,
 		["Red Door Syndrome"] = function()
 			if not have_item("can of black paint") then
 				buy_item("can of black paint", "l")
@@ -797,20 +819,27 @@ function get_automation_scripts(cached_stuff)
 		["Empathy"] = { item = "totem" },
 		["Astral Shell"] = { item = "totem" },
 		["Curiosity of Br'er Tarrypin"] = { item = "totem" },
+		["Reptilian Fortitude"] = { item = "totem" },
 		["Elemental Saucesphere"] = { item = "saucepan" },
 		["Jalape&ntilde;o Saucesphere"] = { item = "saucepan" },
 		["Jaba&ntilde;ero Saucesphere"] = { item = "saucepan" },
 		["Scarysauce"] = { item = "saucepan" },
-
+		
 		["The Moxious Madrigal"] = { effectid = 61 },
 		["Polka of Plenty"] = { effectid = 63 },
 		["The Magical Mojomuscular Melody"] = { effectid = 64 },
 		["Power Ballad of the Arrowsmith"] = { effectid = 65 },
 		["Fat Leon's Phat Loot Lyric"] = { effectid = 67 },
+		
 		["Ode to Booze"] = { effectid = 71 },
 		["The Sonata of Sneakiness"] = { effectid = 162, shrug_first = "Carlweather's Cantata of Confrontation" },
 		["Carlweather's Cantata of Confrontation"] = { effectid = 163, shrug_first = "The Sonata of Sneakiness" },
 		["Ur-Kel's Aria of Annoyance"] = { effectid = 164 },
+		["The Ballad of Richie Thingfinder"] = { effectid = 530 },
+		["Chorale of Companionship"] = { effectid = 533 },	
+		
+		["Singer's Faithful Ocelot"] = { effectid = 1193 },	
+		["Drescher's Annoying Noise"] = { effectid = 1194 },	
 
 		["Pep Talk"] = { skillid = 11005, mpcost = 1 },
 	}
@@ -940,6 +969,7 @@ function get_automation_scripts(cached_stuff)
 			"The Moxious Madrigal",
 			"The Magical Mojomuscular Melody",
 			"Fat Leon's Phat Loot Lyric",
+			"Chorale of Companionship",
 		}
 		if level() >= 13 and buff("Ur-Kel's Aria of Annoyance") and not want_buffs["Ur-Kel's Aria of Annoyance"] then
 			shrug_buff("Ur-Kel's Aria of Annoyance")
@@ -1650,6 +1680,8 @@ endif
 							eat_item("Hell ramen")
 							eat_item("fettucini Inconnu")
 							eat_item("fettucini Inconnu")
+							eat_item("Gnocchetti di Nietzsche")
+							eat_item("Gnocchetti di Nietzsche")							
 							did_action = (fullness() >= 12)
 							return result, resulturl, did_action
 						elseif have("milk of magnesium") then
@@ -1839,9 +1871,6 @@ endif
 								drink_item("pumpkin beer")
 							elseif have("distilled fortified wine") then
 								drink_item("distilled fortified wine")
-							elseif have("Ye Wizard's Shack snack voucher") and drunkenness() + 3 <= max_drunk then
-								async_post_page("/gamestore.php", { action = "buysnack", whichsnack = get_itemid("tobiko-infused sake") })
-								drink_item("tobiko-infused sake")
 							elseif have("Supernova Champagne") and drunkenness() + 3 <= max_drunk then
 								drink_item("Supernova Champagne")
 							elseif have("cream stout") then
@@ -2031,7 +2060,7 @@ endif
 			if not have("The Big Book of Pirate Insults") then
 				critical "No insult book when doing pirates!"
 			end
-			go("doing barrr: " .. insults .. " insults", 157, macro_barrr, get_barrr_noncombattbl(), { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease", "Ghostly Shell", "Astral Shell", "A Few Extra Pounds", "Leash of Linguini", "Empathy" }, "Slimeling even in fist", 30, { equipment = { hat = "eyepatch", pants = "swashbuckling pants", acc3 = "stuffed shoulder parrot" } })
+			go("doing barrr: " .. insults .. " insults", 157, macro_barrr, get_barrr_noncombattbl(), { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Bacon Grease", "Ghostly Shell", "Astral Shell", "A Few Extra Pounds", "Leash of Linguini", "Empathy" }, "Slimeling even in fist", 30, { equipment = { hat = "eyepatch", pants = "swashbuckling pants", acc3 = "stuffed shoulder parrot" } })
 		end
 	end
 
@@ -2091,6 +2120,12 @@ endif
 			async_get_page("/bigisland.php", { place = "orchard", action = "stand", pwd = get_pwd() })
 			async_get_page("/bigisland.php", { place = "orchard", action = "stand", pwd = get_pwd() })
 		end
+--      this doesn't work lol :(		
+		local nunspt = get_page("/bigisland.php", { place = "nunnery", action = "nuns", pwd = get_pwd() })
+			if nunspt:contains(" Those filthy, thieving, dirty rotten bandits from the Themthar Hills have stolen ") then
+			function f.do_nuns()
+			end
+		end
 -- 		error "TODO use PADL"
 		use_dancecard()
 		function macro_battlefield()
@@ -2115,7 +2150,7 @@ mark m_done
 			script.bonus_target { "minoritem" }
 		end
 		local kills = (ascension["battlefield.kills.frat boy"] or {}).min or 0
-		go("fight on battlefield: " .. kills .. " hippies killed", 132, macro_battlefield, nil, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling even in fist", 80, { equipment = { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" } })
+		go("fight on battlefield: " .. kills .. " hippies killed", 132, macro_battlefield, nil, { "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Bacon Grease" }, "Slimeling even in fist", 80, { equipment = { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" } })
 		if get_result():contains("There are no hippy soldiers left") then
 			local turnins = {
 				"green clay bead",
@@ -2150,10 +2185,10 @@ mark m_done
 					end
 				elseif challenge == "jarlsberg" then
 					async_post_page("/campground.php", { action = "telescopehigh" })
-					script.maybe_ensure_buffs { "Mental A-cue-ity", "Pisces in the Skyces" }
+					script.maybe_ensure_buffs { "Mental A-cue-ity" }
 					script.ensure_buffs { "Go Get 'Em, Tiger!", "Butt-Rock Hair" }
 					script.force_heal_up()
-					if have_buff("Mental A-cue-ity") and have_buff("Pisces in the Skyces") and hp() / maxhp() >= 0.9 and have_skill("Blend") then
+					if have_buff("Mental A-cue-ity") and hp() / maxhp() >= 0.9 and have_skill("Blend") then
 					else
 						stop "TODO: Fight hippy boss in AoJ"
 					end
@@ -2225,7 +2260,7 @@ mark m_done
 			go("unlock cellar", 109, macro_noodlecannon, {
 				["Curtains"] = "Watch the dancers",
 				["Strung-Up Quartet"] = "&quot;Play nothing, please.&quot;",
-			}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic" }, "Slimeling", 30)
+			}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Garlic" }, "Slimeling", 30)
 		elseif not have("Lord Spookyraven's spectacles") then
 			script.bonus_target { "noncombat" }
 			go("get spectacles", 108, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Springy Fusilli", "Spirit of Garlic" }, "Rogue Program", 50, { choice_function = function(advtitle, choicenum)
@@ -2318,7 +2353,7 @@ mark m_done
 				end
 				local next_zone = best_zones[math.random(table.maxn(best_zones))]
 --				print("bestzone", table_to_str(best_zones), best, "going to", next_zone)
-				go("get cellar wines", next_zone, macro_noodleserpent, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 50)
+				go("get cellar wines", next_zone, macro_noodleserpent, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Heavy Petting", "Peeled Eyeballs", "The Ballad of Richie Thingfinder", "Chorale of Companionship", "Leash of Linguini", "Empathy" }, "Slimeling", 50)
 			end
 		end
 	end
@@ -2334,7 +2369,7 @@ mark m_done
 			if buff("Stone-Faced") or ascensionstatus() == "Hardcore" then
 				ignore_buffing_and_outfit = true
 				if not have("the Nostril of the Serpent") and ascension["zone.hidden temple.placed Nostril of the Serpent"] ~= "yes" then
-					go("unlock hidden city", 280, macro_noodlecannon, {}, {}, "Mini-Hipster", 25, { choice_function = function(advtitle, choicenum, pagetext)
+					go("unlock hidden city", 280, macro_noodlecannon, {}, {"Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy", "Smooth Movements", "The Sonata of Sneakiness"}, "Slimeling", 25, { choice_function = function(advtitle, choicenum, pagetext)
 						if advtitle == "Fitting In" then
 							return "Explore the higher levels"
 						elseif advtitle == "Such Great Heights" then
@@ -2482,6 +2517,7 @@ mark m_done
 				go("find carved wheel", 124, macro_noodleserpent, nil, { "Spirit of Bacon Grease" }, "Mini-Hipster", 45)
 			else
 				script.bonus_target { "noncombat" }
+				script.maybe_ensure_buffs { "Silent Running" }
 				go("place wheel in middle chamber", 125, macro_noodleserpent, {
 					["Wheel in the Pyramid, Keep on Turning"] = "Turn the wheel",
 				}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "Rogue Program", 45)
@@ -2556,7 +2592,7 @@ mark m_done
 			if daysthisrun() >= 3 then
 				pull_in_softcore("peppermint crook")
 			end
-			go("fight guard", 129, (challenge == "boris" and have_item("peppermint crook") and macro_softcore_boris_crook) or macro_ppnoodlecannon, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 30, { equipment = { familiarequip = "sugar shield", pants = (challenge == "boris" and have("Greatest American Pants")) and "Greatest American Pants" or nil } })
+			go("fight guard", 129, (challenge == "boris" and have_item("peppermint crook") and macro_softcore_boris_crook) or macro_ppnoodlecannon, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Heavy Petting", "Peeled Eyeballs", "The Ballad of Richie Thingfinder", "Chorale of Companionship", "Leash of Linguini", "Empathy" }, "Slimeling", 30, { equipment = { familiarequip = "sugar shield", pants = (challenge == "boris" and have("Greatest American Pants")) and "Greatest American Pants" or nil } })
 		elseif have("filthworm drone scent gland") then
 			inform "using drone stench"
 			set_result(use_item("filthworm drone scent gland"))
@@ -2565,7 +2601,7 @@ mark m_done
 			if daysthisrun() >= 3 then
 				pull_in_softcore("peppermint crook")
 			end
-			go("fight drone", 128, (challenge == "boris" and count_item("peppermint crook") >= 2 and macro_softcore_boris_crook) or macro_ppnoodlecannon, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 30, { equipment = { familiarequip = "sugar shield", pants = (challenge == "boris" and have("Greatest American Pants")) and "Greatest American Pants" or nil } })
+			go("fight drone", 128, (challenge == "boris" and count_item("peppermint crook") >= 2 and macro_softcore_boris_crook) or macro_ppnoodlecannon, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Heavy Petting", "Peeled Eyeballs", "The Ballad of Richie Thingfinder", "Chorale of Companionship", "Leash of Linguini", "Empathy" }, "Slimeling", 30, { equipment = { familiarequip = "sugar shield", pants = (challenge == "boris" and have("Greatest American Pants")) and "Greatest American Pants" or nil } })
 		elseif have("filthworm hatchling scent gland") then
 			inform "using hatchling stench"
 			set_result(use_item("filthworm hatchling scent gland"))
@@ -2573,10 +2609,37 @@ mark m_done
 		else
 			-- TODO: use GAP +item% buff if available, GAP structure buff
 			softcore_stoppable_action("fight hatchling")
-			go("fight hatchling", 127, (challenge == "boris" and count("peppermint crook") >= 3 and macro_softcore_boris_crook) or macro_ppnoodlecannon, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 30, { equipment = { familiarequip = "sugar shield", pants = (challenge == "boris" and have("Greatest American Pants")) and "Greatest American Pants" or nil } })
+			go("fight hatchling", 127, (challenge == "boris" and count("peppermint crook") >= 3 and macro_softcore_boris_crook) or macro_ppnoodlecannon, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Heavy Petting", "Peeled Eyeballs", "The Ballad of Richie Thingfinder", "Chorale of Companionship", "Leash of Linguini", "Empathy" }, "Slimeling", 30, { equipment = { familiarequip = "sugar shield", pants = (challenge == "boris" and have("Greatest American Pants")) and "Greatest American Pants" or nil } })
 		end
 	end
 
+	function f.do_nuns()
+		stop "TODO: Do nuns. p.s. eleron smells!"
+	end
+--		if have("Polka Pop") and not buff("Polka Face") then
+--			use_item("Polka Pop")
+--		end
+--		if have("Mick's IcyVapoHotness Inhaler") and not buff("Sinuses for Miles") then
+--			use_item("Mick's IcyVapoHotness Inhaler")
+--		end
+--		if have("resolution: be wealthier") and not buff("Wealthy Resolve") then
+--			use_item("resolution: be wealthier")
+--		end
+--		if have("pink candy heart") and not buff("Heart of Pink") then
+--			use_item("Mick's IcyVapoHotness Inhaler")
+--		end
+--		if have("Mick's IcyVapoHotness Inhaler") and not buff("Sinuses for Miles") then
+--			use_item("Mick's IcyVapoHotness Inhaler")
+--		end
+--		wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
+--			script.maybe_ensure_buffs { "Wrinklered", "Dances with Tweedles" }
+--			go("fight dirty brigands", 126, macro_noodlegeyser, {}, { "Spirit of Bacon Grease", "The Polka of Plenty", "Heavy Petting", "Wasabi Sinuses", "The Ballad of Richie Thingfinder", "Chorale of Companionship", "Leash of Linguini", "Empathy" }, "Hobo Monkey", 30, { equipment = { familiarequip = "sugar shield" } })
+--		async_get_page("/bigisland.php", { place = "lighthouse", action = "pyro", pwd = get_pwd() })
+--		local nunspt = get_page("/bigisland.php", { place = "nunnery", action = "nuns", pwd = get_pwd() })
+--			if nunspt:contains("Those filthy, thieving, dirty rotten bandits from the Themthar Hills have stolen") then
+--			function f.do_nuns()
+--		end
+			
 	function f.do_sonofa()
 		local macro = macro_noodleserpent
 		if not ascensionstatus("Hardcore") then
@@ -2637,6 +2700,10 @@ endif
 				else
 					script.bonus_target { "combat" }
 					script.ensure_buffs {}
+					if have("reodorant") and not buff("Hippy Stench") then
+					   use_item("reodorant")
+					end
+--					TODO: remove Silent Running!
 					if buff("Song of Battle") and ascensionstatus() == "Hardcore" then
 						go("do sonofa beach, " .. make_plural(count("barrel of gunpowder"), "barrel", "barrels"), 136, macro_hardcore_boris, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
 					elseif buff("Song of Battle") and have("Rain-Doh black box") then
@@ -2765,7 +2832,7 @@ endif
 				ignore_buffing_and_outfit = false
 				script.bonus_target { "item" }
 				maybe_ensure_buffs { "Brother Flying Burrito's Blessing" }
-				local bufftbl = { "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy", "Spirit of Garlic" }
+				local bufftbl = { "The Ballad of Richie Thingfinder", "Chorale of Companionship", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Leash of Linguini", "Empathy", "Spirit of Garlic", "Heavy Petting", "Peeled Eyeballs" }
 				if count("glass of goat's milk") < 2 or not buff("Brother Flying Burrito's Blessing") then
 					table.insert(bufftbl, "Heavy Petting")
 					table.insert(bufftbl, "Peeled Eyeballs")
@@ -2802,7 +2869,7 @@ endif
 					did_action = count(want_ore) > got
 				end
 			else
-				go("get mining outfit", 270, macro_noodlecannon, {}, { "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy", "Spirit of Garlic" }, "Slimeling", 35, { choice_function = function(advtitle, choicenum)
+				go("get mining outfit", 270, macro_noodlecannon, {}, { "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Leash of Linguini", "Empathy", "Spirit of Garlic", "Peeled Eyeballs", "Heavy Petting" }, "Slimeling", 35, { choice_function = function(advtitle, choicenum)
 					print("DEBUG mining", advtitle, choicenum)
 					if advtitle == "100% Legal" then
 						if not have_item("miner's helmet") then
@@ -3099,7 +3166,7 @@ endif
 			did_action = have("eyepatch") and have("swashbuckling pants") and have("stuffed shoulder parrot")
 		else
 			script.bonus_target { "noncombat", "item" }
-			go("get swashbuckling outfit", 66, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric" }, "Slimeling", 25, { choice_function = function(advtitle, choicenum)
+			go("get swashbuckling outfit", 66, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "The Ballad of Richie Thingfinder", "Fat Leon's Phat Loot Lyric", "Peeled Eyeballs" }, "Slimeling", 25, { choice_function = function(advtitle, choicenum)
 				if advtitle == "Amatearrr Night" then
 					if not have("stuffed shoulder parrot") then
 						return "What's orange and sounds like a parrot?" -- stuffed shoulder parrot
@@ -3319,7 +3386,7 @@ endif
 				stop("Trailing " .. trailed .. " when finishing hits")
 			end
 			script.bonus_target { "item" }
-			go("finish hits", 83, macro_noodlecannon, {}, { "Spirit of Peppermint", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 40)
+			go("finish hits", 83, macro_noodlecannon, {}, { "Spirit of Peppermint", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Heavy Petting", "Peeled Eyeballs", "The Ballad of Richie Thingfinder", "Chorale of Companionship", "Leash of Linguini", "Empathy" }, "Slimeling", 40)
 		end
 		return result, resulturl, did_action
 	end
@@ -3434,11 +3501,11 @@ mark m_done
 					macro_laughfloor = macro_fist
 				end
 				if count("imp air") < 5 then
-					go("mourn, imp air: " .. count("imp air"), 242, macro_laughfloor, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
+					go("mourn, imp air: " .. count("imp air"), 242, macro_laughfloor, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "A Few Extra Pounds", "Peeled Eyeballs", "Chorale of Companionship", "The Ballad of Richie Thingfinder" }, "Slimeling", 35)
 				else
 					-- TODO: buff for finding faster?
 					script.bonus_target { "combat" }
-					go("mourn, getting bosses", 242, macro_laughfloor, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)
+					go("mourn, getting bosses", 242, macro_laughfloor, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds", "Musk of the Moose", "Carlweather's Cantata of Confrontation" }, "Hound Dog", 35)
 				end
 			end
 		elseif not have("Azazel's unicorn") then
@@ -3463,7 +3530,7 @@ mark m_done
 
 ]] .. macro_ppnoodlecannon()
 				end
-					go("sven golly, bus passes: " .. count("bus pass"), 243, macro_backstage, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
+					go("sven golly, bus passes: " .. count("bus pass"), 243, macro_backstage, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "A Few Extra Pounds", "Peeled Eyeballs" }, "Slimeling", 35)
 				else
 					-- TODO: buff for finding faster?
 					go("sven golly, getting items", 243, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)
@@ -3511,9 +3578,9 @@ mark m_done
 				end
 				did_action = (count("sonar-in-a-biscuit") == 2)
 			elseif have("enchanted bean") then
-				go("getting sonars", 32, (macrofunc or macro_autoattack), nil, { "Leash of Linguini", "Empathy", "Fat Leon's Phat Loot Lyric", "Butt-Rock Hair" }, "Slimeling", 10 + (extra_mp or 0))
+				go("getting sonars", 32, (macrofunc or macro_autoattack), nil, { "Leash of Linguini", "Empathy", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Butt-Rock Hair" }, "Slimeling", 10 + (extra_mp or 0))
 			else
-				go("getting sonars / enchanted bean", 33, (macrofunc or macro_autoattack), nil, { "Leash of Linguini", "Empathy", "Fat Leon's Phat Loot Lyric", "Butt-Rock Hair" }, "Slimeling", 10 + (extra_mp or 0))
+				go("getting sonars / enchanted bean", 33, (macrofunc or macro_autoattack), nil, { "Leash of Linguini", "Empathy", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Butt-Rock Hair" }, "Slimeling", 10 + (extra_mp or 0))
 			end
 		else
 			-- TODO: only increment turns played when we actually enter the zone, not if something goes wrong
@@ -3644,30 +3711,29 @@ endif
 				else
 					script.bonus_target { "initiative", "noncombat" }
 					script.maybe_ensure_buffs { "Hustlin'", "Sugar Rush" }
-					go("do crypt alcove", 261, alcove_macro, noncombattbl, { "Butt-Rock Hair", "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Springy Fusilli", "Spirit of Garlic" }, "Rogue Program", 20)
+					go("do crypt alcove", 261, alcove_macro, noncombattbl, { "Butt-Rock Hair", "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "A Few Extra Pounds", "Springy Fusilli", "Spirit of Garlic" }, "Rogue Program", 20)
 				end
 			else
-				-- TODO: hustlin pool buff in nonboris?
 				-- TODO: cletus +init?
 				-- TODO: heart of yellow?
 				-- TODO: Happy Medium?
 				script.bonus_target { "initiative", "noncombat" }
-				maybe_ensure_buffs { "Sugar Rush" }
-				go("do crypt alcove", 261, (challenge == "fist" and macro_fist or macro_stasis), noncombattbl, { "Butt-Rock Hair", "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Springy Fusilli", "Spirit of Garlic" }, "Rogue Program", 20)
+				maybe_ensure_buffs { "Sugar Rush", "Hustlin'" }
+				go("do crypt alcove", 261, (challenge == "fist" and macro_fist or macro_stasis), noncombattbl, { "Butt-Rock Hair", "Smooth Movements", "The Sonata of Sneakiness", "The Polka of Plenty", "Singer's Faithful Ocelot", "A Few Extra Pounds", "Springy Fusilli", "Spirit of Garlic" }, "Rogue Program", 20)
 			end
 		elseif cyrpt:match("Defiled Cranny") then
 			script.bonus_target { "noncombat" }
 			maybe_ensure_buffs { "Mental A-cue-ity", "Ur-Kel's Aria of Annoyance" }
-			go("do crypt cranny", 262, macro_noodlecannon, noncombattbl, { "Spirit of Garlic", "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Ur-Kel's Aria of Annoyance" }, "Baby Bugged Bugbear", 35)
+			go("do crypt cranny", 262, macro_noodlecannon, noncombattbl, { "Spirit of Garlic", "Smooth Movements", "The Sonata of Sneakiness", "The Polka of Plenty", "Drescher's Annoying Noise", "A Few Extra Pounds", "Ur-Kel's Aria of Annoyance" }, "Baby Bugged Bugbear", 35)
 		elseif cyrpt:match("Defiled Niche") and (not trailed or trailed == "dirty old lihc") then
-			go("do crypt niche", 263, make_cannonsniff_macro("dirty old lihc"), noncombattbl, { "Spirit of Garlic", "Butt-Rock Hair", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Rogue Program", 25, { olfact = "dirty old lihc" })
+			go("do crypt niche", 263, make_cannonsniff_macro("dirty old lihc"), noncombattbl, { "Spirit of Garlic", "Butt-Rock Hair", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "A Few Extra Pounds" }, "Rogue Program", 25, { olfact = "dirty old lihc" })
 		elseif cyrpt:match("Defiled Nook") then
 			script.bonus_target { "item" }
 			if challenge == "boris" and not buff("Super Vision") and have("Greatest American Pants") then
 				wear { pants = "Greatest American Pants" }
 				script.get_gap_buff("Super Vision")
 			end
-			go("do crypt nook", 264, macro_noodlecannon, noncombattbl, { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 25)
+			go("do crypt nook", 264, macro_noodlecannon, noncombattbl, { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "A Few Extra Pounds", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy", "The Ballad of Richie Thingfinder", "Chorale of Companionship" }, "Slimeling", 25)
 		else
 			inform "kill bonerdagon"
 			if challenge == "boris" then
@@ -3793,15 +3859,15 @@ endif
 		end
 		script.maybe_ensure_buffs { "Silent Running" }
 		if fullness() + count("hellion cube") * 6 + 6 <= estimate_max_fullness() and ascensionstatus() == "Hardcore" and challenge ~= "zombie" then
-			go("getting hellion cubes", 239, make_cannonsniff_macro("Hellion"), nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
+			go("getting hellion cubes", 239, make_cannonsniff_macro("Hellion"), nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
 		elseif not have("box of birthday candles") then
 			go("getting candles", 238, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, { "Scarecrow with Boss Bat britches", "Rogue Program" }, 15)
 		elseif (count("hot wing") < 3 or (meat() < 1000 and fullness() < 5)) and not have("box of birthday candles") then
 			go("getting hot wings", 238, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "Slimeling even in fist", 20)
 --		elseif have_reagent_pastas < 4 and not highskill_at_run and ascensionstatus() == "Hardcore" and challenge ~= "zombie" then
---			go("getting more hellion cubes", 239, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
+--			go("getting more hellion cubes", 239, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
 		elseif not have("dodecagram") then
-			go("getting dodecagram", 239, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling even in fist", 20)
+			go("getting dodecagram", 239, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "A Few Extra Pounds" }, "Slimeling even in fist", 20)
 		elseif not have("eldritch butterknife") then
 			go("getting butterknife", 237, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, { "Scarecrow with Boss Bat britches", "Rogue Program" }, 15)
 		elseif count("hot wing") < 3 then
@@ -3871,7 +3937,7 @@ endif
 				ensure_buffs { "Ode to Booze" }
 				stop "TODO: find oracle, then do DD to wear off teleportitis"
 			else
-				go("unlock dod", 226, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic" }, "Slimeling", 25, { choice_function = function(advtitle, choicenum)
+				go("unlock dod", 226, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Garlic" }, "Slimeling", 25, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Typographical Clutter" then
 						if not have("plus sign") then
 							return "The big apostrophe"
@@ -3890,7 +3956,7 @@ endif
 			else
 				go("get dod wand", 39, macro_noodlecannon, {
 					["Ouch!  You bump into a door!"] = "Buy what appears to be some sort of cloak (5,000 Meat)",
-				}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "Slimeling", 20, {
+				}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "Slimeling", 20, {
 					finalcheck = function()
 						if meat() < 5000 then
 							stop "Need 5k meat for DoD wand"
@@ -3915,7 +3981,7 @@ endif
 	end
 
 	function f.unlock_top_floor()
-		castlego(script.unlock_ground_floor, "unlock top floor", 323, macro_noodleserpent, {}, { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
+		castlego(script.unlock_ground_floor, "unlock top floor", 323, macro_noodleserpent, {}, { "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
 			if advtitle == "There's No Ability Like Possibility" then
 				return "Go out the Way You Came In"
 			elseif advtitle == "Putting Off Is Off-Putting" then
@@ -3932,7 +3998,7 @@ endif
 	function f.unlock_ground_floor()
 		-- TODO: Wear amulet/umbrella
 		script.bonus_target { "noncombat", "item" }
-		go("unlock ground floor", 322, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
+		go("unlock ground floor", 322, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
 			if advtitle == "You Don't Mess Around with Gym" then
 				if have_equipped("amulet of extreme plot significance") then
 					return "Check out the Mirror"
@@ -3959,7 +4025,7 @@ endif
 		end
 
 		script.bonus_target { "noncombat", "item" }
-		castlego(script.unlock_top_floor, "finish castle quest", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
+		castlego(script.unlock_top_floor, "finish castle quest", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Ballad of Richie Thingfinder", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
 			if advtitle == "Copper Feel" then
 				if not have_item("steam-powered model rocketship") then
 					return "Investigate the Whirligigs and Gimcrackery"
@@ -4001,7 +4067,7 @@ endif
 		end
 
 		script.bonus_target { "noncombat", "item" }
-		castlego(script.unlock_top_floor, "unlock hits", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
+		castlego(script.unlock_top_floor, "unlock hits", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
 			if advtitle == "Copper Feel" then
 				return "Investigate the Whirligigs and Gimcrackery"
 			elseif advtitle == "Melon Collie and the Infinite Lameness" then
@@ -4033,7 +4099,7 @@ endif
 			else
 				script.bonus_target { "item" }
 			end
-			go("do black forest", 111, macro_noodleserpent, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 45)
+			go("do black forest", 111, macro_noodleserpent, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Bacon Grease" }, "Slimeling", 45)
 		end
 	end
 
@@ -4118,21 +4184,21 @@ endif
 					pull_in_softcore("drum machine")
 				end
 				script.bonus_target { "item" }
-				go("get stone rose + drum machine", 122, macro_noodleserpent, nil, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 60)
+				go("get stone rose + drum machine", 122, macro_noodleserpent, nil, { "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "The Ballad of Richie Thingfinder", "Chorale of Companionship", "Spirit of Bacon Grease" }, "Slimeling", 60)
 			elseif not have("can of black paint") then
 				inform "buying can of black paint"
 				buy_item("can of black paint", "l")
 				did_action = have("can of black paint")
 			else
-				go("return stone rose", 123, macro_noodleserpent, nil, { "Spirit of Bacon Grease" }, "Mini-Hipster", 60)
+				go("return stone rose", 123, macro_noodleserpent, nil, { "Spirit of Bacon Grease", "The Polka of Plenty" }, "Mini-Hipster", 60)
 			end
 		elseif quest_text("that's probably long enough") then
-			go("return to gnasir after waiting", 123, macro_noodleserpent, nil, { "Spirit of Bacon Grease" }, "Mini-Hipster", 60)
+			go("return to gnasir after waiting", 123, macro_noodleserpent, nil, { "Spirit of Bacon Grease", "The Polka of Plenty" }, "Mini-Hipster", 60)
 		elseif quest_text("find fifteen missing pages") or quest_text("fourteen to go") or quest_text("thirteen to go") then
 			script.bonus_target { "item" }
-			go("find missing pages", 122, macro_noodleserpent, nil, { "Spirit of Bacon Grease" }, "Mini-Hipster", 60)
+			go("find missing pages", 122, macro_noodleserpent, nil, { "Spirit of Bacon Grease", "The Polka of Plenty" }, "Mini-Hipster", 60)
 		elseif quest_text("Time to take them back") then
-			go("return pages to gnasir", 123, macro_noodleserpent, nil, { "Spirit of Bacon Grease" }, "Mini-Hipster", 60)
+			go("return pages to gnasir", 123, macro_noodleserpent, nil, { "Spirit of Bacon Grease", "The Polka of Plenty" }, "Mini-Hipster", 60)
 		end
 	end
 
@@ -4152,7 +4218,7 @@ endif
 				softcore_stoppable_action("do fcle")
 				go("doing fcle", 158, macro_noodleserpent, {
 					["Chatterboxing"] = "Fight chatty fire with chatty fire",
-				}, { "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog", 40, { equipment = { hat = "eyepatch", pants = "swashbuckling pants", acc3 = "stuffed shoulder parrot" } })
+				}, { "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Chorale of Companionship", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Bacon Grease", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog", 40, { equipment = { hat = "eyepatch", pants = "swashbuckling pants", acc3 = "stuffed shoulder parrot" } })
 				if get_result():match("You quickly scribble a random phone number onto the napkin and hand it to the clingy pirate.") then
 					advagain = true
 				end
@@ -4223,11 +4289,11 @@ endif
 				else
 					maybe_ensure_buffs { "Brother Flying Burrito's Blessing" }
 					script.bonus_target { "item" }
-					go("get wet stew ingredients", 100, macro_autoattack, {
+					go("get wet stew ingredients", 100, macro_noodlecannon, {
 						["The Only Thing About Him is the Way That He Walks"] = "Show him some moves",
 						["Rapido!"] = "Steer for the cave",
 						["Don't Fence Me In"] = "Jump the fence",
-					}, { "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog", 20, { equipment = { familiarequip = "sugar shield" } })
+					}, { "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog", 20, { equipment = { familiarequip = "sugar shield" } })
 					if get_result():contains("It's A Sign!") then
 						did_action = true
 					end
@@ -4270,7 +4336,7 @@ endif
 					["Rod Nevada, Vendor"] = "Accept (500 Meat)",
 					["Do Geese See God?"] = "Buy the photograph (500 meat)",
 					["A Pre-War Dresser Drawer, Pa!"] = "Ignawer the drawer",
-				}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 40, { equipment = { acc3 = "Talisman o' Nam" } })
+				}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Bacon Grease" }, "Slimeling", 40, { equipment = { acc3 = "Talisman o' Nam" } })
 				if get_result():contains("Drawn Onward") and resulturl:contains("palinshelves") then
 					set_result(async_post_page("/palinshelves.php", { action = "placeitems", whichitem1 = get_itemid("photograph of God"), whichitem2 = get_itemid("hard rock candy"), whichitem3 = get_itemid("ketchup hound"), whichitem4 = get_itemid("hard-boiled ostrich egg") }))
 					if have("&quot;I Love Me, Vol. I&quot;") then
