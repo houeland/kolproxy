@@ -198,7 +198,7 @@ function get_automation_tasks(script, cached_stuff)
 					equipment = { acc3 = "continuum transfunctioner" },
 					action = function()
 						-- TODO: use adventure()
-						script.go("farm pixels for digital key: " .. pixels, 73, macro_8bit_realm, nil, { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "Ghostly Shell", "Astral Shell", "Leash of Linguini", "Empathy" }, "Stocking Mimic", 15, { olfact = "Blooper", equipment = { acc3 = "continuum transfunctioner" } })
+						script.go("farm pixels for digital key: " .. pixels, 73, macro_8bit_realm, nil, { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Ghostly Shell", "Astral Shell", "Leash of Linguini", "Empathy" }, "Stocking Mimic", 15, { olfact = "Blooper", equipment = { acc3 = "continuum transfunctioner" } })
 					end
 				}
 			end
@@ -355,7 +355,7 @@ mark m_done
 					return {
 						message = "get bridge parts (" .. pieces .. ")",
 						fam = "Slimeling",
-						buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+						buffs = { "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
 						bonus_target = { "item" },
 						minmp = 30,
 						action = adventure {
@@ -405,7 +405,7 @@ mark m_done
 			if have_skill("Gristlesphere") then
 				script.ensure_buffs { "Gristlesphere" }
 			end
-			script.ensure_buffs { "Ur-Kel's Aria of Annoyance" }
+			script.ensure_buffs { "Ur-Kel's Aria of Annoyance", "Drescher's Annoying Noise" }
 			local ml = estimate_bonus("Monster Level")
 			if ml < 20 then
 				stop "Not enough +ML for Oil Peak (want 20+ for automation)"
@@ -416,7 +416,7 @@ mark m_done
 			return {
 				message = "do oil peak",
 				fam = "Baby Bugged Bugbear",
-				buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "A Few Extra Pounds", "Ur-Kel's Aria of Annoyance" },
+				buffs = { "Peeled Eyeballs", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Garlic", "Leash of Linguini", "A Few Extra Pounds", "Ur-Kel's Aria of Annoyance", "Drescher's Annoying Noise" },
 				minmp = 60,
 				action = adventure {
 					zoneid = 298,
@@ -432,6 +432,12 @@ mark m_done
 				end
 				if not have_buff("Well-Oiled") and have_item("Oil of Parrrlay") then
 					use_item("Oil of Parrrlay")
+				end
+				if not have_buff("Oiled-Up") and have_item("pec oil") then
+					use_item("pec oil")
+				end
+				if not have_buff("Protection from Bad Stuff") and have_item("scroll of Protection from Bad Stuff") then
+					use_item("scroll of Protection from Bad Stuff")
 				end
 				script.ensure_buffs { "Go Get 'Em, Tiger!", "Red Door Syndrome", "Astral Shell", "Elemental Saucesphere" }
 				script.force_heal_up()
@@ -475,7 +481,7 @@ mark m_done
 				return {
 					message = string.format("do a-boo peak (%d%% haunted)", hauntedness),
 					fam = "Slimeling",
-					buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+					buffs = { "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Garlic", "Leash of Linguini", "Empathy", "Peeled Eyeballs", "Heavy Petting", "The Ballad of Richie Thingfinder" },
 					minmp = 50,
 					action = adventure {
 						zoneid = 296,
@@ -500,7 +506,7 @@ mark m_done
 				return {
 					message = "solve twin peak mystery",
 					fam = "Slimeling",
-					buffs = { "Fat Leon's Phat Loot Lyric", "Astral Shell", "Elemental Saucesphere" },
+					buffs = { "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Astral Shell", "Elemental Saucesphere", "Smooth Movements", "The Sonata of Sneakiness", "Peeled Eyeballs", "Heavy Petting"},
 					bonus_target = { "noncombat", "item" },
 					minmp = 50,
 					action = function()
@@ -554,7 +560,7 @@ mark m_done
 						if not have_item("jar of oil") then
 							use_item("bubblin' crude", 12)
 						end
-						script.ensure_buffs { "Fat Leon's Phat Loot Lyric", "Astral Shell", "Elemental Saucesphere" }
+						script.ensure_buffs { "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Astral Shell", "Elemental Saucesphere" }
 						if (get_resistance_levels().stench or 0) < 4 and not have_buff("Red Door Syndrome") then
 							script.ensure_buffs { "Red Door Syndrome" }
 						end

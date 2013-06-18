@@ -2419,7 +2419,7 @@ endif
 					return {
 						message = "get KGE outfit",
 						fam = "Slimeling",
-						buffs = { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+						buffs = { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
 						minmp = 25,
 						action = adventure {
 							zoneid = 257,
@@ -2580,7 +2580,7 @@ endif
 	if highskill_at_run then
 		need_total_reagent_pastas = 3 * 2
 	end
-	have_reagent_pastas = (whichday - 1) * 2 + count("hellion cube") + count("goat cheese") + count("Hell ramen") + count("Hell broth") + count("fettucini Inconnu") + count("fancy schmancy cheese sauce")
+	have_reagent_pastas = (whichday - 1) * 2 + count("hellion cube") + count("goat cheese") + count("Knob mushroom") + count("Hell ramen") + count("Hell broth") + count("fettucini Inconnu") + count("fancy schmancy cheese sauce") + count("Himalayan Hidalgo sauce") + count("gnocchetti di Nietzsche")
 	if ascensionstatus() ~= "Hardcore" then
 		have_reagent_pastas = 100
 	elseif fullness() > 9 then
@@ -2840,7 +2840,7 @@ endif
 
 	-- TODO: redo eating/drinking in fist, and in no-path
 	add_task {
-		prereq = challenge == "fist" and whichday >= 2 and level() >= 7 and (advs() < 50 or not quest("Am I My Trapper's Keeper?")) and fullness() <= 9 and (whichday == 2 or have_reagent_pastas >= 8),
+		prereq = challenge == "fist" or challenge == "BIG" and whichday >= 2 and level() >= 7 and (advs() < 50 or not quest("Am I My Trapper's Keeper?")) and fullness() <= 9 and (whichday == 2 or have_reagent_pastas >= 8),
 		f = function()
 			if whichday == 2 and fullness() <= 3 then
 				if count("Hell ramen") >= 2 then
@@ -2878,6 +2878,8 @@ endif
 					eat_item("Hell ramen")
 					eat_item("fettucini Inconnu")
 					eat_item("fettucini Inconnu")
+					eat_item ("Gnocchetti di Nietzsche")
+					eat_item ("Gnocchetti di Nietzsche")
 					if fullness() >= 12 then
 						did_action = true
 					end
@@ -3544,7 +3546,7 @@ endif
 		task = {
 			message = "get digital key",
 			fam = "Slimeling",
-			buffs = { "Glittering Eyelashes", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" },
+			buffs = { "Glittering Eyelashes", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Leash of Linguini", "Empathy", "A Few Extra Pounds", "Reptilian Fortitude" },
 			minmp = 20,
 			olfact = "morbid skull",
 			action = adventure {
@@ -3777,12 +3779,14 @@ endif
 	add_task {
 		prereq =
 			have("Spookyraven ballroom key") and
-			level() < 11 and
 			ascension["zone.manor.quartet song"] ~= "Sono Un Amante Non Un Combattente",
 		f = function()
 			script.bonus_target { "noncombat" }
 			if get_mainstat() == "Moxie" then
 				script.go("set song (moxie)", 109, macro_noodlecannon, {
+			if ascensionpath("BIG") then
+					["Curtains"] = "Pay no attention to the stuff in front of the curtain",
+			end
 					["Curtains"] = "Watch the dancers",
 					["Strung-Up Quartet"] = "&quot;Play 'Sono Un Amanten Non Un Combattente'&quot;",
 				}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic" }, "Slimeling", 25)
@@ -3962,7 +3966,7 @@ endif
 		prereq = have_reagent_pastas < need_total_reagent_pastas and trailed == "dairy goat",
 		f = function()
 			-- TODO: burrito blessing if available. messed up when it's taken too long! don't craft food/equipment until this is done
-			script.go("get goat cheese for pasta", 271, make_cannonsniff_macro("dairy goat"), nil, { "Heavy Petting", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }, "Slimeling even in fist", 30, { olfact = "dairy goat" })
+			script.go("get goat cheese for pasta", 271, make_cannonsniff_macro("dairy goat"), nil, { "Heavy Petting", "Peeled Eyeballs", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Leash of Linguini", "Empathy" }, "Slimeling even in fist", 30, { olfact = "dairy goat" })
 		end,
 	}
 
@@ -4268,7 +4272,7 @@ endif
 
 			if not have_item("S.O.C.K.") then
 				script.maybe_ensure_buffs { "Ur-Kel's Aria of Annoyance", "Silent Running" }
-				script.go("do airship", 81, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Ur-Kel's Aria of Annoyance", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "Slimeling even in fist", 35, { choice_function = function(advtitle, choicenum)
+				script.go("do airship", 81, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Ur-Kel's Aria of Annoyance", "Spirit of Garlic", "Leash of Linguini", "Empathy", "Peeled Eyeballs", "Heavy Petting" }, "Slimeling even in fist", 35, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Random Lack of an Encounter" then
 						if not have_item("model airship") then
 							return "Gallivant down to the head"
@@ -4489,7 +4493,7 @@ endif
 				["Bait and Switch"] = "Wake the cadet up and fight him",
 				["Blockin' Out the Scenery"] = "The Lookout Tower",
 				["The Thin Tie-Dyed Line"] = "The Rations Yurt",
-			}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 30, { equipment = { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" } })
+			}, { "Smooth Movements", "The Sonata of Sneakiness", "Chorale of Companionship", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Bacon Grease" }, "Slimeling", 30, { equipment = { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" } })
 			if get_result():match("Begun, this frat war has.") then
 				did_action = true
 			end
@@ -4595,7 +4599,7 @@ endif
 			if have("BitterSweetTarts") and not buff("Full of Wist") then
 				use_item("BitterSweetTarts")
 			end
-			script.go("do hits astronomers", 83, make_cannonsniff_macro("Astronomer"), nil, { "Spirit of Peppermint", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 60, { olfact = "Astronomer" })
+			script.go("do hits astronomers", 83, make_cannonsniff_macro("Astronomer"), nil, { "Spirit of Peppermint", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 60, { olfact = "Astronomer" })
 		end,
 	}
 
@@ -4608,9 +4612,6 @@ endif
 		prereq = quest("Make War, Not... Oh, Wait") and basemoxie() >= 70 and basemysticality() >= 70,
 		f = function()
 			if not have("heart of the filthworm queen") then
-				if have("Polka Pop") and not buff("Polka Face") then
-					use_item("Polka Pop")
-				end
 				-- TODO: increase priority with stench buffs up
 				script.do_filthworms()
 			elseif not have("tequila grenade") and not have("molotov cocktail cocktail") then
@@ -4681,7 +4682,7 @@ endif
 				if have("plus sign") and meat() < 1000 then
 					stop "Need 1k meat for oracle"
 				end
-				script.go("do > sign", 226, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic" }, "Slimeling", 25, { choice_function = function(advtitle, choicenum)
+				script.go("do > sign", 226, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Singer's Faithful Ocelot", "Spirit of Garlic" }, "Slimeling", 25, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Typographical Clutter" then
 						if not have("plus sign") then
 							return "The big apostrophe"
