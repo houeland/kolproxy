@@ -29,7 +29,7 @@ add_processor("familiar message: obtuseangel", function()
 -- 		print("fired romantic at", monster_name)
 		day["obtuse angel romantic arrow target"] = monster_name
 		day["obtuse angel romantic arrow next monster start"] = nil
-		if have_equipped("quake of arrows") then
+		if have_equipped_item("quake of arrows") then
 			day["obtuse angel romantic arrow monsters remaining"] = 3
 		else
 			day["obtuse angel romantic arrow monsters remaining"] = 2

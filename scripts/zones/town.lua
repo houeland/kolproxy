@@ -32,7 +32,7 @@ add_choice_text("Please, Hammer", { -- choice adventure number: 112
 })
 
 add_always_warning("/casino.php", function()
-	if tonumber(params.whichslot) == 11 and not have("ten-leaf clover") then
+	if tonumber(params.whichslot) == 11 and not have_item("ten-leaf clover") then
 		return "You do not have a ten-leaf clover to win the big rock.", "no clover for big rock"
 	end
 end)

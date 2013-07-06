@@ -74,6 +74,8 @@ add_printer("/choice.php", function()
 	end
 end)
 
+-- temple
+
 add_extra_always_warning("/sea_merkin.php", function()
 	if params.action == "temple" and have_equipped_item("Mer-kin scholar mask") and have_equipped_item("Mer-kin scholar tailpiece") then
 		if count_equipped_item("Mer-kin prayerbeads") < 3 then
@@ -81,3 +83,205 @@ add_extra_always_warning("/sea_merkin.php", function()
 		end
 	end
 end)
+
+function solve_dad_sea_monkee_puzzle(text)
+	local rounds = {}
+
+	local clue1, clue2, clue3, clue4and5, clue6, clue7 = text:match(" ([A-Za-z]+) forms ([A-Za-z]+) in the darkness, each more ([A-Za-z]+) than the last. ([A-Za-z ]+), ([A-Za-z]+) revealing ([0-9]+)%-dimensional monstrosities.")
+	local clue8, clue9, clue10 = text:match("your ([A-Za-z ]-) betraying you%? As if on cue, ([0-9]+)%-sided triangles materialize and then disappear. So impossible that your ([A-Za-z]+) throbs.")
+	local clue4, clue5
+	if clue4and5 then
+		clue4, clue5 = clue4and5:match("([A-Za-z ]-) ([A-Za-z]+)$")
+	end
+	clue7 = tonumber(clue7)
+	clue9 = tonumber(clue9)
+	--print("DEBUG", { clue1 = clue1, clue2 = clue2, clue3 = clue3, clue4 = clue4, clue5 = clue5, clue6 = clue6, clue7 = clue7, clue8 = clue8, clue9 = clue9, clue10 = clue10 })
+	if clue1 and clue2 and clue3 and clue4 and clue5 and clue6 and clue7 and clue8 and clue9 and clue10 then
+		--print("DEBUG: Got all dad sea monkee clues!")
+	end
+
+	local clue1tbl = {
+		Chaoatic = "Hot",
+		Horrifying = "Spooky",
+		Pulpy = "Physical",
+		Rigid = "Cold",
+		Rotting = "Stench",
+		Slimy = "Sleaze",
+	}
+	rounds[1] = clue1tbl[clue1]
+
+	local clue2tbl = {
+		float = "Spooky",
+		ooze = "Stench",
+		shamble = "Cold",
+		skitter = "Hot",
+		swim = "Physical",
+		slither = "Sleaze",
+	}
+	rounds[2] = clue2tbl[clue2]
+
+	local clue3tbl = {
+		awful = "Cold",
+		bloated = "Sleaze",
+		curious = "Physical",
+		frightening = "Spooky",
+		putrescent = "Stench",
+		terrible = "Hot",
+	}
+	rounds[3] = clue3tbl[clue3]
+
+	local clue4tbl = {
+		["Space"] = "Cold",
+		["The blackness"] = "Hot",
+		["The darkness"] = "Spooky",
+		["The emptiness"] = "Sleaze",
+		["The portal"] = "Physical",
+		["The void"] = "Stench",
+	}
+	rounds[5] = clue4tbl[clue4]
+
+	local clue5tbl = {
+		cracks = "Physical",
+		shakes = "Spooky",
+		shifts = "Cold",
+		shimmers = "Stench",
+		warps = "Hot",
+		wobbles = "Sleaze",
+	}
+	rounds[4] = clue5tbl[clue5]
+
+	local element_values = {
+		Hot = 1,
+		Cold = 2,
+		Stench = 3,
+		Spooky = 4,
+		Sleaze = 5,
+		Physical = 6,
+	}
+	for e1, v1 in pairs(element_values) do
+		for e2, v2 in pairs(element_values) do
+			if v1 <= v2 and clue7 and (2 ^ v1 + 2 ^ v2) / 2 == clue7 then
+				if clue6 == "suddenly" then
+					rounds[6] = e1
+					rounds[7] = e2
+				elseif clue6 == "slowly" then
+					rounds[6] = e2
+					rounds[7] = e1
+				end
+			end
+		end
+	end
+
+	local clue8_values = {
+		brain = 2,
+		mind = 3,
+		reason = 4,
+		sanity = 5,
+		["grasp on reality"] = 6,
+		["sixth sense"] = 7,
+		eyes = 8,
+		thoughts = 9,
+		senses = 10,
+		memories = 11,
+		fears = 12,
+	}
+	for e, v in pairs(element_values) do
+		if rounds[1] and v + element_values[rounds[1]] == clue8_values[clue8] then
+			rounds[8] = e
+		end
+	end
+
+	if rounds[2] and rounds[3] and rounds[4] and rounds[5] then
+		for e, v in pairs(element_values) do
+			if element_values[rounds[2]] + element_values[rounds[3]] + element_values[rounds[4]] + element_values[rounds[5]] - v + 4 == clue9 then
+				rounds[9] = e
+			end
+		end
+	end
+
+	local clue10_values = {
+		spleen = 1,
+		stomach = 2,
+		skull = 3,
+		forehead = 4,
+		brain = 5,
+		mind = 6,
+		heart = 7,
+		throat = 8,
+		chest = 9,
+		head = 10,
+	}
+	if clue10 == "head" then
+		local counts = {}
+		for i = 1, 9 do
+			if rounds[i] then
+				counts[rounds[i]] = (counts[rounds[i]] or 0) + 1
+			end
+		end
+		local candidates = {}
+		for e, _ in pairs(element_values) do
+			if (counts[e] or 0) == 0 then
+				table.insert(candidates, e)
+			end
+		end
+		if candidates[1] and not candidates[2] then
+			rounds[10] = candidates[1]
+		end
+	else
+		rounds[10] = rounds[clue10_values[clue10]]
+	end
+
+	return rounds
+end
+
+add_processor("/fight.php", function()
+	if text:contains("Dad Sea Monkee") and text:contains("The room is the machine occupies the room contains the machine") then
+		local rounds = solve_dad_sea_monkee_puzzle(text)
+		print("INFO: Dad Sea Monkee rounds: ", rounds)
+		fight["zone.sea.dad sea monkee rounds"] = rounds
+	end
+end)
+
+add_printer("/fight.php", function()
+	local combat_round = nil
+	for x in text:gmatch("var onturn = ([0-9]+);") do
+		combat_round = tonumber(x)
+	end
+	if combat_round then
+		local rounds = fight["zone.sea.dad sea monkee rounds"] or {}
+		local got_all_rounds = true
+		for i = 1, 10 do
+			if not rounds[i] then
+				got_all_rounds = false
+			end
+		end
+		local elem = rounds[combat_round]
+		if elem then
+			local want_spells = {
+				Hot = "Awesome Balls of Fire",
+				Cold = "Snowclone",
+				Stench = "Eggsplosion",
+				Spooky = "Raise Backup Dancer",
+				Sleaze = "Grease Lightning",
+				Physical = "Toynado",
+			}
+			local spellid = nil
+			local spellid_override = nil
+			for x in text:gmatch("<option.-</option>") do
+				if x:contains(want_spells[elem]) then
+					spellid = tonumber(x:match([[value="([0-9]+)"]]))
+				end
+				if elem == "Hot" and have_item("volcanic ash") and x:contains("Volcanometeor Showeruption") then
+					spellid_override = tonumber(x:match([[value="([0-9]+)"]]))
+				end
+			end
+			spellid = spellid_override or spellid
+			if got_all_rounds and spellid then
+				text = text:gsub([[id='monname'.-</span>]], [[%0 <a href="]]..make_href("/fight.php", { action = "skill", whichskill = spellid })..[[" style="color: green">{ Vulnerability: ]] .. elem .. [[ }</a>]])
+			else
+				text = text:gsub([[id='monname'.-</span>]], [[%0 <span style="color: darkorange">{ Vulnerability: ]] .. elem .. [[ }</span>]])
+			end
+		end
+	end
+end)
+

@@ -4,7 +4,7 @@ local function want_spooky_item()
 	if text:contains("look for that mosquito larva") then
 		return "mosquito larva"
 	-- TODO: How do we know if we've completed the quest, or just haven't done anything? Just print progress instead?
--- 	elseif not have("tree-holed coin") and not have("Spooky Temple map") then
+-- 	elseif not have_item("tree-holed coin") and not have_item("Spooky Temple map") then
 	end
 	return "?"
 end
@@ -117,7 +117,7 @@ add_choice_text("Unconfusing Buttons", { -- choice adventure number: 584
 -- TODO: track hidden city being unlocked?
 
 add_processor("/choice.php", function()
-	if text:contains("the Nostril of the Serpent begins to vibrate and glow") or text:contains("split by the Nostril of the Serpent") or (text:contains("You have trusted your last vine") and not have("the Nostril of the Serpent")) then
+	if text:contains("the Nostril of the Serpent begins to vibrate and glow") or text:contains("split by the Nostril of the Serpent") or (text:contains("You have trusted your last vine") and not have_item("the Nostril of the Serpent")) then
 		print("placed Nostril of the Serpent")
 		ascension["zone.hidden temple.placed Nostril of the Serpent"] = "yes"
 	end
@@ -139,10 +139,10 @@ end)
 
 local svengolly_href = add_automation_script("automate-sven-golly", function()
 	if (count_item("sponge cake") + count_item("comfy pillow") + count_item("booze-soaked cherry")) >= 2 and (count_item("gin-soaked blotter paper") + count_item("giant marshmallow") + count_item("beer-scented teddy bear")) >= 2 then
-		local bognort = have("giant marshmallow") and "giant marshmallow" or "gin-soaked blotter paper"
-		local stinkface = have("beer-scented teddy bear") and "beer-scented teddy bear" or "gin-soaked blotter paper"
-		local flargwurm = have("booze-soaked cherry") and "booze-soaked cherry" or "sponge cake"
-		local jim = have("comfy pillow") and "comfy pillow" or "sponge cake"
+		local bognort = have_item("giant marshmallow") and "giant marshmallow" or "gin-soaked blotter paper"
+		local stinkface = have_item("beer-scented teddy bear") and "beer-scented teddy bear" or "gin-soaked blotter paper"
+		local flargwurm = have_item("booze-soaked cherry") and "booze-soaked cherry" or "sponge cake"
+		local jim = have_item("comfy pillow") and "comfy pillow" or "sponge cake"
 		async_post_page("/pandamonium.php", { action = "sven", preaction = "help" })
 		async_post_page("/pandamonium.php", { action = "sven", bandmember = "Bognort", togive = get_itemid(bognort), preaction = "try" })
 		async_post_page("/pandamonium.php", { action = "sven", bandmember = "Stinkface", togive = get_itemid(stinkface), preaction = "try" })

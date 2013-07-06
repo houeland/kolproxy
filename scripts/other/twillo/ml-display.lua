@@ -1,5 +1,5 @@
 add_automator("all pages", function()
-	if have_equipped("Grimacite gown") and not session["cached Grimacite gown bonus"] then
+	if have_equipped_item("Grimacite gown") and not session["cached Grimacite gown bonus"] then
 		local pt = get_page("/desc_item.php", { whichitem = 528443762 })
 		local bonus = pt:match([[>%+([0-9]+) to Monster Level<]])
 		session["cached Grimacite gown bonus"] = bonus
@@ -7,7 +7,7 @@ add_automator("all pages", function()
 end)
 
 add_automator("all pages", function()
-	if have_equipped("Moonthril Cuirass") and not session["cached Moonthril Cuirass bonus"] then
+	if have_equipped_item("Moonthril Cuirass") and not session["cached Moonthril Cuirass bonus"] then
 		local pt = get_page("/desc_item.php", { whichitem = 534033050 })
 		local bonus = pt:match([[>%+([0-9]+) to Monster Level<]])
 		session["cached Moonthril Cuirass bonus"] = bonus
@@ -15,7 +15,7 @@ add_automator("all pages", function()
 end)
 
 add_automator("all pages", function()
-	if have_equipped("hairshirt") and not session["cached hairshirt bonus"] then
+	if have_equipped_item("hairshirt") and not session["cached hairshirt bonus"] then
 		local pt = get_page("/desc_item.php", { whichitem = 326755469 })
 		local bonus = pt:match([[>%+([0-9]+) to Monster Level<]])
 		session["cached hairshirt bonus"] = bonus

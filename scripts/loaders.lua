@@ -117,8 +117,8 @@ load_file("automation", "automation/scripts.lua")
 load_file("automation", "automation/tasks.lua")
 load_file("automation", "automation/ascension.lua")
 
-load_file("automation", "automation/casual-macro.lua")
-load_file("automation", "automation/casual-scripts.lua")
+--load_file("automation", "automation/casual-macro.lua")
+--load_file("automation", "automation/casual-scripts.lua")
 
 load_file("automation", "automation/nemesis.lua")
 load_file("automation", "automation/suburbandis.lua")

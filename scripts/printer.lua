@@ -11,9 +11,8 @@ set_state = nil
 local printers = {}
 local noncombat_choice_texts = {}
 
--- TODO: probably shouldn't be handled like this(?)
 function set_state()
-	error "You can't change state (counters, etc.) from add_printer, that's just for changing what's displayed. You might want add_processor() instead for registering game state changes?"
+	error "You can't change state (counters, etc.) from add_printer(), that's just for changing what's displayed. You might want add_processor() instead for registering game state changes."
 end
 
 function wrapped_function()
@@ -34,14 +33,38 @@ if path == "/login.php" then
 --		[ [[<input class=button type=submit value="Log In" name=submitbutton id=submitbutton>]] ] = [[<input class="button" type="submit" value="Log In" style="color: gray" name="submitbutton" id="submitbutton" disabled="disabled">]],
 --		["<font size=1>If you've forgotten your password"] = [[<div id="jswarning" style="color: red">You have to turn on javascript, otherwise you'll submit your password in cleartext!</div><script type="text/javascript">if (md5s) { document.getElementById('jswarning').style.display = 'none'; document.getElementById('submitbutton').value = 'Log In'; document.getElementById('submitbutton').disabled = ''; document.getElementById('submitbutton').style.color = 'black'; }</script>%0]],
 	}
-	if current_version ~= "3.10-beta" and current_version ~= "3.10-beta-slowhttp" then
-		mods["/login.php"]["An Adventurer is You!<br>"] = [[An Adventurer is You!<br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; text-decoration: none;">{ Kolproxy v]]..current_version..[[ incorrect installation. }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; font-size: smaller;">{ Click here to download a working version. }</a>]]
-	elseif latest_version and current_version ~= latest_version and latest_version ~= "3.10-alpha" then
-		print("current version", current_version, "latest version", latest_version)
-		mods["/login.php"]["An Adventurer is You!<br>"] = [[An Adventurer is You!<br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; text-decoration: none;">{ Kolproxy v]]..current_version..[[, latest version is v]]..latest_version..[[ }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; font-size: smaller;">{ Click here to upgrade. }</a>]]
+	local version_link = ""
+	print("current version", current_version, "latest version", latest_version)
+	if current_version ~= "3.10" then
+		version_link = [[<a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; text-decoration: none;">{ Kolproxy v]]..current_version..[[ incorrect installation. }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; font-size: smaller;">{ Click here to download a working version. }</a>]]
+	elseif latest_version and current_version ~= latest_version and latest_version ~= "3.10-beta" then
+		version_link = [[<a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; text-decoration: none;">{ Kolproxy v]]..current_version..[[, latest version is v]]..latest_version..[[ }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; font-size: smaller;">{ Click here to upgrade. }</a>]]
 	else
-		mods["/login.php"]["An Adventurer is You!<br>"] = [[An Adventurer is You!<br><span style="color: green">{ Kolproxy v]]..current_version..[[ }</span><br>]]
+		version_link = [[<span style="color: green">{ Kolproxy v]]..current_version..[[ }</span>]]
 	end
+	http_setting = ""
+	mods["/login.php"]["</head>"] = [[
+<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
+<script type="text/javascript">
+function kolproxy_use_slow_http() {
+	$.ajax({
+		type: 'GET',
+		url: ']] .. make_href("/kolproxy-use-slow-http", { secretkey = get_shutdown_secret_key() }) .. [[',
+		cache: false,
+		global: false,
+		success: function() {
+			top.location.href = '/login.php';
+		}
+	});
+}
+</script>
+%0]]
+	if get_slow_http_setting() then
+		http_setting = [[<span style="color: orange; font-size: smaller">{ Using slow connections for compatibility with broken HTTP/1.0 systems. }</span>]]
+	else
+		http_setting = [[<span style="color: green; font-size: smaller">{ Using fast HTTP/1.1 connections. <a href="javascript:kolproxy_use_slow_http()" style="color: green">Change</a> }</span>]]
+	end
+	mods["/login.php"]["An Adventurer is You!<br>"] = [[An Adventurer is You!<br>]] .. version_link .. "<br>" .. http_setting
 end
 
 mods["/showplayer.php"] = { -- This can also be done by adding header_noframecheck=1 to the URL query

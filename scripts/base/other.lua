@@ -10,6 +10,26 @@ add_processor("/main.php", function()
 	end
 end)
 
+-- inventory item annotations
+
+local inventory_item_annotations = {}
+
+function add_inventory_item_annotation(itemname, f)
+	inventory_item_annotations[itemname] = f
+end
+
+add_printer("/inventory.php", function()
+	-- TODO: make sure this triggers on all possible inventory option settings
+	text = text:gsub([[(<b class="ircm">)(.-)(</b>&nbsp;<span>[^<]*</span>)]], function(pre, itemname, post)
+		for checkname, f in pairs(inventory_item_annotations) do
+			-- Support both inventory images turned on and off
+			if itemname:contains(checkname) then
+				return pre .. itemname .. post .. " " .. f(itemname)
+			end
+		end
+	end)
+end)
+
 -- add green border to 100% runs
 
 add_printer("/ascensionhistory.php", function()
@@ -19,7 +39,7 @@ end)
 -- adventure mistake warnings
 
 add_always_adventure_warning(function()
-	if have_equipped("Crown of Thrones") then
+	if have_equipped_item("Crown of Thrones") then
 		if (session["cached enthroned familiar"] or "none") == "none" then
 			cache_enthroned_familiar()
 		end
@@ -44,15 +64,13 @@ add_ascension_adventure_warning(function(zoneid)
 		end
 	end
 	local function should_we_maximize_mcd()
-		if zoneid == 34 then
-			if mcd() == 4 or mcd() == 8 then
-				return false
-			end
+		if zoneid == 34 and (mcd() == 4 or mcd() == 8) then
+			return false
 		end
 		return true
 	end
 	if moonsign_area() == "Degrassi Knoll" then
-		if not have("detuned radio") then
+		if not have_item("detuned radio") then
 			return "You might want to buy a detuned radio.", "buy detuned radio"
 		elseif mcd() == 0 then
 			return "You might want to set your detuned radio.", "set detuned radio"
@@ -66,7 +84,7 @@ add_ascension_adventure_warning(function(zoneid)
 			return "You might want to turn up the Mind-Control Device.", "turn up Mind-Control Device"
 		end
 	elseif moonsign_area() == "Gnomish Gnomad Camp" then
-		if have("bitchin' meatcar") or have("pumpkin carriage") or have("Desert Bus pass") then
+		if have_item("bitchin' meatcar") or have_item("pumpkin carriage") or have_item("Desert Bus pass") then
 			if mcd() == 0 then
 				return "You might want to set the Annoy-o-Tron.", "set Annoy-o-Tron"
 			elseif mcd() < 10 and should_we_maximize_mcd() then
@@ -86,31 +104,31 @@ add_ascension_adventure_warning(function(zoneid)
 end)
 
 add_ascension_adventure_warning(function()
-	if have("astral shirt") and not have_equipped("astral shirt") and level() < 13 then
+	if have_item("astral shirt") and not have_equipped_item("astral shirt") and level() < 13 then
 		return "You might want to wear your astral shirt for stats.", "wear astral shirt"
 	end
 end)
 
 add_ascension_adventure_warning(function()
-	if basemuscle() >= 45 and have("hipposkin poncho") and not have_equipped("hipposkin poncho") and level() < 13 then
+	if basemuscle() >= 45 and have_item("hipposkin poncho") and not have_equipped_item("hipposkin poncho") and level() < 13 then
 		return "You might want to wear your hipposkin poncho for stats.", "wear hipposkin poncho"
 	end
 end)
 
 add_ascension_adventure_warning(function()
-	if basemuscle() >= 40 and have("Grimacite gown") and not have_equipped("Grimacite gown") and level() < 13 then
+	if basemuscle() >= 40 and have_item("Grimacite gown") and not have_equipped_item("Grimacite gown") and level() < 13 then
 		return "You might want to wear your Grimacite gown for stats.", "wear Grimacite gown"
 	end
 end)
 
 add_ascension_adventure_warning(function()
-	if basemuscle() >= 40 and (have("Moonthril Cuirass") or have("Mint-in-box Moonthril Cuirass")) and not have_equipped("Moonthril Cuirass") and level() < 13 then
+	if basemuscle() >= 40 and (have("Moonthril Cuirass") or have_item("Mint-in-box Moonthril Cuirass")) and not have_equipped_item("Moonthril Cuirass") and level() < 13 then
 		return "You might want to wear your Moonthril Cuirass for stats.", "wear Moonthril Cuirass"
 	end
 end)
 
 add_ascension_adventure_warning(function()
-	if basemuscle() >= 40 and have("hairshirt") and not have_equipped("hairshirt") and level() < 13 then
+	if basemuscle() >= 40 and have_item("hairshirt") and not have_equipped_item("hairshirt") and level() < 13 then
 		return "You might want to wear your hairshirt for stats.", "wear hairshirt"
 	end
 end)
@@ -122,13 +140,13 @@ add_ascension_adventure_warning(function()
 end)
 
 add_always_adventure_warning(function()
-	if familiarid() == 113 and (ascensionstatus() == "Aftercore" or have("quadroculars")) and not have_equipped("quadroculars") then
+	if familiarid() == 113 and (ascensionstatus() == "Aftercore" or have_item("quadroculars")) and not have_equipped_item("quadroculars") then
 		return "You might want to wear quadroculars on your he-boulder.", "wear quadroculars"
 	end
 end)
 
 add_always_adventure_warning(function()
-	if familiarid() == 146 and (ascensionstatus() == "Aftercore" or have("quake of arrows")) and not have_equipped("quake of arrows") then
+	if familiarid() == 146 and (ascensionstatus() == "Aftercore" or have_item("quake of arrows")) and not have_equipped_item("quake of arrows") then
 		return "You might want to wear quake of arrows on your obtuse angel.", "wear quake of arrows"
 	end
 end)
@@ -141,7 +159,7 @@ end)
 
 
 -- add_ascension_adventure_warning(function()
--- 	if get_mainstat() == "Moxie" and basemoxie() >= 60 and have_inventory("spangly sombrero") and level() < 13 then
+-- 	if mainstat_type("Moxie") and basemoxie() >= 60 and have_inventory("spangly sombrero") and level() < 13 then
 -- -- TODO: and not in an outfit-required place
 -- 		return "You might want to wear your spangly sombrero for stats.", "wear spangly sombrero"
 -- 	end
@@ -286,7 +304,7 @@ add_processor("/choice.php", function()
 end)
 
 add_printer("/town.php", function()
-	if have("plastic vampire fangs") then
+	if have_item("plastic vampire fangs") then
 		if day["vamped out.isabella"] == "yes" then
 			text = text:gsub("</body>", [[<center style="color: gray">{ Already vamped out at Isabella's today. }</center>%0]])
 		else
@@ -464,9 +482,9 @@ end)
 
 local hermit_items_href = add_automation_script("get-hermit-items", function()
 	local function get_trinket()
-		if not have("worthless trinket") and not have("worthless gewgaw") and not have("worthless knick-knack") then
+		if not have_item("worthless trinket") and not have_item("worthless gewgaw") and not have_item("worthless knick-knack") then
 			print "  getting worthless item"
-			if not have("chewing gum on a string") then
+			if not have_item("chewing gum on a string") then
 				buy_item("chewing gum on a string", "m")
 			end
 			local pt, pturl = use_item("chewing gum on a string")()
@@ -477,7 +495,7 @@ local hermit_items_href = add_automation_script("get-hermit-items", function()
 	end
 	get_trinket()
 	text, url = get_page("/hermit.php")
-	if text:contains("out of Permits") and not have("hermit permit") then
+	if text:contains("out of Permits") and not have_item("hermit permit") then
 		buy_item("hermit permit", "m")
 		text, url = get_page("/hermit.php")
 	end

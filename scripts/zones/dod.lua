@@ -126,24 +126,6 @@ add_processor("use item", function()
 	end
 end)
 
--- TODO: Move to other file
-local inventory_item_annotations = {}
-
-function add_inventory_item_annotation(itemname, f)
-	inventory_item_annotations[itemname] = f
-end
-
-add_printer("/inventory.php", function()
-	text = text:gsub([[(<b class="ircm">)(.-)(</b>&nbsp;<span>[^<]*</span>)]], function(pre, itemname, post)
-		for checkname, f in pairs(inventory_item_annotations) do
-			-- Support both inventory images turned on and off
-			if itemname:contains(checkname) then
-				return pre .. itemname .. post .. " " .. f(itemname)
-			end
-		end
-	end)
-end)
-
 for _, potion in ipairs(dod_potion_types) do
 	add_inventory_item_annotation(potion, function()
 		local tbl, _, unknown = get_dod_potion_status()
@@ -215,16 +197,14 @@ end)
 add_automator("/choice.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 	if text:match("That plus sign.*It's actually a book") then
--- 		print("just paid for major consultation!")
 		text, url = use_item_noajax("plus sign")()
-		-- TODO: Open any boxes too?
 	end
 end)
 
 -- Warnings for adventuring without enough meat
 
 add_always_zone_check(226, function()
-	if meat() < 1000 and have("plus sign") then
+	if meat() < 1000 and have_item("plus sign") then
 		return "A major consultation costs 1000 meat."
 	end
 end)
@@ -235,9 +215,3 @@ add_warning {
 	zone = "The Dungeons of Doom",
 	check = function() return meat() < 5000 end,
 }
-
---add_always_zone_check(39, function()
---	if meat() < 5000 then
---		return "Fighting the mimic costs 5000 meat."
---	end
---end)

@@ -33,7 +33,7 @@ local href = add_automation_script("custom-mix-drinks", function()
 	}
 	local store_price = {}
 	for a, b in pairs(market_store) do store_price[a] = b end
-	if have("filthy knitted dread sack") and have("filthy corduroys") then
+	if have_item("filthy knitted dread sack") and have_item("filthy corduroys") then
 		for a, b in pairs(hippy_store) do store_price[a] = b end
 	end
 	local SHC = { "Neuromancer", "vodka stratocaster", "Mon Tiki", "teqiwila slammer", "Divine", "Gordon Bennett", "gimlet", "yellow brick road", "mandarina colada", "tangarita", "Mae West", "prussian cathouse" }
@@ -100,7 +100,7 @@ local href = add_automation_script("custom-mix-drinks", function()
 	for x, name in pairs(advcock) do
 		resptext = resptext .. handle_recipe(name) .. "<br>"
 	end
-	if get_mainstat() == "Moxie" then
+	if classid() == 5 or classid() == 6 then
 		resptext = resptext .. "<br><br>"
 		for x, name in pairs(SHC) do
 			resptext = resptext .. handle_recipe(name) .. "<br>"

@@ -32,9 +32,17 @@ import qualified Network.Socket
 doSERVER_DEBUG _ = return ()
 -- doSERVER_DEBUG x = putStrLn $ "SERVER DEBUG: " ++ x
 
-make_sessionconn kolproxy_direct_connection dblogstuff statestuff = do
-	cs <- mkconnthing kolproxy_direct_connection
-	cw <- mkconnthing kolproxy_direct_connection
+make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff = do
+	slowconn <- readIORef $ use_slow_http_ref_ $ globalref
+	mkconnthing <- if slowconn
+		then do
+			putStrLn $ "INFO: Using slow server connections"
+			return $ debug_do "making slow connection" $ slow_mkconnthing kolproxy_direct_connection
+		else do
+			putStrLn $ "INFO: Using fast server connections"
+			return $ debug_do "making fast connection" $ fast_mkconnthing kolproxy_direct_connection
+	cs <- mkconnthing
+	cw <- mkconnthing
 	jspmvref <- newIORef =<< newEmptyMVar
 	lrjref <- newIORef Nothing
 	lvjref <- newIORef Nothing
@@ -80,12 +88,20 @@ handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logch
 	case recvdata of
 		Left err -> do
 			if err == ErrorClosed
-				then putStrLn $ "INFO: browser closed request"
-				else putStrLn $ "WARNING: error receiving browser request: " ++ (show err)
+				then putStrLn $ "INFO: Web browser closed connection before completing page request."
+				else putStrLn $ "WARNING: Error receiving browser request: " ++ (show err)
 			makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack $ "Error getting request from browser: " ++ show err) "/kolproxy-error" [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")]
 		Right req -> case uriPath $ rqURI $ req of
 			"/kolproxy-test" -> do
 				makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack "Kolproxy is alive.") "/kolproxy-test" [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")]
+			"/kolproxy-use-slow-http" -> do
+				let maybeparams = decodeUrlParams $ rqURI $ req
+				if (lookup "secretkey" =<< maybeparams) == Just (shutdown_secret_ $ globalref)
+					then do
+						writeIORef (use_slow_http_ref_ globalref) True
+						makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack "Switched to slow HTTP/1.0.") "/kolproxy-test" [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")]
+					else do
+						makeResponse (Data.ByteString.Char8.pack "<html><body><p style=\"color: darkorange\">Denied.</p></body></html>") "/kolproxy-shutdown" []
 			"/kolproxy-shutdown" -> do
 				let maybeparams = decodeUrlParams $ rqURI $ req
 				if (lookup "secretkey" =<< maybeparams) == Just (shutdown_secret_ $ globalref)
@@ -120,7 +136,7 @@ handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logch
 							return (m, x)
 						Nothing -> do
 							doSERVER_DEBUG $ "+++ making new (m, x) +++ " ++ show m_id
-							sessionconn <- make_sessionconn kolproxy_direct_connection dblogstuff statestuff
+							sessionconn <- make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff
 							return (Data.Map.insert m_id sessionconn m, sessionconn)
 
 				let useWhenever = (uriPath uri) `elem` ["/favicon.ico", "/newchatmessages.php", "/submitnewchat.php"]
@@ -186,6 +202,7 @@ make_globalref = do
 		chanaction <- readChan chatlogchan
 		chanaction chatopendb
 
+	use_slow_http_ref <- newIORef False
 	return GlobalRefStuff {
 		logindents_ = indentref,
 		blocking_lua_scripting_ = blockluaref,
@@ -195,7 +212,8 @@ make_globalref = do
 		h_http_log_ = hhttp,
 		shutdown_secret_ = shutdown_secret,
 		shutdown_ref_ = shutdown_ref,
-		doChatLogAction_ = \action -> writeChan chatlogchan action
+		doChatLogAction_ = \action -> writeChan chatlogchan action,
+		use_slow_http_ref_ = use_slow_http_ref
 	}
 
 kolproxy_setup_refstuff = do
@@ -203,8 +221,7 @@ kolproxy_setup_refstuff = do
 		dropping_logchan <- newChan
 		forkIO_ "kps:droplogchan" $ forever $ readChan dropping_logchan
 		logchan <- newChan
-		forkIO_ "kps:logchan" $ forever $ ((join $ readChan $ logchan) `catch` (\e -> do
-			putStrLn $ "writelog error: " ++ (show (e :: SomeException))))
+		forkIO_ "kps:logchan" $ forever $ debug_do "writelog" $ join $ readChan $ logchan
 		return (logchan, dropping_logchan)
 
 	globalref <- make_globalref
@@ -245,7 +262,7 @@ runProxyServer r rwhenever portnum = do
 			case Data.Map.lookup filename m of
 				Just x -> return (m, x)
 				Nothing -> do
-					putStrLn $ "opening log db: " ++ filename
+					putStrLn $ "DB: Opening log database: " ++ filename
 					opendb <- create_db "sqlite3 log" filename
 					do_db_query_ opendb "CREATE TABLE IF NOT EXISTS pageloads(idx INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, time TEXT NOT NULL, statusbefore TEXT, statusafter TEXT, statebefore TEXT, stateafter TEXT, sessionid TEXT NOT NULL, requestedurl TEXT NOT NULL, parameters TEXT, retrievedurl TEXT, pagetext TEXT);" []
 					x <- newChan
@@ -261,8 +278,9 @@ runProxyServer r rwhenever portnum = do
 			case Data.Map.lookup filename m of
 				Just x -> return (m, x)
 				Nothing -> do
-					putStrLn $ "opening state db: " ++ filename
+					putStrLn $ "  DB: Opening state database: " ++ filename
 					statedb <- create_db "state" filename
+					putStrLn $ "  DB: State database loaded."
 					x <- newChan
 					forkIO_ "kps:dbstatechan" $ forever $ do
 						chanaction <- readChan x
@@ -279,22 +297,19 @@ runProxyServer r rwhenever portnum = do
 		when (envlaunch /= Just "0") $ do
 			platform_launch portnum
 
-	sock <- bracketOnError mksocket Network.Socket.sClose $ \s -> do
-		Network.Socket.setSocketOption s Network.Socket.ReuseAddr 1
-		Network.Socket.bindSocket s (Network.Socket.SockAddrInet (fromIntegral portnum) Network.Socket.iNADDR_ANY)
-		Network.Socket.listen s Network.Socket.maxListenQueue
-		return s
+	sock <- mklistensocket portnum
 
 	let do_loop = do
 		should_stop <- readIORef $ shutdown_ref_ $ globalref
 		unless should_stop $ do
 			doSERVER_DEBUG "listening on socket"
-			(sh, _) <- Network.Socket.accept sock
+			(sh, _) <- debug_do "accept socket" $ Network.Socket.accept sock
 #if __GLASGOW_HASKELL__ <= 702
-			h <- socketConnection "???" sh
+			let mksockconn sh = socketConnection "???" sh
 #else
-			h <- socketConnection "???" (fromIntegral portnum) sh
+			let mksockconn sh = socketConnection "???" (fromIntegral portnum) sh
 #endif
+			h <- debug_do "socket connection" $ mksockconn sh
 			doSERVER_DEBUG $ "doing socket:" ++ (show sh)
 			launched <- readIORef launched_ref
 			if launched

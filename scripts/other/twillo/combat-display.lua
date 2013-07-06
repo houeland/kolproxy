@@ -1,9 +1,9 @@
 function estimate_underwater_combat()
 	local com = 0
-	if buff("Colorfully Concealed") then
+	if have_buff("Colorfully Concealed") then
 		com = com - 5
 	end
-	if have_equipped("Mer-kin sneakmask") then
+	if have_equipped_item("Mer-kin sneakmask") then
 		com = com - 5
 	end
 	return com

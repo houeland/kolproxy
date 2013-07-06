@@ -35,6 +35,7 @@ local hatred_href = setup_turnplaying_script {
 		maybe_pull_item("sea salt scrubs", 1)
 		maybe_pull_item("Mer-kin scholar mask", 1)
 		maybe_pull_item("Mer-kin scholar tailpiece", 1)
+		maybe_pull_item("Mer-kin prayerbeads", 3)
 	end,
 	autoinform = false,
 	adventuring = function()

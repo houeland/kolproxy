@@ -137,7 +137,7 @@ function print_charpane_lines(text)
 			text = text:gsub("(<!%-%- charpane compact text space %-%->)", function(one) return ct .. one end)
 		end
 	else -- normal mode
-		for x,y in pairs(values) do
+		for x, y in pairs(values) do
 			local name = y.normalname or y.name or "{nil}"
 			local value = y.normalvalue or y.value or "{nil}"
 			local nt = [[<font size="2">]] .. name .. ": <b>" .. value .. "</b></font>"

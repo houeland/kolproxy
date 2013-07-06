@@ -87,16 +87,12 @@ get_state ref stateset var = do
 get_ref_playername ref = KoL.Api.charName <$> KoL.Api.getApiInfo ref
 
 set_state_whenever ref var value = void $ do
--- 	putStrLn $ "lua: set_state..." ++ (show $ (var, value))
 	charname <- get_ref_playername ref
--- 	putStrLn $ "lua: setting state " ++ var ++ " => " ++ (show value) ++ " for " ++ charname
 	chatmap <- Data.Map.insert var value <$> readMapFromFile ("chat-" ++ charname ++ ".state")
 	writeMapToFile ("chat-" ++ charname ++ ".state") chatmap
 
 get_state_whenever ref var = do
--- 	putStrLn $ "lua: get_state..." ++ (show $ (var))
 	charname <- get_ref_playername ref
--- 	putStrLn $ "lua: getting " ++ (show var) ++ " for " ++ charname
 	chatmap <- readMapFromFile ("chat-" ++ charname ++ ".state")
 	return $ fromMaybe "" (Data.Map.lookup var chatmap)
 
@@ -506,6 +502,11 @@ setup_lua_instance level filename setupref = do
 			Lua.pushstring l (shutdown_secret_ $ globalstuff_ $ ref)
 			return 1
 
+		register_function "get_slow_http_setting" $ \ref l -> do
+			slowconn <- readIORef $ use_slow_http_ref_ $ globalstuff_ $ ref
+			Lua.pushboolean l slowconn
+			return 1
+
 		register_function "kolproxy_log_time_interval" $ \ref l -> do
 			desc <- Lua.tostring l 1
 			Lua.remove l 1
@@ -620,7 +621,6 @@ get_cached_lua_instance_for_code level filename ref runcodebit = do
 							withMVar mv_l runcodebit
 						Left err -> return $ Left err
 		else do
--- 			putStrLn $ "DEBUG: not cached " ++ show (canread, level) ++ " | " ++ show filename
 			either_l_setup <- make_lsetup
 			case either_l_setup of
 				Right l_setup -> do
@@ -631,11 +631,6 @@ get_cached_lua_instance_for_code level filename ref runcodebit = do
 
 run_lua_code level filename ref dosetvars = do
 	get_cached_lua_instance_for_code level filename ref $ \l -> do
--- 		case lookup "text" (vars :: [(String, String)]) of
--- 			Just text -> (lua_log_line ref ("run_lua_code:" ++ filename ++ " [" ++ (show $ lookup "path" vars) ++ ", param length " ++ (show $ length $ fromJust $ lookup "raw_input_params" vars) ++ ", text length " ++ (show $ length text) ++ "]") (return ())) `catch` (\e -> putStrLn $ "run_lua_code error: " ++ (show (e :: SomeException)))
--- 			_ -> (lua_log_line ref ("run_lua_code:" ++ filename ++ " [" ++ (show $ lookup "path" vars) ++ ", param length " ++ (show $ length $ fromJust $ lookup "raw_input_params" vars) ++ ", no text]") (return ())) `catch` (\e -> putStrLn $ "run_lua_code error: " ++ (show (e :: SomeException)))
--- 		putStrLn $ "> run_lua_code: " ++ (filename) ++ " [" ++ (show $ lookup "path" vars) ++ "]"
-
 		log_time_interval ref "prepare for lua code" $ do
 			top <- Lua.gettop l
 			when (top > 1) $ do

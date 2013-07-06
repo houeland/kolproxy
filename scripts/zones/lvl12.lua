@@ -78,7 +78,7 @@ end)
 add_always_adventure_warning(function(zoneid)
 	local z = tonumber(zoneid)
 	if z and z >= 182 and z <= 185 then
-		if not have("molybdenum magnet") then
+		if not have_item("molybdenum magnet") then
 			return "You need a molybdenum magnet for the gremlins.", "molybdenum magnet for gremlins"
 		end
 	end
@@ -138,8 +138,8 @@ end)
 -- beach
 
 add_ascension_zone_check(136, function()
-	if not buff("Hippy Stench") then
-		if have("reodorant") or have("handful of pine needles") then
+	if not have_buff("Hippy Stench") then
+		if have_item("reodorant") or have_item("handful of pine needles") then
 			return "You probably want Hippy Stench for the beach."
 		end
 	end
@@ -161,12 +161,12 @@ end)
 
 add_ascension_adventure_warning(function(zoneid)
 	if zoneid == 126 then
-		if not buff("Polka of Plenty") then
+		if not have_buff("Polka of Plenty") then
 			if have_skill("The Polka of Plenty") then
 				return "You probably want Polka of Plenty for the nuns.", "polka of plenty for nuns"
 			end
 		end
-		if not buff("Greedy Resolve") and have("resolution: be wealthier") then
+		if not have_buff("Greedy Resolve") and have_item("resolution: be wealthier") then
 			return "You probably want to use resolution: be wealthier for the nuns.", "greedy resolve for nuns"
 		end
 	end

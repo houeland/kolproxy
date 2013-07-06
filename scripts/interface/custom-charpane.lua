@@ -462,8 +462,8 @@ end
 local cached_workarounds = {}
 local function work_around_broken_status_lastadv(advdata)
 	if advdata.container == "place.php" then
-		print [[INFO: Working around server API bug. Shout at CDMoyer about lastadv.container for place.php!]]
 		if not cached_workarounds[advdata.name] then
+			print([[INFO: Working around server API bug (for ]] .. tostring(advdata.name) .. [[). Shout at CDMoyer about lastadv.container for place.php!]])
 			async_post_page("/account.php", { am = 1, pwd = session.pwd, action = "flag_compactchar", value = 0, ajax = 1 })
 			local pt = get_page("/charpane.php")
 			local real_container = pt:match([[href="(place.php%?whichplace=[^"]-)"]])
@@ -624,7 +624,7 @@ add_interceptor("/charpane.php", function()
 	}
 	local sorting = {}
 	for descid, x in pairs(status().effects) do
-		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid }) -- HACK: tonumber is a workaround for CDM effects being strings or numbers randomly
+		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid }) -- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly
 	end
 	for descid, x in pairs(status().intrinsics) do
 		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid })
@@ -827,7 +827,7 @@ add_interceptor("/charpane.php", function()
 	}
 	local sorting = {}
 	for descid, x in pairs(status().effects) do
-		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid }) -- HACK: tonumber is a workaround for CDM effects being strings or numbers randomly
+		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid }) -- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly
 	end
 	for descid, x in pairs(status().intrinsics) do
 		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid })

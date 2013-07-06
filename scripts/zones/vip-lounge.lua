@@ -37,7 +37,7 @@ end)
 add_automator("/clan_viplounge.php", function()
 	if params.preaction == "receivefax" then
 		if text:contains("You acquire") then
-			if have("photocopied monster") then
+			if have_item("photocopied monster") then
 				local itempt = get_page("/desc_item.php", { whichitem = "835898159" })
 				local copied = itempt:match([[blurry likeness of [a-zA-Z]* (.-) on it.]])
 				text = text:gsub([[You acquire an item: <b>photocopied monster</b>]], [[%0 <span style="color:green">{ ]] .. copied .. [[ }</span>]])

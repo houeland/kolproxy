@@ -40,7 +40,7 @@ add_printer("/charpane.php", function()
 		else
 			needbits = 50
 		end
-		if needbits > 5 and have_equipped("microwave stogie") then
+		if needbits > 5 and have_equipped_item("microwave stogie") then
 			needbits = needbits - 5
 		end
 		tbl = ascension["familiar.organ grinder.bit types"] or {}

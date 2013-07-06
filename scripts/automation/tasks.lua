@@ -9,24 +9,24 @@ function get_automation_tasks(script, cached_stuff)
 		action = function()
 			inform "using clip art tome summons"
 
-			if not have("shining halo") then
+			if not have_item("shining halo") then
 				script.ensure_mp(2)
 				async_post_page("/campground.php", { preaction = "summoncliparts" })
 				async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "01", clip2 = "06", clip3 = "06" })
 			end
-			if not have("Ur-Donut") then
+			if not have_item("Ur-Donut") then
 				script.ensure_mp(2)
 				async_post_page("/campground.php", { preaction = "summoncliparts" })
 				async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "01", clip2 = "01", clip3 = "01" })
 			end
-			if not have("bucket of wine") then
+			if not have_item("bucket of wine") then
 				script.ensure_mp(2)
 				async_post_page("/campground.php", { preaction = "summoncliparts" })
 				async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "04", clip2 = "04", clip3 = "04" })
 			end
 
-			if not have("shining halo") or not have("Ur-Donut") or not have("bucket of wine") then
-				print(have("shining halo"), have("Ur-Donut"), have("bucket of wine"))
+			if not have_item("shining halo") or not have_item("Ur-Donut") or not have_item("bucket of wine") then
+				print(have("shining halo"), have_item("Ur-Donut"), have_item("bucket of wine"))
 				critical "Error getting clip art items"
 			end
 
@@ -41,9 +41,9 @@ function get_automation_tasks(script, cached_stuff)
 		message = "get starting items",
 		nobuffing = true,
 		action = function()
-			if not ((have("stolen accordion") or have("Rock and Roll Legend")) and have("turtle totem") and have("saucepan")) then
+			if not ((have("stolen accordion") or have_item("Rock and Roll Legend")) and have_item("turtle totem") and have_item("saucepan")) then
 				local pt, pturl, advagain
-				while not ((have("stolen accordion") or have("Rock and Roll Legend")) and have("turtle totem") and have("saucepan")) do
+				while not ((have("stolen accordion") or have_item("Rock and Roll Legend")) and have_item("turtle totem") and have_item("saucepan")) do
 					pt, pturl, advagain = script.buy_use_chewing_gum()
 					if not advagain then
 						critical "Failed to use chewing gum"
@@ -52,60 +52,60 @@ function get_automation_tasks(script, cached_stuff)
 				return pt, pturl
 			end
 
-			if not have("Rock and Roll Legend") and have_skill("The Ode to Booze") then
+			if not have_item("Rock and Roll Legend") and have_skill("The Ode to Booze") then
 				inform "pick up RnR"
 				script.ensure_worthless_item()
-				if not have("hermit permit") then
+				if not have_item("hermit permit") then
 					buy_item("hermit permit", "m")
 				end
-				if not have("hot buttered roll") then
+				if not have_item("hot buttered roll") then
 					async_post_page("/hermit.php", { action = "trade", whichitem = get_itemid("hot buttered roll"), quantity = 1 })
 				end
-				if not have("hot buttered roll") then
+				if not have_item("hot buttered roll") then
 					critical "Failed to buy hot buttered roll."
 				end
-				if not have("casino pass") then
+				if not have_item("casino pass") then
 					buy_item("casino pass", "m")
 				end
-				if not have("casino pass") then
+				if not have_item("casino pass") then
 					critical "Failed to buy casino pass."
 				end
-				if not have("big rock") then
-					if not have("ten-leaf clover") and have("disassembled clover") then
-						use_item("disassembled clover")
-					end
-					if not have("ten-leaf clover") then
+				if not have_item("big rock") then
+					if not have_item("ten-leaf clover") then
 						uncloset_item("ten-leaf clover")
 					end
-					if not have("ten-leaf clover") then
+					if not have_item("ten-leaf clover") and not have_item("disassembled clover") then
 						script.trade_for_clover()
 					end
-					if not have("ten-leaf clover") then
+					if not have_item("ten-leaf clover") and have_item("disassembled clover") then
+						use_item("disassembled clover")
+					end
+					if not have_item("ten-leaf clover") then
 						stop "No ten-leaf clover."
 					end
 					script.maybe_ensure_buffs { "Mental A-cue-ity" }
 					async_get_page("/casino.php", { action = "slot", whichslot = 11 })
-					if not have("big rock") then
+					if not have_item("big rock") then
 						critical "Didn't get big rock."
 					end
 				end
 				set_result(smith_items("hot buttered roll", "big rock"))
 				set_result(smith_items("heart of rock and roll", "stolen accordion"))
-				if not have("Rock and Roll Legend") then
+				if not have_item("Rock and Roll Legend") then
 					critical "Couldn't smith RnR"
 				end
-				did_action = have("Rock and Roll Legend")
+				did_action = have_item("Rock and Roll Legend")
 				return result, resulturl, did_action
 			end
 
-			if not have("seal tooth") and challenge ~= "fist" then
+			if not have_item("seal tooth") and challenge ~= "fist" then
 				inform "pick up seal tooth"
 				script.ensure_worthless_item()
-				if not have("hermit permit") then
+				if not have_item("hermit permit") then
 					buy_item("hermit permit", "m")
 				end
 				async_post_page("/hermit.php", { action = "trade", whichitem = get_itemid("seal tooth"), quantity = 1 })
-				did_action = have("seal tooth")
+				did_action = have_item("seal tooth")
 				return result, resulturl, did_action
 			end
 		end
@@ -146,13 +146,13 @@ function get_automation_tasks(script, cached_stuff)
 
 	-- TODO: merge
 	function t.make_digital_key()
-		if not have("continuum transfunctioner") then
+		if not have_item("continuum transfunctioner") then
 			return {
 				message = "pick up continuum transfunctioner",
 				nobuffing = true,
 				action = function()
 					set_result(pick_up_continuum_transfunctioner())
-					did_action = have("continuum transfunctioner")
+					did_action = have_item("continuum transfunctioner")
 				end
 			}
 		elseif count("white pixel") < 30 then
@@ -171,7 +171,7 @@ function get_automation_tasks(script, cached_stuff)
 				nobuffing = true,
 				action = function()
 					shop_buyitem("digital key", "mystic")
-					did_action = have("digital key")
+					did_action = have_item("digital key")
 				end
 			}
 		end
@@ -181,12 +181,12 @@ function get_automation_tasks(script, cached_stuff)
 		local action = nil
 		local pixels = count("white pixel") + math.min(count("red pixel"), count("green pixel"), count("blue pixel"))
 		if pixels < 30 then
-			if not have("continuum transfunctioner") then
+			if not have_item("continuum transfunctioner") then
 				return {
 					message = "pick up continuum transfunctioner",
 					action = function()
 						set_result(pick_up_continuum_transfunctioner())
-						did_action = have("continuum transfunctioner")
+						did_action = have_item("continuum transfunctioner")
 					end
 				}
 			else
@@ -246,7 +246,7 @@ mark m_done
 
 ]]
 			result, resulturl, advagain = handle_adventure_result(pt, url, "?", mariachi_macro)
-			if advagain and have("spangly sombrero") and have("spangly mariachi pants") then
+			if advagain and have_item("spangly sombrero") and have_item("spangly mariachi pants") then
 				did_action = true
 			end
 		end
@@ -255,7 +255,7 @@ mark m_done
 	function t.do_sewerleveling()
 		if advs() < 12 then
 			stop "Fewer than 12 advs for sewerleveling"
-		elseif not buff("Pisces in the Skyces") then
+		elseif not have_buff("Pisces in the Skyces") then
 			stop "No gamestore +spelldmg% buff when sewer-leveling to reach level 6"
 		else
 			script.shrug_buff("Ode to Booze")
@@ -277,7 +277,7 @@ mark m_done
 			}
 		end
 		if not did_action then
-			result = add_colored_message_to_page(get_result(), "Tried to adventure at the Hobopolis sewer entrance", "darkorange")
+			result = add_message_to_page(get_result(), "Tried to adventure at the Hobopolis sewer entrance", nil, "darkorange")
 		end
 		return result, resulturl, did_action
 	end
@@ -301,7 +301,7 @@ mark m_done
 			}
 		end
 		if not did_action then
-			result = add_colored_message_to_page(get_result(), "Tried to adventure at the Hobopolis sewer entrance", "darkorange")
+			result = add_message_to_page(get_result(), "Tried to adventure at the Hobopolis sewer entrance", nil, "darkorange")
 		end
 		return result, resulturl, did_action
 	end
@@ -426,7 +426,7 @@ mark m_done
 		elseif quest_text("should check out A-Boo Peak and see") or quest_text("should keep clearing the ghosts out of A-Boo Peak") then
 			local hauntedness = get_aboo_peak_hauntedness()
 			if hauntedness > 0 and hauntedness - count_item("A-Boo clue") * 30 <= 0 then
-				if not buff("Super Structure") and have("Greatest American Pants") then
+				if not have_buff("Super Structure") and have_item("Greatest American Pants") then
 					script.wear { pants = "Greatest American Pants" }
 					script.get_gap_buff("Super Structure")
 				end
@@ -443,15 +443,15 @@ mark m_done
 
 -- 				-- TODO: buff max hp
 
--- 				if not buff("Spooky Flavor") and have("ectoplasmic paste") then
+-- 				if not have_buff("Spooky Flavor") and have_item("ectoplasmic paste") then
 -- 					use_item("ectoplasmic paste")
 -- 					-- +0/+2
 -- 				end
--- 				if not buff("Spookypants") and have("spooky powder") then
+-- 				if not have_buff("Spookypants") and have_item("spooky powder") then
 -- 					use_item("spooky powder")
 -- 					-- +0/+1
 -- 				end
--- 				if not buff("Insulated Trousers") and have("cold powder") then
+-- 				if not have_buff("Insulated Trousers") and have_item("cold powder") then
 -- 					use_item("cold powder")
 -- 					-- +1/+0
 -- 				end

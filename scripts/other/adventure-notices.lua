@@ -2,7 +2,7 @@ add_warning {
 	message = "Make sure you use the correct skill to trigger the Juju Mojo Mask.",
 	severity = "notice",
 	check = function()
-		if have_equipped("Juju Mojo Mask") and not have_intrinsic("Gaze of the Volcano God") and not have_intrinsic("Gaze of the Lightning God") and not have_intrinsic("Gaze of the Trickster God") then
+		if have_equipped_item("Juju Mojo Mask") and not have_intrinsic("Gaze of the Volcano God") and not have_intrinsic("Gaze of the Lightning God") and not have_intrinsic("Gaze of the Trickster God") then
 			return true
 		end
 	end
@@ -28,7 +28,7 @@ add_warning {
 	severity = "extra",
 	zone = "The Slime Tube",
 	check = function()
-		return have_equipped("Jarlsberg's pan (Cosmic portal mode)")
+		return have_equipped_item("Jarlsberg's pan (Cosmic portal mode)")
 	end
 }
 

@@ -31,8 +31,9 @@ function lookup_player_id(inputname) -- chat cannot use character state
 	if (tbl == "") then tbl = {} else tbl = str_to_table(tbl) end
 	if not tbl[name] then
 		local id = get_player_id(name)
+		--print("get_player_id", name, "=", id)
 		if id == "-1" then
-			return "-123"
+			return "-123", inputname
 		else
 			tbl[name] = id
 			set_chat_state("kol.player ids", table_to_str(tbl))

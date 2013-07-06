@@ -23,9 +23,9 @@ local felonia_href = setup_turnplaying_script {
 			advagain = quest_text("investigate the Spooky Gravy Barrow")
 		elseif quest_text("investigate the Spooky Gravy Barrow") then
 			script.want_familiar "Flaming Gravy Fairy"
-			if not have("spooky glove") and have("small leather glove") and have("spooky fairy gravy") then
+			if not have_item("spooky glove") and have_item("small leather glove") and have_item("spooky fairy gravy") then
 				result, result_url = cook_items("small leather glove", "spooky fairy gravy")()
-				advagain = have("spooky glove")
+				advagain = have_item("spooky glove")
 			else
 				if not have_equipped_item("ring of conflict") then
 					equip_item("ring of conflict", "acc2")
@@ -33,20 +33,20 @@ local felonia_href = setup_turnplaying_script {
 				if not have_equipped_item("Space Trip safety headphones") then
 					equip_item("Space Trip safety headphones", "acc3")
 				end
-				if have("spooky glove") and have("inexplicably glowing rock") then
+				if have_item("spooky glove") and have_item("inexplicably glowing rock") then
 					equip_item("spooky glove", "acc1")
 				end
-				if not buff("The Sonata of Sneakiness") then
+				if not have_buff("The Sonata of Sneakiness") then
 					cast_skillid(6015, 2) -- sonata of sneakiness
 				end
-				if not buff("Smooth Movements") then
+				if not have_buff("Smooth Movements") then
 					cast_skillid(5017, 2) -- smooth moves
 				end
 				result, resulturl, advagain = autoadventure {
 					zoneid = 48,
 					specialnoncombatfunction = function(advtitle, choicenum, pt)
 						if advtitle == "Heart of Very, Very Dark Darkness" then
-							if have_equipped("spooky glove") and have("inexplicably glowing rock") then
+							if have_equipped_item("spooky glove") and have_item("inexplicably glowing rock") then
 								return "Enter the cave"
 							else
 								return "Don't enter the cave"

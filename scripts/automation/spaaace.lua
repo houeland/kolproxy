@@ -35,7 +35,7 @@ local function use_map(mapname, mapzonetitle, choices)
 end
 
 local function ronaldus(choices)
-	if have("Map to Safety Shelter Ronald Prime") then
+	if have_item("Map to Safety Shelter Ronald Prime") then
 		use_map("Map to Safety Shelter Ronald Prime", "Deep Inside Ronald, Baby", choices)
 	else
 		adv_space_zone(265)
@@ -43,7 +43,7 @@ local function ronaldus(choices)
 end
 
 local function grimacite(choices)
-	if have("Map to Safety Shelter Grimace Prime") then
+	if have_item("Map to Safety Shelter Grimace Prime") then
 		use_map("Map to Safety Shelter Grimace Prime", "Deep Inside Grimace, Bow Chick-a Bow Bow", choices)
 	else
 		adv_space_zone(266)
@@ -161,54 +161,54 @@ local space_href = setup_turnplaying_script {
 	end,
 	adventuring = function()
 		advagain = false
-		if not buff("Transpondent") then
+		if not have_buff("Transpondent") then
 			if transponders_used < 2 then
 				transponders_used = transponders_used + 1
 				maybe_pull_item("transporter transponder")
 				use_item("transporter transponder")
 			end
-			if not buff("Transpondent") then
+			if not have_buff("Transpondent") then
 				stop "Use another transporter transponder."
 			end
 		end
-		if not have("E.M.U. Unit") then
-			if not have("spooky little girl") then
-				if not have("E.M.U. rocket thrusters") then
+		if not have_item("E.M.U. Unit") then
+			if not have_item("spooky little girl") then
+				if not have_item("E.M.U. rocket thrusters") then
 					ronaldus { "Take a Look Around", "Try the Swimming Pool", "To the Left, to the Left", "Take the Red Door", "Step through the Glowy-Orange Thing" }
-					if have("E.M.U. rocket thrusters") then
+					if have_item("E.M.U. rocket thrusters") then
 						advagain = true
 					end
-				elseif not have("E.M.U. joystick") then
+				elseif not have_item("E.M.U. joystick") then
 					ronaldus { "Take a Look Around", "Try the Swimming Pool", "Right as Rain", "Crawl through the Ventilation Duct", "Step through the Glowy Thing" }
-					if have("E.M.U. joystick") then
+					if have_item("E.M.U. joystick") then
 						advagain = true
 					end
-				elseif not have("E.M.U. harness") then
+				elseif not have_item("E.M.U. harness") then
 					grimacite { "Down the Hatch!", "Check out the Coat Check", "Exit, Stage Left", "Be the Duke of the Hazard", "Enter the Transporter" }
-					if have("E.M.U. harness") then
+					if have_item("E.M.U. harness") then
 						advagain = true
 					end
-				elseif not have("E.M.U. helmet") then
+				elseif not have_item("E.M.U. helmet") then
 					grimacite { "Down the Hatch!", "Check out the Coat Check", "Stage Right, Even", "Try the Starboard Door", "Step Through the Transporter" }
-					if have("E.M.U. helmet") then
+					if have_item("E.M.U. helmet") then
 						advagain = true
 					end
 				else
 					adv_space_zone(266)
-					advagain = have("spooky little girl")
+					advagain = have_item("spooky little girl")
 				end
-			elseif not have_equipped("spooky little girl") then
+			elseif not have_equipped_item("spooky little girl") then
 				equip_item("spooky little girl", "offhand")
-				advagain = have_equipped("spooky little girl")
+				advagain = have_equipped_item("spooky little girl")
 			else
 				adv_space_zone(266)
-				if have("E.M.U. Unit") then
+				if have_item("E.M.U. Unit") then
 					advagain = true
 				end
 			end
-		elseif not have_equipped("E.M.U. Unit") then
+		elseif not have_equipped_item("E.M.U. Unit") then
 			equip_item("E.M.U. Unit", "acc1")
-			advagain = have_equipped("E.M.U. Unit")
+			advagain = have_equipped_item("E.M.U. Unit")
 		else
 			result, resulturl, advagain = autoadventure { zoneid = 267 }
 			result, resulturl, did_action = handle_adventure_result(result, resulturl, "?", nil, { ["Big-Time Generator"] = "See what you have to lose" })

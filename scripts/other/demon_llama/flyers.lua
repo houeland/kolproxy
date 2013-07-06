@@ -39,13 +39,13 @@ add_printer("/fight.php", function()
 end)
 
 add_printer("/bigisland.php", function()
-	if have("rock band flyers") or have("jam band flyers") then
+	if have_item("rock band flyers") or have_item("jam band flyers") then
 		local msgs = {}
 		
-		if have("rock band flyers") then
+		if have_item("rock band flyers") then
 			table.insert(msgs, "{&nbsp;~" .. (ascension["zone.island.frat arena flyerML"] or 0) .. " ML slapped for frat boys.&nbsp;}")
 		end
-		if have("jam band flyers") then
+		if have_item("jam band flyers") then
 			table.insert(msgs, "{&nbsp;~" .. (ascension["zone.island.hippy arena flyerML"] or 0) .. " ML slapped for hippies.&nbsp;}")
 		end
 		text = text:gsub([[<p><Center>]], [[<p style="color:green;text-align:center;">]] .. table.concat(msgs, "<br>\n") .. [[</p>%0]])

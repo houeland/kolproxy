@@ -42,7 +42,6 @@ loadState ref = do
 			-- TODO: Don't spin this off to another thread?
 			doStateAction ref $ \db -> do
 				putMVar mv =<< (try $ do
-					ai <- getApiInfo ref -- TODO: don't getapiinfo here?
 					let readMapFromDB base_tablename = do
 						tablename <- get_state_tablename ref base_tablename
 						do_db_query_ db ("CREATE TABLE IF NOT EXISTS " ++ tablename ++ "(name TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY(name));") []
@@ -57,8 +56,9 @@ loadState ref = do
 						then return dbsessionmap
 						else do
 							-- TODO: Remove this default sessiondata, API in Lua should be used instead
-							putStrLn $ "  DB: Retrieving session data..."
-							putStrLn $ "  DB: retrieved name=" ++ (charName ai)
+							putStrLn $ "  DB: Creating session data..."
+							ai <- getApiInfo ref
+							putStrLn $ "    API: Retrieved name = " ++ (charName ai)
 							return $ Data.Map.fromList [("character", charName ai), ("pwd", pwd ai), ("ascension number", show $ ascension ai), ("day", show $ daysthisrun ai)]
 
 					requestmap <- return Data.Map.empty

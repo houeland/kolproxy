@@ -29,20 +29,19 @@ add_choice_text("Yes, You're a Rock Starrr", function()
 end)
 
 add_choice_text("That Explains All The Eyepatches", function()
-	local mainstat = get_mainstat()
-	if mainstat == "Muscle" then
+	if mainstat_type("Muscle") then
 		return {
 			["Carefully throw the darrrt at the tarrrget"] = "Fight a tipsy pirate",
 			["Pull one over on the pirates"] = "Get shot of rotgut",
 			["Throw hard and hope for the best"] = "Gain 3 drunk + stats",
 		}
-	elseif mainstat == "Mysticality" then
+	elseif mainstat_type("Mysticality") then
 		return {
 			["Carefully throw the darrrt at the tarrrget"] = "Gain 3 drunk + stats",
 			["Pull one over on the pirates"] = "Get shot of rotgut",
 			["Throw hard and hope for the best"] = "Get shot of rotgut",
 		}
-	elseif mainstat == "Moxie" then
+	elseif mainstat_type("Moxie") then
 		return {
 			["Carefully throw the darrrt at the tarrrget"] = "Fight a tipsy pirate",
 			["Pull one over on the pirates"] = "Gain 3 drunk + stats",
@@ -51,13 +50,17 @@ add_choice_text("That Explains All The Eyepatches", function()
 	end
 end)
 
--- TODO: check if fcle is unlocked instead?
+local fcle_unlocked = nil
 add_warning {
 	message = "You don't have an insult book.",
 	severity = "warning",
 	zone = "Barrrney's Barrr",
 	check = function()
-		return not ascensionstatus("Aftercore") and not have_item("The Big Book of Pirate Insults") and not have_item("Massive Manual of Marauder Mockery")
+		if not have_item("The Big Book of Pirate Insults") and not have_item("Massive Manual of Marauder Mockery") and not fcle_unlocked then
+			local pt = get_page("/cove.php")
+			fcle_unlocked = pt:contains("F'c'le")
+			return not fcle_unlocked
+		end
 	end,
 }
 
@@ -140,8 +143,6 @@ add_automator("/beerpong.php", function()
 				text, url = post_page("/beerpong.php", { response = responsenum })
 				return solve_beerpong(n - 1)
 			end
--- 		else
--- 			print(text)
 		end
 	end
 	solve_beerpong(3)
@@ -153,7 +154,7 @@ add_printer("/cove.php", function()
 		local count = table.maxn(tbl)
 		local chance = 0
 		if count >= 3 then
-			chance = count/8 * (count-1)/7 * (count-2)/6
+			chance = count / 8 * (count - 1) / 7 * (count - 2) / 6
 		end
 		local status = string.format("<b>%s collected (%.1f%% chance)</b><br>", make_plural(count, "insult", "insults"), chance * 100)
 		status = status .. table.concat(tbl, "<br>")
@@ -265,7 +266,7 @@ end)
 -- belowdecks
 
 add_ascension_zone_check(160, function()
-	if buff("On the Trail") and not have("Talisman o' Nam") and count("snakehead charrrm") + count("gaudy key") < 2 then
+	if have_buff("On the Trail") and not have_item("Talisman o' Nam") and count("snakehead charrrm") + count("gaudy key") < 2 then
 		local trailed = retrieve_trailed_monster()
 		if trailed ~= "gaudy pirate" then
 			return "You are on the trail of '" .. tostring(trailed) .. "' when you might want to sniff a gaudy pirate."

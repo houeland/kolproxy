@@ -25,7 +25,7 @@ function get_ascension_automation_settings(want_bonus)
 			"cornuthaum", "vorpal blade", "magic whistle", "ninja hot pants",
 			"ASCII shirt",
 			"crowbarrr", "Jolly Roger charrrm bracelet",
-			"glowing red eye", "magilaser blastercannon", "titanium assault umbrella", "armgun", "ridiculously huge sword", "ocarina of space", "amulet of extreme plot significance",
+			"magilaser blastercannon", "armgun", "ridiculously huge sword", "ocarina of space",
 			"rave whistle",
 			"black helmet", "black sword", "black greaves",
 			"leotarrrd", "grassy cutlass",
@@ -116,7 +116,7 @@ function get_ascension_automation_settings(want_bonus)
 			hat = {
 				{ name = "silent beret", check = function() return want_bonus.noncombat end },
 				"Crown of Thrones",
-				{ name = "spangly sombrero", check = function() return (get_mainstat() == "Moxie" and level() < 13) end },
+				{ name = "spangly sombrero", check = function() return (mainstat_type("Moxie") and level() < 13) end },
 				{ name = "Boris's Helm (askew)", check = function() return (level() < 13) end },
 				{ name = "Spooky Putty mitre", check = function() return (level() < 13) end },
 				"Boris's Helm",
@@ -290,10 +290,10 @@ function get_ascension_automation_settings(want_bonus)
 		return itemname
 	end
 
-	if have("powdered wig") and basemoxie() >= 20 then
+	if have_item("powdered wig") and basemoxie() >= 20 then
 		table.insert(tbl.sell_items, "Van der Graaf helmet")
 	end
-	if have("pirate fledges") then
+	if have_item("pirate fledges") then
 		table.insert(tbl.sell_items, "The Big Book of Pirate Insults")
 	end
 	if count("meat paste") >= 10 or (moonsign_area() == "Degrassi Knoll" and challenge ~= "zombie") then

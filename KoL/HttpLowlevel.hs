@@ -211,7 +211,7 @@ simple_http_withproxy rq = do
 simple_https_direct rq = do
 	auth <- getAuth rq
 
-	s <- mksocket
+	s <- mkconnectsocket
 	hostA <- head <$> Network.BSD.hostAddresses <$> Network.BSD.getHostByName (host auth)
 --	putStrLn $ "  https to " ++ show (host auth)
 	let a = Network.Socket.SockAddrInet (toEnum 443) hostA
@@ -315,14 +315,30 @@ kolproxy_receiveHTTP conn = do
 						then chunkedTransfer Network.BufferType.bufferOps (readLine conn) (readBlock conn)
 						else uglyDeathTransfer "receiveHTTP"
 
-mksocket = do
+mkconnectsocket = debug_do "mkconnectsocket" $ do
 	proto <- Network.BSD.getProtocolNumber "tcp"
 	bracketOnError (Network.Socket.socket Network.Socket.AF_INET Network.Socket.Stream proto) (Network.Socket.sClose) $ \s -> do
 		Network.Socket.setSocketOption s Network.Socket.KeepAlive 1
 		return s
 
+mklistensocket portnum = debug_do "mklistensocket" $ do
+	proto <- Network.BSD.getProtocolNumber "tcp"
+	let hints = Network.Socket.defaultHints {
+		addrFlags = [AI_ADDRCONFIG],
+		addrFamily = Network.Socket.AF_INET,
+		addrSocketType = Network.Socket.Stream,
+		addrProtocol = proto
+	}
+	addr <- head <$> getAddrInfo (Just hints) Nothing (Just $ show $ portnum)
+	bracketOnError (debug_do "socket create" $ Network.Socket.socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)) (Network.Socket.sClose) $ \s -> do
+		Network.Socket.setSocketOption s Network.Socket.KeepAlive 1
+		Network.Socket.setSocketOption s Network.Socket.ReuseAddr 1
+		debug_do "socket bind" $ Network.Socket.bindSocket s (addrAddress addr)
+		debug_do "socket listen" $ Network.Socket.listen s Network.Socket.maxListenQueue
+		return s
+
 kolproxy_openTCPConnection server = do
-		bracketOnError (mksocket) (\s -> Network.Socket.sClose s) $ \s -> do
+		bracketOnError (mkconnectsocket) (\s -> Network.Socket.sClose s) $ \s -> do
 			-- TODO: use getAddrInfo and stuff? for ipv6??
 			hostA <- getHostAddr hostname
 -- 			putStrLn $ "opentcp connecting to " ++ show auth ++ " | " ++ show hostname ++ " -> " ++ show hostA
@@ -483,9 +499,6 @@ slow_mkconnthing _server = do
 		putMVar mvdest answer) `catch` (\e -> doHTTPLOWLEVEL_DEBUGexception $ "slowconnchan error: " ++ (show (e :: SomeException))))
 
 	return slowconnchan :: IO ConnChanType
-
-mkconnthing = fast_mkconnthing
---mkconnthing = slow_mkconnthing
 
 send_http_response h resp = do
 	-- TODO: check for errors?

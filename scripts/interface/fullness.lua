@@ -73,7 +73,7 @@ add_always_warning("/inv_booze.php", function()
 		end
 	end
 	if ascensionstatus() == "Aftercore" or have_skill("The Ode to Booze") then
-		if not buff("Ode to Booze") then
+		if not have_buff("Ode to Booze") then
 			return "You do not have Ode to Booze active.", "drinking without ode"
 		end
 		local potency = retrieve_item_potency(tonumber(params.whichitem))
@@ -148,7 +148,7 @@ add_aftercore_warning("/inv_eat.php", function()
 end)
 
 add_aftercore_warning("/inv_eat.php", function()
-	if buff("Gar-ish") then return end
+	if have_buff("Gar-ish") then return end
 	for _, x in ipairs { "fishy fish lasagna", "gnat lasagna", "long pork lasagna" } do
 		if tonumber(params.whichitem) == get_itemid(x) then
 			return "You do not have Gar-ish active while eating lasagna.", "eating lasagna without Gar-ish"
@@ -157,7 +157,7 @@ add_aftercore_warning("/inv_eat.php", function()
 end)
 
 add_extra_ascension_warning("/inv_eat.php", function()
-	if have_buff("Got Milk") or have("milk of magnesium") or (have("glass of goat's milk") and (classid() == 4 or have_skill("Advanced Saucecrafting"))) then
+	if have_buff("Got Milk") or have_item("milk of magnesium") or (have("glass of goat's milk") and (classid() == 4 or have_skill("Advanced Saucecrafting"))) then
 		return check_eating_warning(tonumber(params.whichitem), (tonumber(params.quantity) or 1))
 	end
 end)

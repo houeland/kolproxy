@@ -240,7 +240,7 @@ add_printer("/campground.php", function()
 						wantstaritems = { "star hat" }
 						have_star_weapon = true
 					end
-					local have_star_everything = have("Richard's star key") and have_item("star hat") and have_star_weapon
+					local have_star_everything = have_item("Richard's star key") and have_item("star hat") and have_star_weapon
 					for y in table.values(wantstaritems) do
 						if have(y) then
 							table.insert(extrastrs, string.format([[<span style="color: green">%s</span>]], y))
@@ -414,8 +414,8 @@ function gate_status_display(from, to)
 	local effect_link = nil
 	if have_buff(to.effect) then
 		effect_status = [[(<span style="color: gray;">have ]]..to.effect..[[</span>)]]
-	elseif to.effect == "Teleportitis" and have("ring of teleportation") then
-		if have_equipped("ring of teleportation") then
+	elseif to.effect == "Teleportitis" and have_item("ring of teleportation") then
+		if have_equipped_item("ring of teleportation") then
 			effect_status = [[(<span style="color: gray;">have ]]..to.effect..[[</span>)]]
 		else
 			effect_status = [[(wear ring for <span style="color: green;">(]]..to.effect..[[)</span>)]]
@@ -546,9 +546,9 @@ function automate_lair_statues(text)
 	local missing_stuff = {}
 	if text:contains("sit motionless") then
 		local scuba_keys = {
-			{ prepreaction = "sorcriddle1", answer = "fish", key = "Boris's key", have_item = function() return have("fishbowl") or have("hosed fishbowl") end },
-			{ prepreaction = "sorcriddle2", answer = "phish", key = "Jarlsberg's key", have_item = function() return have("fishtank") or have("hosed tank") end },
-			{ prepreaction = "sorcriddle3", answer = "fsh", key = "Sneaky Pete's key", have_item = function() return have("fish hose") or have("hosed tank") or have("hosed fishbowl") end },
+			{ prepreaction = "sorcriddle1", answer = "fish", key = "Boris's key", have_item = function() return have_item("fishbowl") or have_item("hosed fishbowl") end },
+			{ prepreaction = "sorcriddle2", answer = "phish", key = "Jarlsberg's key", have_item = function() return have_item("fishtank") or have_item("hosed tank") end },
+			{ prepreaction = "sorcriddle3", answer = "fsh", key = "Sneaky Pete's key", have_item = function() return have_item("fish hose") or have_item("hosed tank") or have_item("hosed fishbowl") end },
 		}
 		local missing_scuba_keys = {}
 		for _, x in ipairs(scuba_keys) do
@@ -560,11 +560,11 @@ function automate_lair_statues(text)
 				table.insert(missing_scuba_keys, x.key)
 			end
 		end
-		if not have("makeshift SCUBA gear") then
+		if not have_item("makeshift SCUBA gear") then
 			meatpaste_items("fish hose", "fishbowl")
 			meatpaste_items("hosed fishbowl", "fishtank")
 		end
-		if have("makeshift SCUBA gear") then
+		if have_item("makeshift SCUBA gear") then
 			local eq = equipment()
 			equip_item("makeshift SCUBA gear", 3)
 			get_page("/lair2.php", { action = "odor" })
@@ -608,8 +608,8 @@ function automate_lair_statues(text)
 		return
 	end
 
-	if not have("stone tablet (Squeezings of Woe)") then
-		if not have("digital key") and setting_enabled("enable ascension assistance") then
+	if not have_item("stone tablet (Squeezings of Woe)") then
+		if not have_item("digital key") and setting_enabled("enable ascension assistance") then
 			if count("white pixel") + math.min(count("red pixel"), count("green pixel"), count("blue pixel")) >= 30 then
 				if count("white pixel") < 30 then
 					local to_make = 30 - count("white pixel")
@@ -618,15 +618,15 @@ function automate_lair_statues(text)
 				shop_buyitem("digital key", "mystic")
 			end
 		end
-		if have("digital key") then
+		if have_item("digital key") then
 			async_post_page("/lair2.php", { prepreaction = "sequence", seq1= "up", seq2 = "up", seq3 = "down", seq4 = "down", seq5 = "left", seq6 = "right", seq7 = "left", seq8 = "right", seq9 = "b", seq10 = "a" })
 		else
 			table.insert(missing_stuff, "digital key")
 		end
 	end
 
-	if not have("stone tablet (Sinister Strumming)") then
-		if have("Richard's star key") then
+	if not have_item("stone tablet (Sinister Strumming)") then
+		if have_item("Richard's star key") then
 			local eq = equipment()
 			local fam = familiarid()
 			switch_familiarid(17) -- star starfish
@@ -640,13 +640,13 @@ function automate_lair_statues(text)
 		else
 			table.insert(missing_stuff, "Richard's star key")
 		end
-		if not have("stone tablet (Sinister Strumming)") then
+		if not have_item("stone tablet (Sinister Strumming)") then
 			table.insert(missing_stuff, "stone tablet (Sinister Strumming) [star outfit]")
 		end
 	end
 
-	if not have("stone tablet (Really Evil Rhythm)") then
-		if have("skeleton key") then
+	if not have_item("stone tablet (Really Evil Rhythm)") then
+		if have_item("skeleton key") then
 			table.insert(missing_stuff, "complete skeleton game")
 		else
 			table.insert(missing_stuff, "skeleton key")
@@ -659,7 +659,7 @@ function automate_lair_statues(text)
 	end
 
 	if text:contains("no instrument to give to the first") then
-		if have("ten-leaf clover") or have("disassembled clover") or have("big rock") then
+		if have_item("ten-leaf clover") or have_item("disassembled clover") or have_item("big rock") then
 			table.insert(missing_stuff, string.format([[a guitar <span style="color: green">(smith a stone banjo)</span> <a href="%s" style="color: green">{ automate (1) }</a>]], smith_stone_banjo_href { pwd = session.pwd }))
 		else
 			table.insert(missing_stuff, "a guitar")
@@ -839,7 +839,7 @@ function solve_hedge_maze_puzzle()
 		end
 		turns[tile] = prevturns
 	end
-	add_for(enter_tile, enter_dir, have("hedge maze key"))
+	add_for(enter_tile, enter_dir, have_item("hedge maze key"))
 -- 	print("directions to win in " .. tostring(best_winner) .. ":", table_to_str(winner))
 	local function perform_winning_solution(winner)
 		for _, x in ipairs(winner) do
@@ -859,10 +859,10 @@ function solve_hedge_maze_puzzle()
 	end
 	if best_winner <= 10 then
 		local turned, x = perform_winning_solution(winner)
-		if turned and have("hedge maze puzzle") then
+		if turned and have_item("hedge maze puzzle") then
 			return solve_hedge_maze_puzzle()
 		else
-			if not have("hedge maze puzzle") then
+			if not have_item("hedge maze puzzle") then
 				if best_winner == 1 then
 					session["hedge maze result"] = string.format("Automated, %s tile turn left.", best_winner)
 				else
@@ -881,7 +881,7 @@ add_automator("/fight.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 	if text:contains("WINWINWIN") or text:contains("state['fightover'] = true;") or text:contains([[<a href="lair3.php">Go back to the Sorceress' Hedge Maze</a>]]) then
 		-- TODO: would prefer a perfect trigger after fights
-		if text:contains("topiary golem") and have("hedge maze puzzle") then
+		if text:contains("topiary golem") and have_item("hedge maze puzzle") then
 			-- Only trigger vs topiary golems, since the hedge maze puzzle doesn't go away when you're through the maze, unless you keep turning it until it's stolen.
 			-- TODO?: Use it until it goes away when you're done?
 			session["hedge maze result"] = nil
@@ -901,7 +901,7 @@ end)
 add_automator("/lair3.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 	if text:contains("You see a key lying") then
-		if have("hedge maze key") then
+		if have_item("hedge maze key") then
 			session["hedge maze result"] = nil
 			solve_hedge_maze_puzzle()
 		end
@@ -1136,7 +1136,7 @@ add_interceptor("/lair6.php", function()
 end)
 
 add_always_warning("/lair6.php", function()
-	if tonumber(params.place) == 5 and not have("Wand of Nagamar") then
+	if tonumber(params.place) == 5 and not have_item("Wand of Nagamar") then
 		if ascensionpathid() == 8 or ascensionpathid() == 10 or ascensionpath("Avatar of Jarlsberg") then return end
 		return "A Wand of Nagamar is recommended for the sorceress fight.", "sorceress-wand-of-nagamar"
 	end

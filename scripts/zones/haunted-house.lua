@@ -5,7 +5,7 @@ add_choice_text("Dark in the Attic", function()
 		["Turn up the boombox"] = { text = "Raise dungeon ML", good_choice = true },
 		["Turn down the boombox"] = "Lower dungeon ML",
 	}
-	if have("silver shotgun shell") then
+	if have_item("silver shotgun shell") then
 		tbl["Investigate the banging"] = "Kill multiple werewolves with a silver shotgun shell"
 	else
 		tbl["Investigate the banging"] = { text = "Need a silver shotgun shell", leave_noturn = true }
@@ -19,7 +19,7 @@ add_choice_text("Debasement", function()
 		["Turn up the fog machine"] = { text = "Raise dungeon ML", good_choice = true },
 		["Turn down the fog machine"] = "Lower dungeon ML",
 	}
-	if have_equipped("plastic vampire fangs") then
+	if have_equipped_item("plastic vampire fangs") then
 		tbl["Investigate the coffins"] = "Kill multiple vampires (once per dungeon)"
 	else
 		tbl["Investigate the coffins"] = { text = "Need plastic vampire fangs equipped", leave_noturn = true }
@@ -39,12 +39,12 @@ add_choice_text("The Unliving Room", function()
 		["Open the windows"] = "Lower dungeon ML",
 		["Open the box"] = "Get a random sexy halloween costume",
 	}
-	if have("chainsaw chain") then
+	if have_item("chainsaw chain") then
 		tbl["Enter the dining room"] = "Kill multiple zombies with a chainsaw chain"
 	else
 		tbl["Enter the dining room"] = { text = "Need a chainsaw chain", leave_noturn = true }
 	end
-	if have("funhouse mirror") then
+	if have_item("funhouse mirror") then
 		tbl["Look in the closet"] = "Kill multiple skeletons with a funhouse mirror"
 	else
 		tbl["Look in the closet"] = { text = "Need a funhouse mirror", leave_noturn = true }

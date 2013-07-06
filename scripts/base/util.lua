@@ -5,6 +5,7 @@ dofile("scripts/base/kolproxy-core-functions.lua")
 dofile("scripts/base/script-functions.lua")
 dofile("scripts/base/charpane.lua")
 dofile("scripts/base/api.lua")
+dofile("scripts/base/commands.lua")
 
 
 -- TODO: redo the rest of this code
@@ -143,17 +144,4 @@ function determine_cellar_wines()
 		session["tried determining wines"] = "yes"
 		return goblet
 	end
-end
-
-function automate_tiles()
-	local function choose(tile)
-		return async_post_page("/tiles.php", { action = "jump", whichtile = tile })
-	end
-	choose(4)
-	choose(6)
-	choose(3)
-	choose(5)
-	choose(7)
-	choose(6)
-	return choose(3)()
 end

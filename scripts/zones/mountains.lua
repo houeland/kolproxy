@@ -285,7 +285,7 @@ end)
 -- })
 
 add_ascension_zone_check(271, function()
-	if buff("On the Trail") then
+	if have_buff("On the Trail") then
 		local trailed = retrieve_trailed_monster()
 		if trailed ~= "dairy goat" then
 			return "You are trailing '" .. tostring(trailed) .. "' when you might want to sniff a dairy goat."

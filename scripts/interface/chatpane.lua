@@ -64,7 +64,7 @@ add_printer("/mchat.php", function()
 	text = text:gsub("font%-size: 12px;", "font-size: 13px;")
 end)
 
--- TODO: HACK: workaround for bad CDM script
+-- Workaround for bad CDM script
 add_printer("/mchat.php", function()
 --	text = text:gsub("timeout: 5000", [[timeout: 50000, error: function(a,b,c) { console.log("chat error", b, c) }]])
 	text = text:gsub("timeout: 5000", [[timeout: 50000]])

@@ -60,7 +60,7 @@ do
 			return monster_name:contains(x)
 		elseif adventure_title == x or adventure_result == x then
 			return true
-		elseif text:contains(">There once was a bleary-eyed cyclops<") and x == "The Bleary-Eyed Cyclops" then -- HACK! The page for the cyclops eyedrops is weird
+		elseif text:contains(">There once was a bleary-eyed cyclops<") and x == "The Bleary-Eyed Cyclops" then -- WORKAROUND: The page for the cyclops eyedrops is weird with no title
 			return true
 		else
 			return false
@@ -72,6 +72,7 @@ do
 			--ascension["last semirare encounter"] = x
 			--ascension["last semirare turn"] = turnsthisrun()
 			ascension["last semirare"] = { encounter = x, turn = turnsthisrun() }
+			--ascension["fortune cookie numbers"] = nil
 		end
 	end
 end

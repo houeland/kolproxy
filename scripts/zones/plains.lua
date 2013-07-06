@@ -2,12 +2,12 @@
 
 add_extra_ascension_adventure_warning(function(zoneid)
 	if zoneid == 34 then
-		if not buff("Polka of Plenty") then
+		if not have_buff("Polka of Plenty") then
 			if have_skill("The Polka of Plenty") then
 				return "You might want Polka of Plenty for the bodyguards who drop a lot of meat.", "polka of plenty for bat bodyguards"
 			end
 		end
-		if not buff("Greedy Resolve") and have("resolution: be wealthier") then
+		if not have_buff("Greedy Resolve") and have_item("resolution: be wealthier") then
 			return "You might want to use resolution: be wealthier for the bodyguards who drop a lot of meat.", "greedy resolve for bat bodyguards"
 		end
 	end
@@ -78,20 +78,20 @@ add_automator("/palinshelves.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 	if text:contains("It looks as though you could put some things on the shelves") then
 		-- Currently always true if you find the adventure
-		if have("photograph of God") and have("hard rock candy") and have("ketchup hound") and have("hard-boiled ostrich egg") then
+		if have_item("photograph of God") and have_item("hard rock candy") and have_item("ketchup hound") and have_item("hard-boiled ostrich egg") then
 			text, url = post_page("/palinshelves.php", { action = "placeitems", whichitem1 = get_itemid("photograph of God"), whichitem2 = get_itemid("hard rock candy"), whichitem3 = get_itemid("ketchup hound"), whichitem4 = get_itemid("hard-boiled ostrich egg") })
 		end
 	end
 end)
 
 add_ascension_zone_check(119, function()
-	if meat() < 500 and not have("&quot;I Love Me, Vol. I&quot;") and not (have("photograph of God") and have("hard rock candy")) then
+	if meat() < 500 and not have_item("&quot;I Love Me, Vol. I&quot;") and not (have("photograph of God") and have_item("hard rock candy")) then
 		return "Palindome items cost 500 meat."
 	end
 end)
 
 add_ascension_adventure_warning(function(zoneid)
-	if zoneid ~= 119 and have_equipped("Mega Gem") then
+	if zoneid ~= 119 and have_equipped_item("Mega Gem") then
 		return "You might want to unequip the Mega Gem when you're not adventuring in the Palindome.", "wearing mega gem outside palindome"
 	end
 end)

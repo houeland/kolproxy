@@ -15,7 +15,7 @@ add_processor("/choice.php", function()
 end)
 
 add_automator("all pages", function()
-	if have_equipped("stinky cheese eye") and not session["cached stinky cheese eye bonus"] then
+	if have_equipped_item("stinky cheese eye") and not session["cached stinky cheese eye bonus"] then
 		local pt = get_page("/desc_item.php", { whichitem = 548672093 })
 		local bonus = pt:match([[>%+([0-9]+)%% Item Drops from Monsters<]])
 		session["cached stinky cheese eye bonus"] = bonus
@@ -23,7 +23,7 @@ add_automator("all pages", function()
 end)
 
 add_automator("all pages", function()
-	if have_equipped("Jekyllin hide belt") and not session["cached Jekyllin hide belt bonus"] then
+	if have_equipped_item("Jekyllin hide belt") and not session["cached Jekyllin hide belt bonus"] then
 		local pt = get_page("/desc_item.php", { whichitem = 253195678 })
 		local bonus = pt:match([[>%+([0-9]+)%% Item Drops from Monsters<]])
 		session["cached Jekyllin hide belt bonus"] = bonus
@@ -31,7 +31,7 @@ add_automator("all pages", function()
 end)
 
 add_automator("all pages", function()
-	if have_equipped("Snow Suit") and not session["cached Snow Suit bonus"] then
+	if have_equipped_item("Snow Suit") and not session["cached Snow Suit bonus"] then
 		local pt = get_page("/charpane.php")
 		if pt:contains("/snowface3.gif") then
 			session["cached Snow Suit bonus"] = 10

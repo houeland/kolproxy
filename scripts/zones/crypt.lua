@@ -43,7 +43,7 @@ add_automator("/fight.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 	if text:contains("WINWINWIN") or text:contains("state['fightover'] = true;") or text:contains([[<a href="crypt.php">Go back to The Defiled Cyrpt</a>]]) then
 		-- TODO: would prefer a perfect trigger after fights
-		if have("evil eye") then
+		if have_item("evil eye") then
 			-- This currently uses any evil eyes you have, even if the Nook is completed.
 			session["used evil eye"] = nil
 			local c = count("evil eye")

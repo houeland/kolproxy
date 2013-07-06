@@ -207,12 +207,12 @@ kolProxyHandler uri params baseref = do
 		(pt, effuri, allhdrs, code) <- loginrequestfunc uri (Just p_sensitive) (Nothing, useragent_ $ connection $ origref, hostUri_ $ connection $ origref, Nothing) True
 		let hdrs = filter (\(x, _y) -> (x == "Set-Cookie" || x == "Location")) allhdrs
 		putStrLn $ "DEBUG: Login requested " ++ (show $ uriPath uri) ++ ", got " ++ (show $ uriPath effuri)
-		putStrLn $ "  hdrs: " ++ show hdrs
+		putStrLn $ "  HTTP headers: " ++ show hdrs
 		let new_cookie = case filter (\(a, _b) -> a == "Set-Cookie") hdrs of
 			[] -> Nothing
 			(x:xs) -> Just $ intercalate "; " (map ((takeWhile (/= ';')) . snd) (x:xs)) -- TODO: Make readable
-		putStrLn $ "  old_cookie = " ++ (show $ cookie_ $ connection $ origref)
-		putStrLn $ "  new_cookie = " ++ (show new_cookie)
+		putStrLn $ "  old cookie: " ++ (show $ cookie_ $ connection $ origref)
+		putStrLn $ "  new cookie: " ++ (show new_cookie)
 		if isNothing new_cookie
 			then do
 				putStrLn $ "Error: No cookie from logging in!"
@@ -334,7 +334,7 @@ kolProxyHandler uri params baseref = do
 				Right (pt, effuri, _hdrs, _code) -> log_time_interval newref ("run handle request for: " ++ (show uri)) $ handleRequest newref uri effuri [] params pt
 	return retresp
 
-runKolproxy = do
+runKolproxy = (do
 	have_process_page <- doesFileExist "scripts/process-page.lua"
 	if have_process_page
 		then do
@@ -355,7 +355,7 @@ runKolproxy = do
 	let portnum = case portenv of
 		Just x -> fromJust $ read_as x :: Integer
 		Nothing -> 18481
-	runProxyServer kolProxyHandler kolProxyHandlerWhenever portnum `catch` (\e -> putStrLn ("mainError: " ++ show (e :: Control.Exception.SomeException)))
+	runProxyServer kolProxyHandler kolProxyHandlerWhenever portnum) `catch` (\e -> putStrLn ("DEBUG: runKolproxy exception: " ++ show (e :: Control.Exception.SomeException)))
 
 main = platform_init $ do
 	hSetBuffering stdout LineBuffering
@@ -372,7 +372,7 @@ runbot filename = do
 	let login_useragent = kolproxy_version_string ++ " (" ++ platform_name ++ ")" ++ " BotScript/0.1 (" ++ filename ++ ")"
 	let login_host = fromJust $ parseURI $ "http://www.kingdomofloathing.com/"
 
-	sc <- make_sessionconn "http://www.kingdomofloathing.com/" (error "dblogstuff") (error "statestuff")
+	sc <- make_sessionconn globalref "http://www.kingdomofloathing.com/" (error "dblogstuff") (error "statestuff")
 
 	cookie <- login (login_useragent, login_host) "username" "password-md5hash"
 

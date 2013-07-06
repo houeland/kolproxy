@@ -1,6 +1,7 @@
 local function load_slots()
 	local slots = ascension["interface.outfit slots"] or {}
 	slots.outfits = slots.outfits or { {}, {}, {}, {}, {} }
+	slots.familiars = slots.familiars or {}
 	slots.selected = slots.selected or 1
 	return slots
 end
@@ -8,8 +9,18 @@ end
 function switch_outfit_slot(slot)
 	local slots = load_slots()
 	slots.outfits[slots.selected] = equipment()
+	slots.familiars[slots.selected] = familiarid()
+	if equipment().familiarequip and (slots.familiars[slots.selected] or 0) ~= (slots.familiars[slot] or 0) then
+		local famname = maybe_get_familiarname(familiarid())
+		local famequip = famname and datafile("familiars")[famname].familiarequip
+		if famequip and maybe_get_itemname(equipment().familiarequip) == famequip then
+		else
+			unequip_slot("familiarequip")
+		end
+	end
 	slots.selected = slot
-	set_equipment(slots.outfits[slots.selected])
+	pcall(switch_familiarid, slots.familiars[slots.selected] or 0)
+	pcall(set_equipment, slots.outfits[slots.selected] or {})
 	ascension["interface.outfit slots"] = slots
 end
 

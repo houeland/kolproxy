@@ -12,6 +12,7 @@ local required_items_perclass = {
 local href = setup_turnplaying_script {
 	name = "automate-nemesis",
 	description = "Automate Nemesis quest",
+	--can_automate_inrun = true,
 	when = function() return not quest_completed("Me and My Nemesis") end,
 	macro = nil,
 	preparation = function()
@@ -58,10 +59,10 @@ local href = setup_turnplaying_script {
 			-- adventure repeatedly
 			for i = 1, 100 do
 				-- buff up
-				if not buff("The Sonata of Sneakiness") then
+				if not have_buff("The Sonata of Sneakiness") then
 					cast_skillid(6015, 2) -- sonata of sneakiness
 				end
-				if not buff("Smooth Movements") then
+				if not have_buff("Smooth Movements") then
 					cast_skillid(5017, 2) -- smooth moves
 				end
 				script.ensure_mp(50)
@@ -146,10 +147,10 @@ local href = setup_turnplaying_script {
 			-- adventure repeatedly
 			for i = 1, 100 do
 				-- buff up
-				if not buff("The Sonata of Sneakiness") then
+				if not have_buff("The Sonata of Sneakiness") then
 					cast_skillid(6015, 2) -- sonata of sneakiness
 				end
-				if not buff("Smooth Movements") then
+				if not have_buff("Smooth Movements") then
 					cast_skillid(5017, 2) -- smooth moves
 				end
 				result, resulturl, advagain = autoadventure { zoneid = 159 }
@@ -164,11 +165,11 @@ local href = setup_turnplaying_script {
 		elseif quest_text("put a stop to this Nemesis nonsense") then
 			if classid() == 1 then -- seal clubber
 			elseif classid() == 2 then -- turtle tamer
-				if not have("fouet de tortue-dressage") then
+				if not have_item("fouet de tortue-dressage") then
 					get_page("/volcanoisland.php", { pwd = pwd, action = "npc" })
 				end
 			elseif classid() == 3 then -- pastamancer
-				if not have("encoded cult documents") then
+				if not have_item("encoded cult documents") then
 					get_page("/volcanoisland.php", { pwd = pwd, action = "npc" })
 				end
 				stop "TODO: Automate pastamancer island"
@@ -406,7 +407,7 @@ endwhile
 								["candy necklace"] = 1,
 								["rave whistle"] = 1,
 							}
-							if not have("rave whistle") then
+							if not have_item("rave whistle") then
 								pull_storage_items { "rave whistle" }
 							end
 							for name, value in pairs(rave_items) do
@@ -546,17 +547,17 @@ function automate_AT_nemesis_island()
 				text = "explore barracks"
 				for i = 1, 100 do
 					print("exploring barracks...", i)
-					if buff("Beaten Up") then
+					if have_buff("Beaten Up") then
 						cast_skillid(1010) -- tongue of the walrus
 						cast_skillid(3012) -- cocoon
 					end
 					if count("hacienda key") >= 5 then
 						break
 					end
-					if not buff("The Sonata of Sneakiness") then
+					if not have_buff("The Sonata of Sneakiness") then
 						cast_skillid(6015, 2) -- sonata of sneakiness
 					end
-					if not buff("Smooth Movements") then
+					if not have_buff("Smooth Movements") then
 						cast_skillid(5017, 2) -- smooth moves
 					end
 					local visited = ascension["nemesis.at.visited"] or {}
@@ -611,11 +612,11 @@ function automate_AT_nemesis_island()
 						result, resulturl, advagain = handle_adventure_result(pt, url, 220, nil)
 					end
 					if not advagain then
-						if buff("Beaten Up") then
+						if have_buff("Beaten Up") then
 							print("beaten up...")
 							cast_skillid(1010) -- tongue
 							cast_skillid(3012) -- cocoon
-							if buff("Beaten Up") then
+							if have_buff("Beaten Up") then
 								break
 							end
 						else

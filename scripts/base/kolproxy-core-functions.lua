@@ -16,11 +16,16 @@ end
 local itemid_name_lookup = {}
 local monster_image_lookup = {}
 local monster_name_lookup = {}
+local familiarid_name_lookup = {}
 function reset_datafile_cache()
 	datafile_cache = {}
 	itemid_name_lookup = {}
 	for x, y in pairs(datafile("items")) do
 		itemid_name_lookup[y.id] = x
+	end
+	familiarid_name_lookup = {}
+	for x, y in pairs(datafile("familiars")) do
+		familiarid_name_lookup[y.famid] = x
 	end
 	datafile("outfits")
 	for monstername, monster in pairs(datafile("monsters")) do
@@ -46,9 +51,6 @@ local function get_item_data_by_id(id)
 end
 
 function maybe_get_itemid(name)
-	if name == "Staff of the Healthy Breakfast" then return 6258 end -- TODO: HACK!
-	if name == "mediocre lager" then return 6215 end -- TODO: HACK!
-
 	if name == nil then
 		return nil
 	end
@@ -139,6 +141,19 @@ function get_familiarid(name)
 		error("No familiarid found for: " .. tostring(name))
 	end
 	return id
+end
+
+function maybe_get_familiarname(fam)
+	local id = maybe_get_familiarid(fam)
+	return familiarid_name_lookup[id]
+end
+
+function get_familiarname(id)
+	local name = maybe_get_familiarname(id)
+	if not name then
+		error("No familiarname found for: " .. tostring(id))
+	end
+	return name
 end
 
 function get_recipe(item)
@@ -328,7 +343,7 @@ function make_href(url, params)
 end
 
 
-function run_file_with_environment(filename, orgenv, prefillenv, f_notfound)
+function run_file_with_environment(filename, orgenv, prefillenv)
 	local env = {}
 	local env_store = {}
 	-- HACK: API change
@@ -386,47 +401,25 @@ function run_file_with_environment(filename, orgenv, prefillenv, f_notfound)
 	local __allow_global_writes = true
 	local function p_none() end
 	setmetatable(env, { __index = function(t, k)
---		local p = p_none
---		if k == "make_cannonsniff_macro" then
---			p = print
---		end
---		p("indexing global", k, filename)
---		p("  check envstore", exported_raw_tostring(env_store))
 		local v = rawget(env_store, k)
 		if v ~= nil then return v end
---		p("  check prefillenvstore", exported_raw_tostring(prefillenv))
 		local v = rawget(prefillenv, k)
 		if v ~= nil then return v end
-		if f_notfound then
-			f_notfound(t, k, filename)
--- 			print("f_notfound", t, k, orgenv[k])
-		end
---		p("  check orgenv", exported_raw_tostring(orgenv))
 		v = rawget(orgenv, k)
 		if v ~= nil then return v end
---		p("  check _G", exported_raw_tostring(_G))
 		v = _G[k]
 		if v ~= nil then return v end
---		p("  not found")
 		return nil
 	end, __newindex = function(t, k, v)
 		if error_on_writing_text_or_url and (k == "text" or k == "url") then
 			error "You can't write to 'text' or 'url' from add_processor, that's just for registering game state changes. You might want add_printer() instead for changing what's displayed?"
 		end
---		local p = p_none
---		if error_on_writing_text_or_url then
---			p = print
---		end
---		p("DEBUG: setting global", k, filename)
 		if (k == "__allow_global_writes" or not __allow_global_writes) and k ~= "text" and k ~= "url" then
---			p("  in env_store", exported_raw_tostring(env_store))
 			rawset(env_store, k, v)
 		else
---			p("  orgenv write", k, "from", filename, "to", exported_raw_tostring(orgenv))
 			orgenv[k] = v
 		end
 	end})
--- 	print("runfile", filename)
 	local f, e = loadfile("scripts/" .. filename)
 	if not f then error(e, 2) end
 	setfenv(f, env)
@@ -434,7 +427,6 @@ function run_file_with_environment(filename, orgenv, prefillenv, f_notfound)
 	f()
 
 	__allow_global_writes = rawget(env_store, "__allow_global_writes")
---	print(filename, __allow_global_writes)
 end
 
 function load_script_files(env)
@@ -455,13 +447,7 @@ function load_script_files(env)
 	local global_env = {}
 	local function load_file(category, name)
 		local warn = true
-		run_file_with_environment(name, global_env, env, function(t, k, filename)
-			if (warn and k ~= "register_setting" and k ~= "load_datafile" and k ~= "setup_turnplaying_script") or (k == "character" and not filename:contains("settings-page")) then
---				print("Warning: using global variable", k, "in", filename)
--- 				print(debug.traceback())
--- 				error("Warning: invalid __index for name '" .. tostring(k) .. "' in '" .. tostring(filename) .. "'")
-			end
-		end)
+		run_file_with_environment(name, global_env, env)
 		warn = false
 	end
 
@@ -491,11 +477,13 @@ function add_message_to_page(pagetext, msg, title, color)
 	return add_raw_message_to_page(pagetext, make_kol_html_frame(msg, title, color))
 end
 
-function add_colored_message_to_page(pagetext, msg, color) -- TODO: Deprecated!
+function add_colored_message_to_page(pagetext, msg, color) -- TODO: Remove
+	print("WARNING: add_colored_message_to_page(pagetext, msg, color) is deprecated")
 	return add_message_to_page(pagetext, "<pre>" .. msg .. "</pre>", "Result:", color)
 end
 
-function add_formatted_colored_message_to_page(pagetext, msg, color) -- TODO: Deprecated!
+function add_formatted_colored_message_to_page(pagetext, msg, color) -- TODO: Remove
+	print("WARNING: add_formatted_colored_message_to_page(pagetext, msg, color) is deprecated")
 	return add_message_to_page(pagetext, msg, "Result:", color)
 end
 

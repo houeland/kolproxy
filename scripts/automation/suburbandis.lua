@@ -107,23 +107,23 @@ local dis_href = add_automation_script("automate-suburbandis", function()
 		if advs() == 0 then
 			stop "Out of adventures."
 		end
-		if not buff("Dis Abled") then
+		if not have_buff("Dis Abled") then
 			if folios_used < 2 then
 				folios_used = folios_used + 1
 				maybe_pull_item("devilish folio")
 				use_item("devilish folio")
 			end
-			if not buff("Dis Abled") then
+			if not have_buff("Dis Abled") then
 				stop "Use another devilish folio."
 			end
 		end
-		if not have("vanity stone") or not have("furious stone") then
+		if not have_item("vanity stone") or not have_item("furious stone") then
 			-- grove: 277
 			automate_dis_zone(277)
-		elseif not have("lecherous stone") or not have("jealousy stone") then
+		elseif not have_item("lecherous stone") or not have_item("jealousy stone") then
 			-- maelstrom: 278
 			automate_dis_zone(278)
-		elseif not have("avarice stone") or not have("gluttonous stone") then
+		elseif not have_item("avarice stone") or not have_item("gluttonous stone") then
 			-- glacier: 279
 			automate_dis_zone(279)
 		else

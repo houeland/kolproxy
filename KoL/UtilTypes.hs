@@ -80,6 +80,7 @@ data GlobalRefStuff = GlobalRefStuff {
 	h_http_log_ :: Handle,
 	shutdown_secret_ :: String,
 	shutdown_ref_ :: IORef Bool,
+	use_slow_http_ref_ :: IORef Bool,
 	doChatLogAction_ :: (Database.SQLite3.Database -> IO ()) -> IO ()
 }
 

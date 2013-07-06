@@ -381,7 +381,7 @@ end
 
 function elemental_resist_level_multiplier(level)
 	local myst_resist = 0
-	if get_mainstat() == "Mysticality" then
+	if mainstat_type("Mysticality") then
 		myst_resist = 5
 	end
 	if level <= 3 then

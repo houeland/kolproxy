@@ -26,6 +26,13 @@ register_setting {
 	default_level = "enthusiast",
 }
 
+register_setting {
+	name = "automate daily visits/check jackass plumber",
+	description = "Check Jackass Plumber as part of daily visits",
+	group = "automation",
+	default_level = "detailed",
+}
+
 function setup_automation_scan_page_results()
 	local extracts = {
 		[[<center><table><tr><td><img src="http://images.kingdomofloathing.com/itemimages/meat.gif" height=30 width=30 alt="Meat"></td><td valign=center>You gain [0-9,]+ Meat.</td></tr></table></center>]],
@@ -141,6 +148,10 @@ function do_daily_visits()
 
 	dopage("/clan_viplounge.php", { action = "lookingglass" })
 	dopage("/clan_viplounge.php", { action = "crimbotree" })
+
+	if setting_enabled("automate daily visits/check jackass plumber") then
+		dopage("/arcade.php", { action = "plumber" })
+	end
 
 	dopage("/volcanoisland.php", { pwd = pwd, action = "npc" })
 	dopage("/volcanoisland.php", { pwd = pwd, action = "npc2" })
@@ -265,8 +276,15 @@ add_automator("/main.php", function()
 
 	local want_tbl = {}
 	table.insert(want_tbl, "visit")
+
+	if setting_enabled("automate daily visits/summon clip art") then
+		table.insert(want_tbl, "clipart")
+	end
 	if setting_enabled("automate daily visits/harvest garden") then
 		table.insert(want_tbl, "garden")
+	end
+	if setting_enabled("automate daily visits/check jackass plumber") then
+		table.insert(want_tbl, "plumber")
 	end
 	if ascensionstatus("Aftercore") then
 		table.insert(want_tbl, "aftercore")

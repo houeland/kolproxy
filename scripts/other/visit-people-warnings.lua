@@ -5,7 +5,7 @@ add_warning {
 	check = function(zoneid)
 		if ascensionpathid() == 8 or ascensionpathid() == 10 or ascensionpath("Avatar of Jarlsberg") then return false end
 		if daysthisrun() == 1 or level() < 5 then
-			if (zoneid == 114 and get_mainstat() == "Muscle") or (zoneid == 113 and get_mainstat() == "Mysticality") or (zoneid == 112 and get_mainstat() == "Moxie") then
+			if (zoneid == 114 and mainstat_type("Muscle")) or (zoneid == 113 and mainstat_type("Mysticality")) or (zoneid == 112 and mainstat_type("Moxie")) then
 				return true
 			end
 		end
@@ -17,7 +17,7 @@ add_warning {
 	severity = "warning",
 	when = "ascension",
 	check = function(zoneid)
-		if zoneid == 112 and get_mainstat() == "Moxie" and not equipment().pants then
+		if zoneid == 112 and mainstat_type("Moxie") and not equipment().pants then
 			return true
 		end
 	end,

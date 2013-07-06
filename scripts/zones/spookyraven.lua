@@ -146,7 +146,7 @@ end)
 
 add_printer("/manor.php", function()
 	local galtext = [[<span style="color: darkorange">Gallery locked</span>]]
-	if have("Spookyraven gallery key") then
+	if have_item("Spookyraven gallery key") then
 		galtext = [[<span style="color: green">Gallery unlocked</span>]]
 	else
 		local galkeytext = [[<span style="color: darkorange">Visit library to unlock gallery key</span>]]
@@ -161,7 +161,7 @@ end)
 --~ billiards room
 
 add_choice_text("Minnesota Incorporeals", function()
-	if have("Spookyraven library key") or not buff("Chalky Hand") then
+	if have_item("Spookyraven library key") or not have_buff("Chalky Hand") then
 		return {
 			["Break"] = "Gain moxie",
 			["Let the ghost break"] = "Gain muscle or mysticality",
@@ -177,7 +177,7 @@ add_choice_text("Minnesota Incorporeals", function()
 end)
 
 add_choice_text("Broken", function()
-	if have("Spookyraven library key") or not buff("Chalky Hand") then
+	if have_item("Spookyraven library key") or not have_buff("Chalky Hand") then
 		return {
 			["Go for a solid"] = "Gain mysticality",
 			["Go for a stripe"] = "Gain muscle",
@@ -193,13 +193,13 @@ add_choice_text("Broken", function()
 end)
 
 add_choice_text("A Hustle Here, a Hustle There", function()
-	if have("Spookyraven library key") then
+	if have_item("Spookyraven library key") then
 		return {
 			["Go for the 8-ball"] = { text = "Already have library key", disabled = true },
 			["Play defensively"] = "Gain mysticality",
 			["Chicken out"] = { leave_noturn = true },
 		}
-	elseif buff("Chalky Hand") then
+	elseif have_buff("Chalky Hand") then
 		return {
 			["Go for the 8-ball"] = { getitem = "Spookyraven library key", good_choice = true },
 			["Play defensively"] = "Gain mysticality",
@@ -215,7 +215,7 @@ add_choice_text("A Hustle Here, a Hustle There", function()
 end)
 
 add_ascension_zone_check(105, function()
-	if have("pool cue") and not buff("Chalky Hand") and not have("Spookyraven library key") and have("handful of hand chalk") then
+	if have_item("pool cue") and not have_buff("Chalky Hand") and not have_item("Spookyraven library key") and have_item("handful of hand chalk") then
 		return "You need to use hand chalk to get the library key."
 	end
 end)
@@ -225,7 +225,7 @@ end)
 
 add_printer("/manor.php", function()
 	local libtext = [[<span style="color: darkorange">Visit billiards room to unlock</span>]]
-	if have("Spookyraven library key") then
+	if have_item("Spookyraven library key") then
 		libtext = [[<span style="color: green">Library unlocked</span>]]
 	end
 	text = text:gsub([[(<td width=100 height=100>)(<a href="adventure.php%?snarfblat=104">.-)(</td>)]], [[%1<div style="position: relative;"><div style="position: absolute; left: -105px; width: 100px; height: 100px;"><table style="width: 100px; height: 100px; vertical-align: middle; text-align: right;"><tr><td>]] .. libtext .. [[</td></tr></table></div>%2</div>%3]])
@@ -286,7 +286,7 @@ end)
 
 add_choice_text("One Nightstand", function()
 	if text:contains("fine mahogany nightstand") then
-		if have_equipped("Lord Spookyraven's spectacles") then
+		if have_equipped_item("Lord Spookyraven's spectacles") then
 			return {
 				["Check the top drawer"] = "Get coin purse",
 				["Check the bottom drawer"] = "Fight nightstand",
@@ -300,7 +300,7 @@ add_choice_text("One Nightstand", function()
 			}
 		end
 	elseif text:contains("ornately carved nightstand") then
-		if have("Lord Spookyraven's spectacles") then
+		if have_item("Lord Spookyraven's spectacles") then
 			return {
 				["Open the top drawer"] = "Gain meat",
 				["Open the bottom drawer"] = "Gain mysticality",
@@ -320,7 +320,7 @@ add_choice_text("One Nightstand", function()
 			["Kick it and see what happens"] = "Fight nightstand",
 		}
 	elseif text:contains("simple wooden nightstand") then
-		if have("Spookyraven ballroom key") then
+		if have_item("Spookyraven ballroom key") then
 			return {
 				["Check the top drawer"] = "Gain moxie",
 				["Check the bottom drawer"] = { getitem = "Spookyraven ballroom key", disabled = true },
@@ -343,7 +343,7 @@ add_choice_text("One Nightstand", function()
 end)
 
 add_printer("/manor2.php", function()
-	if not have("Spookyraven ballroom key") then
+	if not have_item("Spookyraven ballroom key") then
 		brkeytext = [[<span style="color: darkorange">Ballroom key still taped under drawer</span>]]
 		if ascension["zone.manor.unlocked ballroom key"] == "yes" then
 			brkeytext = [[<span style="color: green">Ballroom key available</span>]]
@@ -398,7 +398,7 @@ add_always_adventure_warning(function(zoneid)
 	if tonumber(ascension["dance card turn"]) == turnsthisrun() then
 		if zoneid ~= 109 then
 			return "Next turn is a possible dance in the ballroom", "dance card-wrong zone"
-		elseif have("ten-leaf clover") then
+		elseif have_item("ten-leaf clover") then
 			return "Your ten-leaf clover will override the ballroom dance.", "dance card-clover"
 		end
 	end
@@ -913,7 +913,7 @@ end)
 
 add_printer("/manor2.php", function()
 	brtext = [[<span style="color: darkorange">Visit bedroom to unlock</span>]]
-	if have("Spookyraven ballroom key") then
+	if have_item("Spookyraven ballroom key") then
 		songspoilers = {
 			["Provare Compasione Per El Sciocco"] = "+5 ML",
 			["Sono Un Amante Non Un Combattente"] = "-5%% combat",

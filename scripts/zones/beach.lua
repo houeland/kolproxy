@@ -37,7 +37,7 @@ end)
 
 add_ascension_warning("/shore.php", function()
 	if params.whichtrip then
-		if level() >= 11 and not have("forged identification documents") and not have("your father's MacGuffin diary") then
+		if level() >= 11 and not have_item("forged identification documents") and not have_item("your father's MacGuffin diary") then
 			return "You don't have the forged identification documents.", "shoring without forged identification documents"
 		end
 	end
@@ -78,7 +78,7 @@ end)
 
 -- This is really the same warning, could this be restructured?
 add_always_zone_check(121, function()
-	if not buff("Ultrahydrated") then
+	if not have_buff("Ultrahydrated") then
 		local pt = get_page("/beach.php")
 		if pt:contains("Oasis") then
 			return "Ultrahydrated is required for the desert."
@@ -87,7 +87,7 @@ add_always_zone_check(121, function()
 end)
 
 add_always_zone_check(123, function()
-	if not buff("Ultrahydrated") then
+	if not have_buff("Ultrahydrated") then
 		local pt = get_page("/beach.php")
 		if pt:contains("Oasis") then
 			return "Ultrahydrated is required for the desert."
@@ -98,30 +98,33 @@ end)
 -- TODO: warn when continuing in the wrong zone
 
 add_always_zone_check(121, function()
-	if have("stone rose") and not have("can of black paint") then
+	if have_item("stone rose") and not have_item("can of black paint") then
 		return "You'll need a can of black paint for Gnasir."
 	end
 end)
 
 add_always_zone_check(123, function()
-	if have("stone rose") and not have("can of black paint") then
+	if have_item("stone rose") and not have_item("can of black paint") then
 		return "You'll need a can of black paint for Gnasir."
 	end
 end)
 
 add_always_zone_check(121, function()
-	if have("stone rose") and not have("drum machine") then
+	if have_item("stone rose") and not have_item("drum machine") then
 		return "You'll need a drum machine for Gnasir."
 	end
 end)
 
 add_always_zone_check(123, function()
-	if have("stone rose") and not have("drum machine") then
+	if have_item("stone rose") and not have_item("drum machine") then
 		return "You'll need a drum machine for Gnasir."
 	end
 end)
 
-add_itemdrop_counter("star chart", function(c)
+add_always_zone_check(122, function()
+	if have_buff("Ultrahydrated") and have_item("stone rose") and have_item("drum machine") then
+		return "You already have the stone rose and a drum machine for Gnasir."
+	end
 end)
 
 -- pyramid
@@ -132,15 +135,15 @@ end)
 local function get_pyramid_action()
 	local pyramidpt = get_page("/pyramid.php")
 	local action = nil
-	if pyramidpt:match("pyramid4_1.gif") and not have("ancient bomb") and not have("ancient bronze token") then
+	if pyramidpt:match("pyramid4_1.gif") and not have_item("ancient bomb") and not have_item("ancient bronze token") then
 		action = "initial"
 	elseif pyramidpt:match("pyramid4_1b.gif") then
 		action = "lower"
-	elseif pyramidpt:match("pyramid4_1.gif") and have("ancient bomb") then
+	elseif pyramidpt:match("pyramid4_1.gif") and have_item("ancient bomb") then
 		action = "lower"
-	elseif pyramidpt:match("pyramid4_3.gif") and not have("ancient bomb") and have("ancient bronze token") then
+	elseif pyramidpt:match("pyramid4_3.gif") and not have_item("ancient bomb") and have_item("ancient bronze token") then
 		action = "lower"
-	elseif pyramidpt:match("pyramid4_4.gif") and not have("ancient bomb") and not have("ancient bronze token") then
+	elseif pyramidpt:match("pyramid4_4.gif") and not have_item("ancient bomb") and not have_item("ancient bronze token") then
 		action = "lower"
 	elseif pyramidpt:match("pyramid4_[12345].gif") then
 		action = "wheel"
@@ -158,11 +161,11 @@ end
 -- TODO: allow customization for when you want warnings?
 add_ascension_zone_check(124, function()
 	local pa, placed = get_pyramid_action()
-	if placed == "not placed wheel" and have("carved wooden wheel") then
+	if placed == "not placed wheel" and have_item("carved wooden wheel") then
 		return "The wheel can be placed in the middle chamber now."
 	elseif pa == "lower" then
 		return "The lower chambers can be used now."
-	elseif placed == "not placed wheel" and have("tomb ratchet") and buff("On the Trail") then
+	elseif placed == "not placed wheel" and have_item("tomb ratchet") and have_buff("On the Trail") then
 		local trailed = retrieve_trailed_monster()
 		if trailed == "tomb rat" then
 			return "You can use your tomb ratchet to set the wheel."
@@ -172,11 +175,11 @@ end)
 
 add_ascension_zone_check(125, function()
 	local pa = get_pyramid_action()
-	if pa == "initial" and not have("carved wooden wheel") then
-		return "The carved wooden wheel is in the upper chamber."
-	elseif pa == "lower" then
+	if pa == "lower" then
 		return "The lower chambers can be used now."
-	elseif not have("carved wooden wheel") and have("tomb ratchet") then
+	elseif pa == "initial" and not have_item("carved wooden wheel") then
+		return "The carved wooden wheel is in the upper chamber."
+	elseif not have_item("carved wooden wheel") and have_item("tomb ratchet") then
 		return "You can use your tomb ratchet first."
 	end
 end)

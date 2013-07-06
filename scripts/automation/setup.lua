@@ -86,7 +86,7 @@ function run_automation_script(f, pwdsrc, scriptname)
 			if result == "??? No action found ???" or result == "??? No automation done ???" then
 				result = [[<script>top.charpane.location = "charpane.php"</script><p style="color: darkorange">]] .. "Something unexpected happened: " .. errmsg .. "<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>"
 			else
-				result = [[<script>top.charpane.location = "charpane.php"</script>]] .. add_formatted_colored_message_to_page(result, "Something unexpected happened: " .. errmsg .. "<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>", "darkorange")
+				result = [[<script>top.charpane.location = "charpane.php"</script>]] .. add_message_to_page(result, "<pre>Something unexpected happened: " .. errmsg .. "</pre><br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>", nil, "darkorange")
 			end
 			local steptrace = get_error_trace_steps()
 			if next(steptrace) then
@@ -163,7 +163,7 @@ custom_aftercore_automation_href = add_automation_script("custom-aftercore-autom
 				table.insert(goodlinks, [[<a href="]]..tbl.simple_link..[[">]]..tbl.description..[[</a>]])
 			elseif tbl.simple then
 				table.insert(goodlinks, [[<a href="kolproxy-automation-script?automation-script=]]..(tbl.name or x)..[[&pwd=]]..session.pwd..[[">]]..tbl.description..[[</a>]])
-			elseif ascensionstatus("Aftercore") and tbl.when and tbl.when() then
+			elseif (ascensionstatus("Aftercore") or tbl.can_automate_inrun) and tbl.when and tbl.when() then
 				table.insert(goodlinks, [[<a href="kolproxy-automation-script?automation-script=]]..(tbl.name or x)..[[&pwd=]]..session.pwd..[[">]]..tbl.description..[[</a>]])
 			else
 				table.insert(goodlinks, [[<span style="color: gray">]]..tbl.description..[[</a>]])

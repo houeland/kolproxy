@@ -293,7 +293,7 @@ function macro_softcore(extrastuff)
   local maybe_runaway = [[
 
 ]]
-  if have_equipped("Greatest American Pants") and macro_runawayfrom_monsters and macro_runawayfrom_monsters ~= "none" and get_daily_counter("item.fly away.free runaways") < 9 then
+  if have_equipped_item("Greatest American Pants") and macro_runawayfrom_monsters and macro_runawayfrom_monsters ~= "none" and get_daily_counter("item.fly away.free runaways") < 9 then
 	maybe_runaway = [[
 
 if hascombatitem rock band flyers
@@ -356,7 +356,7 @@ end
 
 function macro_softcore_boris(extrastuff)
   local set_gaze = ""
-  if not have_intrinsic("Gaze of the Volcano God") and have_equipped("Juju Mojo Mask") and (challenge == "boris" or challenge == "zombie") then
+  if not have_intrinsic("Gaze of the Volcano God") and have_equipped_item("Juju Mojo Mask") and (challenge == "boris" or challenge == "zombie") then
     if have_intrinsic("Gaze of the Trickster God") or have_intrinsic("Gaze of the Lightning God") then
       stop("TODO: Somehow have the wrong gaze on!")
     end
@@ -403,7 +403,7 @@ endif
   local maybe_runaway = [[
 
 ]]
-  if have_equipped("Greatest American Pants") and macro_runawayfrom_monsters and macro_runawayfrom_monsters ~= "none" and get_daily_counter("item.fly away.free runaways") < 9 then
+  if have_equipped_item("Greatest American Pants") and macro_runawayfrom_monsters and macro_runawayfrom_monsters ~= "none" and get_daily_counter("item.fly away.free runaways") < 9 then
 	maybe_runaway = [[
 
 if hascombatitem rock band flyers
@@ -588,7 +588,7 @@ end
 function macro_softcore_boris_orc_chasm()
   local maybeuse334s = ""
 
-  if not have("668 scroll") and count("334 scroll") >= 2 then
+  if not have_item("668 scroll") and count("334 scroll") >= 2 then
     maybeuse334s = [[
 
   use 334 scroll
@@ -1292,7 +1292,7 @@ function macro_orc_chasm()
     end
   end
 
-  if not have("668 scroll") and count("334 scroll") >= 2 then
+  if not have_item("668 scroll") and count("334 scroll") >= 2 then
     maybeuse334s = multiuse("334 scroll", "334 scroll")
   end
 

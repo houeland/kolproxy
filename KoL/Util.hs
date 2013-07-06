@@ -20,7 +20,7 @@ import qualified Data.Digest.Pure.MD5
 import qualified Database.SQLite3
 
 
-kolproxy_version_number = "3.10-beta"
+kolproxy_version_number = "3.10"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 
@@ -121,3 +121,7 @@ forkIO_ name x = void $ forkIO $ x `catch` (\e -> do
 get_custom_autoload_script_files = do
 	filenames <- getDirectoryContents "scripts/custom-autoload"
 	return $ filter (=~ "\\.lua$") filenames
+
+debug_do msg x = (x) `catch` (\e -> do
+	putStrLn $ "DEBUG: " ++ msg ++ " exception: " ++ show (e :: SomeException)
+	throwIO e)

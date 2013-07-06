@@ -13,7 +13,7 @@ function cache_enthroned_familiar()
 end
 
 add_automator("all pages", function()
-	if have_equipped("Crown of Thrones") and not session["cached enthroned familiar"] then
+	if have_equipped_item("Crown of Thrones") and not session["cached enthroned familiar"] then
 		cache_enthroned_familiar()
 	end
 end)

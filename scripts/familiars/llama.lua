@@ -13,7 +13,7 @@ add_processor("/choice.php", function()
 end)
 
 add_printer("/charpane.php", function()
-	if buff("Form of...Bird!") then
+	if have_buff("Form of...Bird!") then
 		violence = ascension["familiar.llama.violence"] or 0
 
 		compact = violence .. " / 15v"

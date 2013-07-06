@@ -55,11 +55,11 @@ end)
 
 add_printer("/charpane.php", function()
 	-- TODO: slow for some reason!
-	if have_equipped("navel ring of navel gazing") or have_equipped("Greatest American Pants") or have("peppermint parasol") then
+	if have_equipped_item("navel ring of navel gazing") or have_equipped_item("Greatest American Pants") or have_item("peppermint parasol") then
 		local runaways = get_daily_counter("item.fly away.free runaways")
 		local chancestr = "?"
 		local remainingstr = ""
-		if have("peppermint parasol") then
+		if have_item("peppermint parasol") then
 			remainingstr = (" [%d left]"):format(math.max(0, 10 - get_ascension_counter("item.peppermint parasol.uses")))
 		end
 		if runaways < 3 then
@@ -74,8 +74,8 @@ add_printer("/charpane.php", function()
 		local compact = ("%s (%s)%s"):format(runaways, chancestr, remainingstr)
 		local normal = ("%s used (%s chance)%s"):format(runaways, chancestr, remainingstr)
 		local color = nil
-		if (familiarpicture() == "bandersnatch" and buff("Ode to Booze")) or (familiarpicture() == "stompboots") then
-			if have_equipped("navel ring of navel gazing") or have_equipped("Greatest American Pants") then
+		if (familiarpicture() == "bandersnatch" and have_buff("Ode to Booze")) or (familiarpicture() == "stompboots") then
+			if have_equipped_item("navel ring of navel gazing") or have_equipped_item("Greatest American Pants") then
 				color = "gray"
 			end
 		end

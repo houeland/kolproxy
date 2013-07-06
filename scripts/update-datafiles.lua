@@ -47,12 +47,18 @@ local blacklist = {
 
 local processed_datafiles = {}
 
-local softwarn = function()
+local error_count_soft = 0
+local error_count_hard = 0
+
+local softwarn = function(...)
 	-- Errors that are just too frequent to spam warnings for
+	--print("NOTICE: downloaded data files inconsistent,", ...)
+	error_count_soft = error_count_soft + 1
 end
 
 local function hardwarn(...)
 	print("WARNING: downloaded data files inconsistent,", ...)
+	error_count_hard = error_count_hard + 1
 end
 
 function string.contains(a, b) return a:find(b, 1, true) end
@@ -401,7 +407,7 @@ function verify_items(data)
 	hardwarn("verify_items failure:", table_to_json(testitems))
 end
 
-local function parse_monster_stats(stats)
+local function parse_monster_stats(stats, monster_debug_line)
 	if stats == "" then
 		return {}
 	end
@@ -413,11 +419,12 @@ local function parse_monster_stats(stats)
 	end
 	stats = stats .. " "
 	while i <= #stats do
-		local ch = stats:byte(i)
 		local name, value, pos
-		if ch == 0x22 then -- quoted string
+		if stats:sub(i, i) == [["]] then -- quoted string
 			name = "WatchOut"
 			value, pos = stats:match('^"([^"]*)" ()', i)
+		elseif stats:sub(i, i) == " " then -- space (formatting error, ignore)
+			pos = i + 1
 		else
 			name, value, pos = stats:match("^([^:]+): ([^ ]+) ()", i)
 			if name and value then
@@ -448,10 +455,16 @@ local function parse_monster_stats(stats)
 			end
 		end
 		if not name or not value then
-			print("ERROR: failed to parse monster stat", stats:sub(i))
-			return statstbl
+			if stats:sub(i, i) == " " then
+				softwarn("monsters.txt:malformed line", monster_debug_line)
+			else
+				print("ERROR: failed to parse monster stat", stats:sub(i))
+				print("DEBUG: ", monster_debug_line)
+				return statstbl
+			end
+		else
+			statstbl[name] = value
 		end
-		statstbl[name] = value
 		i = pos
 	end
 	return statstbl
@@ -506,15 +519,18 @@ function parse_monsters()
 	local monsters = {}
 	for l in io.lines("cache/files/monsters.txt") do
 		local tbl = split_tabbed_line(l)
-		local name, stats = tbl[1], tbl[2]
+		local name, image, stats = tbl[1], tbl[2], tbl[3]
+		__parse_monster_debug = table_to_json(tbl)
 		if not l:match("^#") and name and stats then
 			--print("DEBUG parsing monster", name)
 			table.remove(tbl, 1)
 			table.remove(tbl, 1)
+			table.remove(tbl, 1)
 			local items = tbl
 			monsters[name:lower()] = {
-				Stats = parse_monster_stats(stats),
+				Stats = parse_monster_stats(stats, l),
 				Items = parse_monster_items(items),
+				image = image,
 			}
 		end
 	end
@@ -543,6 +559,7 @@ function verify_monsters(data)
 			end
 		end
 	end
+	print("DEBUG:", table_to_json(data["hellion"]))
 end
 
 function parse_hatrack()
@@ -595,12 +612,12 @@ function parse_familiars()
 	local familiars = {}
 	for l in io.lines("cache/files/familiars.txt") do
 		local tbl = split_tabbed_line(l)
-		local famid, name, pic = tonumber(tbl[1]), tbl[2], tbl[3]
+		local famid, name, pic, equip = tonumber(tbl[1]), tbl[2], tbl[3], tbl[6]
 		if pic then
 			pic = pic:gsub("%.gif$", "")
 		end
 		if famid and name then
-			familiars[name] = { famid = famid, familiarpic = pic }
+			familiars[name] = { famid = famid, familiarpic = pic, familiarequip = equip }
 		end
 	end
 	return familiars
@@ -781,11 +798,11 @@ function parse_zones()
 	local mafia_adventures_inverse = {}
 	for l in io.lines("cache/files/adventures.txt") do
 		local tbl = split_tabbed_line(l)
-		if tbl[2] and tbl[4] then
+		if tbl[2] and tbl[5] then
 			local zoneid = tonumber(tbl[2]:match("adventure=([0-9]*)"))
 			if zoneid then
-				mafia_adventures[tbl[4]] = zoneid
-				mafia_adventures_inverse[zoneid] = tbl[4]
+				mafia_adventures[tbl[5]] = zoneid
+				mafia_adventures_inverse[zoneid] = tbl[5]
 			end
 		end
 	end
@@ -853,7 +870,7 @@ function verify_zones(data)
 	for a, b in pairs(data) do
 		for _, x in ipairs(b.monsters) do
 			if not processed_datafiles["monsters"][x:lower()] then
-				hardwarn("zones:unknown monster", x, "in", a)
+				softwarn("zones:unknown monster", x, "in", a)
 			end
 		end
 	end
@@ -881,7 +898,7 @@ function parse_choice_spoilers()
 			else
 				l_json = l:gsub("\r", ""):gsub("//.+", ""):gsub("([0-9]+)(:%[)", [["%1"%2]]) -- Strip CRs, comments, and quote keys
 				l_json = l_json:gsub("\\m", "\\n") -- Correct known typo
-				l_json = l_json:gsub("%+$", ",") -- HACK: Remove code using string concatenation
+				l_json = l_json:gsub("%+$", ",") -- WORKAROUND: Remove code using string concatenation
 				table.insert(jsonlines, l_json)
 			end
 		end
@@ -947,3 +964,5 @@ process("mallprices")
 process("consumables")
 
 process("zones")
+
+print(string.format("INFO: %d warnings displayed, %d notices ignored (expected with current data files: 0 displayed and fewer than 10000 ignored)", error_count_hard, error_count_soft))

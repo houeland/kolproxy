@@ -40,7 +40,7 @@ add_printer("/charpane.php", function()
 		normal = runaways.." / " .. math.floor(buffedfamiliarweight() / 5) .. " runaways"
 
 		color = nil
-		if familiarpicture() == "bandersnatch" and not buff("Ode to Booze") then
+		if familiarpicture() == "bandersnatch" and not have_buff("Ode to Booze") then
 			color = "gray"
 		end
 		if familiarpicture() == "stompboots" then
