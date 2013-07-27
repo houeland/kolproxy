@@ -1,5 +1,4 @@
-function estimate_current_buff_bonuses()
-	local bonuses = {}
+function estimate_buff_bonuses(buffname)
 	local buffarray = {
 		["Sole Soul"] = { ["Item Drops from Monsters"] = math.min(buffturns("Sole Soul"), 300) },
 		["The HeyDezebound Heart"] = { ["Item Drops from Monsters"] = math.min(buffturns("The HeyDezebound Heart"), 300) },
@@ -21,13 +20,23 @@ function estimate_current_buff_bonuses()
 
 		["Amorous Avarice"] = { ["Meat from Monsters"] = 25 * math.min(math.floor(drunkenness() / 5), 4) },
 	}
-	for buff, _ in pairs(buffslist()) do
-		if buffarray[buff] then
-			add_modifier_bonuses(bonuses, buffarray[buff])
-		elseif datafile("buffs")[buff] then
-			add_modifier_bonuses(bonuses, datafile("buffs")[buff].bonuses or {})
-		end
+
+	if buffarray[buffname] then
+		return make_bonuses_table(buffarray[buffname])
+	elseif datafile("buffs")[buffname] then
+		return make_bonuses_table(datafile("buffs")[buffname].bonuses or {})
+	else
+		-- unknown
+		return make_bonuses_table {}
 	end
+end
+
+function estimate_current_buff_bonuses()
+	local bonuses = {}
+	for buff, _ in pairs(buffslist()) do
+		add_modifier_bonuses(bonuses, estimate_buff_bonuses(buff))
+	end
+
 	if equipment().weapon == nil and equipment().offhand == nil then -- unarmed
 		if have_intrinsic("Expert Timing") then
 			add_modifier_bonuses(bonuses, { ["Item Drops from Monsters"] = 20 })

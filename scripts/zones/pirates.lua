@@ -53,7 +53,7 @@ end)
 local fcle_unlocked = nil
 add_warning {
 	message = "You don't have an insult book.",
-	severity = "warning",
+	type = "warning",
 	zone = "Barrrney's Barrr",
 	check = function()
 		if not have_item("The Big Book of Pirate Insults") and not have_item("Massive Manual of Marauder Mockery") and not fcle_unlocked then

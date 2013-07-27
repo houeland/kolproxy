@@ -23,14 +23,6 @@ function submit_original_request()
 	return raw_submit_page(request_type, requestpath, parse_params_raw(input_params))
 end
 
-if requestpath == "/manor3.php" then
-	determine_cellar_wines()
-end
-
-if requestpath == "/automate-tiles" then
-	text, url = automate_tiles()
-end
-
 -- 			let inrunoption = case choice of
 -- 				21 -> 2 -- not trapped in the wrong body
 -- 				46 -> 3 -- fight vampire, maybe doubtful?

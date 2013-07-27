@@ -29,6 +29,7 @@ add_interceptor("/adventure.php", function()
 	local lastadv = lastadventuredata()
 	if tonumber(params.snarfblat) == tonumber(lastadv.id) and tonumber(lastadv.id) then
 		if checked_zones[tonumber(lastadv.id)] then return end
+		if session["warning-no florist plants, zoneid " .. tonumber(lastadv.id)] == "skip" then return end
 		local noplants = 0
 		if not pt then
 			pt = get_page("/forestvillage.php", { action = "floristfriar" })

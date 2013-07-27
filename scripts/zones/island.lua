@@ -40,7 +40,7 @@ add_choice_text("Amatearrr Night", {
 
 add_warning {
 	message = "You already have the pirate outfit.",
-	severity = "warning",
+	type = "warning",
 	zone = "The Obligatory Pirate's Cove",
 	check = function()
 		return not ascensionstatus("Aftercore") and

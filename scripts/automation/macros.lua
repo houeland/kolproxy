@@ -911,6 +911,40 @@ function make_cannonsniff_macro(name)
 	end
 end
 
+function macro_romanticarrow()
+	return [[
+]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
+
+cast romantic arrow
+
+if (match "too stunned by your beauty")
+]] .. noodles_action() .. [[
+
+]] .. COMMON_MACROSTUFF_FLYERS .. [[
+
+cast poison arrow
+
+cast fingertrap arrow
+
+cast poison arrow
+
+cast fingertrap arrow
+
+cast poison arrow
+
+cast fingertrap arrow
+
+cast glove arrow
+
+while !times 5
+]] .. serpent_action() .. [[
+endwhile
+
+endif
+
+]]
+end
+
 function macro_8bit_realm()
 	local castolfaction = "cast Transcendent Olfaction"
 	return [[

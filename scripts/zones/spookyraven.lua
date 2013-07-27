@@ -31,10 +31,28 @@ add_processor("/desc_item.php", function()
 	if glyph then
 		local tbl = session["zone.manor.glyphs"] or {}
 		name = text:match("<b>(dusty bottle of [A-Za-z ]+)</b>")
-		print(name .. " -> " .. glyph)
+		print("INFO: " .. (name or "???") .. " -> " .. glyph)
 		tbl[glyph] = name
 		session["zone.manor.glyphs"] = tbl
 	end
+end)
+
+function determine_cellar_wines()
+	if not session["zone.manor.wines needed"] and not session["tried determining wines"] then
+		async_get_page("/desc_item.php", { whichitem = "278847834" })
+		async_get_page("/desc_item.php", { whichitem = "163456429" })
+		async_get_page("/desc_item.php", { whichitem = "147519269" })
+		async_get_page("/desc_item.php", { whichitem = "905945394" })
+		async_get_page("/desc_item.php", { whichitem = "289748376" })
+		async_get_page("/desc_item.php", { whichitem = "625138517" })
+		local goblet = get_page("/manor3.php", { place = "goblet" })
+		session["tried determining wines"] = "yes"
+		return goblet
+	end
+end
+
+add_automator("/manor3.php", function()
+	determine_cellar_wines()
 end)
 
 add_processor("/manor3.php", function()
@@ -63,19 +81,6 @@ add_processor("item drop", function()
 	end
 end)
 
--- function get_expected_wine_cellar_ticks_needed(known_tbl, wines_missing)
--- 	local function f(real_ptbl, observed_tbl, still_need)
--- 		for _, z in ipairs { 178,179, 180, 181 } do
--- 			local p_nochange = 0
--- 			
--- 		end
--- 	end
--- 	local init_permutations, _ = get_wine_cellar_permutations_and_quadrants(known_tbl)
--- 	for ptbl in table.values(init_permutations) do
--- 		f(ptbl, known_tbl, wines_missing)
--- 	end
--- end
-
 add_printer("/manor3.php", function()
 	if not session["zone.manor.wines needed"] then return end
 	local tbl = ascension["zone.manor.wine cellar zone bottles"] or ascension["zone.manor.wine cellar bottles"] or {}
@@ -87,13 +92,6 @@ add_printer("/manor3.php", function()
 -- 	end
 
 	local wines_needed_list = session["zone.manor.wines needed"] or {}
--- 	local wines_missing = {}
--- 	for wine in table.values(wines_needed_list) do
--- 		if not have(wine) then
--- 			table.insert(wines_missing, wine)
--- 		end
--- 	end
--- 	get_expected_wine_cellar_ticks_needed(tbl, wines_missing)
 	
 	local wines_needed_status = {}
 	if not text:match("Summoning Chamber") then
@@ -682,154 +680,85 @@ span .fullmap { position: absolute; display: none; }
 	end
 end)
 
---add_choice_text("Louvre It or Leave It ", function()
---	if not choice_adventure_number then return end
---	found = {}
---	reached = {}
---	available = {}
---	available[choice_adventure_number] = -1000
---	for i = 1, 1000 do
---		old_available = available
---		available = {}
---		found_any = false
---		for choicenum, source in pairs(old_available) do
---			found_any = true
---			reached[choicenum] = source
---			for initialc = 1, 3 do
---				initialto = ascension["louvre.adventure." .. choicenum .. ".choice." .. initialc]
---				if initialto then
---					tochoice = initialto:match("^choice ([0-9]+)$")
---					toresult = initialto:match("^result (.+)$")
---					if tochoice then
---						if not reached[tochoice] and not available[tochoice] then
---							available[tochoice] = { whichchoice = choicenum, option = initialc }
---						end
---					end
---					if toresult then
---						if not found[toresult] then
---							found[toresult] = { whichchoice = choicenum, option = initialc }
---						end
---					end
---				end
---			end
---		end
---		if not found_any then
---			break
---		end
---	end
---	choice_tbl = {}
---	for result, source in pairs(found) do
---		function trace(source, tbl)
---			if source == -1000 then
---				return {}
---			else
---				tbl = trace(reached[source.whichchoice])
---				table.insert(tbl, source)
---				return tbl
---			end
---		end
---		local t = trace(source)
---		choice_string = text:match([[<input type=hidden name=whichchoice value=]] .. choice_adventure_number .. [[><input type=hidden name=option value=]] .. t[1].option .. [[><input class=button type=submit value="([^"]+)">]])
---		if not choice_tbl[choice_string] then
---			choice_tbl[choice_string] = {}
---		end
---		local tparams = {}
---		tparams.pwd = text:match([[<input type=hidden name=pwd value='([0-9a-f]+)'>]])
---		for a, b in pairs(t) do
---			tparams[string.format("choice%d", a)] = string.format("%d-%d", b.whichchoice, b.option)
---		end
---		local pwd = text:match([[<input type=hidden name=pwd value='([0-9a-f]+)'>]])
---		if result == "Gain muscle" then
---			result = "<b>" .. result .. "</b>"
---		end
---		table.insert(choice_tbl[choice_string], [[<a href="]]..louvre_href(tparams)..[[">]] .. result .. [[</a>]])
---	end
---	for a, b in pairs(choice_tbl) do
---		choice_tbl[a] = table.concat(b, ", ")
---	end
---	return choice_tbl
---end)
+local function get_wine_cellar_permutations_and_quadrants(tbl)
+	local quadrants = {
+		{ ["dusty bottle of Marsala"] = true, ["dusty bottle of Merlot"] = true, ["dusty bottle of Muscat"] = true }, -- 1
+		{ ["dusty bottle of Marsala"] = true, ["dusty bottle of Pinot Noir"] = true, ["dusty bottle of Zinfandel"] = true }, -- 2
+		{ ["dusty bottle of Merlot"] = true, ["dusty bottle of Pinot Noir"] = true, ["dusty bottle of Port"] = true }, -- 3
+		{ ["dusty bottle of Muscat"] = true, ["dusty bottle of Port"] = true, ["dusty bottle of Zinfandel"] = true }, -- 4
+	}
 
---~ 	add_choice_text("Louvre It or Leave It ", function()
---~ 		if not choice_adventure_number then return end
---~ 		choice_data = {}
---~ 		for initialc = 1, 3 do
---~ 			initialto = get_ascension_state("louvre.adventure." .. tostring(choice_adventure_number) .. ".choice." .. tostring(initialc))
---~ 			result_desc = ""
---~ 			if initialto ~= "" then
---~ 	--~ 		print("initial for", initialc, initialto)
---~ 				tochoice = string.match(initialto, "^choice ([0-9]+)$")
---~ 				toresult = string.match(initialto, "^result (.+)$")
---~ 				if tochoice then
---~ 					can_hit = {}
---~ 					explored = {}
---~ 					results = {}
---~ 					can_hit[tochoice] = true
---~ 					for i = 1, 1000 do -- be absolutely certain to terminate, even if bugged
---~ 						for x, _ in pairs(can_hit) do
---~ 							if not explored[x] then
---~ 	--~ 						print("exploring", x)
---~ 								explored[x] = true
---~ 								for c = 1, 3 do
---~ 									to = get_ascension_state("louvre.adventure." .. x .. ".choice." .. tostring(c))
---~ 									if to ~= "" then
---~ 	--~ 								print("hitting", to)
---~ 										tochoice = string.match(to, "^choice ([0-9]+)$")
---~ 										toresult = string.match(to, "^result (.+)$")
---~ 										if tochoice then
---~ 											can_hit[tochoice] = true
---~ 										elseif toresult then
---~ 											results[toresult] = true
---~ 										end
---~ 									end
---~ 								end
---~ 							end
---~ 						end
---~ 					end
---~ 					found_results = {}
---~ 					for a, b in pairs(results) do
---~ 						short_desc = string.match(a, "^[A-Za-z]+ (.+)$")
---~ 						if not short_desc then
---~ 							short_desc = string.match(a, "^<b>[A-Za-z]+ (.+)</b>$")
---~ 							if short_desc then short_desc = "<b>" .. short_desc .. "</b>" end
---~ 						end
---~ 						table.insert(found_results, short_desc)
---~ 					end
---~ 					table.sort(found_results)
---~ 					found_str = ""
---~ 					for x in table.values(found_results) do
---~ 						if found_str ~= "" then found_str = found_str .. ", " end
---~ 						found_str = found_str .. x
---~ 					end
---~ 					if found_str == "" then
---~ 						result_desc = "Explore maze"
---~ 					else
---~ 						result_desc = "Explore maze (found: " .. found_str .. ")"
---~ 					end
---~ 				elseif toresult then
---~ 					result_desc = toresult
---~ 				end
---~ 			end
---~ 			choice_string = string.match(text, [[<input type=hidden name=whichchoice value=]] .. tostring(choice_adventure_number) .. [[><input type=hidden name=option value=]] .. tostring(initialc) .. [[><input class=button type=submit value="([^"]+)">]])
---~ 			if choice_string and result_desc ~= "" then
---~ 				choice_data[choice_string] = result_desc
---~ 			end
---~ 		end
---~ 		return choice_data
---~ 	end)
+	local permutations = {
+		{ [178] = 1, [179] = 2, [180] = 3, [181] = 4 }, -- 1
+		{ [178] = 1, [179] = 2, [180] = 4, [181] = 3 }, -- 2
+		{ [178] = 1, [179] = 3, [180] = 2, [181] = 4 }, -- 3
+		{ [178] = 1, [179] = 3, [180] = 4, [181] = 2 }, -- 4
+		{ [178] = 1, [179] = 4, [180] = 2, [181] = 3 }, -- 5
+		{ [178] = 1, [179] = 4, [180] = 3, [181] = 2 }, -- 6
+		{ [178] = 2, [179] = 1, [180] = 3, [181] = 4 }, -- 7
+		{ [178] = 2, [179] = 1, [180] = 4, [181] = 3 }, -- 8
+		{ [178] = 2, [179] = 3, [180] = 1, [181] = 4 }, -- 9
+		{ [178] = 2, [179] = 3, [180] = 4, [181] = 1 }, -- 10
+		{ [178] = 2, [179] = 4, [180] = 1, [181] = 3 }, -- 11
+		{ [178] = 2, [179] = 4, [180] = 3, [181] = 1 }, -- 12
+		{ [178] = 3, [179] = 1, [180] = 2, [181] = 4 }, -- 13
+		{ [178] = 3, [179] = 1, [180] = 4, [181] = 2 }, -- 14
+		{ [178] = 3, [179] = 2, [180] = 1, [181] = 4 }, -- 15
+		{ [178] = 3, [179] = 2, [180] = 4, [181] = 1 }, -- 16
+		{ [178] = 3, [179] = 4, [180] = 1, [181] = 2 }, -- 17
+		{ [178] = 3, [179] = 4, [180] = 2, [181] = 1 }, -- 18
+		{ [178] = 4, [179] = 1, [180] = 2, [181] = 3 }, -- 19
+		{ [178] = 4, [179] = 1, [180] = 3, [181] = 2 }, -- 20
+		{ [178] = 4, [179] = 2, [180] = 1, [181] = 3 }, -- 21
+		{ [178] = 4, [179] = 2, [180] = 3, [181] = 1 }, -- 22
+		{ [178] = 4, [179] = 3, [180] = 1, [181] = 2 }, -- 23
+		{ [178] = 4, [179] = 3, [180] = 2, [181] = 1 }, -- 24
+	}
+
+	for z, ztbl in pairs(tbl) do -- remove invalid permutations
+		for name, _ in pairs(ztbl) do
+			for i = 1, 24 do
+				if permutations[i] then
+					local qid = permutations[i][z]
+					if not quadrants[qid][name] then
+						permutations[i] = nil
+					end
+				end
+			end
+		end
+	end
+	return permutations, quadrants
+end
+
+function get_wine_cellar_data(known_tbl)
+	local permutations, quadrants = get_wine_cellar_permutations_and_quadrants(known_tbl)
+
+	local wines = {}
+	local valid_permutations = 0
+
+	for ptbl in table.values(permutations) do
+		for z, qid in pairs(ptbl) do
+			for name, _ in pairs(quadrants[qid]) do
+				if not wines[z] then wines[z] = {} end
+				wines[z][name] = (wines[z][name] or 0) + 1
+			end
+		end
+		valid_permutations = valid_permutations + 1
+	end
+	return wines, valid_permutations
+end
 
 local wines_href = add_automation_script("automate-pour-manor-wines", function()
---	posting page /manor3.php params: Just [("action","pourwine"),("whichwine","2271")]
 	local wines_needed_list = session["zone.manor.wines needed"] or {}
 	local got = 0
-	for wine in table.values(wines_needed_list) do
-		if have(wine) then
+	for _, wine in pairs(wines_needed_list) do
+		if have_item(wine) then
 			got = got + 1
 		end
 	end
 
 	if got == 3 then
-		for wine in table.values(wines_needed_list) do
+		for _, wine in ipairs(wines_needed_list) do
 			text, url = post_page("/manor3.php", { action = "pourwine", whichwine = get_itemid(wine) })
 		end
 	end
@@ -849,9 +778,9 @@ add_printer("/manor3.php", function()
 
 		local count = 0
 		local got = 0
-		for wine in table.values(session["zone.manor.wines needed"] or {}) do
+		for _, wine in pairs(session["zone.manor.wines needed"] or {}) do
 			count = count + 1
-			if have(wine) then
+			if have_item(wine) then
 				got = got + 1
 			end
 		end

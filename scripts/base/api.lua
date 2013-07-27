@@ -40,7 +40,7 @@ function setup_functions()
 
 		function buffslist()
 			local tbl = {}
-			for x in table.values(status().effects) do
+			for _, x in pairs(status().effects) do
 				tbl[x[1]] = tonumber(x[2])
 			end
 			return tbl
@@ -48,7 +48,7 @@ function setup_functions()
 
 		function intrinsicslist()
 			local tbl = {}
-			for x in table.values(status().intrinsics) do
+			for _, x in pairs(status().intrinsics) do
 				tbl[x[1]] = "&infin;"
 			end
 			return tbl
@@ -142,7 +142,13 @@ function setup_functions()
 		function rawmuscle() return tonumber(status().rawmuscle) end
 		function rawmysticality() return tonumber(status().rawmysticality) end
 		function rawmoxie() return tonumber(status().rawmoxie) end
-		function locked() return status().locked end
+		function locked()
+			if status().locked == "cancelable-choice" then
+				return false
+			else
+				return status().locked
+			end
+		end
 		function basemuscle()
 			return math.floor(math.sqrt(rawmuscle()))
 		end

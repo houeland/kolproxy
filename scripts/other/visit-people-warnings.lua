@@ -1,6 +1,6 @@
 add_warning {
 	message = "The guild quest is in your mainstat starting zone. You might want to start it first.",
-	severity = "notice",
+	type = "notice",
 	when = "ascension",
 	check = function(zoneid)
 		if ascensionpathid() == 8 or ascensionpathid() == 10 or ascensionpath("Avatar of Jarlsberg") then return false end
@@ -14,7 +14,7 @@ add_warning {
 
 add_warning {
 	message = "If you want to do the moxie class guild quest, you have to wear pants to be able to steal them.",
-	severity = "warning",
+	type = "warning",
 	when = "ascension",
 	check = function(zoneid)
 		if zoneid == 112 and mainstat_type("Moxie") and not equipment().pants then
@@ -26,7 +26,7 @@ add_warning {
 local have_degrassi = nil
 add_warning {
 	message = "The untinker quest is at the degrassi knoll. Make sure to pick it up first if you want to complete it.",
-	severity = "warning",
+	type = "warning",
 	when = "ascension",
 	zone = "Degrassi Knoll",
 	check = function(zoneid)
@@ -42,7 +42,7 @@ add_warning {
 
 add_warning {
 	message = "The prententious artist quest is in the starting zones. Make sure to pick it up first if you want to complete it.",
-	severity = "notice",
+	type = "notice",
 	when = "ascension",
 	check = function(zoneid)
 		if ascensionpathid() == 10 then return end

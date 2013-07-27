@@ -1,3 +1,5 @@
+local parse_aftercore_turns = false
+
 loadfile("scripts/base/base-lua-functions.lua")()
 loadfile("scripts/base/kolproxy-core-functions.lua")()
 
@@ -174,8 +176,8 @@ for _, xidx in ipairs(tbl) do
 	if (not laststatus) or (laststatus.daysthisrun ~= x.statusafter.daysthisrun) or (laststatus.turnsthisrun < x.statusbefore.turnsthisrun) then
 		laststatus = x.statusbefore
 	end
-	if tonumber(x.statusbefore.freedralph) == 1 then
--- 		print("=== === === DONE === === ===")
+	if tonumber(x.statusbefore.freedralph) == 1 and not parse_aftercore_turns then
+		print("=== === === DONE: Freed Ralph === === ===")
 		break
 	end
 	if not set_key and x.statusbefore.eleronkey then

@@ -8,6 +8,21 @@ cast Stringozzi Serpent
 mark done
 ]]
 
+sea_automation_violence_boss_macro = [[
+scrollwhendone
+
+abort pastround 20
+abort hppercentbelow 10
+
+use crayon shavings, crayon shavings
+use crayon shavings, crayon shavings
+use crayon shavings, crayon shavings
+use crayon shavings, crayon shavings
+use crayon shavings, crayon shavings
+attack
+repeat
+]]
+
 local violence_href = setup_turnplaying_script {
 	name = "automate-sea-violence",
 	description = "Automate sea (gladiator colosseum / violence boss, needs seahorse)",
@@ -56,7 +71,31 @@ local violence_href = setup_turnplaying_script {
 				ascension["zones.sea.defeated gladiators"] = true
 			end
 		else
-			stop "TODO: Kill temple boss."
+			script.bonus_target { "easy combat" }
+			script.ensure_buffs { "Astral Shell", "Ghostly Shell", "A Few Extra Pounds", "Reptilian Fortitude" }
+			script.wear {
+				hat = "Mer-kin gladiator mask",
+				container = first_wearable { "sea shawl" },
+				shirt = "sea salt scrubs",
+				weapon = first_wearable { "Brimstone Bludgeon" },
+				offhand = first_wearable { "Brimstone Bunker" },
+				pants = "Mer-kin gladiator tailpiece",
+			}
+			local damage_sources = have_buff("Frigidalmatian") or have_buff("Jalape&ntilde;o Saucesphere") or have_buff("Jaba&ntilde;ero Saucesphere") or have_buff("Scarysauce")
+			switch_familiarid(0)
+			if have_equipped_item("Brimstone Bludgeon") and have_equipped_item("Brimstone Bunker") and count_item("crayon shavings") >= 10 and not damage_sources and familiarid() == 0 and have_skill("Ambidextrous Funkslinging") then
+				script.force_heal_up()
+				async_get_page("/sea_merkin.php", { action = "temple" })
+				async_get_page("/choice.php", { forceoption = 0 })
+				async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 706, option = 1 })
+				async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 707, option = 1 })
+				result, resulturl = get_page("/choice.php", { pwd = get_pwd(), whichchoice = 708, option = 1 })
+                                result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", sea_automation_violence_boss_macro)
+				-- async_get_page("/choice.php")
+				-- async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 709, option = 1 })
+			else
+				stop "Kill temple boss manually."
+			end
 		end
 		__set_turnplaying_result(result, resulturl, advagain)
 	end,

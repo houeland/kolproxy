@@ -950,7 +950,7 @@ local function missing_tower_item()
 	if where1 and where2 then
 		local level = where1 + where2
 		local itemsneeded = session["zone.lair.itemsneeded"] or {}
-		if itemsneeded[level] then
+		if itemsneeded[level + 1] then
 			return not have_item(itemsneeded[level + 1])
 		end
 	end
@@ -959,7 +959,7 @@ end
 add_warning {
 	message = "You might want to buff up with Frigidalmatian before killing tower monsters.",
 	path = { "/lair4.php", "/lair5.php" },
-	severity = "extra",
+	type = "extra",
 	when = "ascension",
 	check = function()
 		return params.action and missing_tower_item() and not have_buff("Frigidalmatian") and have_skill("Frigidalmatian")
@@ -969,7 +969,7 @@ add_warning {
 add_warning {
 	message = "You might want to buff up with Elron's Explosive Etude before killing tower monsters.",
 	path = { "/lair4.php", "/lair5.php" },
-	severity = "extra",
+	type = "extra",
 	when = "ascension",
 	check = function()
 		return params.action and missing_tower_item() and not have_buff("Elron's Explosive Etude") and classid() == 6 and level() >= 15 and have_skill("Elron's Explosive Etude")
@@ -1155,7 +1155,17 @@ add_printer("/lair6.php", function()
 		"Defeat the Naughty Sorceress",
 		"Free the king",
 	}
-	if ascensionpath("Avatar of Jarlsberg") then
+	if ascensionpath("Zombie Slayer") then
+		placedescs = {
+			"Pass the heavy and light door riddle",
+			"Avoid the electrical attack",
+			"Defeat your own shadow",
+			"Beat the first familiar (requires 10+ Horde)",
+			"Beat the second familiar (requires 10+ Horde)",
+			"Defeat the Naughty Sorceress and Rene C. Corman",
+			"Free the king",
+		}
+	elseif ascensionpath("Avatar of Jarlsberg") then
 		placedescs = {
 			"Pass the heavy and light door riddle",
 			"Avoid the electrical attack",

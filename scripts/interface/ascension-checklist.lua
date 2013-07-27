@@ -85,6 +85,13 @@ consumable_items_high_impact = {
 	{ 3, { "hot wing" } },
 
 	{ 6, { "smut orc keepsake box" } },
+
+	{ 3, { "asbestos ore" } },
+	{ 3, { "linoleum ore" } },
+	{ 2, { "heavy metal sonata" } },
+	{ 1, { "heavy metal thunderrr guitarrr" } },
+
+	{ 10, { "disassembled clover" } },
 }
 
 consumable_items_normal_impact = {
@@ -173,8 +180,6 @@ consumable_items_normal_impact = {
 	{ 3, { "thin black candle" } },
 	{ 1, { "scroll of ancient forbidden unspeakable evil" } },
 
-	{ 10, { "disassembled clover" } },
-
 	{ 1, { "dingy planks" } },
 	{ 1, { "clockwork maid" } },
 	{ 1, { "clockwork pirate skull" } },
@@ -196,11 +201,6 @@ consumable_items_normal_impact = {
 	{ 5, { "wang" } },
 
 	{ 3, { "facsimile dictionary" } },
-
-	{ 3, { "asbestos ore" } },
-	{ 3, { "linoleum ore" } },
-	{ 2, { "heavy metal sonata" } },
-	{ 1, { "heavy metal thunderrr guitarrr" } },
 
 	{ 3, { "blue shell" } },
 

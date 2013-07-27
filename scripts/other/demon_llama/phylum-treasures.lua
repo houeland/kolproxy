@@ -439,6 +439,7 @@ phylumTreasureNames = {
 
 function get_phylum_treasure(phylum)
 	if not phylum then return nil end
+	phylum = phylum:lower()
 	if phylum == "crimbo" then phylum = "elf" end
 	if phylum == "strange" then phylum = "weird" end
 	if not phylumTreasureNames[phylum] or not phylumTreasureEffects[phylum] then

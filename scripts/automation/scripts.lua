@@ -672,7 +672,7 @@ function get_automation_scripts(cached_stuff)
 		if hp() < maxhp() then
 			use_hottub()
 		end
-		if hp() < maxhp() then
+		if hp() < maxhp() and challenge ~= "zombie" then
 			post_page("/galaktik.php", { action = "curehp", pwd = get_pwd(), quantity = maxhp() - hp() })
 			if hp() < maxhp() then
 				stop("Failed to reach full HP using galaktik")
@@ -1439,7 +1439,12 @@ endif
 	function f.get_turns_until_sr()
 		local SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info(turnsthisrun())
 		--print("DEBUG get_turns_until_sr", get_semirare_info(turnsthisrun()))
-		return good_numbers[1]
+		if good_numbers[1] then
+			return good_numbers[1]
+		end
+		if SRmin and SRmin < 0 and all_numbers[1] then
+			return all_numbers[1]
+		end
 	end
 
 	function f.eat_food(whichday)
@@ -1520,55 +1525,15 @@ endif
 		end
 		if highskill_at_run then return end
 		if ascensionstatus() ~= "Hardcore" then return end
--- 		TODO: handle without explicitly checking day
-		if fullness() < 15 then
-			if whichday == 1 then
-				if have_item("Ur-Donut") and fullness() == 0 then
-					inform "eat ur-donut day 1"
-					eat_item("Ur-Donut")
-					did_action = (fullness() == 1)
-					return result, resulturl, did_action
-				elseif not ascension["fortune cookie numbers"] and fullness() == 1 and meat() >= 40 then
-					local f = fullness()
-					inform "eat fortune cookie day 1"
-					buy_item("fortune cookie", "m")
-					eat_item("fortune cookie")()
-					if not (fullness() == f + 1 and script.get_turns_until_sr() ~= nil) then
-						print("WARNING fortune cookie result:", script.get_turns_until_sr())
-						critical "Error getting fortune cookie numbers"
-					end
-					did_action = (ascension["fortune cookie numbers"] ~= nil)
-					return result, resulturl, did_action
-				elseif have_item("Knob pasty") and fullness() == 2 then
-					inform "eat pasty day 1"
-					eat_item("Knob pasty")
-					did_action = (fullness() == 3)
-					return result, resulturl, did_action
-				elseif fullness() <= 9 and (have("Hell ramen") or have_item("Hell broth") or have_item("hellion cube")) then
-					if have_item("Hell ramen") then
-						inform "eat hell ramen day 1"
-						local a = advs()
-						eat_item("Hell ramen")
-						did_action = (advs() > a)
-						return result, resulturl, did_action
-					else
-						result, resulturl, did_action = f.make_reagent_pasta()
-						if did_action == false and get_result():contains("You need a more advanced cooking appliance") then
-							if have_item("Dramatic&trade; range") then
-								set_result(use_item("Dramatic&trade; range"))
-								did_action = not have_item("Dramatic&trade; range")
-							else
-								set_result(buy_item("Dramatic&trade; range", "m"))
-								did_action = have_item("Dramatic&trade; range")
-							end
-						end
-						return result, resulturl, did_action
-					end
-				end
-			elseif whichday == 2 then
-				if script.get_turns_until_sr() == nil then
-					local f = fullness()
-					inform "eat fortune cookie day 2"
+
+		local function space()
+			return estimate_max_fullness() - fullness()
+		end
+		if space() > 0 then
+			if (space() % 6) > 0 then
+				local f = fullness()
+				if script.get_turns_until_sr() == nil and meat() >= 40 then
+					inform "eat fortune cookie"
 					buy_item("fortune cookie", "m")
 					eat_item("fortune cookie")()
 					if not (fullness() == f + 1 and script.get_turns_until_sr() ~= nil) then
@@ -1577,89 +1542,54 @@ endif
 					end
 					did_action = (fullness() == f + 1 and script.get_turns_until_sr() ~= nil)
 					return result, resulturl, did_action
-				elseif have_item("Knob pasty") and (fullness() < 3 or fullness() >= 12) then
-					inform "eat pasty day 2"
-					eat_item("Knob pasty")
-					did_action = (advs() >= 20)
+				elseif have_item("Ur-Donut") and level() < 4 then
+					inform "eat ur-donut"
+					eat_item("Ur-Donut")
+					did_action = (fullness() == f + 1)
 					return result, resulturl, did_action
-				elseif fullness() <= 9 then
-					if count("Hell ramen") >= 2 then
-						if highskill_at_run and not have_buff("Got Milk") then
-							if have_item("milk of magnesium") then
-								inform "using milk"
-								set_result(use_item("milk of magnesium"))
-								if not have_buff("Got Milk") then
-									critical "Failed to use milk of magnesium"
-								end
-							elseif have_item("glass of goat's milk") then
-								inform "making milk"
-								if count("scrumptious reagent") < 1 then
-									ensure_mp(10)
-									cast_skillid(4006, 1) -- advanced saucecrafting
-								end
-								cook_items("glass of goat's milk", "scrumptious reagent")
-								did_action = have_item("milk of magnesium")
-								return result, resulturl, did_action
-							else
-								return nil
-							end
-						end
-						inform "eat hell ramen day 2"
+				elseif have_item("Knob pasty") then
+					inform "eat knob pasty"
+					eat_item("Knob pasty")
+					did_action = (fullness() == f + 1)
+					return result, resulturl, did_action
+				end
+			end
+			if space() >= 6 then
+				local f = fullness()
+				if count("Hell ramen") + count("fettucini Inconnu") >= 2 then
+					if have_buff("Got Milk") then
+						inform "eating reagent pasta with milk"
 						eat_item("Hell ramen")
 						eat_item("Hell ramen")
+						eat_item("fettucini Inconnu")
+						eat_item("fettucini Inconnu")
 						did_action = (fullness() >= 12)
 						return result, resulturl, did_action
-					else
-						return f.make_reagent_pasta()
-					end
-				end
-			elseif whichday >= 3 and (advs() <= 100 or script.get_turns_until_sr() == nil) then
-				if script.get_turns_until_sr() == nil then
-					local f = fullness()
-					inform "eat fortune cookie day 3"
-					buy_item("fortune cookie", "m")
-					eat_item("fortune cookie")()
-					if not (fullness() == f + 1 and script.get_turns_until_sr() ~= nil) then
-						print("WARNING fortune cookie result:", script.get_turns_until_sr())
-						critical "Error getting fortune cookie numbers"
-					end
-					did_action = (fullness() == f + 1 and script.get_turns_until_sr() ~= nil)
-					return result, resulturl, did_action
-				elseif have_item("Knob pasty") and (fullness() < 3 or fullness() >= 12) then
-					inform "eating pasty"
-					local a = advs()
-					eat_item("Knob pasty")
-					did_action = (advs() > a)
-					return result, resulturl, did_action
--- 				elseif fullness() <= 3 and have_reagent_pastas >= need_total_reagent_pastas then
-				elseif fullness() <= 3 then
-					if count("Hell ramen") + count("fettucini Inconnu") >= 2 then
-						if have_buff("Got Milk") then
-							inform "eating reagent pasta"
-							eat_item("Hell ramen")
-							eat_item("Hell ramen")
-							eat_item("fettucini Inconnu")
-							eat_item("fettucini Inconnu")
-							did_action = (fullness() >= 12)
-							return result, resulturl, did_action
-						elseif have_item("milk of magnesium") then
-							inform "using milk"
-							set_result(use_item("milk of magnesium"))
-							did_action = have_buff("Got Milk")
-							return result, resulturl, did_action
-						elseif have_item("glass of goat's milk") then
-							inform "making milk"
-							if count("scrumptious reagent") < 1 then
-								ensure_mp(10)
-								cast_skillid(4006, 1) -- advanced saucecrafting
-							end
-							cook_items("glass of goat's milk", "scrumptious reagent")
-							did_action = have_item("milk of magnesium")
-							return result, resulturl, did_action
+					elseif have_item("milk of magnesium") then
+						inform "using milk"
+						set_result(use_item("milk of magnesium"))
+						did_action = have_buff("Got Milk")
+						return result, resulturl, did_action
+					elseif have_item("glass of goat's milk") then
+						inform "making milk"
+						if count_item("scrumptious reagent") < 1 then
+							ensure_mp(10)
+							cast_skill("Advanced Saucecrafting")
 						end
-					else
-						return f.make_reagent_pasta()
+						cook_items("glass of goat's milk", "scrumptious reagent")
+						did_action = have_item("milk of magnesium")
+						return result, resulturl, did_action
+					elseif advs() < 30 then
+						inform "eating reagent pasta without milk"
+						eat_item("Hell ramen")
+						eat_item("Hell ramen")
+						eat_item("fettucini Inconnu")
+						eat_item("fettucini Inconnu")
+						did_action = (fullness() >= 12)
+						return result, resulturl, did_action
 					end
+				else
+					return script.make_reagent_pasta()
 				end
 			end
 		end
@@ -1816,9 +1746,7 @@ endif
 						end
 					end
 					for i = 1, 20 do
-						local max_drunk = 14
-						if have_skill("Liver of Steel") then max_drunk = 19 end
-						if drunkenness() < max_drunk then
+						if drunkenness() < estimate_max_safe_drunkenness() then
 							local start_drunk = drunkenness()
 							ensure_buffs { "Ode to Booze" }
 							if have_item("astral pilsner") and level() >= 11 then
@@ -1829,10 +1757,14 @@ endif
 								drink_item("pumpkin beer")
 							elseif have_item("distilled fortified wine") then
 								drink_item("distilled fortified wine")
-							elseif have_item("Ye Wizard's Shack snack voucher") and drunkenness() + 3 <= max_drunk then
+							elseif have_item("CSA cheerfulness ration") and level() >= 6 then
+								drink_item("CSA cheerfulness ration")
+							elseif have_item("CSA scoutmaster's &quot;water&quot;") and drunkenness() + 3 <= estimate_max_safe_drunkenness() then
+								drink_item("CSA scoutmaster's &quot;water&quot;")
+							elseif have_item("Ye Wizard's Shack snack voucher") and drunkenness() + 3 <= estimate_max_safe_drunkenness() then
 								async_post_page("/gamestore.php", { action = "buysnack", whichsnack = get_itemid("tobiko-infused sake") })
 								drink_item("tobiko-infused sake")
-							elseif have_item("Supernova Champagne") and drunkenness() + 3 <= max_drunk then
+							elseif have_item("Supernova Champagne") and drunkenness() + 3 <= estimate_max_safe_drunkenness() then
 								drink_item("Supernova Champagne")
 							elseif have_item("cream stout") then
 								drink_item("cream stout")
@@ -1917,6 +1849,14 @@ endif
 							drink_item("pumpkin beer")
 						elseif have_item("distilled fortified wine") then
 							drink_item("distilled fortified wine")
+						elseif have_item("CSA cheerfulness ration") and level() >= 6 then
+							drink_item("CSA cheerfulness ration")
+						elseif have_item("Ye Olde Meade") and drunkenness() + 5 <= estimate_max_safe_drunkenness() then
+							drink_item("Ye Olde Meade")
+						elseif have_item("CSA scoutmaster's &quot;water&quot;") and drunkenness() + 3 <= estimate_max_safe_drunkenness() then
+							drink_item("CSA scoutmaster's &quot;water&quot;")
+						elseif have_item("backwoods screwdriver") and drunkenness() + 3 <= estimate_max_safe_drunkenness() then
+							drink_item("backwoods screwdriver")
 						elseif have_item("Ye Wizard's Shack snack voucher") and drunkenness() <= estimate_max_safe_drunkenness() - 3 then
 							async_post_page("/gamestore.php", { action = "buysnack", whichsnack = get_itemid("tobiko-infused sake") })
 							drink_item("tobiko-infused sake")
@@ -2145,7 +2085,7 @@ mark m_done
 					end
 				end
 				ensure_mp(150)
-				ensure_buffs { "Jalape&ntilde;o Saucesphere", "Jaba&ntilde;ero Saucesphere", "Spirit of Garlic", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
+				ensure_buffs { "Jalape&ntilde;o Saucesphere", "Jaba&ntilde;ero Saucesphere", "Spirit of Bacon Grease", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
 				maybe_ensure_buffs { "Mental A-cue-ity" }
 				async_get_page("/bigisland.php", { place = "camp", whichcamp = 1 })
 				result, resulturl = async_get_page("/bigisland.php", { action = "bossfight", pwd = get_pwd() })()
@@ -3243,7 +3183,9 @@ endif
 			cached_stuff.have_moxie_guild_access = true
 			inform "get tonic water"
 			if challenge ~= "fist" then
-				buy_item("soda water", "m", 10)
+				if count_item("soda water") < 10 then
+					buy_item("soda water", "m", 10)
+				end
 				async_post_page("/guild.php", { action = "stillfruit", whichitem = get_itemid("soda water"), quantity = 10 })
 			end
 			did_action = true
@@ -3484,10 +3426,10 @@ mark m_done
 				end
 				if have_item("ten-leaf clover") then
 					script.ensure_buffs { "Astral Shell" }
-					if not get_resistance_levels().stench then
+					if not get_resistance_level("Stench") then
 						script.maybe_ensure_buffs { "Elemental Saucesphere", "Oilsphere" }
 					end
-					if not get_resistance_levels().stench and not have_buff("Super Structure") and have_item("Greatest American Pants") then
+					if not get_resistance_level("Stench") and not have_buff("Super Structure") and have_item("Greatest American Pants") then
 						wear { pants = "Greatest American Pants" }
 						script.get_gap_buff("Super Structure")
 					end
@@ -4285,6 +4227,7 @@ endif
 		if playername():contains("Devster") then
 			stop("Devster faxbot:" .. target)
 		end
+		code = code or get_faxbot_command(target)
 		print("  photocopied:", f.get_photocopied_monster(), "getting", target, code)
 		try_getting_faxbot_monster(target, code)
 		try_getting_faxbot_monster(target, code)
@@ -4519,15 +4462,12 @@ endif
 	return f
 end
 
-function automate_tiles()
-	local function choose(tile)
-		return async_post_page("/tiles.php", { action = "jump", whichtile = tile })
+function get_faxbot_command(monstername)
+	for _, cat in pairs(datafile("faxbot-monsters").categories) do
+		for a, b in pairs(cat) do
+			if b.name == monstername then
+				return a
+			end
+		end
 	end
-	choose(4)
-	choose(6)
-	choose(3)
-	choose(5)
-	choose(7)
-	choose(6)
-	return choose(3)()
 end

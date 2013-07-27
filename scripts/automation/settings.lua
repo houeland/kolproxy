@@ -300,42 +300,19 @@ function get_ascension_automation_settings(want_bonus)
 		table.insert(tbl.sell_items, "meat paste")
 	end
 
-	local maybe_ignore_skills = {
-		["Musk of the Moose"] = "Musk of the Moose",
-		["A Few Extra Pounds"] = "Holiday Weight Gain",
-		["Ghostly Shell"] = "Ghostly Shell",
-		["Astral Shell"] = "Astral Shell",
-		["Empathy"] = "Empathy of the Newt",
-		["Curiosity of Br'er Tarrypin"] = "Curiosity of Br'er Tarrypin",
-		["Pasta Oneness"] = "Manicotti Meditation",
-		["Leash of Linguini"] = "Leash of Linguini",
-		["Spirit of Bacon Grease"] = "Flavour of Magic",
-		["Spirit of Garlic"] = "Flavour of Magic",
-		["Spirit of Peppermint"] = "Flavour of Magic",
-		["Spirit of Cayenne"] = "Flavour of Magic",
-		["Spirit of Wormwood"] = "Flavour of Magic",
-		["Springy Fusilli"] = "Springy Fusilli",
-		["Saucemastery"] = "Sauce Contemplation",
-		["Elemental Saucesphere"] = "Elemental Saucesphere",
-		["Jalape&ntilde;o Saucesphere"] = "Jalape&ntilde;o Saucesphere",
-		["Jaba&ntilde;ero Saucesphere"] = "Jaba&ntilde;ero Saucesphere",
-		["Scarysauce"] = "Scarysauce",
-		["Smooth Movements"] = "Smooth Movement",
-		["The Moxious Madrigal"] = "The Moxious Madrigal",
-		["The Magical Mojomuscular Melody"] = "The Magical Mojomuscular Melody",
-		["Power Ballad of the Arrowsmith"] = "The Power Ballad of the Arrowsmith",
-		["Polka of Plenty"] = "The Polka of Plenty",
-		["Fat Leon's Phat Loot Lyric"] = "Fat Leon's Phat Loot Lyric",
-		["Ode to Booze"] = "The Ode to Booze",
-		["The Sonata of Sneakiness"] = "The Sonata of Sneakiness",
-		["Carlweather's Cantata of Confrontation"] = "Carlweather's Cantata of Confrontation",
-		["Ur-Kel's Aria of Annoyance"] = "Ur-Kel's Aria of Annoyance",
-	}
+	local maybe_ignore_skills = datafile("buff-recast-skills")
+
+	maybe_ignore_skills["Spirit of Bacon Grease"] = "Flavour of Magic"
+	maybe_ignore_skills["Spirit of Garlic"] = "Flavour of Magic"
+	maybe_ignore_skills["Spirit of Peppermint"] = "Flavour of Magic"
+	maybe_ignore_skills["Spirit of Cayenne"] = "Flavour of Magic"
+	maybe_ignore_skills["Spirit of Wormwood"] = "Flavour of Magic"
+
 	for x, y in pairs(maybe_ignore_skills) do
 		if have_skill(y) == false then
 			tbl.ignore_buffs[x] = true
 		end
 	end
 
-	return tbl
+	return tbl, maybe_ignore_skills
 end

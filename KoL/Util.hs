@@ -20,7 +20,7 @@ import qualified Data.Digest.Pure.MD5
 import qualified Database.SQLite3
 
 
-kolproxy_version_number = "3.10"
+kolproxy_version_number = "3.11-alpha"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 
@@ -86,7 +86,11 @@ canReadState ref = return $ stateValid_ ref :: IO Bool
 
 
 
-create_db place filename = getDirectoryPath place filename >>= Database.SQLite3.open
+create_db place filename = do
+	path <- getDirectoryPath place filename
+	db <- Database.SQLite3.open path
+	do_db_query_ db "PRAGMA fullfsync = 1;" []
+	return db
 
 do_db_query db query params = (do
 	s <- Database.SQLite3.prepare db query

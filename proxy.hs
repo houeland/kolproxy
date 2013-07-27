@@ -374,7 +374,10 @@ runbot filename = do
 
 	sc <- make_sessionconn globalref "http://www.kingdomofloathing.com/" (error "dblogstuff") (error "statestuff")
 
-	cookie <- login (login_useragent, login_host) "username" "password-md5hash"
+	Just username <- getEnvironmentSetting "KOLPROXY_BOTSCRIPT_USERNAME"
+	Just passwordmd5hash <- getEnvironmentSetting "KOLPROXY_BOTSCRIPT_PASSWORDMD5HASH"
+
+	cookie <- login (login_useragent, login_host) username passwordmd5hash
 
 	let baseref = RefType {
 		logstuff_ = LogRefStuff { logchan_ = dropping_logchan, solid_logchan_ = logchan },

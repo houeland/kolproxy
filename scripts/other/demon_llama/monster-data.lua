@@ -97,7 +97,8 @@ function buildCurrentFightMonsterDataCache(monster_name, fight_text)
 	end
 
 	local item = modifiers["Item Drops from Monsters"] or 0
-	for idata in table.values(monster.Items or {}) do
+	for _, idata in pairs(monster.Items or {}) do
+		idata.dropratepercent = idata.Chance
 		if not idata["pickpocket only"] then
 			local chance = idata.Chance or 0
 			local p_mod = chance * (1 + item/100)

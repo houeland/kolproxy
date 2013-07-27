@@ -24,14 +24,6 @@ local phlyumFamiliars = {
 	[159] = true, -- happy medium
 }
 
-local elementColor = {
-	["stench"] = "green",
-	["hot"] = "red",
-	["cold"] = "blue",
-	["sleaze"] = "blueviolet",
-	["spooky"] = "grey",
-}
-
 local function formatStat(name, value, color, tooltip)
 	if not value or value == "" then return "" end
 
@@ -58,15 +50,20 @@ local function make_monster_hp_meter(monster, width)
 	return [[<div class='monsterHP meter' style='width:]]..width..[[px;' title=']]..tooltip..[[' ><div style='width: ]]..math.floor(hpFrac * width)..[[px;background-color:]]..hpColor..[[;' class='meter monsterHPColor'><div class='meter shading'></div></div></div>]]
 end
 
-local function formatMonsterItems(monster)
+local function formatMonsterItems(monster, bonuses)
 	local data = monster.Items
 	if not data then return "" end
+
+	local plusitem = estimate_bonus("Item Drops from Monsters") + bonuses["Item Drops from Monsters"]
 
 	local itemdatalist = {}
 	for value in table.values(data) do
 		local dropinfo = ""
 		
-		local chance = value.Chance or 0
+		local chance = (value.dropratepercent or 0) * (1 + plusitem/100)
+		chance = math.max(math.min(chance, 100), 0)
+		chance = tonumber(round_down(chance, 2))
+
 		if chance > 0 then
 			dropinfo = chance .. "%"
 		else
@@ -108,7 +105,7 @@ local function formatMonsterStats(monster)
 	statData = statData .. formatStat("Atk", data.ModAtk, nil, "Starting Atk: " .. (data.Atk or "?"))
 	statData = statData .. formatStat("Def", data.ModDef, nil, "Starting Def: " .. (data.Def or "?"))
 	statData = statData .. formatStat("Meat", data.Meat)
-	statData = statData .. formatStat("Element", data.Element, elementColor[data.Element])
+	statData = statData .. formatStat("Element", data.Element, element_color(data.Element), "Weak against: " .. table.concat({ get_elemental_weaknesses(data.Element) }, ", ") )
 	statData = statData .. formatStat("Init", data.Init)
 
 	if phlyumFamiliars[familiarid()] and data.Phylum then
@@ -231,6 +228,14 @@ function getCurrentFightMonster()
 		monster.Stats.ModDef = current_serverdata.def
 	end
 
+	local extra_serverdata = fight["currently fighting extra serverdata"]
+	if extra_serverdata then
+		monster = monster or {}
+		monster.Stats = monster.Stats or {}
+		monster.Stats.Phylum = extra_serverdata.phylum or monster.Stats.Phylum
+		monster.Stats.Element = extra_serverdata.element or monster.Stats.Element
+	end
+
 	return monster
 end
 
@@ -276,10 +281,17 @@ add_printer("/fight.php", function()
 	}
 </script>%0]])		
 		local monster = getCurrentFightMonster()
-	
+
 		if monster then
+			local bonuses = make_bonuses_table {}
+			for x in text:gmatch([[/friarplants/[^ ]* alt="(.-)"]]) do
+				local plusitem = tonumber(x:match("+([0-9]+)%% Item drops"))
+				local plusmeat = tonumber(x:match("+([0-9]+)%% Meat drops"))
+				local plusinit = tonumber(x:match("+([0-9]+)%% Combat Initiative"))
+				bonuses = bonuses + { ["Item Drops from Monsters"] = plusitem, ["Meat from Monsters"] = plusmeat, ["Combat Initiative"] = plusinit }
+			end
 			text = text:gsub([[(id='monname'.-)(</td>)]], function(prefix, suffix)
-				return prefix .. [[<div style='font-size:11px;color:#555;margin-top:5px;'>]] .. formatMonsterStats(monster) .. formatMonsterItems(monster) .. [[</div>]] .. suffix
+				return prefix .. [[<div style='font-size:11px;color:#555;margin-top:5px;'>]] .. formatMonsterStats(monster) .. formatMonsterItems(monster, bonuses) .. [[</div>]] .. suffix
 			end)
 
 			if monster.Stats.Phylum then

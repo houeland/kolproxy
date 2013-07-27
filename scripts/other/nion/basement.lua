@@ -11,8 +11,7 @@ add_automator("/basement.php", function()
 	local maxreqinfo = ""
 	local bad_estimate = false
 
-	local function handle_resist_test(elem1title, elem2title)
-		local elem1, elem2 = elem1title:lower(), elem2title:lower()
+	local function handle_resist_test(elem1, elem2)
 		local resists = get_resistance_levels()
 		local basedmg = 8 + 4.5 * (basement_floor ^ 1.4)
 		local mindmg = table_apply_function(estimate_damage { [elem1] = 0.95 * basedmg, [elem2] = 0.95 * basedmg, __resistance_levels = resists }, math.floor)
@@ -25,7 +24,7 @@ add_automator("/basement.php", function()
 		minreqinfo = string.format([[ (%s + %s)]], minmarkup[elem1], minmarkup[elem2])
 		maxreqinfo = string.format([[ (%s + %s)]], maxmarkup[elem1], maxmarkup[elem2])
 		reqtype = " damage"
-		challenge_description = elem1title .. " + " .. elem2title .. " Resistance test"
+		challenge_description = elem1 .. " + " .. elem2 .. " Resistance test"
 	end
 
 	if basement_floor % 5 == 0 then

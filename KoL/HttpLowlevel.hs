@@ -323,8 +323,13 @@ mkconnectsocket = debug_do "mkconnectsocket" $ do
 
 mklistensocket portnum = debug_do "mklistensocket" $ do
 	proto <- Network.BSD.getProtocolNumber "tcp"
+	flags <- do
+		listenpublic <- getEnvironmentSetting "KOLPROXY_LISTEN_PUBLIC"
+		if listenpublic == Just "1"
+			then return [AI_ADDRCONFIG, AI_PASSIVE]
+			else return [AI_ADDRCONFIG]
 	let hints = Network.Socket.defaultHints {
-		addrFlags = [AI_ADDRCONFIG],
+		addrFlags = flags,
 		addrFamily = Network.Socket.AF_INET,
 		addrSocketType = Network.Socket.Stream,
 		addrProtocol = proto

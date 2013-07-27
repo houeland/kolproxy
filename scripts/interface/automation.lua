@@ -47,27 +47,15 @@ local automate_zone_href = add_automation_script("automate-zone", function()
 			autochoices["You May Be on Thin Ice"] = "Fight Back Your Chills"
 			autochoices["Some Sounds Most Unnerving"] = "Infernal Pachyderms Sound Pretty Neat"
 			autochoices["One More Demon to Slay"] = "Sure! I'll be wearing its guts like a wreath!"
-
-			if playername() == "Eleron" and numtimes > 10 then
-				autochoices["Heavily Invested in Pun Futures"] = "Leave"
-			end
 		end
 		for i = 1, numtimes do
 			print("going for adv " .. i .. " / " .. numtimes)
 
 			-- ...prepare, heal up, spend mp, etc...
 
-			if playername() == "Eleron" then
--- 				burn_aftercore_mp(100)
--- 				get_aftercore_buffs { "Beaten Up", "Sleepy" }
-				if hp() < maxhp() / 0.75 then
-					cast_skill("Cannelloni Cocoon")
-				end
--- 				if mp() < 200 then
--- 					use_item("ancient Magi-Wipes")
--- 					use_item("ancient Magi-Wipes")
--- 				end
-			end
+--			if hp() < maxhp() / 0.75 then
+--				cast_skill("Cannelloni Cocoon")
+--			end
 
 			-- adventure
 			text, url, advagain = autoadventure { zoneid = zoneid, noncombatchoices = autochoices }

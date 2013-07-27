@@ -94,6 +94,31 @@ local function automate_hcnp_day(whichday)
 		return not unlocked_island() and not have_item("skeleton")
 	end
 
+	-- TODO: do these properly
+	local function started_war()
+		return quest("Make War, Not... Oh, Wait")
+	end
+
+	local function completed_war()
+		return not quest("Make War, Not... Oh, Wait")
+	end
+
+	local function completed_filthworms()
+		return have_item("heart of the filthworm queen")
+	end
+
+	local function completed_sonofa_beach()
+		return have_item("tequila grenade") or have_item("molotov cocktail cocktail")
+	end
+
+	local function completed_gremlins()
+		return have_item("rusty chain necklace") or have_item("sawblade shield") or have_item("wrench bracelet")
+	end
+
+	local function completed_arena()
+		return not have_item("rock band flyers")
+	end
+
 	challenge = nil
 	if ascensionpathid() == 6 then
 		challenge = "fist"
@@ -1621,30 +1646,6 @@ endif
 		}
 	}
 
---	add_task {
---		when = mcd() == 0 and ascensionstatus() ~= "Hardcore" and moonsign_area() == "Gnomish Gnomad Camp" and level() < 13,
---		task = {
---			message = "set annoy-o-tron",
---			nobuffing = true,
---			action = function()
---				set_result(async_post_page("/gnomes.php", { action = "changedial", whichlevel = 10 }))
---				did_action = mcd() > 0
---			end
---		}
---	}
-
---	add_task {
---		when = mcd() == 10 and ascensionstatus() ~= "Hardcore" and moonsign_area() == "Gnomish Gnomad Camp" and level() >= 13,
---		task = {
---			message = "set annoy-o-tron",
---			nobuffing = true,
---			action = function()
---				set_result(async_post_page("/gnomes.php", { action = "changedial", whichlevel = 0 }))
---				did_action = mcd() == 0
---			end
---		}
---	}
-
 	add_task {
 		when = ascensionstatus() ~= "Hardcore" and moonsign_area() == "Gnomish Gnomad Camp" and not have_skill("Torso Awaregness") and meat() >= 10000,
 		task = {
@@ -1845,42 +1846,13 @@ endif
 		end
 	end
 
-	-- start of turn-spending things
-
-	local want_advs = 0
-	if highskill_at_run or challenge then
-		want_advs = 5
-	else
-		want_advs = 10
-	end
-	add_task {
-		when = advs() < want_advs,
-		task = {
-			message = "low on advs",
-			nobuffing = true,
-			action = function()
-				stop("Fewer than " .. tostring(want_advs) .. " adventures left")
-			end
-		}
-	}
-
-	do
-		local pt, pturl, did_sr = script.check_sr()
-		if pt and pturl then
-			return pt, pturl, did_sr
-		end
-	end
-	if not turns_to_next_sr then
-		turns_to_next_sr = 1000000
-	end
-
 	add_task {
 		when = challenge == "zombie" and
 			ascensionstatus() == "Hardcore" and
 			have_skill("Neurogourmet") and
 			(have_item("hunter brain") or have_item("boss brain")) and
 			fullness() < estimate_max_fullness() and
-			(whichday > 1 or fullness() + 5 <= estimate_max_fullness()),
+			(have_skill("Stomach of Steel") or fullness() + 5 <= estimate_max_fullness()),
 		task = {
 			message = "eat epic brain",
 			action = function()
@@ -1907,6 +1879,217 @@ endif
 				did_action = (advs() > a)
 			end,
 		}
+	}
+
+	-- start of turn-spending things
+
+	add_task {
+		when = ascensionpathid() ~= 0 and
+			level() >= 6 and
+			(level() < 13 or quest("Make War, Not... Oh, Wait") or quest("The Rain on the Plains is Mainly Garbage") or quest_text("Quest for the Holy MacGuffin")) and
+			advs() <= 20 and
+			fullness() == estimate_max_fullness() and
+			drunkenness() == estimate_max_safe_drunkenness(),
+		task = {
+			message = "end of day",
+			nobuffing = true,
+			action = function()
+				script.maybe_ensure_buffs { "Ode to Booze" }
+				if have_buff("Ode to Booze") then
+					script.ensure_buff_turns("Ode to Booze", 10)
+				end
+				if not have_item("bucket of wine") then
+					script.ensure_mp(2)
+					summon_clipart("bucket of wine")
+				end
+				if not have_item("time halo") then
+					script.ensure_mp(2)
+					summon_clipart("time halo")
+				end
+				script.wear { acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" } }
+				result, resulturl = get_page("/inventory.php", { which = 1 })
+				result = add_message_to_page(get_result(), "<p>End of day.</p><p>(PvP,) overdrink, then done.</p>", "Ascension script:")
+				finished = true
+			end
+		}
+	}
+
+	local want_advs = 0
+	if highskill_at_run or challenge then
+		want_advs = 5
+	else
+		want_advs = 10
+	end
+	add_task {
+		when = advs() < want_advs,
+		task = {
+			message = "low on adventures",
+			nobuffing = true,
+			action = function()
+				stop("Fewer than " .. tostring(want_advs) .. " adventures left")
+			end
+		}
+	}
+
+	do
+		local pt, pturl, did_sr = script.check_sr()
+		if pt and pturl then
+			return pt, pturl, did_sr
+		end
+	end
+	if not turns_to_next_sr then
+		turns_to_next_sr = 1000000
+	end
+
+	local use_new_faxing = ascensionpath("BIG!") and script.have_familiar("Obtuse Angel")
+
+	add_task {
+		when = use_new_faxing and not cached_stuff.handled_icy_peak and not cached_stuff.have_faxed_today,
+		task = function()
+			local mc = get_page("/mclargehuge.php")
+			if mc:contains("cloudypeak.gif") and not have_item("ninja rope") and not have_item("ninja crampons") and not have_item("ninja carabiner") then
+				if script.get_photocopied_monster() ~= "ninja snowman assassin" then
+					return {
+						message = "get assassin from faxbot",
+						action = function()
+							script.get_faxbot_fax("ninja snowman assassin")
+							did_action = true
+						end
+					}
+				else
+					return {
+						message = "fight and arrow assassin",
+						action = function()
+							script.heal_up()
+							script.ensure_mp(30)
+							script.want_familiar "Obtuse Angel"
+							set_result(use_item("photocopied monster"))
+							if get_result():contains("You don't think you can handle another one of these things today") then
+								cached_stuff.have_faxed_today = true
+								did_action = true
+								return
+							end
+							local pt, url = get_page("/fight.php")
+							result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_romanticarrow)
+							if resulturl:contains("fight.php") then
+								cached_stuff.have_faxed_today = true
+							end
+							if advagain then
+								did_action = true
+								cached_stuff.handled_icy_peak = true
+							end
+						end
+					}
+				end
+			else
+				return {
+					message = "icy peak is already handled",
+					action = function()
+						cached_stuff.handled_icy_peak = true
+						did_action = true
+					end
+				}
+			end
+		end,
+	}
+
+	add_task {
+		when = use_new_faxing and not cached_stuff.handled_smut_orcs and not cached_stuff.have_faxed_today,
+		task = function()
+			local oc = get_page("/place.php", { whichplace = "orc_chasm" })
+			if oc:contains("nobridge.gif") and not have_item("smut orc keepsake box") then
+				if script.get_photocopied_monster() ~= "smut orc pervert" then
+					return {
+						message = "get pervert from faxbot",
+						action = function()
+							script.get_faxbot_fax("smut orc pervert")
+							did_action = true
+						end
+					}
+				else
+					return {
+						message = "fight and arrow pervert",
+						action = function()
+							script.heal_up()
+							script.ensure_mp(30)
+							script.want_familiar "Obtuse Angel"
+							set_result(use_item("photocopied monster"))
+							if get_result():contains("You don't think you can handle another one of these things today") then
+								cached_stuff.have_faxed_today = true
+								did_action = true
+								return
+							end
+							local pt, url = get_page("/fight.php")
+							result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_romanticarrow)
+							if resulturl:contains("fight.php") then
+								cached_stuff.have_faxed_today = true
+							end
+							if advagain then
+								did_action = true
+								cached_stuff.handled_smut_orcs = true
+							end
+						end
+					}
+				end
+			else
+				return {
+					message = "smut orcs are already handled",
+					action = function()
+						cached_stuff.handled_smut_orcs = true
+						did_action = true
+					end
+				}
+			end
+		end,
+	}
+
+	add_task {
+		when = use_new_faxing and not cached_stuff.handled_lfms and not cached_stuff.have_faxed_today,
+		task = function()
+			if not completed_sonofa_beach() and not have_item("barrel of gunpowder") then
+				if script.get_photocopied_monster() ~= "lobsterfrogman" then
+					return {
+						message = "get lfm from faxbot",
+						action = function()
+							script.get_faxbot_fax("lobsterfrogman")
+							did_action = true
+						end
+					}
+				else
+					return {
+						message = "fight and arrow lfm",
+						action = function()
+							script.heal_up()
+							script.ensure_mp(30)
+							script.want_familiar "Obtuse Angel"
+							set_result(use_item("photocopied monster"))
+							if get_result():contains("You don't think you can handle another one of these things today") then
+								cached_stuff.have_faxed_today = true
+								did_action = true
+								return
+							end
+							local pt, url = get_page("/fight.php")
+							result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_romanticarrow)
+							if resulturl:contains("fight.php") then
+								cached_stuff.have_faxed_today = true
+							end
+							if advagain then
+								did_action = true
+								cached_stuff.handled_lfms = true
+							end
+						end
+					}
+				end
+			else
+				return {
+					message = "lfms are already handled",
+					action = function()
+						cached_stuff.handled_lfms = true
+						did_action = true
+					end
+				}
+			end
+		end,
 	}
 
 	add_task {
@@ -2102,7 +2285,7 @@ endif
 			have("turtle totem") and
 			have("saucepan") and
 			have("seal tooth")
-		) and challenge ~= "fist",
+		) and challenge ~= "fist" and challenge ~= "zombie",
 		task = tasks.get_starting_items,
 	}
 
@@ -2405,35 +2588,6 @@ endif
 		}
 
 		add_task {
-			when = quest("The Goblin Who Wouldn't Be King"),
-			task = function()
-				if have_item("Knob Goblin elite helm") and have_item("Knob Goblin elite polearm") and have_item("Knob Goblin elite pants") then
-					return {
-						message = "kill goblin king",
-						action = function()
-							return script.knob_goblin_king_with_cake(macro_noodlecannon)
-						end
-					}
-				else
-					script.maybe_ensure_buffs { "Mental A-cue-ity" }
-					return {
-						message = "get KGE outfit",
-						fam = "Slimeling",
-						buffs = { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
-						minmp = 25,
-						action = adventure {
-							zoneid = 257,
-							macro_function = macro_ppnoodlecannon,
-							noncombats = {
-								["Welcome to the Footlocker"] = "Loot the locker",
-							}
-						}
-					}
-				end
-			end,
-		}
-
-		add_task {
 			when = quest("Ooh, I Think I Smell a Rat"),
 			task = {
 				message = "do rat cellar",
@@ -2592,6 +2746,18 @@ endif
 	do
 		if trailed ~= "dairy goat" then
 			local pt, pturl, ate = script.eat_food(whichday)
+			if not ate and get_result():contains("You need a more advanced cooking appliance") and meat() >= 2500 then
+				if not have_item("Dramatic&trade; range") then
+					inform "  buying dramatic range"
+					set_result(buy_item("Dramatic&trade; range", "m"))
+					if not have_item("Dramatic&trade; range") then
+						critical "Couldn't buy dramatic range (for advanced cooking)"
+					end
+				end
+				inform "  using dramatic range"
+				set_result(use_item("Dramatic&trade; range"))
+				did_action = not have_item("Dramatic&trade; range")
+			end
 			if pt and pturl and ate then
 				return pt, pturl, ate
 			end
@@ -2627,16 +2793,16 @@ endif
 	end
 
 	if challenge ~= "zombie" then
-	if have_buff("Hardly Poisoned at All") or have_buff("A Little Bit Poisoned") or have_buff("Somewhat Poisoned") or have_buff("Really Quite Poisoned") or have_buff("Majorly Poisoned") then
-		async_get_page("/galaktik.php", { action = "buyitem", buying = 1, pwd = get_pwd(), whichitem = get_itemid("anti-anti-antidote"), howmany = 1, ajax = 1 })
-		use_item("anti-anti-antidote")
 		if have_buff("Hardly Poisoned at All") or have_buff("A Little Bit Poisoned") or have_buff("Somewhat Poisoned") or have_buff("Really Quite Poisoned") or have_buff("Majorly Poisoned") then
-			critical "Failed to remove poison"
-		else
-			did_action = true
+			async_get_page("/galaktik.php", { action = "buyitem", buying = 1, pwd = get_pwd(), whichitem = get_itemid("anti-anti-antidote"), howmany = 1, ajax = 1 })
+			use_item("anti-anti-antidote")
+			if have_buff("Hardly Poisoned at All") or have_buff("A Little Bit Poisoned") or have_buff("Somewhat Poisoned") or have_buff("Really Quite Poisoned") or have_buff("Majorly Poisoned") then
+				critical "Failed to remove poison"
+			else
+				did_action = true
+			end
+			return result, resulturl, did_action
 		end
-		return result, resulturl, did_action
-	end
 	end
 
 	add_task {
@@ -2648,6 +2814,73 @@ endif
 		when = level() < 6 and (buffturns("The Moxious Madrigal") < 10 or buffturns("The Magical Mojomuscular Melody") < 10) and have_skill("The Moxious Madrigal") and have_skill("The Magical Mojomuscular Melody"),
 		task = tasks.extend_tmm_and_mojo,
 	}
+
+	local function have_guard_outfit()
+		return have_item("Knob Goblin elite helm") and have_item("Knob Goblin elite polearm") and have_item("Knob Goblin elite pants")
+	end
+
+	local function have_harem_outfit()
+		return have_item("Knob Goblin harem veil") and have_item("Knob Goblin harem pants")
+	end
+
+	add_task {
+		prereq = use_new_faxing and not have_item("Knob Goblin encryption key") and (level() < 5 or have_item("Cobb's Knob map")),
+		f = script.unlock_cobbs_knob,
+	}
+
+	add_task {
+		when = use_new_faxing and quest("The Goblin Who Wouldn't Be King"),
+		task = function()
+			if have_item("Knob Goblin elite helm") and have_item("Knob Goblin elite polearm") and have_item("Knob Goblin elite pants") then
+				return {
+					message = "kill goblin king",
+					action = function()
+						return script.knob_goblin_king_with_cake(macro_noodlecannon)
+					end
+				}
+			else
+				script.maybe_ensure_buffs { "Mental A-cue-ity" }
+				return {
+					message = "get KGE outfit",
+					fam = "Slimeling",
+					buffs = { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+					minmp = 25,
+					action = adventure {
+						zoneid = 257,
+						macro_function = macro_ppnoodlecannon,
+						noncombats = {
+							["Welcome to the Footlocker"] = "Loot the locker",
+						}
+					}
+				}
+			end
+		end,
+	}
+
+	add_task {
+		when = have_item("Cobb's Knob lab key") and not cached_stuff.learned_lab_password and not quest("The Goblin Who Wouldn't Be King") and not challenge,
+		task = function()
+			local pt = get_page("/cobbsknob.php", { action = "dispensary" })
+			if pt:contains("FARQUAR") then
+				cached_stuff.learned_lab_password = true
+				return {
+					message = "already learned knob lab password",
+					action = function() did_action = true end,
+				}
+			else
+				if have_item("Knob Goblin elite helm") and have_item("Knob Goblin elite polearm") and have_item("Knob Goblin elite pants") then
+					return {
+						message = "learn knob lab password",
+						action = adventure { zoneid = 257 },
+						equipment = { hat = "Knob Goblin elite helm", weapon = "Knob Goblin elite polearm", pants = "Knob Goblin elite pants" },
+					}
+				else
+					critical "No goblin elite outfit to learn the lab password"
+				end
+			end
+		end
+	}
+
 
 	-- TODO: do if we're in hardcore, can fax and have a rack-fam
 	add_task {
@@ -3009,38 +3242,6 @@ endwhile
 		prereq = not have_item("Knob Goblin encryption key") and (level() < 5 or have_item("Cobb's Knob map")),
 		f = script.unlock_cobbs_knob,
 	}
-
-	add_task {
-		when = have_item("Cobb's Knob lab key") and not cached_stuff.learned_lab_password and not quest("The Goblin Who Wouldn't Be King") and not challenge,
-		task = function()
-			local pt = get_page("/cobbsknob.php", { action = "dispensary" })
-			if pt:contains("FARQUAR") then
-				cached_stuff.learned_lab_password = true
-				return {
-					message = "already learned knob lab password",
-					action = function() did_action = true end,
-				}
-			else
-				if have_item("Knob Goblin elite helm") and have_item("Knob Goblin elite polearm") and have_item("Knob Goblin elite pants") then
-					return {
-						message = "learn knob lab password",
-						action = adventure { zoneid = 257 },
-						equipment = { hat = "Knob Goblin elite helm", weapon = "Knob Goblin elite polearm", pants = "Knob Goblin elite pants" },
-					}
-				else
-					critical "No goblin elite outfit to learn the lab password"
-				end
-			end
-		end
-	}
-
-	local function have_guard_outfit()
-		return have_item("Knob Goblin elite helm") and have_item("Knob Goblin elite polearm") and have_item("Knob Goblin elite pants")
-	end
-
-	local function have_harem_outfit()
-		return have_item("Knob Goblin harem veil") and have_item("Knob Goblin harem pants")
-	end
 
 	add_task {
 		prereq = quest("The Goblin Who Wouldn't Be King") and
@@ -3583,37 +3784,6 @@ endif
 				cached_stuff.campground_psychoses = nil
 				use_item("jar of psychoses (The Crackpot Mystic)")
 				did_action = not have_item("jar of psychoses (The Crackpot Mystic)")
-			end
-		}
-	}
-
-	add_task {
-		when = ascensionpathid() ~= 0 and
-			level() >= 6 and
-			(level() < 13 or quest("Make War, Not... Oh, Wait") or quest("The Rain on the Plains is Mainly Garbage")) and
-			advs() <= 20 and
-			fullness() == estimate_max_fullness() and
-			drunkenness() == estimate_max_safe_drunkenness(),
-		task = {
-			message = "end of day",
-			nobuffing = true,
-			action = function()
-				script.maybe_ensure_buffs { "Ode to Booze" }
-				if have_buff("Ode to Booze") then
-					script.ensure_buff_turns("Ode to Booze", 10)
-				end
-				if not have_item("bucket of wine") then
-					script.ensure_mp(2)
-					summon_clipart("bucket of wine")
-				end
-				if not have_item("time halo") then
-					script.ensure_mp(2)
-					summon_clipart("time halo")
-				end
-				script.wear { acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" } }
-				result, resulturl = get_page("/inventory.php", { which = 1 })
-				result = add_message_to_page(get_result(), "<p>End of day.</p><p>(PvP,) overdrink, then done.</p>", "Ascension script:")
-				finished = true
 			end
 		}
 	}
@@ -4608,18 +4778,17 @@ endif
 	add_task {
 		prereq = quest("Make War, Not... Oh, Wait") and basemoxie() >= 70 and basemysticality() >= 70,
 		f = function()
-			if not have_item("heart of the filthworm queen") then
+			if not completed_filthworms() then
 				if have_item("Polka Pop") and not have_buff("Polka Face") then
 					use_item("Polka Pop")
 				end
 				-- TODO: increase priority with stench buffs up
 				script.do_filthworms()
-			elseif not have_item("tequila grenade") and not have_item("molotov cocktail cocktail") then
-				-- TODO: not correct, check properly
+			elseif not completed_sonofa_beach() then
 				script.do_sonofa()
-			elseif not have_item("rusty chain necklace") and not have_item("sawblade shield") and not have_item("wrench bracelet") then
+			elseif not completed_gremlins() then
 				script.do_junkyard()
-			elseif have_item("rock band flyers") then
+			elseif not completed_arena() then
 				inform "turn in rock band flyers"
 				script.wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
 				result, resulturl = get_page("/bigisland.php", { place = "concert" })
@@ -5239,7 +5408,7 @@ add_printer("/main.php", function()
 			{ titleday = " day 3", whichday = 3 },
 			{ titleday = " day 4+", whichday = 4 },
 		}
-		if ascensionstatus() ~= "Hardcore" then
+		if ascensionstatus() ~= "Hardcore" or ascensionpath("BIG!") then
 			links = {
 				{ titleday = "", whichday = 1000 },
 			}

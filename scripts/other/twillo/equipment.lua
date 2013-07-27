@@ -43,8 +43,6 @@ function add_modifier_bonuses(target, source)
 	end
 end
 
-local add_bonuses = add_modifier_bonuses
-
 function estimate_item_equip_bonuses(item)
 	-- TODO: force session bonus computations
 
@@ -75,9 +73,9 @@ function estimate_item_equip_bonuses(item)
 		for _, x in pairs(applied_scratchnsniff_stickers()) do
 			-- TODO: read from data file?
 			if x == get_itemid("scratch 'n' sniff unicorn sticker") then
-				add_bonuses(scratchnsniff_bonuses, { ["Item Drops from Monsters"] = 25 })
+				add_modifier_bonuses(scratchnsniff_bonuses, { ["Item Drops from Monsters"] = 25 })
 			elseif x == get_itemid("scratch 'n' sniff UPC sticker") then
-				add_bonuses(scratchnsniff_bonuses, { ["Meat from Monsters"] = 25 })
+				add_modifier_bonuses(scratchnsniff_bonuses, { ["Meat from Monsters"] = 25 })
 			end
 		end
 		itemarray["scratch 'n' sniff sword"] = scratchnsniff_bonuses
@@ -94,13 +92,13 @@ function estimate_item_equip_bonuses(item)
 	local name = maybe_get_itemname(item)
 	if not name then
 		-- ..unknown..
-		return {}
+		return make_bonuses_table {}
 	elseif itemarray[name] then
-		return itemarray[name]
+		return make_bonuses_table(itemarray[name])
 	elseif datafile("items")[name] then
-		return datafile("items")[name].equip_bonuses or {}
+		return make_bonuses_table(datafile("items")[name].equip_bonuses or {})
 	else
-		return {}
+		return make_bonuses_table {}
 	end
 end
 
@@ -108,13 +106,13 @@ function estimate_current_equipment_bonuses()
 	local bonuses = {}
 
 	for _, itemid in pairs(equipment()) do
-		add_bonuses(bonuses, estimate_item_equip_bonuses(itemid))
+		add_modifier_bonuses(bonuses, estimate_item_equip_bonuses(itemid))
 	end
 
 	-- TODO: hobo power
 
 	if have_equipped_item("snake shield") and have_equipped_item("serpentine sword") then
-		add_bonuses(bonuses, { ["Monster Level"] = 10 })
+		add_modifier_bonuses(bonuses, { ["Monster Level"] = 10 })
 	end
 
 	local count_brimstone = count_distinct_equipped_itemlist {
@@ -126,7 +124,7 @@ function estimate_current_equipment_bonuses()
 		"Brimstone Bracelet",
 	}
 	if count_brimstone > 0 then
-		add_bonuses(bonuses, { ["Item Drops from Monsters"] = math.pow(2, count_brimstone), ["Meat from Monsters"] = math.pow(2, count_brimstone), ["Monster Level"] = math.pow(2, count_brimstone) })
+		add_modifier_bonuses(bonuses, { ["Item Drops from Monsters"] = math.pow(2, count_brimstone), ["Meat from Monsters"] = math.pow(2, count_brimstone), ["Monster Level"] = math.pow(2, count_brimstone) })
 	end
 
 	local count_mm = count_distinct_equipped_itemlist {
@@ -135,9 +133,9 @@ function estimate_current_equipment_bonuses()
 		"molten medallion",
 	}
 	if count_mm == 2 then
-		add_bonuses(bonuses, { ["Item Drops from Monsters"] = 10 })
+		add_modifier_bonuses(bonuses, { ["Item Drops from Monsters"] = 10 })
 	elseif count_mm == 3 then
-		add_bonuses(bonuses, { ["Item Drops from Monsters"] = 30 })
+		add_modifier_bonuses(bonuses, { ["Item Drops from Monsters"] = 30 })
 	end
 
 	local count_bb = count_distinct_equipped_itemlist {
@@ -146,9 +144,9 @@ function estimate_current_equipment_bonuses()
 		"brazen bracelet",
 	}
 	if count_bb == 2 then
-		add_bonuses(bonuses, { ["Meat from Monsters"] = 10 })
+		add_modifier_bonuses(bonuses, { ["Meat from Monsters"] = 10 })
 	elseif count_bb == 3 then
-		add_bonuses(bonuses, { ["Meat from Monsters"] = 30 })
+		add_modifier_bonuses(bonuses, { ["Meat from Monsters"] = 30 })
 	end
 
 	return bonuses

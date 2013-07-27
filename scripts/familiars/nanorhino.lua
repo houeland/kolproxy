@@ -8,7 +8,7 @@ end)
 
 add_warning {
 	message = "Make sure you use the correct skill to trigger the nanorhino.",
-	severity = "notice",
+	type = "notice",
 	check = function()
 		return familiar("Nanorhino")
 	end
@@ -16,7 +16,7 @@ add_warning {
 
 add_warning {
 	message = "You have autoattack enabled while using the nanorhino.",
-	severity = "extra",
+	type = "extra",
 	check = function()
 		return familiar("Nanorhino") and autoattack_is_set()
 	end

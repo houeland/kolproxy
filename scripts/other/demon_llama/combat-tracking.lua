@@ -103,6 +103,15 @@ add_processor("/fight.php", function()
 		fight["currently fighting current serverdata"] = json_to_table(server_monsterstats_text)
 	end
 
+	if text:contains("var monsterstats") then
+		local extra_serverdata = {}
+		local phylumstr = text:match([[title="This monster is ([A-Za-z -]+)"]])
+		local phylumsuffix = phylumstr and phylumstr:match(".+ (.+)")
+		extra_serverdata.phylum = phylumsuffix or phylumstr
+		extra_serverdata.element = text:match([[title="This monster is [A-Za-z]+%.  ([A-Za-z]+) is weak against]])
+		fight["currently fighting extra serverdata"] = extra_serverdata
+	end
+
 	fightBody = getFightBody(text)
 
 	fight["damage inflicted"] = (tonumber(fight["damage inflicted"]) or 0) + getCombatDamage(fightBody)

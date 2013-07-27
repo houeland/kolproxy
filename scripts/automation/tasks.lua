@@ -98,7 +98,7 @@ function get_automation_tasks(script, cached_stuff)
 				return result, resulturl, did_action
 			end
 
-			if not have_item("seal tooth") and challenge ~= "fist" then
+			if not have_item("seal tooth") and challenge ~= "fist" and challenge ~= "zombie" then
 				inform "pick up seal tooth"
 				script.ensure_worthless_item()
 				if not have_item("hermit permit") then
@@ -504,10 +504,10 @@ mark m_done
 					bonus_target = { "noncombat", "item" },
 					minmp = 50,
 					action = function()
-						if (get_resistance_levels().stench or 0) < 4 and not have_buff("Red Door Syndrome") then
+						if get_resistance_level("Stench") < 4 and not have_buff("Red Door Syndrome") then
 							script.ensure_buffs { "Red Door Syndrome" }
 						end
-						if (get_resistance_levels().stench or 0) < 4 then
+						if get_resistance_level("Stench") < 4 then
 							script.want_familiar "Exotic Parrot"
 						end
 						local force_advagain = false
@@ -550,18 +550,19 @@ mark m_done
 			else
 				return {
 					message = "check twin peak requirements",
+					buffs = { "Fat Leon's Phat Loot Lyric", "Astral Shell", "Elemental Saucesphere" },
+					bonus_target = { "noncombat", "item" },
 					action = function()
 						if not have_item("jar of oil") then
 							use_item("bubblin' crude", 12)
 						end
-						script.ensure_buffs { "Fat Leon's Phat Loot Lyric", "Astral Shell", "Elemental Saucesphere" }
-						if (get_resistance_levels().stench or 0) < 4 and not have_buff("Red Door Syndrome") then
+						if get_resistance_level("Stench") < 4 and not have_buff("Red Door Syndrome") then
 							script.ensure_buffs { "Red Door Syndrome" }
 						end
-						if (get_resistance_levels().stench or 0) < 4 then
+						if get_resistance_level("Stench") < 4 then
 							script.want_familiar "Exotic Parrot"
 						end
-						if (get_resistance_levels().stench or 0) >= 4 and estimate_bonus("Item Drops from Monsters") - __DONOTUSE_estimate_familiar_item_drop_bonus() + estimate_bonus("Food Drops from Monsters") >= 50 and have_item("jar of oil") and estimate_bonus("Combat Initiative") >= 40 then
+						if get_resistance_level("Stench") >= 4 and estimate_bonus("Item Drops from Monsters") - __DONOTUSE_estimate_familiar_item_drop_bonus() + estimate_bonus("Food Drops from Monsters") >= 50 and have_item("jar of oil") and estimate_bonus("Combat Initiative") >= 40 then
 							session["__script.automate twin peak"] = "yes"
 							did_action = true
 						else

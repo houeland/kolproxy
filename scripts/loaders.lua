@@ -21,6 +21,7 @@ load_file("interface", "interface/cosmic-kitchen.lua")
 load_file("interface", "interface/modifier-maximizer.lua")
 load_file("interface", "interface/compute-net-worth.lua")
 load_file("interface", "interface/outfit-slots.lua")
+load_file("interface", "interface/elemental-resistance.lua")
 
 load_file("item", "items/scary-copying.lua")
 load_file("item", "items/fly-away.lua")

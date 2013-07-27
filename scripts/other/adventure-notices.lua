@@ -1,6 +1,6 @@
 add_warning {
 	message = "Make sure you use the correct skill to trigger the Juju Mojo Mask.",
-	severity = "notice",
+	type = "notice",
 	check = function()
 		if have_equipped_item("Juju Mojo Mask") and not have_intrinsic("Gaze of the Volcano God") and not have_intrinsic("Gaze of the Lightning God") and not have_intrinsic("Gaze of the Trickster God") then
 			return true
@@ -11,7 +11,7 @@ add_warning {
 -- TODO: in-run only(?)
 add_warning {
 	message = "Your Juju Mojo Mask gaze does not correspond to your primary stat.",
-	severity = "extra",
+	type = "extra",
 	check = function()
 		if have_intrinsic("Gaze of the Volcano God") and not mainstat_type("Muscle") then
 			return true
@@ -25,7 +25,7 @@ add_warning {
 
 add_warning {
 	message = "Having Jarlsberg's pan in Cosmic portal mode will consume the Slime Tube drops.",
-	severity = "extra",
+	type = "extra",
 	zone = "The Slime Tube",
 	check = function()
 		return have_equipped_item("Jarlsberg's pan (Cosmic portal mode)")
@@ -40,7 +40,7 @@ end)
 
 add_warning {
 	message = "Your Everything Looks Yellow buff ran out.",
-	severity = "notice",
+	type = "notice",
 	idgenerator = function()
 		return session["had everything looks yellow buff on turn"]
 	end,
@@ -54,7 +54,7 @@ add_warning {
 local have_war_quest = nil
 add_warning {
 	message = "You do not have the quest to start the war.",
-	severity = "warning",
+	type = "warning",
 	when = "ascension",
 	check = function(zoneid)
 		if have_war_quest then return end
@@ -69,7 +69,7 @@ add_warning {
 
 add_warning {
 	message = "You are still Consumed by Fear (click the face in the middle of the Mystic's Psychoses).",
-	severity = "warning",
+	type = "warning",
 	when = "ascension",
 	check = function(zoneid)
 		if not have_buff("Consumed by Fear") then return end

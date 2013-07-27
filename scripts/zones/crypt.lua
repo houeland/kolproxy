@@ -127,7 +127,7 @@ end)
 -- TODO: split in two, remove message="custom" support
 add_warning {
 	message = "custom",
-	severity = "notice",
+	type = "notice",
 	when = "ascension",
 	check = function(zoneid)
 	if zoneid and zoneid >= 261 and zoneid <= 264 then
@@ -146,14 +146,14 @@ add_warning {
 
 add_warning {
 	message = "You might want to use a marzipan skull for +initiative%.",
-	severity = "warning",
+	type = "warning",
 	zone = "The Defiled Alcove",
 	check = function() return moonsign_area("Gnomish Gnomad Camp") and not (have_buff("Sugar Rush") and have_buff("Hombre Muerto Caminando")) end,
 }
 
 add_warning {
-	message = "You might want to cast Springy Fusilli.",
-	severity = "warning",
+	message = "You might want to cast Springy Fusilli for +initiative%.",
+	type = "warning",
 	zone = "The Defiled Alcove",
 	check = function() return not have_buff("Springy Fusilli") and have_skill("Springy Fusilli") end,
 }

@@ -86,6 +86,10 @@ local function split_commaseparated(l)
 	return split_line_on(",", l:gsub(", ", ","))
 end
 
+local function remove_line_junk(l)
+	return l:gsub("\r$", "")
+end
+
 local function parse_mafia_bonuslist(bonuslist)
 	local checks = {
 		["Initiative"] = "Combat Initiative",
@@ -164,6 +168,7 @@ function parse_buffs()
 
 	local section = nil
 	for l in io.lines("cache/files/modifiers.txt") do
+		l = remove_line_junk(l)
 		section = l:match([[^# (.*) section of modifiers.txt]]) or section
 		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
 		local name2 = l:match([[^# ([^	:]+)]])
@@ -177,7 +182,7 @@ function parse_buffs()
 end
 
 function verify_buffs(data)
-	if data["Peppermint Twisted"].bonuses["Combat Initiative"] == 40 and data["Peppermint Twisted"].bonuses["Monster Level"] == 10 and data["Peeled Eyeballs"].bonuses["Meat from Monsters"] == -20 then
+	if data["Peppermint Twisted"].bonuses["Combat Initiative"] == 40 and data["Peppermint Twisted"].bonuses["Monster Level"] == 10 and data["Peeled Eyeballs"].bonuses["Meat from Monsters"] == -20 and data["On the Trail"] then
 		return data
 	end
 end
@@ -185,6 +190,7 @@ end
 function parse_outfits()
 	local outfits = {}
 	for l in io.lines("cache/files/outfits.txt") do
+		l = remove_line_junk(l)
 		local name, itemlist = l:match([[^[0-9]*	([^	]+)	(.+)$]])
 		if name and itemlist then
 			local items = {}
@@ -196,6 +202,7 @@ function parse_outfits()
 		end
 	end
 	for l in io.lines("cache/files/modifiers.txt") do
+		l = remove_line_junk(l)
 		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
 		if name and bonuslist and outfits[name] then
 			outfits[name].bonuses = parse_mafia_bonuslist(bonuslist)
@@ -222,6 +229,7 @@ end
 function parse_skills()
 	local skills = {}
 	for l in io.lines("cache/files/classskills.txt") do
+		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
 		local skillid, name, mpcost = tonumber(tbl[1]), tbl[2], tonumber(tbl[4])
 		if skillid and name and mpcost then
@@ -242,6 +250,7 @@ end
 function parse_buff_recast_skills(skills)
 	local buff_recast_skills = {}
 	for l in io.lines("cache/files/statuseffects.txt") do
+		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
 		local buffname, usecmd = tbl[2], tbl[5]
 		local castname = (usecmd or ""):match("^cast 1 ([^|]+)")
@@ -275,6 +284,7 @@ function parse_items()
 	local allitemuses = {}
 	local itemslots = { hat = "hat", shirt = "shirt", container = "container", weapon = "weapon", offhand = "offhand", pants = "pants", accessory = "accessory", familiar = "familiarequip" }
 	for l in io.lines("cache/files/items.txt") do
+		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
 		local itemid, name, picturestr, itemusestr, plural = tonumber(tbl[1]), tbl[2], tbl[4], tbl[5], tbl[8]
 		local picture = (picturestr or ""):match("^(.-)%.gif$")
@@ -313,16 +323,20 @@ function parse_items()
 		end
 	end
 	for l in io.lines("cache/files/fullness.txt") do
+		l = remove_line_junk(l)
 		do_organ_line(l, "fullness")
 	end
 	for l in io.lines("cache/files/inebriety.txt") do
+		l = remove_line_junk(l)
 		do_organ_line(l, "drunkenness")
 	end
 	for l in io.lines("cache/files/spleenhit.txt") do
+		l = remove_line_junk(l)
 		do_organ_line(l, "spleen")
 	end
 
 	for l in io.lines("cache/files/equipment.txt") do
+		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
 		local name, power, req, weaptype = tbl[1], tonumber(tbl[2]), tbl[3], tbl[4]
 		if name and req and not blacklist[name] then
@@ -352,6 +366,7 @@ function parse_items()
 	local section = nil
 	local equip_sections = { Hats = true, Containers = true, Shirts = true, Weapons = true, ["Off-hand"] = true, Pants = true, Accessories = true, ["Familiar Items"] = true }
 	for l in io.lines("cache/files/modifiers.txt") do
+		l = remove_line_junk(l)
 		section = l:match([[^# (.*) section of modifiers.txt]]) or section
 		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
 		local name2 = l:match([[^# ([^	:]+)]])
@@ -374,6 +389,7 @@ function parse_items()
 	end
 
 	for l in io.lines("cache/files/statuseffects.txt") do
+		l = remove_line_junk(l)
 		local n, i = l:match("[0-9]*	([^	]+)	.*use 1 (.+)")
 		if n and i and items[i] then
 			if not processed_datafiles["buffs"][n] then
@@ -445,8 +461,10 @@ local function parse_monster_stats(stats, monster_debug_line)
 
 				if name == "P" then
 					name = "Phylum"
+					value = value:sub(1, 1):upper() .. value:sub(2)
 				elseif name == "E" or name == "ED" then
 					name = "Element"
+					value = value:sub(1, 1):upper() .. value:sub(2)
 				end
 
 				if name == "Init" and value == -10000 then
@@ -518,6 +536,7 @@ end
 function parse_monsters()
 	local monsters = {}
 	for l in io.lines("cache/files/monsters.txt") do
+		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
 		local name, image, stats = tbl[1], tbl[2], tbl[3]
 		__parse_monster_debug = table_to_json(tbl)
@@ -552,7 +571,7 @@ function verify_monsters(data)
 			cube_ok = true
 		end
 	end
-	if data["hellion"].Stats.Element == "hot" and data["hellion"].Stats.Phylum == "demon" and data["hellion"].Stats.HP == 52 then
+	if data["hellion"].Stats.Element == "Hot" and data["hellion"].Stats.Phylum == "Demon" and data["hellion"].Stats.HP == 52 then
 		if data["hank north, photojournalist"].Stats.HP == 180 then
 			if data["beefy bodyguard bat"].Stats.Meat == 250 then
 				return data
@@ -566,6 +585,7 @@ function parse_hatrack()
 	local hatrack = {}
 
 	for l in io.lines("cache/files/modifiers.txt") do
+		l = remove_line_junk(l)
 		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
 		if name and bonuslist and not blacklist[name] and processed_datafiles["items"][name] then
 			hatrack[name] = bonuslist:match([[Familiar Effect: "(.-)"]])
@@ -592,6 +612,7 @@ function parse_recipes()
 		table.insert(recipes[item], tbl)
 	end
 	for l in io.lines("cache/files/concoctions.txt") do
+		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
 		if tbl[2] == "CLIPART" then
 			add_recipe(tbl[1], { type = "cliparts", clips = { tonumber(tbl[3]), tonumber(tbl[4]), tonumber(tbl[5]) } })
@@ -611,6 +632,7 @@ end
 function parse_familiars()
 	local familiars = {}
 	for l in io.lines("cache/files/familiars.txt") do
+		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
 		local famid, name, pic, equip = tonumber(tbl[1]), tbl[2], tbl[3], tbl[6]
 		if pic then
@@ -633,6 +655,7 @@ function parse_enthroned_familiars()
 	local enthroned_familiars = {}
 	local section = nil
 	for l in io.lines("cache/files/modifiers.txt") do
+		l = remove_line_junk(l)
 		section = l:match([[^# (.*) section of modifiers.txt]]) or section
 		local name, bonuslist = l:match([[^Throne:([^	]+)	(.+)$]])
 		if section == "Enthroned familiars" and name and bonuslist then
@@ -736,6 +759,7 @@ end
 function parse_semirares()
 	local semirares = {}
 	for l in io.lines("cache/files/KoLmafia.java") do
+		l = remove_line_junk(l)
 		local sr = l:match([[{ *"([^"]+)", *EncounterTypes.SEMIRARE *}]])
 		if sr then
 			table.insert(semirares, sr)
@@ -797,6 +821,7 @@ function parse_zones()
 	local mafia_adventures = {}
 	local mafia_adventures_inverse = {}
 	for l in io.lines("cache/files/adventures.txt") do
+		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
 		if tbl[2] and tbl[5] then
 			local zoneid = tonumber(tbl[2]:match("adventure=([0-9]*)"))
@@ -811,6 +836,7 @@ function parse_zones()
 	local found_valid = false
 	local mafia_zoneid_monsters = {}
 	for l in io.lines("cache/files/combats.txt") do
+		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
 		if mafia_adventures[tbl[1]] then
 			local monsters = {}
@@ -887,16 +913,20 @@ end
 function parse_choice_spoilers()
 	local jsonlines = {}
 	local found_adv_options = false
+	local found_adv_start = false
 	for l in io.lines("cache/files/68727.user.js") do
-		if l:match("var advOptions") then
+		l = remove_line_junk(l)
+		if l:match("var advOptions") and found_adv_start then
 			found_adv_options = true
 			table.insert(jsonlines, "{")
+		elseif l:match("function GetSpoilersForAdvNumber") then
+			found_adv_start = true
 		elseif found_adv_options then
 			if l:match("};") then
 				table.insert(jsonlines, "}")
 				break
 			else
-				l_json = l:gsub("\r", ""):gsub("//.+", ""):gsub("([0-9]+)(:%[)", [["%1"%2]]) -- Strip CRs, comments, and quote keys
+				l_json = l:gsub("\r", ""):gsub("//.*", ""):gsub("([0-9]+)(:%[)", [["%1"%2]]) -- Strip CRs, comments, and quote keys
 				l_json = l_json:gsub("\\m", "\\n") -- Correct known typo
 				l_json = l_json:gsub("%+$", ",") -- WORKAROUND: Remove code using string concatenation
 				table.insert(jsonlines, l_json)
@@ -965,4 +995,4 @@ process("consumables")
 
 process("zones")
 
-print(string.format("INFO: %d warnings displayed, %d notices ignored (expected with current data files: 0 displayed and fewer than 10000 ignored)", error_count_hard, error_count_soft))
+print(string.format("INFO: %d warnings displayed, %d notices ignored (expected with current data files: no errors, 0 warnings displayed, and fewer than 5000 notices ignored)", error_count_hard, error_count_soft))

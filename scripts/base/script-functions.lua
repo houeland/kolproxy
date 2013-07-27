@@ -35,7 +35,7 @@ do
 			if not setting_enabled("show extra warnings") then return end
 			local message, warningid, custommsg, customdisablecolor, customwarningprefix = f()
 			if message then
-				return intercept_warning { message = message, id = warningid, customdisablemsg = custommsg, customdisablecolor = customdisablecolor or "green", customwarningprefix = customwarningprefix or "Consider: " }
+				return intercept_warning { message = message, id = warningid, customdisablemsg = custommsg, customdisablecolor = customdisablecolor or "green", customwarningprefix = customwarningprefix or "Reminder: " }
 			end
 		end)
 	end
@@ -47,47 +47,8 @@ do
 			if not setting_enabled("show extra notices") then return end
 			local message, warningid, custommsg, customdisablecolor, customwarningprefix = f()
 			if message then
-				return intercept_warning { message = message, id = warningid, customdisablemsg = custommsg, customdisablecolor = customdisablecolor or "rgb(51, 153, 51)", customwarningprefix = customwarningprefix or "Notice: " }
+				return intercept_warning { message = message, id = warningid, customdisablemsg = custommsg, customdisablecolor = customdisablecolor or "rgb(91, 203, 121)", customwarningprefix = customwarningprefix or "Notice: " }
 			end
-		end)
-	end
-
-	function add_ascension_warning(filename, f)
-		if filename == "/adventure.php" then error("Use add_ascension_adventure_warning instead of warning on /adventure.php") end
-		__raw_add_warning(filename, function()
-			if ascensionstatus() == "Aftercore" then return end
-			return f()
-		end)
-	end
-
-	function add_extra_ascension_warning(filename, f)
-		if filename == "/adventure.php" then error("Use add_extra_ascension_adventure_warning instead of warning on /adventure.php") end
-		__raw_add_extra_warning(filename, function()
-			if ascensionstatus() == "Aftercore" then return end
-			return f()
-		end)
-	end
-
-	function add_aftercore_warning(filename, f)
-		if filename == "/adventure.php" then error("Use add_aftercore_adventure_warning instead of warning on /adventure.php") end
-		__raw_add_warning(filename, function()
-			if ascensionstatus() ~= "Aftercore" then return end
-			return f()
-		end)
-	end
-
-	function add_always_warning(filename, f)
-		if filename == "/adventure.php" then error("Use add_always_adventure_warning instead of warning on /adventure.php") end
-		__raw_add_warning(filename, function()
-			return f()
-		end)
-	end
-
-	function add_extra_always_warning(filename, f)
-		if filename == "/adventure.php" then error("Use add_extra_always_adventure_warning instead of warning on /adventure.php") end
-		__raw_add_extra_warning(filename, function()
-			if not setting_enabled("show extra warnings") then return end
-			return f()
 		end)
 	end
 
@@ -97,6 +58,72 @@ do
 	function get_raw_adventure_warnings()
 		return __raw_adventure_warnings, __raw_extra_adventure_warnings, __raw_adventure_notices
 	end
+
+	local function add_warning_internal(warntype, path, f)
+		if type(path) ~= "table" then
+			path = { path }
+		end
+		if warntype == "extra" then
+			-- TODO: redo these local tables with warnings, at least give them paths, or preferably reuse normal stuff
+			if path == "/adventure.php" then
+				localtable.insert(__raw_extra_adventure_warnings, f)
+			end
+			for _, p in ipairs(path) do
+				__raw_add_extra_warning(p, f)
+			end
+		elseif warntype == "warning" then
+			if path == "/adventure.php" then
+				localtable.insert(__raw_adventure_warnings, f)
+			end
+			for _, p in ipairs(path) do
+				__raw_add_warning(p, f)
+			end
+		elseif warntype == "notice" then
+			if path == "/adventure.php" then
+				localtable.insert(__raw_adventure_notices, f)
+			end
+			for _, p in ipairs(path) do
+				__raw_add_notice(p, f)
+			end
+		else
+			error("Invalid warning severity: " .. tostring(warntype))
+		end
+	end
+
+
+	function add_ascension_warning(filename, f)
+		add_warning_internal("warning", filename, function()
+			if ascensionstatus() == "Aftercore" then return end
+			return f()
+		end)
+	end
+
+	function add_extra_ascension_warning(filename, f)
+		add_warning_internal("extra", filename, function()
+			if ascensionstatus() == "Aftercore" then return end
+			return f()
+		end)
+	end
+
+	function add_aftercore_warning(filename, f)
+		add_warning_internal("warning", filename, function()
+			if ascensionstatus() ~= "Aftercore" then return end
+			return f()
+		end)
+	end
+
+	function add_always_warning(filename, f)
+		add_warning_internal("warning", filename, function()
+			return f()
+		end)
+	end
+
+	function add_extra_always_warning(filename, f)
+		add_warning_internal("extra", filename, function()
+			return f()
+		end)
+	end
+
 	local function add_raw_adventure_warning(f)
 		localtable.insert(__raw_adventure_warnings, f)
 		__raw_add_warning("/adventure.php", function()
@@ -194,9 +221,6 @@ do
 		check_supported_table_values(tbl, {}, { "message", "check", "severity", "zone", "when", "idgenerator", "path" })
 		local want_zoneid = tbl.zone and get_zoneid(tbl.zone)
 		local path = tbl.path or "/adventure.php"
-		if type(path) ~= "table" then
-			path = { path }
-		end
 		local function f()
 			if tbl.when == "ascension" and ascensionstatus("Aftercore") then return end
 			local zoneid = tonumber(params.snarfblat)
@@ -215,25 +239,7 @@ do
 				return msg, warnid
 			end
 		end
-		if tbl.severity == "extra" then
-			-- TODO: redo these local tables with warnings, at least give them paths, or preferably reuse normal stuff
-			localtable.insert(__raw_extra_adventure_warnings, f)
-			for _, p in ipairs(path) do
-				__raw_add_extra_warning(p, f)
-			end
-		elseif tbl.severity == "warning" then
-			localtable.insert(__raw_adventure_warnings, f)
-			for _, p in ipairs(path) do
-				__raw_add_warning(p, f)
-			end
-		elseif tbl.severity == "notice" then
-			localtable.insert(__raw_adventure_notices, f)
-			for _, p in ipairs(path) do
-				__raw_add_notice(p, f)
-			end
-		else
-			error("Invalid warning severity: " .. tostring(tbl.severity))
-		end
+		add_warning_internal(tbl.type, path, f)
 	end
 
 	local added_automation_handler = false
@@ -349,20 +355,21 @@ function autoadventure(tbl)
 	return handle_adventure_result(pt, url, tbl.zoneid, tbl.macro, tbl.noncombatchoices or {}, tbl.specialnoncombatfunction)
 end
 
+function get_element_names()
+	return { "Cold", "Hot", "Sleaze", "Spooky", "Stench" }
+end
+
 function get_resistance_levels()
 	local charpage = get_page("/charsheet.php")
-	local elements = {
-		cold = "Cold",
-		hot = "Hot",
-		sleaze = "Sleaze",
-		spooky = "Spooky",
-		stench = "Stench",
-	}
 	local resists = {}
-	for x, y in pairs(elements) do
-		resists[x] = tonumber(charpage:match([[<td align=right>]]..y..[[ Protection:</td><td><b>[^>()]+%(([0-9]+)%)</b></td>]]))
+	for _, x in pairs(get_element_names()) do
+		resists[x] = tonumber(charpage:match([[<td align=right>]]..x..[[ Protection:</td><td><b>[^>()]+%(([0-9]+)%)</b></td>]]))
 	end
 	return resists
+end
+
+function get_resistance_level(elem)
+	return get_resistance_levels()[elem] or 0
 end
 
 function get_elemental_weaknesses(element)
@@ -402,37 +409,33 @@ function check_supported_table_values(tbl, optional, mandatory)
 	for _, x in ipairs(mandatory) do
 		ok_keys[x] = true
 		if not tbl[x] then
---			if playername() == "Eleron" then print("DEBUG: missing mandatory param", x) end
+			print("DEBUG: missing mandatory param", x)
 --			error("Missing mandatory table parameter value: " .. tostring(x))
 		end
 	end
 	for x, _ in pairs(tbl) do
 		if not ok_keys[x] then
---			if playername() == "Eleron" then print("DEBUG: unsupported param", x, tbl[x]) end
+			print("DEBUG: unsupported param", x, tbl[x])
 --			error("Unsupported table parameter value: " .. tostring(x))
 		end
 	end
 end
 
-local resistphials = {
-	cold = { resistform = "Coldform", doubledmgform1 = "Sleazeform", doubledmgform2 = "Stenchform" },
-	hot = { resistform = "Hotform", doubledmgform1 = "Spookyform", doubledmgform2 = "Coldform" },
-	sleaze = { resistform = "Sleazeform", doubledmgform1 = "Stenchform", doubledmgform2 = "Hotform" },
-	spooky = { resistform = "Spookyform", doubledmgform1 = "Coldform", doubledmgform2 = "Sleazeform" },
-	stench = { resistform = "Stenchform", doubledmgform1 = "Hotform", doubledmgform2 = "Spookyform" },
-}
-
 function estimate_damage(tbl)
-	check_supported_table_values(tbl, { "cold", "hot", "sleaze", "spooky", "stench", "__resistance_levels" })
+	check_supported_table_values(tbl, { "Cold", "Hot", "Sleaze", "Spooky", "Stench", "__resistance_levels" })
 	local resists = tbl.__resistance_levels or get_resistance_levels()
 	local dmg = {}
-	for _, dmgtype in ipairs { "cold", "hot", "sleaze", "spooky", "stench" } do
+	for _, dmgtype in pairs(get_element_names()) do
 		if tbl[dmgtype] then
 			local formmult = 1
-			if have_buff(resistphials[dmgtype].resistform) then
+			for _, testtype in pairs(get_element_names()) do
+				local a, b = get_elemental_weaknesses(testtype)
+				if (a == dmgtype or b == dmgtype) and have_buff(testtype .. "form") then
+					formmult = 2
+				end
+			end
+			if have_buff(dmgtype .. "form") then
 				formmult = 0
-			elseif have_buff(resistphials[dmgtype].doubledmgform1) or have_buff(resistphials[dmgtype].doubledmgform2) then
-				formmult = 2
 			end
 			dmg[dmgtype] = math.max(1, tbl[dmgtype] * formmult * elemental_resist_level_multiplier(resists[dmgtype] or 0))
 		end
@@ -448,19 +451,23 @@ function table_apply_function(tbl, f)
 	return ret
 end
 
-local resistcolors = {
-	cold = "blue",
-	hot = "red",
-	sleaze = "blueviolet",
-	spooky = "gray",
-	stench = "green",
+local element_color_lookup = {
+	Hot = "red",
+	Cold = "blue",
+	Spooky = "gray",
+	Stench = "green",
+	Sleaze = "blueviolet",
 }
 
+function element_color(x)
+	return element_color_lookup[x]
+end
+
 function markup_damagetext(tbl)
-	check_supported_table_values(tbl, { "cold", "hot", "sleaze", "spooky", "stench" })
+	check_supported_table_values(tbl, get_element_names())
 	local dmgtext = {}
 	for x, y in pairs(tbl) do
-		dmgtext[x] = [[<b style="color: ]]..resistcolors[x]..[[">]]..y..[[</b>]]
+		dmgtext[x] = [[<b style="color: ]]..(element_color(x) or "black")..[[">]]..y..[[</b>]]
 	end
 	return dmgtext
 end

@@ -25,7 +25,7 @@ add_choice_text("More Locker Than Morlock", { -- choice adventure number: 556
 
 add_warning {
 	message = "You already have the mining outfit.",
-	severity = "warning",
+	type = "warning",
 	zone = "Itznotyerzitz Mine",
 	check = function()
 		return not ascensionstatus("Aftercore") and have_item("7-Foot Dwarven mattock") and have_item("miner's helmet") and have_item("miner's pants")
@@ -377,28 +377,28 @@ end)
 
 function predict_aboo_peak_banish()
 	local resists = get_resistance_levels()
-	local accumuldmg = { cold = 0, spooky = 0 }
+	local accumuldmg = { Cold = 0, Spooky = 0 }
 	local accumulbanish = 0
 	local nextbanish = 2
 	local beatenup = false
 	local msglines = {}
 	for _, dmg in ipairs { 13, 25, 50, 125, 250 } do
-		local dmg = table_apply_function(estimate_damage { cold = dmg, spooky = dmg, __resistance_levels = resists }, math.ceil)
-		accumuldmg.cold = accumuldmg.cold + dmg.cold
-		accumuldmg.spooky = accumuldmg.spooky + dmg.spooky
+		local dmg = table_apply_function(estimate_damage { Cold = dmg, Spooky = dmg, __resistance_levels = resists }, math.ceil)
+		accumuldmg.Cold = accumuldmg.Cold + dmg.Cold
+		accumuldmg.Spooky = accumuldmg.Spooky + dmg.Spooky
 		if beatenup then
 			local dmgtext = markup_damagetext(accumuldmg)
-			table.insert(msglines, string.format("Failed: %d (%s + %s)", accumuldmg.cold + accumuldmg.spooky, dmgtext.cold, dmgtext.spooky))
-		elseif accumuldmg.cold + accumuldmg.spooky < hp() then
+			table.insert(msglines, string.format("Failed: %d (%s + %s)", accumuldmg.Cold + accumuldmg.Spooky, dmgtext.Cold, dmgtext.Spooky))
+		elseif accumuldmg.Cold + accumuldmg.Spooky < hp() then
 			accumulbanish = accumulbanish + nextbanish
 			nextbanish = nextbanish + 2
 			local dmgtext = markup_damagetext(accumuldmg)
-			table.insert(msglines, string.format("%d%%: %d (%s + %s)", accumulbanish, accumuldmg.cold + accumuldmg.spooky, dmgtext.cold, dmgtext.spooky))
+			table.insert(msglines, string.format("%d%%: %d (%s + %s)", accumulbanish, accumuldmg.Cold + accumuldmg.Spooky, dmgtext.Cold, dmgtext.Spooky))
 		else
 			accumulbanish = accumulbanish + 2
 			beatenup = true
 			local dmgtext = markup_damagetext(accumuldmg)
-			table.insert(msglines, string.format("%d%% (beaten up): %d (%s + %s)", accumulbanish, accumuldmg.cold + accumuldmg.spooky, dmgtext.cold, dmgtext.spooky))
+			table.insert(msglines, string.format("%d%% (beaten up): %d (%s + %s)", accumulbanish, accumuldmg.Cold + accumuldmg.Spooky, dmgtext.Cold, dmgtext.Spooky))
 		end
 		--print("DEBUG: accumuldmg", accumuldmg, "accumulbanish", accumulbanish)
 	end
@@ -411,7 +411,7 @@ add_extra_ascension_adventure_warning(function(zoneid)
 			local accumulbanish, accumuldmg = predict_aboo_peak_banish()
 			if accumulbanish < 30 then
 				local dmgtext = markup_damagetext(accumuldmg)
-				return string.format([[<p>You only have enough HP to lower haunting level by %s%% (max is 30%%).</p><p>Maximum reduction would require at least %s HP (taking %s + %s damage) or higher resistance.</p>]], accumulbanish, accumuldmg.cold + accumuldmg.spooky + 1, dmgtext.spooky, dmgtext.cold), "a-boo peak incomplete banish"
+				return string.format([[<p>You only have enough HP to lower haunting level by %s%% (max is 30%%).</p><p>Maximum reduction would require at least %s HP (taking %s + %s damage) or higher resistance.</p>]], accumulbanish, accumuldmg.Cold + accumuldmg.Spooky + 1, dmgtext.Spooky, dmgtext.Cold), "a-boo peak incomplete banish"
 			end
 		end
 		if ascensionpathid() ~= 4 and not ascension["zone.aboo peak.clue active"] then
@@ -426,7 +426,7 @@ end)
 local aboo_peak_banish_href = add_automation_script("aboo-peak-banish", function()
 	local accumulbanish, accumuldmg, msglines = predict_aboo_peak_banish()
 	local dmgtext = markup_damagetext(accumuldmg)
-	return string.format([[<p>You have enough HP to lower haunting level by %s%% (max is 30%%).</p><p>Maximum reduction requires at least %s HP (taking %s + %s damage) or higher resistance.</p><p>%s</p>]], accumulbanish, accumuldmg.cold + accumuldmg.spooky + 1, dmgtext.spooky, dmgtext.cold, table.concat(msglines, "<br>\n")), requestpath
+	return string.format([[<p>You have enough HP to lower haunting level by %s%% (max is 30%%).</p><p>Maximum reduction requires at least %s HP (taking %s + %s damage) or higher resistance.</p><p>%s</p>]], accumulbanish, accumuldmg.Cold + accumuldmg.Spooky + 1, dmgtext.Spooky, dmgtext.Cold, table.concat(msglines, "<br>\n")), requestpath
 end)
 
 add_printer("/place.php", function()

@@ -47,14 +47,14 @@ register_setting {
 
 register_setting {
 	name = "enable adventure warnings",
-	description = "Enable adventuring mistake warnings about semirares, not enough meat, etc.",
+	description = "Enable important adventure warnings about semirares, not having enough meat, already having an outfit, etc.",
 	group = "warnings",
 	default_level = "limited",
 }
 
 register_setting {
 	name = "show extra warnings",
-	description = "Add many extra adventure warnings for things that are worth thinking about but not necessarily mistakes",
+	description = "Add many extra reminders for things that are worth thinking about but not necessarily mistakes",
 	group = "warnings",
 	default_level = "detailed",
 	parent = "enable adventure warnings",

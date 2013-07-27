@@ -1,5 +1,8 @@
 local function load_datafile(datafilename)
 	local fobj = io.open("cache/data/" .. datafilename:gsub(" ", "-") .. ".json")
+	if not fobj then
+		error("Couldn't load datafile: " .. tostring(datafilename))
+	end
 	local str = fobj:read("*a")
 	fobj:close()
 	local data = json_to_table(str)

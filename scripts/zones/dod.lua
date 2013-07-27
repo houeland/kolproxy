@@ -211,7 +211,7 @@ end)
 
 add_warning {
 	message = "Fighting the mimic costs 5000 meat.",
-	severity = "extra",
+	type = "extra",
 	zone = "The Dungeons of Doom",
 	check = function() return meat() < 5000 end,
 }

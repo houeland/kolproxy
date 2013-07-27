@@ -21,7 +21,7 @@ function determine_best_flavour_vs_monsterlist(monsterlist, default)
 	for _, mname in ipairs(monsterlist) do
 		local m = maybe_get_monsterdata(mname)
 		if m and m.Stats and m.Stats.Element then
-			local element = m.Stats.Element:sub(1, 1):upper() .. m.Stats.Element:sub(2)
+			local element = m.Stats.Element
 			scores[element] = scores[element] - 1000
 			local w1, w2 = get_elemental_weaknesses(element)
 			scores[w1] = scores[w1] + 10
@@ -56,7 +56,7 @@ add_interceptor("/adventure.php", function()
 			local want_element = determine_best_flavour_vs_monsterlist(x.monsters or {}, default)
 			local want_flavour = flavour_of_magic_intrinsics[want_element]
 			if not have_intrinsic(want_flavour) then
-				print("WANT!", want_flavour, "vs", x.monsters or {})
+				--print("WANT!", want_flavour, "vs", x.monsters or {})
 				cast_skill(want_flavour)
 				if not have_intrinsic(want_flavour) then
 					print("ERROR: failed to set flavour to", want_flavour)

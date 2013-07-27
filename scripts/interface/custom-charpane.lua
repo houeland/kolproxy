@@ -463,7 +463,7 @@ local cached_workarounds = {}
 local function work_around_broken_status_lastadv(advdata)
 	if advdata.container == "place.php" then
 		if not cached_workarounds[advdata.name] then
-			print([[INFO: Working around server API bug (for ]] .. tostring(advdata.name) .. [[). Shout at CDMoyer about lastadv.container for place.php!]])
+			print([[INFO: Working around server API bug (for ]] .. tostring(advdata.name) .. [[). Shout at CDMoyer about lastadv.container bug for place.php!]])
 			async_post_page("/account.php", { am = 1, pwd = session.pwd, action = "flag_compactchar", value = 0, ajax = 1 })
 			local pt = get_page("/charpane.php")
 			local real_container = pt:match([[href="(place.php%?whichplace=[^"]-)"]])

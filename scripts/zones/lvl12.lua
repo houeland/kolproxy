@@ -220,14 +220,15 @@ add_printer("/fight.php", function()
 end)
 
 add_processor("/postwarisland.php", function()
-	if text:contains("The Sisters give you an invigorating massage.") then
+	if text:contains("The Sisters give you an invigorating massage.") or text:contains("The Sisters tend to your wounds.") then
 		increase_daily_counter("zone.island.nun massage")
 	end
 end)
 
 add_printer("/postwarisland.php", function()
-	if text:contains("The Sisters give you an invigorating massage.") then
+	if text:contains("The Sisters give you an invigorating massage.") or text:contains("The Sisters tend to your wounds.") then
 		text = text:gsub("(The Sisters give you an invigorating massage.)", [[<span style="color: green">%1</span> { ]]..get_daily_counter("zone.island.nun massage")..[[ / 3 times today. }]])
+		text = text:gsub("(The Sisters tend to your wounds.)", [[<span style="color: green">%1</span> { ]]..get_daily_counter("zone.island.nun massage")..[[ / 3 times today. }]])
 	end
 end)
 
