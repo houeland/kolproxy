@@ -105,6 +105,7 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		"Muscle",
 		"Mysticality",
 		"Moxie",
+		"Adventures per day",
 	}
 
 	local whichbonus = params.whichbonus or "Item Drops from Monsters"

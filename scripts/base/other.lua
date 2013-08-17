@@ -428,7 +428,7 @@ add_ascension_assistance(function() return not picked_up_free_pulls end, functio
 		freepull_item("cursed microwave")
 		freepull_item("cursed pony keg")
 	end
-	if ascensionpathid() == 8 and not have_item("Boris's Helm") and not have_item("Boris's Helm (askew)") then
+	if ascensionpath("Avatar of Boris") and not have_item("Boris's Helm") and not have_item("Boris's Helm (askew)") then
 		freepull_item("Boris's Helm")
 		freepull_item("Boris's Helm (askew)")
 	end
@@ -445,7 +445,7 @@ add_ascension_assistance(function() return not talked_to_toot end, function()
 		async_get_page("/tutorial.php", { action = "toot" })
 		use_item("letter from King Ralph XI")
 		async_post_page("/galaktik.php", { action = "startquest", pwd = session.pwd })
-		if ascensionpathid() ~= 4 then
+		if not ascensionpath("Bees Hate You") then
 			use_item("Newbiesport&trade; tent")
 		end
 	end
@@ -453,7 +453,7 @@ add_ascension_assistance(function() return not talked_to_toot end, function()
 end)
 
 -- Use Cobb's Knob map
-add_ascension_assistance(function() return have_item("Knob Goblin encryption key") and have_item("Cobb's Knob map") and ascensionpathid() ~= 4 end, function()
+add_ascension_assistance(function() return have_item("Knob Goblin encryption key") and have_item("Cobb's Knob map") and not ascensionpath("Bees Hate You") end, function()
 	use_item("Cobb's Knob map")
 end)
 

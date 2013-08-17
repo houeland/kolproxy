@@ -4,7 +4,7 @@ end
 
 function meatpaste_items(a, b)
 	-- TODO: can this be done without requiring up-to-date status?
-	if moonsign_area("Degrassi Knoll") and ascensionpathid() ~= 10 then
+	if moonsign_area("Degrassi Knoll") and not ascensionpath("Zombie Slayer") then
 		return async_post_page("/knoll.php", { action = "combine", pwd = session.pwd, item1 = get_itemid(a), item2 = get_itemid(b), quantity = 1, ajax = 1 })
 	else
 		if not have_item("meat paste") then

@@ -1,46 +1,3 @@
-add_processor("/fight.php", function()
-	if newly_started_fight then
-		session["cached stinky cheese eye bonus"] = nil
-	end
-end)
-
-add_processor("/inv_equip.php", function()
-	session["cached stinky cheese eye bonus"] = nil
-end)
-
-add_processor("/choice.php", function()
-	if text:contains("snow suit") then
-		session["cached Snow Suit bonus"] = nil
-	end
-end)
-
-add_automator("all pages", function()
-	if have_equipped_item("stinky cheese eye") and not session["cached stinky cheese eye bonus"] then
-		local pt = get_page("/desc_item.php", { whichitem = 548672093 })
-		local bonus = pt:match([[>%+([0-9]+)%% Item Drops from Monsters<]])
-		session["cached stinky cheese eye bonus"] = bonus
-	end
-end)
-
-add_automator("all pages", function()
-	if have_equipped_item("Jekyllin hide belt") and not session["cached Jekyllin hide belt bonus"] then
-		local pt = get_page("/desc_item.php", { whichitem = 253195678 })
-		local bonus = pt:match([[>%+([0-9]+)%% Item Drops from Monsters<]])
-		session["cached Jekyllin hide belt bonus"] = bonus
-	end
-end)
-
-add_automator("all pages", function()
-	if have_equipped_item("Snow Suit") and not session["cached Snow Suit bonus"] then
-		local pt = get_page("/charpane.php")
-		if pt:contains("/snowface3.gif") then
-			session["cached Snow Suit bonus"] = 10
-		else
-			session["cached Snow Suit bonus"] = 0
-		end
-	end
-end)
-
 local vanilla_fairy = {
 	slimeling = true,
 	stompboots = true,
@@ -73,7 +30,7 @@ local vanilla_fairy = {
 }
 
 local function estimate_fam_item()
-	if ascensionpathid() == 8 then
+	if ascensionpath("Avatar of Boris") then
 		if clancy_instrumentid() == 3 then
 			return fairy_bonus(clancy_level() * 5)
 		else

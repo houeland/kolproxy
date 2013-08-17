@@ -139,10 +139,19 @@ automation_script_details_list["get-faxbot-monster"] = { simple_link = "clan_vip
 automation_script_details_list["custom-ascension-checklist"] = { simple = true, description = "Ascension checklist" }
 automation_script_details_list["automate-suburbandis"] = { when = function() return ascension["suburbandis.defeated thing with no name"] ~= "yes" end, description = "Automate Suburban Dis quest" }
 automation_script_details_list["castle-farming"] = { simple_link = "beanstalk.php", description = "Automate Castle meat farming (link to beanstalk)" }
-automation_script_details_list["lua-console"] = { simple = true, description = "Go to Lua console" }
+--automation_script_details_list["lua-console"] = { simple = true, description = "Go to Lua console" }
 automation_script_details_list["add-log-notes"] = { simple = true, description = "Add note to ascension log" }
-automation_script_details_list["automate-aftercore-pulls"] = { when = function() return true end, description = "Pull a selection of useful aftercore items from Hagnks storage" }
+automation_script_details_list["automate-aftercore-pulls"] = { simple = true, description = "Pull a selection of useful aftercore items from Hagnks storage" }
 automation_script_details_list["setup-ascension-automation"] = { simple = true, description = "Setup ascension automation script" }
+automation_script_details_list["custom-inventory-diff"] = { simple = true, description = "Show items found this session" }
+
+automation_script_details_list["custom-cosmic-kitchen"] = { simple = true, description = "Cosmic kitchen dinner planner" }
+automation_script_details_list["custom-choose-mad-tea-party-hat"] = { simple = true, description = "Choose hat for mad tea party" }
+automation_script_details_list["custom-modifier-maximizer"] = { simple = true, description = "Modifier maximizer (preview)" }
+automation_script_details_list["custom-compute-net-worth"] = { simple = true, description = "Compute net worth (preview)" }
+automation_script_details_list["display-tracked-variables"] = { simple = true, description = "Display tracked game variables (preview)" }
+automation_script_details_list["custom-mix-drinks"] = { simple = true, description = "List advanced cocktails you can craft (preview)" }
+automation_script_details_list["custom-ascension-checklist"] = { simple = true, description = "Pre-ascension pull stocking checklist" }
 
 custom_aftercore_automation_href = add_automation_script("custom-aftercore-automation", function()
 	local questlogcompleted_page = get_page("/questlog.php", { which = 2 })
@@ -154,25 +163,43 @@ custom_aftercore_automation_href = add_automation_script("custom-aftercore-autom
 		return accomplishments_page:contains(text)
 	end
 
-	local goodlinks = {}
 	local links = {}
 	for x in pairs(get_automation_script_links()) do
 		local tbl = automation_script_details_list[x]
 		if tbl and tbl.description then
 			if tbl.simple_link then
-				table.insert(goodlinks, [[<a href="]]..tbl.simple_link..[[">]]..tbl.description..[[</a>]])
+				table.insert(links, { priority = 2, title = "Automation", link = tbl.simple_link, description = tbl.description })
 			elseif tbl.simple then
-				table.insert(goodlinks, [[<a href="kolproxy-automation-script?automation-script=]]..(tbl.name or x)..[[&pwd=]]..session.pwd..[[">]]..tbl.description..[[</a>]])
+				table.insert(links, { priority = 3, title = "Information", link = [[kolproxy-automation-script?automation-script=]]..(tbl.name or x)..[[&pwd=]]..session.pwd, description = tbl.description })
 			elseif (ascensionstatus("Aftercore") or tbl.can_automate_inrun) and tbl.when and tbl.when() then
-				table.insert(goodlinks, [[<a href="kolproxy-automation-script?automation-script=]]..(tbl.name or x)..[[&pwd=]]..session.pwd..[[">]]..tbl.description..[[</a>]])
+				table.insert(links, { priority = 1, title = "Quests", link = [[kolproxy-automation-script?automation-script=]]..(tbl.name or x)..[[&pwd=]]..session.pwd, description = tbl.description })
 			else
-				table.insert(goodlinks, [[<span style="color: gray">]]..tbl.description..[[</a>]])
+				table.insert(links, { priority = 1, title = "Quests", link = nil, description = tbl.description })
 			end
-		else
---			table.insert(links, [[<a href="kolproxy-automation-script?automation-script=]]..x..[[&pwd=]]..session.pwd..[[">]]..x..[[</a>]])
 		end
 	end
-	return "Note: Work in progress, currently missing an interface<br><br>" .. table.concat(goodlinks, "<br>") .. "<br><br>" .. table.concat(links, "<br>"), requestpath
+
+	table.sort(links, function(a, b)
+		if a.priority ~= b.priority then
+			return a.priority < b.priority
+		end
+		return a.description < b.description
+	end)
+	local lines = {}
+	local header = nil
+	for _, x in ipairs(links) do
+		if header ~= x.title then
+			table.insert(lines, string.format([[<h4>%s</h4>]], x.title))
+			header = x.title
+		end
+		if x.link then
+			table.insert(lines, string.format([[<a href="%s" style="color: green">%s</a><br>]], x.link, x.description))
+		else
+			table.insert(lines, string.format([[<span style="color: gray">%s</span><br>]], x.description))
+		end
+	end
+
+	return make_kol_html_frame(table.concat(lines, "\n"), "Setup/run scripts"), requestpath
 end)
 
 function maybe_pull_item(name, input_amount)

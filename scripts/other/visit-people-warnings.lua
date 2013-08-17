@@ -3,7 +3,7 @@ add_warning {
 	type = "notice",
 	when = "ascension",
 	check = function(zoneid)
-		if ascensionpathid() == 8 or ascensionpathid() == 10 or ascensionpath("Avatar of Jarlsberg") then return false end
+		if ascensionpath("Avatar of Boris") or ascensionpath("Zombie Slayer") or ascensionpath("Avatar of Jarlsberg") then return false end
 		if daysthisrun() == 1 or level() < 5 then
 			if (zoneid == 114 and mainstat_type("Muscle")) or (zoneid == 113 and mainstat_type("Mysticality")) or (zoneid == 112 and mainstat_type("Moxie")) then
 				return true
@@ -45,7 +45,7 @@ add_warning {
 	type = "notice",
 	when = "ascension",
 	check = function(zoneid)
-		if ascensionpathid() == 10 then return end
+		if ascensionpath("Zombie Slayer") then return end
 		if daysthisrun() == 1 or level() < 5 then
 			if zoneid == 112 or zoneid == 113 or zoneid == 114 then
 				return true

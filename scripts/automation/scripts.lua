@@ -381,7 +381,7 @@ function get_automation_scripts(cached_stuff)
 			if count_item("ten-leaf clover") <= c then
 				critical "Failed to trade for ten-leaf clover"
 			end
-			if ascensionpathid() == 4 then
+			if ascensionpath("Bees Hate You") then
 				closet_item("ten-leaf clover")
 			else
 				use_item("ten-leaf clover")
@@ -872,7 +872,7 @@ function get_automation_scripts(cached_stuff)
 			["Heavy Petting"] = true,
 			["Peeled Eyeballs"] = true,
 		}
-		if ascensionpathid() == 8 and not ignore_buffing_and_outfit then
+		if ascensionpath("Avatar of Boris") and not ignore_buffing_and_outfit then
 			if want_bonus.boris_song then
 				table.insert(xs, want_bonus.boris_song)
 			end
@@ -1522,6 +1522,7 @@ endif
 			elseif cached_stuff.trained_jarlsberg_skills_level == level() then
 				stop "TODO: Eat food in jarlsberg"
 			end
+			return
 		end
 		if highskill_at_run then return end
 		if ascensionstatus() ~= "Hardcore" then return end
@@ -3426,10 +3427,10 @@ mark m_done
 				end
 				if have_item("ten-leaf clover") then
 					script.ensure_buffs { "Astral Shell" }
-					if not get_resistance_level("Stench") then
+					if get_resistance_level("Stench") <= 0 then
 						script.maybe_ensure_buffs { "Elemental Saucesphere", "Oilsphere" }
 					end
-					if not get_resistance_level("Stench") and not have_buff("Super Structure") and have_item("Greatest American Pants") then
+					if get_resistance_level("Stench") <= 0 and not have_buff("Super Structure") and have_item("Greatest American Pants") then
 						wear { pants = "Greatest American Pants" }
 						script.get_gap_buff("Super Structure")
 					end

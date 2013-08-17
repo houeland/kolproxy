@@ -163,7 +163,7 @@ add_extra_ascension_warning("/inv_eat.php", function()
 end)
 
 add_always_warning("/inv_eat.php", function()
-	if ascensionpathid() == 8 then
+	if ascensionpath("Avatar of Boris") then
 		return check_eating_warning(tonumber(params.whichitem), (tonumber(params.quantity) or 1), "Song of the Glorious Lunch")
 	end
 end)

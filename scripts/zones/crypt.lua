@@ -6,21 +6,20 @@ add_choice_text("Turn Your Head and Coffin", { -- choice adventure number: 153
 })
 
 add_choice_text("Skull, Skull, Skull", function() 
-	if ascensionpathid() == 10 then
+	if ascensionpath("Zombie Slayer") then
 		return { -- choice adventure number: 155
-		   ["Check behind the first one"] = "Gain moxie, or get Hovering Skull familiar if you don't already have it",
-		   ["Look inside the second one"] = { getmeatmin = 200, getmeatmax = 300 },
-		   ["See what's under the third one"] = "Gain rusty bonesaw",
-		   ["Leave the skulls alone"] = { leave_noturn = true, good_choice = true },
+			["Check behind the first one"] = "Gain moxie, or get Hovering Skull familiar if you don't already have it",
+			["Look inside the second one"] = { getmeatmin = 200, getmeatmax = 300 },
+			["See what's under the third one"] = "Gain rusty bonesaw",
+			["Leave the skulls alone"] = { leave_noturn = true, good_choice = true },
 		}
 	else
 		return { -- choice adventure number: 155
-		   ["Check behind the first one"] = "Gain moxie",
-		   ["Look inside the second one"] = { getmeatmin = 200, getmeatmax = 300 },
-		   ["See what's under the third one"] = "Gain rusty bonesaw",
-		   ["Leave the skulls alone"] = { leave_noturn = true, good_choice = true },
+			["Check behind the first one"] = "Gain moxie",
+			["Look inside the second one"] = { getmeatmin = 200, getmeatmax = 300 },
+			["See what's under the third one"] = "Gain rusty bonesaw",
+			["Leave the skulls alone"] = { leave_noturn = true, good_choice = true },
 		}
-
 	end
 end)
 

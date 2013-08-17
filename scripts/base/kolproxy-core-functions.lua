@@ -583,7 +583,7 @@ function load_buff_extension_info()
 	local info = {}
 	for x, y in pairs(buff_recast_skills) do
 		info[x] = { skillname = y, skillid = skills[y].skillid, mpcost = skills[y].mpcost }
-		if ascensionpathid() == 10 then
+		if ascensionpath("Zombie Slayer") then
 			info[x].zombiecost = info[x].mpcost
 			info[x].mpcost = 0
 		end

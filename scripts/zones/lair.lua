@@ -114,7 +114,7 @@ add_automator("/campground.php", function()
 end)
 
 function requires_wand_of_nagamar()
-	return ascensionpathid() ~= 8 and ascensionpathid() ~= 10 and not ascensionpath("Avatar of Jarlsberg")
+	return not ascensionpath("Avatar of Boris") and not ascensionpath("Zombie Slayer") and not ascensionpath("Avatar of Jarlsberg")
 end
 
 add_printer("/campground.php", function()
@@ -236,7 +236,7 @@ add_printer("/campground.php", function()
 					local have_star_weapon = have_item("star sword") or have_item("star staff") or have_item("star crossbow")
 					local extrastrs = {}
 					local wantstaritems = { "star hat", "star sword", "star staff", "star crossbow" }
-					if ascensionpathid() == 4 or ascensionpathid() == 8 then
+					if ascensionpath("Bees Hate You") or ascensionpath("Avatar of Boris") then
 						wantstaritems = { "star hat" }
 						have_star_weapon = true
 					end
@@ -349,7 +349,7 @@ add_printer("/campground.php", function()
 		end
 
 		local extratext = {}
-		if ascensionpathid() ~= 4 then
+		if not ascensionpath("Bees Hate You") then
 			table.insert(extratext, [[<h4>Lair gates</h4>]] .. table.concat(get_gates_display_lines(), "<br>") .. [[</p>]])
 			table.insert(extratext, [[<h4>Dungeons of Doom potions</h4><p>]] .. table.concat(get_dod_display_lines(), "<br>") .. [[</p>]])
 		end
@@ -1137,7 +1137,7 @@ end)
 
 add_always_warning("/lair6.php", function()
 	if tonumber(params.place) == 5 and not have_item("Wand of Nagamar") then
-		if ascensionpathid() == 8 or ascensionpathid() == 10 or ascensionpath("Avatar of Jarlsberg") then return end
+		if ascensionpath("Avatar of Boris") or ascensionpath("Zombie Slayer") or ascensionpath("Avatar of Jarlsberg") then return end
 		return "A Wand of Nagamar is recommended for the sorceress fight.", "sorceress-wand-of-nagamar"
 	end
 end)

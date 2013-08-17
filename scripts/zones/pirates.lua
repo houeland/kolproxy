@@ -177,7 +177,7 @@ add_interceptor("use item: Orcish Frat House blueprints", function() -- TODO: sp
 		for _, want in pairs(opt.equipment) do
 			if not have(want) and not buyable[want] then
 				possible = false
-			elseif want == "homoerotic frat-paddle" and (ascensionpathid() == 6 or ascensionpathid() == 8) then
+			elseif want == "homoerotic frat-paddle" and (ascensionpath("Way of the Surprising Fist") or ascensionpath("Avatar of Boris")) then
 				-- Can't use in fist or boris
 				possible = false
 			end

@@ -55,6 +55,26 @@ function setup_functions()
 		end
 
 		function classid() return tonumber(status().class) end
+		function playerclassname()
+			local classnames = {
+				"Seal Clubber",
+				"Turtle Tamer",
+				"Pastamancer",
+				"Sauceror",
+				"Disco Bandit",
+				"Accordion Thief",
+				nil, nil, nil, nil,
+				"Avatar of Boris",
+				"Zombie Master",
+				nil,
+				"Avatar of Jarlsberg"
+			}
+			return classnames[classid()]
+		end
+		function playerclass(check)
+			-- TODO: validate
+			return check == playerclassname()
+		end
 
 		function playerid() return tonumber(status().playerid) end
 

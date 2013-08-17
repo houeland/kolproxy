@@ -284,24 +284,16 @@ add_printer("/custom-settings", function()
 				</form>
 				<center><form action="custom-settings" method="post"><input type="hidden" name="page" value="customize features"><input type="hidden" name="pwd" value="]]..session.pwd..[["><input type="submit" value="Advanced: Customize features"></center>
 			</td></tr></table></center>
-]], "Kolproxy features") .. make_kol_html_frame([[
+]], "Configure kolproxy features") .. make_kol_html_frame([[
 			<center><table><tr><td>
 			<tr><td><center><a href="custom-logs?pwd=]]..session.pwd..[[">Parse ascension log</a></center></td></tr>
-			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-ascension-checklist&pwd=]]..session.pwd..[[">Pre-ascension pull stocking checklist</a></center></td></tr>
-			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-aftercore-automation&pwd=]]..session.pwd..[[">Setup/run automation scripts</a></center></td></tr>
-			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-cosmic-kitchen&pwd=]]..session.pwd..[[">Cosmic kitchen dinner planner</a></center></td></tr>
-			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-choose-mad-tea-party-hat&pwd=]]..session.pwd..[[">Choose hat for mad tea party</a></center></td></tr>
-			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-modifier-maximizer&pwd=]]..session.pwd..[[">Modifier maximizer (preview)</a></center></td></tr>
-			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-compute-net-worth&pwd=]]..session.pwd..[[">Compute net worth (preview)</a></center></td></tr>
-			<tr><td><center><a href="kolproxy-automation-script?automation-script=display-tracked-variables&pwd=]]..session.pwd..[[">Display tracked game variables (preview)</a></center></td></tr>
-			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-mix-drinks&pwd=]]..session.pwd..[[">List advanced cocktails you can craft (preview)</a></center></td></tr>
+			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-aftercore-automation&pwd=]]..session.pwd..[[">Setup/run scripts</a></center></td></tr>
 			<tr><td><center><a href="http://www.houeland.com/kolproxy/wiki/" target="_blank">Kolproxy documentation</a> (opens in a new tab)</center></td></tr>
 			</td></tr></table></center>
-]], "Kolproxy special pages") .. make_kol_html_frame([[
+]], "Kolproxy page links") .. make_kol_html_frame([[
 			<center><table><tr><td>
 			<tr><td><center><input type="button" value="Reload Lua script files" onclick="javascript:clear_lua_script_cache(this)"></center></td></tr>
 			<tr><td><center><a href="kolproxy-automation-script?automation-script=lua-console&pwd=]]..session.pwd..[[">Interactive Lua console</a></center></td></tr>
-			<tr><td><center><a href="kolproxy-automation-script?automation-script=add-log-notes&pwd=]]..session.pwd..[[">Add log notes</a></center></td></tr>
 			</td></tr></table></center>
 ]], "Developer tools")
 	text = [[

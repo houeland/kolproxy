@@ -79,7 +79,7 @@ local function automate_hcnp_day(whichday)
 	end
 
 	local function can_photocopy()
-		return true
+		return not cached_stuff.have_faxed_today and have_item("Clan VIP Lounge key")
 	end
 
 	local function unlocked_beach()
@@ -120,7 +120,7 @@ local function automate_hcnp_day(whichday)
 	end
 
 	challenge = nil
-	if ascensionpathid() == 6 then
+	if ascensionpath("Way of the Surprising Fist") then
 		challenge = "fist"
 		fist_level = 0
 		for _, x in ipairs { "Flying Fire Fist", "Salamander Kata", "Drunken Baby Style", "Stinkpalm", "Worldpunch" } do
@@ -162,7 +162,7 @@ mark m_done
 
 ]]
 		end
-	elseif ascensionpathid() == 8 then
+	elseif ascensionpath("Avatar of Boris") then
 		-- TODO: pull third wine bottle
 		challenge = "boris"
 		if ascensionstatus() == "Hardcore" then
@@ -239,7 +239,7 @@ endif
 				critical("Trying to sniff " .. name .. " in Boris")
 			end
 		end
-	elseif ascensionpathid() == 10 then
+	elseif ascensionpath("Zombie Slayer") then
 		challenge = "zombie"
 		if ascensionstatus() == "Hardcore" then
 			macro_softcore_boris = macro_hardcore_boris
@@ -458,7 +458,7 @@ endif
 		end
 	end
 
-	if ascensionpathid() == 8 or ascensionpath("Avatar of Jarlsberg") then
+	if ascensionpath("Avatar of Boris") or ascensionpath("Avatar of Jarlsberg") then
 		can_change_familiar = false
 	else
 		can_change_familiar = true
@@ -1944,7 +1944,7 @@ endif
 	local use_new_faxing = ascensionpath("BIG!") and script.have_familiar("Obtuse Angel")
 
 	add_task {
-		when = use_new_faxing and not cached_stuff.handled_icy_peak and not cached_stuff.have_faxed_today,
+		when = use_new_faxing and not cached_stuff.handled_icy_peak and can_photocopy(),
 		task = function()
 			local mc = get_page("/mclargehuge.php")
 			if mc:contains("cloudypeak.gif") and not have_item("ninja rope") and not have_item("ninja crampons") and not have_item("ninja carabiner") then
@@ -1994,7 +1994,7 @@ endif
 	}
 
 	add_task {
-		when = use_new_faxing and not cached_stuff.handled_smut_orcs and not cached_stuff.have_faxed_today,
+		when = use_new_faxing and not cached_stuff.handled_smut_orcs and can_photocopy(),
 		task = function()
 			local oc = get_page("/place.php", { whichplace = "orc_chasm" })
 			if oc:contains("nobridge.gif") and not have_item("smut orc keepsake box") then
@@ -2044,7 +2044,7 @@ endif
 	}
 
 	add_task {
-		when = use_new_faxing and not cached_stuff.handled_lfms and not cached_stuff.have_faxed_today,
+		when = use_new_faxing and not cached_stuff.handled_lfms and can_photocopy(),
 		task = function()
 			if not completed_sonofa_beach() and not have_item("barrel of gunpowder") then
 				if script.get_photocopied_monster() ~= "lobsterfrogman" then
@@ -3285,9 +3285,8 @@ endwhile
 	add_task {
 		prereq = quest("The Goblin Who Wouldn't Be King") and
 			not have_guard_outfit() and
-			challenge ~= "fist" and
-			challenge ~= "boris" and
-			challenge ~= "jarlsberg",
+			challenge ~= "fist" and challenge ~= "boris" and challenge ~= "jarlsberg" and
+			can_photocopy(),
 		f = function()
 			if script.get_photocopied_monster() ~= "Knob Goblin Elite Guard Captain" then
 				inform "get KGE captain from faxbot"
@@ -3299,6 +3298,7 @@ endwhile
 				use_item("photocopied monster")
 				local pt, url = get_page("/fight.php")
 				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodlecannon)
+				cached_stuff.have_faxed_today = true
 				if advagain then
 					did_action = true
 				end
@@ -3541,7 +3541,7 @@ endwhile
 	end }
 
 	add_task {
-		prereq = not have_item("time halo") and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and daysthisrun() >= 2,
+		prereq = not have_item("time halo") and ascensionpathid() == 0 and daysthisrun() >= 2,
 		f = function()
 			inform "using tome summons (time halo, bucket of wine, sugar shield)"
 
@@ -3634,42 +3634,40 @@ endwhile
 			ascensionstatus() == "Hardcore" and
 			not trailed and
 			challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and
-			not script.have_familiar("Angry Jung Man"),
+			not script.have_familiar("Angry Jung Man") and
+			can_photocopy(),
 		task = function()
-			if highskill_at_run then
-				return tasks.do_8bit_realm()
-			else
-				return {
-					message = "find blooper",
-					action = function()
-						if script.get_photocopied_monster() ~= "Blooper" then
-							print("photocopied:", script.get_photocopied_monster())
-							inform "get blooper from faxbot"
-							script.get_faxbot_fax("Blooper", "blooper")
-						else
-							if not have_item("continuum transfunctioner") then
-								inform "pick up continuum transfunctioner"
-								set_result(pick_up_continuum_transfunctioner())
-							end
-							inform "fight and sniff blooper"
-							script.heal_up()
-							script.ensure_buffs { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric" }
-							script.want_familiar "Frumious Bandersnatch"
-							script.wear { acc3 = "continuum transfunctioner" }
-							script.ensure_mp(60)
-							set_result(use_item("photocopied monster"))
-							local pt, url = get_page("/fight.php")
-							if url:contains("/fight.php") then
-								result, resulturl, advagain = handle_adventure_result(pt, url, "?", make_cannonsniff_macro("Blooper"))
-								if advagain then
-									did_action = true
-								end
+			return {
+				message = "find blooper",
+				action = function()
+					if script.get_photocopied_monster() ~= "Blooper" then
+						print("photocopied:", script.get_photocopied_monster())
+						inform "get blooper from faxbot"
+						script.get_faxbot_fax("Blooper", "blooper")
+					else
+						if not have_item("continuum transfunctioner") then
+							inform "pick up continuum transfunctioner"
+							set_result(pick_up_continuum_transfunctioner())
+						end
+						inform "fight and sniff blooper"
+						script.heal_up()
+						script.ensure_buffs { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric" }
+						script.want_familiar "Frumious Bandersnatch"
+						script.wear { acc3 = "continuum transfunctioner" }
+						script.ensure_mp(60)
+						set_result(use_item("photocopied monster"))
+						cached_stuff.have_faxed_today = true
+						local pt, url = get_page("/fight.php")
+						if url:contains("/fight.php") then
+							result, resulturl, advagain = handle_adventure_result(pt, url, "?", make_cannonsniff_macro("Blooper"))
+							if advagain then
+								did_action = true
 							end
 						end
 					end
-				}
-			end
-		end,
+				end
+			}
+		end
 	}
 
 	add_task {
@@ -3824,7 +3822,11 @@ endif
 	}
 
 	add_task {
-		when = highskill_at_run and not have_item("barrel of gunpowder") and level() >= 8 and level() < 12 and script.have_familiar("Obtuse Angel"),
+		when = highskill_at_run and
+			not have_item("barrel of gunpowder") and
+			level() >= 8 and level() < 12 and
+			script.have_familiar("Obtuse Angel") and
+			can_photocopy(),
 		task = {
 			message = "fax and arrow lobsterfrogman",
 			action = function()
@@ -4545,6 +4547,7 @@ endif
 					script.wear {}
 					script.ensure_mp(40)
 					use_item("photocopied monster")
+					cached_stuff.have_faxed_today = true
 					local pt, url = get_page("/fight.php")
 					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodlecannon)
 					if advagain then
@@ -5354,7 +5357,7 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 		return get_page("/main.php")
 	end
 
-	local ok_paths = { [0] = true, [6] = true, [8] = true, [10] = true, ["Avatar of Jarlsberg"] = true, ["BIG!"] = true }
+	local ok_paths = { [0] = true, ["Way of the Surprising Fist"] = true, ["Avatar of Boris"] = true, [10] = true, ["Avatar of Jarlsberg"] = true, ["BIG!"] = true }
 	local path_support_text = ""
 	local pathdesc = string.format([[%s %s]], ascensionstatus(), ascensionpathname())
 	if ascensionpathid() == 0 then
@@ -5397,7 +5400,7 @@ add_printer("/main.php", function()
 	if not setting_enabled("enable turnplaying automation") then return end
 	if not setting_enabled("enable turnplaying automation in-run") then return end
 	if tonumber(status().freedralph) == 1 then
-		text = text:gsub([[title="Bottom Edge".-</table>]], [[%0<table><tr><td><center><a href="]]..custom_aftercore_automation_href { pwd = session.pwd }..[[" style="color: green">{ Setup/run automation scripts }</a></center></td></tr></table>]])
+		text = text:gsub([[title="Bottom Edge".-</table>]], [[%0<table><tr><td><center><a href="]]..custom_aftercore_automation_href { pwd = session.pwd }..[[" style="color: green">{ Setup/run scripts }</a></center></td></tr></table>]])
 		return
 	end
 

@@ -1,3 +1,5 @@
+dofile("scripts/base/base-lua-functions.lua")
+
 local faxbot_most_popular = {
 	["Blooper"] = true,
 	["dirty thieving brigand"] = true,
@@ -47,18 +49,19 @@ local blacklist = {
 
 local processed_datafiles = {}
 
-local error_count_soft = 0
+local error_count_critical = 0
 local error_count_hard = 0
+local error_count_soft = 0
+
+local function hardwarn(...)
+	print("WARNING: downloaded data files inconsistent,", ...)
+	error_count_hard = error_count_hard + 1
+end
 
 local softwarn = function(...)
 	-- Errors that are just too frequent to spam warnings for
 	--print("NOTICE: downloaded data files inconsistent,", ...)
 	error_count_soft = error_count_soft + 1
-end
-
-local function hardwarn(...)
-	print("WARNING: downloaded data files inconsistent,", ...)
-	error_count_hard = error_count_hard + 1
 end
 
 function string.contains(a, b) return a:find(b, 1, true) end
@@ -195,7 +198,7 @@ function parse_outfits()
 		if name and itemlist then
 			local items = {}
 			for x in (", "..itemlist):gmatch(", ([^,]+)") do
-				table.insert(items, x)  
+				table.insert(items, x)
 			end
 			table.sort(items)
 			outfits[name] = { items = items, bonuses = {} }
@@ -364,7 +367,7 @@ function parse_items()
 	end
 
 	local section = nil
-	local equip_sections = { Hats = true, Containers = true, Shirts = true, Weapons = true, ["Off-hand"] = true, Pants = true, Accessories = true, ["Familiar Items"] = true }
+	local equip_sections = { Hats = true, Containers = true, Shirts = true, Weapons = true, Offhand = true, Pants = true, Accessories = true, ["Familiar Items"] = true }
 	for l in io.lines("cache/files/modifiers.txt") do
 		l = remove_line_junk(l)
 		section = l:match([[^# (.*) section of modifiers.txt]]) or section
@@ -405,19 +408,20 @@ function parse_items()
 end
 
 function verify_items(data)
-	if data["Orcish Frat House blueprints"] and data["Boris's Helm"] then
-		if data["Hell ramen"].fullness == 6 and data["water purification pills"].drunkenness == 3 and data["beastly paste"].spleen == 4 then
-			if data["leather chaps"].equip_requirement.moxie == 65 then
-				if data["dried gelatinous cube"].id == 6256 then
-					if data["flaming pink shirt"].equipment_slot == "shirt" then
-						return data
-					end
-				end
-			end
-		end
+	local ok = true
+	ok = ok and data["Orcish Frat House blueprints"] and data["Boris's Helm"]
+	ok = ok and data["Hell ramen"].fullness == 6 and data["water purification pills"].drunkenness == 3 and data["beastly paste"].spleen == 4
+	ok = ok and data["leather chaps"].equip_requirement.moxie == 65
+	ok = ok and data["dried gelatinous cube"].id == 6256
+	ok = ok and data["flaming pink shirt"].equipment_slot == "shirt"
+	ok = ok and data["mayfly bait necklace"].equip_bonuses["Item Drops from Monsters"] == 10 and data["mayfly bait necklace"].equip_bonuses["Meat from Monsters"] == 10
+	ok = ok and data["Jarlsberg's pan (Cosmic portal mode)"].equip_bonuses["Food Drops from Monsters"] == 50
+	if ok then
+		return data
 	end
+
 	local testitems = {}
-	for _, x in ipairs { "Orcish Frat House blueprints", "Hell ramen", "water purification pills", "beastly paste", "leather chaps", "dried gelatinous cube", "flaming pink shirt" } do
+	for _, x in ipairs { "Orcish Frat House blueprints", "Hell ramen", "water purification pills", "beastly paste", "leather chaps", "dried gelatinous cube", "flaming pink shirt", "mayfly bait necklace", "Jarlsberg's pan (Cosmic portal mode)" } do
 		testitems[x] = data[x]
 	end
 	hardwarn("verify_items failure:", table_to_json(testitems))
@@ -476,6 +480,7 @@ local function parse_monster_stats(stats, monster_debug_line)
 			if stats:sub(i, i) == " " then
 				softwarn("monsters.txt:malformed line", monster_debug_line)
 			else
+				error_count_critical = error_count_critical + 1
 				print("ERROR: failed to parse monster stat", stats:sub(i))
 				print("DEBUG: ", monster_debug_line)
 				return statstbl
@@ -500,7 +505,7 @@ local function parse_monster_items(items)
 	if #items == 0 then return nil end
 	itemtbl = {}
 	for _, item in ipairs(items) do
-		local name, prefix, rate =  item:match("^(.*) %(([pnbcf]*)(%d+)%)$")
+		local name, prefix, rate = item:match("^(.*) %(([pnbcf]*)(%d+)%)$")
 
 		if not name then
 			-- a few items are missing drop rates
@@ -666,9 +671,19 @@ function parse_enthroned_familiars()
 end
 
 function verify_enthroned_familiars(data)
+	local ok_missing = { "Mad Hatrack", "Money-Making Goblin", "Egg Benedict", "Vampire Bat", "Disembodied Hand", "Fancypants Scarecrow", "Floating Eye", "Snowhitman", "Worm Doctor", "Bank Piggy", "Oyster Bunny", "Doppelshifter", "Comma Chameleon", "Plastic Grocery Bag" }
 	for x, _ in pairs(processed_datafiles["familiars"]) do
 		if not data[x] then
-			softwarn("missing enthroned familiar", x)
+			local ok = false
+			for _, y in ipairs(ok_missing) do
+				if x == y then
+					ok = true
+				end
+			end
+			if not ok then
+				-- TODO: get these fixed in mafia and change to hardwarn
+				softwarn("missing enthroned familiar", x)
+			end
 		end
 	end
 	for x, _ in pairs(data) do
@@ -758,29 +773,30 @@ end
 
 function parse_semirares()
 	local semirares = {}
-	for l in io.lines("cache/files/KoLmafia.java") do
+	for l in io.lines("cache/files/encounters.txt") do
 		l = remove_line_junk(l)
-		local sr = l:match([[{ *"([^"]+)", *EncounterTypes.SEMIRARE *}]])
-		if sr then
-			table.insert(semirares, sr)
+		local tbl = split_tabbed_line(l)
+		local zone, advtype, title = tbl[1], tbl[2], tbl[3]
+		if zone and advtype == "SEMIRARE" and title then
+			table.insert(semirares, title)
 		end
 	end
 	return semirares
 end
 
 function verify_semirares(data)
-	local ok1, ok2 = false, false
-	for _, x in ipairs(data) do
-		if x == "All The Rave" then
-			ok1 = true
-		end
-		if x == "It's a Gas Gas Gas" then
-			ok2 = true
-		end
+	local check_semis = { "All The Rave", "It's a Gas Gas Gas", "Bad ASCII Art", "Baa'baa'bu'ran" }
+	local missing = {}
+	for _, x in ipairs(check_semis) do
+		missing[x] = true
 	end
-	if ok1 and ok2 then
+	for _, x in ipairs(data) do
+		missing[x] = nil
+	end
+	if not next(missing) then
 		return data
 	end
+	hardwarn("verify_semirares failure:", table_to_json(missing))
 end
 
 function parse_mallprices()
@@ -962,9 +978,11 @@ function process(datafile)
 			fobj:close()
 			processed_datafiles[datafile] = verified
 		else
+			error_count_hard = error_count_hard + 1
 			print("WARNING: verifying " .. tostring(filename) .. " data file failed (" .. tostring(verified) .. ").")
 		end
 	else
+		error_count_critical = error_count_critical + 1
 		print("ERROR: parsing " .. tostring(filename) .. " data file failed (" .. tostring(data) .. ").")
 	end
 end
@@ -995,4 +1013,4 @@ process("consumables")
 
 process("zones")
 
-print(string.format("INFO: %d warnings displayed, %d notices ignored (expected with current data files: no errors, 0 warnings displayed, and fewer than 5000 notices ignored)", error_count_hard, error_count_soft))
+print(string.format("INFO: %d errors, %d warnings displayed, %d notices ignored (expected with current data files: 0 errors, 0 warnings displayed, and fewer than 5000 notices ignored)", error_count_critical, error_count_hard, error_count_soft))

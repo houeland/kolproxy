@@ -249,7 +249,7 @@ function do_daily_visits()
 	end
 
 	local clover_before = count_item("ten-leaf clover")
-	if ascensionpathid() == 10 then
+	if ascensionpath("Zombie Slayer") then
 		get_page("/hermit.php")
 	end
 	if setting_enabled("automate daily visits/do lazy aftercore daily tasks") and ascensionstatus("Aftercore") then

@@ -1,3 +1,32 @@
+function add_modifier_bonuses(target, source)
+	if not source then
+		print("WARNING: no source for add_modifier_bonuses()")
+	end
+	for a, b in pairs(source or {}) do
+		if b == "?" then
+			target[a .. "_unknown"] = true
+		elseif b == true then
+			target[a] = true
+		else
+			target[a] = (target[a] or 0) + b
+		end
+	end
+end
+
+function parse_item_bonuses(itemname)
+-- C/NC
+-- init
+
+	local descid = item_api_data(itemname).descid
+	local pt = get_page("/desc_item.php", { whichitem = descid })
+	local bonuses = make_bonuses_table {}
+	bonuses = bonuses + { ["Item Drops from Monsters"] = tonumber(pt:match([[>%+([0-9]+)%% Item Drops from Monsters<]])) }
+	bonuses = bonuses + { ["Meat from Monsters"] = tonumber(pt:match([[>%+([0-9]+)%% Meat from Monsters<]])) }
+	bonuses = bonuses + { ["Meat from Monsters"] = tonumber(pt:match([[>%+([0-9]+)%% Meat Drops from Monsters<]])) }
+	bonuses = bonuses + { ["Monster Level"] = tonumber(pt:match([[>%+([0-9]+) to Monster Level<]])) }
+	return bonuses
+end
+
 add_processor("/familiar.php", function()
 	session["cached enthroned familiar"] = nil
 end)
@@ -18,46 +47,69 @@ add_automator("all pages", function()
 	end
 end)
 
-local function count_distinct_equipped_itemlist(itemlist)
-	local c = 0
-	for _, name in ipairs(itemlist) do
-		if have_equipped_item(name) then
-			c = c + 1
-		end
-	end
-	return c
+function clear_cached_item_bonuses(name)
+	session["cached item bonuses: " .. name] = nil
 end
 
-function add_modifier_bonuses(target, source)
-	if not source then
-		print("WARNING: no source for add_modifier_bonuses()")
-	end
-	for a, b in pairs(source or {}) do
-		if b == "?" then
-			target[a .. "_unknown"] = true
-		elseif b == true then
-			target[a] = true
-		else
-			target[a] = (target[a] or 0) + b
-		end
+function set_cached_item_bonuses(name, tbl)
+	print("DEBUG setting item", name, "to", tbl)
+	session["cached item bonuses: " .. name] = tbl
+end
+
+function get_cached_item_bonuses(name)
+	local tbl = session["cached item bonuses: " .. name]
+	if tbl then
+		return make_bonuses_table(tbl)
 	end
 end
+
+add_processor("/fight.php", function()
+	if newly_started_fight then
+		clear_cached_item_bonuses("stinky cheese eye")
+	end
+end)
+
+add_processor("/inv_equip.php", function()
+	clear_cached_item_bonuses("stinky cheese eye")
+end)
+
+add_processor("/choice.php", function()
+	if text:contains("snow suit") then
+		clear_cached_item_bonuses("Snow Suit")
+	end
+	if text:contains("folder") and text:contains("holder") then
+		clear_cached_item_bonuses("over-the-shoulder Folder Holder")
+	end
+end)
+
+add_automator("all pages", function()
+	for _, itemname in ipairs { "stinky cheese eye", "Jekyllin hide belt", "Grimacite gown", "Moonthril Cuirass", "hairshirt", "over-the-shoulder Folder Holder" } do
+		if have_equipped_item(itemname) and not get_cached_item_bonuses(itemname) then
+			set_cached_item_bonuses(itemname, parse_item_bonuses(itemname))
+		end
+	end
+end)
+
+add_automator("all pages", function()
+	if have_equipped_item("Snow Suit") and not get_cached_item_bonuses("Snow Suit") then
+		local pt = get_page("/charpane.php")
+		set_cached_item_bonuses("Snow Suit", { ["Item Drops from Monsters"] = pt:contains("/snowface3.gif") and 10 or 0 })
+	end
+end)
 
 function estimate_item_equip_bonuses(item)
-	-- TODO: force session bonus computations
-
 	local itemarray = {
-		["Jekyllin hide belt"] = { ["Item Drops from Monsters"] = session["cached Jekyllin hide belt bonus"] or "?" },
+		["Jekyllin hide belt"] = "cached",
 		["little box of fireworks"] = { item_upto = 25 },
 		["Colonel Mustard's Lonely Spades Club Jacket"] = { ["Combat Initiative"] = "?", ["Item Drops from Monsters"] = "?", ["Meat from Monsters"] = "?" }, -- 1-3%
-		["stinky cheese eye"] = { ["Item Drops from Monsters"] = session["cached stinky cheese eye bonus"] or "?", ["Meat from Monsters"] = session["cached stinky cheese eye bonus"] or "?" },
-		["Moonthril Cuirass"] = { ["Monster Level"] = session["cached Moonthril Cuirass bonus"] or "?" },
-		["Grimacite gown"] = { ["Monster Level"] = session["cached Grimacite gown bonus"] or "?" },
-		["hairshirt"] = { ["Monster Level"] = session["cached hairshirt bonus"] or "?" },
+		["stinky cheese eye"] = "cached",
+		["Moonthril Cuirass"] = "cached",
+		["Grimacite gown"] = "cached",
+		["hairshirt"] = "cached",
 		["jalape&ntilde;o slices"] = { ["Meat from Monsters"] = 2 * fairy_bonus(10) },
 		["navel ring of navel gazing"] = { item_upto = 20, meat_upto = 20 },
 		["parasitic tentacles"] = { ["Combat Initiative"] = math.min(15, level()) * (2 + (have_buff("Yuletide Mutations") and 1 or 0)) },
-		["Snow Suit"] = { ["Item Drops from Monsters"] = session["cached Snow Suit bonus"] or "?" },
+		["Snow Suit"] = "cached",
 
 		["Mayflower bouquet"] = { item_upto = 10, meat_upto = 40, ["Item Drops from Monsters"] = "?" }, -- not sufficiently spaded
 		["Tuesday's ruby"] = { ["Item Drops from Monsters"] = "?", ["Meat from Monsters"] = "?" }, -- varies by day
@@ -93,6 +145,8 @@ function estimate_item_equip_bonuses(item)
 	if not name then
 		-- ..unknown..
 		return make_bonuses_table {}
+	elseif itemarray[name] == "cached" then
+		return make_bonuses_table(get_cached_item_bonuses(name) or {})
 	elseif itemarray[name] then
 		return make_bonuses_table(itemarray[name])
 	elseif datafile("items")[name] then
@@ -104,9 +158,38 @@ end
 
 function estimate_current_equipment_bonuses()
 	local bonuses = {}
-
 	for _, itemid in pairs(equipment()) do
 		add_modifier_bonuses(bonuses, estimate_item_equip_bonuses(itemid))
+	end
+	return bonuses
+end
+
+local function count_distinct_equipped_itemlist(itemlist)
+	local c = 0
+	for _, name in ipairs(itemlist) do
+		if have_equipped_item(name) then
+			c = c + 1
+		end
+	end
+	return c
+end
+
+function estimate_current_outfit_bonuses()
+	local bonuses = {}
+	for _, x in pairs(datafile("outfits")) do
+		local wearing = true
+		for _, y in ipairs(x.items) do
+			if not maybe_get_itemid(y) then
+				-- WORKAROUND: Sometimes checks for unknown items.
+				-- TODO: Make this never happen using solid consistency checks and synchronized datafile loading.
+				wearing = false
+			elseif not have_equipped(y) then
+				wearing = false
+			end
+		end
+		if wearing then
+			add_modifier_bonuses(bonuses, x.bonuses)
+		end
 	end
 
 	-- TODO: hobo power
@@ -124,7 +207,27 @@ function estimate_current_equipment_bonuses()
 		"Brimstone Bracelet",
 	}
 	if count_brimstone > 0 then
-		add_modifier_bonuses(bonuses, { ["Item Drops from Monsters"] = math.pow(2, count_brimstone), ["Meat from Monsters"] = math.pow(2, count_brimstone), ["Monster Level"] = math.pow(2, count_brimstone) })
+		add_modifier_bonuses(bonuses, {
+			["Item Drops from Monsters"] = math.pow(2, count_brimstone),
+			["Meat from Monsters"] = math.pow(2, count_brimstone),
+			["Monster Level"] = math.pow(2, count_brimstone),
+		})
+	end
+
+	local count_loathing = count_distinct_equipped_itemlist {
+		"Goggles of Loathing",
+		"Stick-Knife of Loathing",
+		"Scepter of Loathing",
+		"Jeans of Loathing",
+		"Treads of Loathing",
+		"Belt of Loathing",
+		"Pocket Square of Loathing",
+	}
+	if count_loathing > 0 then
+		add_modifier_bonuses(bonuses, {
+			["Item Drops from Monsters"] = math.pow(2, count_loathing - 1),
+			["Meat from Monsters"] = math.pow(2, count_loathing),
+		})
 	end
 
 	local count_mm = count_distinct_equipped_itemlist {

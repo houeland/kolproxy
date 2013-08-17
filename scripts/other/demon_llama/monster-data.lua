@@ -92,7 +92,7 @@ function buildCurrentFightMonsterDataCache(monster_name, fight_text)
 
 	--In a bees hate you, monster's with b in their names get increased by 20% per b
 	--This is AFTER ML is applied
-	if ascensionpathid() == 4 then
+	if ascensionpath("Bees Hate You") then
 		monster.Stats = beesIncreaser(monster_name, monster.Stats)
 	end
 

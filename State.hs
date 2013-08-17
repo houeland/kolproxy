@@ -24,8 +24,9 @@ import qualified Data.Map
 
 get_stid ref = do
 	ai <- getApiInfo ref
-	let Just sessid = get_sessid ref
-	return (charName ai, ascension ai, daysthisrun ai, sessid)
+	case get_sessid ref of
+		Just sessid -> return (charName ai, ascension ai, daysthisrun ai, sessid)
+		_ -> throwIO $ StateException
 
 loadState ref = do
 	newstid <- get_stid ref

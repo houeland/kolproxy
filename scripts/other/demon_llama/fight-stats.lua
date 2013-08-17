@@ -299,7 +299,7 @@ add_printer("/fight.php", function()
 				text = text:gsub([[id='monname'.-</table>]], [[%0]] .. formatMonsterPhylumTreasure(monster))
 			end
 			
-			if ascensionpathid() == 4 then
+			if ascensionpath("Bees Hate You") then
 				local boldedName = monster_name:gsub("[bB]", [[<span style="font-weight:bold;color:orange;">%0</span>]])
 				text = text:gsub(monster_name, boldedName)
 			end

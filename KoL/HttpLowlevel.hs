@@ -388,9 +388,6 @@ fast_mkconnthing server = do
 --								r <- randomRIO (1, 100 :: Integer)
 --								when (r < 5) $ throwIO $ NetworkError $ "faked random read error!"
 								Right resp <- log_time_interval_http ref "HTTP body" $ switchResponse c True False rsp rq
--- 								putStrLn $ "DEBUG: HTTP lowlevel GOT " ++ (show absuri) ++ " (" ++ show req_nr ++ ")"
--- 								putStrLn $ "DEBUG: resp: " ++ show resp
--- 								putStrLn $ "DEBUG: respbody: " ++ show (rspBody resp)
 								return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)) `catch` (\e -> do
 									doHTTPLOWLEVEL_DEBUGexception $ "http read exception: " ++ (show (e :: SomeException))
 									throwIO e))
@@ -430,19 +427,12 @@ fast_mkconnthing server = do
 		forkIO_ "HTTPlow:run" $ (run `catch` (\e -> do
 			doHTTPLOWLEVEL_DEBUGexception $ "http forked-run exception: " ++ (show (e :: SomeException))
 			throwIO e))
---			return ()))
 		let cfunc (absuri, rq, mvdest, ref) = do
--- 			putStrLn $ "DEBUG cfunc: " ++ show absuri
 			isok <- log_time_interval_http ref ("HTTP asking: " ++ (show $ rqURI $ rq)) $ try $ do
 				req_nr <- atomicModifyIORef req_counter (\x -> (x + 1, x + 1))
 				let requesting_it = (req_nr <= 80) -- Do a maximum of 80 requests per connection
 				if requesting_it
 					then do
--- 						doHTTPLOWLEVEL_DEBUG $ "HTTP asking for " ++ show (rqURI rq) ++ " (" ++ show req_nr ++ ")"
--- 						putStrLn $ "DEBUG: http lowlevel ask " ++ show (rqURI rq) ++ " (" ++ show req_nr ++ ")"
--- 						putStrLn $ "DEBUG: http lowlevel req " ++ show rq
--- 						putStrLn $ Data.ByteString.Char8.unpack $ rqBody rq
--- 						putStrLn $ ""
 						connPut c (show rq)
 						connPut c (Data.ByteString.Char8.unpack $ rqBody rq)
 --						r <- randomRIO (1, 100 :: Integer)
@@ -452,7 +442,6 @@ fast_mkconnthing server = do
 -- 						putStrLn $ "DEBUG: waiting with request for " ++ show (rqURI rq) ++ " (" ++ show req_nr ++ ")"
 						return ()
 				return (requesting_it, req_nr)
--- 			putStrLn $ "DEBUG cfunc isok: " ++ show isok
 			writeChan rchan $ Just (isok, (absuri, rq, mvdest, ref))
 		let ckill = do
 			writeChan rchan Nothing
@@ -464,8 +453,6 @@ fast_mkconnthing server = do
 		x <- (readChan connchan) `catch` (\e -> do
 			doHTTPLOWLEVEL_DEBUGexception $ "connchan read exception: " ++ (show (e :: SomeException))
 			throwIO e)
--- 		let (debug_absuri, _, _, _) = x
--- 		putStrLn $ "DEBUG readchan process x: " ++ show debug_absuri
 
 		-- TODO: unify open_conn and transfer? should be 0 pending here
 		modifyMVar_ connmv $ \(cf_stored, t_stored, pending, oldkill) -> do
@@ -478,9 +465,7 @@ fast_mkconnthing server = do
 --					putStrLn $ "DEBUG: stale, making new connection | " ++ show (tnow, t_stored, diffUTCTime tnow t_stored)
 					oldkill
 					open_conn -- TODO: need to handle this failing!!!
--- 			putStrLn $ "DEBUG connmv cf x: " ++ show debug_absuri
 			cf x
--- 			putStrLn $ "DEBUG connmv cfed x!: " ++ show debug_absuri
 			return (cf, t, p + 1, k)) `catch` (\e -> doHTTPLOWLEVEL_DEBUGexception $ "connchan error: " ++ (show (e :: SomeException))))
 
 	return connchan :: IO ConnChanType

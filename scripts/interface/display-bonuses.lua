@@ -17,11 +17,11 @@ function estimate_companion_bonuses(jarlcompanion)
 		return make_bonuses_table { ["Monster Level"] = 20 + 10 * working_lunch }
 	else
 		return make_bonuses_table {}
-        end
+	end
 end
 
 function estimate_current_companion_bonuses()
-        local jarlcompanion = tonumber(status().jarlcompanion)
+	local jarlcompanion = tonumber(status().jarlcompanion)
 	if not jarlcompanion then return {} end
 	return estimate_companion_bonuses(jarlcompanion)
 end
@@ -61,28 +61,30 @@ add_printer("/charpane.php", function()
 	if not setting_enabled("show modifier estimates") then return end
 
 	local bonuses = estimate_modifier_bonuses()
-	local ml_init_penalty = compute_monster_initiative_bonus(bonuses["Monster Level"] or 0)
+	local ml_init_penalty = compute_monster_initiative_bonus(bonuses["Monster Level"])
 
-	local com = bonuses["Monsters will be more attracted to you"] or 0
-	local item = bonuses["Item Drops from Monsters"] or 0
-	local ml = bonuses["Monster Level"] or 0
-	local initial_init = bonuses["Combat Initiative"] or 0
+	local com = bonuses["Monsters will be more attracted to you"]
+	local item = bonuses["Item Drops from Monsters"]
+	local ml = bonuses["Monster Level"]
+	local initial_init = bonuses["Combat Initiative"]
 	local adjusted_init = initial_init - ml_init_penalty
-	local meat = bonuses["Meat from Monsters"] or 0
+	local meat = bonuses["Meat from Monsters"]
 
 	local foodbonusstr = ""
-	if (bonuses["Food Drops from Monsters"] or 0) ~= 0 then
-		foodbonusstr = string.format(" (%+d%% food)", bonuses["Food Drops from Monsters"] or 0)
+	if bonuses["Food Drops from Monsters"] ~= 0 then
+		foodbonusstr = string.format(" (%+d%% food)", bonuses["Food Drops from Monsters"])
 	end
 
-	local uncertaintystr = ""
-	if not have_cached_data() then
-		uncertaintystr = " ?"
+	local initbonusstr = ""
+	if ml_init_penalty ~= 0 then
+		initbonusstr = string.format(" (from %+d%%)", initial_init)
 	end
+
+	local uncertaintystr = have_cached_data() and "" or "?"
 	print_charpane_value { normalname = "(Non)combat", compactname = "C/NC", value = string.format("%+d%%", com) .. uncertaintystr }
 	print_charpane_value { normalname = "Item drops", compactname = "Item", value = string.format("%+.1f%%", floor_to_places(item, 1)) .. uncertaintystr .. foodbonusstr, link = modifier_maximizer_href { pwd = session.pwd, whichbonus = "Item Drops from Monsters" }, link_name_only = true }
 	print_charpane_value { normalname = "ML", compactname = "ML", value = string.format("%+d", ml) .. uncertaintystr, link = modifier_maximizer_href { pwd = session.pwd, whichbonus = "Monster Level" }, link_name_only = true }
-	print_charpane_value { normalname = "Initiative", compactname = "Init", value = string.format("%+d%%", adjusted_init) .. uncertaintystr, tooltip = string.format("%+d%% initiative - %d%% ML penalty = %+d%% combined", initial_init, ml_init_penalty, adjusted_init), link = modifier_maximizer_href { pwd = session.pwd, whichbonus = "Combat Initiative" }, link_name_only = true }
+	print_charpane_value { normalname = "Initiative", compactname = "Init", value = string.format("%+d%%", adjusted_init) .. uncertaintystr .. initbonusstr, tooltip = string.format("%+d%% initiative - %d%% ML penalty = %+d%% combined", initial_init, ml_init_penalty, adjusted_init), link = modifier_maximizer_href { pwd = session.pwd, whichbonus = "Combat Initiative" }, link_name_only = true }
 	print_charpane_value { normalname = "Meat drops", compactname = "Meat", value = string.format("%+.1f%%", floor_to_places(meat, 1)) .. uncertaintystr, link = modifier_maximizer_href { pwd = session.pwd, whichbonus = "Meat from Monsters" }, link_name_only = true }
 end)
 
@@ -118,7 +120,10 @@ local bonus_meta_table = {
 }
 
 function make_bonuses_table(tbl)
-	local bonuses = tbl or {}
+	local bonuses = {}
 	setmetatable(bonuses, bonus_meta_table)
+	if tbl then
+		add_modifier_bonuses(bonuses, tbl)
+	end
 	return bonuses
 end

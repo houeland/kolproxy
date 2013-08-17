@@ -247,7 +247,7 @@ end
 
 function macro_autoattack()
 	return [[
-]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
+]] .. COMMON_MACROSTUFF_START(25, 50) .. [[
 
 pickpocket
 

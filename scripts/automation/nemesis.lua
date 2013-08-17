@@ -70,10 +70,15 @@ local href = setup_turnplaying_script {
 					["Adventurer, $1.99"] = "Push the nose",
 					["Lurking at the Threshold"] = "Open the door",
 				} }
+				if result:contains("Clownlord Beelzebozo") then
+					result, resulturl = cast_autoattack_macro()
+				end
 				if not advagain then
 					break
 				end
 			end
+			refresh_quest()
+			advagain = not quest_text("you must defeat Beelzebozo")
 		elseif not have_item(required_items.lew) and have_item(required_items.ew) and have_item(required_items.extra) then
 			smith_items(required_items.ew, required_items.extra)
 			if not have_item(required_items.lew) then

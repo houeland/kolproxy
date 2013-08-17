@@ -414,7 +414,7 @@ add_extra_ascension_adventure_warning(function(zoneid)
 				return string.format([[<p>You only have enough HP to lower haunting level by %s%% (max is 30%%).</p><p>Maximum reduction would require at least %s HP (taking %s + %s damage) or higher resistance.</p>]], accumulbanish, accumuldmg.Cold + accumuldmg.Spooky + 1, dmgtext.Spooky, dmgtext.Cold), "a-boo peak incomplete banish"
 			end
 		end
-		if ascensionpathid() ~= 4 and not ascension["zone.aboo peak.clue active"] then
+		if not ascensionpath("Bees Hate You") and not ascension["zone.aboo peak.clue active"] then
 			local hauntedness = get_aboo_peak_hauntedness()
 			if hauntedness > 2 and hauntedness - count_item("A-Boo clue") * 30 <= 0 then
 				return "You can finish the peak if you fully complete your A-Boo clues.", "a-boo peak enough clues"

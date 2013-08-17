@@ -473,11 +473,11 @@ function markup_damagetext(tbl)
 end
 
 function estimate_max_fullness()
-	if ascensionpathname() == "Boozetafarian" or ascensionpathname() == "Oxygenarian" then
+	if ascensionpath("Boozetafarian") or ascensionpath("Oxygenarian") then
 		return 0
 	end
 	local mf = 15
-	if ascensionpathid() == 8 then
+	if ascensionpath("Avatar of Boris") then
 		mf = 20
 	elseif ascensionpath("Avatar of Jarlsberg") then
 		mf = 10
@@ -510,11 +510,11 @@ function estimate_max_fullness()
 end
 
 function estimate_max_safe_drunkenness()
-	if ascensionpathname() == "Teetotaler" or ascensionpathname() == "Oxygenarian" then
+	if ascensionpath("Teetotaler") or ascensionpath("Oxygenarian") then
 		return 0
 	end
 	local dlimit = 15
-	if ascensionpathid() == 8 or ascensionpathid() == 10 then
+	if ascensionpath("Avatar of Boris") or ascensionpath("Zombie Slayer") then
 		dlimit = 5
 	elseif ascensionpath("Avatar of Jarlsberg") then
 		dlimit = 10

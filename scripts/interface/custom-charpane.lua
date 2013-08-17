@@ -183,6 +183,16 @@ local function get_familiar_grid_line(fams)
 	return famchoosertext
 end
 
+function get_initials(str)
+	if not str then return str end
+	if str:len() <= 6 then return str end
+	local compacted = ""
+	for x in (" " .. str):gmatch(" (.)") do
+		compacted = compacted .. x
+	end
+	return compacted
+end
+
 local function pathdesc()
 	local prefix = ""
 	if ascensionstatus() == "Hardcore" then
@@ -192,12 +202,6 @@ local function pathdesc()
 	end
 	if moonsign() == "Bad Moon" then
 		return "BM"
-	elseif ascensionpathname() == "Teetotaler" then
-		return prefix .. "T"
-	elseif ascensionpathname() == "Boozetafarian" then
-		return prefix .. "B"
-	elseif ascensionpathname() == "Oxygenarian" then
-		return prefix .. "O"
 	elseif ascensionpathid() == 0 or ascensionpathname() == "" then
 		if prefix ~= "" then
 			return prefix .. "NP"
@@ -205,16 +209,17 @@ local function pathdesc()
 			return ""
 		end
 	else
-		return prefix .. "Challenge"
+		local suffix = get_initials(ascensionpathname()) or "?"
+		return prefix .. suffix
 	end
 end
 
 local function classdesc()
-	local descs = {
-		compact = { "SC", "TT", "PM", "S", "DB", "AT", nil, nil, nil, nil, "AoB", "ZM", nil, "AoJ" },
-		normal = { "Seal Clubber", "Turtle Tamer", "Pastamancer", "Sauceror", "Disco Bandit", "Accordion Thief", nil, nil, nil, nil, "Avatar of Boris", "Zombie Master", nil, "Avatar of Jarlsberg" },
-	}
-	return descs[kolproxy_custom_charpane_mode()][classid()] or "?"
+	if kolproxy_custom_charpane_mode() ~= "compact" then
+		return playerclassname() or "?"
+	else
+		return get_initials(playerclassname()) or "?"
+	end
 end
 
 local function classpathdesc()
@@ -243,13 +248,13 @@ local function get_srdata(SRtitle)
 	if SRnow then
 		color = "green"
 	end
-	if table.maxn(good_numbers) > 0 then
+	if next(good_numbers) then
 		value = table.concat(good_numbers, ", ")
 	else
 		value = "?"
 	end
 
-	if (not lastsemi) and (not is_first_semi) then
+	if not lastsemi and not is_first_semi then
 		lastsemi = "?"
 	end
 	
@@ -305,7 +310,7 @@ local function get_common_js()
 	return [[
 
 	<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/charpane.4.js"></script>
-	
+	<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/window.20111231.js"></script>
 	<script type="text/javascript">
 		function popup_effect(descid) {
 			var w = window.open("desc_effect.php?whicheffect=" + descid, "effect", "height=200,width=300")
@@ -353,10 +358,42 @@ local function get_common_js()
 			})
 			return false
 		}
-		function cast_skillid(skillid) {
+		function kolproxy_use_itemid(itemid) {
 			$.ajax({
 				type: 'GET',
-				url: "/skills.php?whichskill=" + skillid + "&quantity=1&action=Skillz&ajax=1&targetplayer=]] .. playerid() .. [[&pwd=]] .. session.pwd .. [[",
+				url: "/inv_use.php?whichitem=" + itemid + "&ajax=1&pwd=]] .. session.pwd .. [[",
+				cache: false,
+				global: false,
+				success: function(out) {
+					if (out.match(/no\|/)) {
+						var parts = out.split(/\|/)
+						alert("Error extending buff: " + parts[1] + ".")
+						return
+					}
+					var $eff = $(top.mainpane.document).find('#effdiv');
+					if ($eff.length == 0) {
+						var d = top.mainpane.document.createElement('DIV');
+						d.id = 'effdiv';
+						var b = top.mainpane.document.body;
+						if ($('#content_').length > 0) {
+							b = $('#content_ div:first')[0];
+						}
+						b.insertBefore(d, b.firstChild);
+						$eff = $(d);
+					}
+					$eff.find('a[name="effdivtop"]').remove().end()
+						.prepend('<a name="effdivtop"></a><center>' + out + '</center>').css('display','block');
+					if (!window.dontscroll || (window.dontscroll && dontscroll==0)) {
+						top.mainpane.document.location = top.mainpane.document.location + "#effdivtop";
+					}
+				}
+			})
+			return false
+		}
+		function kolproxy_cast_skillid(skillid) {
+			$.ajax({
+				type: 'GET',
+				url: "/skills.php?whichskill=" + skillid + "&ajax=1&action=Skillz&targetplayer=]] .. playerid() .. [[&quantity=1&pwd=]] .. session.pwd .. [[",
 				cache: false,
 				global: false,
 				success: function(out) {
@@ -451,14 +488,6 @@ function URLEncode(x)
 ]] .. get_outfit_slots_script()
 end
 
-local buff_extension_info = nil
-local function get_buff_extension_info()
-	if not buff_extension_info then
-		buff_extension_info = load_buff_extension_info()
-	end
-	return buff_extension_info
-end
-
 local cached_workarounds = {}
 local function work_around_broken_status_lastadv(advdata)
 	if advdata.container == "place.php" then
@@ -493,30 +522,7 @@ local function update_and_get_previous_adventure_links()
 	return previous_adventures_tbl
 end
 
-add_interceptor("/charpane.php", function()
-	if not setting_enabled("use custom kolproxy charpane") then return end
-	if not pcall(turnsthisrun) then return end -- in afterlife
-	if kolproxy_custom_charpane_mode() ~= "compact" then return end
-	local extra_js, fams = get_familiar_grid()
--- 	print(table_to_str(fams))
-
--- name
--- level / progress
--- mus / mys / mox
--- full / drunk / spleen
--- hp / maxhp
--- mp / maxmp
--- meat
--- advs / turnsplayed
--- mcd ??
--- zone
--- semirare
--- familiar, weight, bonus
--- buffs
-
-	local bgcolor, srdata = get_srdata("SR")
-
-	local lines = {}
+function compact_charpane_level_lines(lines)
 	table.insert(lines, string.format([[<a class="nounder" target="mainpane" href="charsheet.php"><b>%s</b></a> <span class="tiny">(%s)</span><br>]], playername(), classpathdesc()))
 	table.insert(lines, string.format([[Level: <b>%s</b> <span class="tiny">(%s to go)</span><br>]], round_down(level() + level_progress(), 1), format_integer(substats_for_level(level() + 1) - rawmainstat())))
 -- 	table.insert(lines, string.format([[Mainstat: <b><span style="color: blue; font-weight: bold;">%s</span> (%s)</b><br>]], format_integer(buffedmainstat()), format_integer(basemainstat())))
@@ -529,14 +535,69 @@ add_interceptor("/charpane.php", function()
 	else
 		table.insert(lines, "")
 	end
+end
+
+function full_charpane_level_lines(lines)
+	local _, have_level, need_level = level_progress()
+	local function make_progress_bar(have, need, width, height)
+		local filled_width = math.floor((have / need) * width)
+		local remaining_width = width - filled_width
+		return string.format([[<table title='%s / %s' cellpadding=0 cellspacing=0 style='border: 1px solid #5A5A5A'><tr><td height=%d width=%s bgcolor=#5A5A5A></td><td width=%s bgcolor=white></td></tr></table>]], format_integer(have), format_integer(need), height, filled_width, remaining_width)
+	end
+	table.insert(lines, [[<center>]])
+	table.insert(lines, string.format([[<a class=nounder target=mainpane href="charsheet.php"><b>%s</b></a><br>Level %s<br>%s]], playername(), level(), classdesc()))
+	table.insert(lines, make_progress_bar(have_level, need_level, 100, 5))
+	table.insert(lines, [[</center><br>]])
+	table.insert(lines, [[<table align=center>]])
+	local function add_stat_line(statname, buffed, base, raw_substat)
+		local substat_level = math.floor(math.sqrt(raw_substat))
+		local substat_base = substat_level * substat_level
+		local have = raw_substat - substat_base
+		local need = (substat_level + 1) * (substat_level + 1) - substat_base
+		table.insert(lines, string.format([[<tr><td align=right>%s</td><td align=left><b><font color=blue>%s</font>&nbsp;(%s)</b>%s</td></tr>]], statname, format_integer(buffed), format_integer(base), make_progress_bar(have, need, 50, 3)))
+	end
+	add_stat_line("Muscle:", buffedmuscle(), basemuscle(), rawmuscle())
+	add_stat_line("Mysticality:", buffedmysticality(), basemysticality(), rawmysticality())
+	add_stat_line("Moxie:", buffedmoxie(), basemoxie(), rawmoxie())
+	local function add_organ_line(organdescs, amountstr)
+		local desc = random_choice(organdescs)
+		table.insert(lines, string.format([[<tr><td align=right>%s</td><td><b>%s</b></td></tr>]], desc, amountstr))
+	end
+	add_organ_line({ "Engorgement:", "Gluttony:", "Satiation:" }, fullness() .. " / " .. estimate_max_fullness())
+	add_organ_line({ "Inebriety:", "Temulency:", "Tipsiness:" }, drunkenness() .. " / " .. estimate_max_safe_drunkenness())
+	add_organ_line({ "Melancholy:", "Moroseness:", "Spleen:" }, spleen() .. " / " .. estimate_max_spleen())
+	table.insert(lines, [[</table>]])
+	if ascensionstatus() == "Aftercore" then
+		table.insert(lines, [[<center><font size="2"><a href="]] .. make_optimize_diet_href() .. [[" target="mainpane" style="color: green">{ Optimize diet }</a></font></center>]])
+	end
+end
+
+function compact_charpane_hpmp_lines(lines)
 	table.insert(lines, string.format([[HP: <b>%s</b><br>]], format_hpmp(hp(), maxhp())))
-	if ascensionpathid() == 10 then
+	if ascensionpath("Zombie Slayer") then
 		table.insert(lines, string.format([[Horde: <b>%s</b><br>]], horde_size()))
 	else
 		table.insert(lines, string.format([[MP: <b>%s</b><br>]], format_hpmp(mp(), maxmp())))
 	end
 	table.insert(lines, string.format([[Meat: <b>%s</b><br>]], format_integer(meat())))
 	table.insert(lines, string.format([[Turns: <b>%s</b> <span class="tiny">(%s played, day %s)</span><br>]], advs(), turnsthisrun(), daysthisrun()))
+end
+
+function full_charpane_hpmp_lines(lines)
+	table.insert(lines, [[<table cellpadding=3 align=center>]])
+	table.insert(lines, string.format([[<tr><td align=center><img src="http://images.kingdomofloathing.com/itemimages/hp.gif" class=hand title="Hit Points" alt="Hit Points"><br><span class=black>%s</span></td>]], format_hpmp(hp(), maxhp())))
+	if ascensionpath("Zombie Slayer") then
+		table.insert(lines, string.format([[<td align=center><img src="http://images.kingdomofloathing.com/otherimages/zombies/horde_15.gif"  height=35 class=hand title="Horde (%s zombie(s))" alt="Horde (%s zombie(s))"><br><span class=black>%s</span></td></tr>]], horde_size(), horde_size(), horde_size()))
+	else
+		local mpname = ({ "Muscularity Points", "Muscularity Points", "Mana Points", "Mana Points", "Mojo Points", "Mojo Points" })[classid()] or "MP"
+		table.insert(lines, string.format([[<td align=center><img src="http://images.kingdomofloathing.com/itemimages/mp.gif" class=hand title="%s" alt="%s"><br><span class=black>%s</span></td></tr>]], mpname, mpname, format_hpmp(mp(), maxmp())))
+	end
+	table.insert(lines, string.format([[<tr><td align=center><img src="http://images.kingdomofloathing.com/itemimages/meat.gif" class=hand title="Meat" alt="Meat"><br><span class=black>%s</span></td>]], format_integer(meat())))
+	table.insert(lines, string.format([[<td align=center><img src="http://images.kingdomofloathing.com/itemimages/hourglass.gif" class=hand title="Adventures Remaining" alt="Adventures Remaining"><br><span class=black>%s</span></td></tr>]], format_integer(advs())))
+	table.insert(lines, [[</table>]])
+end
+
+function compact_charpane_zone_lines(lines)
 	table.insert(lines, string.format([[<a href="%s" target="mainpane">Zone</a>: <b><a href="%s" target="mainpane">%s</a></b><br>]], work_around_broken_status_lastadv(lastadventuredata()).container or "", lastadventuredata().link, lastadventuredata().name))
 	local links = update_and_get_previous_adventure_links()
 	if setting_enabled("show multiple previous-adventure links") then
@@ -546,39 +607,23 @@ add_interceptor("/charpane.php", function()
 			end
 		end
 	end
-	table.insert(lines, "<!-- kolproxy charpane text area --><br>")
+end
 
-	table.insert(lines, srdata .. "<br>")
-
-	local next_bee_turn = ascension["bee turn"]
-	local bee_value = nil
-	if next_bee_turn then
-		local turnmin = next_bee_turn - turnsthisrun()
-		local turnmax = next_bee_turn + 5 - turnsthisrun()
-		if turnmax >= 0 then
-			if turnmin < 0 then turnmin = 0 end
-			bee_value = turnmin .. "-" .. turnmax
-		end
-	else
--- 		bee_value = "?"
-	end
-	if bee_value then
-		table.insert(lines, string.format([[Bee: %s<br>]], bee_value))
-	end
-
-	for _, x in ipairs(ascension["turn counters"] or {}) do
-		local turns = x.turn + x.length - turnsthisrun()
-		if turns >= 0 then
-			if turnsleft == 0 then
-				table.insert(lines, string.format([[%s: <b style="color: green">%s</b><br>]], x.name, turns))
-			else
-				table.insert(lines, string.format([[%s: <b>%s</b><br>]], x.name, turns))
+function full_charpane_zone_lines(lines)
+	table.insert(lines, [[<center>]])
+	table.insert(lines, string.format([[<font size=2><b><a class=nounder href="%s" target=mainpane>Last Adventure:</a></b></font><br><font size=2><a target=mainpane href="%s">%s</a></font><br>]], work_around_broken_status_lastadv(lastadventuredata()).container or "", lastadventuredata().link, lastadventuredata().name))
+	if setting_enabled("show multiple previous-adventure links") then
+		local links = update_and_get_previous_adventure_links()
+		for i = 2, 5 do
+			if links[i] then
+				table.insert(lines, string.format([[<font size=1><a target=mainpane href="%s">%s</a></font><br>]], links[i].link, links[i].name))
 			end
 		end
 	end
+	table.insert(lines, [[</center>]])
+end
 
-	table.insert(lines, "<br>")
-
+function compact_charpane_equipment_lines(lines)
 	table.insert(lines, "<center>" .. get_outfit_slots_line() .. "</center>")
 	local function get_equip_line(tbl)
 		local equipstr = ""
@@ -590,32 +635,54 @@ add_interceptor("/charpane.php", function()
 		end
 		for _, x in ipairs(tbl) do
 			local pic = "blank"
+			local descid = 0
 			if eq[x] then
--- 				pic = item_api_data(eq[x]).picture
-				local isok, thepic = pcall(function() return item_api_data(eq[x]).picture end)
+				local isok, thepic, thedescid = pcall(function()
+					local data = item_api_data(eq[x])
+					return data.picture, data.descid
+				end)
 				if isok then
 					pic = thepic
+					descid = thedescid
 				else
 					pic = "nopic"
+					descid = 0
 				end
 			end
-			equipstr = equipstr .. string.format([[<img src="http://images.kingdomofloathing.com/itemimages/%s.gif" width="30" height="30" style="border: solid thin lightgray;">]], pic)
+			equipstr = equipstr .. string.format([[<img src="http://images.kingdomofloathing.com/itemimages/%s.gif" width="30" height="30" style="border: solid thin lightgray;" class="hand" onClick="descitem(%d, 0, event)">]], pic, descid)
 		end
 		return equipstr
 	end
 	table.insert(lines, string.format("<center>%s<br>%s</center><br>", get_equip_line { "hat", "container", "shirt", "weapon", "offhand" }, get_equip_line { "pants", "acc1", "acc2", "acc3", "familiarequip" }))
+end
 
+function compact_charpane_familiar_lines(lines, fams)
 	if familiarid() ~= 0 then
 		table.insert(lines, "<center>" .. get_familiar_grid_line(fams) .. "</center>")
-		table.insert(lines, string.format([[<center>%s lbs.<!-- kolproxy charpane familiar text area --></center><br>]], buffedfamiliarweight()))
-	elseif ascensionpathid() == 8 then
-		table.insert(lines, [[<center>]] .. get_clancy_display() .. [[</center><br>]])
+		table.insert(lines, string.format([[<center>%s lbs.<!-- kolproxy charpane familiar text area --></center>]], buffedfamiliarweight()))
+	elseif ascensionpath("Avatar of Boris") then
+		table.insert(lines, [[<center>]] .. get_clancy_display() .. [[</center>]])
 	elseif ascensionpath("Avatar of Jarlsberg") then
-		table.insert(lines, [[<center>]] .. get_companion_display() .. [[</center><br>]])
+		table.insert(lines, [[<center>]] .. get_companion_display() .. [[</center>]])
 	else
-		table.insert(lines, [[<center><a href="familiar.php" target="mainpane">No familiar</a></center><br>]])
+		table.insert(lines, [[<center><a href="familiar.php" target="mainpane">No familiar</a></center>]])
 	end
+end
 
+function full_charpane_familiar_lines(lines, fams)
+	if familiarid() ~= 0 then
+		table.insert(lines, "<center>" .. get_familiar_grid_line(fams) .. "</center>")
+		table.insert(lines, string.format([[<center><font size=2>%s lbs.<!-- kolproxy charpane familiar text area --></font></center>]], buffedfamiliarweight()))
+	elseif ascensionpath("Avatar of Boris") then
+		table.insert(lines, [[<center>]] .. get_clancy_display() .. [[</center>]])
+	elseif ascensionpath("Avatar of Jarlsberg") then
+		table.insert(lines, [[<center>]] .. get_companion_display() .. [[</center>]])
+	else
+		table.insert(lines, [[<center><a href="familiar.php" target="mainpane">No familiar</a></center>]])
+	end
+end
+
+function compact_charpane_buff_lines(lines)
 	local buff_colors = {
 		["On the Trail"] = "purple",
 		["Everything Looks Red"] = "red",
@@ -624,7 +691,7 @@ add_interceptor("/charpane.php", function()
 	}
 	local sorting = {}
 	for descid, x in pairs(status().effects) do
-		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid }) -- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly
+		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid, upeffect = x[4] }) -- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly
 	end
 	for descid, x in pairs(status().intrinsics) do
 		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid })
@@ -634,7 +701,6 @@ add_interceptor("/charpane.php", function()
 	local bufflines = {}
 
 	if setting_enabled("show buff extension arrows") then
-		local buffinfo = get_buff_extension_info()
 		local curbuffline = nil
 		for _, x in ipairs(sorting) do
 			local styleinfo = ""
@@ -644,9 +710,18 @@ add_interceptor("/charpane.php", function()
 				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
 			end
 			local strarrow = ""
-			local bi = buffinfo[x.title]
-			if bi and have_skill(bi.skillname) and mp() >= bi.mpcost then
-				strarrow = string.format([[<img src="%s" style="cursor: pointer;" onclick="cast_skillid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", bi.skillid)
+			if x.upeffect then
+				local skillid = tonumber(x.upeffect:match("skill:([0-9]+)"))
+				local itemid = tonumber(x.upeffect:match("item:([0-9]+)"))
+				if skillid then
+					strarrow = string.format([[<img src="%s" style="cursor: pointer;" onclick="kolproxy_cast_skillid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", skillid)
+				elseif itemid then
+					if have_item(itemid) then
+						strarrow = string.format([[<img src="%s" style="cursor: pointer;" onclick="kolproxy_use_itemid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", itemid)
+					else
+						strarrow = string.format([[<img src="%s" style="cursor: pointer; opacity: 0.5;" onclick="kolproxy_use_itemid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", itemid)
+					end
+				end
 			end
 			local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>%s</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, display_duration(x.duration))
 			if not curbuffline then
@@ -685,6 +760,125 @@ add_interceptor("/charpane.php", function()
 
 	if ascensionstatus() == "Aftercore" then
 		table.insert(lines, [[<center><a href="]]..make_get_buffs_href()..[[" target="mainpane" style="color: green">{ Get buffs }</a></center>]])
+	end
+end
+
+function full_charpane_buff_lines(lines)
+	local buff_colors = {
+		["On the Trail"] = "purple",
+		["Everything Looks Red"] = "red",
+		["Everything Looks Blue"] = "blue",
+		["Everything Looks Yellow"] = "goldenrod",
+	}
+	local sorting = {}
+	for descid, x in pairs(status().effects) do
+		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid }) -- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly
+	end
+	for descid, x in pairs(status().intrinsics) do
+		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid })
+	end
+	table.sort(sorting, buff_sort_func)
+
+	local bufflines = {}
+
+	if setting_enabled("show buff extension arrows") then
+		for _, x in ipairs(sorting) do
+			local styleinfo = ""
+			local imgstyleinfo = ""
+			if buff_colors[x.title] then
+				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
+				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
+			end
+			local strarrow = ""
+			if x.upeffect then
+				local skillid = tonumber(x.upeffect:match("skill:([0-9]+)"))
+				local itemid = tonumber(x.upeffect:match("item:([0-9]+)"))
+				if skillid then
+					strarrow = string.format([[<img src="%s" style="cursor: pointer;" onclick="kolproxy_cast_skillid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", skillid)
+				elseif itemid then
+					strarrow = string.format([[<img src="%s" style="cursor: pointer;" onclick="kolproxy_use_itemid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", itemid)
+				end
+			end
+			local str = string.format([[<tr><td>%s</td><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s %s</font><br></td></tr>]], strarrow, imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_duration(x.duration))
+			table.insert(bufflines, str)
+		end
+	else
+		for _, x in ipairs(sorting) do
+			local styleinfo = ""
+			local imgstyleinfo = ""
+			if buff_colors[x.title] then
+				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
+				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
+			end
+			local str = string.format([[<tr><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s %s</font><br></td></tr>]], imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_duration(x.duration))
+			table.insert(bufflines, str)
+		end
+	end
+
+	table.insert(lines, [[<br>]])
+	table.insert(lines, [[<center><table>]] .. table.concat(bufflines) .. [[</table></center>]])
+
+	if ascensionstatus() == "Aftercore" then
+		table.insert(lines, [[<center><a href="]]..make_get_buffs_href()..[[" target="mainpane" style="color: green">{ Get buffs }</a></center>]])
+	end
+end
+
+add_interceptor("/charpane.php", function()
+	if not setting_enabled("use custom kolproxy charpane") then return end
+	if not pcall(turnsthisrun) then return end -- in afterlife
+	if kolproxy_custom_charpane_mode() ~= "compact" then return end
+	local extra_js, fams = get_familiar_grid()
+
+	local bgcolor, srdata = get_srdata("SR")
+
+	local lines = {}
+	compact_charpane_level_lines(lines)
+	compact_charpane_hpmp_lines(lines)
+	compact_charpane_zone_lines(lines)
+
+	table.insert(lines, "<!-- kolproxy charpane text area --><br>")
+
+	table.insert(lines, srdata .. "<br>")
+
+	local next_bee_turn = ascension["bee turn"]
+	local bee_value = nil
+	if next_bee_turn then
+		local turnmin = next_bee_turn - turnsthisrun()
+		local turnmax = next_bee_turn + 5 - turnsthisrun()
+		if turnmax >= 0 then
+			if turnmin < 0 then turnmin = 0 end
+			bee_value = turnmin .. "-" .. turnmax
+		end
+	else
+-- 		bee_value = "?"
+	end
+	if bee_value then
+		table.insert(lines, string.format([[Bee: %s<br>]], bee_value))
+	end
+
+	for _, x in ipairs(ascension["turn counters"] or {}) do
+		local turns = x.turn + x.length - turnsthisrun()
+		if turns >= 0 then
+			if turnsleft == 0 then
+				table.insert(lines, string.format([[%s: <b style="color: green">%s</b><br>]], x.name, turns))
+			else
+				table.insert(lines, string.format([[%s: <b>%s</b><br>]], x.name, turns))
+			end
+		end
+	end
+
+	table.insert(lines, "<br>")
+
+	if tonumber(api_flag_config().swapfam) ~= 1 then
+		compact_charpane_equipment_lines(lines)
+		compact_charpane_familiar_lines(lines, fams)
+		table.insert(lines, "<br>")
+		compact_charpane_buff_lines(lines)
+	else
+		compact_charpane_equipment_lines(lines)
+		compact_charpane_buff_lines(lines)
+		table.insert(lines, "<br>")
+		compact_charpane_familiar_lines(lines, fams)
 	end
 
 	local text = [[
@@ -733,65 +927,15 @@ add_interceptor("/charpane.php", function()
 
 	local bgcolor, srdata = get_srdata("Semirare")
 
-	local _, have_level, need_level = level_progress()
-	local function make_progress_bar(have, need, width, height)
-		local filled_width = math.floor((have / need) * width)
-		local remaining_width = width - filled_width
-		return string.format([[<table title='%s / %s' cellpadding=0 cellspacing=0 style='border: 1px solid #5A5A5A'><tr><td height=%d width=%s bgcolor=#5A5A5A></td><td width=%s bgcolor=white></td></tr></table>]], format_integer(have), format_integer(need), height, filled_width, remaining_width)
-	end
-	table.insert(lines, [[<center>]])
-	table.insert(lines, string.format([[<a class=nounder target=mainpane href="charsheet.php"><b>%s</b></a><br>Level %s<br>%s]], playername(), level(), classdesc()))
-	table.insert(lines, make_progress_bar(have_level, need_level, 100, 5))
-	table.insert(lines, [[</center><br>]])
-	table.insert(lines, [[<table align=center>]])
-	local function add_stat_line(statname, buffed, base, raw_substat)
-		local substat_level = math.floor(math.sqrt(raw_substat))
-		local substat_base = substat_level * substat_level
-		local have = raw_substat - substat_base
-		local need = (substat_level + 1) * (substat_level + 1) - substat_base
-		table.insert(lines, string.format([[<tr><td align=right>%s</td><td align=left><b><font color=blue>%s</font>&nbsp;(%s)</b>%s</td></tr>]], statname, format_integer(buffed), format_integer(base), make_progress_bar(have, need, 50, 3)))
-	end
-	add_stat_line("Muscle:", buffedmuscle(), basemuscle(), rawmuscle())
-	add_stat_line("Mysticality:", buffedmysticality(), basemysticality(), rawmysticality())
-	add_stat_line("Moxie:", buffedmoxie(), basemoxie(), rawmoxie())
-	local function add_organ_line(organdescs, amountstr)
-		local desc = random_choice(organdescs)
-		table.insert(lines, string.format([[<tr><td align=right>%s</td><td><b>%s</b></td></tr>]], desc, amountstr))
-	end
-	add_organ_line({ "Engorgement:", "Gluttony:", "Satiation:" }, fullness() .. " / " .. estimate_max_fullness())
-	add_organ_line({ "Inebriety:", "Temulency:", "Tipsiness:" }, drunkenness() .. " / " .. estimate_max_safe_drunkenness())
-	add_organ_line({ "Melancholy:", "Moroseness:", "Spleen:" }, spleen() .. " / " .. estimate_max_spleen())
-	table.insert(lines, [[</table>]])
-	if ascensionstatus() == "Aftercore" then
-		table.insert(lines, [[<center><font size="2"><a href="]] .. make_optimize_diet_href() .. [[" target="mainpane" style="color: green">{ Optimize diet }</a></font></center>]])
-	end
+	full_charpane_level_lines(lines)
+	full_charpane_hpmp_lines(lines)
 
-	table.insert(lines, [[<table cellpadding=3 align=center>]])
-	table.insert(lines, string.format([[<tr><td align=center><img src="http://images.kingdomofloathing.com/itemimages/hp.gif" class=hand title="Hit Points" alt="Hit Points"><br><span class=black>%s</span></td>]], format_hpmp(hp(), maxhp())))
-	if ascensionpathid() == 10 then
-		table.insert(lines, string.format([[<td align=center><img src="http://images.kingdomofloathing.com/otherimages/zombies/horde_15.gif"  height=35 class=hand title="Horde (%s zombie(s))" alt="Horde (%s zombie(s))"><br><span class=black>%s</span></td></tr>]], horde_size(), horde_size(), horde_size()))
-	else
-		local mpname = ({ "Muscularity Points", "Muscularity Points", "Mana Points", "Mana Points", "Mojo Points", "Mojo Points" })[classid()] or "MP"
-		table.insert(lines, string.format([[<td align=center><img src="http://images.kingdomofloathing.com/itemimages/mp.gif" class=hand title="%s" alt="%s"><br><span class=black>%s</span></td></tr>]], mpname, mpname, format_hpmp(mp(), maxmp())))
-	end
-	table.insert(lines, string.format([[<tr><td align=center><img src="http://images.kingdomofloathing.com/itemimages/meat.gif" class=hand title="Meat" alt="Meat"><br><span class=black>%s</span></td>]], format_integer(meat())))
-	table.insert(lines, string.format([[<td align=center><img src="http://images.kingdomofloathing.com/itemimages/hourglass.gif" class=hand title="Adventures Remaining" alt="Adventures Remaining"><br><span class=black>%s</span></td></tr>]], format_integer(advs())))
-	table.insert(lines, [[</table>]])
-
-	table.insert(lines, [[<center><font size="2">]]..srdata..[[</font></center>]])
 	table.insert(lines, string.format([[<center><font size="2">Turns played: <b>%s</b> (day %s)</font></center>]], turnsthisrun(), daysthisrun()))
+	table.insert(lines, [[<center><font size="2">]]..srdata..[[</font></center>]])
 	table.insert(lines, "<!-- kolproxy charpane text area -->")
-	table.insert(lines, [[<br><center>]])
-	table.insert(lines, string.format([[<font size=2><b><a class=nounder href="%s" target=mainpane>Last Adventure:</a></b></font><br><font size=2><a target=mainpane href="%s">%s</a></font><br>]], work_around_broken_status_lastadv(lastadventuredata()).container or "", lastadventuredata().link, lastadventuredata().name))
-	if setting_enabled("show multiple previous-adventure links") then
-		local links = update_and_get_previous_adventure_links()
-		for i = 2, 5 do
-			if links[i] then
-				table.insert(lines, string.format([[<font size=1><a target=mainpane href="%s">%s</a></font><br>]], links[i].link, links[i].name))
-			end
-		end
-	end
-	table.insert(lines, [[</center><br>]])
+
+	table.insert(lines, "<br>")
+	full_charpane_zone_lines(lines)
 
 	-- TODO: make bee counter generic and auto-insert
 
@@ -806,71 +950,14 @@ add_interceptor("/charpane.php", function()
 		end
 	end
 
-	table.insert(lines, "")
-
-	if familiarid() ~= 0 then
-		table.insert(lines, "<center>" .. get_familiar_grid_line(fams) .. "</center>")
-		table.insert(lines, string.format([[<center><font size=2>%s lbs.<!-- kolproxy charpane familiar text area --></font></center>]], buffedfamiliarweight()))
-	elseif ascensionpathid() == 8 then
-		table.insert(lines, [[<center>]] .. get_clancy_display() .. [[</center><br>]])
-	elseif ascensionpath("Avatar of Jarlsberg") then
-		table.insert(lines, [[<center>]] .. get_companion_display() .. [[</center><br>]])
+	if tonumber(api_flag_config().swapfam) ~= 1 then
+		table.insert(lines, "<br>")
+		full_charpane_familiar_lines(lines, fams)
+		full_charpane_buff_lines(lines)
 	else
-		table.insert(lines, [[<center><a href="familiar.php" target="mainpane">No familiar</a></center>]])
-	end
-
-	local buff_colors = {
-		["On the Trail"] = "purple",
-		["Everything Looks Red"] = "red",
-		["Everything Looks Blue"] = "blue",
-		["Everything Looks Yellow"] = "goldenrod",
-	}
-	local sorting = {}
-	for descid, x in pairs(status().effects) do
-		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid }) -- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly
-	end
-	for descid, x in pairs(status().intrinsics) do
-		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid })
-	end
-	table.sort(sorting, buff_sort_func)
-
-	local bufflines = {}
-
-	if setting_enabled("show buff extension arrows") then
-		local buffinfo = get_buff_extension_info()
-		for _, x in ipairs(sorting) do
-			local styleinfo = ""
-			local imgstyleinfo = ""
-			if buff_colors[x.title] then
-				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
-				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
-			end
-			local strarrow = ""
-			local bi = buffinfo[x.title]
-			if bi and have_skill(bi.skillname) and mp() >= bi.mpcost then
-				strarrow = string.format([[<img src="%s" style="cursor: pointer;" onclick="cast_skillid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", bi.skillid)
-			end
-			local str = string.format([[<tr><td>%s</td><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s %s</font><br></td></tr>]], strarrow, imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_duration(x.duration))
-			table.insert(bufflines, str)
-		end
-	else
-		for _, x in ipairs(sorting) do
-			local styleinfo = ""
-			local imgstyleinfo = ""
-			if buff_colors[x.title] then
-				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
-				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
-			end
-			local str = string.format([[<tr><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s %s</font><br></td></tr>]], imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_duration(x.duration))
-			table.insert(bufflines, str)
-		end
-	end
-
-	table.insert(lines, [[<br>]])
-	table.insert(lines, [[<center><table>]] .. table.concat(bufflines) .. [[</table></center>]])
-
-	if ascensionstatus() == "Aftercore" then
-		table.insert(lines, [[<center><a href="]]..make_get_buffs_href()..[[" target="mainpane" style="color: green">{ Get buffs }</a></center>]])
+		full_charpane_buff_lines(lines)
+		table.insert(lines, "<br>")
+		full_charpane_familiar_lines(lines, fams)
 	end
 
 	local text = [[

@@ -22,6 +22,7 @@ load_file("interface", "interface/modifier-maximizer.lua")
 load_file("interface", "interface/compute-net-worth.lua")
 load_file("interface", "interface/outfit-slots.lua")
 load_file("interface", "interface/elemental-resistance.lua")
+load_file("interface", "interface/inventory-diff.lua")
 
 load_file("item", "items/scary-copying.lua")
 load_file("item", "items/fly-away.lua")
@@ -132,15 +133,15 @@ load_file("automation", "automation/seahorse.lua")
 load_file("automation", "automation/sea-violence.lua")
 load_file("automation", "automation/sea-hatred.lua")
 
-load_file("interface", "other/twillo/buffs.lua")
-load_file("interface", "other/twillo/outfits.lua")
-load_file("interface", "other/twillo/equipment.lua")
+load_file("interface", "items/equipment-bonuses.lua")
+load_file("interface", "interface/display-bonuses.lua")
+load_file("interface", "buffs/buff-bonuses.lua")
+
 load_file("interface", "other/twillo/combat-display.lua")
 load_file("interface", "other/twillo/item-display.lua")
 load_file("interface", "other/twillo/ml-display.lua")
 load_file("interface", "other/twillo/init-display.lua")
 load_file("interface", "other/twillo/meat-display.lua")
-load_file("interface", "other/twillo/bonus-display.lua")
 
 load_file("interface", "other/bmaher/compact-topmenu.lua")
 
