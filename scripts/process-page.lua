@@ -56,8 +56,8 @@ setup_variables()
 
 do
 	local function matches(x)
-		if monster_name and newly_started_fight and encounter_source == "adventure" then
-			return monster_name:contains(x)
+		if newly_started_fight and encounter_source == "adventure" and monstername(x) then
+			return true
 		elseif adventure_title == x or adventure_result == x then
 			return true
 		elseif text:contains(">There once was a bleary-eyed cyclops<") and x == "The Bleary-Eyed Cyclops" then -- WORKAROUND: The page for the cyclops eyedrops is weird with no title

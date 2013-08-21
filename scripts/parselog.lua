@@ -59,7 +59,7 @@ local function parse_page(x, xtbl)
 			backuppagetitle = z
 		end
 	end
-	local monstername = pt:match([[>You're fighting <span id='monname'>([^<]*)</span><]])
+	local monstername = pt:match([[>You're fighting <span id='monname'>([^<]*)</span><]]) or pt:match([[<span id="monname" style="display:none">([^<]*)</span>]])
 	local advrestitle = pt:match([[<td style="color: white;" align=center bgcolor=blue><b>[a-zA-Z]* Results:</b></td></tr><tr><td style="padding: 5px; border: 1px solid blue;"><center><table><tr><td><center><b>([^<]*)</b>]])
 	local title = monstername or advrestitle or pagetitle
 

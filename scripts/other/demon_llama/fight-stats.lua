@@ -290,18 +290,18 @@ add_printer("/fight.php", function()
 				local plusinit = tonumber(x:match("+([0-9]+)%% Combat Initiative"))
 				bonuses = bonuses + { ["Item Drops from Monsters"] = plusitem, ["Meat from Monsters"] = plusmeat, ["Combat Initiative"] = plusinit }
 			end
-			text = text:gsub([[(id='monname'.-)(</td>)]], function(prefix, suffix)
+			text = text:gsub([[(id=['"]monname['"].-)(</td>)]], function(prefix, suffix)
 				return prefix .. [[<div style='font-size:11px;color:#555;margin-top:5px;'>]] .. formatMonsterStats(monster) .. formatMonsterItems(monster, bonuses) .. [[</div>]] .. suffix
 			end)
 
 			if monster.Stats.Phylum then
 				text = text:gsub([[img id='monpic']], [[%0 title='Phylum: ]]..monster.Stats.Phylum..[[']])
-				text = text:gsub([[id='monname'.-</table>]], [[%0]] .. formatMonsterPhylumTreasure(monster))
+				text = text:gsub([[id=['"]monname['"].-</table>]], [[%0]] .. formatMonsterPhylumTreasure(monster))
 			end
 			
 			if ascensionpath("Bees Hate You") then
-				local boldedName = monster_name:gsub("[bB]", [[<span style="font-weight:bold;color:orange;">%0</span>]])
-				text = text:gsub(monster_name, boldedName)
+				local boldedName = monstername():gsub("[bB]", [[<span style="font-weight:bold;color:orange;">%0</span>]])
+				text = text:gsub(monstername(), boldedName)
 			end
 		end
 	end

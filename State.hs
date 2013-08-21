@@ -21,6 +21,7 @@ import System.IO.Error (isDoesNotExistError)
 import Text.JSON
 import Text.Printf
 import qualified Data.Map
+import qualified Data.ByteString.Char8
 
 get_stid ref = do
 	ai <- getApiInfo ref
@@ -48,7 +49,7 @@ loadState ref = do
 						do_db_query_ db ("CREATE TABLE IF NOT EXISTS " ++ tablename ++ "(name TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY(name));") []
 						rs <- do_db_query db ("SELECT name, value FROM " ++ tablename ++ ";") []
 						let mapper x = case x of
-							[Just name, Just value] -> (name, value)
+							[Just name, Just value] -> (Data.ByteString.Char8.unpack name, Data.ByteString.Char8.unpack value)
 							_ -> throw $ InternalError $ "Error loading state from database"
 						return $ Data.Map.fromList $ map mapper rs
 
@@ -119,7 +120,7 @@ registerUpdatedState ref stateset var = do
 	tablename <- get_state_tablename ref "character"
 	doStateAction ref $ \db -> do
 		do_db_query_ db ("CREATE TABLE IF NOT EXISTS " ++ tablename ++ "(name TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY(name));") []
-		do_db_query_ db ("INSERT OR REPLACE INTO " ++ tablename ++ "(name, value) VALUES(?, ?);") [Just "turnsplayed last state change", Just $ show $ turnsplayed ai]
+		do_db_query_ db ("INSERT OR REPLACE INTO " ++ tablename ++ "(name, value) VALUES(?, ?);") [Just $ Data.ByteString.Char8.pack $ "turnsplayed last state change", Just $ Data.ByteString.Char8.pack $ show $ turnsplayed ai]
 
 remap_stateset input_stateset input_var = if input_stateset == "fight"
 	then ("day", "fight." ++ input_var)
@@ -140,7 +141,7 @@ raw_unsetState ref input_stateset input_var = do
 	tablename <- get_state_tablename ref stateset
 	doStateAction ref $ \db -> do
 		do_db_query_ db ("CREATE TABLE IF NOT EXISTS " ++ tablename ++ "(name TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY(name));") []
-		do_db_query_ db ("DELETE FROM " ++ tablename ++ " WHERE name = ?;") [Just var]
+		do_db_query_ db ("DELETE FROM " ++ tablename ++ " WHERE name = ?;") [Just $ Data.ByteString.Char8.pack $ var]
 	registerUpdatedState ref stateset var
 
 raw_setState ref input_stateset input_var value = do
@@ -158,7 +159,7 @@ raw_setState ref input_stateset input_var value = do
 	tablename <- get_state_tablename ref stateset
 	doStateAction ref $ \db -> do
 		do_db_query_ db ("CREATE TABLE IF NOT EXISTS " ++ tablename ++ "(name TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY(name));") []
-		do_db_query_ db ("INSERT OR REPLACE INTO " ++ tablename ++ "(name, value) VALUES(?, ?);") [Just var, Just value]
+		do_db_query_ db ("INSERT OR REPLACE INTO " ++ tablename ++ "(name, value) VALUES(?, ?);") [Just $ Data.ByteString.Char8.pack $ var, Just $ Data.ByteString.Char8.pack $ value]
 	registerUpdatedState ref stateset var
 
 setState ref input_stateset input_var value = do
@@ -257,7 +258,7 @@ mirrorStateIntoDatabase ref = do
 			tablename <- get_state_tablename ref base_tablename
 			do_db_query_ db ("CREATE TABLE IF NOT EXISTS " ++ tablename ++ "(name TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY(name));") []
 			do_db_query_ db ("DELETE FROM " ++ tablename ++ ";") []
-			mapM_ (\(x, y) -> do_db_query_ db ("INSERT OR REPLACE INTO " ++ tablename ++ "(name, value) VALUES(?, ?);") [Just x, Just y]) $ Data.Map.toList contents
+			mapM_ (\(x, y) -> do_db_query_ db ("INSERT OR REPLACE INTO " ++ tablename ++ "(name, value) VALUES(?, ?);") [Just $ Data.ByteString.Char8.pack $ x, Just $ Data.ByteString.Char8.pack $ y]) $ Data.Map.toList contents
 		save_tbl "character" charmap
 		save_tbl "ascension" ascmap
 		save_tbl "day" daymap

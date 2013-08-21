@@ -5,10 +5,13 @@
 
 local function getFightBody(htmlPageText)
 	--get fight body
-	local pos,_ = htmlPageText:find("<span id='monname'>")
+	local pos, _ = htmlPageText:find([==[<span id=['"]monname['"]]==])
+	if not pos then
+		return htmlPageText
+	end
 	part1 = htmlPageText:sub(pos)
 	
-	local _,pos1 = part1:find("</span>")
+	local _, pos1 = part1:find("</span>")
 	part1 = part1:sub(pos1 + 1)
 	
 	local pos2, _ = part1:find([[<a name="end">]])

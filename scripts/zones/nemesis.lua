@@ -97,7 +97,7 @@ end)
 -- Turtle Tamer
 
 add_processor("/fight.php", function()
-	if monster_name == "a guard turtle" then
+	if monstername("guard turtle") then
 		if text:match("<img id='monpic' .-frenchturtle.gif.->") then
 			fight["guard turtle.type"] = "French"
 		end
@@ -108,15 +108,15 @@ end)
 
 add_processor("/fight.php", function()
 	dancers = {
-		["a breakdancing raver"] = "spinning his legs",
-		["a pop-and-lock raver"] = "spastic and jerky",
-		["a running man"] = "running anywhere",
+		["breakdancing raver"] = "spinning his legs",
+		["pop-and-lock raver"] = "spastic and jerky",
+		["running man"] = "running anywhere",
 	}
-	if dancers[monster_name] then
+	if dancers[monstername()] then
 		if not fight["nemesis.dancer"] then
 			fight["nemesis.dancer"] = "yes"
 		end
-		if text:contains(dancers[monster_name]) then
+		if text:contains(dancers[monstername()]) then
 			fight["nemesis.dancer.special move"] = "yes"
 		else
 			fight["nemesis.dancer.special move"] = nil

@@ -13,7 +13,7 @@ import Text.JSON
 import System.IO
 import qualified Data.ByteString
 import qualified Data.Map
-import qualified Database.SQLite3
+import qualified Database.SQLite3Modded
 import qualified Network.HTTP
 import qualified Scripting.LuaModded
 
@@ -32,8 +32,8 @@ data SessionDataType = SessionDataType {
 	latestRawJson_ :: IORef (Maybe (Either SomeException (JSObject JSValue))),
 	latestValidJson_ :: IORef (Maybe (JSObject JSValue)),
 	itemData_ :: IORef (Maybe (Int -> Maybe [(String, String)], String -> Maybe [(String, String)])),
-	doDbLogAction_ :: RefType -> (Database.SQLite3.Database -> IO ()) -> IO (),
-	doStateAction_ :: RefType -> (Database.SQLite3.Database -> IO ()) -> IO (),
+	doDbLogAction_ :: RefType -> (Database.SQLite3Modded.Database -> IO ()) -> IO (),
+	doStateAction_ :: RefType -> (Database.SQLite3Modded.Database -> IO ()) -> IO (),
 	stateData_ :: IORef (Maybe (DiscerningStateIdentifier, StateType)),
 	luaInstances_ :: IORef (Data.Map.Map (String, LuaScriptType) (MVar Scripting.LuaModded.LuaState)),
 	lastStoredState_ :: IORef (Maybe String)
@@ -81,7 +81,7 @@ data GlobalRefStuff = GlobalRefStuff {
 	shutdown_secret_ :: String,
 	shutdown_ref_ :: IORef Bool,
 	use_slow_http_ref_ :: IORef Bool,
-	doChatLogAction_ :: (Database.SQLite3.Database -> IO ()) -> IO ()
+	doChatLogAction_ :: (Database.SQLite3Modded.Database -> IO ()) -> IO ()
 }
 
 data OtherRefStuff = OtherRefStuff {

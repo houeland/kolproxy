@@ -72,7 +72,6 @@ add_printer("/fight.php", function()
 		end
 	end
 
--- 	local color = "darkslategray"
 	local color = nil
 	local extra = ""
 	if awesome_monsters[monstername()] then
@@ -142,10 +141,15 @@ add_printer("/fight.php", function()
 		end
 	end
 
--- 	text = text:gsub("(<span id='monname')(>)([^<]+)(</span>)", [[%1 style="color: ]]..color..[["%2(%3)%4]] .. extra)
 	local colorstr = ""
 	if color then
 		colorstr = [[ style="color: ]]..color..[["]]
 	end
-	text = text:gsub("(<span id='monname')(>)([^<]+)(</span>)", [[%1]]..colorstr..[[%2%3%4]] .. extra)
+	text = text:gsub([[<span.-</span>]], function(spantext)
+		if spantext:contains("monname") then
+			return spantext:gsub([[<span [^>]*id=['"]monname['"][^>]*>]], function(spantag)
+				return spantag:gsub(">$", colorstr .. ">")
+			end) .. extra
+		end
+	end)
 end)

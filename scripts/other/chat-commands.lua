@@ -1,3 +1,12 @@
+if register_setting then
+register_setting {
+	name = "enable dangerous chat commands",
+	description = "Enable /sell and /stock chat commands",
+	group = "chat",
+	default_level = "detailed",
+}
+end
+
 -- TODO: simplify functions
 
 add_chat_redirect("/hottub", "Relaxing in the hot tub.", "/clan_viplounge.php", { action = "hottub" })
@@ -100,3 +109,66 @@ end)
 
 add_chat_redirect("/activate", "Activating Greatest American Pants.", "/inventory.php", { action = "activatesuperpants" })
 
+local function match_item(line)
+	local pattern = line:gsub("^%s*", "")
+	local text = get_page("/submitnewchat.php", { graf = "/closet? " .. pattern, pwd = session.pwd, j = 1 })
+	local json = json_to_table(text)
+	local item = json.output:match("Closeting 1 (.*)%.</font>$")
+	if not item then
+		return nil, json.output:match("Would produce: (.*)</font>") or "{ Unknown error. }"
+	end
+	return item
+end
+
+local function match_amount_and_item(line)
+	local amount, pattern = line:match("^%s*(%d+)%s+(.*)$")
+	if not amount then
+		pattern = line:match("^%s*%*%s+(.*)$")
+		if pattern then
+			amount = "*"
+		end
+	end
+	if not amount then
+		amount = 1
+		pattern = line
+	end
+	item, err = match_item(pattern)
+	if not item then
+		return item, err
+	elseif amount == "*" then
+		amount = count_inventory(item)
+	end
+	return tonumber(amount), item
+end
+
+local function command_error(error_text)
+	return make_kol_html_frame(error_text, nil, "darkorange"), requestpath
+end
+
+add_raw_chat_command("/sell", "Selling.", function(line)
+	if line:match("^%s*$") then
+		return command_error('What do you want to autosell? "/sell itemname"')
+	end
+	local amount, item = match_amount_and_item(line)
+	if not amount then
+		return command_error(item)
+	end
+	if not setting_enabled("enable dangerous chat commands") then
+		return command_error("You need to enable /sell and /stock chat commands in kolproxy settings first.")
+	end
+	return autosell_item(item, amount)()
+end)
+
+add_raw_chat_command("/stock", "Stocking.", function(line)
+	if line:match("^%s*$") then
+		return command_error('What do you want to stock in your store? "/stock itemname"')
+	end
+	local amount, item = match_amount_and_item(line)
+	if not amount then
+		return command_error(item)
+	end
+	if not setting_enabled("enable dangerous chat commands") then
+		return command_error("You need to enable /sell and /stock chat commands in kolproxy settings first.")
+	end
+	return add_store_item(item, amount)()
+end)

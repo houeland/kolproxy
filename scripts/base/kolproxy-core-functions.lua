@@ -118,7 +118,7 @@ function maybe_get_monsterdata(name, image)
 	local realname = nil
 	if image then
 		realname = monster_image_lookup[image]
-	else
+	elseif name then
 		realname = monster_name_lookup[name:lower()]
 	end
 	return datafile("monsters")[realname]
@@ -459,9 +459,8 @@ function load_script_files(env)
 	global_env.register_setting = nil
 end
 
-
 function make_kol_html_frame(contents, title, bgcolor)
-	return [[<center><table  width=95%  cellspacing=0 cellpadding=0><tr><td style="color: white; background-color: ]] .. (bgcolor or "green") .. [[;" align=center><b>]] .. (title or "Results:") .. [[</b></td></tr><tr><td style="padding: 5px; border: 1px solid ]]..(bgcolor or "green")..[[;"><center><table><tr><td>]] .. contents .. [[</td></tr></table></center></td></tr><tr><td height=4></td></tr></table></center>]]
+	return [[<center><table  width=95%  cellspacing=0 cellpadding=0><tr><td style="color: white; background-color: ]] .. (bgcolor or "green") .. [[;" align=center><b>]] .. (title or "Results:") .. [[</b></td></tr><tr><td style="padding: 5px; border: 1px solid ]]..(bgcolor or "green")..[[;"><center><table><tr><td>]] .. tostring(contents) .. [[</td></tr></table></center></td></tr><tr><td height=4></td></tr></table></center>]]
 end
 
 function add_raw_message_to_page(pagetext, msg)

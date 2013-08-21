@@ -335,7 +335,7 @@ if hasskill Slice
 endif
 
 ]]
-			elseif (level() >= 7 or mp() >= 25) and monster_element ~= "hot" then
+			elseif (level() >= 7 or mp() >= 25) and monster_element ~= "hot" and monster_element ~= "Hot" then
 				killspell = [[
 
 if hasskill Boil
@@ -351,7 +351,7 @@ if hasskill Slice
 endif
 
 ]]
-			elseif monster_element ~= "stench" then
+			elseif monster_element ~= "stench" and monster_element ~= "Stench" then
 				killspell = [[
 
 if hasskill Curdle

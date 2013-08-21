@@ -176,10 +176,16 @@ function uncloset_item(name)
 	return async_get_page("/inventory.php", { action = "closetpull", pwd = session.pwd, qty = 1, whichitem = get_itemid(name), ajax = 1 })
 end
 		
-function sell_item(name, amount)
+function autosell_item(name, amount)
 	print_debug("  selling", name)
 	return async_get_page("/sellstuff.php", { action = "sell", ajax = 1, type = "quant", ["whichitem[]"] = get_itemid(name), howmany = amount or 1, pwd = session.pwd })
 end
+sell_item = autosell_item
+
+function add_store_item(name, amount, price, limit)
+	return async_get_page("/managestore.php", { action = "additem", ajax = 1, item1 = get_itemid(name), limit1 = limit, price1 = price, qty1 = amount or 1, pwd = session.pwd }) 
+end
+stock_item = add_store_item
 
 function cast_skill(skill, quantity, targetid)
 	local skillid = get_skillid(skill)

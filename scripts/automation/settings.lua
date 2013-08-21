@@ -202,6 +202,7 @@ function get_ascension_automation_settings(want_bonus)
 				{ name = "Brimstone Bracelet", check = function() return not ascensionstatus("Aftercore") end },
 				{ name = "plastic vampire fangs", check = function() return (mp() < 60 or level() < 9) end },
 				{ name = "hockey stick of furious angry rage", check = function() return level() < 13 end },
+				"over-the-shoulder Folder Holder",
 				"astral ring",
 				"astral mask",
 				{ name = "astral belt", check = function() return (level() >= 7 or (challenge == "fist" and fist_level > 0) or highskill_at_run or ascensionstatus() ~= "Hardcore") and (level() < 13) end }, -- How early should we wear this?

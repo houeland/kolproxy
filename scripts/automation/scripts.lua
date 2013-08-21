@@ -548,19 +548,19 @@ function get_automation_scripts(cached_stuff)
 				else
 					critical "Failed to buy MMJ as lvl 9+ AT"
 				end
-			elseif have_item("Cobb's Knob lab key") and ((have("Knob Goblin elite helm") and have_item("Knob Goblin elite polearm") and have_item("Knob Goblin elite pants")) or level() >= 8) and challenge ~= "fist" and not have_item("Knob Goblin seltzer") and not highskill_at_run and challenge ~= "boris" and not have_item("Knob Goblin seltzer") then
+			elseif have_item("Cobb's Knob lab key") and ((have("Knob Goblin elite helm") and have_item("Knob Goblin elite polearm") and have_item("Knob Goblin elite pants")) or (level() >= 8 and not quest("The Goblin Who Wouldn't Be King"))) and challenge ~= "fist" and not have_item("Knob Goblin seltzer") and not highskill_at_run and challenge ~= "boris" and not have_item("Knob Goblin seltzer") then
 				buy_item("Knob Goblin seltzer", "k", 5)
 				if have_item("Knob Goblin seltzer") then
 					return f.ensure_mp(amount, true)
 				else
-					critical "Failed to buy knob goblin seltzer"
+					critical "Failed to buy knob goblin seltzer (should have key and outfit)"
 				end
 			elseif kgs_available and not have_item("Knob Goblin seltzer") then
 				buy_item("Knob Goblin seltzer", "k", 5)
 				if have_item("Knob Goblin seltzer") then
 					return f.ensure_mp(amount, true)
 				else
-					critical "Failed to buy knob goblin seltzer"
+					critical "Failed to buy knob goblin seltzer (should already be available)"
 				end
 			elseif have_item("your father's MacGuffin diary") and not have_item("black cherry soda") then
 				buy_item("black cherry soda", "l", 5)

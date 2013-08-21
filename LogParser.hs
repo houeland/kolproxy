@@ -18,12 +18,12 @@ import qualified Data.ByteString.Base64
 import qualified Data.ByteString.Char8
 import qualified Data.ByteString.Lazy.Char8
 import qualified Data.ByteString.Lazy.Internal
-import qualified Database.SQLite3
+import qualified Database.SQLite3Modded
 
 scan_through_database_lua_logparse filename basefilename = do
-	log_db <- Database.SQLite3.open filename
+	log_db <- Database.SQLite3Modded.open filename
 	(jsonlog, maybeloginfo) <- runLogParsingScript log_db
-	Database.SQLite3.close log_db
+	Database.SQLite3Modded.close log_db
 
 	putStrLn $ show $ maybeloginfo
 	case maybeloginfo of

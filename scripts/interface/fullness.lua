@@ -5,6 +5,8 @@ register_setting {
 	default_level = "limited",
 }
 
+-- TODO: handle ode/milk checks in a better and more generic way. use add_warning {}
+
 add_printer("/charpane.php", function()
 	if setting_enabled("use custom kolproxy charpane") then return end
 	if not setting_enabled("show spleen counter") then return end
@@ -44,11 +46,6 @@ add_printer("/charpane.php", function()
 	end
 end)
 
--- TODO: warn when using frosty mug, divine champagne flute etc. Are all those actually OK since they use inv_booze?
-
--- TODO: warn when drinking from cafes
---   /cafe.php [("cafeid","1"),("pwd","..."),("action","CONSUME!"),("whichitem","1257")]
-
 function retrieve_item_potency(item)
 	if not item then
 		print("WARNING: called retrieve_item_potency(" .. tostring(item) .. ")")
@@ -79,6 +76,38 @@ add_always_warning("/inv_booze.php", function()
 		local potency = retrieve_item_potency(tonumber(params.whichitem))
 		if not potency then
 			return "You might not have enough turns of Ode to Booze active (unspecified potency).", "drinking unspecified potency without enough turns of ode to booze"
+		end
+		local need_turns = (tonumber(params.quantity) or 1) * potency
+		if buffturns("Ode to Booze") < need_turns then
+			return "You do not have enough turns of Ode to Booze active (need " .. need_turns .. " turns).", "drinking without enough turns of ode to booze"
+		end
+	end
+end)
+
+add_always_warning("/cafe.php", function()
+	if params.action ~= "CONSUME!" or tonumber(params.cafeid) ~= 2 then return end
+	-- Micromicrobrewery
+	if tonumber(params.whichitem) == -1 or tonumber(params.whichitem) == -2 then
+		return "Are you sure? You might want to drink Infinitesimal IPA at the very least, and preferably something much better.", "drinking bad microbrewery booze"
+	elseif tonumber(params.whichitem) == -3 then
+		return "Are you sure? Preferably you'd drink something much better.", "drinking bad microbrewery booze"
+	end
+end)
+
+add_always_warning("/cafe.php", function()
+	if params.action ~= "CONSUME!" or tonumber(params.cafeid) ~= 2 then return end
+	-- Micromicrobrewery
+	if ascensionstatus() == "Aftercore" or have_skill("The Ode to Booze") then
+		if not have_buff("Ode to Booze") then
+			return "You do not have Ode to Booze active.", "drinking without ode"
+		end
+		local potency = nil
+		if tonumber(params.whichitem) == -1 or tonumber(params.whichitem) == -2 or tonumber(params.whichitem) == -3 then
+			potency = 3
+		end
+		-- TODO: check potency for other drinks
+		if not potency then
+			return "You might not have enough turns of Ode to Booze active (unknown potency).", "drinking unspecified potency without enough turns of ode to booze"
 		end
 		local need_turns = (tonumber(params.quantity) or 1) * potency
 		if buffturns("Ode to Booze") < need_turns then
@@ -165,5 +194,39 @@ end)
 add_always_warning("/inv_eat.php", function()
 	if ascensionpath("Avatar of Boris") then
 		return check_eating_warning(tonumber(params.whichitem), (tonumber(params.quantity) or 1), "Song of the Glorious Lunch")
+	end
+end)
+
+add_always_warning("/cafe.php", function()
+	if params.action ~= "CONSUME!" or tonumber(params.cafeid) ~= 1 then return end
+	-- Chez Snotee
+	if tonumber(params.whichitem) == -1 or tonumber(params.whichitem) == -2 or tonumber(params.whichitem) == -3 then
+		return "Are you sure? Preferably you'd eat something much better.", "eating bad chez snotee food"
+	end
+end)
+
+add_always_warning("/cafe.php", function()
+	if params.action ~= "CONSUME!" or tonumber(params.cafeid) ~= 1 then return end
+	-- Chez Snotee
+	if ascensionstatus() == "Aftercore" or (have_buff("Got Milk") or have_item("milk of magnesium") or (have("glass of goat's milk") and (classid() == 4 or have_skill("Advanced Saucecrafting")))) then
+		if not have_buff("Got Milk") then
+			return "You do not have Got Milk active.", "eating without Got Milk"
+		end
+		local fullness = nil
+		if tonumber(params.whichitem) == -1 then
+			fullness = 3
+		elseif tonumber(params.whichitem) == -2 then
+			fullness = 4
+		elseif tonumber(params.whichitem) == -3 then
+			fullness = 5
+		end
+		-- TODO: check fullness for other food
+		if not fullness then
+			return "You might not have enough turns of Got Milk active (unknown fullness).", "eating unspecified fullness without enough turns of got milk"
+		end
+		local need_turns = (tonumber(params.quantity) or 1) * fullness
+		if buffturns("Got Milk") < need_turns then
+			return "You do not have enough turns of Got Milk active (need " .. need_turns .. " turns).", "eating without enough turns of got milk"
+		end
 	end
 end)

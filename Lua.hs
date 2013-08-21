@@ -24,7 +24,7 @@ import Text.Regex.TDFA
 import Text.XML.Light
 import qualified Data.ByteString.Char8
 import qualified Data.Map
-import qualified Database.SQLite3
+import qualified Database.SQLite3Modded
 import qualified Scripting.LuaModded as Lua
 
 local_maybepeek l n test peek = do
@@ -748,59 +748,59 @@ runLogScript log_db code = do
 		return 1
 
 	register_function "get_log_lines" $ \l -> do
-		s <- Database.SQLite3.prepare log_db "SELECT idx FROM pageloads;"
+		s <- Database.SQLite3Modded.prepare log_db "SELECT idx FROM pageloads;"
 		Lua.newtable l
 		let process tblidx = do
-			sr <- Database.SQLite3.step s
+			sr <- Database.SQLite3Modded.step s
 			case sr of
-				Database.SQLite3.Row -> do
-					[Database.SQLite3.SQLInteger lidx] <- Database.SQLite3.columns s
+				Database.SQLite3Modded.Row -> do
+					[Database.SQLite3Modded.SQLInteger lidx] <- Database.SQLite3Modded.columns s
 					Lua.pushinteger l tblidx
 					Lua.pushinteger l (fromIntegral lidx)
 					Lua.settable l (-3)
 					process (tblidx + 1)
-				Database.SQLite3.Done -> return ()
+				Database.SQLite3Modded.Done -> return ()
 		process 1
-		Database.SQLite3.finalize s
+		Database.SQLite3Modded.finalize s
 		return 1
 
 	register_function "get_line_text" $ \l -> do
 		whichidx <- peekJust l 1
 		whichfield <- peekJust l 2
-		s <- Database.SQLite3.prepare log_db ("SELECT " ++ whichfield ++ " FROM pageloads WHERE idx == " ++ show (whichidx :: Int) ++ ";") -- TODO: make safe?
-		sr <- Database.SQLite3.step s
+		s <- Database.SQLite3Modded.prepare log_db ("SELECT " ++ whichfield ++ " FROM pageloads WHERE idx == " ++ show (whichidx :: Int) ++ ";") -- TODO: make safe?
+		sr <- Database.SQLite3Modded.step s
 		retvals <- case sr of
-			Database.SQLite3.Row -> do
-				row <- Database.SQLite3.columns s
+			Database.SQLite3Modded.Row -> do
+				row <- Database.SQLite3Modded.columns s
 				case row of
-					[Database.SQLite3.SQLText str] -> do
-						Lua.pushstring l str
+					[Database.SQLite3Modded.SQLText str] -> do
+						Lua.pushbytestring l str
 						return 1
 					_ -> return 0
-			Database.SQLite3.Done -> return 0
-		Database.SQLite3.finalize s
+			Database.SQLite3Modded.Done -> return 0
+		Database.SQLite3Modded.finalize s
 		return retvals
 
 	register_function "get_line_allparams" $ \l -> do
 		whichidx <- peekJust l 1
-		s <- Database.SQLite3.prepare log_db ("SELECT requestedurl, retrievedurl, parameters FROM pageloads WHERE idx == " ++ show (whichidx :: Int) ++ ";")
-		sr <- Database.SQLite3.step s
+		s <- Database.SQLite3Modded.prepare log_db ("SELECT requestedurl, retrievedurl, parameters FROM pageloads WHERE idx == " ++ show (whichidx :: Int) ++ ";")
+		sr <- Database.SQLite3Modded.step s
 		retvals <- case sr of
-			Database.SQLite3.Row -> do
-				[Database.SQLite3.SQLText requestedurlstr, Database.SQLite3.SQLText retrievedurlstr, paramthing] <- Database.SQLite3.columns s
+			Database.SQLite3Modded.Row -> do
+				[Database.SQLite3Modded.SQLText requestedurlstr, Database.SQLite3Modded.SQLText retrievedurlstr, paramthing] <- Database.SQLite3Modded.columns s
 -- 				putStrLn $ "params: " ++ show paramthing
-				let Just uri = parseURIReference requestedurlstr
-				let Just effuri = parseURIReference retrievedurlstr
+				let Just uri = parseURIReference $ Data.ByteString.Char8.unpack $ requestedurlstr
+				let Just effuri = parseURIReference $ Data.ByteString.Char8.unpack $ retrievedurlstr
 				let params = case paramthing of
-					Database.SQLite3.SQLText parametersstr -> read_as parametersstr
+					Database.SQLite3Modded.SQLText parametersstr -> read_as $ Data.ByteString.Char8.unpack $ parametersstr
 					_ -> Nothing
 				let allparams = concat $ catMaybes $ [decodeUrlParams uri, decodeUrlParams effuri, params]
 -- 				putStrLn $ "allparams: " ++ show allparams
 				Lua.newtable l
 				add_table_contents l allparams
 				return 1
-			Database.SQLite3.Done -> return 0
-		Database.SQLite3.finalize s
+			Database.SQLite3Modded.Done -> return 0
+		Database.SQLite3Modded.finalize s
 		return retvals
 
 	loginforef <- newIORef Nothing

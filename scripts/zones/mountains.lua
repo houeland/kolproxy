@@ -471,7 +471,7 @@ function get_aboo_peak_hauntedness()
 end
 
 add_automator("/fight.php", function()
-	if aboo_peak_monster[monster_name:gsub("^a ", "")] and text:contains("<!--WINWINWIN-->") and not freedralph() then
+	if aboo_peak_monster[monstername()] and text:contains("<!--WINWINWIN-->") and not freedralph() then
 		local hauntedness = get_hauntedness()
 		text = text:gsub("<!%-%-WINWINWIN%-%->", function(x) return x .. [[<p style="color: green">{ ]] .. (hauntedness or "Unknown hauntedness.") .. [[ }</p>]] end)
 	end
@@ -510,7 +510,7 @@ end
 --get_oil_peak_pressure = get_pressure
 
 add_automator("/fight.php", function()
-	if oil_peak_monster[monster_name:gsub("^an ", "")] and text:contains("<!--WINWINWIN-->") and not freedralph() then
+	if oil_peak_monster[monstername()] and text:contains("<!--WINWINWIN-->") and not freedralph() then
 		local pressure = get_pressure()
 		text = text:gsub("<!%-%-WINWINWIN%-%->", function(x) return x .. [[<p style="color: green">{ ]] .. (pressure or "Unknown pressure.") .. [[ }</p>]] end)
 	end

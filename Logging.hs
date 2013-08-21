@@ -14,6 +14,7 @@ import System.IO
 import Text.JSON
 import Text.Printf
 import qualified Data.Map
+import qualified Data.ByteString.Char8
 
 data LogItem = LogItem {
 	time :: ZonedTime,
@@ -25,7 +26,7 @@ data LogItem = LogItem {
 	requestedUri :: URI,
 	parameters :: Maybe [(String, String)],
 	retrievedUri :: URI,
-	pageText :: String
+	pageText :: Data.ByteString.Char8.ByteString
 }
 
 doLOGGING_DEBUG _ = return ()
@@ -39,22 +40,22 @@ print_log_msg ref _file logdetails = do
 		doLOGGING_DEBUG $ "print_log_msg logaction: " ++ (show $ time $ logdetails) ++ " | " ++ (show $ retrievedUri $ logdetails)
 -- 		putStrLn $ "writing to log db."
 		let showstate s = case s of
-			Just (_requestmap, _sessionmap, charmap, ascmap, daymap) -> show [("character", charmap), ("ascension", ascmap), ("day", daymap)]
+			Just (_requestmap, _sessionmap, charmap, ascmap, daymap) -> Data.ByteString.Char8.pack $ show [("character", charmap), ("ascension", ascmap), ("day", daymap)]
 			_ -> throw $ InternalError $ "Invalid state while logging"
 		do_db_query_ db "INSERT INTO pageloads(time, statusbefore, statusafter, statebefore, stateafter, sessionid, requestedurl, parameters, retrievedurl, pagetext) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);" [
-			Just $ show $ time $ logdetails,
+			Just $ Data.ByteString.Char8.pack $ show $ time $ logdetails,
 			case apiStatusBefore logdetails of
-				Right x -> Just $ encodeStrict $ x
+				Right x -> Just $ Data.ByteString.Char8.pack $ encodeStrict $ x
 				_ -> Nothing,
 			case apiStatusAfter logdetails of
-				Right x -> Just $ encodeStrict $ x
+				Right x -> Just $ Data.ByteString.Char8.pack $ encodeStrict $ x
 				_ -> Nothing,
 			Just $ showstate (stateBefore $ logdetails),
 			Just $ showstate (stateAfter $ logdetails),
-			Just $ sessionId $ logdetails,
-			Just $ show $ requestedUri $ logdetails,
-			show <$> (parameters $ logdetails),
-			Just $ show $ retrievedUri $ logdetails,
+			Just $ Data.ByteString.Char8.pack $ sessionId $ logdetails,
+			Just $ Data.ByteString.Char8.pack $ show $ requestedUri $ logdetails,
+			Data.ByteString.Char8.pack <$> show <$> (parameters $ logdetails),
+			Just $ Data.ByteString.Char8.pack $ show $ retrievedUri $ logdetails,
 			Just $ pageText $ logdetails]
 		doLOGGING_DEBUG $ "print_log_msg logactiondone: " ++ (show $ time $ logdetails) ++ " | " ++ (show $ retrievedUri $ logdetails)
 	doLOGGING_DEBUG $ "print_log_msg alldone: " ++ (show $ time $ logdetails) ++ " | " ++ (show $ retrievedUri $ logdetails)
@@ -151,22 +152,22 @@ log_chat_messages ref text = (do
 --				putStrLn $ "DEBUG chat public: " ++ show (time, playerid, channel, mid)
 				doChatLogAction ref $ \db -> do
 					do_db_query_ db "INSERT OR IGNORE INTO public(mid, time, channel, playerid, msg, rawjson) VALUES(?, ?, ?, ?, ?, ?);"
-						[Just $ show $ mid, Just $ show $ time, Just channel, Just $ show $ playerid, Just msg, Just rawjson]
+						[Just $ Data.ByteString.Char8.pack $ show $ mid, Just $ Data.ByteString.Char8.pack $ show $ time, Just $ Data.ByteString.Char8.pack $ channel, Just $ Data.ByteString.Char8.pack $ show $ playerid, Just $ Data.ByteString.Char8.pack $ msg, Just $ Data.ByteString.Char8.pack $ rawjson]
 			(Ok "private", Ok time, Ok msg, Ok playerid, _, _) -> do
 --				putStrLn $ "DEBUG chat private: " ++ show (time, playerid)
 				doChatLogAction ref $ \db -> do
 					do_db_query_ db "INSERT INTO private(time, playerid, msg, rawjson) VALUES(?, ?, ?, ?);"
-						[Just $ show $ time, Just $ show $ playerid, Just msg, Just rawjson]
+						[Just $ Data.ByteString.Char8.pack $ show $ time, Just $ Data.ByteString.Char8.pack $ show $ playerid, Just $ Data.ByteString.Char8.pack $ msg, Just $ Data.ByteString.Char8.pack $ rawjson]
 			(Ok _, Ok time, Ok msg, _, _, _) -> do
 --				putStrLn $ "DEBUG chat other: " ++ show (time, oktype)
 				doChatLogAction ref $ \db -> do
 					do_db_query_ db "INSERT INTO other(time, msg, rawjson) VALUES(?, ?, ?);"
-						[Just $ show $ time, Just msg, Just rawjson]
+						[Just $ Data.ByteString.Char8.pack $ show $ time, Just $ Data.ByteString.Char8.pack $ msg, Just $ Data.ByteString.Char8.pack $ rawjson]
 			_ -> do
 				putStrLn $ "WARNING: unrecognized chat type"
 				doChatLogAction ref $ \db -> do
 					do_db_query_ db "INSERT INTO unrecognized(rawjson) VALUES(?);"
-						[Just rawjson]
+						[Just $ Data.ByteString.Char8.pack $ rawjson]
 		return ()) `catch` (\e -> do
 			putStrLn $ "ERROR: handle_msg exception: " ++ show (e :: SomeException)
 			return ())
@@ -180,6 +181,6 @@ log_chat_messages ref text = (do
 		return (e :: SomeException)
 		doChatLogAction ref $ \db -> do
 			do_db_query_ db "INSERT INTO oldchat(text) VALUES(?);"
-				[Just text]
+				[Just $ Data.ByteString.Char8.pack $ text]
 --		putStrLn $ "DEBUG: log_chat_messages exception: " ++ show (e :: SomeException)
 		return ())

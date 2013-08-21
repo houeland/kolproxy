@@ -21,7 +21,14 @@ function setup_variables()
 	end
 
 	if path == "/fight.php" then
-		monster_name = text:match("<span id='monname'>(.-)</span>")
+		monster_name = nil
+		monster_name_tag = nil
+		for spantext in text:gmatch([[<span.-</span>]]) do
+			if spantext:contains("monname") then
+				monster_name = spantext:match([[<span [^>]*id=['"]monname['"][^>]*>(.-)</span>]]) or monster_name
+				monster_name_tag = spantext:match([[<span [^>]*id=['"]monname['"][^>]*>.-</span>]]) or monster_name_tag
+			end
+		end
 		adventure_zone = tonumber(fight.zone)
 		if not query:contains("ireallymeanit") then
 			encounter_source = "other"
@@ -50,6 +57,10 @@ function monstername(name)
 		return name == monstername()
 	end
 	if monster_name then
-		return monster_name:gsub("^[^ ]* ", "")
+		if monster_name_tag and monster_name_tag:contains([[id="monname"]]) then
+			return monster_name
+		else
+			return monster_name:gsub("^[^ ]* ", "")
+		end
 	end
 end

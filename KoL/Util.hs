@@ -15,12 +15,13 @@ import System.Directory
 import System.Environment
 import System.FilePath
 import Text.Regex.TDFA
+import qualified Data.ByteString.Char8
 import qualified Data.ByteString.Lazy.Char8
 import qualified Data.Digest.Pure.MD5
-import qualified Database.SQLite3
+import qualified Database.SQLite3Modded
 
 
-kolproxy_version_number = "3.11-beta"
+kolproxy_version_number = "3.11"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 
@@ -85,32 +86,31 @@ canReadState ref = return $ stateValid_ ref :: IO Bool
 
 
 
-
 create_db place filename = do
 	path <- getDirectoryPath place filename
-	db <- Database.SQLite3.open path
+	db <- Database.SQLite3Modded.open path
 	do_db_query_ db "PRAGMA fullfsync = 1;" []
 	return db
 
 do_db_query db query params = (do
-	s <- Database.SQLite3.prepare db query
-	Database.SQLite3.bind s $ map (\x -> case x of
-		Nothing -> Database.SQLite3.SQLNull
-		Just t -> Database.SQLite3.SQLText t) params
+	s <- Database.SQLite3Modded.prepare db query
+	Database.SQLite3Modded.bind s $ map (\x -> case x of
+		Nothing -> Database.SQLite3Modded.SQLNull
+		Just t -> Database.SQLite3Modded.SQLText t) params
 	let getresults acc = do
-		sr <- Database.SQLite3.step s
+		sr <- Database.SQLite3Modded.step s
 		case sr of
-			Database.SQLite3.Row -> do
-				rawcs <- Database.SQLite3.columns s
+			Database.SQLite3Modded.Row -> do
+				rawcs <- Database.SQLite3Modded.columns s
 				let convertedcs = map (\x -> case x of
-					Database.SQLite3.SQLNull -> Nothing
-					Database.SQLite3.SQLText t -> Just t
-					Database.SQLite3.SQLInteger i -> Just $ show i
+					Database.SQLite3Modded.SQLNull -> Nothing
+					Database.SQLite3Modded.SQLText t -> Just t
+					Database.SQLite3Modded.SQLInteger i -> Just $ Data.ByteString.Char8.pack $ show i
 					_ -> throw $ InternalError $ "Unexpected database contents") rawcs
 				getresults (acc ++ [convertedcs])
-			Database.SQLite3.Done -> return acc
+			Database.SQLite3Modded.Done -> return acc
 	r <- getresults []
-	Database.SQLite3.finalize s
+	Database.SQLite3Modded.finalize s
 	return r) `catch` (\e -> do
 		putStrLn $ "db exception: " ++ (show (e :: SomeException))
 		putStrLn $ "  for query: " ++ query

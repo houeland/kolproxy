@@ -219,6 +219,14 @@ function display_number(n)
 	end
 end
 
+function display_signed_integer(n)
+	if n < 0 then
+		return "-" .. display_number(math.floor(-n + 0.5))
+	else
+		return "+" .. display_number(math.floor(n + 0.5))
+	end
+end
+
 function display_value(v)
 	if type(v) == "number" then
 		return display_number(v)

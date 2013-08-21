@@ -1,5 +1,5 @@
 name:           Kolproxy
-version:        3.6
+version:        3.11
 synopsis:       Kingdom of Loathing user interface
 author:         Tor Gunnar Houeland
 build-type:     Simple
@@ -35,7 +35,6 @@ executable kolproxy
     zlib >= 0.5 && < 0.6,
     HTTP == 4000.2.3,
     cryptocipher == 0.2.5,
-    direct-sqlite == 1.1,
     tls == 0.6.2,
     tls-extra == 0.2.1,
     cprng-aes == 0.2.3
@@ -48,6 +47,7 @@ executable kolproxy
     Scripting/lstate.c Scripting/lstring.c Scripting/lstrlib.c Scripting/ltable.c
     Scripting/ltablib.c Scripting/ltm.c Scripting/lundump.c Scripting/lvm.c
     Scripting/lzio.c Scripting/ntrljmp.c Scripting/print.c
+    Database/sqlite3.c
   cc-options: -DLUA_USE_LINUX
   ghc-options: -threaded
   main-is: proxy.hs

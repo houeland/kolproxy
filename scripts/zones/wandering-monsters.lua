@@ -1,17 +1,17 @@
 local bees = {
-	[" beebee gunners"] = true,
-	["a moneybee"] = true,
-	["a mumblebee"] = true,
-	["a beebee queue"] = true,
-	["a bee swarm"] = true,
-	["a buzzerker"] = true,
-	["a Beebee King"] = true,
-	["a bee thoven"] = true,
-	["a Queen Bee"] = true,
+	["beebee gunners"] = true,
+	["moneybee"] = true,
+	["mumblebee"] = true,
+	["beebee queue"] = true,
+	["bee swarm"] = true,
+	["buzzerker"] = true,
+	["Beebee King"] = true,
+	["bee thoven"] = true,
+	["Queen Bee"] = true,
 }
 
 add_processor("/fight.php", function()
-	if bees[monster_name] then
+	if bees[monstername()] then
 		ascension["bee turn"] = turnsthisrun() + 15
 	end
 end)

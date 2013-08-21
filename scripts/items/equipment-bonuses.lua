@@ -47,12 +47,7 @@ add_automator("all pages", function()
 	end
 end)
 
-function clear_cached_item_bonuses(name)
-	session["cached item bonuses: " .. name] = nil
-end
-
 function set_cached_item_bonuses(name, tbl)
-	print("DEBUG setting item", name, "to", tbl)
 	session["cached item bonuses: " .. name] = tbl
 end
 
@@ -61,6 +56,10 @@ function get_cached_item_bonuses(name)
 	if tbl then
 		return make_bonuses_table(tbl)
 	end
+end
+
+function clear_cached_item_bonuses(name)
+	return set_cached_item_bonuses(name, nil)
 end
 
 add_processor("/fight.php", function()
@@ -82,8 +81,14 @@ add_processor("/choice.php", function()
 	end
 end)
 
+add_processor("/inventory.php", function()
+	if text:contains("Your card sleeve") then
+		clear_cached_item_bonuses("card sleeve")
+	end
+end)
+
 add_automator("all pages", function()
-	for _, itemname in ipairs { "stinky cheese eye", "Jekyllin hide belt", "Grimacite gown", "Moonthril Cuirass", "hairshirt", "over-the-shoulder Folder Holder" } do
+	for _, itemname in ipairs { "stinky cheese eye", "Jekyllin hide belt", "Grimacite gown", "Moonthril Cuirass", "hairshirt", "over-the-shoulder Folder Holder", "Tuesday's ruby", "spooky little girl", "card sleeve" } do
 		if have_equipped_item(itemname) and not get_cached_item_bonuses(itemname) then
 			set_cached_item_bonuses(itemname, parse_item_bonuses(itemname))
 		end
@@ -99,25 +104,27 @@ end)
 
 function estimate_item_equip_bonuses(item)
 	local itemarray = {
-		["Jekyllin hide belt"] = "cached",
+		["parasitic tentacles"] = { ["Combat Initiative"] = math.min(15, level()) * (2 + (have_buff("Yuletide Mutations") and 1 or 0)) },
+		["frosty halo"] = { ["Item Drops from Monsters"] = (not equipment().weapon and not equipment().offhand) and 25 or nil },
+
 		["little box of fireworks"] = { item_upto = 25 },
-		["Colonel Mustard's Lonely Spades Club Jacket"] = { ["Combat Initiative"] = "?", ["Item Drops from Monsters"] = "?", ["Meat from Monsters"] = "?" }, -- 1-3%
-		["stinky cheese eye"] = "cached",
+		["jalape&ntilde;o slices"] = { ["Meat from Monsters"] = 2 * fairy_bonus(10) },
+		["navel ring of navel gazing"] = { item_upto = 20, meat_upto = 20 },
+
+		["Jekyllin hide belt"] = "cached",
 		["Moonthril Cuirass"] = "cached",
 		["Grimacite gown"] = "cached",
 		["hairshirt"] = "cached",
-		["jalape&ntilde;o slices"] = { ["Meat from Monsters"] = 2 * fairy_bonus(10) },
-		["navel ring of navel gazing"] = { item_upto = 20, meat_upto = 20 },
-		["parasitic tentacles"] = { ["Combat Initiative"] = math.min(15, level()) * (2 + (have_buff("Yuletide Mutations") and 1 or 0)) },
+		["Tuesday's ruby"] = "cached",
+		["spooky little girl"] = "cached",
+
+		["stinky cheese eye"] = "cached",
 		["Snow Suit"] = "cached",
+		["card sleeve"] = "cached",
+		["over-the-shoulder Folder Holder"] = "cached",
 
 		["Mayflower bouquet"] = { item_upto = 10, meat_upto = 40, ["Item Drops from Monsters"] = "?" }, -- not sufficiently spaded
-		["Tuesday's ruby"] = { ["Item Drops from Monsters"] = "?", ["Meat from Monsters"] = "?" }, -- varies by day
-		["spooky little girl"] = { ["Item Drops from Monsters"] = "?" }, -- varies with grimacite
-
-		["card sleeve"] = { ["Combat Initiative"] = "?", ["Item Drops from Monsters"] = "?", ["Meat from Monsters"] = "?" }, -- varies by card
-
-		["frosty halo"] = { ["Item Drops from Monsters"] = (not equipment().weapon and not equipment().offhand) and 25 or nil },
+		["Colonel Mustard's Lonely Spades Club Jacket"] = { ["Combat Initiative"] = "?", ["Item Drops from Monsters"] = "?", ["Meat from Monsters"] = "?" }, -- 1-3%
 	}
 
 	if have_equipped_item("scratch 'n' sniff sword") or have_equipped_item("scratch 'n' sniff crossbow") then
@@ -141,12 +148,13 @@ function estimate_item_equip_bonuses(item)
 		end
 	end
 
+	local unknown_table = { ["Combat Initiative"] = "?", ["Item Drops from Monsters"] = "?", ["Meat from Monsters"] = "?", ["Monster Level"] = "?", ["Monsters will be more attracted to you"] = "?" }
 	local name = maybe_get_itemname(item)
 	if not name then
 		-- ..unknown..
-		return make_bonuses_table {}
+		return make_bonuses_table(unknown_table)
 	elseif itemarray[name] == "cached" then
-		return make_bonuses_table(get_cached_item_bonuses(name) or {})
+		return make_bonuses_table(get_cached_item_bonuses(name) or unknown_table)
 	elseif itemarray[name] then
 		return make_bonuses_table(itemarray[name])
 	elseif datafile("items")[name] then
