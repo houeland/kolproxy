@@ -32,9 +32,11 @@ function reset_datafile_cache()
 	end
 	datafile("outfits")
 	for monstername, monster in pairs(datafile("monsters")) do
-		local image = monster.Stats.Image
-		if image then
-			monster_image_lookup[image] = monstername
+		if monster.image then
+			monster_image_lookup[monster.image] = monstername
+		elseif monstername:lower():contains("ed the undying") then
+			local form = tonumber(monstername:match("%(([0-9])%)"))
+			monster_image_lookup["ed"..tostring(form)..".gif"] = monstername
 		end
 		monster_name_lookup[monstername:lower()] = monstername
 	end

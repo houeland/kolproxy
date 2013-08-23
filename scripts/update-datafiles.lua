@@ -543,6 +543,7 @@ function parse_monsters()
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
 		local name, image, stats = tbl[1], tbl[2], tbl[3]
+		if image == "" then image = nil end
 		__parse_monster_debug = table_to_json(tbl)
 		if not l:match("^#") and name and stats then
 			--print("DEBUG parsing monster", name)
