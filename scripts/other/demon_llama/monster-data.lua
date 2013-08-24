@@ -12,25 +12,25 @@ function deepcopy(t)
 	return res
 end
 
-local function beesIncreaser(monster_name, base_data)
+local function beesIncreaser(name, base_data)
 	local bees = {
-		[" beebee gunners"] = true,
-		["a moneybee"] = true,
-		["a mumblebee"] = true,
-		["a beebee queue"] = true,
-		["a bee swarm"] = true,
-		["a buzzerker"] = true,
-		["a Beebee King"] = true,
-		["a bee thoven"] = true,
-		["a Queen Bee"] = true,
+		["beebee gunners"] = true,
+		["moneybee"] = true,
+		["mumblebee"] = true,
+		["beebee queue"] = true,
+		["bee swarm"] = true,
+		["buzzerker"] = true,
+		["Beebee King"] = true,
+		["bee thoven"] = true,
+		["Queen Bee"] = true,
 	}
 
-	local _, numberBees = monster_name:gsub("[bB]", "%0")
-	if numberBees > 0 and not bees[monster_name] then
+	local _, numberBees = name:gsub("[bB]", "%0")
+	if numberBees > 0 and not bees[name] and base_data then
 		local modifier = 1 + (numberBees * .2)
-		base_data.Stats.HP = base_data.Stats.HP * modifier
-		base_data.Stats.Atk = base_data.Stats.Atk * modifier
-		base_data.Stats.Def = base_data.Stats.Def * modifier
+		base_data.HP = base_data.HP * modifier
+		base_data.Atk = base_data.Atk * modifier
+		base_data.Def = base_data.Def * modifier
 	end
 	
 	return base_data
@@ -93,7 +93,7 @@ function buildCurrentFightMonsterDataCache(monster_name, fight_text)
 	--In a bees hate you, monster's with b in their names get increased by 20% per b
 	--This is AFTER ML is applied
 	if ascensionpath("Bees Hate You") then
-		monster.Stats = beesIncreaser(monster_name, monster.Stats)
+		monster.Stats = beesIncreaser(monstername(), monster.Stats)
 	end
 
 	local item = modifiers["Item Drops from Monsters"] or 0

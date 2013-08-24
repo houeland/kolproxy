@@ -114,7 +114,7 @@ add_automator("/campground.php", function()
 end)
 
 function requires_wand_of_nagamar()
-	return not ascensionpath("Avatar of Boris") and not ascensionpath("Zombie Slayer") and not ascensionpath("Avatar of Jarlsberg")
+	return not ascensionpath("Bees Hate You") and not ascensionpath("Avatar of Boris") and not ascensionpath("Bugbear Invasion") and not ascensionpath("Zombie Slayer") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("KOLHS")
 end
 
 add_printer("/campground.php", function()
@@ -344,6 +344,8 @@ add_printer("/campground.php", function()
 			table.insert(otherlines, check_items(drum_items))
 			if requires_wand_of_nagamar() then
 				check_wand()
+			elseif ascensionpath("Bees Hate You") then
+				table.insert(otherlines, check_items { "antique hand mirror" })
 			end
 			return otherlines
 		end
@@ -1036,7 +1038,7 @@ add_processor("/lair6.php", function()
 				first = text:match("&quot;No it isn't,&quot; says East. &quot;It's ([0-9]).&quot;")
 			end
 		end
-		print("lair6 door", first, second, third)
+		print("INFO: lair6 door", first, second, third)
 		if first and second and third then
 			session["zone.lair.doorcode"] = first..second..third
 		end
@@ -1078,6 +1080,7 @@ function automate_lair6_place(place, text)
 			}
 			if familiar_lookup[which] then
 				print("  Familiar used to defeat it:", familiar_lookup[which].name)
+				session["NS lair familiar needed for place " .. place] = familiar_lookup[which].name
 				local famid = familiarid()
 				switch_familiarid(familiar_lookup[which].id)
 				if familiarid() == familiar_lookup[which].id then
@@ -1136,9 +1139,14 @@ add_interceptor("/lair6.php", function()
 end)
 
 add_always_warning("/lair6.php", function()
-	if tonumber(params.place) == 5 and not have_item("Wand of Nagamar") then
-		if ascensionpath("Avatar of Boris") or ascensionpath("Zombie Slayer") or ascensionpath("Avatar of Jarlsberg") then return end
+	if tonumber(params.place) == 5 and not have_item("Wand of Nagamar") and requires_wand_of_nagamar() then
 		return "A Wand of Nagamar is recommended for the sorceress fight.", "sorceress-wand-of-nagamar"
+	end
+end)
+
+add_always_warning("/lair6.php", function()
+	if tonumber(params.place) == 5 and ascensionpath("Bees Hate You") and not have_item("antique hand mirror") then
+		return "An antique hand mirror is recommended for the guy made of bees fight.", "bees-hate-you-antique-hand-mirror"
 	end
 end)
 
@@ -1149,32 +1157,32 @@ add_printer("/lair6.php", function()
 	local placedescs = {
 		"Pass the heavy and light door riddle",
 		"Avoid the electrical attack",
-		"Defeat your own shadow",
-		"Beat the first familiar",
-		"Beat the second familiar",
-		"Defeat the Naughty Sorceress",
+		"Defeat your own shadow (use healing items)",
+		"Beat the first familiar (requires 20+ lbs. familiar)",
+		"Beat the second familiar (requires 20+ lbs. familiar)",
+		"Defeat The Naughty Sorceress",
 		"Free the king",
 	}
-	if ascensionpath("Zombie Slayer") then
-		placedescs = {
-			"Pass the heavy and light door riddle",
-			"Avoid the electrical attack",
-			"Defeat your own shadow",
-			"Beat the first familiar (requires 10+ Horde)",
-			"Beat the second familiar (requires 10+ Horde)",
-			"Defeat the Naughty Sorceress and Rene C. Corman",
-			"Free the king",
-		}
+	if session["NS lair familiar needed for place 3"] then
+		placedescs[4] = "Beat the first familiar (need 20+ lbs. " .. session["NS lair familiar needed for place 3"] .. ")"
+	end
+	if session["NS lair familiar needed for place 4"] then
+		placedescs[5] = "Beat the first familiar (need 20+ lbs. " .. session["NS lair familiar needed for place 4"] .. ")"
+	end
+	if ascensionpath("Bees Hate You") then
+		placedescs[6] = "Defeat The Naughty Sorceress and The Guy Made Of Bees"
+	elseif ascensionpath("Avatar of Boris") then
+		placedescs[4] = "Beat the first familiar (requires nothing)"
+		placedescs[5] = "Beat the second familiar (requires nothing)"
+		placedescs[6] = "Defeat The Naughty Sorceress and The Avatar of Sneaky Pete"
+	elseif ascensionpath("Zombie Slayer") then
+		placedescs[4] = "Beat the first familiar (requires 10+ Horde)"
+		placedescs[5] = "Beat the second familiar (requires 10+ Horde)"
+		placedescs[6] = "Defeat The Naughty Sorceress and Rene C. Corman"
 	elseif ascensionpath("Avatar of Jarlsberg") then
-		placedescs = {
-			"Pass the heavy and light door riddle",
-			"Avoid the electrical attack",
-			"Defeat your own shadow",
-			"Defeat Clancy",
-			"(skipped)",
-			"Defeat The Avatar of Boris",
-			"Free the king",
-		}
+		placedescs[4] = "Defeat Clancy"
+		placedescs[5] = "(skipped)"
+		placedescs[6] = "Defeat The Avatar of Boris"
 	end
 	local status = "<b>Chamber progress</b><br>"
 	for x, y in ipairs(placedescs) do
