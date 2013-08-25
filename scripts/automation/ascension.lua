@@ -3330,7 +3330,7 @@ endwhile
 	add_task {
 		prereq = not have_item("Knob Goblin seltzer") and
 			not have_item("Knob Goblin pet-buffing spray") and
-			challenge ~= "fist" and
+			challenge ~= "fist" and challenge ~= "boris" and
 			have_guard_outfit() and
 			basemuscle() >= 25 and
 			basemoxie() >= 25,

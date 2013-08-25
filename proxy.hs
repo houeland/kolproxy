@@ -395,9 +395,16 @@ runbot filename = do
 		},
 		stateValid_ = False,
 		globalstuff_ = globalref,
-		skipRunningPrinters_ = False
+		skipRunningPrinters_ = True
 	}
 
-	okref <- make_ref baseref
+	let okref = baseref {
+		processingstuff_ = ProcessingRefStuff {
+			processPage_ = doProcessPageWhenever,
+			nochangeRawRetrievePageFunc_ = internalKolRequest_pipelining,
+			getstatusfunc_ = statusfunc
+		},
+		stateValid_ = False
+	}
 
 	runBotScript okref filename

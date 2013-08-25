@@ -181,9 +181,11 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 	return (xf, mvf)
 
 login (login_useragent, login_host) name pass = do
-        (text, _effuri, _headers, _code) <- internalKolRequest (mkuri "/") Nothing (Nothing, login_useragent, login_host, Nothing) False
-        let [[challenge]] = matchGroups "<input type=hidden name=challenge value=\"([0-9a-f]*)\">" (Data.ByteString.Char8.unpack text)
-        let response = get_md5 (pass ++ ":" ++ challenge)
+	(text, _effuri, _headers, _code) <- internalKolRequest (mkuri "/") Nothing (Nothing, login_useragent, login_host, Nothing) False
+	challenge <- case matchGroups "<input type=hidden name=challenge value=\"([0-9a-f]*)\">" (Data.ByteString.Char8.unpack text) of
+		[[challenge]] -> return challenge
+		_ -> throwIO $ NetworkError "No challenge found on login page. Down for maintenance?"
+	let response = get_md5 (pass ++ ":" ++ challenge)
 	let p_sensitive = [("loginname", name), ("challenge", challenge), ("response", response), ("secure", "1"), ("loggingin", "Yup.")]
 	(_pt, _effuri, allhdrs, _code) <- internalKolRequest (mkuri "/login.php") (Just p_sensitive) (Nothing, login_useragent, login_host, Nothing) True
 	let hdrs = filter (\(x, _y) -> (x == "Set-Cookie" || x == "Location")) allhdrs

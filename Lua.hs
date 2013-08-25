@@ -563,6 +563,14 @@ setup_lua_instance level filename setupref = do
 				register_function "raw_submit_page" submit_page_func
 				register_function "raw_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
+			BOTSCRIPT -> do
+				register_function "raw_submit_page" submit_page_func
+				register_function "raw_async_submit_page" async_submit_page_func
+				register_function "get_api_itemid_info" get_api_itemid_info
+				register_function "sleep" $ \_ref l -> do
+					delay <- peekJust l 1
+					threadDelay (1000000 * delay)
+					return 0
 
 		Lua.registerhsfunction lstate "kolproxy_debug_print" (\x -> lua_log_line setupref ("kolproxy_debug_print: " ++ x) (return ()))
 
@@ -726,7 +734,7 @@ runInterceptScript ref uri allparams reqtype = do
 		Left err -> Left err
 
 runBotScript baseref filename = do
-	run_lua_code INTERCEPT filename baseref (setvars [] "" [])
+	run_lua_code BOTSCRIPT filename baseref (setvars [] "" [])
 	return ()
 
 runLogParsingScript log_db = do
