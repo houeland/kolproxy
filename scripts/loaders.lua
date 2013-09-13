@@ -46,8 +46,8 @@ load_file("familiar", "familiars/bloovian-groose.lua")
 load_file("familiar", "familiars/nanorhino.lua")
 load_file("familiar", "familiars/hatrack.lua")
 load_file("familiar", "familiars/happy-medium.lua")
-load_file("familiar", "familiars/jack-in-the-box.lua")
 load_file("familiar", "familiars/drops.lua")
+load_file("familiar", "familiars/steam-powered-cheerleader.lua")
 
 load_file("skill", "skills/summons.lua")
 
@@ -103,6 +103,7 @@ load_file("other", "other/check-florist-friar.lua")
 
 -- load_file("other", "other/log-everything.lua")
 
+load_file("chat", "other/chat-kolmafia-links.lua")
 load_file("chat", "other/chat-pvp-announcements.lua")
 
 load_file("chat", "other/chat-commands.lua")
@@ -151,7 +152,6 @@ load_file("interface", "other/demon_llama/combat-tracking.lua")
 load_file("interface", "other/demon_llama/flyers.lua")
 load_file("interface", "other/demon_llama/fight-stats.lua")
 load_file("warning", "other/demon_llama/dictionary-warning.lua")
-load_file("interface", "other/demon_llama/hiddencity-spheres.lua")
 
 load_file("interface", "other/nion/basement.lua")
 

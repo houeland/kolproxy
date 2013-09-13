@@ -129,21 +129,12 @@ do
 		__raw_add_warning("/adventure.php", function()
 			return f(tonumber(params.snarfblat))
 		end)
-		__raw_add_warning("/hiddencity.php", function()
-			if params.which then
-				return f()
-			end
-		end)
 	end
 
 	local function add_raw_extra_adventure_warning(f)
 		localtable.insert(__raw_extra_adventure_warnings, f)
 		__raw_add_extra_warning("/adventure.php", function()
 			return f(tonumber(params.snarfblat))
-		end)
-		__raw_add_extra_warning("/hiddencity.php", function()
-			if params.which == nil then return end
-			return f()
 		end)
 	end
 
@@ -209,6 +200,10 @@ do
 	end
 
 	function get_zoneid(name)
+        	if type(name) == "number" then
+	                return name
+		end
+
 		local zoneid = (datafile("zones")[name] or {}).zoneid
 		if not zoneid then
 			error("Unknown zone: " .. tostring(name))
@@ -610,3 +605,17 @@ end
 function add_stash_item(item)
 	return async_post_page("/clan_stash.php", { pwd = session.pwd, action = "addgoodies", qty1 = 1, item1 = get_itemid(item) })
 end
+
+function can_wear_weapons()
+	return not ascensionpath("Avatar of Boris") and not ascensionpath("Way of the Surprising Fist")
+end
+
+function have_unlocked_beach()
+	return have_item("bitchin' meatcar") or have_item("Desert Bus pass") or have_item("pumpkin carriage")
+end
+unlocked_beach = have_unlocked_beach
+
+function have_unlocked_island()
+	return have_item("dingy dinghy") or have_item("skeletal skiff")
+end
+unlocked_island = have_unlocked_island

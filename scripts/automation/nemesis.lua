@@ -82,7 +82,7 @@ local href = setup_turnplaying_script {
 		elseif not have_item(required_items.lew) and have_item(required_items.ew) and have_item(required_items.extra) then
 			smith_items(required_items.ew, required_items.extra)
 			if not have_item(required_items.lew) then
-				smith_items_craft(required_items.ew, required_items.extra)
+				smith_items(required_items.ew, required_items.extra)
 			end
 			if have_item(required_items.lew) then
 				advagain = true

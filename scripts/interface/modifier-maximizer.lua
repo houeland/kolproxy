@@ -102,6 +102,7 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		"Combat Initiative",
 		"Meat from Monsters",
 		"HP & cold/spooky resistance",
+		"Familiar Weight",
 		"Muscle",
 		"Mysticality",
 		"Moxie",

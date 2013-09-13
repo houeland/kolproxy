@@ -184,7 +184,12 @@ switchResponse conn allow_retry bdy_sent (Right (cd, rn, hdrs)) rqst = do
 -- 	putStrLn $ "DEBUG:/switchResponse: " ++ (show (cd,rn,hdrs,rqst))
 	return x
 
-mkreq useragent cookie absuri params forproxy =
+mkreq_slow useragent cookie absuri params forproxy =
+		(returi, setRequestVersion "HTTP/1.0" req)
+	where
+		(returi, req) = mkreq_fast useragent cookie absuri params forproxy
+
+mkreq_fast useragent cookie absuri params forproxy =
 		(absuri, normalizeRequest defaultNormalizeRequestOptions { normForProxy = forproxy } $ case params of
 			Nothing -> Request { rqURI = absuri, rqMethod = GET, rqHeaders = cookiehdr, rqBody = Data.ByteString.empty }
 			Just p -> let enc = formEncode p in Request { rqURI = absuri, rqMethod = POST, rqHeaders = cookiehdr ++ [mkHeader HdrContentType "application/x-www-form-urlencoded", mkHeader HdrContentLength (show $ length enc)], rqBody = Data.ByteString.Char8.pack enc })
@@ -192,6 +197,8 @@ mkreq useragent cookie absuri params forproxy =
 		cookiehdr = case cookie of
 			Nothing -> [mkHeader HdrUserAgent useragent] -- ++ [mkHeader HdrConnection "Keep-Alive"]
 			Just x -> [mkHeader HdrCookie x, mkHeader HdrUserAgent useragent] -- ++ [mkHeader HdrConnection "Keep-Alive"]
+
+mkreq isslow = if isslow then mkreq_slow else mkreq_fast
 
 rewrite_headers hdrs = map (\(Header x y) -> (show x, y)) hdrs
 

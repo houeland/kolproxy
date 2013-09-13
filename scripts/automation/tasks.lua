@@ -255,31 +255,25 @@ mark m_done
 	function t.do_sewerleveling()
 		if advs() < 12 then
 			stop "Fewer than 12 advs for sewerleveling"
-		elseif not have_buff("Pisces in the Skyces") then
-			stop "No gamestore +spelldmg% buff when sewer-leveling to reach level 6"
-		else
-			script.shrug_buff("Ode to Booze")
-			script.maybe_ensure_buffs { "Mental A-cue-ity" }
-			return {
-				message = "sewerlevel to lvl 6",
-				fam = "Frumious Bandersnatch",
-				buffs = { "Springy Fusilli", "Spirit of Garlic", "Jaba&ntilde;ero Saucesphere", "Curiosity of Br'er Tarrypin" },
-				minmp = 70,
-				action = adventure {
-					zoneid = 166,
-					macro_function = function() return macro_noodlegeyser(3) end,
-					noncombats = {
-						["Disgustin' Junction"] = "Swim back toward the entrance",
-						["The Former or the Ladder"] = "Play in the water",
-						["Somewhat Higher and Mostly Dry"] = "Dive back into the water",
-					}
+		end
+		script.ensure_buffs { "Pisces in the Skyces" }
+		script.shrug_buff("Ode to Booze")
+		script.maybe_ensure_buffs { "Mental A-cue-ity" }
+		return {
+			message = "sewerlevel to lvl 6",
+			fam = "Frumious Bandersnatch",
+			buffs = { "Springy Fusilli", "Spirit of Garlic", "Jaba&ntilde;ero Saucesphere", "Curiosity of Br'er Tarrypin" },
+			minmp = 70,
+			action = adventure {
+				zoneid = 166,
+				macro_function = function() return macro_noodlegeyser(3) end,
+				noncombats = {
+					["Disgustin' Junction"] = "Swim back toward the entrance",
+					["The Former or the Ladder"] = "Play in the water",
+					["Somewhat Higher and Mostly Dry"] = "Dive back into the water",
 				}
 			}
-		end
-		if not did_action then
-			result = add_message_to_page(get_result(), "Tried to adventure at the Hobopolis sewer entrance", nil, "darkorange")
-		end
-		return result, resulturl, did_action
+		}
 	end
 
 	function t.do_bearhug_sewerleveling()
@@ -306,7 +300,6 @@ mark m_done
 		return result, resulturl, did_action
 	end
 
--- TODO: fax & arrow smut orc instead of ascii art (day 3)
 -- TODO: lvl 9 quest on day 4 & after the bridge is untinkered
 	function t.there_can_be_only_one_topping()
 		if ascension_script_option("manual lvl 9 quest") then
@@ -433,8 +426,18 @@ mark m_done
 				if not have_buff("Well-Oiled") and have_item("Oil of Parrrlay") then
 					use_item("Oil of Parrrlay")
 				end
-				script.ensure_buffs { "Go Get 'Em, Tiger!", "Red Door Syndrome", "Astral Shell", "Elemental Saucesphere" }
+				script.ensure_buffs { "Go Get 'Em, Tiger!", "Red Door Syndrome", "Astral Shell", "Elemental Saucesphere", "Scarysauce" }
 				script.force_heal_up()
+				if predict_aboo_peak_banish() < 30 then
+					local gear = {}
+					if have_item("eXtreme mittens") and have_item("eXtreme scarf") and have_item("snowboarder pants") then
+						gear = { hat = "eXtreme scarf", pants = "snowboarder pants", acc3 = "eXtreme mittens" }
+					end
+					gear.acc1 = first_wearable { "glowing red eye" }
+					script.wear(gear)
+					script.ensure_buffs { "Reptilian Fortitude", "Power Ballad of the Arrowsmith" }
+					script.force_heal_up()
+				end
 				if predict_aboo_peak_banish() < 30 then
 					stop "TODO: Buff up and finish A-Boo Peak clues (couldn't banish 30%)"
 				end
@@ -572,6 +575,33 @@ mark m_done
 				}
 			end
 		end
+	end
+
+	function t.do_daily_dungeon()
+		return {
+			message = "do daily dungeon",
+			buffs = { "Astral Shell", "Elemental Saucesphere", "Scarysauce" },
+			minmp = 20,
+			action = function()
+				local advf = adventure {
+					zone = "The Daily Dungeon",
+					macro_function = macro_noodlecannon,
+					noncombats = {
+						["It's Almost Certainly a Trap"] = "Proceed forward cautiously",
+						["The First Chest Isn't the Deepest."] = "Ignore the chest",
+						["I Wanna Be a Door"] = count_item("skeleton key") >= 2 and "Use a skeleton key" or "Magic it open",
+						["Second Chest"] = "Ignore the chest",
+						["The Final Reward"] = "Open it!",
+					},
+				}
+				local pt, pturl, advagain = advf()
+				if pt:contains("Daily Done, John.") then
+					cached_stuff.done_daily_dungeon = true
+					advagain = true
+				end
+				return pt, pturl, advagain
+			end
+		}
 	end
 
 	return t

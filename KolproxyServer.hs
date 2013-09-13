@@ -94,14 +94,35 @@ handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logch
 		Right req -> case uriPath $ rqURI $ req of
 			"/kolproxy-test" -> do
 				makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack "Kolproxy is alive.") "/kolproxy-test" [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")]
+			"/kolproxy-network-test" -> do
+				let test url = do
+					putStrLn $ "Testing slow: " ++ url
+					(effuri, body, hdrs, code) <- doHTTPreq (mkreq True "kolproxy-network-test" Nothing (mkuri url) Nothing True)
+					putStrLn $ "  result: " ++ (show (effuri, Data.ByteString.Char8.length $ body, code))
+					putStrLn $ "  headers: " ++ show hdrs
+
+					putStrLn $ "Testing fast: " ++ url
+					(effuri, body, hdrs, code) <- doHTTPreq (mkreq False "kolproxy-network-test" Nothing (mkuri url) Nothing True)
+					putStrLn $ "  result: " ++ (show (effuri, Data.ByteString.Char8.length $ body, code))
+					putStrLn $ "  headers: " ++ show hdrs
+				test "http://www.houeland.com/kolproxy/latest-version"
+				test "http://www.kingdomofloathing.com/sendjickmail.php"
+				test "http://www.kingdomofloathing.com/login.php"
+				makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack "Simple network is OK?") "/kolproxy-network-test" [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")]
+			"/kolproxy-secretkey" -> do
+				makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack $ "Kolproxy session key: " ++ (show $ shutdown_secret_ $ globalref)) "/kolproxy-secretkey" [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")]
 			"/kolproxy-use-slow-http" -> do
 				let maybeparams = decodeUrlParams $ rqURI $ req
 				if (lookup "secretkey" =<< maybeparams) == Just (shutdown_secret_ $ globalref)
 					then do
 						writeIORef (use_slow_http_ref_ globalref) True
-						makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack "Switched to slow HTTP/1.0.") "/kolproxy-test" [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")]
+						modifyMVar sessionmastermv $ \_m -> return (Data.Map.empty, "Modified.")
+						makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack "<html><body>Switched to slow HTTP/1.0.<br><br><a href=\"/\">Back to login</a>.</body></html>") "/kolproxy-test" [("Content-Type", "text/html; charset=UTF-8"), ("Cache-Control", "no-cache")]
 					else do
-						makeResponse (Data.ByteString.Char8.pack "<html><body><p style=\"color: darkorange\">Denied.</p></body></html>") "/kolproxy-shutdown" []
+						makeErrorResponse (Data.ByteString.Char8.pack "<html><body><p style=\"color: darkorange\">Denied.</p></body></html>") "/kolproxy-shutdown" []
+			"/kolproxy-troubleshooting" -> do
+				let text = "Badly behaving network equipment, firewalls, or anti-virus are frequent sources of kolproxy problems.<br><a href=\"/kolproxy-use-slow-http?secretkey=" ++ (shutdown_secret_ $ globalref) ++ "\">Click here to try using slower HTTP/1.0 requests instead, which might help.</a>"
+				makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack text) "/kolproxy-troubleshooting" [("Content-Type", "text/html; charset=UTF-8"), ("Cache-Control", "no-cache")]
 			"/kolproxy-shutdown" -> do
 				let maybeparams = decodeUrlParams $ rqURI $ req
 				if (lookup "secretkey" =<< maybeparams) == Just (shutdown_secret_ $ globalref)
@@ -109,7 +130,7 @@ handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logch
 						writeIORef (shutdown_ref_ $ globalref) True
 						makeResponse (Data.ByteString.Char8.pack "<html><body><p style=\"color: green\">Closing.</p></body></html>") "/kolproxy-shutdown" []
 					else do
-						makeResponse (Data.ByteString.Char8.pack "<html><body><p style=\"color: darkorange\">Denied.</p></body></html>") "/kolproxy-shutdown" []
+						makeErrorResponse (Data.ByteString.Char8.pack "<html><body><p style=\"color: darkorange\">Denied.</p></body></html>") "/kolproxy-shutdown" []
 			_ -> do
 				doSERVER_DEBUG $ "got request: " ++ (show $ rqURI req) ++ " [" ++ show sh ++ "]"
 				let cookie = findHeader HdrCookie req
@@ -203,6 +224,7 @@ make_globalref = do
 		chanaction chatopendb
 
 	use_slow_http_ref <- newIORef False
+	have_logged_in_ref <- newIORef False
 	return GlobalRefStuff {
 		logindents_ = indentref,
 		blocking_lua_scripting_ = blockluaref,
@@ -213,7 +235,8 @@ make_globalref = do
 		shutdown_secret_ = shutdown_secret,
 		shutdown_ref_ = shutdown_ref,
 		doChatLogAction_ = \action -> writeChan chatlogchan action,
-		use_slow_http_ref_ = use_slow_http_ref
+		use_slow_http_ref_ = use_slow_http_ref,
+		have_logged_in_ref_ = have_logged_in_ref
 	}
 
 kolproxy_setup_refstuff = do
@@ -334,6 +357,10 @@ runProxyServer r rwhenever portnum = do
 mkResponse code hdrs text = Response code "" (map (\(x,y) -> mkHeader (HdrCustom x) y) hdrs) text
 
 makeResponse text _effuri headers = return $ mkResponse (2,0,0) (headers ++ [("Content-Type", "text/html; charset=UTF-8"), ("Cache-Control", "no-cache")]) text
+
+makeErrorResponse text _effuri headers = do
+	let newtext = Data.ByteString.Char8.concat [text, (Data.ByteString.Char8.pack "<br><br>{&nbsp;<a href=\"/kolproxy-troubleshooting\">Click here for kolproxy troubleshooting.</a>&nbsp;}")]
+	return $ mkResponse (2,0,0) (headers ++ [("Content-Type", "text/html; charset=UTF-8"), ("Cache-Control", "no-cache")]) newtext
 
 makeResponseWithNoExtraHeaders text _effuri headers = return $ mkResponse (2,0,0) headers text
 

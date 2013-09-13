@@ -1,6 +1,6 @@
 add_interceptor("/main.php", function()
 	if not session["cached initial session data"] then
-		print("INFO: caching inventory from start of session")
+		print("INFO: caching inventory at start of session")
 		session["cached initial session data"] = { inventory = inventory(), equipment = equipment(), meat = meat() }
 	end
 end)

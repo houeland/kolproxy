@@ -14,16 +14,26 @@ function add_modifier_bonuses(target, source)
 end
 
 function parse_item_bonuses(itemname)
--- C/NC
--- init
-
 	local descid = item_api_data(itemname).descid
 	local pt = get_page("/desc_item.php", { whichitem = descid })
 	local bonuses = make_bonuses_table {}
-	bonuses = bonuses + { ["Item Drops from Monsters"] = tonumber(pt:match([[>%+([0-9]+)%% Item Drops from Monsters<]])) }
-	bonuses = bonuses + { ["Meat from Monsters"] = tonumber(pt:match([[>%+([0-9]+)%% Meat from Monsters<]])) }
-	bonuses = bonuses + { ["Meat from Monsters"] = tonumber(pt:match([[>%+([0-9]+)%% Meat Drops from Monsters<]])) }
-	bonuses = bonuses + { ["Monster Level"] = tonumber(pt:match([[>%+([0-9]+) to Monster Level<]])) }
+	bonuses = bonuses + { ["Item Drops from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops from Monsters<]])) }
+	bonuses = bonuses + { ["Item Drops from Monsters (Dreadsylvania only)"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops from Monsters %(Dreadsylvania only%)<]])) }
+	bonuses = bonuses + { ["Item Drops (KoL High School zones only)"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops %(KoL High School zones only%)<]])) }
+	bonuses = bonuses + { ["Item Drops (Underwater only)"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops %(Underwater only%)<]])) }
+	bonuses = bonuses + { ["Food Drops from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Food Drops from Monsters<]])) }
+	bonuses = bonuses + { ["Booze Drops from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Booze Drops from Monsters<]])) }
+	bonuses = bonuses + { ["Meat from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Meat from Monsters<]])) }
+	bonuses = bonuses + { ["Meat from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Meat Drops from Monsters<]])) }
+	bonuses = bonuses + { ["Monster Level"] = tonumber(pt:match([[>([+-][0-9]+) to Monster Level<]])) }
+	bonuses = bonuses + { ["Combat Initiative"] = tonumber(pt:match([[>Combat Initiative ([+-][0-9]+)%%<]])) }
+	if pt:contains(">Monsters will be more attracted to you.<") then
+		bonuses = bonuses + { ["Monsters will be more attracted to you"] = 5 }
+	end
+	if pt:contains(">Monsters will be less attracted to you.<") then
+		bonuses = bonuses + { ["Monsters will be more attracted to you"] = -5 }
+	end
+
 	return bonuses
 end
 
@@ -48,11 +58,11 @@ add_automator("all pages", function()
 end)
 
 function set_cached_item_bonuses(name, tbl)
-	session["cached item bonuses: " .. name] = tbl
+	session["cached item bonuses: " .. get_itemid(name)] = tbl
 end
 
 function get_cached_item_bonuses(name)
-	local tbl = session["cached item bonuses: " .. name]
+	local tbl = session["cached item bonuses: " .. get_itemid(name)]
 	if tbl then
 		return make_bonuses_table(tbl)
 	end
@@ -87,10 +97,29 @@ add_processor("/inventory.php", function()
 	end
 end)
 
+local items_to_cache = {
+	"stinky cheese eye",
+	"Jekyllin hide belt",
+	"Grimacite gown",
+	"Moonthril Cuirass",
+	"hairshirt",
+	"over-the-shoulder Folder Holder",
+	"Tuesday's ruby",
+	"spooky little girl",
+	"card sleeve",
+	"Yearbook Club Camera",
+	"Frown Exerciser",
+}
+
 add_automator("all pages", function()
-	for _, itemname in ipairs { "stinky cheese eye", "Jekyllin hide belt", "Grimacite gown", "Moonthril Cuirass", "hairshirt", "over-the-shoulder Folder Holder", "Tuesday's ruby", "spooky little girl", "card sleeve" } do
+	for _, itemname in ipairs(items_to_cache) do
 		if have_equipped_item(itemname) and not get_cached_item_bonuses(itemname) then
 			set_cached_item_bonuses(itemname, parse_item_bonuses(itemname))
+		end
+	end
+	for _, itemid in pairs(equipment()) do
+		if not maybe_get_itemname(itemid) and not get_cached_item_bonuses(itemid) then
+			set_cached_item_bonuses(itemid, parse_item_bonuses(itemid))
 		end
 	end
 end)
@@ -111,21 +140,15 @@ function estimate_item_equip_bonuses(item)
 		["jalape&ntilde;o slices"] = { ["Meat from Monsters"] = 2 * fairy_bonus(10) },
 		["navel ring of navel gazing"] = { item_upto = 20, meat_upto = 20 },
 
-		["Jekyllin hide belt"] = "cached",
-		["Moonthril Cuirass"] = "cached",
-		["Grimacite gown"] = "cached",
-		["hairshirt"] = "cached",
-		["Tuesday's ruby"] = "cached",
-		["spooky little girl"] = "cached",
-
-		["stinky cheese eye"] = "cached",
 		["Snow Suit"] = "cached",
-		["card sleeve"] = "cached",
-		["over-the-shoulder Folder Holder"] = "cached",
 
 		["Mayflower bouquet"] = { item_upto = 10, meat_upto = 40, ["Item Drops from Monsters"] = "?" }, -- not sufficiently spaded
 		["Colonel Mustard's Lonely Spades Club Jacket"] = { ["Combat Initiative"] = "?", ["Item Drops from Monsters"] = "?", ["Meat from Monsters"] = "?" }, -- 1-3%
 	}
+
+	for _, itemname in ipairs(items_to_cache) do
+		itemarray[itemname] = "cached"
+	end
 
 	if have_equipped_item("scratch 'n' sniff sword") or have_equipped_item("scratch 'n' sniff crossbow") then
 		local scratchnsniff_bonuses = {}
@@ -152,7 +175,7 @@ function estimate_item_equip_bonuses(item)
 	local name = maybe_get_itemname(item)
 	if not name then
 		-- ..unknown..
-		return make_bonuses_table(unknown_table)
+		return make_bonuses_table(unknown_table) + make_bonuses_table(get_cached_item_bonuses(item) or {})
 	elseif itemarray[name] == "cached" then
 		return make_bonuses_table(get_cached_item_bonuses(name) or unknown_table)
 	elseif itemarray[name] then

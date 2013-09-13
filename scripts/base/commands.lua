@@ -2,28 +2,23 @@ function use_hottub()
 	return async_get_page("/clan_viplounge.php", { action = "hottub" })
 end
 
-function meatpaste_items(a, b)
-	-- TODO: can this be done without requiring up-to-date status?
-	if moonsign_area("Degrassi Knoll") and not ascensionpath("Zombie Slayer") then
-		return async_post_page("/knoll.php", { action = "combine", pwd = session.pwd, item1 = get_itemid(a), item2 = get_itemid(b), quantity = 1, ajax = 1 })
-	else
-		if not have_item("meat paste") then
-			async_post_page("/craft.php", { pwd = session.pwd, action = "makepaste", qty = 1, ajax = 1, whichitem = get_itemid("meat paste") })
-		end
-		return async_post_page("/craft.php", { mode = "combine", pwd = session.pwd, action = "craft", a = get_itemid(a), b = get_itemid(b), qty = 1, ajax = 1 })
+function meatpaste_items(a, b, qty)
+	if not have_item("meat paste") and not moonsign_area("Degrassi Knoll") then
+		async_post_page("/craft.php", { pwd = session.pwd, action = "makepaste", qty = qty or 1, ajax = 1, whichitem = get_itemid("meat paste") })
 	end
+	return async_post_page("/craft.php", { mode = "combine", pwd = session.pwd, action = "craft", a = get_itemid(a), b = get_itemid(b), qty = qty or 1, ajax = 1 })
 end
 
-function cook_items(a, b)
-	return async_post_page("/craft.php", { mode = "cook", pwd = session.pwd, action = "craft", a = get_itemid(a), b = get_itemid(b), qty = 1, ajax = 1 })
+function cook_items(a, b, qty)
+	return async_post_page("/craft.php", { mode = "cook", pwd = session.pwd, action = "craft", a = get_itemid(a), b = get_itemid(b), qty = qty or 1, ajax = 1 })
 end
 
-function mix_items(a, b)
-	return async_post_page("/craft.php", { mode = "cocktail", pwd = session.pwd, action = "craft", a = get_itemid(a), b = get_itemid(b), qty = 1, ajax = 1 })
+function mix_items(a, b, qty)
+	return async_post_page("/craft.php", { mode = "cocktail", pwd = session.pwd, action = "craft", a = get_itemid(a), b = get_itemid(b), qty = qty or 1, ajax = 1 })
 end
 
-function smith_items(a, b)
-	return async_post_page("/knoll.php", { action = "smith", pwd = session.pwd, item1 = get_itemid(a), item2 = get_itemid(b), quantity = 1, ajax = 1 })
+function smith_items(a, b, qty)
+	return post_page("/craft.php", { mode = "smith", pwd = session.pwd, action = "craft", a = get_itemid(a), b = get_itemid(b), qty = qty or 1, ajax = 1 })
 end
 
 function buy_item(name, whichstore, amount)
@@ -164,16 +159,16 @@ function pull_storage_items(xs)
 	return pf
 end
 
-function freepull_item(name)
-	return async_post_page("/storage.php", { action = "pull", pwd = session.pwd, howmany1 = 1, whichitem1 = get_itemid(name) })
+function freepull_item(name, qty)
+	return async_post_page("/storage.php", { action = "pull", pwd = session.pwd, howmany1 = qty or 1, whichitem1 = get_itemid(name) })
 end
 
-function closet_item(name)
-	return async_get_page("/inventory.php", { action = "closetpush", pwd = session.pwd, qty = 1, whichitem = get_itemid(name), ajax = 1 })
+function closet_item(name, qty)
+	return async_get_page("/inventory.php", { action = "closetpush", pwd = session.pwd, qty = qty or 1, whichitem = get_itemid(name), ajax = 1 })
 end
 
-function uncloset_item(name)
-	return async_get_page("/inventory.php", { action = "closetpull", pwd = session.pwd, qty = 1, whichitem = get_itemid(name), ajax = 1 })
+function uncloset_item(name, qty)
+	return async_get_page("/inventory.php", { action = "closetpull", pwd = session.pwd, qty = qty or 1, whichitem = get_itemid(name), ajax = 1 })
 end
 		
 function autosell_item(name, amount)

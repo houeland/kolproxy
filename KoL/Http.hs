@@ -19,11 +19,11 @@ import Text.JSON
 import qualified Data.ByteString.Char8
 
 getHTTPFileData useragent url = do
-	(_, body, _, _) <- doHTTPreq (mkreq useragent Nothing url Nothing True)
+	(_, body, _, _) <- doHTTPreq (mkreq True useragent Nothing url Nothing True)
 	return $ Data.ByteString.Char8.unpack body
 
 postHTTPFileData useragent url params = do
-	(_, body, _, _) <- doHTTPreq (mkreq useragent Nothing url (Just params) True)
+	(_, body, _, _) <- doHTTPreq (mkreq True useragent Nothing url (Just params) True)
 	return $ Data.ByteString.Char8.unpack body
 
 parseUriServerBugWorkaround rawuri = do
@@ -42,7 +42,7 @@ parseUriServerBugWorkaround rawuri = do
 internalKolHttpsRequest url params cu _noredirect = do
 	let (cucookie, useragent, host, _getconn) = cu
 	let Just reqabsuri = url `relativeTo` host
-	(effuri, body, hdrs, code) <- doHTTPSreq (mkreq useragent cucookie reqabsuri params True)
+	(effuri, body, hdrs, code) <- doHTTPSreq (mkreq True useragent cucookie reqabsuri params True)
 	let addheaders = filter (\(x, _y) -> x == "Set-Cookie") hdrs
 	return (body, effuri, addheaders, code)
 
@@ -50,7 +50,7 @@ internalKolRequest url params cu noredirect = do
 	let (cucookie, useragent, host, getconn) = cu
 	let Just reqabsuri = url `relativeTo` host
 -- 	putStrLn $ "DEBUG: single-req " ++ show absuri
-	(effuri, body, hdrs, code) <- doHTTPreq (mkreq useragent cucookie reqabsuri params True)
+	(effuri, body, hdrs, code) <- doHTTPreq (mkreq True useragent cucookie reqabsuri params True)
 
 	if noredirect
 		then return (body, effuri, hdrs, code)
@@ -119,7 +119,8 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 			return newmv
 		else readIORef (jsonStatusPageMVarRef_ $ sessionData $ ref)
 	retrieval_start <- getCurrentTime
-	let (reqabsuri, r) = mkreq (useragent_ $ connection $ ref) (cookie_ $ connection $ ref) (fromJust $ uri `relativeTo` host) params True
+	slowconn <- readIORef $ use_slow_http_ref_ $ globalstuff_ $ ref
+	let (reqabsuri, r) = mkreq slowconn (useragent_ $ connection $ ref) (cookie_ $ connection $ ref) (fromJust $ uri `relativeTo` host) params True
 	mv_x <- newEmptyMVar
 	writeChan (getconn_ $ connection $ ref) (reqabsuri, r, mv_x, ref)
 

@@ -81,6 +81,7 @@ data GlobalRefStuff = GlobalRefStuff {
 	shutdown_secret_ :: String,
 	shutdown_ref_ :: IORef Bool,
 	use_slow_http_ref_ :: IORef Bool,
+	have_logged_in_ref_ :: IORef Bool,
 	doChatLogAction_ :: (Database.SQLite3Modded.Database -> IO ()) -> IO ()
 }
 

@@ -64,7 +64,7 @@ end)
 
 add_chat_command("/pyec", "Using PYEC.", function()
 	if not ascensionstatus("Aftercore") then
-		return "Not in aftercore.", "darkorange"
+		return "Not in aftercore.", nil, "darkorange"
 	end
 	if have_item("Platinum Yendorian Express Card") then
 		local pt = use_item("Platinum Yendorian Express Card")()
@@ -73,20 +73,20 @@ add_chat_command("/pyec", "Using PYEC.", function()
 	local clanstash = get_page("/clan_stash.php")
 	local pyec_line = clanstash:match([[<option value=1687 descid=298008237>Platinum Yendorian Express Card.-</option>]])
 	if not pyec_line then
-		return "No PYEC in clan stash.", "darkorange"
+		return "No PYEC in clan stash.", nil, "darkorange"
 	end
 	if not clanstash:contains("You are exempt from your Clan's Karma requirements.") then
-		return "Not Karma exempt.", "darkorange"
+		return "Not Karma exempt.", nil, "darkorange"
 	end
 	take_stash_item("Platinum Yendorian Express Card")
 	if not have_item("Platinum Yendorian Express Card") then
-		return "Error taking PYEC from clan stash!", "red"
+		return "Error taking PYEC from clan stash!", nil, "red"
 	else
 		local _, pt = pcall(function() return use_item("Platinum Yendorian Express Card")() end)
 		add_stash_item("Platinum Yendorian Express Card")
 		local newclanstash = get_page("/clan_stash.php")
 		if newclanstash:match([[<option value=1687 descid=298008237>Platinum Yendorian Express Card.-</option>]]) ~= pyec_line then
-			return "Error returning PYEC to clan stash!", "red"
+			return "Error returning PYEC to clan stash!", nil, "red"
 		else
 			return pt
 		end

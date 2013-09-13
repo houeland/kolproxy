@@ -19,6 +19,9 @@ function estimate_buff_bonuses(buffname)
 		["A Little Bit Evil"] = { ["Monster Level"] = 2 },
 
 		["Amorous Avarice"] = { ["Meat from Monsters"] = 25 * math.min(math.floor(drunkenness() / 5), 4) },
+
+		["Whitesloshed"] = { ["Item Drops from Monsters (Dreadsylvania only)"] = 500 },
+		["You've Got a Stew Going!"] = { ["Item Drops from Monsters (Dreadsylvania only)"] = 500 },
 	}
 
 	if buffarray[buffname] then

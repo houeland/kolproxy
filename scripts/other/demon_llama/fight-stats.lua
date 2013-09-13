@@ -209,13 +209,22 @@ function getCurrentFightMonster()
 		monster.Stats.ModDef = adjustStat(monster.Stats.Def, tonumber(fight["defense decrease"]), 1, nil)
 	end
 
+	local function tonum(x)
+		if type(x) == "string" then
+			x = x:gsub(",", "")
+			return tonumber(x)
+		else
+			return x
+		end
+	end
+
 	local first_serverdata = fight["currently fighting first serverdata"]
 	if first_serverdata then
 		monster = monster or {}
 		monster.Stats = monster.Stats or {}
-		monster.Stats.HP = first_serverdata.hp
-		monster.Stats.Atk = first_serverdata.off
-		monster.Stats.Def = first_serverdata.def
+		monster.Stats.HP = tonum(first_serverdata.hp)
+		monster.Stats.Atk = tonum(first_serverdata.off)
+		monster.Stats.Def = tonum(first_serverdata.def)
 	end
 
 	local current_serverdata = fight["currently fighting current serverdata"]
@@ -223,9 +232,9 @@ function getCurrentFightMonster()
 		monster = monster or {}
 		monster.manuel_stats = true
 		monster.Stats = monster.Stats or {}
-		monster.Stats.ModHP = current_serverdata.hp
-		monster.Stats.ModAtk = current_serverdata.off
-		monster.Stats.ModDef = current_serverdata.def
+		monster.Stats.ModHP = tonum(current_serverdata.hp)
+		monster.Stats.ModAtk = tonum(current_serverdata.off)
+		monster.Stats.ModDef = tonum(current_serverdata.def)
 	end
 
 	local extra_serverdata = fight["currently fighting extra serverdata"]

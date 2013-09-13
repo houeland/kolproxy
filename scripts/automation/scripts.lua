@@ -35,6 +35,45 @@ function reuse_equipment_slots(neweq)
 	return neweq
 end
 
+function solve_knapsack(size, datalist)
+	local array = {}
+	local arrayitems = {}
+	array[0] = 0
+	for _, d in ipairs(datalist) do
+		for i = size, 0, -1 do
+			for num = 1, 100 do
+				local j = i + d.size * num
+				if num > d.amount or j > size or not array[i] then break end
+				local v = array[i] + d.value * num
+				if v > (array[j] or 0) then
+					array[j] = v
+					arrayitems[j] = { name = d.name, amount = num, previous = arrayitems[i] }
+				end
+			end
+		end
+	end
+	return array, arrayitems
+end
+
+function get_available_drinks(min_quality)
+	local drinks = {}
+	for id, amount in pairs(inventory()) do
+		if id == get_itemid("astral pilsner") then
+			if level() >= 11 then
+				table.insert(drinks, { name = get_itemname(id), amount = amount, size = 1, value = 11 })
+			end
+		else
+			local d = maybe_get_itemdata(id)
+			if d and d.drunkenness and d.drunkenness >= 1 and level() >= (d.levelreq or 1) then
+				local value = (d.advmin + d.advmax) / 2
+				if not min_quality or value / d.drunkenness >= min_quality then
+					table.insert(drinks, { name = get_itemname(id), amount = amount, size = d.drunkenness, value = value })
+				end
+			end
+		end
+	end
+	return drinks
+end
 
 __allow_global_writes = true
 
@@ -44,10 +83,6 @@ function get_automation_scripts(cached_stuff)
 	local f = {}
 	local script = f
 	cached_stuff = cached_stuff or script_cached_stuff
-
-	local function smith_items_craft(a, b)
-		return post_page("/craft.php", { mode = "smith", pwd = get_pwd(), action = "craft", a = get_itemid(a), b = get_itemid(b), qty = 1, ajax = 1 })
-	end
 
 	local function feed_slimeling()
 		if ascensionstatus() == "Aftercore" then return end
@@ -548,7 +583,7 @@ function get_automation_scripts(cached_stuff)
 				else
 					critical "Failed to buy MMJ as lvl 9+ AT"
 				end
-			elseif have_item("Cobb's Knob lab key") and ((have("Knob Goblin elite helm") and have_item("Knob Goblin elite polearm") and have_item("Knob Goblin elite pants")) or (level() >= 8 and not quest("The Goblin Who Wouldn't Be King"))) and challenge ~= "fist" and not have_item("Knob Goblin seltzer") and not highskill_at_run and challenge ~= "boris" and not have_item("Knob Goblin seltzer") then
+			elseif have_item("Cobb's Knob lab key") and ((have("Knob Goblin elite helm") and have_item("Knob Goblin elite polearm") and have_item("Knob Goblin elite pants")) or (level() >= 8 and not quest("The Goblin Who Wouldn't Be King"))) and not have_item("Knob Goblin seltzer") and can_wear_weapons() and not have_item("Knob Goblin seltzer") then
 				buy_item("Knob Goblin seltzer", "k", 5)
 				if have_item("Knob Goblin seltzer") then
 					return f.ensure_mp(amount, true)
@@ -885,7 +920,16 @@ function get_automation_scripts(cached_stuff)
 			end
 		end
 		if not even_in_fist and not ignore_buffing_and_outfit then
-			if level() < 6 and not highskill_at_run then
+			if want_bonus.plusitems then
+				table.insert(xs, "Fat Leon's Phat Loot Lyric")
+				table.insert(xs, "Leash of Linguini")
+				table.insert(xs, "Empathy")
+				table.insert(xs, "Singer's Faithful Ocelot")
+				if want_bonus.extraplusitems then
+					table.insert(xs, "Heavy Petting")
+					table.insert(xs, "Peeled Eyeballs")
+				end
+			elseif level() < 6 then
 				table.insert(xs, "The Moxious Madrigal")
 				table.insert(xs, "The Magical Mojomuscular Melody")
 			end
@@ -1447,7 +1491,7 @@ endif
 		end
 	end
 
-	function f.eat_food(whichday)
+	function f.eat_food()
 		if ascension_script_option("eat manually") then return end
 		if challenge == "fist" then return end
 		if challenge == "boris" then return end
@@ -1468,7 +1512,7 @@ endif
 					eat_item("Ultimate Breakfast Sandwich")
 					eat_item("consummate sauerkraut")
 					if fullness() == 15 then
-						return f.eat_food(whichday)
+						return f.eat_food()
 					else
 						critical "Failed to eat food"
 					end
@@ -1476,7 +1520,7 @@ endif
 					craft_cosmic_kitchen { pwd = session.pwd, ["Ultimate Breakfast Sandwich"] = 2, ["consummate sauerkraut"] = 1 }
 					shop_buyitem({ ["Staff of Fruit Salad"] = 1, ["Staff of the Healthy Breakfast"] = 1, ["Staff of the Hearty Dinner"] = 1, ["Staff of the Light Lunch"] = 1, ["Staff of the All-Steak"] = 1, ["Staff of the Cream of the Cream"] = 1, ["Staff of the Staff of Life"] = 1, ["Staff of the Standalone Cheese"] = 1 }, "jarl")
 					if count_item("Ultimate Breakfast Sandwich") >= 2 and count_item("consummate sauerkraut") >= 1 then
-						return f.eat_food(whichday)
+						return f.eat_food()
 					else
 						critical "Failed to cook food"
 					end
@@ -1512,7 +1556,7 @@ endif
 					r() cast_skill("Conjure Fruit")
 					cached_stuff.summoned_jarlsberg_ingredients = true
 					if count_item("cosmic egg") >= 2 and count_item("cosmic potted meat product") >= 2 and count_item("cosmic cheese") >= 2 and count_item("cosmic dough") >= 2 and count_item("cosmic vegetable") >= 1 then
-						return f.eat_food(whichday)
+						return f.eat_food()
 					else
 						critical "Failed to conjure cosmic ingredients"
 					end
@@ -1603,18 +1647,7 @@ endif
 		stop "Script would drink imported beer. Drink something else manually instead, or run again to proceed."
 	end
 
-	function f.drink_booze(whichday, forced)
--- 		local function want_to_drink()
--- 			-- TODO: revamp, improve and use this
--- 			if whichday == 1 and drunkenness() < 3 and have_item("Typical Tavern swill") and meat() >= 1000 then
--- 				return true
--- 			elseif whichday == 1 and drunkenness() < 12 and have_item("Typical Tavern swill") and have_item("thermos full of Knob coffee") and meat() >= 2000 then
--- 				return true
--- 			elseif whichday >= 2 and drunkenness() < 19 and ((meat() >= 2000 and advs() <= 20) or forced) then
--- 				return true
--- 			end
--- 			return false
--- 		end
+	function f.drink_booze()
 		if ascension_script_option("eat manually") then return end
 		if challenge == "fist" then return end
 		if challenge == "boris" then return end
@@ -1629,14 +1662,14 @@ endif
 					drink_item("Le Roi")
 					drink_item("Over Easy Rider")
 					if drunkenness() == 19 then
-						return f.drink_booze(whichday)
+						return f.drink_booze()
 					else
 						critical "Failed to drink booze"
 					end
 				elseif count_item("cosmic egg") >= 1 and count_item("cosmic fruit") >= 3 and count_item("cosmic potted meat product") >= 2 and count_item("cosmic potato") >= 3 and count_item("cosmic cheese") >= 1 and count_item("cosmic vegetable") >= 2 and count_item("cosmic dough") >= 2 then
 					craft_cosmic_kitchen { pwd = session.pwd, ["Bologna Lambic"] = 2, ["Chunky Mary"] = 2, ["Nachojito"] = 1, ["Le Roi"] = 1, ["Over Easy Rider"] = 1 }
 					if count_item("Bologna Lambic") >= 2 and count_item("Chunky Mary") >= 2 and count_item("Nachojito") >= 1 and count_item("Le Roi") >= 1 and count_item("Over Easy Rider") >= 1 then
-						return f.drink_booze(whichday)
+						return f.drink_booze()
 					else
 						critical "Failed to mix booze"
 					end
@@ -1644,248 +1677,127 @@ endif
 			end
 			return
 		end
-		if highskill_at_run then return end
-		if ascensionstatus() ~= "Hardcore" then return end
-		if whichday == 1 then
-			if drunkenness() < 3 and have_item("Typical Tavern swill") and meat() >= 1000 then
-				inform "drinking pumpkin and overpriced beer"
-				if not have_item("pumpkin beer") and have_item("pumpkin") then
-					buy_item("fermenting powder", "m")
-					mix_items("pumpkin", "fermenting powder")
-				end
-				-- IMPROVE?: drink booze and sewerlevel at nice times
-				ensure_mp(5)
-				cast_skill("Summon Alice's Army Cards")
 
-				ensure_buffs { "Ode to Booze" }
-				for i = 1, 10 do
-					if drunkenness() < 8 and drunkenness() < estimate_max_safe_drunkenness() and (buff("Ode to Booze") or not have_skill("The Ode to Booze")) then
-						local start_drunk = drunkenness()
-						if have_item("astral pilsner") and level() >= 11 then
-							drink_item("astral pilsner")
-						elseif have_item("thermos full of Knob coffee") then
-							drink_item("thermos full of Knob coffee")
-						elseif have_item("pumpkin beer") then
-							drink_item("pumpkin beer")
-						elseif have_item("distilled fortified wine") then
-							drink_item("distilled fortified wine")
-						elseif have_item("Ye Wizard's Shack snack voucher") and drunkenness() <= 7 then
-							async_post_page("/gamestore.php", { action = "buysnack", whichsnack = get_itemid("tobiko-infused sake") })
-							drink_item("tobiko-infused sake")
-						elseif have_item("cream stout") then
-							drink_item("cream stout")
-						elseif have_item("shot of rotgut") then
-							f.heal_up()
-							drink_item("shot of rotgut")
-						elseif have_item("shot of flower schnapps") then
-							drink_item("shot of flower schnapps")
-						else
-							warn_imported_beer()
-							buy_item("overpriced &quot;imported&quot; beer", "v", 1)
-							drink_item("overpriced &quot;imported&quot; beer")
-						end
-						if drunkenness() <= start_drunk then
-							critical "Failed to drink..."
-						end
-					end
-				end
-				did_action = (drunkenness() >= 3 and have_buff("Pisces in the Skyces")) or (drunkenness() == estimate_max_safe_drunkenness())
-				return result, resulturl, did_action
-			elseif (drunkenness() < 12 or (have_skill("Liver of Steel") and drunkenness() < 19)) and have_item("Typical Tavern swill") and have_item("distilled fortified wine") and (meat() >= 2000 or session["__script.have cocktailcrafting kit"]) then
-				-- TODO: or we already have cocktailcrafting kit...
-				inform "drinking rest for day 1"
-				-- TODO: redo
-				if not have_item("coconut shell") and not have_item("little paper umbrella") and not have_item("magical ice cubes") then
-					ensure_mp(10)
-					cast_skillid(5014, 1) -- advanced cocktailcrafting
-					ensure_mp(10)
-					cast_skillid(5014, 1) -- advanced cocktailcrafting
-					ensure_mp(10)
-					cast_skillid(5014, 1) -- advanced cocktailcrafting
-					ensure_mp(10)
-					cast_skillid(5014, 1) -- advanced cocktailcrafting
-					ensure_mp(10)
-					cast_skillid(5014, 1) -- advanced cocktailcrafting
-				end
-				if not have_item("blended frozen swill") and not have_item("fruity girl swill") and not have_item("tropical swill") then
-					local f = nil
-					if have_item("little paper umbrella") then
-						f = mix_items("Typical Tavern swill", "little paper umbrella")
-					elseif have_item("magical ice cubes") then
-						f = mix_items("Typical Tavern swill", "magical ice cubes")
-					elseif have_item("coconut shell") then
-						f = mix_items("Typical Tavern swill", "coconut shell")
-					end
-					if have_item("blended frozen swill") or have_item("fruity girl swill") or have_item("tropical swill") then
-						did_action = true
-					elseif f():contains("Your cocktail set is not advanced enough") then
-						if have_item("Queue Du Coq cocktailcrafting kit") then
-							print "  using cocktailcrafting kit"
-							set_result(use_item("Queue Du Coq cocktailcrafting kit"))
-							did_action = not have_item("Queue Du Coq cocktailcrafting kit")
-						else
-							print "  buying cocktailcrafting kit"
-							set_result(buy_item("Queue Du Coq cocktailcrafting kit", "m"))
-							session["__script.have cocktailcrafting kit"] = "yes"
-							did_action = have_item("Queue Du Coq cocktailcrafting kit")
-						end
-					end
-				else
-					ensure_buffs { "Ode to Booze" }
-					f.ensure_buff_turns("Ode to Booze", 8)
-					local ode_buffturns = buffturns("Ode to Booze")
-					if ode_buffturns < 8 then
-						critical "Failed to cast ode to booze"
-					end
-					if drunkenness() == 8 or (have_skill("Liver of Steel") and drunkenness() == 13) then
-						if have_item("blended frozen swill") then
-							drink_item("blended frozen swill")
-						elseif have_item("fruity girl swill") then
-							drink_item("fruity girl swill")
-						elseif have_item("tropical swill") then
-							drink_item("fruity girl swill")
-						end
-					end
-					for i = 1, 20 do
-						if drunkenness() < estimate_max_safe_drunkenness() then
-							local start_drunk = drunkenness()
-							ensure_buffs { "Ode to Booze" }
-							if have_item("astral pilsner") and level() >= 11 then
-								drink_item("astral pilsner")
-							elseif have_item("thermos full of Knob coffee") then
-								drink_item("thermos full of Knob coffee")
-							elseif have_item("pumpkin beer") then
-								drink_item("pumpkin beer")
-							elseif have_item("distilled fortified wine") then
-								drink_item("distilled fortified wine")
-							elseif have_item("CSA cheerfulness ration") and level() >= 6 then
-								drink_item("CSA cheerfulness ration")
-							elseif have_item("CSA scoutmaster's &quot;water&quot;") and drunkenness() + 3 <= estimate_max_safe_drunkenness() then
-								drink_item("CSA scoutmaster's &quot;water&quot;")
-							elseif have_item("Ye Wizard's Shack snack voucher") and drunkenness() + 3 <= estimate_max_safe_drunkenness() then
-								async_post_page("/gamestore.php", { action = "buysnack", whichsnack = get_itemid("tobiko-infused sake") })
-								drink_item("tobiko-infused sake")
-							elseif have_item("Supernova Champagne") and drunkenness() + 3 <= estimate_max_safe_drunkenness() then
-								drink_item("Supernova Champagne")
-							elseif have_item("cream stout") then
-								drink_item("cream stout")
-							elseif have_item("shot of rotgut") then
-								f.heal_up()
-								drink_item("shot of rotgut")
-							elseif have_item("shot of flower schnapps") then
-								drink_item("shot of flower schnapps")
-							else
-								warn_imported_beer()
-								buy_item("overpriced &quot;imported&quot; beer", "v", 1)
-								if not have_item("overpriced &quot;imported&quot; beer") then
-									critical "Failed to buy imported beer"
-								end
-								drink_item("overpriced &quot;imported&quot; beer")
-							end
-							if drunkenness() <= start_drunk then
-								critical "Failed to drink..."
-							end
-						end
-					end
-					if drunkenness() == 19 and have_skill("Liver of Steel") then
-						did_action = true
-					elseif drunkenness() == 14 and not have_skill("Liver of Steel") then
-						did_action = true
-					end
-				end
-				return result, resulturl, did_action
-			end
-		elseif whichday >= 2 then
+		if ascensionstatus() ~= "Hardcore" then return end
+
+		if have_item("steel margarita") then
+			drink_item("steel margarita")
+		end
+
+		if drunkenness() >= estimate_max_safe_drunkenness() then return end
+
+		for i = 1, 5 do
 			if have_item("peppermint sprout") or have_item("peppermint twist") then
-				for x in table.values { "bottle of rum", "bottle of gin", "bottle of tequila", "bottle of vodka", "bottle of whiskey", "boxed wine" } do
-					if have(x) then
+				for _, x in ipairs { "bottle of rum", "bottle of gin", "bottle of tequila", "bottle of vodka", "bottle of whiskey", "boxed wine" } do
+					if have_item(x) then
 						if not have_item("peppermint twist") then
 							use_item("peppermint sprout")
 						end
 						local twists = count("peppermint twist")
 						inform "mixing peppermint booze"
-						result, resulturl = mix_items(x, "peppermint twist")()
-						-- TODO: check for cocktailcrafting kit
+						set_result(mix_items(x, "peppermint twist"))
 						if count("peppermint twist") ~= twists - 1 then
 							critical "Failed to mix peppermint booze"
 						end
-						did_action = true
-						return result, resulturl, did_action
+						break
 					end
 				end
 			end
-			if drunkenness() < estimate_max_safe_drunkenness() and ((meat() >= 2000 and advs() <= 20) or (advs() <= 15) or forced) then
--- 				TODOSOON!!! error "Drink better!"
-				-- TODO: drink good stuff early, then more good stuff later when you get it from SRs
-				if have_item("pumpkin") then
-					buy_item("fermenting powder", "m")
-					mix_items("pumpkin", "fermenting powder")
+		end
+
+		if not have_item("pumpkin beer") and have_item("pumpkin") then
+			buy_item("fermenting powder", "m")
+			mix_items("pumpkin", "fermenting powder")
+		end
+
+		ensure_mp(5)
+		cast_skill("Summon Alice's Army Cards")
+
+--[[--
+			if not have_item("coconut shell") and not have_item("little paper umbrella") and not have_item("magical ice cubes") then
+				ensure_mp(10)
+				cast_skillid(5014, 1) -- advanced cocktailcrafting
+				ensure_mp(10)
+				cast_skillid(5014, 1) -- advanced cocktailcrafting
+				ensure_mp(10)
+				cast_skillid(5014, 1) -- advanced cocktailcrafting
+				ensure_mp(10)
+				cast_skillid(5014, 1) -- advanced cocktailcrafting
+				ensure_mp(10)
+				cast_skillid(5014, 1) -- advanced cocktailcrafting
+			end
+
+			if not have_item("blended frozen swill") and not have_item("fruity girl swill") and not have_item("tropical swill") then
+				local f = nil
+				if have_item("little paper umbrella") then
+					f = mix_items("Typical Tavern swill", "little paper umbrella")
+				elseif have_item("magical ice cubes") then
+					f = mix_items("Typical Tavern swill", "magical ice cubes")
+				elseif have_item("coconut shell") then
+					f = mix_items("Typical Tavern swill", "coconut shell")
 				end
-				ensure_mp(5)
-				cast_skill("Summon Alice's Army Cards")
-				inform "drinking booze"
-				for i = 1, 50 do
-					if drunkenness() < estimate_max_safe_drunkenness() then
-						local start_drunk = drunkenness()
-						ensure_buffs { "Ode to Booze" }
-						if have_item("steel margarita") then
-							drink_item("steel margarita")
-						elseif have_item("astral pilsner") and level() >= 11 then
-							drink_item("astral pilsner")
-						elseif have_item("Crimbojito") and drunkenness() <= estimate_max_safe_drunkenness() - 2 then
-							drink_item("Crimbojito")
-						elseif have_item("Feliz Navidad") and drunkenness() <= estimate_max_safe_drunkenness() - 2 then
-							drink_item("Feliz Navidad")
-						elseif have_item("Gin Mint") and drunkenness() <= estimate_max_safe_drunkenness() - 2 then
-							drink_item("Gin Mint")
-						elseif have_item("Mint Yulep") and drunkenness() <= estimate_max_safe_drunkenness() - 2 then
-							drink_item("Mint Yulep")
-						elseif have_item("Sangria de Menthe") and drunkenness() <= estimate_max_safe_drunkenness() - 2 then
-							drink_item("Sangria de Menthe")
-						elseif have_item("Vodka Matryoshka") and drunkenness() <= estimate_max_safe_drunkenness() - 2 then
-							drink_item("Vodka Matryoshka")
-						elseif have_item("thermos full of Knob coffee") then
-							drink_item("thermos full of Knob coffee")
-						elseif have_item("pumpkin beer") then
-							drink_item("pumpkin beer")
-						elseif have_item("distilled fortified wine") then
-							drink_item("distilled fortified wine")
-						elseif have_item("CSA cheerfulness ration") and level() >= 6 then
-							drink_item("CSA cheerfulness ration")
-						elseif have_item("Ye Olde Meade") and drunkenness() + 5 <= estimate_max_safe_drunkenness() then
-							drink_item("Ye Olde Meade")
-						elseif have_item("CSA scoutmaster's &quot;water&quot;") and drunkenness() + 3 <= estimate_max_safe_drunkenness() then
-							drink_item("CSA scoutmaster's &quot;water&quot;")
-						elseif have_item("backwoods screwdriver") and drunkenness() + 3 <= estimate_max_safe_drunkenness() then
-							drink_item("backwoods screwdriver")
-						elseif have_item("Ye Wizard's Shack snack voucher") and drunkenness() <= estimate_max_safe_drunkenness() - 3 then
-							async_post_page("/gamestore.php", { action = "buysnack", whichsnack = get_itemid("tobiko-infused sake") })
-							drink_item("tobiko-infused sake")
-						elseif have_item("Supernova Champagne") and drunkenness() <= estimate_max_safe_drunkenness() - 3 then
-							drink_item("Supernova Champagne")
-						elseif have_item("cream stout") then
-							drink_item("cream stout")
-						elseif have_item("shot of rotgut") then
-							f.heal_up()
-							drink_item("shot of rotgut")
-						elseif have_item("shot of flower schnapps") then
-							drink_item("shot of flower schnapps")
-						else
-							warn_imported_beer()
-							buy_item("overpriced &quot;imported&quot; beer", "v", 1)
-							if not have_item("overpriced &quot;imported&quot; beer") then
-								critical "Failed to buy imported beer"
+				if have_item("blended frozen swill") or have_item("fruity girl swill") or have_item("tropical swill") then
+					did_action = true
+				elseif f():contains("Your cocktail set is not advanced enough") then
+					if have_item("Queue Du Coq cocktailcrafting kit") then
+						print "  using cocktailcrafting kit"
+						set_result(use_item("Queue Du Coq cocktailcrafting kit"))
+						did_action = not have_item("Queue Du Coq cocktailcrafting kit")
+					else
+						print "  buying cocktailcrafting kit"
+						set_result(buy_item("Queue Du Coq cocktailcrafting kit", "m"))
+						session["__script.have cocktailcrafting kit"] = "yes"
+						did_action = have_item("Queue Du Coq cocktailcrafting kit")
+					end
+				end
+			end
+--]]--
+
+		local max_space = estimate_max_safe_drunkenness() - drunkenness()
+
+		local function determine_drinks()
+			if max_space < 5 then
+				for i = 1, 6 do
+					local array, arrayitems = solve_knapsack(max_space, get_available_drinks(2))
+					if array[max_space] then return max_space, arrayitems[max_space] end
+					warn_imported_beer()
+					buy_item("overpriced &quot;imported&quot; beer", "v", 1)
+				end
+			else
+				for q = 10, 2, -1 do
+					local array, arrayitems = solve_knapsack(max_space, get_available_drinks(q))
+					local best_space = nil
+					for space = 5, max_space do
+						if array[space] then
+							if not best_space or array[space] / space > array[best_space] / best_space then
+								best_space = space
 							end
-							drink_item("overpriced &quot;imported&quot; beer")
-						end
-						if drunkenness() <= start_drunk then
-							critical "Failed to drink..."
 						end
 					end
+					if best_space then return best_space, arrayitems[best_space] end
 				end
-				did_action = (drunkenness() == estimate_max_safe_drunkenness())
-				return result, resulturl, did_action
+				for i = 1, 6 do
+					local array, arrayitems = solve_knapsack(5, get_available_drinks(2))
+					if array[5] then return 5, arrayitems[5] end
+					warn_imported_beer()
+					buy_item("overpriced &quot;imported&quot; beer", "v", 1)
+				end
 			end
+		end
+
+		local space, drinks = determine_drinks()
+
+		local function recur(x)
+			if not x then return end
+			for i = 1, x.amount do
+				drink_item(x.name)
+			end
+			recur(x.previous)
+		end
+		if space then
+			print("drink_booze():", space)
+			script.ensure_buff_turns("Ode to Booze", space)
+			recur(drinks)
 		end
 	end
 
@@ -2250,6 +2162,168 @@ mark m_done
 		end
 	end
 
+	function f.do_hidden_city()
+		local places = {
+			{ zone = "A Massive Ziggurat", choice = "Legend of the Temple in the Hidden City", option = "Leave" },
+			{ zone = "An Overgrown Shrine (Southwest)", choice = "Water You Dune", option = "Place your head in the impression", fallback = "Back away", sphere = "dripping" },
+			{ zone = "An Overgrown Shrine (Northwest)", choice = "Earthbound and Down", option = "Place your head in the impression", fallback = "Step away from the altar", sphere = "moss-covered" },
+			{ zone = "An Overgrown Shrine (Southeast)", choice = "Fire When Ready", option = "Place your head in the impression", fallback = "Back off", sphere = "scorched" },
+			{ zone = "An Overgrown Shrine (Northeast)", choice = "Air Apparent", option = "Place your head in the impression", fallback = "Leave the altar", sphere = "crackling" },
+		}
+		local citypt = get_page("/place.php", { whichplace = "hiddencity" })
+		if count_item("stone triangle") >= 4 then
+			return run_task {
+				message = "kill hidden city boss",
+				minmp = 70,
+				action = adventure {
+					zone = "A Massive Ziggurat",
+					macro_function = function() return macro_noodlegeyser(5) end,
+					noncombats = { ["Legend of the Temple in the Hidden City"] = "Open the door" },
+				}
+			}
+		elseif citypt:contains("Hidden Apartment Building") and citypt:contains("Hidden Hospital") and citypt:contains("Hidden Office Building") and citypt:contains("Hidden Bowling Alley") then
+			local spherecount = count_item("scorched stone sphere") + count_item("moss-covered stone sphere") + count_item("crackling stone sphere") + count_item("dripping stone sphere")
+
+			if spherecount + count_item("stone triangle") >= 4 then
+				for _, x in ipairs(places) do
+					if x.sphere and have_item(x.sphere .. " stone sphere") then
+						return run_task {
+							message = "place " .. x.sphere .. " stone sphere at " .. x.zone,
+							action = adventure {
+								zone = x.zone,
+								noncombats = { [x.choice] = "Place the " .. x.sphere .. " sphere in the impression" },
+							}
+						}
+					end
+				end
+				critical "Error picking up stone triangles"
+			elseif have_item("stone triangle") then
+				stop "Hidden city partially completed, finish it manually"
+			end
+
+			-- use "book of matches" if we have it, buy drink
+
+			if not have_item("moss-covered stone sphere") then
+				return run_task {
+					message = "do apartment building",
+					minmp = 50,
+					action = adventure {
+						zone = "The Hidden Apartment Building",
+						macro_function = macro_hiddencity,
+						noncombats = {
+							["Action Elevator"] = have_buff("Thrice-Cursed") and "Go to the Thrice-Cursed Penthouse" or "Go to the mezannine",
+						},
+					}
+				}
+			elseif not have_item("crackling stone sphere") then
+				use_item("boring binder clip")
+				local function choose()
+					if have_item("McClusky file (complete)") then
+						return "Knock on the boss's office door"
+					elseif not have_item("boring binder clip") then
+						return "Raid the supply cabinet"
+					else
+						return "Pick a fight with a cubicle drone"
+					end
+				end
+				return run_task {
+					message = "do office building",
+					minmp = 50,
+					buffs = { "Spirit of Peppermint" },
+					action = adventure {
+						zone = "The Hidden Office Building",
+						macro_function = macro_hiddencity,
+						noncombats = { ["Working Holiday"] = choose() },
+					}
+				}
+			elseif not have_item("scorched stone sphere") then
+				-- sniff pygmy bowler?
+				script.bonus_target { "item" }
+				return run_task {
+					message = "do bowling alley",
+					fam = "Slimeling",
+					minmp = 50,
+					action = adventure {
+						zone = "The Hidden Bowling Alley",
+						macro_function = macro_hiddencity,
+						noncombats = { ["Life is Like a Cherry of Bowls"] = "Let's roll" },
+					}
+				}
+			elseif not have_item("dripping stone sphere") then
+				-- sniff witch surgeon?
+				return run_task {
+					message = "do hospital",
+					minmp = 50,
+					equipment = {
+						shirt = first_wearable { "surgical apron" },
+						weapon = can_wear_weapons() and first_wearable { "half-size scalpel" },
+						pants = first_wearable { "bloodied surgical dungarees" },
+						acc1 = first_wearable { "head mirror" },
+						acc2 = first_wearable { "surgical mask" },
+					},
+					action = adventure {
+						zone = "The Hidden Hospital",
+						macro_function = macro_hiddencity,
+						noncombats = { ["You, M. D."] = "Enter the Operating Theater" },
+					}
+				}
+			else
+				critical "Should have all hidden city spheres"
+			end
+		elseif can_wear_weapons() and not have_item("antique machete") then
+			return run_task {
+				message = "get antique machete",
+				buffs = { "Smooth Movements", "The Sonata of Sneakiness" },
+				fam = "Slimeling",
+				minmp = 50,
+				action = adventure {
+					zone = "The Hidden Park",
+					macro_function = macro_noodleserpent,
+					noncombats = {
+						["Where Does The Lone Ranger Take His Garbagester?"] = "Knock over the dumpster",
+					}
+				}
+			}
+		else
+			if not can_wear_weapons() then
+				stop "Kill lianas manually without machete"
+			end
+			for _, x in ipairs(places) do
+				for i = 1, 5 do
+					did_action = false
+					local t = turnsthisrun()
+					run_task {
+						message = "cut liana at " .. x.zone,
+						fam = "Angry Jung Man",
+						equipment = { weapon = "antique machete" },
+						action = adventure {
+							zone = x.zone,
+							choice_function = function(advtitle, choicenum, pagetext)
+								if advtitle == x.choice then
+									if pagetext:contains(x.option) then
+										return x.option
+									else
+										return x.fallback
+									end
+								end
+							end,
+						}
+					}
+					if get_result():contains("New Area Unlocked") then
+					elseif not did_action or turnsthisrun() ~= t then
+						critical "Failed to cut liana for free"
+					end
+				end
+			end
+			citypt = get_page("/place.php", { whichplace = "hiddencity" })
+			if citypt:contains("Hidden Apartment Building") and citypt:contains("Hidden Hospital") and citypt:contains("Hidden Office Building") and citypt:contains("Hidden Bowling Alley") then
+				did_action = true
+			else
+				did_action = false
+			end
+		end
+	end
+
 	function f.do_gotta_worship_them_all()
 		local woodspt = get_page("/woods.php")
 		if not woodspt:contains("The Hidden Temple") then
@@ -2319,82 +2393,7 @@ mark m_done
 				end
 			end
 		else
-			local hiddencitypt = get_page("/hiddencity.php")
-			local count_spheres_stones = count("cracked stone sphere") + count("mossy stone sphere") + count("rough stone sphere") + count("smooth stone sphere") + count("triangular stone")
-			local altars = 0
-			for x in hiddencitypt:gmatch("map_altar.gif") do
-				altars = altars + 1
-			end
-			if count_spheres_stones == 4 and altars == 4 and hiddencitypt:contains("map_temple.gif") then
-				if count("triangular stone") == 4 then
-					inform "fight hidden city boss"
-					local temple_which = nil
-					for which, tiletext in hiddencitypt:gmatch([[<a href='hiddencity.php%?which=([0-9]+)'>(.-)</a>]]) do
-						if tiletext:contains("map_temple.gif") then
-							temple_which = which
-						end
-					end
-					if temple_which then
-						ensure_buffs { "Spirit of Peppermint", "Jaba&ntilde;ero Saucesphere", "Jalape&ntilde;o Saucesphere" }
-						fam "Mini-Hipster"
-						f.heal_up()
-						f.burn_mp(90)
-						ensure_mp(80)
-						async_get_page("/hiddencity.php", { which = temple_which })
-						async_post_page("/hiddencity.php", { action = "trisocket" })
-						result, resulturl = get_page("/fight.php")
-						if challenge == "boris" then
-							result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_hiddencity)
-						else
-							result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
-						end
-						did_action = have_item("ancient amulet")
-					end
-				else
-					inform "use spheres, get stones..."
-					local altar_solutions = get_stone_sphere_status().altars
-					local pre_stones = count("triangular stone")
-					for which, tiletext in hiddencitypt:gmatch([[<a href='hiddencity.php%?which=([0-9]+)'>(.-)</a>]]) do
-						if tiletext:contains("map_altar.gif") then
--- 								print("hiddencity altar", which, tiletext)
-							local altarpt = get_page("/hiddencity.php", { which = which })
-							if altarpt:contains("<form") then
-								for a, b in pairs(altar_solutions) do
-									if altarpt:match("<table><tr><td><table><tr><td valign=center><img src='http://images.kingdomofloathing.com/otherimages/hiddencity/altar[0-9].gif' alt='An altar with a carving of a god of "..a.."' title='An altar with a carving of a god of "..a.."'></td><td><b>Altared Perceptions</b><p>You discover a stone altar, elaborately carved with a depiction of what appears to be some kind of ancient god.</td></tr></table>The top of the altar features a bowl%-like depression %-%- it looks as though you're meant to put something into it. Probably something round.<p>") then
-										print("put", b, get_itemid(b .. " stone sphere"), "in", which)
-										result, resulturl = post_page("/hiddencity.php", { action = "roundthing", whichitem = get_itemid(b .. " stone sphere") })
-										did_action = (count("triangular stone") > pre_stones)
-										return result, resulturl, did_action
-									end
-								end
-							end
-						end
-					end
-				end
-			else
-				local which = hiddencitypt:match([[<a href='hiddencity.php%?which=([0-9]-)'><img src="http://images.kingdomofloathing.com/otherimages/hiddencity/map_unruins]])
-				if which then
-					inform("do hidden city (" .. which .. ")")
-					ensure_buffs { "Spirit of Peppermint", "Jaba&ntilde;ero Saucesphere", "Jalape&ntilde;o Saucesphere" }
-					local fam_t = fam "Mini-Hipster"
-					f.heal_up()
-					if fam_t.mpregen then
-						f.burn_mp(90)
-					end
-					ensure_mp(60)
---					print("DEBUG: fighting in hidden city, did_action: " .. tostring(did_action))
-					local pt, url = get_page("/hiddencity.php", { which = which })
-					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_hiddencity)
-					if advagain or get_result():match([[Altared Perceptions]]) or get_result():match([[Mansion House of the Black Friars]]) or get_result():match([[Dr. Henry "Dakota" Fanning, Ph.D., R.I.P.]]) then
-						did_action = true
-					elseif resulturl:match("/adventure.php") and get_result():match([[<a href="hiddencity.php">Go back to The Hidden City</a>]]) then
-						did_action = true
-					end
---					print("DEBUG: fought in hidden city, did_action: " .. tostring(did_action))
-				else
-					critical "Nothing to do in hidden city, but don't have all spheres"
-				end
-			end
+			return script.do_hidden_city()
 		end
 	end
 
@@ -2839,7 +2838,7 @@ endif
 -- 					if not have_item("shirt kit") then
 -- 						buy_item("shirt kit", "s")
 -- 					end
--- 					smith_items_craft("shirt kit", "hippopotamus skin")
+-- 					smith_items("shirt kit", "hippopotamus skin")
 -- 					did_action = have_item("hipposkin poncho")
 -- 				end
 -- 			elseif not have_item("yak anorak") and not highskill_at_run and have_skill("Torso Awaregness") and have_skill("Armorcraftiness") then
@@ -2852,7 +2851,7 @@ endif
 -- 					if not have_item("shirt kit") then
 -- 						buy_item("shirt kit", "s")
 -- 					end
--- 					smith_items_craft("shirt kit", "yak skin")
+-- 					smith_items("shirt kit", "yak skin")
 -- 					did_action = have_item("yak anorak")
 -- 				end
 -- 			end
@@ -3231,7 +3230,7 @@ endif
 			if not have_item("star hat") then
 				shop_buyitem("star hat", "starchart")
 			end
-			if not have_item("star crossbow") and not have_item("star staff") and not have_item("star sword") and challenge ~= "fist" and challenge ~= "boris" then
+			if not have_item("star crossbow") and not have_item("star staff") and not have_item("star sword") and can_wear_weapons() then
 				if count("star") >= 5 and count("line") >= 6 then
 					shop_buyitem("star crossbow", "starchart")
 				elseif count("star") >= 6 and count("line") >= 5 then
@@ -3485,11 +3484,11 @@ mark m_done
 					stop("Failed to buy item: " .. tostring(name))
 				end
 			end
-			check_buy_item("cog", "5")
-			check_buy_item("empty meat tank", "5")
-			check_buy_item("tires", "5")
-			check_buy_item("spring", "5")
-			check_buy_item("sprocket", "5")
+			check_buy_item("cog", "4")
+			check_buy_item("empty meat tank", "4")
+			check_buy_item("tires", "4")
+			check_buy_item("spring", "4")
+			check_buy_item("sprocket", "4")
 			check_buy_item("sweet rims", "m")
 			meatpaste_items("empty meat tank", "meat stack")
 			meatpaste_items("spring", "sprocket")
@@ -3500,15 +3499,15 @@ mark m_done
 			if not have_item("bitchin' meatcar") then
 				critical "Failed to build bitchin' meatcar"
 			end
-			inform "unlock beach"
+			inform "unlock beach (with meatcar)"
 			async_get_page("/forestvillage.php", { place = "untinker" })
 			async_post_page("/forestvillage.php", { action = "screwquest" })
-			async_get_page("/knoll.php", { place = "smith" })
+			async_get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_innabox" })
 			async_get_page("/forestvillage.php", { place = "untinker" })
 			local rf = async_get_page("/guild.php", { place = "paco" }) -- TODO: need the topmenu refreshed from this
 			use_item("Degrassi Knoll shopping list")
-			local b = get_page("/beach.php")
-			did_action = b:contains("shore.php")
+			local b = get_page("/place.php", { whichplace = "desertbeach" })
+			did_action = b:contains("The Shore")
 			result, resulturl = rf()
 		end
 		return result, resulturl, did_action
@@ -3949,6 +3948,16 @@ endif
 		end
 	end
 
+	function f.take_shore_trip()
+		local choices = {
+			Muscle = "Distant Lands Dude Ranch Adventure",
+			Mysticality = "Tropical Paradise Island Getaway",
+			Moxie = "Large Donkey Mountain Ski Resort",
+		}
+		result, resulturl, advagain = autoadventure { zoneid = 355, noncombatchoices = { ["Welcome to The Shore, Inc."] = choices[mainstat_type()] } }
+		return result, resulturl, advagain
+	end
+
 	function f.get_macguffin_diary()
 		inform "shore for macguffin diary"
 		if not have_item("forged identification documents") then
@@ -3979,7 +3988,7 @@ endif
 			end
 		end
 		if have_item("forged identification documents") and not have_item("your father's MacGuffin diary") then
-			result, resulturl = post_page("/shore.php", { pwd = get_pwd(), whichtrip = "3" })
+			result, resulturl = script.take_shore_trip()
 		end
 		if have_item("your father's MacGuffin diary") then
 			result, resulturl = get_page("/diary.php", { whichpage = "1" })
@@ -4341,7 +4350,7 @@ endif
 		end
 	end
 
-	function f.do_daily_dungeon()
+	function f.do_old_daily_dungeon()
 		result, resulturl = get_page("/dungeon.php")
 		local roomnumber, roomtitle = get_result():match("<b>Room ([0-9]*): (.-)</b>")
 		roomnumber = tonumber(roomnumber)

@@ -79,15 +79,7 @@ local function automate_hcnp_day(whichday)
 	end
 
 	local function can_photocopy()
-		return not cached_stuff.have_faxed_today and have_item("Clan VIP Lounge key")
-	end
-
-	local function unlocked_beach()
-		return have_item("bitchin' meatcar") or have_item("Desert Bus pass") or have_item("pumpkin carriage")
-	end
-
-	local function unlocked_island()
-		return have_item("dingy dinghy") or have_item("skeletal skiff")
+		return not cached_stuff.have_faxed_today and have_item("Clan VIP Lounge key") and not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg")
 	end
 
 	local function want_shore()
@@ -557,7 +549,8 @@ endif
 
 	function adventure(t)
 		return function()
-			local pt, pturl, advagain = autoadventure { zoneid = t.zoneid, macro = t.macro_function and t.macro_function(), noncombatchoices = t.noncombats, specialnoncombatfunction = t.choice_function, ignorewarnings = true }
+			local pt, pturl, advagain = autoadventure { zoneid = get_zoneid(t.zone or t.zoneid), macro = t.macro_function and t.macro_function(), noncombatchoices = t.noncombats, specialnoncombatfunction = t.choice_function, ignorewarnings = true }
+			t.zone = nil
 			t.zoneid = nil
 			t.macro_function = nil
 			t.noncombats = nil
@@ -790,7 +783,7 @@ endif
 			message = "buying detuned radio",
 			nobuffing = true,
 			action = function()
-				set_result(buy_item("detuned radio", "5"))
+				set_result(buy_item("detuned radio", "4"))
 				did_action = have_item("detuned radio")
 			end
 		}
@@ -1617,7 +1610,7 @@ endif
 	want_softcore_item("Camp Scout backpack")
 	want_softcore_item_oneof { "Jekyllin hide belt", "Mr. Accessory Jr.", "astral mask" }
 	want_softcore_item_oneof { "Boris's Helm (askew)", "Boris's Helm", "Spooky Putty mitre" }
-	if challenge ~= "boris" and challenge ~= "fist" and not have_item("Jarlsberg's pan (Cosmic portal mode)") and not have_item("Jarlsberg's pan") then
+	if can_wear_weapons() and not have_item("Jarlsberg's pan (Cosmic portal mode)") and not have_item("Jarlsberg's pan") then
 		want_softcore_item("Operation Patriot Shield")
 	end
 	if ascensionpath("Avatar of Jarlsberg") then
@@ -1629,7 +1622,7 @@ endif
 			moonsign_area() == "Gnomish Gnomad Camp" and
 			not unlocked_beach(),
 		task = {
-			message = "unlock beach",
+			message = "unlock beach (early with bus pass for gnomad camp)",
 			nobuffing = true,
 			action = function()
 				if meat() >= 5000 then
@@ -1712,8 +1705,6 @@ endif
 			if have_item("stone tablet (Really Evil Rhythm)") then
 				did_action = true
 			end
-		elseif DD_keys < 3 then
-			script.do_daily_dungeon()
 		elseif countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") < 3 and not have_item("makeshift SCUBA gear") then
 			-- TODO: if not enough fat loot tokens, and no wand, hmm(?)
 			inform "trading for legend keys"
@@ -1838,9 +1829,6 @@ endif
 		if have_item("plus sign") then
 			script.want_familiar "Pair of Stomping Boots"
 			stop "TODO: find oracle"
-		elseif DD_keys < 3 then
-			-- TODO: test DD potions while doing this
-			script.do_daily_dungeon()
 		else
 			stop "TODO: Wear off teleportitis"
 		end
@@ -1884,8 +1872,7 @@ endif
 	-- start of turn-spending things
 
 	add_task {
-		when = ascensionpathid() ~= 0 and
-			level() >= 6 and
+		when = level() >= 6 and
 			(level() < 13 or quest("Make War, Not... Oh, Wait") or quest("The Rain on the Plains is Mainly Garbage") or quest_text("Quest for the Holy MacGuffin")) and
 			advs() <= 20 and
 			fullness() == estimate_max_fullness() and
@@ -1994,7 +1981,7 @@ endif
 	}
 
 	add_task {
-		when = use_new_faxing and not cached_stuff.handled_smut_orcs and can_photocopy(),
+		when = use_new_faxing and not cached_stuff.handled_smut_orcs and can_photocopy() and false,
 		task = function()
 			local oc = get_page("/place.php", { whichplace = "orc_chasm" })
 			if oc:contains("nobridge.gif") and not have_item("smut orc keepsake box") then
@@ -2728,13 +2715,8 @@ endif
 		end
 	end
 
--- 	print("turns_to_next_sr", turns_to_next_sr)
-
 	need_total_reagent_pastas = 4 * 2
-	if highskill_at_run then
-		need_total_reagent_pastas = 3 * 2
-	end
-	have_reagent_pastas = (whichday - 1) * 2 + count("hellion cube") + count("goat cheese") + count("Hell ramen") + count("Hell broth") + count("fettucini Inconnu") + count("fancy schmancy cheese sauce")
+	have_reagent_pastas = 2 + count("hellion cube") + count("goat cheese") + count("Hell ramen") + count("Hell broth") + count("fettucini Inconnu") + count("fancy schmancy cheese sauce")
 	if ascensionstatus() ~= "Hardcore" then
 		have_reagent_pastas = 100
 	elseif fullness() > 9 then
@@ -2745,7 +2727,7 @@ endif
 
 	do
 		if trailed ~= "dairy goat" then
-			local pt, pturl, ate = script.eat_food(whichday)
+			local pt, pturl, ate = script.eat_food()
 			if not ate and get_result():contains("You need a more advanced cooking appliance") and meat() >= 2500 then
 				if not have_item("Dramatic&trade; range") then
 					inform "  buying dramatic range"
@@ -2765,8 +2747,8 @@ endif
 	end
 -- 	print("reagent pasta have", have_reagent_pastas, "need", need_total_reagent_pastas)
 
-	do
-		local pt, pturl, drank = script.drink_booze(whichday)
+	if advs() < 20 then
+		local pt, pturl, drank = script.drink_booze()
 		if pt then
 			return pt, pturl, drank
 		end
@@ -2865,6 +2847,7 @@ endif
 				cached_stuff.learned_lab_password = true
 				return {
 					message = "already learned knob lab password",
+					nobuffing = true,
 					action = function() did_action = true end,
 				}
 			else
@@ -3246,10 +3229,9 @@ endwhile
 	add_task {
 		prereq = quest("The Goblin Who Wouldn't Be King") and
 			have_guard_outfit() and
+			can_wear_weapons() and
 			basemuscle() >= 15 and
-			basemoxie() >= 15 and
-			challenge ~= "fist" and
-			challenge ~= "boris",
+			basemoxie() >= 15,
 		f = function()
 			script.knob_goblin_king_with_cake(macro_noodlecannon)
 		end,
@@ -3285,7 +3267,7 @@ endwhile
 	add_task {
 		prereq = quest("The Goblin Who Wouldn't Be King") and
 			not have_guard_outfit() and
-			challenge ~= "fist" and challenge ~= "boris" and challenge ~= "jarlsberg" and
+			can_wear_weapons() and
 			can_photocopy(),
 		f = function()
 			if script.get_photocopied_monster() ~= "Knob Goblin Elite Guard Captain" then
@@ -3330,10 +3312,10 @@ endwhile
 	add_task {
 		prereq = not have_item("Knob Goblin seltzer") and
 			not have_item("Knob Goblin pet-buffing spray") and
-			challenge ~= "fist" and challenge ~= "boris" and
 			have_guard_outfit() and
-			basemuscle() >= 25 and
-			basemoxie() >= 25,
+			can_wear_weapons() and
+			basemuscle() >= 15 and
+			basemoxie() >= 15,
 		f = function()
 			if not have_item("Knob Goblin pet-buffing spray") then
 				inform "buying pet-buffing spray"
@@ -3522,52 +3504,33 @@ endwhile
 		end
 	}
 
-	add_task { prereq = (whichday == 1) and challenge ~= "boris" and challenge ~= "jarlsberg", f = function()
-		if fullness() < 14 or drunkenness() < estimate_max_safe_drunkenness() or (spleen() < 12 and challenge ~= "trendy") then
-			stop "Unexpected fullness/drunkenness/spleen at end of day 1"
-		else
-			if script.spooky_forest_runaways() then return end -- TODO: do earlier as a task
-			if script.trade_for_clover() then return end
-			if drunkenness() <= estimate_max_safe_drunkenness() then
-				script.ensure_buff_turns("Ode to Booze", 10)
+	add_task {
+		when = not cached_stuff.did_forest_runaways,
+		task = {
+			message = "doing spooky forest runaways",
+			nobuffing = true,
+			action = function()
+				if not script.spooky_forest_runaways() then
+					cached_stuff.did_forest_runaways = true
+				end
+				did_action = true
 			end
-			result, resulturl = get_page("/inventory.php", { which = 1})
-			result = add_message_to_page(get_result(), "<p>End of day 1.</p><p>(PvP,) overdrink with bucket of wine, then done.</p>", "Ascension script:")
-			finished = true
-		end
-	--~ got uri: /store.php | ?phash=473ef1d066720535fa82afaf731e7985&buying=1&whichitem=1003&howmany=10&whichstore=m&ajax=1&action=buyitem&_=1281940316402 (from /store.php?phash=473ef1d066720535fa82afaf731e7985&buying=1&whichitem=1003&howmany=10&whichstore=m&ajax=1&action=buyitem&_=1281940316402), size 1009
-	--~ posting page /guild.php params: Just [("action","stillfruit"),("whichitem","1003"),("quantity","10")]
-	--~ got uri: /inv_use.php | ?whichitem=1559&ajax=1&pwd=473ef1d066720535fa82afaf731e7985&_=1281940380271 (from /inv_use.php?whichitem=1559&ajax=1&pwd=473ef1d066720535fa82afaf731e7985&_=1281940380271), size 926
-	end }
+		}
+	}
 
 	add_task {
-		prereq = not have_item("time halo") and ascensionpathid() == 0 and daysthisrun() >= 2,
-		f = function()
-			inform "using tome summons (time halo, bucket of wine, sugar shield)"
-
-			if not have_item("time halo") then
+		when = not have_item("sugar shield") and not cached_stuff.summoned_sugar_shield,
+		task = {
+			message = "summon sugar shield",
+			nobuffing = true,
+			action = function()
 				script.ensure_mp(2)
-				async_post_page("/campground.php", { preaction = "summoncliparts" })
-				async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "01", clip2 = "09", clip3 = "09" })
-			end
-			if not have_item("bucket of wine") then
-				script.ensure_mp(2)
-				async_post_page("/campground.php", { preaction = "summoncliparts" })
-				async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "04", clip2 = "04", clip3 = "04" })
-			end
-			if not have_item("sugar shield") then
-				script.ensure_mp(2)
-				cast_skillid(8002, 1) -- summon sugar sheet
+				cast_skill("Summon Sugar Sheets")
 				async_get_page("/sugarsheets.php", { pwd = get_pwd(), action = "fold", whichitem = get_itemid("sugar shield") })
+				cached_stuff.summoned_sugar_shield = true
+				did_action = true
 			end
-
-			if not have_item("time halo") or not have_item("bucket of wine") then --or not have_item("sugar shield") then
-				print(have("time halo"), have_item("bucket of wine"), have_item("sugar shield"))
-				critical "Error getting tome items"
-			end
-
-			did_action = true
-		end,
+		}
 	}
 
 	local function drink_1_drunk_booze_loop()
@@ -3595,8 +3558,6 @@ endwhile
 			end
 		end
 	end
-
-	-- TODO: drink on day 2+
 
 	add_task {
 		prereq = challenge == "fist" and drunkenness() < 3 and (have("pumpkin") or have_item("pumpkin beer")),
@@ -3632,9 +3593,9 @@ endwhile
 	add_task {
 		when = not have_item("digital key") and
 			ascensionstatus() == "Hardcore" and
-			not trailed and
-			challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and
 			not script.have_familiar("Angry Jung Man") and
+			have_skill("Transcendent Olfaction") and
+			not trailed and
 			can_photocopy(),
 		task = function()
 			return {
@@ -3770,7 +3731,10 @@ endif
 	}
 
 	add_task {
-		when = not have_item("digital key") and (have_item("psychoanalytic jar") or have_item("jar of psychoses (The Crackpot Mystic)")) and advs() >= 40 and not trailed,
+		when = not have_item("digital key") and
+			(have_item("psychoanalytic jar") or have_item("jar of psychoses (The Crackpot Mystic)")) and
+			advs() >= 40 and
+			not trailed,
 		task = {
 			message = "use mystic jar",
 			nobuffing = true,
@@ -3785,29 +3749,6 @@ endif
 			end
 		}
 	}
-
---	add_task {
---		when = (level() < 9 or quest("There Can Be Only One Topping")) and ascensionstatus() == "Hardcore" and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and script.have_familiar("Obtuse Angel"),
---		task = function()
---			return {
---				message = "arrow pervert",
---				action = function()
---					if script.get_photocopied_monster() ~= "smut orc pervert" then
---						print("photocopied:", script.get_photocopied_monster())
---						inform "get pervert from faxbot"
---						script.get_faxbot_fax("smut orc pervert", "smut_orc_perv")
---					else
---						inform "fight and arrow pervert"
---						script.heal_up()
---						script.ensure_buffs { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric" }
---						script.want_familiar "Obtuse Angel"
---						script.ensure_mp(60)
---						stop "TODO: fight and arrow pervert"
---					end
---				end
---			}
---		end,
---	}
 
 	add_task {
 		when = quest("Am I My Trapper's Keeper?") and (not trailed or trailed == "dairy goat") and highskill_at_run,
@@ -3893,7 +3834,7 @@ endif
 			moonsign_area() ~= "Degrassi Knoll" and
 			meat() >= 6000,
 		task = {
-			message = "unlock beach",
+			message = "unlock beach (with bus pass)",
 			nobuffing = true,
 			action = function()
 				buy_item("Desert Bus pass", "m")
@@ -3936,9 +3877,8 @@ endif
 	}
 
 	add_task {
-		prereq = (DD_keys < 1 and have_item("skeleton key")) or (highskill_at_run and DD_keys < 2 and have_item("skeleton key")),
-		f = script.do_daily_dungeon,
-		message = "daily dungeon",
+		when = DD_keys < 1 and have_item("skeleton key") and not cached_stuff.done_daily_dungeon,
+		task = tasks.do_daily_dungeon,
 	}
 
 	add_task {
@@ -3994,9 +3934,9 @@ endif
 		}
 	end
 
-	add_task { prereq = (whichday == 2) and ((not highskill_at_run and advs() < 110) or (advs() < 20 and level() >= 8)) and challenge ~= "jarlsberg", f = function()
+	add_task { prereq = challenge == "fist" and (whichday == 2) and ((not highskill_at_run and advs() < 110) or (advs() < 20 and level() >= 8)), f = function()
 		if drunkenness() < estimate_max_safe_drunkenness() then
-			if challenge == "fist" and have_hippy_outfit() and drunkenness() < estimate_max_safe_drunkenness() then
+			if have_hippy_outfit() and drunkenness() < estimate_max_safe_drunkenness() then
 				local kitchen = get_page("/campground.php", { action = "inspectkitchen" })
 				if kitchen:contains("My First Shaker") and not kitchen:contains("Du Coq cocktailcrafting") then
 					if not have_item("Queue Du Coq cocktailcrafting kit") and meat() < 1000 then
@@ -4016,40 +3956,11 @@ endif
 				stop "TODO: mix and drink SHCs to max drunk"
 			else
 				inform "drinking at end of day 2"
-				local pt, pturl, drank = script.drink_booze(whichday, true)
+				local pt, pturl, drank = script.drink_booze()
 				if pt then
 					return pt, pturl, drank
 				end
 			end
-		elseif fullness() >= 12 and drunkenness() >= estimate_max_safe_drunkenness() then
-			if script.spooky_forest_runaways() then return end -- TODO: do earlier as a task
-			if script.trade_for_clover() then return end
-			if DD_keys < 1 then
-				stop "TODO: Get DD key"
-			end
-			if quest("Am I My Trapper's Keeper?") and have_miners_outfit() then
-				if challenge == "fist" then
-					script.ensure_buffs { "Earthen Fist" }
-				else
-					script.wear { hat = "miner's helmet", weapon = "7-Foot Dwarven mattock", pants = "miner's pants" }
-				end
-				local mined = do_day_2_mining()
-				script.wear {}
-				if mined then
-					return result, resulturl, did_action
-				end
-			end
-			script.maybe_ensure_buffs { "Brother Flying Burrito's Blessing" }
-			unequip_slot("familiarequip")
-			script.wear { acc3 = first_wearable { "time halo" } , acc2 = first_wearable { "dead guy's watch" } }
-			if drunkenness() <= estimate_max_safe_drunkenness() then
-				script.ensure_buff_turns("Ode to Booze", 10)
-			end
-			result, resulturl = get_page("/inventory.php", { which = 1})
-			result = add_message_to_page(get_result(), "<p>End of day 2.</p><p>(PvP,) overdrink with bucket of wine, then done.</p>", "Ascension script:")
-			finished = true
-		else
-			critical "Error at end of day 2. Organs are not full yet, but there's nothing left to do."
 		end
 	end }
 
@@ -4123,20 +4034,20 @@ endif
 	}
 
 	add_task {
-		prereq = quest("Am I My Trapper's Keeper?") and (not trailed or trailed == "dairy goat") and whichday >= 3 and challenge ~= "boris",
-		f = function()
-			ignore_buffing_and_outfit = false
-			script.do_trapper_quest()
-		end,
-		message = "trapper quest",
-	}
-
-	add_task {
 		prereq = have_reagent_pastas < need_total_reagent_pastas and trailed == "dairy goat",
 		f = function()
 			-- TODO: burrito blessing if available. messed up when it's taken too long! don't craft food/equipment until this is done
 			script.go("get goat cheese for pasta", 271, make_cannonsniff_macro("dairy goat"), nil, { "Heavy Petting", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }, "Slimeling even in fist", 30, { olfact = "dairy goat" })
 		end,
+	}
+
+	add_task {
+		prereq = quest("Am I My Trapper's Keeper?") and (not trailed or trailed == "dairy goat") and challenge ~= "boris",
+		f = function()
+			ignore_buffing_and_outfit = false
+			script.do_trapper_quest()
+		end,
+		message = "trapper quest",
 	}
 
 	-- TODO: wait until shore counter is up
@@ -4193,7 +4104,7 @@ endif
 				elseif have_item("Orcish Frat House blueprints") and quest_text("and asked you to steal his dentures back") then
 					inform "use blueprints"
 					if not have_item("frilly skirt") then
-						buy_item("frilly skirt", "5")
+						buy_item("frilly skirt", "4")
 					end
 					if not have_item("frilly skirt") and moonsign_area() ~= "Degrassi Knoll" and not ascensionstatus("Hardcore") then
 						if challenge == "boris" then
@@ -4340,9 +4251,8 @@ endif
 	}
 
 	add_task {
-		prereq = DD_keys < 2 and whichday >= 3,
-		f = script.do_daily_dungeon,
-		message = "do DD",
+		when = DD_keys < 3 and not cached_stuff.done_daily_dungeon,
+		task = tasks.do_daily_dungeon,
 	}
 
 	add_task {
@@ -4519,81 +4429,18 @@ endif
 		message = "level to 11",
 	}
 
-	add_task { prereq = (whichday == 3) and not highskill_at_run and advs() < 100 and challenge ~= "jarlsberg", f = function()
+	add_task { prereq = challenge == "fist" and (whichday == 3) and not highskill_at_run and advs() < 100, f = function()
 		if drunkenness() < estimate_max_safe_drunkenness() then
 			if challenge == "fist" then
 				script.wear { hat = "filthy knitted dread sack", pants = "filthy corduroys" }
 				stop "TODO: mix and drink SHCs to max drunk"
 			else
 				inform "drinking at end of day 3"
-				local pt, pturl, drank = script.drink_booze(whichday, true)
+				local pt, pturl, drank = script.drink_booze()
 				if pt then
 					return pt, pturl, drank
 				end
 			end
-		elseif fullness() >= 12 and drunkenness() >= estimate_max_safe_drunkenness() then
-			if script.spooky_forest_runaways() then return end -- TODO: do earlier as a task
-			if script.trade_for_clover() then return end
-			-- TODO: move out, check for scrolls and level() and quest()
-			if not have_item("334 scroll") and not have_item("facsimile dictionary") and false then
-				if script.get_photocopied_monster() ~= "smut orc pervert" then
-					inform "get pervert from faxbot"
-					script.get_faxbot_fax("smut orc pervert", "smut_orc_perv")
-				else
-					stop "fight pervert"
-					script.heal_up()
-					script.ensure_buffs { "Spirit of Garlic" }
-					script.want_familiar "Stocking Mimic"
-					script.wear {}
-					script.ensure_mp(40)
-					use_item("photocopied monster")
-					cached_stuff.have_faxed_today = true
-					local pt, url = get_page("/fight.php")
-					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodlecannon)
-					if advagain then
-						did_action = true
-					end
-				end
-				return result, resulturl, did_action
-			else
-				if drunkenness() <= estimate_max_safe_drunkenness() and not have_item("bucket of wine") then
-					inform "using tome summons (bucket of wine, borrowed time, sugar sheet)"
-
-					if not have_item("bucket of wine") then
-						script.ensure_mp(2)
-						async_post_page("/campground.php", { preaction = "summoncliparts" })
-						async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "04", clip2 = "04", clip3 = "04" })
-					end
-					if not have_item("borrowed time") then
-						script.ensure_mp(2)
-						async_post_page("/campground.php", { preaction = "summoncliparts" })
-						async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "09", clip2 = "09", clip3 = "09" })
-					end
-					if count_item("sugar shield") + count_item("sugar sheet") < 2 then
-						script.ensure_mp(2)
-						cast_skillid(8002, 1) -- summon sugar sheet
-						--async_get_page("/sugarsheets.php", { pwd = get_pwd(), action = "fold", whichitem = get_itemid("sugar shield") })
-					end
-
-					if not have_item("bucket of wine") or not have_item("borrowed time") then --or not have_item("sugar shield") then
-						print(have("bucket of wine"), have_item("borrowed time"), have_item("sugar shield"))
-						critical "Error getting tome items"
-					end
-
-					did_action = true
-				else
-					if drunkenness() <= estimate_max_safe_drunkenness() then
-						script.ensure_buff_turns("Ode to Booze", 10)
-					end
-					unequip_slot("familiarequip")
-					script.wear { acc3 = "time halo", acc2 = have_item("dead guy's watch") and "dead guy's watch" or nil }
-					result, resulturl = get_page("/inventory.php", { which = 1})
-					result = add_message_to_page(get_result(), "<p>End of day 3.</p><p>(PvP,) overdrink with bucket of wine, then done.</p>", "Ascension script:")
-					finished = true
-				end
-			end
-		else
-			critical "Error at end of day 3. Organs are not full yet, but there's nothing left to do."
 		end
 	end }
 
@@ -4716,6 +4563,21 @@ endif
 	}
 
 	add_task {
+		when = quest("A Pyramid Scheme") and quest_text("you've found the little pyramid") and have_item("Staff of Ed"),
+		task = {
+			message = "unlock pyramid",
+			nobuffing = true,
+			action = function()
+				get_page("/place.php", { whichplace = "desertbeach", action = "db_pyramid1" })
+				refresh_quest()
+				if not quest_text("you've found the little pyramid") then
+					did_action = true
+				end
+			end
+		}
+	}
+
+	add_task {
 		prereq = (level() + level_progress() < 11.75) or (challenge == "boris" and level() < 12),
 		f = function()
 			use_dancecard()
@@ -4834,8 +4696,6 @@ endif
 
 	add_task { prereq = true, f = function()
 		if ((advs() < 50 and turnsthisrun() + advs() < 650) or (advs() < 10)) and fullness() >= 12 and drunkenness() >= estimate_max_safe_drunkenness() and not highskill_at_run then
-			if script.spooky_forest_runaways() then return end -- TODO: do earlier as a task
-			if script.trade_for_clover() then return end
 			stop "TODO: end of day 4. (pvp,) overdrink"
 		elseif level() < 13 then
 			if ascensionstatus() ~= "Hardcore" then
@@ -4950,7 +4810,7 @@ use ]] .. itemsneeded[level + 1] .. [[
 							did_action = pt:contains("place=1")
 						elseif result:contains("place=1") then
 							inform "avoid electrical attack"
-							if challenge ~= "fist" and challenge ~= "boris" then
+							if can_wear_weapons() then
 								script.wear { weapon = "huge mirror shard" }
 							end
 							result, resulturl = get_page("/lair6.php", { place = 1 })
@@ -5411,7 +5271,7 @@ add_printer("/main.php", function()
 			{ titleday = " day 3", whichday = 3 },
 			{ titleday = " day 4+", whichday = 4 },
 		}
-		if ascensionstatus() ~= "Hardcore" or ascensionpath("BIG!") then
+		if not ascensionpath("Way of the Surprising Fist") then
 			links = {
 				{ titleday = "", whichday = 1000 },
 			}

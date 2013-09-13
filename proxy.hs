@@ -155,12 +155,11 @@ handleRequest ref uri effuri headers params pagetext = do
 		then return $ Right $ pagetext
 		else log_time_interval ref ("printing: " ++ (show uri)) $ runPrinterScript ref uri effuri pagetext allparams
 
-	let resptext = case xresptext of
-		Right msg -> msg
-		Left (msg, trace) -> add_error_message_to_page ("printer.lua error: " ++ msg ++ "\n" ++ trace) pagetext
-
-	log_time_interval ref ("making response") $ makeResponse resptext effuri headers
-
+	case xresptext of
+		Right msg -> log_time_interval ref ("making response") $ makeResponse msg effuri headers
+		Left (msg, trace) -> do
+			let pt = add_error_message_to_page ("printer.lua error: " ++ msg ++ "\n" ++ trace) pagetext
+			log_time_interval ref ("making response") $ makeErrorResponse pt effuri headers
 
 make_ref baseref = do
 	let ref = baseref {
@@ -194,7 +193,7 @@ kolProxyHandler uri params baseref = do
 		ai <- getApiInfo origref
 		if lookup "pwd" allparams == Just (pwd ai)
 			then action
-			else makeResponse (Data.ByteString.Char8.pack $ "Invalid pwd field") uri []
+			else makeErrorResponse (Data.ByteString.Char8.pack $ "Invalid pwd field") uri []
 
 	let handle_login p_sensitive = do
 		loginrequestfunc <- case lookup "password" p_sensitive of
@@ -231,6 +230,7 @@ kolProxyHandler uri params baseref = do
 				putStrLn $ "INFO: Logging in as " ++ (charName ai) ++ " (ascension " ++ (show $ ascension ai) ++ ")"
 				what <- loadSettingsFromServer newref
 				putStrLn $ "INFO: settings loaded: " ++ (fromMaybe "nothing" what)
+				writeIORef (have_logged_in_ref_ $ globalstuff_ $ newref) True
 
 				forkIO_ "proxy:compresslogs" $ compressLogs (charName ai) (ascension ai)
 
@@ -286,9 +286,9 @@ kolProxyHandler uri params baseref = do
 					putStrLn $ "Error: Can't read state! Don't log in for the first time in a day while in a fight or choice noncombat, and don't log in while in valhalla!"
 					gp <- getpage
 					case gp of
-						Left (pt, effuri, _hdrs, _code) -> makeResponse pt effuri []
+						Left (pt, effuri, _hdrs, _code) -> makeErrorResponse pt effuri []
 						Right (pt, effuri, hdrs, _code) -> if (uriPath effuri) `elem` ["/fight.php", "/choice.php"]
-							then makeResponse (add_error_message_to_page "Error: kolproxy can't read state!" pt) effuri []
+							then makeErrorResponse (add_error_message_to_page "Error: kolproxy can't read state!" pt) effuri []
 							else handleRequest origref uri effuri hdrs params pt
 				else r
 		Nothing -> do
@@ -330,7 +330,7 @@ kolProxyHandler uri params baseref = do
 					return (x, newref)
 
 			case new_page of
-				Left (pt, effuri, _hdrs, _code) -> makeResponse pt effuri []
+				Left (pt, effuri, _hdrs, _code) -> makeErrorResponse pt effuri []
 				Right (pt, effuri, _hdrs, _code) -> log_time_interval newref ("run handle request for: " ++ (show uri)) $ handleRequest newref uri effuri [] params pt
 	return retresp
 

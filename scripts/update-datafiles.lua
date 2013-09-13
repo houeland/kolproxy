@@ -147,6 +147,8 @@ local function parse_mafia_bonuslist(bonuslist)
 		["Food Drop"] = "Food Drops from Monsters",
 		["Booze Drop"] = "Booze Drops from Monsters",
 
+		["Familiar Weight"] = "Familiar Weight",
+
 		-- TODO: add more modifiers
 	}
 

@@ -1135,28 +1135,10 @@ endwhile
 end
 
 function macro_hiddencity()
-	local spheres = ascension["zone.hiddencity.sphere"] or {}
-	local sphere_types = { "cracked", "mossy", "rough", "smooth" }
-	local identify_macro = ""
-	for x in table.values(sphere_types) do
-		if have(x .. " stone sphere") then
-			local known = false
-			for y in table.values(spheres) do
-				if y == x then
-					known = true
-				end
-			end
-			if not known then
-				identify_macro = "use " .. x .. " stone sphere"
-			end
-		end
-	end
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
 ]] .. noodles_action() .. [[
-
-]] .. identify_macro .. [[
 
 ]] .. COMMON_MACROSTUFF_FLYERS .. [[
 

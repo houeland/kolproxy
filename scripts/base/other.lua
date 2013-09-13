@@ -603,18 +603,10 @@ local automate_brushfire_href = add_automation_script("automate-brushfire", func
 	return text, url
 end)
 
-add_printer("/plains.php", function()
-	if not setting_enabled("automate simple tasks") then return end
-	text = text:gsub("</body>", [[<center><a href="]] .. automate_brushfire_href { pwd = session.pwd } .. [[" style="color:green">{ Automate brushfire }</a></center>%0]])
-end)
-
 add_interceptor("/kolproxy-frame-page", function()
 	if params.pwd ~= session.pwd then return "", requestpath end
 	return [[<html style="margin: 0px; padding: 0px;"><head><script language=Javascript src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script></head><body style="margin: 0px; padding: 0px;"><iframe src="]] .. params.url .. [[" style="width: 100%; height: 100%; border: none; margin: 0px; padding: 0px;"></iframe></body></html>]], requestpath
 end)
-
---add_printer("use item: Degrassi Knoll shopping list", function()
---end)
 
 --[--[--
 add_interceptor("__IGNORE__ use item: Degrassi Knoll shopping list", function()

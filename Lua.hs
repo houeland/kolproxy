@@ -568,8 +568,8 @@ setup_lua_instance level filename setupref = do
 				register_function "raw_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
 				register_function "sleep" $ \_ref l -> do
-					delay <- peekJust l 1
-					threadDelay (1000000 * delay)
+					delay <- peekJust l 1 :: IO Double
+					threadDelay $ round $ delay * 1000000
 					return 0
 
 		Lua.registerhsfunction lstate "kolproxy_debug_print" (\x -> lua_log_line setupref ("kolproxy_debug_print: " ++ x) (return ()))
