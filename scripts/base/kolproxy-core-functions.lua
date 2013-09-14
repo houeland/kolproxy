@@ -518,7 +518,7 @@ function run_functions(p, pagetext, run)
 		end)
 	end
 
-	if text:contains("You acquire an item") then
+	if original_page_text:contains("You acquire an item") then
 		pagetext = pagetext:gsub([[<center><table class="item" style="float: none" rel="[^"]*"><tr><td><img src="http://images.kingdomofloathing.com/itemimages/[^"]+.gif" alt="[^"]*" title="[^"]*" class=hand onClick='descitem%([0-9]+%)'></td><td valign=center class=effect>You acquire .-</td></tr></table></center>]], function(droptext)
 			item_image = droptext:match([[src="http://images.kingdomofloathing.com/itemimages/([^"]+).gif"]])
 			item_name = droptext:match([[title="([^"]*)"]])

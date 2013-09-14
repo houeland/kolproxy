@@ -60,7 +60,8 @@ function monstername(name)
 		if monster_name_tag and monster_name_tag:contains([[id="monname"]]) then
 			return monster_name
 		else
-			return monster_name:gsub("^[^ ]* ", "")
+			local name = monster_name:gsub("^[^ ]* ", "")
+			return name
 		end
 	end
 end

@@ -299,12 +299,14 @@ kolProxyHandler uri params baseref = do
 			-- TODO: Move to specific handler? Remove entirely?
 			when (uriPath uri == "/logout.php" && canread_before) $ storeSettingsOnServer origref "logging out"
 
+			let reqtype = if isJust params then "POST" else "GET"
+
+{-
 			-- TODO: redo this stuff. Simple case is when we're connected both before and after
 			let should_run_intercept_script = canread_before
 
 			downloaded_page <- if should_run_intercept_script
 				then do
-					let reqtype = if isJust params then "POST" else "GET"
 					zz <- log_time_interval origref ("intercepting: " ++ (show uri)) $ runInterceptScript origref uri allparams reqtype
 					case zz of
 						Right (pt, effuri) -> return $ Right (pt, effuri, [], 200)
@@ -332,6 +334,11 @@ kolProxyHandler uri params baseref = do
 			case new_page of
 				Left (pt, effuri, _hdrs, _code) -> makeErrorResponse pt effuri []
 				Right (pt, effuri, _hdrs, _code) -> log_time_interval newref ("run handle request for: " ++ (show uri)) $ handleRequest newref uri effuri [] params pt
+-}
+			response <- log_time_interval origref ("browser request: " ++ (show uri)) $ runBrowserRequestScript origref uri allparams reqtype
+			case response of
+				Left (pt, effuri) -> makeErrorResponse pt effuri []
+				Right (pt, effuri) -> makeResponse pt effuri []
 	return retresp
 
 runKolproxy = (do

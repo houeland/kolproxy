@@ -563,6 +563,19 @@ setup_lua_instance level filename setupref = do
 				register_function "raw_submit_page" submit_page_func
 				register_function "raw_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
+			BROWSERREQUEST -> do
+				Lua.registerhsfunction lstate "set_state" (set_state setupref)
+				Lua.registerhsfunction lstate "get_state" (get_state setupref)
+				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)
+				register_function "raw_submit_page" submit_page_func
+				register_function "raw_async_submit_page" async_submit_page_func
+				register_function "get_api_itemid_info" get_api_itemid_info
+				register_function "browserrequest_splituri" $ \_ref l -> do
+					uristr <- peekJust l 1
+					let uri = mkuri uristr
+					Lua.pushstring l $ uriPath uri
+					Lua.pushstring l $ uriQuery uri
+					return 2
 			BOTSCRIPT -> do
 				register_function "raw_submit_page" submit_page_func
 				register_function "raw_async_submit_page" async_submit_page_func
@@ -732,6 +745,14 @@ runInterceptScript ref uri allparams reqtype = do
 		Right [Just t, Just u] -> Right (t, mkuri $ Data.ByteString.Char8.unpack $ u)
 		Right xs -> Left ("Lua intercept call error, return values = " ++ (show xs), "")
 		Left err -> Left err
+
+runBrowserRequestScript ref uri allparams reqtype = do
+	let vars = [("request_path", uriPath uri), ("request_query", uriQuery uri), ("request_type", reqtype)]
+	rets <- run_lua_code BROWSERREQUEST "scripts/browser-request.lua" ref (setvars vars "" allparams)
+	return $ case rets of
+		Right [Just t, Just u] -> Right (t, mkuri $ Data.ByteString.Char8.unpack $ u)
+		Right xs -> Left (Data.ByteString.Char8.pack $ ("Lua browser request call error, return values = " ++ (show xs)), "")
+		Left (err, extra) -> Left (Data.ByteString.Char8.pack $ err, extra)
 
 runBotScript baseref filename = do
 	run_lua_code BOTSCRIPT filename baseref (setvars [] "" [])
