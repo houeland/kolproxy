@@ -16,7 +16,6 @@ function load_script(scriptname)
 	add_do_nothing_function("add_json_chat_printer")
 	add_do_nothing_function("add_chat_trigger")
 
--- 	print("loadfile", scriptname)
 	local f, e = loadfile("scripts/" .. scriptname)
 	if not f then error(e, 2) end
 	setfenv(f, g_env)
@@ -46,35 +45,18 @@ local function logprint(k, msg)
 	end
 end
 
-setmetatable(g_env, { __index = function(t, k)
+setmetatable(g_env, {
+__index = function(t, k)
 	local g_v = rawget(envstoreinfo.g_store, k)
-	if g_v ~= nil then
--- 		logprint(k, "from g_v")
-		return g_v
-	end
-
+	if g_v ~= nil then return g_v end
 	local f_v = rawget(envstoreinfo.f_store, k)
-	if f_v ~= nil then
--- 		logprint(k, "from f_v")
-		return f_v
-	end
-
--- 	logprint(k, "from _G")
+	if f_v ~= nil then return f_v end
 	return _G[k]
-end, __newindex = function(t, k, v)
--- 	if envstoreinfo.store_target_name ~= "g_store" then
--- 		print("process", envstoreinfo.store_target_name, "set", k, "=", "...")
--- 	end
+end,
+__newindex = function(t, k, v)
 	envstoreinfo.store_target[k] = v
-end	})
+end
+})
 setfenv(wrapped_function, g_env)
-
--- setmetatable(_G, { __index = function(t, k)
--- 	log_internal_print("_G <- ", k)
--- 	return rawget(t, k)
--- end, __newindex = function(t, k, v)
--- 	log_internal_print("_G -> ", k)
--- 	rawset(t, k, v)
--- end	})
 
 return envstoreinfo

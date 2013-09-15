@@ -47,107 +47,44 @@ module Scripting.LuaModded
 (
     -- * Basic Lua types
     LuaState(..),
-    LuaCFunction,
-    LuaInteger,
-    LuaNumber,
 
     -- * Constants and enumerations
-    GCCONTROL(..),
     LTYPE(..),
     multret,
-    registryindex,
-    environindex,
-    globalsindex,
 
     -- * lua_* functions
-    atpanic,
-    call,
-    checkstack,
     close,
-    concat,
-    cpcall,
-    createtable,
-    ---dump,
-    equal,
-    gc,
-    getfenv,
-    getfield,
     getglobal,
-    getmetatable,
     gettable,
     gettop,
-    getupvalue,
-    insert,
     isboolean,
-    iscfunction,
-    isfunction,
-    islightuserdata,
-    isnil,
-    isnone,
     isnoneornil,
     isnumber,
     isstring,
     istable,
-    isthread,
-    isuserdata,
-    lessthan,
     newstate,
     newtable,
-    newthread,
-    newuserdata,
     next,
-    objlen,
     pcall,
     pop,
     pushboolean,
-    pushcclosure,
-    pushcfunction,
     pushinteger,
-    pushlightuserdata,
     pushnil,
     pushnumber,
     pushstring,
     pushbytestring,
-    pushthread,
-    pushvalue,
-    rawequal,
-    rawget,
-    rawgeti,
-    rawset,
-    rawseti,
-    register,
     remove,
-    replace,
-    resume,
-    setfenv,
-    setfield,
     setglobal,
-    setmetatable,
     settable,
-    settop,
-    setupvalue,
-    status,
     toboolean,
-    tocfunction,
     tointeger,
     tonumber,
-    topointer,
     tostring,
     tobytestring,
-    tothread,
-    touserdata,
     ltype,
-    typename,
-    upvalueindex,
-    ---xmove,
-    yield,
 
     -- * luaL_* functions
     openlibs,
-    ---loadfile,
-    ---loadstring,
-    newmetatable,
-    argerror,
     safeloadstring,
 
     -- * Haskell extensions
@@ -356,8 +293,8 @@ createtable :: LuaState -> Int -> Int -> IO ()
 createtable l s z = c_lua_createtable l (fromIntegral s) (fromIntegral z)
 
 -- | See @lua_objlen@ in Lua Reference Manual.
-objlen :: LuaState -> Int -> IO Int
-objlen l n = liftM fromIntegral (c_lua_objlen l (fromIntegral n))
+_objlen :: LuaState -> Int -> IO Int
+_objlen l n = liftM fromIntegral (c_lua_objlen l (fromIntegral n))
 
 -- | See @lua_pop@ in Lua Reference Manual.
 pop :: LuaState -> Int -> IO ()
@@ -369,12 +306,12 @@ newtable :: LuaState -> IO ()
 newtable l = createtable l 0 0
 
 -- | See @lua_pushcclosure@ in Lua Reference Manual.
-pushcclosure :: LuaState -> FunPtr LuaCFunction -> Int -> IO ()
-pushcclosure l f n = c_lua_pushcclosure l f (fromIntegral n)
+_pushcclosure :: LuaState -> FunPtr LuaCFunction -> Int -> IO ()
+_pushcclosure l f n = c_lua_pushcclosure l f (fromIntegral n)
 
 -- | See @lua_pushcfunction@ in Lua Reference Manual.
 pushcfunction :: LuaState -> FunPtr LuaCFunction -> IO ()
-pushcfunction l f = pushcclosure l f 0
+pushcfunction l f = _pushcclosure l f 0
 
 
 -- | See @lua_strlen@ in Lua Reference Manual.
@@ -386,16 +323,16 @@ ltype :: LuaState -> Int -> IO LTYPE
 ltype l n = liftM (toEnum . fromIntegral) (c_lua_type l (fromIntegral n))
 
 -- | See @lua_isfunction@ in Lua Reference Manual.
-isfunction :: LuaState -> Int -> IO Bool
-isfunction l n = liftM (==TFUNCTION) (ltype l n)
+_isfunction :: LuaState -> Int -> IO Bool
+_isfunction l n = liftM (==TFUNCTION) (ltype l n)
 
 -- | See @lua_istable@ in Lua Reference Manual.
 istable :: LuaState -> Int -> IO Bool
 istable l n = liftM (==TTABLE) (ltype l n)
 
 -- | See @lua_islightuserdata@ in Lua Reference Manual.
-islightuserdata :: LuaState -> Int -> IO Bool
-islightuserdata l n = liftM (==TLIGHTUSERDATA) (ltype l n)
+_islightuserdata :: LuaState -> Int -> IO Bool
+_islightuserdata l n = liftM (==TLIGHTUSERDATA) (ltype l n)
 
 -- | See @lua_isnil@ in Lua Reference Manual.
 isnil :: LuaState -> Int -> IO Bool
@@ -406,32 +343,32 @@ isboolean :: LuaState -> Int -> IO Bool
 isboolean l n = liftM (==TBOOLEAN) (ltype l n)
 
 -- | See @lua_isthread@ in Lua Reference Manual.
-isthread :: LuaState -> Int -> IO Bool
-isthread l n = liftM (==TTHREAD) (ltype l n)
+_isthread :: LuaState -> Int -> IO Bool
+_isthread l n = liftM (==TTHREAD) (ltype l n)
 
 -- | See @lua_none@ in Lua Reference Manual.
-isnone :: LuaState -> Int -> IO Bool
-isnone l n = liftM (==TNONE) (ltype l n)
+_isnone :: LuaState -> Int -> IO Bool
+_isnone l n = liftM (==TNONE) (ltype l n)
 
 -- | See @lua_noneornil@ in Lua Reference Manual.
 isnoneornil :: LuaState -> Int -> IO Bool
 isnoneornil l n = liftM (<=TNIL) (ltype l n)
 
 -- | See @LUA_REGISTRYINDEX@ in Lua Reference Manual.
-registryindex :: Int
-registryindex = (-10000)
+_registryindex :: Int
+_registryindex = (-10000)
 
 -- | See @LUA_ENVIRONINDEX@ in Lua Reference Manual.
-environindex :: Int
-environindex = (-10001)
+_environindex :: Int
+_environindex = (-10001)
 
 -- | See @LUA_GLOBALSINDEX@ in Lua Reference Manual.
 globalsindex :: Int
 globalsindex = (-10002)
 
 -- | See @lua_upvalueindex@ in Lua Reference Manual.
-upvalueindex :: Int -> Int
-upvalueindex i = (globalsindex-(i))
+_upvalueindex :: Int -> Int
+_upvalueindex i = (globalsindex-(i))
 
 {-
 The following seem to be really bad idea, as calls from C
@@ -458,8 +395,8 @@ static void *l_alloc (void *ud, void *ptr, size_t osize,
 -}
 
 -- | See @lua_atpanic@ in Lua Reference Manual.
-atpanic :: LuaState -> FunPtr LuaCFunction -> IO (FunPtr LuaCFunction)
-atpanic = c_lua_atpanic
+_atpanic :: LuaState -> FunPtr LuaCFunction -> IO (FunPtr LuaCFunction)
+_atpanic = c_lua_atpanic
 
 -- | See @lua_tostring@ in Lua Reference Manual.
 tostring :: LuaState -> Int -> IO String
@@ -482,8 +419,8 @@ tobytestring l n = do
 		else Control.Exception.throwIO $ userError $ "bad argument #1 to 'tobytestring' (string expected)"
 
 -- | See @lua_tothread@ in Lua Reference Manual.
-tothread :: LuaState -> Int -> IO LuaState
-tothread l n = c_lua_tothread l (fromIntegral n)
+_tothread :: LuaState -> Int -> IO LuaState
+_tothread l n = c_lua_tothread l (fromIntegral n)
 
 -- | See @lua_touserdata@ in Lua Reference Manual.
 touserdata :: LuaState -> Int -> IO (Ptr a)
@@ -498,12 +435,12 @@ typename l n = c_lua_typename l (fromIntegral (fromEnum n)) >>= peekCString
 ---xmove l1 l2 n = c_lua_xmove l1 l2 (fromIntegral n)
 
 -- | See @lua_yield@ in Lua Reference Manual.
-yield :: LuaState -> Int -> IO Int
-yield l n = liftM fromIntegral (c_lua_yield l (fromIntegral n))
+_yield :: LuaState -> Int -> IO Int
+_yield l n = liftM fromIntegral (c_lua_yield l (fromIntegral n))
 
 -- | See @lua_checkstack@ in Lua Reference Manual.
-checkstack :: LuaState -> Int -> IO Bool
-checkstack l n = liftM (/=0) (c_lua_checkstack l (fromIntegral n))
+_checkstack :: LuaState -> Int -> IO Bool
+_checkstack l n = liftM (/=0) (c_lua_checkstack l (fromIntegral n))
 
 -- | See @lua_newstate@ and @luaL_newstate@ in Lua Reference Manual.
 newstate :: IO LuaState
@@ -514,24 +451,24 @@ close :: LuaState -> IO ()
 close = c_lua_close
 
 -- | See @lua_concat@ in Lua Reference Manual.
-concat :: LuaState -> Int -> IO ()
-concat l n = c_lua_concat l (fromIntegral n)
+_concat :: LuaState -> Int -> IO ()
+_concat l n = c_lua_concat l (fromIntegral n)
 
 
 
 -- | See @lua_call@ and @lua_call@ in Lua Reference Manual. This is 
 -- a wrapper over @lua_pcall@, as @lua_call@ is unsafe in controlled environment
 -- like Haskell VM.
-call :: LuaState -> Int -> Int -> IO Int
-call l a b = liftM fromIntegral (c_lua_pcall l (fromIntegral a) (fromIntegral b) 0)
+_call :: LuaState -> Int -> Int -> IO Int
+_call l a b = liftM fromIntegral (c_lua_pcall l (fromIntegral a) (fromIntegral b) 0)
 
 -- | See @lua_pcall@ in Lua Reference Manual.
 pcall :: LuaState -> Int -> Int -> Int -> IO Int
 pcall l a b c = liftM fromIntegral (c_lua_pcall l (fromIntegral a) (fromIntegral b) (fromIntegral c))
 
 -- | See @lua_cpcall@ in Lua Reference Manual.
-cpcall :: LuaState -> FunPtr LuaCFunction -> Ptr a -> IO Int
-cpcall l a c = liftM fromIntegral (c_lua_cpcall l a c)
+_cpcall :: LuaState -> FunPtr LuaCFunction -> Ptr a -> IO Int
+_cpcall l a c = liftM fromIntegral (c_lua_cpcall l a c)
 
 -- | See @lua_getfield@ in Lua Reference Manual.
 getfield :: LuaState -> Int -> String -> IO ()
@@ -569,24 +506,24 @@ openlibs = c_luaL_openlibs
 ---    readIORef r
 
 -- | See @lua_equal@ in Lua Reference Manual.
-equal :: LuaState -> Int -> Int -> IO Bool
-equal l i j = liftM (/=0) (c_lua_equal l (fromIntegral i) (fromIntegral j))
+_equal :: LuaState -> Int -> Int -> IO Bool
+_equal l i j = liftM (/=0) (c_lua_equal l (fromIntegral i) (fromIntegral j))
 
 -- | See @lua_error@ in Lua Reference Manual.
 --error :: LuaState -> IO Int
 --error l = liftM fromIntegral (c_lua_error l)
 
 -- | See @lua_gc@ in Lua Reference Manual.
-gc :: LuaState -> GCCONTROL -> Int -> IO Int
-gc l i j= liftM fromIntegral (c_lua_gc l (fromIntegral (fromEnum i)) (fromIntegral j))
+_gc :: LuaState -> GCCONTROL -> Int -> IO Int
+_gc l i j= liftM fromIntegral (c_lua_gc l (fromIntegral (fromEnum i)) (fromIntegral j))
 
 -- | See @lua_getfenv@ in Lua Reference Manual.
-getfenv :: LuaState -> Int -> IO ()
-getfenv l n = c_lua_getfenv l (fromIntegral n)
+_getfenv :: LuaState -> Int -> IO ()
+_getfenv l n = c_lua_getfenv l (fromIntegral n)
 
 -- | See @lua_getmetatable@ in Lua Reference Manual.
-getmetatable :: LuaState -> Int -> IO Bool
-getmetatable l n = liftM (/=0) (c_lua_getmetatable l (fromIntegral n))
+_getmetatable :: LuaState -> Int -> IO Bool
+_getmetatable l n = liftM (/=0) (c_lua_getmetatable l (fromIntegral n))
 
 -- | See @lua_gettable@ in Lua Reference Manual.
 gettable :: LuaState -> Int -> IO ()
@@ -597,12 +534,12 @@ gettop :: LuaState -> IO Int
 gettop l = liftM fromIntegral (c_lua_gettop l)
 
 -- | See @lua_getupvalue@ in Lua Reference Manual.
-getupvalue :: LuaState -> Int -> Int -> IO String
-getupvalue l funcindex n = c_lua_getupvalue l (fromIntegral funcindex) (fromIntegral n) >>= peekCString
+_getupvalue :: LuaState -> Int -> Int -> IO String
+_getupvalue l funcindex n = c_lua_getupvalue l (fromIntegral funcindex) (fromIntegral n) >>= peekCString
 
 -- | See @lua_insert@ in Lua Reference Manual.
-insert :: LuaState -> Int -> IO ()
-insert l n  = c_lua_insert l (fromIntegral n)
+_insert :: LuaState -> Int -> IO ()
+_insert l n  = c_lua_insert l (fromIntegral n)
 
 -- | See @lua_iscfunction@ in Lua Reference Manual.
 iscfunction :: LuaState -> Int -> IO Bool
@@ -621,8 +558,8 @@ isuserdata :: LuaState -> Int -> IO Bool
 isuserdata l n = liftM (/=0) (c_lua_isuserdata l (fromIntegral n))
 
 -- | See @lua_lessthan@ in Lua Reference Manual.
-lessthan :: LuaState -> Int -> Int -> IO Bool
-lessthan l i j = liftM (/=0) (c_lua_lessthan l (fromIntegral i) (fromIntegral j))
+_lessthan :: LuaState -> Int -> Int -> IO Bool
+_lessthan l i j = liftM (/=0) (c_lua_lessthan l (fromIntegral i) (fromIntegral j))
 
 
 -- | See @luaL_loadfile@ in Lua Reference Manual.
@@ -655,8 +592,8 @@ lessthan l i j = liftM (/=0) (c_lua_lessthan l (fromIntegral i) (fromIntegral j)
 ---    return (fromIntegral res)
 
 -- | See @lua_newthread@ in Lua Reference Manual.
-newthread :: LuaState -> IO LuaState
-newthread l = c_lua_newthread l
+_newthread :: LuaState -> IO LuaState
+_newthread l = c_lua_newthread l
 
 -- | See @lua_newuserdata@ in Lua Reference Manual.
 newuserdata :: LuaState -> Int -> IO (Ptr ())
@@ -694,48 +631,48 @@ pushbytestring :: LuaState -> Data.ByteString.ByteString -> IO ()
 pushbytestring l s = Data.ByteString.useAsCStringLen s $ \(s,z) -> c_lua_pushlstring l s (fromIntegral z)
 
 -- | See @lua_pushthread@ in Lua Reference Manual.
-pushthread :: LuaState -> IO Bool
-pushthread l = liftM (/=0) (c_lua_pushthread l)
+_pushthread :: LuaState -> IO Bool
+_pushthread l = liftM (/=0) (c_lua_pushthread l)
 
 -- | See @lua_pushvalue@ in Lua Reference Manual.
-pushvalue :: LuaState -> Int -> IO ()
-pushvalue l n = c_lua_pushvalue l (fromIntegral n)
+_pushvalue :: LuaState -> Int -> IO ()
+_pushvalue l n = c_lua_pushvalue l (fromIntegral n)
 
 -- | See @lua_rawequal@ in Lua Reference Manual.
-rawequal :: LuaState -> Int -> Int -> IO Bool
-rawequal l n m = liftM (/=0) (c_lua_rawequal l (fromIntegral n) (fromIntegral m))
+_rawequal :: LuaState -> Int -> Int -> IO Bool
+_rawequal l n m = liftM (/=0) (c_lua_rawequal l (fromIntegral n) (fromIntegral m))
 
 -- | See @lua_rawget@ in Lua Reference Manual.
-rawget :: LuaState -> Int -> IO ()
-rawget l n = c_lua_rawget l (fromIntegral n)
+_rawget :: LuaState -> Int -> IO ()
+_rawget l n = c_lua_rawget l (fromIntegral n)
 
 -- | See @lua_rawgeti@ in Lua Reference Manual.
-rawgeti :: LuaState -> Int -> Int -> IO ()
-rawgeti l k m = c_lua_rawgeti l (fromIntegral k) (fromIntegral m)
+_rawgeti :: LuaState -> Int -> Int -> IO ()
+_rawgeti l k m = c_lua_rawgeti l (fromIntegral k) (fromIntegral m)
 
 -- | See @lua_rawset@ in Lua Reference Manual.
-rawset :: LuaState -> Int -> IO ()
-rawset l n = c_lua_rawset l (fromIntegral n)
+_rawset :: LuaState -> Int -> IO ()
+_rawset l n = c_lua_rawset l (fromIntegral n)
 
 -- | See @lua_rawseti@ in Lua Reference Manual.
-rawseti :: LuaState -> Int -> Int -> IO ()
-rawseti l k m = c_lua_rawseti l (fromIntegral k) (fromIntegral m)
+_rawseti :: LuaState -> Int -> Int -> IO ()
+_rawseti l k m = c_lua_rawseti l (fromIntegral k) (fromIntegral m)
 
 -- | See @lua_remove@ in Lua Reference Manual.
 remove :: LuaState -> Int -> IO ()
 remove l n = c_lua_remove l (fromIntegral n)
 
 -- | See @lua_replace@ in Lua Reference Manual.
-replace :: LuaState -> Int -> IO ()
-replace l n = c_lua_replace l (fromIntegral n)
+_replace :: LuaState -> Int -> IO ()
+_replace l n = c_lua_replace l (fromIntegral n)
 
 -- | See @lua_resume@ in Lua Reference Manual.
-resume :: LuaState -> Int -> IO Int
-resume l n = liftM fromIntegral (c_lua_resume l (fromIntegral n))
+_resume :: LuaState -> Int -> IO Int
+_resume l n = liftM fromIntegral (c_lua_resume l (fromIntegral n))
 
 -- | See @lua_setfenv@ in Lua Reference Manual.
-setfenv :: LuaState -> Int -> IO Int
-setfenv l n = liftM fromIntegral (c_lua_setfenv l (fromIntegral n))
+_setfenv :: LuaState -> Int -> IO Int
+_setfenv l n = liftM fromIntegral (c_lua_setfenv l (fromIntegral n))
 
 -- | See @lua_setmetatable@ in Lua Reference Manual.
 setmetatable :: LuaState -> Int -> IO ()
@@ -747,12 +684,12 @@ settable l index = c_lua_settable l (fromIntegral index)
 
 
 -- | See @lua_setupvalue@ in Lua Reference Manual.
-setupvalue :: LuaState -> Int -> Int -> IO String
-setupvalue l funcindex n = c_lua_setupvalue l (fromIntegral funcindex) (fromIntegral n) >>= peekCString
+_setupvalue :: LuaState -> Int -> Int -> IO String
+_setupvalue l funcindex n = c_lua_setupvalue l (fromIntegral funcindex) (fromIntegral n) >>= peekCString
 
 -- | See @lua_status@ in Lua Reference Manual.
-status :: LuaState -> IO Int
-status l = liftM fromIntegral (c_lua_status l)
+_status :: LuaState -> IO Int
+_status l = liftM fromIntegral (c_lua_status l)
 
 -- | See @lua_toboolean@ in Lua Reference Manual.
 toboolean :: LuaState -> Int -> IO Bool
@@ -771,13 +708,13 @@ tonumber :: LuaState -> Int -> IO CDouble
 tonumber l n = c_lua_tonumber l (fromIntegral n)
 
 -- | See @lua_topointer@ in Lua Reference Manual.
-topointer :: LuaState -> Int -> IO (Ptr ())
-topointer l n = c_lua_topointer l (fromIntegral n)
+_topointer :: LuaState -> Int -> IO (Ptr ())
+_topointer l n = c_lua_topointer l (fromIntegral n)
 
 -- | See @lua_register@ in Lua Reference Manual.
-register :: LuaState -> String -> FunPtr LuaCFunction -> IO ()
-register l n f = do
-    pushcclosure l f 0
+_register :: LuaState -> String -> FunPtr LuaCFunction -> IO ()
+_register l n f = do
+    _pushcclosure l f 0
     setglobal l n
 
 -- | See @luaL_newmetatable@ in Lua Reference Manual.

@@ -506,7 +506,10 @@ local function parse_monster_items(items)
 	if #items == 0 then return nil end
 	itemtbl = {}
 	for _, item in ipairs(items) do
-		local name, prefix, rate = item:match("^(.*) %(([pnbcf]*)(%d+)%)$")
+		local name, prefix, rate, suffix = item:match("^(.*) %(([pnbcf]*)(%d+)([pnbcf]*)%)$")
+		if suffix and suffix ~= "" then
+			prefix = suffix
+		end
 
 		if not name then
 			-- a few items are missing drop rates

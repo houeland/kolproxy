@@ -127,7 +127,7 @@ add_automation_script("buy-and-cook-fancy", function()
 			table.insert(p, x)
 		end
 	end
-	return raw_submit_page("POST", "/craft.php", p)
+	return raw_async_submit_page("POST", "/craft.php", p)()
 end)
 
 -- TODO: make this a printer after redoing parameter handling
@@ -155,7 +155,7 @@ add_automation_script("buy-and-mix-fancy", function()
 			table.insert(p, x)
 		end
 	end
-	return raw_submit_page("POST", "/craft.php", p)
+	return raw_async_submit_page("POST", "/craft.php", p)()
 end)
 
 -- TODO: make this a printer after redoing parameter handling

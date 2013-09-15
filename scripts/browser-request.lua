@@ -1,5 +1,4 @@
-function load_wrapped_function(path)
---	print("loading wrapped", path)
+local function load_wrapped_function(path)
 	local wrapped_env = {}
 	function wrapped_env.loadfile(path)
 		local f, e = loadfile(path)
@@ -9,24 +8,12 @@ function load_wrapped_function(path)
 	end
 	wrapped_env._G = wrapped_env
 
-	local have_read = {}
-
-        setmetatable(wrapped_env, { __index = function(t, k)
---		if not have_read[k] then
---			print("DEBUG: wrapped_env reading", k)
---			have_read[k] = true
---		end
-		return _G[k]
-        end, __newindex = function(t, k, v)
---		print("DEBUG: wrapped_env writing", k, v)
-		rawset(t, k, v)
-        end})
+	setmetatable(wrapped_env, { __index = _G })
 
 	local f, e = loadfile(path)
 	if not f then error(e, 2) end
 	setfenv(f, wrapped_env)
 	local wrapped = f()
---	print("loaded", wrapped)
 	return wrapped
 end
 
@@ -34,22 +21,37 @@ local intercept_wrapped = load_wrapped_function("scripts/intercept.lua")
 local automate_wrapped = load_wrapped_function("scripts/automate.lua")
 local printer_wrapped = load_wrapped_function("scripts/printer.lua")
 
-function descit(what, pt, url)
+local function descit(what, pt, url)
 --	print(what, "url", url, "pt", type(pt), type(pt) == "string" and pt:len())
 end
 
-function run_wrapped_function(f_env)
-	function submit_original_request()
+local function add_raw_message_to_page(pagetext, msg)
+        local pre_, dv_, mid_, end_, post_ = pagetext:match("^(.+)(<div style='overflow: auto'><center><table)(.+)(</body></html>)(.*)$")
+        if pre_ and dv_ and mid_ and end_ and post_ then  
+                local wrappedmsg = [[<center><table width=95%><tr><td>]] .. msg .. [[</td></tr></table></center>]]
+                return pre_ .. wrappedmsg .. "<br>" .. dv_ .. mid_ .. end_ .. post_
+        elseif pagetext:match("<body>") then
+                return pagetext:gsub("<body>", function(a) return a .. msg end)
+        else   
+                return msg .. pagetext
+        end
+end
+
+local function show_error(basepage, errortbl)
+	for _, x in ipairs(errortbl.extrafun) do
+		print(x)
+	end
+	return add_raw_message_to_page(basepage, [[<pre style="color: red">]] .. errortbl.trace .. [[</pre>]])
+end
+
+local function run_wrapped_function_internal(f_env)
+	local function submit_original_request()
 		local tbl = parse_request_param_string(f_env.raw_input_params)
 		if not tbl[1] then tbl = nil end
-	        return raw_submit_page(f_env.request_type, f_env.request_path, tbl)
+	        return raw_async_submit_page(f_env.request_type, f_env.request_path, tbl)()
 	end
 
 	descit("start")
-
---	for _, x in ipairs { "raw_input_params", "request_path", "request_query", "request_type" } do
---		print(x, f_env[x])
---	end
 
 	if not can_read_state() then
 		local pt, url = submit_original_request()
@@ -90,6 +92,33 @@ function run_wrapped_function(f_env)
 	descit("printer", printer_pt, intercept_url)
 
 	return printer_pt, intercept_url
+end
+
+local function extrafun()
+	local tbl = {}
+	for i = 0, 1000 do
+		local dgi = debug.getinfo(i)
+		if dgi then
+			local linetbl = {}
+			for a, b in pairs(dgi) do
+				if type(b) == "string" and b:len() > 100 then b = b:sub(1, 90) .. "..." .. b:len() end
+				table.insert(linetbl, a .. "[" .. tostring(b) .. "]")
+			end
+			table.insert(tbl, table.concat(linetbl, " "))
+		else
+			break
+		end
+	end
+	return tbl
+end
+
+local function run_wrapped_function(f_env)
+	local ok, pt, url = xpcall(function() return run_wrapped_function_internal(f_env) end, function(e) return { msg = e, trace = debug.traceback(e, 2), extrafun = extrafun() } end)
+	if ok then
+		return pt, url
+	else
+		return show_error(f_env.text, pt)
+	end
 end
 
 return run_wrapped_function

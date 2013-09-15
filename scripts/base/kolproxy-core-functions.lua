@@ -261,7 +261,7 @@ end
 function do_submit_page(t, url, params)
 	kolproxy_debug_print("> do_submit_page(" .. tostring(url) .. ")\n" .. debug.traceback(""))
 	after_pageload_cache = {}
-	local pt, pturl = nil, nil
+	local tbl = nil
 	if params then
 		local tbl = {}
 		for a, b in pairs(params) do
@@ -273,10 +273,8 @@ function do_submit_page(t, url, params)
 				error("Unknown submit_page value type: " .. type(b))
 			end
 		end
-		pt, pturl = raw_submit_page(t, url, tbl)
-	else
-		pt, pturl = raw_submit_page(t, url, nil)
 	end
+	local pt, pturl = raw_async_submit_page(t, url, tbl)()
 	kolproxy_debug_print("< do_submit_page(" .. tostring(url) .. ")")
 	return pt, pturl
 end

@@ -55,11 +55,15 @@ instance Lua.StackValue Element where
 
 failLua msg = throwIO $ LuaError $ msg
 
-peekJust l idx = do
+__peekJust l idx = do
 	x <- Lua.peek l idx
 	case x of
 		Just v -> return v
 		_ -> failLua $ "Wrong paramater " ++ show idx
+
+peekJustString l idx = (__peekJust l idx) :: IO String
+peekJustInteger l idx = (__peekJust l idx) :: IO Integer
+peekJustDouble l idx = (__peekJust l idx) :: IO Double
 
 get_current_kolproxy_version = return $ kolproxy_version_number :: IO String
 
@@ -98,7 +102,7 @@ get_state_whenever ref var = do
 
 -- TODO: change to return 0 and not handling it in lua
 get_player_id ref l = do
-	name <- peekJust l 1
+	name <- peekJustString l 1
 	pid <- KoL.Api.getPlayerId name ref
 	Lua.pushstring l =<< case pid of
 		Just x -> return (show x)
@@ -106,17 +110,17 @@ get_player_id ref l = do
 	return 1
 
 parse_request_param_string _ref l = do
-	str <- peekJust l 1
+	str <- peekJustString l 1
 	case read_as str :: Maybe [(String, String)] of
 		Just xs -> do
 			let pushkeyvalue (idx, (x, y)) = do
-				Lua.push l idx
+				Lua.pushinteger l (fromIntegral idx)
 				Lua.newtable l
-				Lua.push l "key"
-				Lua.push l x
+				Lua.pushstring l "key"
+				Lua.pushstring l x
 				Lua.settable l (-3)
-				Lua.push l "value"
-				Lua.push l y
+				Lua.pushstring l "value"
+				Lua.pushstring l y
 				Lua.settable l (-3)
 				Lua.settable l (-3)
 
@@ -170,11 +174,19 @@ async_submit_page ref method inputuristr params = do
 		x <- xf
 		return $ either id id x
 
-add_table_contents l tbl = do
+__add_table_contents l tbl = do
 	mapM_ (\(x, y) -> do
 		Lua.push l x
 		Lua.push l y
 		Lua.settable l (-3)) tbl
+
+add_table_contents_integer_integer l tbl = __add_table_contents l (tbl :: [(Integer, Integer)])
+add_table_contents_integer_string l tbl = __add_table_contents l (tbl :: [(Integer, String)])
+add_table_contents_string_string l tbl = __add_table_contents l (tbl :: [(String, String)])
+add_table_contents_integer_json l tbl = __add_table_contents l (tbl :: [(Integer, JSValue)])
+add_table_contents_string_json l tbl = __add_table_contents l (tbl :: [(String, JSValue)])
+add_table_contents_integer_boolean l tbl = __add_table_contents l (tbl :: [(Integer, Bool)])
+add_table_contents_integer_xml l tbl = __add_table_contents l (tbl :: [(Integer, Element)])
 
 push_jsvalue l jsval = do
 	case jsval of
@@ -184,11 +196,11 @@ push_jsvalue l jsval = do
 		JSString jss -> Lua.pushstring l (fromJSString jss)
 		JSArray jsarr -> do
 			Lua.newtable l
-			add_table_contents l (zip ([1..] :: [Int]) jsarr)
+			add_table_contents_integer_json l (zip [1..] jsarr)
 		JSObject jsobj -> do
 			let m = fromJSObject jsobj :: [(String, JSValue)]
 			Lua.newtable l
-			add_table_contents l m
+			add_table_contents_string_json l m
 
 array_tbl_to_jsvalue l = do
 	let get_more n initlist = do
@@ -259,7 +271,7 @@ push_simplexmldata l xmlval = do
 
 	Lua.pushstring l "children"
 	Lua.newtable l
-	add_table_contents l (zip ([1..] :: [Int]) (elChildren xmlval))
+	add_table_contents_integer_xml l (zip [1..] (elChildren xmlval))
 	Lua.settable l (-3)
 
 push_function l1 f identifier = do
@@ -329,6 +341,7 @@ show_blocked_page_info ref l = do
 	Lua.pushstring l "/kolproxy-page-loading-blocked"
 	return 2
 
+{-
 submit_page_func ref l = do
 	lua_log_line ref "> submit_page_func" (return ())
 	shouldstop <- readIORef (blocking_lua_scripting ref)
@@ -339,14 +352,15 @@ submit_page_func ref l = do
 			if top < 2
 				then failLua "Not enough parameters to submit_page"
 				else do
-					one <- peekJust l 1
-					two <- peekJust l 2
+					one <- peekJustString l 1
+					two <- peekJustString l 2
 					params <- parse_keyvalue_luatbl l 3
 					(pt, puri, _hdrs, _code) <- join $ async_submit_page ref one two params
 					Lua.pushbytestring l pt
 					Lua.pushstring l (show puri)
 					lua_log_line ref ("< submit_page_func " ++ (show puri)) (return ())
 					return 2
+-}
 
 async_submit_page_func ref l1 = do
 	lua_log_line ref "> async_submit_page_func" (return ())
@@ -360,8 +374,8 @@ async_submit_page_func ref l1 = do
 			if top < 2
 				then failLua "Not enough parameters to async_submit_page"
 				else do
-					one <- peekJust l1 1
-					two <- peekJust l1 2
+					one <- peekJustString l1 1
+					two <- peekJustString l1 2
 					params <- parse_keyvalue_luatbl l1 3
 					f <- async_submit_page ref one two params
 					lua_log_line ref "< async_submit_page_func requested" (return ())
@@ -375,7 +389,7 @@ async_submit_page_func ref l1 = do
 
 
 make_href _ref l = do
-	inputuristr <- peekJust l 1
+	inputuristr <- peekJustString l 1
 	params <- parse_keyvalue_luatbl l 2
 	case parseURIReference inputuristr of	
 		Just inputuri -> do
@@ -406,7 +420,7 @@ get_fallback_choicespoilers _ref l = do
 					(Just choicenum, Just spoilers) -> do
 						Lua.pushinteger l (fromIntegral (choicenum :: Integer))
 						Lua.newtable l
-						add_table_contents l (zip [1..] spoilers :: [(Int, String)])
+						add_table_contents_integer_string l (zip [1..] spoilers)
 						Lua.settable l topidx
 					_ -> throwIO $ InternalError $ "Invalid choice spoiler, id: " ++ show xs
 			_ -> throwIO $ InternalError $ "Invalid choice spoiler, id: " ++ show xs
@@ -429,7 +443,7 @@ get_pulverize_groups _ref l = do
 
 		Lua.pushstring l "items"
 		Lua.newtable l
-		add_table_contents l $ zip (items :: [Integer]) (repeat True)
+		add_table_contents_integer_boolean l $ zip (items :: [Integer]) (repeat True)
 		Lua.settable l gidx
 
 		Lua.settable l topidx
@@ -438,8 +452,8 @@ get_pulverize_groups _ref l = do
 	return 1
 
 get_api_itemid_info ref l1 = do
-	itemid <- peekJust l1 1
-	f <- KoL.Api.asyncGetItemInfoObj (itemid :: Int) ref
+	itemid <- peekJustInteger l1 1
+	f <- KoL.Api.asyncGetItemInfoObj itemid ref
 	let callback_f l2 = do
 		push_jsvalue l2 =<< f
 		return 1
@@ -462,7 +476,7 @@ setup_lua_instance level filename setupref = do
 
 		register_function "get_inventory_counts" $ \ref l -> do
 			Lua.newtable l
-			add_table_contents l =<< KoL.Api.getInventoryCounts ref
+			add_table_contents_integer_integer l =<< KoL.Api.getInventoryCounts ref
 			return 1
 
 		register_function "get_status_info" $ \ref l -> do
@@ -470,7 +484,7 @@ setup_lua_instance level filename setupref = do
 			return 1
 
 		register_function "json_to_table" $ \_ref l -> do
-			jsonstr <- peekJust l 1
+			jsonstr <- peekJustString l 1
 			let Ok jsonobj = decodeStrict jsonstr
 			push_jsvalue l jsonobj
 			return 1
@@ -481,8 +495,8 @@ setup_lua_instance level filename setupref = do
 			return 1
 
 		register_function "simplexmldata_to_table" $ \_ref l -> do
-			xmlstr <- peekJust l 1
-			let Just xmldoc = parseXMLDoc (xmlstr :: String)
+			xmlstr <- peekJustString l 1
+			let Just xmldoc = parseXMLDoc xmlstr
 			push_simplexmldata l xmldoc
 			return 1
 
@@ -523,7 +537,7 @@ setup_lua_instance level filename setupref = do
 		register_function "list_custom_autoload_script_files" $ \_ref l -> do
 			filenames <- get_custom_autoload_script_files
 			Lua.newtable l
-			add_table_contents l (zip ([1..] :: [Int]) filenames)
+			add_table_contents_integer_string l (zip [1..] filenames)
 			return 1
 
 		register_function "block_lua_scripting" $ \ref _l -> do
@@ -554,34 +568,34 @@ setup_lua_instance level filename setupref = do
 			AUTOMATE -> do
 				Lua.registerhsfunction lstate "set_state" (set_state setupref)
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)
-				register_function "raw_submit_page" submit_page_func
+				--register_function "raw_submit_page" submit_page_func
 				register_function "raw_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
 			INTERCEPT -> do
 				Lua.registerhsfunction lstate "set_state" (set_state setupref)
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)
-				register_function "raw_submit_page" submit_page_func
+				--register_function "raw_submit_page" submit_page_func
 				register_function "raw_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
 			BROWSERREQUEST -> do
 				Lua.registerhsfunction lstate "set_state" (set_state setupref)
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)
 				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)
-				register_function "raw_submit_page" submit_page_func
+				--register_function "raw_submit_page" submit_page_func
 				register_function "raw_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
 				register_function "browserrequest_splituri" $ \_ref l -> do
-					uristr <- peekJust l 1
+					uristr <- peekJustString l 1
 					let uri = mkuri uristr
 					Lua.pushstring l $ uriPath uri
 					Lua.pushstring l $ uriQuery uri
 					return 2
 			BOTSCRIPT -> do
-				register_function "raw_submit_page" submit_page_func
+				--register_function "raw_submit_page" submit_page_func
 				register_function "raw_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
 				register_function "sleep" $ \_ref l -> do
-					delay <- peekJust l 1 :: IO Double
+					delay <- peekJustDouble l 1
 					threadDelay $ round $ delay * 1000000
 					return 0
 
@@ -685,9 +699,9 @@ run_lua_code level filename ref dosetvars = do
 
 setvars vars text allparams l = do
 	Lua.newtable l
-	add_table_contents l (vars :: [(String, String)])
+	add_table_contents_string_string l (vars :: [(String, String)])
 	Lua.pushstring l "text"
-	Lua.push l text
+	Lua.pushbytestring l text
 	Lua.settable l (-3)
 	Lua.pushstring l "raw_input_params"
 	Lua.pushstring l (show (allparams :: [(String, String)]))
@@ -720,7 +734,7 @@ runChatScript ref uri effuri pagetext allparams = do
 
 runSendChatScript ref uri allparams = do
 	let vars = [("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
-	rets <- run_lua_code WHENEVER "scripts/sendchat.lua" ref (setvars vars "" allparams)
+	rets <- run_lua_code WHENEVER "scripts/sendchat.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
 	return $ case rets of
 		Right [Just t] -> Right $ t
 		Right xs -> Left ("Lua chat call error, return values = " ++ (show xs), "")
@@ -740,7 +754,7 @@ runAutomateScript ref uri effuri pagetext allparams = do
 
 runInterceptScript ref uri allparams reqtype = do
 	let vars = [("requestpath", uriPath uri), ("requestquery", uriQuery uri), ("request_type", reqtype)]
-	rets <- run_lua_code INTERCEPT "scripts/intercept.lua" ref (setvars vars "" allparams)
+	rets <- run_lua_code INTERCEPT "scripts/intercept.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
 	return $ case rets of
 		Right [Just t, Just u] -> Right (t, mkuri $ Data.ByteString.Char8.unpack $ u)
 		Right xs -> Left ("Lua intercept call error, return values = " ++ (show xs), "")
@@ -748,14 +762,14 @@ runInterceptScript ref uri allparams reqtype = do
 
 runBrowserRequestScript ref uri allparams reqtype = do
 	let vars = [("request_path", uriPath uri), ("request_query", uriQuery uri), ("request_type", reqtype)]
-	rets <- run_lua_code BROWSERREQUEST "scripts/browser-request.lua" ref (setvars vars "" allparams)
+	rets <- run_lua_code BROWSERREQUEST "scripts/browser-request.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
 	return $ case rets of
 		Right [Just t, Just u] -> Right (t, mkuri $ Data.ByteString.Char8.unpack $ u)
 		Right xs -> Left (Data.ByteString.Char8.pack $ ("Lua browser request call error, return values = " ++ (show xs)), "")
 		Left (err, extra) -> Left (Data.ByteString.Char8.pack $ err, extra)
 
 runBotScript baseref filename = do
-	run_lua_code BOTSCRIPT filename baseref (setvars [] "" [])
+	run_lua_code BOTSCRIPT filename baseref (setvars [] (Data.ByteString.Char8.pack "") [])
 	return ()
 
 runLogParsingScript log_db = do
@@ -771,7 +785,7 @@ runLogScript log_db code = do
 		Lua.setglobal lstate name
 
 	register_function "json_to_table" $ \l -> do
-		jsonstr <- peekJust l 1
+		jsonstr <- peekJustString l 1
 		let Ok jsonobj = decodeStrict jsonstr
 		push_jsvalue l jsonobj
 		return 1
@@ -794,9 +808,9 @@ runLogScript log_db code = do
 		return 1
 
 	register_function "get_line_text" $ \l -> do
-		whichidx <- peekJust l 1
-		whichfield <- peekJust l 2
-		s <- Database.SQLite3Modded.prepare log_db ("SELECT " ++ whichfield ++ " FROM pageloads WHERE idx == " ++ show (whichidx :: Int) ++ ";") -- TODO: make safe?
+		whichidx <- peekJustInteger l 1
+		whichfield <- peekJustString l 2
+		s <- Database.SQLite3Modded.prepare log_db ("SELECT " ++ whichfield ++ " FROM pageloads WHERE idx == " ++ (show whichidx) ++ ";") -- TODO: make safe?
 		sr <- Database.SQLite3Modded.step s
 		retvals <- case sr of
 			Database.SQLite3Modded.Row -> do
@@ -811,8 +825,8 @@ runLogScript log_db code = do
 		return retvals
 
 	register_function "get_line_allparams" $ \l -> do
-		whichidx <- peekJust l 1
-		s <- Database.SQLite3Modded.prepare log_db ("SELECT requestedurl, retrievedurl, parameters FROM pageloads WHERE idx == " ++ show (whichidx :: Int) ++ ";")
+		whichidx <- peekJustInteger l 1
+		s <- Database.SQLite3Modded.prepare log_db ("SELECT requestedurl, retrievedurl, parameters FROM pageloads WHERE idx == " ++ (show whichidx) ++ ";")
 		sr <- Database.SQLite3Modded.step s
 		retvals <- case sr of
 			Database.SQLite3Modded.Row -> do
@@ -826,7 +840,7 @@ runLogScript log_db code = do
 				let allparams = concat $ catMaybes $ [decodeUrlParams uri, decodeUrlParams effuri, params]
 -- 				putStrLn $ "allparams: " ++ show allparams
 				Lua.newtable l
-				add_table_contents l allparams
+				add_table_contents_string_string l allparams
 				return 1
 			Database.SQLite3Modded.Done -> return 0
 		Database.SQLite3Modded.finalize s
@@ -834,15 +848,15 @@ runLogScript log_db code = do
 
 	loginforef <- newIORef Nothing
 	register_function "set_log_info" $ \l -> do
-		playerid <- peekJust l 1
-		charname <- peekJust l 2
-		ascnum <- peekJust l 3
-		secretkey <- peekJust l 4
-		writeIORef loginforef $ Just (fromIntegral (playerid :: Int) :: Integer, charname :: String, fromIntegral (ascnum :: Int) :: Integer, get_md5 $ secretkey)
+		playerid <- peekJustInteger l 1
+		charname <- peekJustString l 2
+		ascnum <- peekJustInteger l 3
+		secretkey <- peekJustString l 4
+		writeIORef loginforef $ Just (playerid, charname, ascnum, get_md5 $ secretkey)
 		return 0
 
 	register_function "get_url_path" $ \l -> do
-		urlstr <- peekJust l 1
+		urlstr <- peekJustString l 1
 		case parseURIReference urlstr of
 			Just uri -> do
 				Lua.pushstring l (uriPath uri)
@@ -893,7 +907,7 @@ run_datafile_parsers = do
 		Lua.setglobal lstate name
 
 	register_function "json_to_table" $ \l -> do
-		jsonstr <- peekJust l 1
+		jsonstr <- peekJustString l 1
 		let Ok jsonobj = decodeStrict jsonstr
 		push_jsvalue l jsonobj
 		return 1
@@ -904,8 +918,8 @@ run_datafile_parsers = do
 		return 1
 
 	register_function "simplexmldata_to_table" $ \l -> do
-		xmlstr <- peekJust l 1
-		let Just xmldoc = parseXMLDoc (xmlstr :: String)
+		xmlstr <- peekJustString l 1
+		let Just xmldoc = parseXMLDoc xmlstr
 		push_simplexmldata l xmldoc
 		return 1
 

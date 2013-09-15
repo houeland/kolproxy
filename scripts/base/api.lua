@@ -414,7 +414,7 @@ function setup_functions()
 				local cached_skills_storedid = session["cached player skills.storedid"]
 				local currentid = ascensionpathid() .. "/" .. ascensionstatus()
 				if (not cached_skills or cached_skills_storedid ~= currentid) then
-					if raw_submit_page then
+					if raw_async_submit_page then
 						cached_skills = raw_retrieve_skills()
 						session["cached player skills"] = cached_skills
 						session["cached player skills.storedid"] = currentid

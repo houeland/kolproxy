@@ -20,7 +20,7 @@ query = requestquery -- temporary workaround for backwards compatibility
 get_player_skills()
 
 function submit_original_request()
-	return raw_submit_page(request_type, requestpath, parse_params_raw(input_params))
+	return raw_async_submit_page(request_type, requestpath, parse_params_raw(input_params))()
 end
 
 -- 			let inrunoption = case choice of
