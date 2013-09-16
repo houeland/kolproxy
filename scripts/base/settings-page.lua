@@ -155,6 +155,8 @@ local function get_customize_features_page()
 	local feature_radio_names = {}
 	local all_radio_names = {}
 	local all_default_values = {}
+	local charpane_updaters = {}
+	local menupane_updaters = {}
 	for _, x in ipairs(setting_groups) do
 		if #grouped[x.name] > 0 then
 			table.sort(grouped[x.name], function(a, b) return settings_order[a.name] < settings_order[b.name] end)
@@ -177,6 +179,8 @@ local function get_customize_features_page()
 				featuredesc = "&ndash;&nbsp;" .. featuredesc
 			end
 			all_default_values[y.name] = defaultvalue
+			charpane_updaters[y.name] = y.update_charpane and true or false
+			menupane_updaters[y.name] = y.update_menupane and true or false
 			if not y.hidden then
 				table.insert(featurerows, [[<tr data-feature-name="]]..y.name..[["]]..trstyle..[[><td class="tdname">]] .. featuredesc .. [[</td>]] ..
 					[[<td class="tdon"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..onchecked..[[>On</td>]] ..
@@ -223,6 +227,10 @@ var all_default_values = ]] .. table_to_json(all_default_values) .. [[
 
 var all_radio_names = ]] .. table_to_json(all_radio_names) .. [[
 
+var charpane_updaters = ]] .. table_to_json(charpane_updaters) .. [[
+
+var menupane_updaters = ]] .. table_to_json(menupane_updaters) .. [[
+
 function refresh_visibility() {
 	var hidden = {}
 	for (var i_ = 0; i_ < all_radio_names.length; i_ += 1) {
@@ -248,12 +256,24 @@ function refresh_visibility() {
 function changed_feature_setting(what) {
 	var setting = $($(what).parents("tr")[0]).attr("data-feature-name")
 	var c = $(what).parent("td").attr("class")
+	var update_charpane = charpane_updaters[setting]
+	var update_menupane = menupane_updaters[setting]
+	console.log("changing:", setting, "to", c, "refreshes", update_charpane, update_menupane)
 	if (c == "tdon") {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'on', ajax: 1 })
+		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'on', ajax: 1 }, function(res) {
+			if (update_charpane) top.charpane.location = "charpane.php"
+			if (update_menupane) top.menupane.location = "topmenu.php"
+		})
 	} else if (c == "tdoff") {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'off', ajax: 1 })
+		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'off', ajax: 1 }, function(res) {
+			if (update_charpane) top.charpane.location = "charpane.php"
+			if (update_menupane) top.menupane.location = "topmenu.php"
+		})
 	} else if (c == "tddefault") {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'', ajax: 1 })
+		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'', ajax: 1 }, function(res) {
+			if (update_charpane) top.charpane.location = "charpane.php"
+			if (update_menupane) top.menupane.location = "topmenu.php"
+		})
 	}
 	refresh_visibility()
 }
@@ -317,14 +337,17 @@ function changed_settings() {
 	if (document.getElementById("settingslimited").checked) {
 		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'limited', ajax: 1 }, function(res) {
 			top.charpane.location = "charpane.php"
+			top.menupane.location = "topmenu.php"
 		})
 	} else if (document.getElementById("settingsstandard").checked) {
 		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'standard', ajax: 1 }, function(res) {
 			top.charpane.location = "charpane.php"
+			top.menupane.location = "topmenu.php"
 		})
 	} else if (document.getElementById("settingsdetailed").checked) {
 		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'detailed', ajax: 1 }, function(res) {
 			top.charpane.location = "charpane.php"
+			top.menupane.location = "topmenu.php"
 		})
 	}
 }

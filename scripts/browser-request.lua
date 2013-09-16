@@ -38,9 +38,6 @@ local function add_raw_message_to_page(pagetext, msg)
 end
 
 local function show_error(basepage, errortbl)
-	for _, x in ipairs(errortbl.extrafun) do
-		print(x)
-	end
 	return add_raw_message_to_page(basepage, [[<pre style="color: red">]] .. errortbl.trace .. [[</pre>]])
 end
 
@@ -94,26 +91,8 @@ local function run_wrapped_function_internal(f_env)
 	return printer_pt, intercept_url
 end
 
-local function extrafun()
-	local tbl = {}
-	for i = 0, 1000 do
-		local dgi = debug.getinfo(i)
-		if dgi then
-			local linetbl = {}
-			for a, b in pairs(dgi) do
-				if type(b) == "string" and b:len() > 100 then b = b:sub(1, 90) .. "..." .. b:len() end
-				table.insert(linetbl, a .. "[" .. tostring(b) .. "]")
-			end
-			table.insert(tbl, table.concat(linetbl, " "))
-		else
-			break
-		end
-	end
-	return tbl
-end
-
 local function run_wrapped_function(f_env)
-	local ok, pt, url = xpcall(function() return run_wrapped_function_internal(f_env) end, function(e) return { msg = e, trace = debug.traceback(e, 2), extrafun = extrafun() } end)
+	local ok, pt, url = xpcall(function() return run_wrapped_function_internal(f_env) end, function(e) return { msg = e, trace = debug.traceback(e, 2) } end)
 	if ok then
 		return pt, url
 	else

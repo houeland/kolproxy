@@ -3,6 +3,7 @@ register_setting {
 	description = "Show spleen counter",
 	group = "charpane",
 	default_level = "limited",
+	update_charpane = true,
 }
 
 -- TODO: handle ode/milk checks in a better and more generic way. use add_warning {}

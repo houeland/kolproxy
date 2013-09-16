@@ -13,6 +13,7 @@ register_setting {
 	description = "Replace character pane with speedy custom kolproxy version",
 	group = "charpane",
 	default_level = "standard",
+	update_charpane = true,
 }
 
 register_setting {
@@ -20,22 +21,24 @@ register_setting {
 	description = "Use compact mode for custom kolproxy charpane",
 	group = "charpane",
 	default_level = "detailed",
+	update_charpane = true,
 }
 
-register_setting {
-	name = "show buff extension arrows",
-	description = "Show up-arrows for extending buffs (currently only on custom charpane)",
-	group = "charpane",
-	default_level = "standard",
-	parent = "use custom kolproxy charpane",
-}
+--register_setting {
+--	name = "show buff extension arrows",
+--	description = "Show up-arrows for extending buffs (currently only on custom charpane)",
+--	group = "charpane",
+--	default_level = "standard",
+--	parent = "use custom kolproxy charpane",
+--}
 
 register_setting {
 	name = "show multiple previous-adventure links",
-	description = "Show multiple previous-adventure links (currently only on custom charpane)",
+	description = "Show multiple previous-adventure links",
 	group = "charpane",
 	default_level = "detailed",
 	parent = "use custom kolproxy charpane",
+	update_charpane = true,
 }
 
 add_printer("/game.php", function()
@@ -700,7 +703,7 @@ function compact_charpane_buff_lines(lines)
 
 	local bufflines = {}
 
-	if setting_enabled("show buff extension arrows") then
+	if tonumber(api_flag_config().hideefarrows) ~= 1 then
 		local curbuffline = nil
 		for _, x in ipairs(sorting) do
 			local styleinfo = ""
@@ -781,7 +784,7 @@ function full_charpane_buff_lines(lines)
 
 	local bufflines = {}
 
-	if setting_enabled("show buff extension arrows") then
+	if tonumber(api_flag_config().hideefarrows) ~= 1 then
 		for _, x in ipairs(sorting) do
 			local styleinfo = ""
 			local imgstyleinfo = ""

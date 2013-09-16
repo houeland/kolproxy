@@ -3,6 +3,7 @@ register_setting {
 	description = "Use custom super-compact menupane",
 	group = nil,
 	default_level = "detailed",
+	update_menupane = true,
 }
 
 add_printer("/game.php", function()

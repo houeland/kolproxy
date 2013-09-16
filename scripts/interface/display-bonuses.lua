@@ -3,6 +3,7 @@ register_setting {
 	description = "Show modifier estimates (+noncombat%, +item%, +ML. <b>Not always accurate</b>)",
 	group = "charpane",
 	default_level = "standard",
+	update_charpane = true,
 }
 
 function estimate_companion_bonuses(jarlcompanion)
