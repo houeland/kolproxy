@@ -1,6 +1,6 @@
 register_setting {
 	name = "show modifier estimates",
-	description = "Show modifier estimates (+noncombat%, +item%, +ML. <b>Not always accurate</b>)",
+	description = "Show modifier estimates (+item%, +ML, etc. <b>Not always accurate</b>)",
 	group = "charpane",
 	default_level = "standard",
 	update_charpane = true,

@@ -10,7 +10,7 @@ local setting_levels = {
 }
 
 function register_setting(tbl)
-	check_supported_table_values(tbl, { "hidden" }, { "name", "description", "group", "default_level" })
+	tbl.name = tbl.name or tbl.server_name
 	settings[tbl.name] = tbl
 	settings_order_counter = settings_order_counter + 1
 	settings_order[tbl.name] = settings_order_counter
@@ -113,9 +113,7 @@ function setting_enabled(name)
 	if not can_read_state() then return false end
 	local s = character["setting: " .. name]
 	if s then
-		local enabled = (s == "on")
--- 		print("DEBUG setting", name, enabled)
-		return enabled
+		return (s == "on")
 	else
 		if not settings[name] then
 			print("ERROR!!! SETTING NOT DEFINED!", name)
@@ -167,29 +165,52 @@ local function get_customize_features_page()
 			local radio_name = "radio_" .. radio_ctr
 			feature_radio_names[y.name] = radio_name
 			table.insert(all_radio_names, radio_name)
-			local onchecked = (character["setting: " .. y.name] == "on") and [[ checked="checked"]] or ""
-			local offchecked = (character["setting: " .. y.name] == "off") and [[ checked="checked"]] or ""
-			local defaultchecked = (character["setting: " .. y.name] == nil) and [[ checked="checked"]] or ""
-			local baselevel = character["settings base level"] or "limited"
-			local defaultvalue = (setting_levels[y.default_level or "enthusiast"] <= setting_levels[baselevel]) and "on" or "off"
-			local featuredesc = y.description and ([[<span title="Lua scripting syntax: setting_enabled(&quot;]] .. y.name .. [[&quot)">]] .. y.description .. [[</span>]]) or ([[<span style="color: red">No description (<tt>]] .. y.name .. [[</tt>)</span>]])
-			local trstyle = ""
-			if parentname then
-				trstyle = string.format([[ class="childof_%s"]], feature_radio_names[parentname])
-				featuredesc = "&ndash;&nbsp;" .. featuredesc
-			end
-			all_default_values[y.name] = defaultvalue
-			charpane_updaters[y.name] = y.update_charpane and true or false
-			menupane_updaters[y.name] = y.update_menupane and true or false
-			if not y.hidden then
-				table.insert(featurerows, [[<tr data-feature-name="]]..y.name..[["]]..trstyle..[[><td class="tdname">]] .. featuredesc .. [[</td>]] ..
-					[[<td class="tdon"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..onchecked..[[>On</td>]] ..
-					[[<td class="tdoff"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..offchecked..[[>Off</td>]] ..
-					[[<td class="tddefault"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..defaultchecked..[[>Default (]]..defaultvalue..[[)</td></tr>]])
+			if y.server_name then
+				local featuredesc = y.description .. [[<span style="color: gray"> (built-in KoL option)</span>]]
+				local trstyle = ""
+				local onchecked = (tonumber(api_flag_config()[y.server_name]) == 1) and [[ checked="checked"]] or ""
+				local offchecked = (tonumber(api_flag_config()[y.server_name]) == 0) and [[ checked="checked"]] or ""
+				if y.server_inverted then
+					-- CDM is crazy
+					onchecked, offchecked = offchecked, onchecked
+				end
+				if parentname then
+					trstyle = string.format([[ class="childof_%s"]], feature_radio_names[parentname])
+					featuredesc = "&ndash;&nbsp;" .. featuredesc
+				end
+				charpane_updaters[y.name] = y.update_charpane and true or false
+				menupane_updaters[y.name] = y.update_menupane and true or false
+				table.insert(featurerows, [[<tr data-feature-name="]]..y.server_name..[["]]..trstyle..[[><td class="tdname">]] .. featuredesc .. [[</td>]] ..
+					[[<td class="tdserveron"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..onchecked..[[>On</td>]] ..
+					[[<td class="tdserveroff"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..offchecked..[[>Off</td>]] ..
+					[[<td></td></tr>]])
+			else
+				local onchecked = (character["setting: " .. y.name] == "on") and [[ checked="checked"]] or ""
+				local offchecked = (character["setting: " .. y.name] == "off") and [[ checked="checked"]] or ""
+				local defaultchecked = (character["setting: " .. y.name] == nil) and [[ checked="checked"]] or ""
+				local baselevel = character["settings base level"] or "limited"
+				local defaultvalue = (setting_levels[y.default_level or "enthusiast"] <= setting_levels[baselevel]) and "on" or "off"
+				local featuredesc = y.description and ([[<span title="Lua scripting syntax: setting_enabled(&quot;]] .. y.name .. [[&quot)">]] .. y.description .. [[</span>]]) or ([[<span style="color: red">No description (<tt>]] .. y.name .. [[</tt>)</span>]])
+				local trstyle = ""
+				if parentname then
+					trstyle = string.format([[ class="childof_%s"]], feature_radio_names[parentname])
+					featuredesc = "&ndash;&nbsp;" .. featuredesc
+				end
+				all_default_values[y.name] = defaultvalue
+				charpane_updaters[y.name] = y.update_charpane and true or false
+				menupane_updaters[y.name] = y.update_menupane and true or false
+				if not y.hidden then
+					table.insert(featurerows, [[<tr data-feature-name="]]..y.name..[["]]..trstyle..[[><td class="tdname">]] .. featuredesc .. [[</td>]] ..
+						[[<td class="tdon"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..onchecked..[[>On</td>]] ..
+						[[<td class="tdoff"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..offchecked..[[>Off</td>]] ..
+						[[<td class="tddefault"><input type="radio" name="]]..radio_name..[[" onChange="changed_feature_setting(this)"]]..defaultchecked..[[>Default (]]..defaultvalue..[[)</td></tr>]])
+				end
 			end
 		end
 		local function recurse(y)
-			for _, z in ipairs(children[y.name] or {}) do
+			local tbl = children[y.name] or {}
+			table.sort(tbl, function(a, b) return settings_order[a.name] < settings_order[b.name] end)
+			for _, z in ipairs(tbl) do
 				insert_setting_row(z, y.name)
 				recurse(z)
 			end
@@ -220,6 +241,8 @@ local function get_customize_features_page()
 				.featuretable .tdname { border-right: thin dotted gray; }
 				.featuretable .tdon { border-right: thin dotted gray; }
 				.featuretable .tdoff { border-right: thin dotted gray; }
+				.featuretable .tdserveron { border-right: thin dotted gray; }
+				.featuretable .tdserveroff { border-right: thin dotted gray; }
 			</style>
 			<script language="Javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
 			<script type="text/javascript">
@@ -241,6 +264,7 @@ function refresh_visibility() {
 				var c = $(radio).parent("td").attr("class")
 				var isenabled = false
 				if (c == "tdon") isenabled = true
+				else if (c == "tdserveron") isenabled = true
 				else if (c == "tddefault" && all_default_values[fname] == "on") isenabled = true
 				if (isenabled && !hidden[fname]) {
 					$(".childof_" + all_radio_names[i_]).show()
@@ -271,6 +295,16 @@ function changed_feature_setting(what) {
 		})
 	} else if (c == "tddefault") {
 		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'', ajax: 1 }, function(res) {
+			if (update_charpane) top.charpane.location = "charpane.php"
+			if (update_menupane) top.menupane.location = "topmenu.php"
+		})
+	} else if (c == "tdserveron") {
+		$.post('account.php', { pwd:']]..session.pwd..[[', am:1, action:'flag_' + setting, value:1, ajax: 1 }, function(res) {
+			if (update_charpane) top.charpane.location = "charpane.php"
+			if (update_menupane) top.menupane.location = "topmenu.php"
+		})
+	} else if (c == "tdserveroff") {
+		$.post('account.php', { pwd:']]..session.pwd..[[', am:1, action:'flag_' + setting, value:0, ajax: 1 }, function(res) {
 			if (update_charpane) top.charpane.location = "charpane.php"
 			if (update_menupane) top.menupane.location = "topmenu.php"
 		})

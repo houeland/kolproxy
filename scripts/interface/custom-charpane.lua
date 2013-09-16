@@ -16,11 +16,19 @@ register_setting {
 	update_charpane = true,
 }
 
+--register_setting {
+--	name = "use custom kolproxy charpane/use compact mode",
+--	description = "Use compact mode for custom kolproxy charpane",
+--	group = "charpane",
+--	default_level = "detailed",
+--	update_charpane = true,
+--}
+
 register_setting {
-	name = "use custom kolproxy charpane/use compact mode",
-	description = "Use compact mode for custom kolproxy charpane",
+	server_name = "compactchar",
+	description = "Use compact character pane",
 	group = "charpane",
-	default_level = "detailed",
+	parent = "use custom kolproxy charpane",
 	update_charpane = true,
 }
 
@@ -37,6 +45,23 @@ register_setting {
 	description = "Show multiple previous-adventure links",
 	group = "charpane",
 	default_level = "detailed",
+	parent = "use custom kolproxy charpane",
+	update_charpane = true,
+}
+
+register_setting {
+	server_name = "hideefarrows",
+	server_inverted = true,
+	description = "Show effect replenishment arrows",
+	group = "charpane",
+	parent = "use custom kolproxy charpane",
+	update_charpane = true,
+}
+
+register_setting {
+	server_name = "swapfam",
+	description = "Display familiar below effects",
+	group = "charpane",
 	parent = "use custom kolproxy charpane",
 	update_charpane = true,
 }
@@ -91,7 +116,7 @@ function get_companion_display()
 end
 
 local function kolproxy_custom_charpane_mode()
-	if setting_enabled("use custom kolproxy charpane/use compact mode") then
+	if tonumber(api_flag_config().compactchar) ~= 0 then
 		return "compact"
 	else
 		return "normal"
