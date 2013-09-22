@@ -177,7 +177,7 @@ add_interceptor("use item: Orcish Frat House blueprints", function() -- TODO: sp
 		for _, want in pairs(opt.equipment) do
 			if not have(want) and not buyable[want] then
 				possible = false
-			elseif want == "homoerotic frat-paddle" and (ascensionpath("Way of the Surprising Fist") or ascensionpath("Avatar of Boris")) then
+			elseif want == "homoerotic frat-paddle" and not can_wear_weapons() then
 				-- Can't use in fist or boris
 				possible = false
 			end
@@ -209,7 +209,7 @@ add_interceptor("use item: Orcish Frat House blueprints", function() -- TODO: sp
 			return text, requestpath
 		end
 	end
-	return intercept_warning { message = "You do not have the equipment/items to retrieve the dentures", id = "no equipment for retrieving dentures" }
+	return intercept_warning { message = "You do not have the equipment/items to retrieve the dentures.", id = "no equipment for retrieving dentures" }
 end)
 
 -- f'cl'e

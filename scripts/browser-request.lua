@@ -96,7 +96,7 @@ local function run_wrapped_function(f_env)
 	if ok then
 		return pt, url
 	else
-		return show_error(f_env.text, pt)
+		return show_error(f_env.text or "{ No page text. }", pt), "/kolproxy-error"
 	end
 end
 

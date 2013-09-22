@@ -189,11 +189,11 @@ kolProxyHandler uri params baseref = do
 
 	let allparams = concat $ catMaybes $ [decodeUrlParams uri, params]
 
-	let check_pwd_for action = Just $ do
+	let check_pwd_for action = do
 		ai <- getApiInfo origref
 		if lookup "pwd" allparams == Just (pwd ai)
-			then action
-			else makeErrorResponse (Data.ByteString.Char8.pack $ "Invalid pwd field") uri []
+			then return action
+			else return $ Just $ makeErrorResponse (Data.ByteString.Char8.pack $ "Invalid pwd field") uri []
 
 	let handle_login p_sensitive = do
 		loginrequestfunc <- case lookup "password" p_sensitive of
@@ -241,21 +241,21 @@ kolProxyHandler uri params baseref = do
 						then makeRedirectResponse pt uri hdrs
 						else makeResponse pt uri hdrs)
 
-	let response = case uriPath uri of
-		"/login.php" -> fmap handle_login params
+	response <- case uriPath uri of
+		"/login.php" -> return $ fmap handle_login params
 
 -- TODO: intercept if logged in before page. automate if logged in after page. support logging both.
 
-		"/custom-clear-lua-script-cache" -> check_pwd_for $ do
+		"/custom-clear-lua-script-cache" -> check_pwd_for $ Just $ do
 			writeIORef (luaInstances_ $ sessionData $ origref) Data.Map.empty
 			writeIORef (blocking_lua_scripting origref) False
 			makeResponse (Data.ByteString.Char8.pack $ "Cleared Lua script cache.") uri []
 
-		"/custom-logs" -> check_pwd_for $ do
+		"/custom-logs" -> check_pwd_for $ Just $ do
 			pt <- showLogs (lookup "which" allparams) (fromJust $ lookup "pwd" allparams)
 			makeResponse (Data.ByteString.Char8.pack pt) uri []
 
-		"/custom-settings" -> check_pwd_for $ do
+		"/custom-settings" -> check_pwd_for $ Just $ do
 			case lookup "action" allparams of
 				Nothing -> return ()
 				Just "set state" -> do
@@ -265,15 +265,9 @@ kolProxyHandler uri params baseref = do
 				Just x -> throwIO $ InternalError $ "Custom settings action not recognized: " ++ x
 			handleRequest origref uri uri [] params (Data.ByteString.Char8.pack "Empty page.")
 
-		"/kolproxy-automation-script" -> check_pwd_for $ do
-			(pt, effuri, hdrs) <- do
-				let reqtype = if isJust params then "POST" else "GET"
-				zz <- runInterceptScript origref uri allparams reqtype
-				case zz of
-					Right (text, effuri) -> return (text, effuri, [])
-					Left (msg, trace) -> return (add_error_message_to_page ("intercept.lua error: " ++ msg ++ "\n" ++ trace) (Data.ByteString.Char8.pack "{ Kolproxy automation script. }"), mkuri "/error", [])
-			handleRequest origref uri effuri hdrs params pt
-		_ -> Nothing
+		"/kolproxy-automation-script" -> check_pwd_for $ Nothing
+
+		_ -> return Nothing
 
 	let getpage = join $ (processPage origref) origref uri params
 
@@ -292,49 +286,12 @@ kolProxyHandler uri params baseref = do
 							else handleRequest origref uri effuri hdrs params pt
 				else r
 		Nothing -> do
--- 			putStrLn $ "DEBUG: not specifically handled: " ++ show uri
 			canread_before <- canReadState origref
--- 			putStrLn $ "canread_before: " ++ show (uri, canread_before)
 
 			-- TODO: Move to specific handler? Remove entirely?
 			when (uriPath uri == "/logout.php" && canread_before) $ storeSettingsOnServer origref "logging out"
 
 			let reqtype = if isJust params then "POST" else "GET"
-
-{-
-			-- TODO: redo this stuff. Simple case is when we're connected both before and after
-			let should_run_intercept_script = canread_before
-
-			downloaded_page <- if should_run_intercept_script
-				then do
-					zz <- log_time_interval origref ("intercepting: " ++ (show uri)) $ runInterceptScript origref uri allparams reqtype
-					case zz of
-						Right (pt, effuri) -> return $ Right (pt, effuri, [], 200)
-						Left (msg, trace) -> return $ Left (add_error_message_to_page ("intercept.lua error: " ++ msg ++ "\n" ++ trace) (Data.ByteString.Char8.pack "{ No page loaded. }"), mkuri "/error", [], 503)
-				else log_time_interval origref ("run getpage for: " ++ (show uri)) $ getpage
-
-			(new_page, newref) <- case downloaded_page of
-				Left dl -> return (Left dl, origref)
-				Right (pt, effuri, hdrs, code) -> do
-					newref <- if canread_before && (uriPath effuri /= "/afterlife.php")
-						then return origref
-						else log_time_interval _fake_log_ref ("make ref-2 for: " ++ (show uri)) $ make_ref baseref
-					canread_after <- canReadState newref
--- 					putStrLn $ "canread_after: " ++ show (uri, canread_after)
-					let should_run_automate_script = canread_after
-					x <- if should_run_automate_script
-						then do
-							y <- log_time_interval newref ("automating: " ++ (show uri)) $ runAutomateScript newref uri effuri pt allparams
-							case y of
-								Right autotext -> return $ Right (autotext, effuri, hdrs, 200)
-								Left (msg, trace) -> return $ Left (add_error_message_to_page ("automate.lua error: " ++ msg ++ "\n" ++ trace) pt, effuri, hdrs, 503)
-						else return $ Right (pt, effuri, hdrs, code)
-					return (x, newref)
-
-			case new_page of
-				Left (pt, effuri, _hdrs, _code) -> makeErrorResponse pt effuri []
-				Right (pt, effuri, _hdrs, _code) -> log_time_interval newref ("run handle request for: " ++ (show uri)) $ handleRequest newref uri effuri [] params pt
--}
 			response <- log_time_interval origref ("browser request: " ++ (show uri)) $ runBrowserRequestScript origref uri allparams reqtype
 			case response of
 				Left (pt, effuri) -> makeErrorResponse pt effuri []

@@ -282,7 +282,6 @@ function changed_feature_setting(what) {
 	var c = $(what).parent("td").attr("class")
 	var update_charpane = charpane_updaters[setting]
 	var update_menupane = menupane_updaters[setting]
-	console.log("changing:", setting, "to", c, "refreshes", update_charpane, update_menupane)
 	if (c == "tdon") {
 		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'on', ajax: 1 }, function(res) {
 			if (update_charpane) top.charpane.location = "charpane.php"
