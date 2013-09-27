@@ -519,11 +519,14 @@ end
 local cached_workarounds = {}
 local function work_around_broken_status_lastadv(advdata)
 	if advdata.container == "place.php" then
+		print("ERROR: Status API place.php bug should be fixed already, this should not happen!")
 		if not cached_workarounds[advdata.name] then
 			print([[INFO: Working around server API bug (for ]] .. tostring(advdata.name) .. [[). Shout at CDMoyer about lastadv.container bug for place.php!]])
+			local should_be = api_flag_config().compactchar or 0
 			async_post_page("/account.php", { am = 1, pwd = session.pwd, action = "flag_compactchar", value = 0, ajax = 1 })
-			local pt = get_page("/charpane.php")
-			local real_container = pt:match([[href="(place.php%?whichplace=[^"]-)"]])
+			local ptf = async_get_page("/charpane.php")
+			async_post_page("/account.php", { am = 1, pwd = session.pwd, action = "flag_compactchar", value = should_be, ajax = 1 })
+			local real_container = ptf():match([[href="(place.php%?whichplace=[^"]-)"]])
 			if real_container then
 				advdata.container = real_container
 			end
@@ -541,7 +544,7 @@ local function update_and_get_previous_adventure_links()
 		local newtbl = {}
 		table.insert(newtbl, work_around_broken_status_lastadv(lastadventuredata()))
 		for _, x in ipairs(previous_adventures_tbl) do
-			if x.name ~= lastadventuredata().name and #newtbl < 5 then
+			if x.name ~= lastadventuredata().name and not newtbl[5] then
 				table.insert(newtbl, x)
 			end
 		end

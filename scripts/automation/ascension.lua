@@ -3786,6 +3786,8 @@ endif
 	add_task {
 		prereq = not have_item("Spookyraven library key"),
 		f = script.get_library_key,
+		message = "get library key",
+		hide_message = true,
 	}
 
 	add_task {
@@ -4944,7 +4946,7 @@ use gauze garter, gauze garter
 			x.f()
 		else
 			x.prereq = nil
-			if not x.hide_message then
+			if not x.hide_message and not debug_show_empty_messages then
 				if x.message then
 					inform(x.message)
 				elseif debug_show_empty_messages then
@@ -5061,7 +5063,7 @@ use gauze garter, gauze garter
 	end
 
 	for _, x in ipairs(tasks_list) do
-		--print("check", { message = x.message, task = x.task, prereq = x.prereq, when = x.when, when_function = type(x.when) == "function" and x.when() })
+		--print("DEBUG taskcheck", pretty_tostring { message = x.message, task = x.task, prereq = x.prereq, when = x.when, when_function = type(x.when) == "function" and x.when() })
 		if x.task ~= nil then
 			local triggered = false
 			if type(x.when) == "function" then

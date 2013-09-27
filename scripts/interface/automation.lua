@@ -1,11 +1,3 @@
-local daily_skills = {}
-
-local function burn_aftercore_mp(downto)
-	if mp() >= downto then
-		cast_skillid(8100)
-	end
-end
-
 local function get_aftercore_buffs(tbl)
 	local buff_functions = {
 		["Beaten Up"] = function()
@@ -15,7 +7,7 @@ local function get_aftercore_buffs(tbl)
 			use_item("decorative fountain")
 		end,
 	}
-	for x in table.values(tbl) do
+	for _, x in ipairs(tbl) do
 		if not buff(x) then
 			buff_functions[x]()
 		end
@@ -24,7 +16,7 @@ end
 
 local automate_zone_href = add_automation_script("automate-zone", function()
 	if not autoattack_is_set() then
-		stop "Setting an Auto-Attack is required for automated re-adventuring. This can be done in KoL options &rarr; Combat, or with the /autoattack chat command (or the /aa abbreviation)."
+		stop "Setting an Auto-Attack is required for automated re-adventuring.<br><br>This can be done in KoL options &rarr; Combat, or with the /autoattack chat command (or the /aa abbreviation)."
 	end
 	local zoneid = tonumber(params.zoneid)
 	local numtimes = tonumber(params.numtimes)
@@ -53,6 +45,10 @@ local automate_zone_href = add_automation_script("automate-zone", function()
 
 			-- ...prepare, heal up, spend mp, etc...
 
+			if perform_before_automated_readventuring then
+				perform_before_automated_readventuring()
+			end
+
 --			if hp() < maxhp() / 0.75 then
 --				cast_skill("Cannelloni Cocoon")
 --			end
@@ -78,6 +74,10 @@ local automate_zone_href = add_automation_script("automate-zone", function()
 			-- ...handle result...
 			if text:contains("The turtle blinks at you with gratitude for freeing it from its brainwashing") then
 				advagain = true
+			end
+
+			if perform_after_automated_readventuring then
+				perform_after_automated_readventuring()
 			end
 
 			if not advagain then

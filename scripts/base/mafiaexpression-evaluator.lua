@@ -2,6 +2,7 @@ function evaluate_mafiaexpression(expression_input, tbl)
 	local expr = expression_input:match("^mafiaexpression:%[([^]]*)%]$")
 	if not expr then return nil end
 
+	expr = expr:gsub("STAT", buffedmainstat)
 	expr = expr:gsub("MUS", buffedmuscle)
 	expr = expr:gsub("MYS", buffedmysticality)
 	expr = expr:gsub("MOX", buffedmoxie)

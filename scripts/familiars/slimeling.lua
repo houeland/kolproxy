@@ -38,14 +38,15 @@ dont_slime = {
 	-- including items from the pull/closet list would be nice
 }
 
-add_printer("/inventory.php", function()
-	for x, name in pairs(dont_slime) do
-		-- inventory images visible
-		text = text:gsub("(<b class=\"ircm\">" .. name .. "</b>.-<a href=\")([^\"]-)(\">%[give to slimeling%]</a>)", "%1javascript:if (confirm('Are you sure you want to lose this item?')) { location.href = '%2'; }%3")
-		-- inventory images hidden
-		text = text:gsub("(<b class=\"ircm\"><a[^>]->" .. name .. "</a></b>.-<a href=\")([^\"]-)(\">%[give to slimeling%]</a>)", "%1javascript:if (confirm('Are you sure you want to lose this item?')) { location.href = '%2'; }%3")
-	end
-end)
+-- Disabled because it's slow and should probably be done with an interceptor warning anyway, or just dropped
+--add_printer("/inventory.php", function()
+--	for x, name in pairs(dont_slime) do
+--		-- inventory images visible
+--		text = text:gsub("(<b class=\"ircm\">" .. name .. "</b>.-<a href=\")([^\"]-)(\">%[give to slimeling%]</a>)", "%1javascript:if (confirm('Are you sure you want to lose this item?')) { location.href = '%2'; }%3")
+--		-- inventory images hidden
+--		text = text:gsub("(<b class=\"ircm\"><a[^>]->" .. name .. "</a></b>.-<a href=\")([^\"]-)(\">%[give to slimeling%]</a>)", "%1javascript:if (confirm('Are you sure you want to lose this item?')) { location.href = '%2'; }%3")
+--	end
+--end)
 
 -- add_printer("/charpane.php", function()
 -- 	if familiarpicture() == "slimeling" then

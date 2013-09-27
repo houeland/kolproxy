@@ -3750,8 +3750,9 @@ endif
 		else
 			local manor = get_page("/manor.php")
 			if manor:match("Stairs Up") then
-				async_get_page("/manor.php", { place = "stairs" }) -- breaking chairs so they reflect state
-				did_action = true
+				inform "breaking spookyraven stairs"
+				set_result(get_page("/place.php", { whichplace = "spookyraven1", action = "sr1_stairs1" })) -- breaking stairs so they reflect state
+				did_action = not get_page("/manor.php"):match("Stairs Up")
 			else
 				if have_item("pool cue") and have_item("handful of hand chalk") and not have_buff("Chalky Hand") then
 					use_item("handful of hand chalk") -- TODO: ensure_buffs

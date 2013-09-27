@@ -11,6 +11,7 @@ if not can_read_state() then
 	return
 end
 
+kolproxy_log_time_interval("intercept:initialize", function()
 reset_pageload_cache()
 
 path = requestpath -- temporary workaround for backwards compatibility
@@ -22,6 +23,7 @@ get_player_skills()
 function submit_original_request()
 	return raw_async_submit_page(request_type, requestpath, parse_params_raw(input_params))()
 end
+end)
 
 -- 			let inrunoption = case choice of
 -- 				21 -> 2 -- not trapped in the wrong body
@@ -56,6 +58,7 @@ end
 -- 				216 -> 2 -- begone from the compostal service
 -- 				otherwise -> inrunoption
 
+text, url = kolproxy_log_time_interval("run intercepts", function()
 for _, x in ipairs(interceptors[requestpath] or {}) do
 	local t, u = x.f()
 	if t then
@@ -80,6 +83,7 @@ if requestpath == "/inv_use.php" then
 		end
 	end
 end
+end)
 
 if text then
 -- 	print "intercept:returning"

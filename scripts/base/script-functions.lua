@@ -333,18 +333,18 @@ end
 
 function autoadventure(tbl)
 	check_supported_table_values(tbl, { "ignorewarnings", "noncombatchoices", "specialnoncombatfunction" }, { "zoneid", "macro" })
--- 	if not tbl.ignorewarnings and setting_enabled("enable adventure warnings") then
+--	if not tbl.ignorewarnings and setting_enabled("enable adventure warnings") then
 	if not tbl.ignorewarnings and character["setting: enable adventure warnings"] ~= "no" then
-		local foo = { kolproxy_log_time_interval("check adv warnings", function()
+		local foo = { kolproxy_log_time_interval("check adventure warnings", function()
 			local warn_tbl = get_raw_adventure_warnings()
--- 			print("warn_tbl is", warn_tbl)
+--			print("warn_tbl is", warn_tbl)
 			for f in table.values(warn_tbl) do
 				local message, warningid, custommsg = f(tbl.zoneid)
 				if message then
 					print("advwarn?", f, message, warningid)
 					local x, y = intercept_warning { message = message, id = warningid, customdisablemsg = custommsg, norepeat = true }
 					if x then
--- 								print("  warn!", x, y, "...")
+--						print("  warn!", x, y, "...")
 						return x, y, false
 					end
 				end

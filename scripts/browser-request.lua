@@ -68,7 +68,7 @@ local function run_wrapped_function_internal(f_env)
 
 	descit("pre-intercept")
 
-	local intercept_pt, intercept_url = intercept_wrapped(f_env)
+	local intercept_pt, intercept_url = kolproxy_log_time_interval("intercept", function() return intercept_wrapped(f_env) end)
 
 	descit("intercept", intercept_pt, intercept_url)
 
@@ -78,13 +78,13 @@ local function run_wrapped_function_internal(f_env)
 	f_env.path = intercept_path
 	f_env.query = intercept_query
 
-	local automate_pt = automate_wrapped(f_env)
+	local automate_pt = kolproxy_log_time_interval("automate", function() return automate_wrapped(f_env) end)
 
 	descit("automate", automate_pt, intercept_url)
 
 	f_env.text = automate_pt
 
-	local printer_pt = printer_wrapped(f_env)
+	local printer_pt = kolproxy_log_time_interval("printer", function() return printer_wrapped(f_env) end)
 
 	descit("printer", printer_pt, intercept_url)
 

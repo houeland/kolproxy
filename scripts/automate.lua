@@ -8,6 +8,7 @@ if not can_read_state() then
 	return text
 end
 
+kolproxy_log_time_interval("automate:initialize", function()
 reset_pageload_cache()
 
 which = path
@@ -15,10 +16,10 @@ if (requestpath == "/login.php" and text == "kolproxy login redirect") or (reque
 	which = "player login"
 end
 
--- kolproxy_log_time_interval("setup variables", function()
 setup_variables()
--- end)
+end)
 
+kolproxy_log_time_interval("run automators", function()
 if which ~= "/loggedout.php" then
 	local automate_url = path
 	text = run_functions(path, text, function(target, pt)
@@ -33,6 +34,7 @@ if which ~= "/loggedout.php" then
 		return pt
 	end)
 end
+end)
 
 return text
 

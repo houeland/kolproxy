@@ -62,7 +62,7 @@ if pretty_print_tables then
 			return pretty_tostring_key(x)
 		end
 	end
-	function tostring(x)
+	function pretty_tostring(x)
 		if type_(x) == "table" then
 			loop_tbl = {}
 			local vals = {}
@@ -74,6 +74,7 @@ if pretty_print_tables then
 			return raw_tostring(x)
 		end
 	end
+	tostring = pretty_tostring
 end
 
 function encode_thing(x)

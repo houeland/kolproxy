@@ -15,6 +15,7 @@ if not can_read_state() then
 	return text
 end
 
+kolproxy_log_time_interval("process:initialize", function()
 error_on_writing_text_or_url = false
 
 reset_pageload_cache()
@@ -37,6 +38,7 @@ if requestpath == "/adventure.php" then
 end
 
 setup_variables()
+end)
 
 -- if requestpath == "/adventure.php" and zone then
 -- 	local encounter = nil
@@ -54,6 +56,7 @@ setup_variables()
 -- 	set_ascension_state("zone-"..zone.."-encounters", table_to_str(tbl))
 -- end
 
+kolproxy_log_time_interval("process:check semirare and skills", function()
 do
 	local function matches(x)
 		if newly_started_fight and encounter_source == "adventure" and monstername(x) then
@@ -69,8 +72,6 @@ do
 	for _, x in ipairs(datafile("semirares")) do
 		if matches(x) then
 			print("INFO: SEMIRARE!!!", x)
-			--ascension["last semirare encounter"] = x
-			--ascension["last semirare turn"] = turnsthisrun()
 			ascension["last semirare"] = { encounter = x, turn = turnsthisrun() }
 			--ascension["fortune cookie numbers"] = nil
 		end
@@ -82,16 +83,19 @@ if text:contains("You acquire a skill") or text:contains("You leargn a new skill
 	print("INFO: Clearing skill cache!")
 	clear_cached_skills()
 end
+end)
 
+kolproxy_log_time_interval("process:run functions", function()
 run_functions(path, text, function(target, pt)
 	for _, x in ipairs(processors[target] or {}) do
 		getfenv(x.f).text = pt
--- 		kolproxy_log_time_interval("run:" .. tostring(x.scriptname), x.f)
 		error_on_writing_text_or_url = true
+--		kolproxy_log_time_interval("run:" .. tostring(x.scriptname), x.f)
 		x.f()
 		error_on_writing_text_or_url = false
 	end
 	return pt
+end)
 end)
 
 return text

@@ -105,7 +105,7 @@ mods["/loggedout.php"] = {
 
 end)
 
-kolproxy_log_time_interval("mods run", function()
+kolproxy_log_time_interval("run mods", function()
 for from, to in pairs(mods[path] or {}) do
 	text = text:gsub(from, to, 1)
 end
@@ -115,6 +115,7 @@ if not can_read_state() then
 	return text
 end
 
+kolproxy_log_time_interval("printer setup", function()
 function get_noncombat_choice_spoilers(advtitle)
 	return noncombat_choice_texts[advtitle]
 end
@@ -128,18 +129,19 @@ if path == "/charpane.php" then
 	text = text:gsub([[(<a target=mainpane href="familiar.php" class="familiarpick"><img src="http://images.kingdomofloathing.com/itemimages/)([^"]-)(.gif" width=30 height=30 border=0>.- <b>)([0-9]+)(</b> pound .-)(</table></center>)]], "%1%2%3%4%5<!-- charpane normal familiar text space type{%2} weight{%4} -->%6") -- TODO-future: redo without .-!
 end
 
-kolproxy_log_time_interval("setup variables", setup_variables)
+setup_variables()
 
 reset_charpane_values()
+end)
 
-kolproxy_log_time_interval("do run_functions", function()
+kolproxy_log_time_interval("run printers", function()
 if path == "/charpane.php" and text:contains("inf_small.gif") then
 	-- Hack for valhalla
 else
 	text = run_functions(path, text, function(target, pt)
 		for _, x in ipairs(printers[target] or {}) do
 			getfenv(x.f).text = pt
--- 			kolproxy_log_time_interval("run:" .. tostring(x.scriptname), x.f)
+--			kolproxy_log_time_interval("run:" .. tostring(x.scriptname), x.f)
 			x.f()
 			pt = getfenv(x.f).text
 		end
@@ -148,6 +150,7 @@ else
 end
 end)
 
+kolproxy_log_time_interval("finish printing", function()
 if path == "/fight.php" then
 	if text:contains("state['fightover'] = true;") or text:contains("<!--WINWINWIN-->") or text:contains("You slink away, dejected and defeated.") then -- TODO: HACK! state fightover only works with combat bar enabled!!
 -- 		print("resetting fight state!")
@@ -174,7 +177,8 @@ if text:contains("charpane.php") then
 	end
 end
 
---text = text:gsub("</head>", function(head) return string.format([[<script type="text/javascript">var kolproxy_effective_url = %q</script>%s]], path .. query, head) end)
+text = text:gsub("</head>", function(head) return string.format([[<script type="text/javascript">var kolproxy_effective_url = %q</script>%s]], path .. query, head) end)
+end)
 
 return text
 

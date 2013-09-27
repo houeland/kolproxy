@@ -56,7 +56,7 @@ local href = add_automation_script("custom-inventory-diff", function()
 		if x.amount < 0 then
 			value = -value
 		end
-		table.insert(lines, string.format("%+dx %s (%s Meat)", x.amount, x.name or ("{ itemid: " + tostring(x.itemid) + " }"), display_signed_integer(value)))
+		table.insert(lines, string.format("%+dx %s (%s Meat)", x.amount, x.name or ("{ itemid: " .. tostring(x.itemid) .. " }"), display_signed_integer(value)))
 		item_sum = item_sum + value
 	end
 
