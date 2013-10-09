@@ -348,7 +348,7 @@ local cook_key_href = add_automation_script("custom-ascension-checklist-cook-key
 	end
 end)
 
-function retrieve_all_item_locations()
+function __old_retrieve_all_item_locations()
 	local function extract_itemdata(itd)
 		local rel = itd:match([[rel=".-"]])
 		local id = tonumber(rel:match("id=([0-9]+)"))
@@ -398,6 +398,22 @@ function retrieve_all_item_locations()
 		end
 	end
 	return inventory, storage, closet
+end
+
+local function do_retrieve_items(what)
+	local items = {}
+	local json = get_page("/api.php", { what = what, ["for"] = "Kolproxy by Eleron (from Lua script)", format = "json" })
+	for x, y in pairs(json_to_table(json)) do
+		local name = maybe_get_itemname(tonumber(x))
+		if name then
+			items[name] = tonumber(y)
+		end
+	end
+	return items
+end
+
+function retrieve_all_item_locations()
+	return do_retrieve_items("inventory"), do_retrieve_items("storage"), do_retrieve_items("closet")
 end
 
 local href = add_automation_script("custom-ascension-checklist", function()

@@ -26,7 +26,6 @@ import Network.TLS.Extra
 import Network.URI
 import Numeric (readHex)
 import System.IO
---import System.IO.Unsafe (unsafePerformIO)
 import qualified Data.ByteString
 import qualified Data.ByteString.Char8
 import qualified Data.ByteString.Lazy
@@ -42,14 +41,6 @@ doHTTPLOWLEVEL_DEBUG _ = return ()
 doHTTPLOWLEVEL_DEBUGexception _ = return ()
 --doHTTPLOWLEVEL_DEBUGexception x = putStrLn $ "HTTPlow DEBUGexc: " ++ x
 
-connDoMutexed a = a
-
---{-# NOINLINE connmutexref #-}
---connmutexref = unsafePerformIO (newMVar ())
-
---connDoMutexed a = withMVar connmutexref (\_ -> a)
-
-
 class ConnFunctionsBundle a b | a -> b where
 	connGetBlock :: a -> Int -> IO b
 	connGetLine :: a -> IO String
@@ -58,18 +49,18 @@ class ConnFunctionsBundle a b | a -> b where
 	connGetContents :: a -> IO b
 
 instance ConnFunctionsBundle Handle Data.ByteString.ByteString where
-	connGetBlock conn size = connDoMutexed $ Data.ByteString.hGet conn size
+	connGetBlock conn size = Data.ByteString.hGet conn size
 
-	connGetLine conn = connDoMutexed $ do
+	connGetLine conn = do
 		x <- Data.ByteString.hGetLine conn
 -- 		putStrLn $ "connGetLine: " ++ (Data.ByteString.Char8.unpack x)
 		return $ (Data.ByteString.Char8.unpack x) ++ "\n"
 
-	connPut conn d = connDoMutexed $ Data.ByteString.hPut conn (Data.ByteString.Char8.pack $ d)
+	connPut conn d = Data.ByteString.hPut conn (Data.ByteString.Char8.pack $ d)
 
-	connFlush conn = connDoMutexed $ hFlush conn
+	connFlush conn = hFlush conn
 
-	connGetContents conn = connDoMutexed $ Data.ByteString.hGetContents conn
+	connGetContents conn = Data.ByteString.hGetContents conn
 
 data SslConn = SslConn {
 	sslconn_c :: TLSCtx,
@@ -403,7 +394,8 @@ fast_mkconnthing server = do
 					putMVar mvdest what `catch` (\e -> do
 						doHTTPLOWLEVEL_DEBUGexception $ "http write mvdest exception for " ++ (uriPath absuri) ++ ": " ++ (show (e :: SomeException))
 						throwIO e)
-					going <- (modifyMVar connmv $ \(cf_stored, _, pending, thiskillfunc) -> do
+					going <- (modifyMVar connmv $ \zzz -> do
+						let Right (cf_stored, _, pending, thiskillfunc) = zzz
 						let kill_it = do
 -- 							doHTTPLOWLEVEL_DEBUG $ "closed, making new connection"
 							(cf, connt, _, cnewkill) <- open_conn
@@ -412,7 +404,7 @@ fast_mkconnthing server = do
 								cf x
 								transfer (n - 1)
 							transfer (pending - 1)
-							return ((cf, connt, pending - 1, cnewkill), False)
+							return (Right (cf, connt, pending - 1, cnewkill), False)
 						case (was_last_request, what) of
 							(True, _) -> do
 -- 								doHTTPLOWLEVEL_DEBUG $ "last request, refreshing connection"
@@ -423,7 +415,7 @@ fast_mkconnthing server = do
 									kill_it
 								_ -> do
 									trefreshed <- getCurrentTime
-									return ((cf_stored, trefreshed, pending - 1, thiskillfunc), True)
+									return (Right (cf_stored, trefreshed, pending - 1, thiskillfunc), True)
 							_ -> do
 								putStrLn $ "WARNING: no headers from server, closing connection"
 								kill_it) `catch` (\e -> do
@@ -453,27 +445,31 @@ fast_mkconnthing server = do
 		let ckill = do
 			writeChan rchan Nothing
 		return (cfunc, tnow, 0, ckill)
-	forkIO_ "HTTPlow:connmv" $ putMVar connmv =<< open_conn
+	putMVar connmv =<< (try $ throwIO $ InternalError $ "Not connected to server")
 
 	connchan <- newChan
-	forkIO_ "HTTPlow:connchan" $ forever $ ((do
-		x <- (readChan connchan) `catch` (\e -> do
-			doHTTPLOWLEVEL_DEBUGexception $ "connchan read exception: " ++ (show (e :: SomeException))
-			throwIO e)
+	forkIO_ "HTTPlow:connchan" $ forever $ handle (\e -> doHTTPLOWLEVEL_DEBUGexception $ "connchan error: " ++ (show (e :: SomeException))) $ do
+		x <- readChan connchan
 
 		-- TODO: unify open_conn and transfer? should be 0 pending here
-		modifyMVar_ connmv $ \(cf_stored, t_stored, pending, oldkill) -> do
-			tnow <- getCurrentTime
-			(cf, t, p, k) <- if diffUTCTime tnow t_stored <= 60.0 -- Reuse connection if it is less than a minute old
-				then do
--- 					doHTTPLOWLEVEL_DEBUG $ "not-stale, keeping connection | " ++ show (tnow, t_stored, diffUTCTime tnow t_stored)
-					return (cf_stored, t_stored, pending, oldkill)
-				else do
---					putStrLn $ "DEBUG: stale, making new connection | " ++ show (tnow, t_stored, diffUTCTime tnow t_stored)
-					oldkill
-					open_conn -- TODO: need to handle this failing!!!
-			cf x
-			return (cf, t, p + 1, k)) `catch` (\e -> doHTTPLOWLEVEL_DEBUGexception $ "connchan error: " ++ (show (e :: SomeException))))
+		modifyMVar_ connmv $ \z -> do
+			what <- case z of
+				Right (_cf_stored, t_stored, _pending, oldkill) -> do
+					tnow <- getCurrentTime
+					if diffUTCTime tnow t_stored <= 60.0 -- Reuse connection if it is less than a minute old
+						then return z
+						else try $ do
+							oldkill
+							open_conn
+				Left _ -> try $ open_conn
+			case what of
+				Right (cf, t, p, k) -> do
+					cf x
+					return $ Right (cf, t, p + 1, k)
+				Left err -> do
+					let (_absuri, _rq, mvdest, _ref) = x
+					putMVar mvdest $ Left (err :: SomeException)
+					return $ Left err
 
 	return connchan :: IO ConnChanType
 

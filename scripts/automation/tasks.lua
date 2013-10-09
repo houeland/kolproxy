@@ -148,7 +148,7 @@ function get_automation_tasks(script, cached_stuff)
 	function t.make_digital_key()
 		if not have_item("continuum transfunctioner") then
 			return {
-				message = "pick up continuum transfunctioner",
+				message = "pick up continuum transfunctioner (to make digital key)",
 				nobuffing = true,
 				action = function()
 					set_result(pick_up_continuum_transfunctioner())
@@ -183,7 +183,7 @@ function get_automation_tasks(script, cached_stuff)
 		if pixels < 30 then
 			if not have_item("continuum transfunctioner") then
 				return {
-					message = "pick up continuum transfunctioner",
+					message = "pick up continuum transfunctioner (to do 8-bit realm)",
 					action = function()
 						set_result(pick_up_continuum_transfunctioner())
 						did_action = have_item("continuum transfunctioner")

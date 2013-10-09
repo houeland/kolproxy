@@ -52,16 +52,6 @@ end
 
 local script = nil
 
-local function maybe_pull_item(name, amount)
-	amount = amount or 1
-	if count(name) < amount then
-		async_post_page("/storage.php", { action = "pull", whichitem1 = get_itemid(name), howmany1 = amount - count(name), pwd = session.pwd, ajax = 1 })
-		if amount > 1 and count(name) < amount then
-			critical("Couldn't pull " .. tostring(amount) .. "x " .. tostring(name))
-		end
-	end
-end
-
 local function automate_dis_zone(zoneid)
 	local noncombatchoices = {
 		["Foreshadowing Demon!"] = "Head towards all the trouble",

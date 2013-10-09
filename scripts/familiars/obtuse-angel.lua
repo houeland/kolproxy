@@ -39,7 +39,7 @@ end)
 
 add_processor("/fight.php", function()
 	if text:contains("shot with a love arrow earlier") then
-		day["obtuse angel romantic arrow monsters remaining"] = tonumber(day["obtuse angel romantic arrow monsters remaining"]) - 1
+		day["obtuse angel romantic arrow monsters remaining"] = (tonumber(day["obtuse angel romantic arrow monsters remaining"]) or 0) - 1
 		day["obtuse angel romantic arrow next monster start"] = turnsthisrun() + 15
 	end
 end)

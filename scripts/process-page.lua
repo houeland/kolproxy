@@ -63,7 +63,7 @@ do
 			return true
 		elseif adventure_title == x or adventure_result == x then
 			return true
-		elseif text:contains(">There once was a bleary-eyed cyclops<") and x == "The Bleary-Eyed Cyclops" then -- WORKAROUND: The page for the cyclops eyedrops is weird with no title
+		elseif x == "The Bleary-Eyed Cyclops" and text:contains(">There once was a bleary-eyed cyclops<") then -- WORKAROUND: The page for the cyclops eyedrops is weird with no title
 			return true
 		else
 			return false

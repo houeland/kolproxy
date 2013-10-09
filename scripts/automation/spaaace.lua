@@ -1,13 +1,3 @@
-local function maybe_pull_item(name, amount)
-	amount = amount or 1
-	if count(name) < amount then
-		async_post_page("/storage.php", { action = "pull", whichitem1 = get_itemid(name), howmany1 = amount - count(name), pwd = session.pwd, ajax = 1 })
-		if amount > 1 and count(name) < amount then
-			critical("Couldn't pull " .. tostring(amount) .. "x " .. tostring(name))
-		end
-	end
-end
-
 local function adv_space_zone(zoneid)
 	script.ensure_buffs { "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }
 	script.heal_up()

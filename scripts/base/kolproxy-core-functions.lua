@@ -494,6 +494,13 @@ function run_functions(p, pagetext, run)
 	original_page_text = pagetext
 
 	if p == "/fight.php" then
+	        if newly_started_fight then
+			if monstername() then
+				pagetext = run("start fight:" .. monstername(), pagetext)
+			end
+			pagetext = run("start fight", pagetext)
+	        end
+
 		pagetext = pagetext:gsub([[(<td[^>]-><img src="http://images.kingdomofloathing.com/itemimages/)([^"]+.gif)(" width=30 height=30 alt="[^"]+" title=")([^"]+)("></td><td[^>]->)(.-)(</td></tr>)]], function(pre, itemimage, mid, title, td, msg, post)
 			item_image = itemimage
 			item_name = title

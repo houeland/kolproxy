@@ -205,7 +205,7 @@ end)
 function maybe_pull_item(name, input_amount)
 	local amount = input_amount or 1
 	if count_item(name) < amount then
-		async_post_page("/storage.php", { action = "pull", whichitem1 = get_itemid(name), howmany1 = amount - count(name), pwd = session.pwd, ajax = 1 })
+		pull_storage_item(name, amount - count(name))
 		if input_amount and count_item(name) < input_amount then
 			critical("Couldn't pull " .. tostring(amount) .. "x " .. tostring(name))
 		end

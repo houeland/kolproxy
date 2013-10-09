@@ -458,7 +458,7 @@ add_ascension_assistance(function() return have_item("Knob Goblin encryption key
 end)
 
 function pick_up_continuum_transfunctioner()
-	async_post_page("/forestvillage.php", { action = "mystic" })
+	async_post_page("/place.php", { whichplace = "forestvillage", action = "fv_mystic" })
 	async_get_page("/choice.php", { forceoption = 0 })
 	async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 664, option = 1 })
 	async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 664, option = 1 })
@@ -467,7 +467,7 @@ end
 
 -- Pick up transfunctioner
 add_ascension_assistance(function() return level() >= 2 and not have_item("continuum transfunctioner") end, function()
-	async_post_page("/forestvillage.php", { action = "screwquest" })
+	async_post_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker_quest" })
 	pick_up_continuum_transfunctioner()
 end)
 

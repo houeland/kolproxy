@@ -3501,7 +3501,7 @@ mark m_done
 			end
 			inform "unlock beach (with meatcar)"
 			async_get_page("/forestvillage.php", { place = "untinker" })
-			async_post_page("/forestvillage.php", { action = "screwquest" })
+			async_post_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker_quest" })
 			async_get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_innabox" })
 			async_get_page("/forestvillage.php", { place = "untinker" })
 			local rf = async_get_page("/guild.php", { place = "paco" }) -- TODO: need the topmenu refreshed from this
@@ -3514,7 +3514,7 @@ mark m_done
 	end
 
 	function f.do_crypt()
-		local cyrpt = get_page("/cyrpt.php")
+		local cyrpt = get_page("/crypt.php")
 		if have_item("skeleton bone") and have_item("loose teeth") then
 			meatpaste_items("skeleton bone", "loose teeth")
 		end

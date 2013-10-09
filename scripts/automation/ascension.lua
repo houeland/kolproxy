@@ -3607,7 +3607,7 @@ endwhile
 						script.get_faxbot_fax("Blooper", "blooper")
 					else
 						if not have_item("continuum transfunctioner") then
-							inform "pick up continuum transfunctioner"
+							inform "pick up continuum transfunctioner (for faxed blooper)"
 							set_result(pick_up_continuum_transfunctioner())
 						end
 						inform "fight and sniff blooper"

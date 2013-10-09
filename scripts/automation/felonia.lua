@@ -14,14 +14,14 @@ local felonia_href = setup_turnplaying_script {
 	adventuring = function()
 		advagain = false
 		if quest_text("investigate the Gnolls' bugbear pens") then
-			result, resulturl = get_page("/knoll.php", { place = "mayor" })
+			result, resulturl = get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_mayor" })
 			refresh_quest()
 			advagain = quest_text("find your way to the spooky gravy fairies' barrow")
 		elseif quest_text("but first he needs you to") then
-			result, resulturl = get_page("/knoll.php", { place = "mayor" })
+			result, resulturl = get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_mayor" })
 			refresh_quest()
 			advagain = quest_text("investigate the Spooky Gravy Barrow")
-		elseif quest_text("investigate the Spooky Gravy Barrow") then
+		elseif quest_text("investigate the Spooky Gravy Burrow") then
 			script.want_familiar "Flaming Gravy Fairy"
 			if not have_item("spooky glove") and have_item("small leather glove") and have_item("spooky fairy gravy") then
 				result, result_url = cook_items("small leather glove", "spooky fairy gravy")()
@@ -64,15 +64,10 @@ local felonia_href = setup_turnplaying_script {
 				end
 			end
 		else
-			result, resulturl = get_page("/knoll.php", { place = "mayor" })
+			result, resulturl = get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_mayor" })
 			refresh_quest()
 			advagain = quest_text("investigate the Gnolls' bugbear pens")
 		end
 		__set_turnplaying_result(result, resulturl, advagain)
 	end,
 }
-
-add_printer("/questlog.php", function()
-	if not setting_enabled("enable turnplaying automation") or ascensionstatus() ~= "Aftercore" then return end
-	text = text:gsub("<b>A Bugbear of a Problem</b>", [[%0 <a href="]]..felonia_href { pwd = session.pwd }..[[" style="color:green">{ automate }</a>]])
-end)

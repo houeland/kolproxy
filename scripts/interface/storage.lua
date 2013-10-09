@@ -300,15 +300,6 @@ function repeat_send_form(targeturl, action, howmany, pwd, itemids)
 	end
 end
 
-local function extract_itemdata(itd)
-	local rel = itd:match([[rel=".-"]])
-	local id = tonumber(rel:match("id=([0-9]+)"))
-	local n = tonumber(rel:match("n=([0-9]+)"))
-	local ircmtext = itd:match([[<b class="ircm">(.-)</b>]])
-	local name = ircmtext:match([[<a.->(.-)</a>]]) or ircmtext
-	return name, id, n
-end
-
 local closet_href = add_automation_script("automate-closet", function()
 	local keep_items = {}
 	for _, x in ipairs(aftercore_items_list) do
@@ -334,14 +325,7 @@ add_printer("/closet.php", function()
 end)
 
 function automate_aftercore_pulls()
-	local items = {}
-	for which in table.values { 1, 2, 3 } do
-		local pt, pturl = get_page("/storage.php", { which = which })
-		for itd in pt:gmatch([[<td class="i"[^>]*><table class='item'.-</table></td>]]) do
-			local name, id, n = extract_itemdata(itd)
-			items[name] = id
-		end
-	end
+	local _, items, _ = retrieve_all_item_locations()
 
 	local itemids = {}
 	for _, x in ipairs(aftercore_items_list) do

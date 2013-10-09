@@ -48,6 +48,7 @@ local href = setup_turnplaying_script {
 	dorefresh()
 
 	if scg:match([[How goes your quest to restore the Legendary Epic Weapon]]) or scg:match([[acquire the Legendary Epic Weapon soon]]) or scg:match([[going with that Legendary Epic Weapon]]) then
+		inform "make LEW"
 		result = "make LEW"
 		if quest_text("you must defeat Beelzebozo") then
 			-- TODO: make robust
@@ -93,6 +94,7 @@ local href = setup_turnplaying_script {
 			critical "Failed to make Legendary Epic Weapon."
 		end
 	elseif scg:match([[Have you defeated your Nemesis yet]]) or scg:match([[We need you to defeat your Nemesis]]) or scg:match([[Haven't beat your Nemesis yet]]) then
+		inform "do nemesis cave"
 		result = "do nemesis cave"
 		result, resulturl = get_page("/cave.php")
 

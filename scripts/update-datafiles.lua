@@ -570,7 +570,7 @@ function verify_monsters(data)
 	for xi, x in pairs(data) do
 		for _, y in ipairs(x.Items or {}) do
 			if not processed_datafiles["items"][y.Name] then
-				hardwarn("monster:item does not exist", y.Name, "(from " .. tostring(xi) .. ")")
+				hardwarn([[monsters:item does not exist: "]] .. tostring(y.Name) .. [[" (from ]] .. tostring(xi) .. [[)]])
 			end
 		end
 	end

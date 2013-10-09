@@ -47,6 +47,7 @@ add_printer("/charpane.php", function()
 	end
 end)
 
+local cached_potency = {}
 function retrieve_item_potency(item)
 	if not item then
 		print("WARNING: called retrieve_item_potency(" .. tostring(item) .. ")")
@@ -57,10 +58,13 @@ function retrieve_item_potency(item)
 	if d and d.drunkenness and dn and dn:contains("dusty bottle of") then
 		return d.drunkenness
 	else
-		local descid = item_api_data(get_itemid(item)).descid
-		local pt = get_page("/desc_item.php", { whichitem = descid })
-		local potency = tonumber(pt:match([[>Potency: <b>([0-9]*)</b><]]))
-		return potency
+		local itemid = get_itemid(item)
+		if not cached_potency[itemid] then
+			local descid = item_api_data(itemid).descid
+			local pt = get_page("/desc_item.php", { whichitem = descid })
+			cached_potency[itemid] = tonumber(pt:match([[>Potency: <b>([0-9]*)</b><]]))
+		end
+		return cached_potency[itemid]
 	end
 end
 

@@ -159,9 +159,10 @@ function pull_storage_items(xs)
 	return pf
 end
 
-function freepull_item(name, qty)
-	return async_post_page("/storage.php", { action = "pull", pwd = session.pwd, howmany1 = qty or 1, whichitem1 = get_itemid(name) })
+function pull_storage_item(name, qty)
+	return async_post_page("/storage.php", { pwd = session.pwd, action = "pull", ajax = 1, howmany1 = qty or 1, whichitem1 = get_itemid(name) })
 end
+freepull_item = pull_storage_item
 
 function closet_item(name, qty)
 	return async_get_page("/inventory.php", { action = "closetpush", pwd = session.pwd, qty = qty or 1, whichitem = get_itemid(name), ajax = 1 })
