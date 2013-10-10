@@ -16,22 +16,14 @@ add_processor("/fight.php", function()
 	end
 end)
 
-add_printer("/charpane.php", function()
-	local ttr = tonumber(text:match("var turnsthisrun = ([0-9]+);"))
-	if not ttr then return end
+add_charpane_line(function()
 	local next_bee_turn = ascension["bee turn"]
-	local value = nil
 	if next_bee_turn then
-		local turnmin = next_bee_turn - ttr
-		local turnmax = next_bee_turn + 5 - ttr
+		local turnmin = next_bee_turn - turnsthisrun()
+		local turnmax = next_bee_turn + 5 - turnsthisrun()
 		if turnmax >= 0 then
 			if turnmin < 0 then turnmin = 0 end
-			value = turnmin .. "-" .. turnmax
+			return { name = "Bee", value = turnmin .. " to " .. turnmax }
 		end
-	else
--- 		value = "?"
-	end
-	if value then
-		print_charpane_value { name = "Bee", value = value }
 	end
 end)

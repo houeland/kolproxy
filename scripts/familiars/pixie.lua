@@ -1,12 +1,3 @@
--- add_printer("/charpane.php", function()
--- 	if familiarpicture() == "pictsie" then
--- 		local bonus = string.format("+%.1f%%", fairy_bonus(buffedfamiliarweight()))
--- 		compact = bonus
--- 		normal = bonus .. " items"
--- 		print_charpane_infoline(compact, normal)
--- 	end
--- end)
-
 -- TODO-future: make a pixie choice page thingie
 
 

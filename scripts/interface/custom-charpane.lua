@@ -269,59 +269,6 @@ local function format_hpmp(c, m)
 	end
 end
 
-local function get_srdata(SRtitle)
-	local SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info(turnsthisrun())
-	local value = ""
-	local color = "black"
-	if SRnow then
-		color = "green"
-	end
-	if next(good_numbers) then
-		value = table.concat(good_numbers, ", ")
-	else
-		value = "?"
-	end
-
-	if not lastsemi and not is_first_semi then
-		lastsemi = "?"
-	end
-	
-	local tooltip = ""
-	if table.maxn(all_numbers) > 0 then
-		tooltip = tooltip .. "Fortune cookie numbers: " .. table.concat(all_numbers, ", ")
-	else
-		tooltip = tooltip .. "Fortune cookie numbers: ?"
-	end
-
-	if SRmin and SRmax and SRmax >= 0 then
-		if value == "?" then
-			value = SRmin .. " to " .. SRmax
-		end
-		tooltip = tooltip .. ", range = " .. SRmin .. " to " .. SRmax
-	else
-		if value ~= "?" then
-			value = value .. " ?"
-		end
-		tooltip = tooltip .. ", range = ?"
-	end
-
-	if lastsemi then
-		tooltip = tooltip .. ", last semirare = " .. lastsemi
-	end
-	local bgcolor = "white"
-	local showlast = nil
-	if SRnow then
-		bgcolor = "lightgreen"
-	end
-
-	local srdata = string.format([[%s: <span style="color: %s" title="%s"><b>%s</b></span>]], SRtitle, color, tooltip, value)
-	if SRnow and lastsemi then
-		srdata = srdata .. string.format([[<br>Last SR: %s]], lastsemi)
-	end
-
-	return bgcolor, srdata
-end
-
 local function make_optimize_diet_href()
 	return make_href("/kolproxy-frame-page", { url = "http://www.houeland.com" .. make_href("/kol/diets", {
 		foodspace = math.max(0, estimate_max_fullness() - fullness()),
@@ -854,38 +801,41 @@ function full_charpane_buff_lines(lines)
 	end
 end
 
+function compact_charpane_infolines(lines)
+	for _, x in ipairs(run_charpane_line_functions()) do
+		local name = x.compactname or x.name or "{nil}"
+		local value = x.compactvalue or x.value or "{nil}"
+		local ct_pre = name
+		local ct_value = "<b>" .. value .. "</b>"
+		local color = x.color or "black"
+		if x.link then
+			ct_pre = [[<a target="mainpane" href="]] .. x.link .. [[" style="color:]] .. color .. [[">]] .. name .. [[</a>]]
+			if not x.link_name_only then
+				ct_value = [[<a target="mainpane" href="]] .. x.link .. [[" style="color:]] .. color .. [["><b>]] .. value .. [[</b></a>]]
+			end
+		end
+		if x.tooltip then
+			table.insert(lines, string.format([[<span style="color:%s" title="%s">%s: %s</span><br>]], color, x.tooltip, ct_pre, ct_value))
+		else
+			table.insert(lines, string.format([[<span style="color:%s">%s: %s</span><br>]], color, ct_pre, ct_value))
+		end
+	end
+end
+
 add_interceptor("/charpane.php", function()
 	if not setting_enabled("use custom kolproxy charpane") then return end
 	if not pcall(turnsthisrun) then return end -- in afterlife
 	if kolproxy_custom_charpane_mode() ~= "compact" then return end
 	local extra_js, fams = get_familiar_grid()
 
-	local bgcolor, srdata = get_srdata("SR")
-
 	local lines = {}
 	compact_charpane_level_lines(lines)
 	compact_charpane_hpmp_lines(lines)
 	compact_charpane_zone_lines(lines)
 
-	table.insert(lines, "<!-- kolproxy charpane text area --><br>")
-
-	table.insert(lines, srdata .. "<br>")
-
-	local next_bee_turn = ascension["bee turn"]
-	local bee_value = nil
-	if next_bee_turn then
-		local turnmin = next_bee_turn - turnsthisrun()
-		local turnmax = next_bee_turn + 5 - turnsthisrun()
-		if turnmax >= 0 then
-			if turnmin < 0 then turnmin = 0 end
-			bee_value = turnmin .. "-" .. turnmax
-		end
-	else
--- 		bee_value = "?"
-	end
-	if bee_value then
-		table.insert(lines, string.format([[Bee: %s<br>]], bee_value))
-	end
+	table.insert(lines, "<br>")
+	table.insert(lines, "<!-- kolproxy charpane text area -->")
+	compact_charpane_infolines(lines)
 
 	for _, x in ipairs(ascension["turn counters"] or {}) do
 		local turns = x.turn + x.length - turnsthisrun()
@@ -918,7 +868,6 @@ add_interceptor("/charpane.php", function()
 	<style type="text/css">
 body {
 	font-family: Arial, Helvetica, sans-serif;
-	background-color: ]] .. bgcolor .. [[;
 	color: black;
 	font-size: 0.8em;
 }
@@ -956,13 +905,10 @@ add_interceptor("/charpane.php", function()
 
 	local extra_js, fams = get_familiar_grid()
 
-	local bgcolor, srdata = get_srdata("Semirare")
-
 	full_charpane_level_lines(lines)
 	full_charpane_hpmp_lines(lines)
 
 	table.insert(lines, string.format([[<center><font size="2">Turns played: <b>%s</b> (day %s)</font></center>]], turnsthisrun(), daysthisrun()))
-	table.insert(lines, [[<center><font size="2">]]..srdata..[[</font></center>]])
 	table.insert(lines, "<!-- kolproxy charpane text area -->")
 
 	table.insert(lines, "<br>")
@@ -998,7 +944,6 @@ add_interceptor("/charpane.php", function()
 	<style type="text/css">
 body {
 	font-family: Arial, Helvetica, sans-serif;
-	background-color: ]] .. bgcolor .. [[;
 	color: black;
 }
 td {

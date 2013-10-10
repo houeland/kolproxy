@@ -6,50 +6,10 @@ add_choice_text("Finger-Lickin'... Death.", { -- choice adventure number: 4
 
 -- shore
 
-local shore_tower_items = {
-	["stick of dynamite"] = "Distant Lands Dude Ranch Adventure",
-	["tropical orchid"] = "Tropical Paradise Island Getaway",
-	["barbed-wire fence"] = "Large Donkey Mountain Ski Resort",
-}
-
-add_printer("/shore.php", function()
-	for from, to in pairs(session["zone.lair.itemsneeded"] or {}) do
-		if shore_tower_items[to] then
-			text = text:gsub("(<td valign=center>)("..shore_tower_items[to]..")(</td>)", "%1<b>%2</b>%3")
-		end
-	end
-end)
-
-add_processor("/shore.php", function()
-	if text:contains([[<b>Vacation Results:</b>]]) then
-		local trips_text = text:match("You have taken (.-) trip")
-		local found_combat_item = false
-		for x, _ in pairs(shore_tower_items) do
-			if text:contains(x) then
-				found_combat_item = true
-			end
-		end
-		if trips_text == "one" or found_combat_item then
-			ascension["shore turn"] = turnsthisrun() + 35
-		end
-	end
-end)
-
 add_ascension_warning("/shore.php", function()
 	if params.whichtrip then
 		if level() >= 11 and not have_item("forged identification documents") and not have_item("your father's MacGuffin diary") then
 			return "You don't have the forged identification documents.", "shoring without forged identification documents"
-		end
-	end
-end)
-
-add_printer("/charpane.php", function()
-	local shore_next_combat_item_turn = ascension["shore turn"]
-	if shore_next_combat_item_turn then
-		local turns = shore_next_combat_item_turn - turnsthisrun()
-		if turns >= 0 then
-			print_charpane_value { name = "Shore", value = turns }
-			value = turns
 		end
 	end
 end)

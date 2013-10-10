@@ -376,7 +376,7 @@ add_processor("use item: dance card", function()
 	end
 end)
 
-add_printer("/charpane.php", function()
+add_charpane_line(function()
 	local dance_card_turn = tonumber(ascension["dance card turn"])
 	if dance_card_turn then
 		local turnsleft = dance_card_turn - turnsthisrun()
@@ -387,7 +387,7 @@ add_printer("/charpane.php", function()
 				color = "green"
 				link = "adventure.php?snarfblat=109"
 			end
-			print_charpane_value({ name = "Dance card", value = turnsleft, color = color, link = link })
+			return { name = "Dance card", value = turnsleft, color = color, link = link }
 		end
 	end
 end)
@@ -416,12 +416,12 @@ add_processor("/choice.php", function()
 	end
 end)
 
-add_printer("/charpane.php", function()
+add_charpane_line(function()
 	local banish_turn = ascension["zone.gallery.out in the garden banish"]
 	if banish_turn then
 		local turns = banish_turn - turnsthisrun()
 		if turns > 0 then
-			print_charpane_value { name = "Garden", value = turns }
+			return { name = "Garden", value = turns }
 		end
 	end
 end)

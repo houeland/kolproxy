@@ -45,7 +45,8 @@ add_processor("/inv_eat.php", function()
 	ascension["fortune cookie numbers"] = SRnumberlist
 end)
 
-function get_semirare_info(turn)
+function get_semirare_info()
+	local turn = turnsthisrun()
 	local lastturn = tonumber((ascension["last semirare"] or {}).turn)
 	local is_first_semi = false
 	local SRmin = nil
@@ -94,40 +95,24 @@ function get_semirare_info(turn)
 	return SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi
 end
 
-add_printer("/charpane.php", function()
-	local ttr = tonumber(text:match("var turnsthisrun = ([0-9]+);"))
-	if not ttr then return end
-	if text:contains("inf_small.gif") then return end
+add_charpane_line(function()
+	local SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info()
 
-	local SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info(ttr)
+	local value = good_numbers[1] and table.concat(good_numbers, ", ") or "?"
+	local color = SRnow and "green" or "black"
 
-	value = ""
-	color = nil
-	if SRnow then
-		color = "green"
-	end
-
-	if next(good_numbers) then
-		value = good_numbers[1]
-		for x, _ in pairs(good_numbers) do
-			if x > 1 then
-				value = value .. " +"
-			end
+	for x, _ in ipairs(good_numbers) do
+		if x > 1 then
+			value = value .. " +"
 		end
-	else
-		value = "?"
 	end
 
-	if (not lastsemi) and (not is_first_semi) then
+	if not lastsemi and not is_first_semi then
 		lastsemi = "?"
 	end
 
-	tooltip = ""
-	if table.maxn(all_numbers) > 0 then
-		tooltip = tooltip .. "Fortune cookie numbers: " .. table.concat(all_numbers, ", ")
-	else
-		tooltip = tooltip .. "Fortune cookie numbers: ?"
-	end
+	local tooltip = string.format("Fortune cookie numbers: %s", all_numbers[1] and table.concat(all_numbers, ", ") or "?")
+
 	if SRmin and SRmax and SRmax >= 0 then
 		if value == "?" then
 			value = SRmin .. " to " .. SRmax
@@ -144,21 +129,21 @@ add_printer("/charpane.php", function()
 		tooltip = tooltip .. ", last semirare = " .. lastsemi
 	end
 
+	local lines = {}
+
 	normalname = "Semirare"
-	compactname = "SR"
+	compactname = "Semirare"
 	if ascensionpath("Oxygenarian") then
 		normalname = normalname .. " (Oxy)"
 		compactname = compactname .. " (O)"
 		tooltip = tooltip .. ", on Oxygenarian path"
 	end
-	print_charpane_value({ normalname = normalname, compactname = compactname, value = value, tooltip = tooltip, color = color })
+	table.insert(lines, { normalname = normalname, compactname = compactname, value = value, tooltip = tooltip, color = color })
 
-	if SRnow then
-		text = text:gsub("<body bgcolor=white", [[<body style="background-color: lightgreen"]])
-		if lastsemi then
-			print_charpane_value { name = "Last SR", value = lastsemi }
-		end
+	if SRnow and lastsemi then
+		table.insert(lines, { name = "Last SR", value = lastsemi })
 	end
+	return lines
 end)
 
 add_always_adventure_warning(function()

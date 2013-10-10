@@ -10,6 +10,28 @@ function reset_charpane_values()
 	fam_values = {}
 end
 
+local charpane_line_functions = {}
+function add_charpane_line(f)
+	table.insert(charpane_line_functions, f)
+end
+
+function run_charpane_line_functions()
+	local values = {}
+	for _, f in ipairs(charpane_line_functions) do
+		local lines = f()
+		if not lines then
+			lines = {}
+		elseif lines.value then
+			lines = { lines }
+		end
+		for _, x in ipairs(lines) do
+			x.__charpane_line_function = true
+			table.insert(values, x)
+		end
+	end
+	return values
+end
+
 function print_charpane_value(value)
 	table.insert(values, value)
 end
@@ -93,13 +115,15 @@ function print_charpane_lines(text)
 				end
 			end
 			if kolproxy_custom_charpane_mode == "compact" then
-				local ct = ct_pre .. ": " .. ct_value
-				if y["tooltip"] then
-					ct = [[<span title="]] .. y["tooltip"] .. [["]] .. style .. ">" .. ct .. "</span>"
-				else
-					ct = "<span" .. style .. ">" .. ct .. "</span>"
+				if not y.__charpane_line_function then
+					local ct = ct_pre .. ": " .. ct_value
+					if y["tooltip"] then
+						ct = [[<span title="]] .. y["tooltip"] .. [["]] .. style .. ">" .. ct .. "</span>"
+					else
+						ct = "<span" .. style .. ">" .. ct .. "</span>"
+					end
+					text = text:gsub("(<!%-%- kolproxy charpane text area %-%->)", function(one) return "<br>" .. ct .. one end)
 				end
-				text = text:gsub("(<!%-%- kolproxy charpane text area %-%->)", function(one) return "<br>" .. ct .. one end)
 			else
 				local tr = [[<tr]] .. style .. [[><td align=right>]] .. ct_pre .. [[:</td><td>]] .. ct_value .. [[</td></tr>]]
 				if y["tooltip"] then
