@@ -94,6 +94,15 @@ function maximize_skill_bonuses(scoref)
 end
 
 modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", function()
+	local resultpt = ""
+	if params.equip_itemname and params.equip_slot then
+		resultpt = equip_item(params.equip_itemname, params.equip_slot)()
+	elseif params.cast_skillname then
+		resultpt = cast_skill(params.cast_skillname)()
+	elseif params.use_itemname then
+		resultpt = use_item(params.use_itemname)()
+	end
+
 	local bonuses = {
 		"Monsters will be more attracted to you",
 		"Monsters will be less attracted to you",
@@ -153,7 +162,7 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 			if equipment()[where] == itemid then
 				table.insert(equipmentlines, string.format([[<tr style="color: gray"><td>%s</td><td>%s (%+d)</td></tr>]], slot, item.name, item.score))
 			else
-				table.insert(equipmentlines, string.format([[<tr style="color: green"><td>%s</td><td><a href="javascript:kolproxy_equip_itemid(%d, '%s')" style="color: green">%s</a> (%+d)</td></tr>]], slot, itemid, where, item.name, item.score))
+				table.insert(equipmentlines, string.format([[<tr style="color: green"><td>%s</td><td><a href="%s" style="color: green">%s</a> (%+d)</td></tr>]], slot, modifier_maximizer_href { pwd = session.pwd, whichbonus = params.whichbonus, equip_itemname = item.name, equip_slot = where }, item.name, item.score))
 			end
 		end
 		if slot == "accessory" then
@@ -176,7 +185,7 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 			if have_buff(x.effect) then
 				table.insert(bufflines, string.format([[<tr style="color: gray"><td>%s</td><td>%s (%+d)</td></tr>]], x.name, x.effect, x.score))
 			else
-				table.insert(bufflines, string.format([[<tr style="color: green"><td>%s</td><td>%s (%+d)</td></tr>]], x.name, x.effect, x.score))
+				table.insert(bufflines, string.format([[<tr style="color: green"><td><a href="%s" style="color: green">%s</a></td><td>%s (%+d)</td></tr>]], modifier_maximizer_href { pwd = session.pwd, whichbonus = params.whichbonus, cast_skillname = x.name }, x.name, x.effect, x.score))
 			end
 		end
 	end
@@ -188,7 +197,7 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 			if have_buff(x.effect) then
 				table.insert(bufflines, string.format([[<tr style="color: gray"><td>%s</td><td>%s (%+d)</td></tr>]], x.name, x.effect, x.score))
 			else
-				table.insert(bufflines, string.format([[<tr style="color: green"><td>%s</td><td>%s (%+d)</td></tr>]], x.name, x.effect, x.score))
+				table.insert(bufflines, string.format([[<tr style="color: green"><td><a href="%s" style="color: green">%s</a></td><td>%s (%+d)</td></tr>]], modifier_maximizer_href { pwd = session.pwd, whichbonus = params.whichbonus, use_itemname = x.name }, x.name, x.effect, x.score))
 			end
 		end
 	end
@@ -204,42 +213,6 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 -- TODO: support difficult slots: acc1-3 => 1-3, offhand???
 -- TODO: support casting buffs
 -- TODO: support using items
-	local jscode = [[
-<script language=Javascript src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
-<script language=Javascript>
-function kolproxy_equip_itemid(itemid, slot) {
-	$.ajax({
-		type: 'GET',
-		url: "/inv_equip.php?action=equip&whichitem=" + itemid + "&slot=" + slot + "&ajax=1&pwd=]] .. session.pwd .. [[",
-		cache: false,
-		global: false,
-		success: function(out) {
-			if (out.match(/no\|/)) {
-				var parts = out.split(/\|/)
-				alert("Error equipping item: " + parts[1] + ".")
-				return
-			}
-			var $eff = $(top.mainpane.document).find('#effdiv');
-			if ($eff.length == 0) {
-				var d = top.mainpane.document.createElement('DIV');
-				d.id = 'effdiv';
-				var b = top.mainpane.document.body;
-				if ($('#content_').length > 0) {
-					b = $('#content_ div:first')[0];
-				}
-				b.insertBefore(d, b.firstChild);
-				$eff = $(d);
-			}
-			$eff.find('a[name="effdivtop"]').remove().end()
-				.prepend('<a name="effdivtop"></a><center>' + out + '</center>').css('display','block');
-			if (!window.dontscroll || (window.dontscroll && dontscroll==0)) {
-				top.mainpane.document.location = top.mainpane.document.location + "#effdivtop";
-			}
-		}
-	})
-}
-</script>
-]]
 
-	return [[<html style="margin: 0px; padding: 0px;"><head>]] .. jscode .. [[</head><body style="margin: 0px; padding: 0px;">]] .. contents .. [[</body></html>]], requestpath
+	return [[<html style="margin: 0px; padding: 0px;"><head><script language=Javascript src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script></head><body style="margin: 0px; padding: 0px;">]] .. resultpt .. contents .. [[</body></html>]], requestpath
 end)
