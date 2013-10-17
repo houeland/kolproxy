@@ -208,15 +208,28 @@ array_tbl_to_jsvalue l = do
 		if isempty
 			then do
 				Lua.pop l 1
-				return initlist
+				return (n - 1, initlist)
 			else do
 				v <- lua_to_jsvalue l
-				get_more (n + 1) (initlist ++ [v])
-	JSArray <$> get_more 1 []
+				get_more (n + 1) (v:initlist)
+	(arraylen, valuelist) <- get_more 1 []
+	let array_recur = do
+		nonempty <- Lua.next l (-2)
+		when nonempty $ do
+			t <- Lua.ltype l (-2)
+			case t of
+				Lua.TNUMBER -> return ()
+				_ -> failLua ("JSON array keys must be integers, got type: " ++ show t)
+			k <- Lua.tointeger l (-2)
+			Lua.pop l 1
+			when ((k < 1) || (k > arraylen)) $ failLua ("Non-sequential JSON array key: " ++ show k)
+			array_recur
+	Lua.pushnil l
+	array_recur
+	return $ JSArray $ reverse $ valuelist
 
 stringobj_tbl_to_jsvalue l = do
-	Lua.pushnil l
-	let recur initlist = do
+	let strobj_recur curmap = do
 		nonempty <- Lua.next l (-2)
 		if nonempty
 			then do
@@ -226,9 +239,11 @@ stringobj_tbl_to_jsvalue l = do
 					_ -> failLua ("JSON object keys must be strings, got type: " ++ show t)
 				k <- Lua.tostring l (-2)
 				v <- lua_to_jsvalue l
-				recur $ initlist ++ [(k, v)]
-			else return initlist
-	JSObject <$> toJSObject <$> recur []
+				strobj_recur $ Data.Map.insert k v curmap
+			else return curmap
+	Lua.pushnil l
+	objmap <- strobj_recur Data.Map.empty
+	return $ JSObject $ toJSObject $ Data.Map.assocs $ objmap
 
 lua_to_jsvalue l = do
 	t <- Lua.ltype l (-1)
@@ -239,14 +254,7 @@ lua_to_jsvalue l = do
 			isempty1idx <- Lua.isnoneornil l (-1)
 			Lua.pop l 1
 			if isempty1idx
-				then do
-					Lua.pushnil l
-					nonempty <- Lua.next l (-2)
-					if nonempty
-						then do
-							Lua.pop l 2
-							stringobj_tbl_to_jsvalue l
-						else array_tbl_to_jsvalue l
+				then stringobj_tbl_to_jsvalue l
 				else array_tbl_to_jsvalue l
 		Lua.TSTRING -> JSString <$> toJSString <$> Lua.tostring l (-1)
 		Lua.TNUMBER -> JSRational False <$> toRational <$> Lua.tonumber l (-1)
