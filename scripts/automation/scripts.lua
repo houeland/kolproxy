@@ -793,7 +793,7 @@ function get_automation_scripts(cached_stuff)
 			if not have_item("tobiko marble soda") then
 				script.ensure_mp(5)
 				cast_skill("Summon Alice's Army Cards")
-				async_get_page("/forestvillage.php")
+				async_get_page("/place.php", { whichplace = "forestvillage" })
 				async_get_page("/gamestore.php")
 				async_get_page("/gamestore.php", { place = "cashier" })
 				async_post_page("/gamestore.php", { action = "buysnack", whichsnack = get_itemid("tobiko marble soda") })
@@ -2928,32 +2928,14 @@ endif
 		end
 	end
 
-	function f.get_shore_trips()
-		local pt, pturl = get_page("/shore.php")
-		local trips = pt:match("You have taken (.-) trip")
-		if trips == "no" then
-			trips = 0
-		elseif trips == "one" then
-			trips = 1
-		else
-			trips = tonumber(trips)
-		end
-		if not trips then
-			critical "Could not determine number of shore trips taken"
-		end
-		return trips
-	end
-
 	function f.get_dinghy()
-		cached_stuff.completed_shore_trips = nil
 		inform "make dingy dinghy"
+		stop("Make dingy dinghy")
 		if not have_item("dinghy plans") then
 			inform "shore for dinghy plans"
-			local trips = f.get_shore_trips()
 			local function do_trip(tripid)
-				result, resulturl = post_page("/shore.php", { pwd = get_pwd(), whichtrip = tripid })
-				local new_trips = f.get_shore_trips()
-				did_action = (new_trips > trips)
+				-- TODO
+				did_action = false
 			end
 			local shore_tower_items = {
 				["stick of dynamite"] = 1,
@@ -3500,10 +3482,7 @@ mark m_done
 				critical "Failed to build bitchin' meatcar"
 			end
 			inform "unlock beach (with meatcar)"
-			async_get_page("/forestvillage.php", { place = "untinker" })
-			async_post_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker_quest" })
-			async_get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_innabox" })
-			async_get_page("/forestvillage.php", { place = "untinker" })
+			do_degrassi_untinker_quest()
 			local rf = async_get_page("/guild.php", { place = "paco" }) -- TODO: need the topmenu refreshed from this
 			use_item("Degrassi Knoll shopping list")
 			local b = get_page("/place.php", { whichplace = "desertbeach" })
@@ -3771,7 +3750,6 @@ endif
 
 	function f.get_dod_wand()
 		-- TODO: don't get teleportitis that overlaps with SR
-		-- do meatcar/beach/shore
 		local dapt = get_page("/da.php")
 		if dapt:contains("The Enormous Greater-Than Sign") then
 			if advs() < 20 then
@@ -4028,7 +4006,11 @@ endif
 				if have_item("ten-leaf clover") or have_item("disassembled clover") then
 					did_action = true
 				else
-					stop "No clover for ultrahydrated"
+					--stop "No clover for ultrahydrated"
+					result, resulturl, advagain = autoadventure { zoneid = 122, ignorewarnings = true }
+					if have_buff("Ultrahydrated") or get_result():contains("You acquire an item") then
+						did_action = advagain
+					end
 				end
 			end
 		elseif quest_text("managed to stumble upon a hidden oasis") then
@@ -4481,4 +4463,12 @@ function get_faxbot_command(monstername)
 			end
 		end
 	end
+end
+
+function do_degrassi_untinker_quest()
+	async_get_page("/place.php", { whichplace = "forestvillage" })
+	async_get_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker_quest" })
+	async_post_page("/place.php", { whichplace = "forestvillage", preaction = "screwquest", action = "fv_untinker_quest" })
+	async_get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_innabox" })
+	async_get_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker" })
 end

@@ -737,22 +737,6 @@ endif
 	}
 
 	add_task {
-		when = want_shore() and
-			not unlocked_island() and
-			unlocked_beach() and
-			not cached_stuff.completed_shore_trips,
-		task = {
-			message = "check shore trips",
-			nobuffing = true,
-			action = function()
-				cached_stuff.completed_shore_trips = script.get_shore_trips()
-				print("  shore trips taken so far:", cached_stuff.completed_shore_trips)
-				did_action = cached_stuff.completed_shore_trips
-			end
-		}
-	}
-
-	add_task {
 		when = council_text:contains("visit the Toot Oriole"),
 		task = {
 			message = "visit the toot oriole",
@@ -2243,7 +2227,6 @@ endif
 	add_task {
 		prereq = want_shore() and
 			challenge == "boris" and
-			((cached_stuff.completed_shore_trips or 0) >= 2 or (tonumber(ascension["shore turn"]) and tonumber(ascension["shore turn"]) < turnsthisrun())) and
 			not unlocked_island() and
 			turns_to_next_sr >= 5 and
 			(have("Clancy's lute") or clancy_instrumentid() == 3),
@@ -2606,7 +2589,7 @@ endif
 			task = {
 				message = "get DD key",
 				action = function()
-					stop "TODO: get DD key day 1, and shore"
+					stop "TODO: get DD key day 1"
 				end
 			}
 		}
@@ -3845,32 +3828,6 @@ endif
 		}
 	}
 
-	add_task {
-		prereq = want_shore() and
-			unlocked_beach() and
-			not unlocked_island() and
-			not have_item("dinghy plans") and
-			(cached_stuff.completed_shore_trips or 0) < 1 and
-			turns_to_next_sr >= 5 and
-			meat() >= 1000,
-		f = function()
-			inform "shoring initially"
-			local real_trips = script.get_shore_trips()
-			if real_trips ~= 0 then
-				set_result(async_get_page("/shore.php"))
-				critical "Unexpected number of shore trips taken"
-			end
-			cached_stuff.completed_shore_trips = nil
-			set_result(async_post_page("/shore.php", { pwd = get_pwd(), whichtrip = 1 }))
-			local new_trips = script.get_shore_trips()
-			if new_trips == 1 then
-				did_action = true
-			else
-				critical "Failed to take a shore trip"
-			end
-		end,
-	}
-
 	-- TODO: unless in fist and bonerdagon is up
 	-- TODO: don't need no-trail for all of crypt, just niche
 	add_task {
@@ -4052,7 +4009,6 @@ endif
 		message = "trapper quest",
 	}
 
-	-- TODO: wait until shore counter is up
 	add_task {
 		prereq = want_shore() and
 			not unlocked_island() and

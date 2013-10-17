@@ -2,6 +2,7 @@ loadfile("scripts/base/base-lua-functions.lua")()
 loadfile("scripts/base/kolproxy-core-functions.lua")()
 
 local pwd = nil
+local sleep = kolproxycore_sleep
 
 function send_message(playerid, msg)
 	get_page("/submitnewchat.php", { graf = "/msg " .. playerid .. " " .. msg, pwd = pwd })

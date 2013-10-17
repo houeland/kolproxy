@@ -36,7 +36,9 @@ data SessionDataType = SessionDataType {
 	doStateAction_ :: RefType -> (Database.SQLite3Modded.Database -> IO ()) -> IO (),
 	stateData_ :: IORef (Maybe (DiscerningStateIdentifier, StateType)),
 	luaInstances_ :: IORef (Data.Map.Map (String, LuaScriptType) (MVar Scripting.LuaModded.LuaState)),
-	lastStoredState_ :: IORef (Maybe String)
+	lastStoredState_ :: IORef (Maybe String),
+	storedStateId_ :: IORef (Integer, Integer),
+	cachedActionbar_ :: IORef (Maybe String)
 }
 
 type ConnChanActionType = (Either SomeException (URI, Data.ByteString.ByteString, [(String, String)], Integer, Network.HTTP.Response Data.ByteString.ByteString))

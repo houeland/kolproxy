@@ -55,7 +55,7 @@ module Scripting.LuaModded
     -- * lua_* functions
     close,
     getglobal,
-    gettable,
+    --gettable,
     gettop,
     isboolean,
     isnoneornil,
@@ -73,6 +73,7 @@ module Scripting.LuaModded
     pushnumber,
     pushstring,
     pushbytestring,
+    rawget,
     remove,
     setglobal,
     settable,
@@ -526,8 +527,8 @@ _getmetatable :: LuaState -> Int -> IO Bool
 _getmetatable l n = liftM (/=0) (c_lua_getmetatable l (fromIntegral n))
 
 -- | See @lua_gettable@ in Lua Reference Manual.
-gettable :: LuaState -> Int -> IO ()
-gettable l n = c_lua_gettable l (fromIntegral n)
+_gettable :: LuaState -> Int -> IO ()
+_gettable l n = c_lua_gettable l (fromIntegral n)
 
 -- | See @lua_gettop@ in Lua Reference Manual.
 gettop :: LuaState -> IO Int
@@ -643,8 +644,8 @@ _rawequal :: LuaState -> Int -> Int -> IO Bool
 _rawequal l n m = liftM (/=0) (c_lua_rawequal l (fromIntegral n) (fromIntegral m))
 
 -- | See @lua_rawget@ in Lua Reference Manual.
-_rawget :: LuaState -> Int -> IO ()
-_rawget l n = c_lua_rawget l (fromIntegral n)
+rawget :: LuaState -> Int -> IO ()
+rawget l n = c_lua_rawget l (fromIntegral n)
 
 -- | See @lua_rawgeti@ in Lua Reference Manual.
 _rawgeti :: LuaState -> Int -> Int -> IO ()

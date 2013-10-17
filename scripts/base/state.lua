@@ -15,14 +15,20 @@ function set_character_state(name, value) error("No set_character_state from Lua
 
 
 local function setup_state_table(getf, setf)
-	-- TODO: Encode/decode JSON instead
 	local tbl = {}
 	setmetatable(tbl, { __index = function(t, k)
 		local function parse_value(v)
 			if v == "" then return nil end
 			local pref = v:sub(1, 1)
-			if pref == "[" then
-				return str_to_table(v)
+			if pref == "{" then
+				return json_to_table(v)
+			elseif pref == "[" then
+				local pref2 = v:sub(2, 2)
+				if pref2 == "(" then
+					return str_to_table(v)
+				else
+					return json_to_table(v)
+				end
 			elseif v == "::BOOL:true::" then
 				return true
 			elseif v == "::BOOL:false::" then
@@ -32,17 +38,15 @@ local function setup_state_table(getf, setf)
 			end
 		end
 		local v = getf(k)
--- 		print("getting state[" .. tostring(k) .. "]: " .. tostring(v))
 		local p = parse_value(v)
--- 		print("getting state[" .. tostring(k) .. "] => " .. tostring(p))
 		return p
 	end, __newindex = function(t, k, v)
--- 		print("setting state[" .. tostring(k) .. "]: " .. tostring(v))
 		local p = nil
 		if v == nil then
 			p = ""
 		elseif type(v) == "table" then
 			p = table_to_str(v)
+--			p = table_to_json(v)
 		elseif type(v) == "number" then
 			p = tostring(v)
 		elseif type(v) == "string" then
@@ -52,7 +56,6 @@ local function setup_state_table(getf, setf)
 		else
 			error("Unknown value " .. tostring(v) .. " of type " .. type(v))
 		end
--- 		print("setting state[" .. tostring(k) .. "] => " .. tostring(p))
 		setf(k, p)
 	end})
 	return tbl

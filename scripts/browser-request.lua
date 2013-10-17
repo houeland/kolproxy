@@ -1,3 +1,5 @@
+function kolproxy_log_time_interval(msg, f) return f() end
+
 local function load_wrapped_function(path)
 	local wrapped_env = {}
 	function wrapped_env.loadfile(path)
@@ -45,7 +47,12 @@ local function run_wrapped_function_internal(f_env)
 	local function submit_original_request()
 		local tbl = parse_request_param_string(f_env.raw_input_params)
 		if not tbl[1] then tbl = nil end
-	        return raw_async_submit_page(f_env.request_type, f_env.request_path, tbl)()
+		local a, b, c = kolproxycore_async_submit_page(f_env.request_type, f_env.request_path, tbl)()
+		if a then
+			return a, b
+		else   
+			error("Error downloading page " .. tostring(f_env.request_path) .. ":<br><br>" .. tostring(b))
+		end
 	end
 
 	descit("start")
@@ -56,7 +63,7 @@ local function run_wrapped_function_internal(f_env)
 		f_env.requestpath = f_env.request_path
 		f_env.requestquery = f_env.request_query
 		f_env.text = pt
-		f_env.path, f_env.query = browserrequest_splituri(url)
+		f_env.path, f_env.query = kolproxycore_splituri(url)
 
 		local printer_pt = printer_wrapped(f_env)
 		return printer_pt, url
@@ -72,7 +79,7 @@ local function run_wrapped_function_internal(f_env)
 
 	descit("intercept", intercept_pt, intercept_url)
 
-	local intercept_path, intercept_query = browserrequest_splituri(intercept_url)
+	local intercept_path, intercept_query = kolproxycore_splituri(intercept_url)
 
 	f_env.text = intercept_pt
 	f_env.path = intercept_path

@@ -170,9 +170,7 @@ get_submit_uri_params _ref method inputuristr params = do
 async_submit_page ref method inputuristr params = do
 	(final_url, final_params) <- get_submit_uri_params ref method inputuristr params
 	xf <- (processPage ref) ref (mkuri final_url) final_params
-	return $ do
-		x <- xf
-		return $ either id id x
+	return xf
 
 __add_table_contents l tbl = do
 	mapM_ (\(x, y) -> do
@@ -205,7 +203,7 @@ push_jsvalue l jsval = do
 array_tbl_to_jsvalue l = do
 	let get_more n initlist = do
 		Lua.pushinteger l n
-		Lua.gettable l (-2)
+		Lua.rawget l (-2)
 		isempty <- Lua.isnoneornil l (-1)
 		if isempty
 			then do
@@ -237,7 +235,7 @@ lua_to_jsvalue l = do
 	!val <- case t of
 		Lua.TTABLE -> do
 			Lua.pushinteger l 1
-			Lua.gettable l (-2)
+			Lua.rawget l (-2)
 			isempty1idx <- Lua.isnoneornil l (-1)
 			Lua.pop l 1
 			if isempty1idx
@@ -310,7 +308,7 @@ luatbl_to_stringmap l idx = do
 parse_keyvalue_luatbl l idx = do
 	let get_more n = do
 		Lua.pushinteger l n
-		Lua.gettable l idx
+		Lua.rawget l idx
 		t <- Lua.ltype l (-1)
 		case t of
 			Lua.TTABLE -> do
@@ -341,27 +339,6 @@ show_blocked_page_info ref l = do
 	Lua.pushstring l "/kolproxy-page-loading-blocked"
 	return 2
 
-{-
-submit_page_func ref l = do
-	lua_log_line ref "> submit_page_func" (return ())
-	shouldstop <- readIORef (blocking_lua_scripting ref)
-	if shouldstop
-		then show_blocked_page_info ref l
-		else do
-			top <- Lua.gettop l
-			if top < 2
-				then failLua "Not enough parameters to submit_page"
-				else do
-					one <- peekJustString l 1
-					two <- peekJustString l 2
-					params <- parse_keyvalue_luatbl l 3
-					(pt, puri, _hdrs, _code) <- join $ async_submit_page ref one two params
-					Lua.pushbytestring l pt
-					Lua.pushstring l (show puri)
-					lua_log_line ref ("< submit_page_func " ++ (show puri)) (return ())
-					return 2
--}
-
 async_submit_page_func ref l1 = do
 	lua_log_line ref "> async_submit_page_func" (return ())
 	shouldstop <- readIORef (blocking_lua_scripting ref)
@@ -380,13 +357,20 @@ async_submit_page_func ref l1 = do
 					f <- async_submit_page ref one two params
 					lua_log_line ref "< async_submit_page_func requested" (return ())
 					push_function l1 (\l2 -> do
-						(pt, puri, _hdrs, _code) <- f
-						lua_log_line ref ("< async_submit_page_func result " ++ (show puri)) (return ())
-						Lua.pushbytestring l2 pt
-						Lua.pushstring l2 (show puri)
-						return 2) "async_submit_page_callback"
+						ret <- f
+						case ret of
+							Right (pt, puri, _hdrs, _code) -> do
+								lua_log_line ref ("< async_submit_page_func result " ++ (show puri)) (return ())
+								Lua.pushbytestring l2 pt
+								Lua.pushstring l2 (show puri)
+								return 2
+							Left (pt, puri, _hdrs, _code) -> do
+								Lua.pushnil l2
+								let newtext = Data.ByteString.Char8.concat [pt, (Data.ByteString.Char8.pack "<br><br>{&nbsp;<a href=\"/kolproxy-troubleshooting\">Click here for kolproxy troubleshooting.</a>&nbsp;}")]
+								Lua.pushbytestring l2 newtext
+								Lua.pushstring l2 (show puri)
+								return 3) "async_submit_page_callback"
 					return 1
-
 
 make_href _ref l = do
 	inputuristr <- peekJustString l 1
@@ -568,33 +552,29 @@ setup_lua_instance level filename setupref = do
 			AUTOMATE -> do
 				Lua.registerhsfunction lstate "set_state" (set_state setupref)
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)
-				--register_function "raw_submit_page" submit_page_func
-				register_function "raw_async_submit_page" async_submit_page_func
+				register_function "kolproxycore_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
 			INTERCEPT -> do
 				Lua.registerhsfunction lstate "set_state" (set_state setupref)
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)
-				--register_function "raw_submit_page" submit_page_func
-				register_function "raw_async_submit_page" async_submit_page_func
+				register_function "kolproxycore_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
 			BROWSERREQUEST -> do
 				Lua.registerhsfunction lstate "set_state" (set_state setupref)
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)
 				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)
-				--register_function "raw_submit_page" submit_page_func
-				register_function "raw_async_submit_page" async_submit_page_func
+				register_function "kolproxycore_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
-				register_function "browserrequest_splituri" $ \_ref l -> do
+				register_function "kolproxycore_splituri" $ \_ref l -> do
 					uristr <- peekJustString l 1
 					let uri = mkuri uristr
 					Lua.pushstring l $ uriPath uri
 					Lua.pushstring l $ uriQuery uri
 					return 2
 			BOTSCRIPT -> do
-				--register_function "raw_submit_page" submit_page_func
-				register_function "raw_async_submit_page" async_submit_page_func
+				register_function "kolproxycore_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
-				register_function "sleep" $ \_ref l -> do
+				register_function "kolproxycore_sleep" $ \_ref l -> do
 					delay <- peekJustDouble l 1
 					threadDelay $ round $ delay * 1000000
 					return 0

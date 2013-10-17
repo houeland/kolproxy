@@ -8,6 +8,8 @@ module = nil
 package = nil
 set_state = nil
 
+function kolproxy_log_time_interval(msg, f) return f() end
+
 local printers = {}
 local noncombat_choice_texts = {}
 
@@ -35,7 +37,7 @@ if path == "/login.php" then
 	}
 	local version_link = ""
 	print("current version", current_version, "latest version", latest_version)
-	if current_version ~= "3.15-alpha" then
+	if current_version ~= "3.15-dev" then
 		version_link = [[<a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; text-decoration: none;">{ Kolproxy v]]..current_version..[[ incorrect installation. }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; font-size: smaller;">{ Click here to download a working version. }</a>]]
 	elseif latest_version and current_version ~= latest_version and latest_version ~= "3.14-beta" then
 		version_link = [[<a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; text-decoration: none;">{ Kolproxy v]]..current_version..[[, latest version is v]]..latest_version..[[ }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; font-size: smaller;">{ Click here to upgrade. }</a>]]
@@ -150,6 +152,11 @@ else
 end
 end)
 
+-- TODO: Redo!
+if choice_adventure_number or path == "/choice.php" then
+	text = do_choice_page_printing(text, title, adventure_title, choice_adventure_number)
+end
+
 kolproxy_log_time_interval("finish printing", function()
 if path == "/fight.php" then
 	if text:contains("state['fightover'] = true;") or text:contains("<!--WINWINWIN-->") or text:contains("You slink away, dejected and defeated.") then -- TODO: HACK! state fightover only works with combat bar enabled!!
@@ -158,26 +165,10 @@ if path == "/fight.php" then
 	end
 end
 
-if path == "/charpane.php" then
-kolproxy_log_time_interval("do charpane lines", function()
-	for _, x in ipairs(run_charpane_line_functions()) do
-		print_charpane_value(x)
-	end
-	text = print_charpane_lines(text)
-end)
-end
-
--- TODO: Redo!
-if choice_adventure_number or path == "/choice.php" then
-	text = do_choice_page_printing(text, title, adventure_title, choice_adventure_number)
-end
-
-if text:contains("charpane.php") then
-	if path:contains("afterlife.php") or path:contains("charpane.php") then
-	else
-		-- ensure API load before returning page
-		kolproxy_log_time_interval("do ensure-status", status)
-	end
+if path:contains("afterlife.php") or path:contains("charpane.php") then
+elseif text:contains("charpane.php") then
+	-- ensure API load before returning page
+	kolproxy_log_time_interval("do ensure-status", status)
 end
 
 text = text:gsub("</head>", function(head) return string.format([[<script type="text/javascript">var kolproxy_effective_url = %q</script>%s]], path .. query, head) end)

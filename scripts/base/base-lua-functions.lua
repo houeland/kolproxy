@@ -135,11 +135,33 @@ function table_to_str(tbl)
 		table.insert(keys, from)
 	end
 	table.sort(keys)
+
 	for from in table.values(keys) do
 		local to = tbl[from]
 --~ 		print("tbl["..tostring(from).."] -> "..tostring(to))
 		table.insert(newtbl, string.format("(%s, %s)", encode_thing(from), encode_thing(to)))
 	end
+
+	if rawget(tbl, 1) then
+		local keys = {}
+		local keylist = {}
+		for x, _ in pairs(tbl) do
+			keys[x] = true
+			table.insert(keylist, x)
+		end
+		for x, _ in ipairs(tbl) do
+			keys[x] = nil
+		end
+		if next(keys) then
+			print("ERROR: table_to_str on non-JSON table")
+			print("  keys:", table_to_json(keylist))
+			print("   str:", "["..table.concat(newtbl, ", ").."]")
+			print("  json:", table_to_json(tbl))
+			error("table_to_str called for non-JSON table")
+		end
+	end
+
+
 	return "["..table.concat(newtbl, ", ").."]"
 end
 

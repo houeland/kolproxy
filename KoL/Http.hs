@@ -83,9 +83,14 @@ internalKolRequest url params cu noredirect = do
 					_ -> throwIO $ InternalError $ "Error parsing redirect: No location header"
 			_ -> return (body, effuri, hdrs, code)
 
-load_api_status_to_mv ref mv = do
+load_api_status_to_mv_mkapixf ref = do
+	try $ internalKolRequest_pipelining ref (mkuri $ "/api.php?what=status,inventory&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") Nothing False
+
+load_api_status_to_mv ref mv apixf = do
 	apires <- (try $ do
-		(xf, _) <- internalKolRequest_pipelining ref (mkuri $ "/api.php?what=status,inventory&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") Nothing False
+		let xf = case apixf of
+			Right (xf, _) -> xf
+			Left err -> throwIO (err :: SomeException)
 		(xraw, xuri, _, _) <- xf
 		jsobj <- case uriPath xuri of
 			"/api.php" -> do
@@ -124,7 +129,9 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 	mv_x <- newEmptyMVar
 	writeChan (getconn_ $ connection $ ref) (reqabsuri, r, mv_x, ref)
 
-	when should_invalidate_cache $ forkIO_ "HTTP:load_api_status_to_mv" $ load_api_status_to_mv ref curjsonmv
+	when should_invalidate_cache $ do
+		apixf <- load_api_status_to_mv_mkapixf ref
+		forkIO_ "HTTP:load_api_status_to_mv" $ load_api_status_to_mv ref curjsonmv apixf
 
 	mv_val <- newEmptyMVar
 	forkIO_ "HTTP:mv_val" $ do

@@ -2,6 +2,8 @@
 
 -- TODO? check for valid pwd!
 
+function kolproxy_log_time_interval(msg, f) return f() end
+
 local interceptors = {}
 
 function wrapped_function()

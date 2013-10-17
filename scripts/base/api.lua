@@ -409,12 +409,11 @@ function setup_functions()
 
 		function get_player_skills()
 			return get_cached_item("cached_get_player_skills", function()
-				-- TODO: Cache in a variable if merging Lua states
 				local cached_skills = session["cached player skills"]
 				local cached_skills_storedid = session["cached player skills.storedid"]
 				local currentid = ascensionpathid() .. "/" .. ascensionstatus()
-				if (not cached_skills or cached_skills_storedid ~= currentid) then
-					if raw_async_submit_page then
+				if not cached_skills or cached_skills_storedid ~= currentid then
+					if kolproxycore_async_submit_page then
 						cached_skills = raw_retrieve_skills()
 						session["cached player skills"] = cached_skills
 						session["cached player skills.storedid"] = currentid

@@ -300,7 +300,6 @@ mark m_done
 		return result, resulturl, did_action
 	end
 
--- TODO: lvl 9 quest on day 4 & after the bridge is untinkered
 	function t.there_can_be_only_one_topping()
 		if ascension_script_option("manual lvl 9 quest") then
 			stop "STOPPED: Ascension script option set to do lvl 9 quest manually"
@@ -313,7 +312,8 @@ mark m_done
 			end
 			if not have_item("dictionary") then
 				if have_item("abridged dictionary") then
-					async_post_page("/forestvillage.php", { pwd = get_pwd(), action = "untinker", whichitem = get_itemid("abridged dictionary") })
+					do_degrassi_untinker_quest()
+					async_post_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker", pwd = get_pwd(), preaction = "untinker", whichitem = get_itemid("abridged dictionary") })
 				end
 				if not have_item("dictionary") then
 					stop "Missing bridge from pirates"

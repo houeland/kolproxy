@@ -163,6 +163,7 @@ function get_ascension_automation_settings(want_bonus)
 				"souvenir ski t-shirt",
 				"ASCII shirt",
 				"Knob Goblin elite shirt",
+				"eXtreme Bi-Polar Fleece Vest",
 			},
 			pants = {
 				"stinky cheese diaper",

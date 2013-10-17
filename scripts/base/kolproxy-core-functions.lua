@@ -198,6 +198,15 @@ function get_semirare_encounters()
 	return semirares_datafile
 end
 
+function raw_async_submit_page(rqtype, rqpath, rqparams)
+	local a, b, c = kolproxycore_async_submit_page(rqtype, rqpath, rqparams)
+	if a then
+		return a, b
+	else
+		error("Error downloading page " .. tostring(rqpath) .. ":<br><br>" .. tostring(b))
+	end
+end
+
 function intercept_warning(warning)
 	if not warning.id then
 		error "No warning id!"

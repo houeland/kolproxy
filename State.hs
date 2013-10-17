@@ -31,7 +31,6 @@ get_stid ref = do
 
 loadState ref = do
 	newstid <- get_stid ref
--- 	log_time_interval ref "printing newstid line" $ putStrLn $ "loading state for... " ++ show newstid
 	stv <- readIORef $ stateData_ $ sessionData $ ref
 	let usable_old_st = case stv of
 		Just (stid, oldst) -> if stid == newstid then Just oldst else Nothing
@@ -184,7 +183,7 @@ uglyhack_resetFightState ref = do
 	let fight_keys = Data.Map.toList $ Data.Map.filterWithKey (\x _y -> isPrefixOf "fight." x) daymap
 	mapM_ (\(x, _y) -> raw_unsetState ref "day" x) fight_keys
 
-makeStateJSON ref = do
+makeStateJSON_old ref = do
 	ai <- getApiInfo ref
 
 	Just (_stid, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
@@ -194,12 +193,31 @@ makeStateJSON ref = do
 	let asc = [("ascension", show $ ascension ai), ("state", show ascmap)]
 	let day = [("ascension-day", (show $ ascension ai) ++ "-" ++ (show $ daysthisrun ai)), ("state", show daymap)]
 	let timestamp = [("turnsplayed", show $ turnsplayed ai)]
--- 	putStrLn $ "new server settings timestamp: " ++ show (turnsplayed ai, timestamp)
+-- 	putStrLn $ "new server settings timestamp: " ++ show timestamp
 
 	let makeobj strmap = JSObject $ toJSObject $ map (\(a, b) -> (a, JSString $ toJSString $ b)) strmap
 	return $ toJSObject [("character", makeobj char), ("ascension", makeobj asc), ("day", makeobj day), ("timestamp", makeobj timestamp)]
 
-loadStateJSON ref jsobj = do
+makeStateJSON_new ref newstateid = do
+	ai <- getApiInfo ref
+
+	Just (_stid, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
+	let daymap = Data.Map.filterWithKey (\x _y -> not $ isPrefixOf "fight." x) extra_daymap
+
+	let maptojson name value statemap =
+			toJSObject [(name, JSString $ toJSString $ value), ("state", JSObject jsobj)]
+		where
+			jsobj = toJSObject $ Data.Map.toList $ Data.Map.map (\x -> JSString $ toJSString $ x) $ statemap
+
+	let char = maptojson "name" (charName ai) charmap
+	let asc = maptojson "ascension" (show $ ascension $ ai) ascmap
+	let day = maptojson "ascension-day" ((show $ ascension ai) ++ "-" ++ (show $ daysthisrun ai)) daymap
+	let timestamp = toJSObject [("turnsplayed", JSRational True $ toRational $ fst $ newstateid), ("writes", JSRational True $ toRational $ snd $ newstateid)]
+-- 	putStrLn $ "new server settings timestamp: " ++ show timestamp
+
+	return $ toJSObject [("character", JSObject char), ("ascension", JSObject asc), ("day", JSObject day), ("timestamp", JSObject timestamp)]
+
+loadStateJSON_old ref jsobj = do
 	lstp <- getState ref "character" "turnsplayed last state change"
 	ai <- getApiInfo ref
 	Just (stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
@@ -267,35 +285,45 @@ mirrorStateIntoDatabase ref = do
 		putMVar mv ()
 	void $ takeMVar mv
 
--- TODO: Move this to API? Elsewhere?
 storeSettingsOnServer ref store_reason = do
 	Just (_, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
 	let daymap = Data.Map.filterWithKey (\x _y -> not $ isPrefixOf "fight." x) extra_daymap
 	let statedesc = show (charmap, ascmap, daymap)
 	laststored <- readIORef (lastStoredState_ $ sessionData $ ref)
 	when (laststored /= Just statedesc) $ do
-		ai <- getApiInfo ref
-		json <- nochangeGetPageRawNoScripts ("/actionbar.php?action=fetch&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") ref
+		ai <- getApiInfo ref -- TODO: make this the correct timed api load, or just the fastest possible. latest valid cached one?
+		(oldturns, oldid) <- readIORef (storedStateId_ $ sessionData $ ref)
+		newstateid <- if oldturns == turnsplayed ai
+			then return (turnsplayed ai, oldid + 1)
+			else return (turnsplayed ai, 1)
+		cachedactionbar <- readIORef (cachedActionbar_ $ sessionData $ ref)
+		json <- case cachedactionbar of
+			Just x -> return x
+			_ -> nochangeGetPageRawNoScripts ("/actionbar.php?action=fetch&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") ref
 		let Ok storedjslist = fromJSObject <$> decodeStrict json
-		stateobj <- makeStateJSON ref
-		let newjson = encodeStrict $ toJSObject $ filter (\(x, _) -> x /= "kolproxy state") storedjslist ++ [("kolproxy state", JSObject stateobj)]
+		stateobj_old <- makeStateJSON_old ref
+		stateobj_new <- makeStateJSON_new ref newstateid
+		let newjson = encodeStrict $ toJSObject $ filter (\(x, _) -> x /= "kolproxy state" && x /= "kolproxy json state") storedjslist ++ [("kolproxy state", JSObject stateobj_old)] ++ [("kolproxy json state", JSObject stateobj_new)]
 		void $ postPageRawNoScripts "/actionbar.php" [("action", "set"), ("for", "kolproxy " ++ kolproxy_version_number ++ " by Eleron"), ("format", "json"), ("bar", newjson), ("pwd", pwd ai)] ref
 		putStrLn $ "INFO: stored settings on server (" ++ (show $ length newjson) ++ " bytes.) because: " ++ store_reason
+		writeIORef (cachedActionbar_ $ sessionData $ ref) (Just newjson)
 		writeIORef (lastStoredState_ $ sessionData $ ref) (Just statedesc)
+		writeIORef (storedStateId_ $ sessionData $ ref) newstateid
 
 loadSettingsFromServer ref = do
 	json <- nochangeGetPageRawNoScripts ("/actionbar.php?action=fetch&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") ref
 	case fromJSObject <$> decodeStrict json of
 		Ok list -> case (lookup "kolproxy state" list) of
 			Just x -> do
-				what_list <- loadStateJSON ref x
+				what_list <- loadStateJSON_old ref x
 				mirrorStateIntoDatabase ref
 				return $ Just $ show what_list
 			Nothing -> return Nothing
 		Error err -> do
 			putStrLn $ "ERROR: Invalid actionbar data: " ++ err
-			putStrLn $ "  Your server data has most likely gotten corrupted by a buggy GreaseMonkey script."
+			putStrLn $ "  Your server data was most likely corrupted by a buggy GreaseMonkey script."
 			putStrLn $ "  To reset it, first turn on the combat bar by going to KoL options -> Combat -> Enable Combat Bar."
 			putStrLn $ "  Then, fight a monster, drag some skills onto the combat bar, win the fight, and log out. That should fix it."
 			writeFile "DEBUG-invalid-actionbar-data.json" json
+			-- TODO: Wipe the actionbar?
 			throwIO StateException

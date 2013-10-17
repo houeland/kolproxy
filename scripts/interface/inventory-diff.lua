@@ -1,7 +1,11 @@
 add_interceptor("/main.php", function()
 	if not session["cached initial session data"] then
 		print("INFO: caching inventory at start of session")
-		session["cached initial session data"] = { inventory = inventory(), equipment = equipment(), meat = meat() }
+		local str_inv = {}
+		for a, b in pairs(inventory()) do
+			str_inv[tostring(a)] = b
+		end
+		session["cached initial session data"] = { inventory = str_inv, equipment = equipment(), meat = meat() }
 	end
 end)
 
@@ -14,7 +18,7 @@ local href = add_automation_script("custom-inventory-diff", function()
 	local function build_items(inv, eq)
 		local items = {}
 		for a, b in pairs(inv) do
-			items[a] = b
+			items[tonumber(a)] = b
 		end
 		for _, x in pairs(eq) do
 			items[x] = (items[x] or 0) + 1

@@ -7,6 +7,8 @@ require = nil
 module = nil
 package = nil
 
+function kolproxy_log_time_interval(msg, f) return f() end
+
 local processors = {}
 
 function wrapped_function()

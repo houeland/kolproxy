@@ -1,5 +1,7 @@
 -- automate.lua
 
+function kolproxy_log_time_interval(msg, f) return f() end
+
 local automators = {}
 
 function wrapped_function()

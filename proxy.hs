@@ -43,6 +43,9 @@ doProcessPage ref uri params = do
 	log_file_retrieval ref uri params
 
 	(xf, mvf) <- (nochangeRawRetrievePageFunc ref) ref uri params True
+	when ((uriPath uri) == "/actionbar.php") $ do
+		putStrLn $ "DEBUG: requested actionbar: " ++ show uri ++ " | " ++ show params
+		writeIORef (cachedActionbar_ $ sessionData $ ref) Nothing
 
 	let status_after_func = do
 		readMVar =<< mvf
@@ -173,7 +176,8 @@ make_ref baseref = do
 		mjs <- readIORef (latestRawJson_ $ sessionData $ ref)
 		when (isNothing mjs) $ do
 			mv <- readIORef (jsonStatusPageMVarRef_ $ sessionData $ ref)
-			load_api_status_to_mv ref mv
+			apixf <- load_api_status_to_mv_mkapixf ref
+			load_api_status_to_mv ref mv apixf
 		force_latest_status_parse ref
 		void $ loadState ref
 		return True) `catch` (\e -> do
@@ -283,7 +287,7 @@ kolProxyHandler uri params baseref = do
 						Left (pt, effuri, _hdrs, _code) -> makeErrorResponse pt effuri []
 						Right (pt, effuri, hdrs, _code) -> if (uriPath effuri) `elem` ["/fight.php", "/choice.php"]
 							then makeErrorResponse (add_error_message_to_page "Error: kolproxy can't read state!" pt) effuri []
-							else handleRequest origref uri effuri hdrs params pt
+							else handleRequest origref uri effuri hdrs params pt -- Because we still want to run printer here(?)
 				else r
 		Nothing -> do
 			canread_before <- canReadState origref
