@@ -452,6 +452,33 @@ get_api_itemid_info ref l1 = do
 	push_function l1 callback_f "get_api_itemid_info_callback"
 	return 1
 
+kolproxycore_enumerate_state ref l = do
+	canread <- canReadState ref
+	unless canread $ failLua $ "Error: Trying to enumerate state before state is available."
+	statekeys <- uglyhack_enumerateState ref
+	Lua.newtable l
+	mapM_ (\(statename, keylist) -> do
+		Lua.pushstring l statename
+		Lua.newtable l
+		add_table_contents_integer_string l $ zip [1..] keylist
+		Lua.settable l (-3)) statekeys
+	return 1
+
+json_to_table l = do
+	jsonstr <- peekJustString l 1
+	case decodeStrict jsonstr of
+		Ok jsonobj -> do
+			push_jsvalue l jsonobj
+			return 1
+		_ -> do
+			putStrLn $ "DEBUG invalid JSON: " ++ jsonstr
+			failLua "Invalid JSON"
+
+table_to_json l = do
+	jsonobj <- lua_to_jsvalue l
+	Lua.pushstring l $ encodeStrict jsonobj
+	return 1
+
 setup_lua_instance level filename setupref = do
 	(l, c) <- log_time_interval setupref ("setup lua: " ++ filename) $ do
 		code <- readFile filename
@@ -475,16 +502,9 @@ setup_lua_instance level filename setupref = do
 			push_jsvalue l =<< KoL.Api.getCharStatusObj ref
 			return 1
 
-		register_function "json_to_table" $ \_ref l -> do
-			jsonstr <- peekJustString l 1
-			let Ok jsonobj = decodeStrict jsonstr
-			push_jsvalue l jsonobj
-			return 1
+		register_function "json_to_table" $ \_ref l -> json_to_table l
 
-		register_function "table_to_json" $ \_ref l -> do
-			jsonobj <- lua_to_jsvalue l
-			Lua.pushstring l (encodeStrict jsonobj)
-			return 1
+		register_function "table_to_json" $ \_ref l -> table_to_json l
 
 		register_function "simplexmldata_to_table" $ \_ref l -> do
 			xmlstr <- peekJustString l 1
@@ -560,19 +580,20 @@ setup_lua_instance level filename setupref = do
 			AUTOMATE -> do
 				Lua.registerhsfunction lstate "set_state" (set_state setupref)
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)
-				register_function "kolproxycore_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
+				register_function "kolproxycore_async_submit_page" async_submit_page_func
 			INTERCEPT -> do
 				Lua.registerhsfunction lstate "set_state" (set_state setupref)
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)
-				register_function "kolproxycore_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
+				register_function "kolproxycore_async_submit_page" async_submit_page_func
 			BROWSERREQUEST -> do
 				Lua.registerhsfunction lstate "set_state" (set_state setupref)
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)
 				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)
-				register_function "kolproxycore_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
+				register_function "kolproxycore_enumerate_state" kolproxycore_enumerate_state
+				register_function "kolproxycore_async_submit_page" async_submit_page_func
 				register_function "kolproxycore_splituri" $ \_ref l -> do
 					uristr <- peekJustString l 1
 					let uri = mkuri uristr
@@ -580,8 +601,9 @@ setup_lua_instance level filename setupref = do
 					Lua.pushstring l $ uriQuery uri
 					return 2
 			BOTSCRIPT -> do
-				register_function "kolproxycore_async_submit_page" async_submit_page_func
 				register_function "get_api_itemid_info" get_api_itemid_info
+				register_function "kolproxycore_enumerate_state" kolproxycore_enumerate_state
+				register_function "kolproxycore_async_submit_page" async_submit_page_func
 				register_function "kolproxycore_sleep" $ \_ref l -> do
 					delay <- peekJustDouble l 1
 					threadDelay $ round $ delay * 1000000
@@ -772,11 +794,7 @@ runLogScript log_db code = do
 		push_function lstate f name
 		Lua.setglobal lstate name
 
-	register_function "json_to_table" $ \l -> do
-		jsonstr <- peekJustString l 1
-		let Ok jsonobj = decodeStrict jsonstr
-		push_jsvalue l jsonobj
-		return 1
+	register_function "json_to_table" json_to_table
 
 	register_function "get_log_lines" $ \l -> do
 		s <- Database.SQLite3Modded.prepare log_db "SELECT idx FROM pageloads;"
@@ -894,16 +912,9 @@ run_datafile_parsers = do
 		push_function lstate f name
 		Lua.setglobal lstate name
 
-	register_function "json_to_table" $ \l -> do
-		jsonstr <- peekJustString l 1
-		let Ok jsonobj = decodeStrict jsonstr
-		push_jsvalue l jsonobj
-		return 1
+	register_function "json_to_table" json_to_table
 
-	register_function "table_to_json" $ \l -> do
-		jsonobj <- lua_to_jsvalue l
-		Lua.pushstring l (encodeStrict jsonobj)
-		return 1
+	register_function "table_to_json" table_to_json
 
 	register_function "simplexmldata_to_table" $ \l -> do
 		xmlstr <- peekJustString l 1

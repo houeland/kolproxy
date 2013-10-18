@@ -183,6 +183,10 @@ uglyhack_resetFightState ref = do
 	let fight_keys = Data.Map.toList $ Data.Map.filterWithKey (\x _y -> isPrefixOf "fight." x) daymap
 	mapM_ (\(x, _y) -> raw_unsetState ref "day" x) fight_keys
 
+uglyhack_enumerateState ref = do
+	Just (_stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
+	return [("request", Data.Map.keys requestmap), ("session", Data.Map.keys sessionmap), ("character", Data.Map.keys charmap), ("ascension", Data.Map.keys ascmap), ("day", Data.Map.keys daymap)]
+
 makeStateJSON_old ref = do
 	ai <- getApiInfo ref
 

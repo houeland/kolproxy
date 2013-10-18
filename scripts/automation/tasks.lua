@@ -195,10 +195,10 @@ function get_automation_tasks(script, cached_stuff)
 					message = "do_8bit_realm",
 					fam = "Stocking Mimic",
 					olfact = "Blooper",
-					equipment = { acc3 = "continuum transfunctioner" },
+					equipment = { acc1 = "continuum transfunctioner" },
 					action = function()
 						-- TODO: use adventure()
-						script.go("farm pixels for digital key: " .. pixels, 73, macro_8bit_realm, nil, { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "Ghostly Shell", "Astral Shell", "Leash of Linguini", "Empathy" }, "Stocking Mimic", 15, { olfact = "Blooper", equipment = { acc3 = "continuum transfunctioner" } })
+						script.go("farm pixels for digital key: " .. pixels, 73, macro_8bit_realm, nil, { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "Ghostly Shell", "Astral Shell", "Leash of Linguini", "Empathy" }, "Stocking Mimic", 15, { olfact = "Blooper", equipment = { acc1 = "continuum transfunctioner" } })
 					end
 				}
 			end
@@ -578,19 +578,23 @@ mark m_done
 	end
 
 	function t.do_daily_dungeon()
+		if not have_gelatinous_cubeling_items() then
+			stop "Missing gelatinous cubeling items for daily dungeon"
+		end
 		return {
 			message = "do daily dungeon",
 			buffs = { "Astral Shell", "Elemental Saucesphere", "Scarysauce" },
+			equipment = { acc1 = "ring of Detect Boring Doors" },
 			minmp = 20,
 			action = function()
 				local advf = adventure {
 					zone = "The Daily Dungeon",
 					macro_function = macro_noodlecannon,
 					noncombats = {
-						["It's Almost Certainly a Trap"] = "Proceed forward cautiously",
-						["The First Chest Isn't the Deepest."] = "Ignore the chest",
-						["I Wanna Be a Door"] = count_item("skeleton key") >= 2 and "Use a skeleton key" or "Magic it open",
-						["Second Chest"] = "Ignore the chest",
+						["It's Almost Certainly a Trap"] = "Use your eleven-foot pole",
+						["The First Chest Isn't the Deepest."] = "Go through the boring door",
+						["I Wanna Be a Door"] = "Use your lockpicks",
+						["Second Chest"] = "Go through the boring door",
 						["The Final Reward"] = "Open it!",
 					},
 				}
@@ -605,4 +609,8 @@ mark m_done
 	end
 
 	return t
+end
+
+function have_gelatinous_cubeling_items()
+	return have_item("eleven-foot pole") and have_item("ring of Detect Boring Doors") and have_item("Pick-O-Matic lockpicks")
 end

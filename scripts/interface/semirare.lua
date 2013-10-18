@@ -101,12 +101,6 @@ add_charpane_line(function()
 	local value = good_numbers[1] and table.concat(good_numbers, ", ") or "?"
 	local color = SRnow and "green" or "black"
 
-	for x, _ in ipairs(good_numbers) do
-		if x > 1 then
-			value = value .. " +"
-		end
-	end
-
 	if not lastsemi and not is_first_semi then
 		lastsemi = "?"
 	end

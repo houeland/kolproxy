@@ -109,6 +109,7 @@ function get_automation_scripts(cached_stuff)
 		end
 	end
 
+	-- TODO: remove this, handle as generic "want items, mprestore" etc.
 	local familiar_data = {
 		["Kolproxy Test Fam"] = { id = 12345, fallback = "Midget Clownfish" },
 		["Leprechaun"] = { id = 2 },
@@ -146,6 +147,7 @@ function get_automation_scripts(cached_stuff)
 		["Reagnimated Gnome"] = { id = 162, familiarequip = "gnomish housemaid's kgnee", fallback = "Hovering Sombrero" },
 		["Hovering Sombrero"] = { id = 18, fallback = "(ignore familiar)" },
 		["Angry Jung Man"] = { id = 165, fallback = "Slimeling" },
+		["Gelatinous Cubeling"] = { id = 171, fallback = "Slimeling" },
 	}
 
 	local function raw_want_familiar(famname_input)
@@ -263,6 +265,8 @@ function get_automation_scripts(cached_stuff)
 		end
 		if famname == "Slimeling" and daysthisrun() >= 2 and not have_item("digital key") and not have_item("psychoanalytic jar") and get_daily_counter("familiar.jungman.jar") == 0 then
 			famname = "Angry Jung Man"
+		elseif famname == "Slimeling" and not have_gelatinous_cubeling_items() then
+			famname = "Gelatinous Cubeling"
 		end
 		return raw_want_familiar(famname)
 	end

@@ -83,6 +83,8 @@ add_choice_text("The Mad Tea Party", function()
 	end
 end)
 
-add_printer("/rabbithole.php", function()
-	text = text:gsub([[</body>]], [[<center><a href="]]..tea_party_href { pwd = session.pwd }..[[" style="color: green">{ Choose hat }</a></center>%0]])
+add_printer("/place.php", function()
+	if params.whichplace == "rabbithole" then
+		text = text:gsub([[</body>]], [[<center><a href="]]..tea_party_href { pwd = session.pwd }..[[" style="color: green">{ Choose hat }</a></center>%0]])
+	end
 end)

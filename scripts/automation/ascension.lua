@@ -3836,7 +3836,7 @@ endif
 	}
 
 	add_task {
-		when = DD_keys < 1 and have_item("skeleton key") and not cached_stuff.done_daily_dungeon,
+		when = DD_keys < 3 and not cached_stuff.done_daily_dungeon,
 		task = tasks.do_daily_dungeon,
 	}
 
@@ -4206,11 +4206,6 @@ endif
 	add_task {
 		prereq = mainstat_type("Muscle") and not have_item("Spookyraven gallery key") and level() < 13,
 		f = script.do_muscle_powerleveling,
-	}
-
-	add_task {
-		when = DD_keys < 3 and not cached_stuff.done_daily_dungeon,
-		task = tasks.do_daily_dungeon,
 	}
 
 	add_task {

@@ -330,12 +330,12 @@ function automate_aftercore_pulls()
 	local itemids = {}
 	for _, x in ipairs(aftercore_items_list) do
 		if items[x] then
-			table.insert(itemids, items[x])
+			table.insert(itemids, get_itemid(x))
 		end
 	end
 -- 	for _, x in ipairs(maybe_pvp_stealable) do
 -- 		if items[x] then
--- 			table.insert(itemids, items[x])
+-- 			table.insert(itemids, get_itemid(x))
 -- 		end
 -- 	end
 

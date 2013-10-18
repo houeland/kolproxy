@@ -211,7 +211,7 @@ local space_href = setup_turnplaying_script {
 				local rewards = { 0, 0, 0, 0, 1, 0, 0, 0, 0 }
 				local best_option = solve_porko(pegs, rewards)
 				result, resulturl = get_page("/choice.php", { whichchoice = 540, pwd = session.pwd, option = best_option })
-				result, resulturl = get_page("/spaaace.php", { place = "grimace" })
+				result, resulturl = get_page("/place.php", { whichplace = "spaaacegrimace" })
 			end
 			advagain = false
 		end
@@ -219,15 +219,10 @@ local space_href = setup_turnplaying_script {
 	end
 }
 
-add_printer("/spaaace.php", function()
-	if not setting_enabled("enable turnplaying automation") or ascensionstatus() ~= "Aftercore" then return end
-	if text:contains("transpanel_before.gif") then
-		text = text:gsub([[(</table></center>)(</body>)]], [[%1<center><a href="]]..space_href { pwd = session.pwd }..[[" style="color: green">{ Automate Space }</a></center>%2]])
-	end
-end)
+--[2013-10-18 13:20:36.248727 UTC     ] s [   473.4ms] choice.php?forceoption=0
 
 function automate_porko_play()
-	local pt, pturl = post_page("/spaaace.php", { pwd = session.pwd, place = "porko", action = "playporko" })
+	local pt, pturl = post_page("/place.php", { pwd = session.pwd, whichplace = "spaaacegrimace", action = "playporko" })
 	if pt:contains("Click starting slot to drop your Porko!") then
 -- 		print(pt)
 		local pegs = {}
@@ -270,7 +265,8 @@ local porko_href = add_automation_script("automate-porko", function()
 	return text, requestpath
 end)
 
-add_printer("/spaaace.php", function()
+add_printer("/place.php", function()
+	if params.whichplace ~= "spaaacegrimace" then return end
 	if not setting_enabled("enable turnplaying automation") or ascensionstatus() ~= "Aftercore" then return end
 	if text:contains("Step right up and try your luck at Porko") then
 		text = text:gsub([[(</table></center>)(</body>)]], function(a, b)

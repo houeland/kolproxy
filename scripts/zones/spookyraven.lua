@@ -71,11 +71,11 @@ end)
 add_processor("item drop", function()
 	if adventure_zone then
 		if item_name:match("^dusty bottle of ") then
-			tbl = ascension["zone.manor.wine cellar zone bottles"] or ascension["zone.manor.wine cellar bottles"] or {}
-			if not tbl[adventure_zone] then
-				tbl[adventure_zone] = {}
+			tbl = __convert_table_to_json(ascension["zone.manor.wine cellar zone bottles"] or ascension["zone.manor.wine cellar bottles"] or {})
+			if not tbl[tostring(adventure_zone)] then
+				tbl[tostring(adventure_zone)] = {}
 			end
-			tbl[adventure_zone][item_name] = true
+			tbl[tostring(adventure_zone)][item_name] = true
 			ascension["zone.manor.wine cellar zone bottles"] = tbl
 		end
 	end
@@ -83,13 +83,9 @@ end)
 
 add_printer("/manor3.php", function()
 	if not session["zone.manor.wines needed"] then return end
-	local tbl = ascension["zone.manor.wine cellar zone bottles"] or ascension["zone.manor.wine cellar bottles"] or {}
+	local tbl = __convert_table_to_json(ascension["zone.manor.wine cellar zone bottles"] or ascension["zone.manor.wine cellar bottles"] or {})
 
 	local wines, valid_permutations = get_wine_cellar_data(tbl)
-
--- 	for z, wtbl in pairs(wines) do
--- 		print("wine", z, table_to_str(wtbl))
--- 	end
 
 	local wines_needed_list = session["zone.manor.wines needed"] or {}
 	
@@ -715,11 +711,12 @@ local function get_wine_cellar_permutations_and_quadrants(tbl)
 		{ [178] = 4, [179] = 3, [180] = 2, [181] = 1 }, -- 24
 	}
 
-	for z, ztbl in pairs(tbl) do -- remove invalid permutations
+	-- Remove invalid permutations, rest are equally likely
+	for z, ztbl in pairs(tbl) do
 		for name, _ in pairs(ztbl) do
 			for i = 1, 24 do
 				if permutations[i] then
-					local qid = permutations[i][z]
+					local qid = permutations[i][tonumber(z)]
 					if not quadrants[qid][name] then
 						permutations[i] = nil
 					end
@@ -731,7 +728,7 @@ local function get_wine_cellar_permutations_and_quadrants(tbl)
 end
 
 function get_wine_cellar_data(known_tbl)
-	local permutations, quadrants = get_wine_cellar_permutations_and_quadrants(known_tbl)
+	local permutations, quadrants = get_wine_cellar_permutations_and_quadrants(__convert_table_to_json(known_tbl))
 
 	local wines = {}
 	local valid_permutations = 0

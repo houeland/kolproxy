@@ -29,6 +29,8 @@ local function setup_state_table(getf, setf)
 				else
 					return json_to_table(v)
 				end
+			elseif pref == [["]] then
+				return json_to_table("[" .. v .. "]")[1]
 			elseif v == "::BOOL:true::" then
 				return true
 			elseif v == "::BOOL:false::" then
@@ -45,16 +47,9 @@ local function setup_state_table(getf, setf)
 		if v == nil then
 			p = ""
 		elseif type(v) == "table" then
-			p = table_to_str(v)
---			p = table_to_json(v)
-		elseif type(v) == "number" then
-			p = tostring(v)
-		elseif type(v) == "string" then
-			p = v
-		elseif type(v) == "boolean" then
-			p = "::BOOL:" .. tostring(v) .. "::"
+			p = table_to_json(v)
 		else
-			error("Unknown value " .. tostring(v) .. " of type " .. type(v))
+			p = table_to_json({ v }):sub(2, -2)
 		end
 		setf(k, p)
 	end})

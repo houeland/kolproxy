@@ -1155,10 +1155,8 @@ if monstername protector
 endif
 
 while !times 5
-]] .. cannon_action() .. [[
+]] .. serpent_action() .. [[
 endwhile
-
-mark m_done
 
 ]]
 end

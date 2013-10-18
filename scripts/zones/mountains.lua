@@ -1,3 +1,11 @@
+function __convert_table_to_json(tbl)
+	local newtbl = {}
+	for a, _ in pairs(tbl) do
+		newtbl[tostring(a)] = tbl[a]
+	end
+	return newtbl
+end
+
 -- itznotyerzitz mine
 
 add_choice_text("A Flat Miner", { -- choice adventure number: 18
@@ -38,7 +46,7 @@ add_processor("/mining.php", function()
 	mine = params.mine:match("([0-9]+)")
 	if mine then
 		stateid = "mining.results." .. mine
-		tbl = ascension[stateid] or {}
+		tbl = __convert_table_to_json(ascension[stateid] or {})
 		tabletext = text:match([[<table cellpadding=0 cellspacing=0 border=0 background='http://images.kingdomofloathing.com/otherimages/mine/mine_background.gif'>(.-)</table>]])
 		if not tabletext then return end
 		local id = -1
@@ -59,8 +67,8 @@ add_processor("/mining.php", function()
 		img = resulttext:match([[<img src="http://images.kingdomofloathing.com/itemimages/([^"]+).gif"]])
 		if mine and img then
 			stateid = "mining.results." .. mine
-			tbl = ascension[stateid] or {}
-			tbl[tonumber(which)] = img
+			tbl = __convert_table_to_json(ascension[stateid] or {})
+			tbl[tostring(which)] = img
 			ascension[stateid] = tbl
 		end
 	end
@@ -133,7 +141,7 @@ local function get_minestr(minetext, foundtbl)
 					curtbl[which] = "0"
 				end
 			else
-				if foundtbl[which] then -- and alt == "Open Cavern" 
+				if foundtbl[tostring(which)] then -- and alt == "Open Cavern" 
 					curtbl[which] = orechars[foundtbl[which]] or "0"
 				elseif not image:match("wall1111.gif") and not image:match("wallsparkle") then
 					curtbl[which] = "0"
@@ -185,7 +193,7 @@ add_printer("/mining.php", function()
 	mine = params.mine:match("([0-9]+)")
 	if mine then
 		stateid = "mining.results." .. mine
-		tbl = ascension[stateid] or {}
+		tbl = __convert_table_to_json(ascension[stateid] or {})
 	else
 		tbl = {}
 	end
@@ -253,9 +261,9 @@ add_printer("/mining.php", function()
 					return [[<td class="linkminecell]]..mineclass..[[" style="height: ]] .. height .. [[px; width: ]] .. width .. [[px; ]] .. bgstyle .. [[">]] .. linkdata .. [[<center style="line-height: 50px;"><span style="color: ]] .. linkcolor .. [[;">]] .. linktext .. [[</span></center></a></td>]]
 				else
 					local background = [[background-image: url(']] .. image .. [['); background-repeat: no-repeat;]]
-					if tbl[which] then -- and alt == "Open Cavern" 
-						celldata = [[<center><img src="http://images.kingdomofloathing.com/itemimages/]] .. tbl[which] .. [[.gif"></center>]]
-						if wantore and orechars[tbl[which]] == wantore then
+					if tbl[tostring(which)] then -- and alt == "Open Cavern" 
+						celldata = [[<center><img src="http://images.kingdomofloathing.com/itemimages/]] .. tbl[tostring(which)] .. [[.gif"></center>]]
+						if wantore and orechars[tbl[tostring(which)]] == wantore then
 							background = "background-color: green;"
 						end
 					elseif title:contains("Promising") or image:contains("spark") then
