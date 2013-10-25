@@ -78,6 +78,9 @@ local function run_wrapped_function_internal(f_env)
 	local intercept_pt, intercept_url = intercept_wrapped(f_env)
 
 	descit("intercept", intercept_pt, intercept_url)
+	if not intercept_pt then
+		return intercept_url, "/error"
+	end
 
 	local intercept_path, intercept_query = kolproxycore_splituri(intercept_url)
 
