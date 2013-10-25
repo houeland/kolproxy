@@ -208,16 +208,27 @@ makeStateJSON_new ref newstateid = do
 	Just (_stid, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
 	let daymap = Data.Map.filterWithKey (\x _y -> not $ isPrefixOf "fight." x) extra_daymap
 
-	let maptojson name value statemap =
-			toJSObject [(name, JSString $ toJSString $ value), ("state", JSObject jsobj)]
-		where
-			jsobj = toJSObject $ Data.Map.toList $ Data.Map.map (\x -> JSString $ toJSString $ x) $ statemap
+	jsondied <- newIORef False
+	let maptojson name value statemap = do
+		let remapx (name, jsonstr) = case decode jsonstr of
+			Ok y -> return $ Just (name, y)
+			_ -> do
+				putStrLn $ "ERROR: could not convert JSON: " ++ show (name, jsonstr)
+				writeIORef jsondied True
+				return Nothing
+		jsonlist <- mapM remapx $ Data.Map.toList statemap
+		return $ toJSObject [(name, JSString $ toJSString $ value), ("state", JSObject $ toJSObject $ catMaybes $ jsonlist)]
 
-	let char = maptojson "name" (charName ai) charmap
-	let asc = maptojson "ascension" (show $ ascension $ ai) ascmap
-	let day = maptojson "ascension-day" ((show $ ascension ai) ++ "-" ++ (show $ daysthisrun ai)) daymap
-	let timestamp = toJSObject [("turnsplayed", JSRational True $ toRational $ fst $ newstateid), ("writes", JSRational True $ toRational $ snd $ newstateid)]
+	char <- maptojson "name" (charName ai) charmap
+	asc <- maptojson "ascension" (show $ ascension $ ai) ascmap
+	day <- maptojson "ascension-day" ((show $ ascension ai) ++ "-" ++ (show $ daysthisrun ai)) daymap
+	timestamp <- return $ toJSObject [("turnsplayed", JSRational True $ toRational $ fst $ newstateid), ("writes", JSRational True $ toRational $ snd $ newstateid)]
 -- 	putStrLn $ "new server settings timestamp: " ++ show timestamp
+
+	hasdied <- readIORef jsondied
+	when hasdied $ do
+		putStrLn $ "ERROR: Error(s) converting JSON"
+--		throwIO $ InternalError "Error converting JSON"
 
 	return $ toJSObject [("character", JSObject char), ("ascension", JSObject asc), ("day", JSObject day), ("timestamp", JSObject timestamp)]
 

@@ -1,3 +1,39 @@
+function __temp_safe_table_to_json(tbl, what)
+	local isok, jsonstr = pcall(table_to_json, tbl)
+	if isok then return jsonstr end
+	print("DEBUG: need to convert for JSON:", what)
+	local newtbl = {}
+	for a, b in pairs(tbl) do
+		if type(a) == "number" then
+			newtbl[tostring(a)] = b
+		else
+			error "Couldn't convert table to JSON"
+		end
+	end
+	return table_to_json(newtbl)
+end
+
+-- TEMPORARY STATE CONVERSION FUNCTION --
+local __done_conversion = false
+add_automator("/main.php", function()
+	if not __done_conversion then
+		__done_conversion = true
+		for stateset, vars in pairs(kolproxycore_enumerate_state()) do
+			--print("===", stateset, "===")
+			for _, x in ipairs(vars) do
+				local val = _G[stateset][x]
+				if type(val) == "table" then
+					local json = __temp_safe_table_to_json(val, x)
+					--print("  ", json)
+					val = json_to_table(json)
+				end
+				--print(stateset, x, val)
+				_G[stateset][x] = val
+			end
+		end
+	end
+end)
+
 add_processor("/main.php", function()
 	if text:contains("the Feast of Boris") then
 		session["holiday: feast of boris"] = "yes"

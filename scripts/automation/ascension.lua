@@ -1865,13 +1865,15 @@ endif
 			message = "end of day",
 			nobuffing = true,
 			action = function()
-				script.maybe_ensure_buffs { "Ode to Booze" }
-				if have_buff("Ode to Booze") then
-					script.ensure_buff_turns("Ode to Booze", 10)
-				end
-				if not have_item("bucket of wine") then
-					script.ensure_mp(2)
-					summon_clipart("bucket of wine")
+				if can_drink_normal_booze() then
+					script.maybe_ensure_buffs { "Ode to Booze" }
+					if have_buff("Ode to Booze") then
+						script.ensure_buff_turns("Ode to Booze", 10)
+					end
+					if not have_item("bucket of wine") then
+						script.ensure_mp(2)
+						summon_clipart("bucket of wine")
+					end
 				end
 				if not have_item("time halo") then
 					script.ensure_mp(2)

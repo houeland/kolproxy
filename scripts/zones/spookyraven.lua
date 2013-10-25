@@ -138,7 +138,8 @@ add_processor("/choice.php", function()
 	end
 end)
 
-add_printer("/manor.php", function()
+add_printer("/place.php", function()
+	if params.whichplace ~= "spookyraven1" then return end
 	local galtext = [[<span style="color: darkorange">Gallery locked</span>]]
 	if have_item("Spookyraven gallery key") then
 		galtext = [[<span style="color: green">Gallery unlocked</span>]]
@@ -147,12 +148,12 @@ add_printer("/manor.php", function()
 		if ascension["zone.conservatory.gallery key"] == "unlocked" then
 			galkeytext = [[<span style="color: green">Gallery key available</span>]]
 		end
-		text = text:gsub([[(<td width=100 height=100>)(<a href="adventure.php%?snarfblat=103">.-)(</td>)]], [[%1<div style="position: relative;"><div style="position: absolute; left: 105px; width: 100px; height: 100px;"><table style="height: 100px; vertical-align: middle;"><tr><td>]] .. galkeytext .. [[</td></tr></table></div>%2</div>%3]])
+		text = text:gsub([[<div id=sr1_conservatory]], [[<div style="position: absolute; top: 0px; left: 305px; width: 100px; height: 100px;"><table style="height: 100px; vertical-align: middle;"><tr><td>]] .. galkeytext .. [[</td></tr></table></div>%0]])
 	end
-	text = text:gsub([[(<td width=100 height=100>)(<a href="adventure.php%?snarfblat=106">.-)(</td>)]], [[%1<div style="position: relative;"><div style="position: absolute; left: -105px; width: 100px; height: 100px;"><table style="width: 100px; height: 100px; vertical-align: middle; text-align: right;"><tr><td>]] .. galtext .. [[</td></tr></table></div>%2</div>%3]])
+	text = text:gsub([[<div id=sr1_gallery]], [[<div style="position: absolute; top: 0px; left: -105px; width: 100px; height: 100px;"><table style="width: 100px; height: 100px; vertical-align: middle; text-align: right;"><tr><td>]] .. galtext .. [[</td></tr></table></div>%0]])
 end)
 
---~ billiards room
+-- billiards room
 
 add_choice_text("Minnesota Incorporeals", function()
 	if have_item("Spookyraven library key") or not have_buff("Chalky Hand") then
@@ -217,12 +218,14 @@ end)
 
 -- library
 
-add_printer("/manor.php", function()
+add_printer("/place.php", function()
+	if params.whichplace ~= "spookyraven1" then return end
 	local libtext = [[<span style="color: darkorange">Visit billiards room to unlock</span>]]
 	if have_item("Spookyraven library key") then
 		libtext = [[<span style="color: green">Library unlocked</span>]]
 	end
-	text = text:gsub([[(<td width=100 height=100>)(<a href="adventure.php%?snarfblat=104">.-)(</td>)]], [[%1<div style="position: relative;"><div style="position: absolute; left: -105px; width: 100px; height: 100px;"><table style="width: 100px; height: 100px; vertical-align: middle; text-align: right;"><tr><td>]] .. libtext .. [[</td></tr></table></div>%2</div>%3]])
+	text = text:gsub([[<div id=sr1_library]], [[%1<div style="position: absolute; top: 200px; left: -105px; width: 100px; height: 100px;"><table style="width: 100px; height: 100px; vertical-align: middle; text-align: right;"><tr><td>]] .. libtext .. [[</td></tr></table></div>%0]])
+	-- TODO: recheck line below
 	text = text:gsub([[(<td width=100 height=100>)(<a href="manor.php%?place=library">.-)(</td>)]], [[%1<div style="position: relative;"><div style="position: absolute; left: -105px; width: 100px; height: 100px;"><table style="width: 100px; height: 100px; vertical-align: middle; text-align: right;"><tr><td>]] .. libtext .. [[</td></tr></table></div>%2</div>%3]])
 end)
 

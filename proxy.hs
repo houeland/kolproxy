@@ -186,10 +186,13 @@ make_ref baseref = do
 	return ref { stateValid_ = state_is_ok }
 
 kolProxyHandler uri params baseref = do
-	let _fake_log_ref = baseref
-	forkIO_ "proxy:updatedatafiles" $ update_data_files -- TODO: maybe not for *every single page*?
+	t <- getCurrentTime
+	tlast <- readIORef (lastDatafileUpdate_ $ globalstuff_ $ baseref)
+	when (diffUTCTime t tlast > 10 * 60) $ do
+		writeIORef (lastDatafileUpdate_ $ globalstuff_ $ baseref) t
+		forkIO_ "proxy:updatedatafiles" $ update_data_files -- TODO: maybe not for *every single page*?
 
-	origref <- log_time_interval _fake_log_ref ("make ref for: " ++ (show uri)) $ make_ref baseref
+	origref <- log_time_interval baseref ("make ref for: " ++ (show uri)) $ make_ref baseref
 
 	let allparams = concat $ catMaybes $ [decodeUrlParams uri, params]
 
@@ -199,15 +202,7 @@ kolProxyHandler uri params baseref = do
 			then return action
 			else return $ Just $ makeErrorResponse (Data.ByteString.Char8.pack $ "Invalid pwd field") uri []
 
-	let handle_login p_sensitive = do
-		loginrequestfunc <- case lookup "password" p_sensitive of
-			Just "" -> do
-				putStrLn $ "Logging in..."
-				return internalKolRequest
-			_ -> do
-				putStrLn $ "Logging in over https..."
-				return internalKolHttpsRequest
-		(pt, effuri, allhdrs, code) <- loginrequestfunc uri (Just p_sensitive) (Nothing, useragent_ $ connection $ origref, hostUri_ $ connection $ origref, Nothing) True
+	let handle_login (pt, effuri, allhdrs, code) = do
 		let hdrs = filter (\(x, _y) -> (x == "Set-Cookie" || x == "Location")) allhdrs
 		putStrLn $ "DEBUG: Login requested " ++ (show $ uriPath uri) ++ ", got " ++ (show $ uriPath effuri)
 		putStrLn $ "  HTTP headers: " ++ show hdrs
@@ -246,9 +241,18 @@ kolProxyHandler uri params baseref = do
 						else makeResponse pt uri hdrs)
 
 	response <- case uriPath uri of
-		"/login.php" -> return $ fmap handle_login params
-
--- TODO: intercept if logged in before page. automate if logged in after page. support logging both.
+		"/login.php" -> case params of
+			Nothing -> return Nothing
+			Just p_sensitive -> return $ Just $ do
+				loginrequestfunc <- case lookup "password" p_sensitive of
+					Just "" -> do
+						putStrLn $ "Logging in..."
+						return internalKolRequest
+					_ -> do
+						putStrLn $ "Logging in over https..."
+						return internalKolHttpsRequest
+				(pt, effuri, allhdrs, code) <- loginrequestfunc uri (Just p_sensitive) (Nothing, useragent_ $ connection $ origref, hostUri_ $ connection $ origref, Nothing) True
+				handle_login (pt, effuri, allhdrs, code)
 
 		"/custom-clear-lua-script-cache" -> check_pwd_for $ Just $ do
 			writeIORef (luaInstances_ $ sessionData $ origref) Data.Map.empty
@@ -273,22 +277,21 @@ kolProxyHandler uri params baseref = do
 
 		_ -> return Nothing
 
-	let getpage = join $ (processPage origref) origref uri params
-
 	retresp <- log_time_interval origref ("run handler for: " ++ (show uri)) $ case response of
-		Just r -> do
-			canread <- canReadState origref
-			if and [not canread, uriPath uri /= "/login.php", uriPath uri /= "/afterlife.php"]
-				then do
-					-- TODO: Can this still be reached?
-					putStrLn $ "Error: Can't read state! Don't log in for the first time in a day while in a fight or choice noncombat, and don't log in while in valhalla!"
-					gp <- getpage
-					case gp of
-						Left (pt, effuri, _hdrs, _code) -> makeErrorResponse pt effuri []
-						Right (pt, effuri, hdrs, _code) -> if (uriPath effuri) `elem` ["/fight.php", "/choice.php"]
-							then makeErrorResponse (add_error_message_to_page "Error: kolproxy can't read state!" pt) effuri []
-							else handleRequest origref uri effuri hdrs params pt -- Because we still want to run printer here(?)
-				else r
+		Just r -> r
+--		do
+--			canread <- canReadState origref
+--			if and [not canread, uriPath uri /= "/login.php", uriPath uri /= "/afterlife.php"]
+--				then do
+--					-- TODO: Can this still be reached?
+--					putStrLn $ "Error: Can't read state! Don't log in for the first time in a day while in a fight or choice noncombat, and don't log in while in valhalla!"
+--					gp <- getpage
+--					case gp of
+--						Left (pt, effuri, _hdrs, _code) -> makeErrorResponse pt effuri []
+--						Right (pt, effuri, hdrs, _code) -> if (uriPath effuri) `elem` ["/fight.php", "/choice.php"]
+--							then makeErrorResponse (add_error_message_to_page "Error: kolproxy can't read state!" pt) effuri []
+--							else handleRequest origref uri effuri hdrs params pt -- Because we still want to run printer here(?)
+--				else r
 		Nothing -> do
 			canread_before <- canReadState origref
 
@@ -319,6 +322,7 @@ runKolproxy = (do
 		else do
 			putStrLn $ "WARNING: Trying to start without required files in the \"scripts\" directory."
 			putStrLn $ "         Did you unzip the files correctly?"
+			-- TODO: give error message in browser
 	portenv <- getEnvironmentSetting "KOLPROXY_PORT"
 	let portnum = case portenv of
 		Just x -> fromJust $ read_as x :: Integer

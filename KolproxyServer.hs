@@ -229,6 +229,8 @@ make_globalref = do
 
 	use_slow_http_ref <- newIORef False
 	have_logged_in_ref <- newIORef False
+	tnow <- getCurrentTime
+	last_datafile_update_ref <- newIORef $ addUTCTime (fromInteger (-60000)) tnow
 	return GlobalRefStuff {
 		logindents_ = indentref,
 		blocking_lua_scripting_ = blockluaref,
@@ -240,7 +242,8 @@ make_globalref = do
 		shutdown_ref_ = shutdown_ref,
 		doChatLogAction_ = \action -> writeChan chatlogchan action,
 		use_slow_http_ref_ = use_slow_http_ref,
-		have_logged_in_ref_ = have_logged_in_ref
+		have_logged_in_ref_ = have_logged_in_ref,
+		lastDatafileUpdate_ = last_datafile_update_ref
 	}
 
 kolproxy_setup_refstuff = do

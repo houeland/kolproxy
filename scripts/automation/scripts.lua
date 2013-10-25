@@ -1575,6 +1575,8 @@ endif
 		if highskill_at_run then return end
 		if ascensionstatus() ~= "Hardcore" then return end
 
+		if not can_eat_normal_food() then return end
+
 		local function space()
 			return estimate_max_fullness() - fullness()
 		end
@@ -1689,6 +1691,8 @@ endif
 		end
 
 		if drunkenness() >= estimate_max_safe_drunkenness() then return end
+
+		if not can_drink_normal_booze() then return end
 
 		for i = 1, 5 do
 			if have_item("peppermint sprout") or have_item("peppermint twist") then

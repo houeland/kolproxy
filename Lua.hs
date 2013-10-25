@@ -76,7 +76,9 @@ get_latest_kolproxy_version = do
 set_state ref stateset var value = do
 	canread <- canReadState ref
 	unless canread $ failLua $ "Error: Trying to set state \"" ++ var ++ "\" before state is available."
-	if stateset `elem` ["ascension", "day", "fight", "session"]
+--	if stateset `elem` ["ascension", "day", "fight", "session"]
+-- HACK: Allow temporarily!
+	if stateset `elem` ["character", "ascension", "day", "fight", "session"]
 		then setState ref stateset var value
 		else failLua $ "cannot write to stateset " ++ (show $ stateset)
 
@@ -464,9 +466,9 @@ kolproxycore_enumerate_state ref l = do
 		Lua.settable l (-3)) statekeys
 	return 1
 
-json_to_table l = do
+fromjson l = do
 	jsonstr <- peekJustString l 1
-	case decodeStrict jsonstr of
+	case decode jsonstr of
 		Ok jsonobj -> do
 			push_jsvalue l jsonobj
 			return 1
@@ -474,9 +476,19 @@ json_to_table l = do
 			putStrLn $ "DEBUG invalid JSON: " ++ jsonstr
 			failLua "Invalid JSON"
 
-table_to_json l = do
+tojson l = do
 	jsonobj <- lua_to_jsvalue l
-	Lua.pushstring l $ encodeStrict jsonobj
+	Lua.pushstring l $ encode jsonobj
+	return 1
+
+decode_uri_query l = do
+	querystr <- peekJustString l 1
+	let Just uri = parseURIReference querystr
+	let maybe_vars = decodeUrlParams uri
+	Lua.newtable l
+	case maybe_vars of
+		Just vars -> add_table_contents_string_string l vars
+		_ -> return ()
 	return 1
 
 setup_lua_instance level filename setupref = do
@@ -502,9 +514,10 @@ setup_lua_instance level filename setupref = do
 			push_jsvalue l =<< KoL.Api.getCharStatusObj ref
 			return 1
 
-		register_function "json_to_table" $ \_ref l -> json_to_table l
+		register_function "fromjson" $ \_ref l -> fromjson l
+		register_function "tojson" $ \_ref l -> tojson l
 
-		register_function "table_to_json" $ \_ref l -> table_to_json l
+		register_function "kolproxycore_decode_uri_query" $ \_ref l -> decode_uri_query l
 
 		register_function "simplexmldata_to_table" $ \_ref l -> do
 			xmlstr <- peekJustString l 1
@@ -794,7 +807,8 @@ runLogScript log_db code = do
 		push_function lstate f name
 		Lua.setglobal lstate name
 
-	register_function "json_to_table" json_to_table
+	register_function "fromjson" fromjson
+	register_function "tojson" tojson
 
 	register_function "get_log_lines" $ \l -> do
 		s <- Database.SQLite3Modded.prepare log_db "SELECT idx FROM pageloads;"
@@ -912,9 +926,8 @@ run_datafile_parsers = do
 		push_function lstate f name
 		Lua.setglobal lstate name
 
-	register_function "json_to_table" json_to_table
-
-	register_function "table_to_json" table_to_json
+	register_function "fromjson" fromjson
+	register_function "tojson" tojson
 
 	register_function "simplexmldata_to_table" $ \l -> do
 		xmlstr <- peekJustString l 1

@@ -24,7 +24,7 @@ local automate_wrapped = load_wrapped_function("scripts/automate.lua")
 local printer_wrapped = load_wrapped_function("scripts/printer.lua")
 
 local function descit(what, pt, url)
---	print(what, "url", url, "pt", type(pt), type(pt) == "string" and pt:len())
+	print("DEBUG descit:", what, "url", url, "pt", type(pt), type(pt) == "string" and pt:len())
 end
 
 local function add_raw_message_to_page(pagetext, msg)
@@ -75,7 +75,7 @@ local function run_wrapped_function_internal(f_env)
 
 	descit("pre-intercept")
 
-	local intercept_pt, intercept_url = kolproxy_log_time_interval("intercept", function() return intercept_wrapped(f_env) end)
+	local intercept_pt, intercept_url = intercept_wrapped(f_env)
 
 	descit("intercept", intercept_pt, intercept_url)
 
@@ -84,14 +84,15 @@ local function run_wrapped_function_internal(f_env)
 	f_env.text = intercept_pt
 	f_env.path = intercept_path
 	f_env.query = intercept_query
+	f_env.effuri_params = kolproxycore_decode_uri_query(intercept_url)
 
-	local automate_pt = kolproxy_log_time_interval("automate", function() return automate_wrapped(f_env) end)
+	local automate_pt = automate_wrapped(f_env)
 
 	descit("automate", automate_pt, intercept_url)
 
 	f_env.text = automate_pt
 
-	local printer_pt = kolproxy_log_time_interval("printer", function() return printer_wrapped(f_env) end)
+	local printer_pt = printer_wrapped(f_env)
 
 	descit("printer", printer_pt, intercept_url)
 

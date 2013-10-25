@@ -10,13 +10,15 @@ function set_fight_state(name, value) set_state("fight", name, value) end
 function set_session_state(name, value) set_state("session", name, value) end
 function set_day_state(name, value) set_state("day", name, value) end
 function set_ascension_state(name, value) set_state("ascension", name, value) end
-function set_character_state(name, value) error("No set_character_state from Lua") end
-
+--function set_character_state(name, value) error("No set_character_state from Lua") end
+-- HACK: allow temporarily!
+function set_character_state(name, value) set_state("character", name, value) end
 
 
 local function setup_state_table(getf, setf)
 	local tbl = {}
 	setmetatable(tbl, { __index = function(t, k)
+		-- TODO: REMOVE TEMPORARY WORKAROUNDS
 		local function parse_value(v)
 			if v == "" then return nil end
 			local pref = v:sub(1, 1)
@@ -29,13 +31,23 @@ local function setup_state_table(getf, setf)
 				else
 					return json_to_table(v)
 				end
+			elseif v == [["true"]] then
+				return true
+			elseif v == [["false"]] then
+				return false
 			elseif pref == [["]] then
+				if tonumber(v:sub(2, -2)) then return tonumber(v:sub(2, -2)) end
 				return json_to_table("[" .. v .. "]")[1]
 			elseif v == "::BOOL:true::" then
 				return true
 			elseif v == "::BOOL:false::" then
 				return false
+			elseif v == "true" then
+				return true
+			elseif v == "false" then
+				return false
 			else
+				if tonumber(v) then return tonumber(v) end
 				return v
 			end
 		end
@@ -46,10 +58,8 @@ local function setup_state_table(getf, setf)
 		local p = nil
 		if v == nil then
 			p = ""
-		elseif type(v) == "table" then
-			p = table_to_json(v)
 		else
-			p = table_to_json({ v }):sub(2, -2)
+			p = tojson(v)
 		end
 		setf(k, p)
 	end})

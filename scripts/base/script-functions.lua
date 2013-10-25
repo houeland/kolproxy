@@ -610,6 +610,14 @@ function can_wear_weapons()
 	return not ascensionpath("Avatar of Boris") and not ascensionpath("Way of the Surprising Fist")
 end
 
+function can_eat_normal_food()
+	return not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Zombie Slayer")
+end
+
+function can_drink_normal_booze()
+	return not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("KOLHS")
+end
+
 function have_unlocked_beach()
 	return have_item("bitchin' meatcar") or have_item("Desert Bus pass") or have_item("pumpkin carriage")
 end

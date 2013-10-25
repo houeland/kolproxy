@@ -10,12 +10,5 @@ add_printer("/choice.php", function()
 			return [[<div ]].. housediv:gsub([[style='position: absolute;]], [[%0 background-color: yellow;]]):gsub("<img  src=", [[<img style="opacity: 0.5" src=]])
 		end
 	end)
-end)
 
---[[--
-houses = {}
-for whichhouse, img in pt:gmatch("whichhouse=([0-9]*)><img(.-)>") do
-  houses[whichhouse] = img:match("otherimages/trickortreat/(house_.-.gif)")
-end
-print(tostring(houses))
---]]--
+end)

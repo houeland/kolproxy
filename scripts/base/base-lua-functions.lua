@@ -1,5 +1,8 @@
 pretty_print_tables = true
 
+table_to_json = tojson
+json_to_table = fromjson
+
 if string then
 	function string.contains(a, b) return not not a:find(b, 1, true) end
 end
