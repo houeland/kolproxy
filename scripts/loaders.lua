@@ -13,7 +13,6 @@ load_file("interface", "interface/fullness.lua")
 load_file("interface", "interface/crafting.lua")
 load_file("interface", "interface/storage.lua")
 load_file("interface", "interface/ascension-checklist.lua")
-load_file("interface", "interface/charpane.lua")
 load_file("interface", "interface/pulverize-groups.lua")
 load_file("interface", "interface/semirare.lua")
 load_file("interface", "interface/shop-item-count.lua")
@@ -169,6 +168,8 @@ load_file("interface", "other/lua-console.lua")
 load_file("other", "paths/jarlsberg.lua")
 
 load_file("zone", "zones/wandering-monsters.lua")
+
+load_file("interface", "interface/charpane.lua")
 
 for _, f in ipairs(list_custom_autoload_script_files()) do
 	load_file("custom autoload", "custom-autoload/" .. f)

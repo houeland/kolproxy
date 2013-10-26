@@ -61,6 +61,7 @@ local function setup_state_table(getf, setf)
 		else
 			p = tojson(v)
 		end
+--		print("DEBUG setting state", k, " ==> ", p)
 		setf(k, p)
 	end})
 	return tbl

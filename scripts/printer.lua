@@ -37,9 +37,9 @@ if path == "/login.php" then
 	}
 	local version_link = ""
 	print("current version", current_version, "latest version", latest_version)
-	if current_version ~= "3.15-alpha" then
+	if current_version ~= "3.16-dev" then
 		version_link = [[<a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; text-decoration: none;">{ Kolproxy v]]..current_version..[[ incorrect installation. }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; font-size: smaller;">{ Click here to download a working version. }</a>]]
-	elseif latest_version and current_version ~= latest_version and latest_version ~= "3.14-beta" then
+	elseif latest_version and current_version ~= latest_version and latest_version ~= "3.15-alpha" then
 		version_link = [[<a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; text-decoration: none;">{ Kolproxy v]]..current_version..[[, latest version is v]]..latest_version..[[ }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; font-size: smaller;">{ Click here to upgrade. }</a>]]
 	else
 		version_link = [[<span style="color: green">{ Kolproxy v]]..current_version..[[ }</span>]]

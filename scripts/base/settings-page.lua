@@ -96,10 +96,6 @@ register_setting {
 	default_level = "detailed",
 }
 
--- 	-- 		{ title = "Show PvP announcements in a separate tab", set = "character", name = "separate pvp announcements tab", field = "yesno" },
-
-
-
 local setting_groups = {
 	{ name = "charpane", title = "Character pane" },
 	{ name = "warnings", title = "Adventure warnings" },
@@ -283,12 +279,12 @@ function changed_feature_setting(what) {
 	var update_charpane = charpane_updaters[setting]
 	var update_menupane = menupane_updaters[setting]
 	if (c == "tdon") {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'on', ajax: 1 }, function(res) {
+		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'"on"', ajax: 1 }, function(res) {
 			if (update_charpane) top.charpane.location = "charpane.php"
 			if (update_menupane) top.menupane.location = "topmenu.php"
 		})
 	} else if (c == "tdoff") {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'off', ajax: 1 }, function(res) {
+		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'"off"', ajax: 1 }, function(res) {
 			if (update_charpane) top.charpane.location = "charpane.php"
 			if (update_menupane) top.menupane.location = "topmenu.php"
 		})
@@ -368,31 +364,21 @@ add_printer("/custom-settings", function()
 			<script type="text/javascript">
 function changed_settings() {
 	if (document.getElementById("settingslimited").checked) {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'limited', ajax: 1 }, function(res) {
+		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'"limited"', ajax: 1 }, function(res) {
 			top.charpane.location = "charpane.php"
 			top.menupane.location = "topmenu.php"
 		})
 	} else if (document.getElementById("settingsstandard").checked) {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'standard', ajax: 1 }, function(res) {
+		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'"standard"', ajax: 1 }, function(res) {
 			top.charpane.location = "charpane.php"
 			top.menupane.location = "topmenu.php"
 		})
 	} else if (document.getElementById("settingsdetailed").checked) {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'detailed', ajax: 1 }, function(res) {
+		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'"detailed"', ajax: 1 }, function(res) {
 			top.charpane.location = "charpane.php"
 			top.menupane.location = "topmenu.php"
 		})
 	}
-}
-function click_cb(cb, name, stateset) {
-	var cur = "no"
-	if (cb.checked) {
-		cur = "yes"
-	}
-	$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:name, stateset:stateset, value:cur, ajax: 1 }, function(res) {
-		enableDiv(label);
-	});
-	return true;
 }
 function clear_lua_script_cache(button) {
 	var pwd = ']] .. session.pwd .. [['

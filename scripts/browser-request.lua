@@ -24,7 +24,7 @@ local automate_wrapped = load_wrapped_function("scripts/automate.lua")
 local printer_wrapped = load_wrapped_function("scripts/printer.lua")
 
 local function descit(what, pt, url)
-	print("DEBUG descit:", what, "url", url, "pt", type(pt), type(pt) == "string" and pt:len())
+--	print("DEBUG descit:", what, "url", url, "pt", type(pt), type(pt) == "string" and pt:len())
 end
 
 local function add_raw_message_to_page(pagetext, msg)
