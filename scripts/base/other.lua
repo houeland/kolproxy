@@ -18,6 +18,8 @@ local __done_conversion = false
 add_automator("/main.php", function()
 	if not __done_conversion then
 		__done_conversion = true
+		print("DEBUG: converting tables to JSON")
+		get_outfit_slots_line()
 		for stateset, vars in pairs(kolproxycore_enumerate_state()) do
 			--print("===", stateset, "===")
 			for _, x in ipairs(vars) do

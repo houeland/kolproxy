@@ -797,9 +797,9 @@ function get_automation_scripts(cached_stuff)
 			if not have_item("tobiko marble soda") then
 				script.ensure_mp(5)
 				cast_skill("Summon Alice's Army Cards")
-				async_get_page("/place.php", { whichplace = "forestvillage" })
-				async_get_page("/gamestore.php")
-				async_get_page("/gamestore.php", { place = "cashier" })
+				get_page("/place.php", { whichplace = "forestvillage" })
+				get_page("/gamestore.php")
+				get_page("/gamestore.php", { place = "cashier" })
 				async_post_page("/gamestore.php", { action = "buysnack", whichsnack = get_itemid("tobiko marble soda") })
 			end
 			return use_item("tobiko marble soda")

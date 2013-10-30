@@ -8,6 +8,7 @@ local function load_slots()
 	end
 	-- <<< TODO: TEMPORARY WORKAROUND <<< --
 	slots.selected = slots.selected or 1
+	ascension["interface.outfit slots"] = slots -- TODO: TEMPORARY WORKAROUND
 	return slots
 end
 

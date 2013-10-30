@@ -1865,23 +1865,32 @@ endif
 			message = "end of day",
 			nobuffing = true,
 			action = function()
-				if can_drink_normal_booze() then
-					script.maybe_ensure_buffs { "Ode to Booze" }
-					if have_buff("Ode to Booze") then
-						script.ensure_buff_turns("Ode to Booze", 10)
-					end
-					if not have_item("bucket of wine") then
-						script.ensure_mp(2)
-						summon_clipart("bucket of wine")
-					end
-				end
 				if not have_item("time halo") then
 					script.ensure_mp(2)
 					summon_clipart("time halo")
 				end
 				script.wear { acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" } }
+
+				if ascension_script_option("overdrink with nightcap") then
+					if can_drink_normal_booze() then
+						script.maybe_ensure_buffs { "Ode to Booze" }
+						if have_buff("Ode to Booze") then
+							script.ensure_buff_turns("Ode to Booze", 10)
+						end
+						if not have_item("bucket of wine") then
+							script.ensure_mp(2)
+							summon_clipart("bucket of wine")
+						end
+						if buffturns("Ode to Booze") >= 10 and have_item("bucket of wine") then
+							set_result(drink_item("bucket of wine"))
+							result = add_message_to_page(get_result(), "<p>Overdrunk, finished day. (Do PvP?)</p>", "Ascension script:")
+							finished = true
+							return
+						end
+					end
+				end
 				result, resulturl = get_page("/inventory.php", { which = 1 })
-				result = add_message_to_page(get_result(), "<p>End of day.</p><p>(PvP,) overdrink, then done.</p>", "Ascension script:")
+				result = add_message_to_page(get_result(), "<p>End of day.</p><p>(PvP?,) cast ode and overdrink, then done.</p>", "Ascension script:")
 				finished = true
 			end
 		}
@@ -5151,6 +5160,7 @@ local ascension_script_options_tbl = {
 	["ignore automatic pulls"] = { yes = "only pull softcore items manually", no = "automate some pulls", when = function() return not ascensionstatus("Hardcore") end },
 	["train skills manually"] = { yes = "train manually", no = "automate training", when = function() return ascensionpath("Avatar of Jarlsberg") end },
 	["100% familiar run"] = { yes = "don't change familiar", no = "automate familiar choice" },
+	["overdrink with nightcap"] = { yes = "overdrink automatically", no = "don't automate" },
 }
 
 function ascension_script_option(name)

@@ -91,6 +91,13 @@ local gremlins = {
 	["vegetable gremlin"] = "molybdenum screwdriver",
 }
 
+local gremlin_messages = {
+	["batwinged gremlin"] = "you're <i>so</i> hammered",
+	["erudite gremlin"] = "adjust it to make you scream bloody murder",
+	["spider gremlin"] = "a pair of pliers and fastens them firmly",
+	["vegetable gremlin"] = "it was just the regular, metal, stabby kind of screwdriver",
+}
+
 add_processor("/fight.php", function()
 	if gremlins[monstername()] then
 		for _, x in ipairs { "a bombing run", "random junk", "fibula", "picks a" } do
@@ -98,7 +105,7 @@ add_processor("/fight.php", function()
 				fight["gremlin.has tool"] = "no"
 			end
 		end
-		if text:contains("whips out a") then
+		if text:contains("whips out a") and text:contains(gremlin_messages[monstername()]) then
 			fight["gremlin.has tool"] = "yes"
 			for x in text:gmatch("var onturn = ([0-9]+);") do
 				fight["gremlin.tool round"] = tonumber(x)
