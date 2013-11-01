@@ -29,6 +29,7 @@ load_file("item", "items/leaflet.lua")
 load_file("item", "items/clover.lua")
 load_file("item", "items/halo.lua")
 load_file("item", "items/sugar-sheet.lua")
+load_file("item", "items/pantsgiving.lua")
 load_file("interface", "items/beararms.lua")
 
 load_file("familiar", "familiars/butt-away.lua")

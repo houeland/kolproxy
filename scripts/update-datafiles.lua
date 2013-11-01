@@ -396,7 +396,7 @@ function parse_items()
 	for l in io.lines("cache/files/statuseffects.txt") do
 		l = remove_line_junk(l)
 		local n = l:match("[0-9]*	([^	]+)")
-		local i = l:match("[0-9]*	([^	]+)	.*use 1 (.+)")
+		local i = l:match("[0-9]*	[^	]+	.*use 1 (.+)") or l:match("[0-9]*	[^	]+	.*use 5 (.+)")
 		if n and not processed_datafiles["buffs"][n] then
 			softwarn("statuseffects:buff does not exist", n)
 		elseif n and i and items[i] and items[i].use_effect ~= n then

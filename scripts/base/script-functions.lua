@@ -510,6 +510,7 @@ function estimate_max_fullness()
 	if session["active feast of boris bonus fullness today"] == "yes" then
 		mf = mf + 15
 	end
+	mf = mf + get_daily_counter("pantsgiving bonus fullness")
 	return mf
 end
 
