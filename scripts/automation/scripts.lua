@@ -2264,7 +2264,7 @@ mark m_done
 					minmp = 50,
 					equipment = {
 						shirt = first_wearable { "surgical apron" },
-						weapon = can_wear_weapons() and first_wearable { "half-size scalpel" },
+						weapon = can_wear_weapons() and first_wearable { "half-size scalpel" } or nil,
 						pants = first_wearable { "bloodied surgical dungarees" },
 						acc1 = first_wearable { "head mirror" },
 						acc2 = first_wearable { "surgical mask" },

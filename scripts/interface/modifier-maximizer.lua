@@ -18,7 +18,7 @@ function maximize_equipment_slot_bonuses(slot, scoref_raw)
 		local d = maybe_get_itemdata(itemid)
 		if name and d and d.equipment_slot == slot then
 			local score = scoref(estimate_item_equip_bonuses(name))
-			table.insert(options, { name = name, score = score, worn = true, wornslot = wornslot, itemid = itemid })
+			table.insert(options, { name = name, score = score, worn = true, wornslot = wornslot, itemid = itemid, canwear = true })
 		end
 	end
 	for itemid, _ in pairs(inventory()) do
@@ -26,14 +26,16 @@ function maximize_equipment_slot_bonuses(slot, scoref_raw)
 		local d = maybe_get_itemdata(itemid)
 		if name and d and d.equipment_slot == slot then
 			local score = scoref(estimate_item_equip_bonuses(name))
-			table.insert(options, { name = name, score = score, worn = false, itemid = itemid })
+			table.insert(options, { name = name, score = score, worn = false, itemid = itemid, canwear = can_equip_item(name) })
 		end
 	end
-	table.insert(options, { name = "(none)", score = 0, worn = true, wornslot = "zzz1" })
-	table.insert(options, { name = "(none)", score = 0, worn = true, wornslot = "zzz2" })
-	table.insert(options, { name = "(none)", score = 0, worn = true, wornslot = "zzz3" })
+	table.insert(options, { name = "(none)", score = 0, worn = true, wornslot = "zzz1", canwear = true })
+	table.insert(options, { name = "(none)", score = 0, worn = true, wornslot = "zzz2", canwear = true })
+	table.insert(options, { name = "(none)", score = 0, worn = true, wornslot = "zzz3", canwear = true })
 	table.sort(options, function(a, b)
-		if a.score ~= b.score then
+		if a.canwear ~= b.canwear then
+			return a.canwear
+		elseif a.score ~= b.score then
 			return a.score > b.score
 		elseif a.worn ~= b.worn then
 			return a.worn
