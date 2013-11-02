@@ -2,6 +2,7 @@ local sources = {
 	{ "clan", "1736451", "AFH" },
 	{ "clan", "1736457", "AFHk" },
 	{ "clan", "1736458", "AFHobo" },
+	{ "clan", "2402686", "CGRelay" },
 }
 
 --~ local contact_color = get_character_state("kol.account.contact chat color") -- TODO-future: can these be moved to chat state?
