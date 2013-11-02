@@ -214,16 +214,27 @@ do
 	function add_warning(tbl)
 		-- TODO: deprecate some of these
 		check_supported_table_values(tbl, {}, { "message", "check", "severity", "zone", "when", "idgenerator", "path" })
-		local want_zoneid = tbl.zone and get_zoneid(tbl.zone)
+		local warnprefix = "everywhere"
+		local want_zoneids = nil
+		if tbl.zone then
+			want_zoneids = {}
+			if type(tbl.zone) ~= "table" then
+				tbl.zone = { tbl.zone }
+			end
+			warnprefix = table.concat(tbl.zone, ",")
+			for _, z in ipairs(tbl.zone) do
+				want_zoneids[get_zoneid(z)] = true
+			end
+		end
 		local path = tbl.path or "/adventure.php"
 		local function f()
 			if tbl.when == "ascension" and ascensionstatus("Aftercore") then return end
 			local zoneid = tonumber(params.snarfblat)
-			if want_zoneid and zoneid ~= want_zoneid then return end
+			if want_zoneids and not want_zoneids[zoneid] then return end
 			local check, checkid = tbl.check(zoneid)
 			if check then
 				local msg = tbl.message
-				local warnid = (tbl.zone or "everywhere") .. "/" .. msg
+				local warnid = warnprefix .. "/" .. msg
 				if msg == "custom" and type(check) == "string" then
 					msg = check
 					warnid = checkid
