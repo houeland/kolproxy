@@ -35,7 +35,29 @@ add_automator("/shore.php", function()
 	end
 end)
 
+-- desert/oasis
 
+function get_desert_exploration()
+	local pt = get_page("/place.php", { whichplace = "desertbeach" })
+	if pt:contains("zonefont/percent.gif") then
+		local snippet = pt:match("zonefont/lparen.gif.-zonefont/percent.gif")
+		local digits = ""
+		for x in snippet:gmatch("zonefont/([0-9]).gif") do
+			digits = digits .. x
+		end
+		return tonumber(digits)
+	end
+end
+
+add_warning {
+	message = "You might want to equip an UV-resistant compass to aid in desert exploration (from The Shore, Inc.)",
+	type = "warning",
+	when = "ascension",
+	zone = "The Arid, Extra-Dry Desert",
+	check = function() return can_wear_weapons() and not have_equipped("UV-resistant compass") end
+}
+
+--[[--
 -- This is really the same warning, could this be restructured?
 add_always_zone_check(121, function()
 	if not have_buff("Ultrahydrated") then
@@ -86,6 +108,7 @@ add_always_zone_check(122, function()
 		return "You already have the stone rose and a drum machine for Gnasir."
 	end
 end)
+--]]--
 
 -- pyramid
 add_itemdrop_counter("tomb ratchet", function(c)

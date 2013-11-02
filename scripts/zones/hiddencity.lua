@@ -1,5 +1,5 @@
 add_warning {
-	message = "You might want to equip an antique machete to cut away dense lianas without taking a turn.",
+	message = "You might want to equip an antique machete to cut away dense lianas without taking a turn (from The Hidden Park).",
 	type = "warning",
 	when = "ascension",
 	zone = { "An Overgrown Shrine (Northwest)", "An Overgrown Shrine (Southwest)", "An Overgrown Shrine (Northeast)", "An Overgrown Shrine (Southeast)", "A Massive Ziggurat" },

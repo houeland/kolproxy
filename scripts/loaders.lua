@@ -112,9 +112,9 @@ load_file("chat", "other/chat-commands.lua")
 
 -- load_file("interface", "other/itemdrop-decorator.lua")
 
-load_file("chat", "other/afh-clan-chat.lua")
+load_file("chat", "chat/relay-chatbot.lua")
 -- load_file("other", "other/afh-clan-chat-base.lua")
-load_file("chat", "other/chat-highlighting.lua")
+load_file("chat", "chat/highlighting.lua")
 
 load_file("automation", "automation/settings.lua")
 load_file("automation", "automation/macros.lua")
