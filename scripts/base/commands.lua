@@ -18,7 +18,7 @@ function mix_items(a, b, qty)
 end
 
 function smith_items(a, b, qty)
-	return post_page("/craft.php", { mode = "smith", pwd = session.pwd, action = "craft", a = get_itemid(a), b = get_itemid(b), qty = qty or 1, ajax = 1 })
+	return async_post_page("/craft.php", { mode = "smith", pwd = session.pwd, action = "craft", a = get_itemid(a), b = get_itemid(b), qty = qty or 1, ajax = 1 })
 end
 
 function buy_item(name, whichstore, amount)
