@@ -49,6 +49,13 @@ function get_desert_exploration()
 	end
 end
 
+add_automator("all pages", function()
+	if not setting_enabled("enable ascension assistance") then return end
+	if locked() then return end
+	if not have_item("desert sightseeing pamphlet") then return end
+	use_item("desert sightseeing pamphlet")
+end)
+
 add_warning {
 	message = "You might want to equip an UV-resistant compass to aid in desert exploration (from The Shore, Inc.)",
 	type = "warning",

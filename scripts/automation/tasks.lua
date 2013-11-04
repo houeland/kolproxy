@@ -578,8 +578,8 @@ mark m_done
 	end
 
 	function t.do_daily_dungeon()
-		if not have_gelatinous_cubeling_items() then
-			stop "Missing gelatinous cubeling items for daily dungeon"
+		if not have_gelatinous_cubeling_items() and script.have_familiar("Gelatinous Cubeling") then
+			stop "Get missing gelatinous cubeling items for daily dungeon"
 		end
 		return {
 			message = "do daily dungeon",

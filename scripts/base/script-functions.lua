@@ -228,7 +228,7 @@ do
 		end
 		local path = tbl.path or "/adventure.php"
 		local function f()
-			if tbl.when == "ascension" and ascensionstatus("Aftercore") then return end
+			if tbl.when == "ascension" and freedralph() then return end
 			local zoneid = tonumber(params.snarfblat)
 			if want_zoneids and not want_zoneids[zoneid] then return end
 			local check, checkid = tbl.check(zoneid)

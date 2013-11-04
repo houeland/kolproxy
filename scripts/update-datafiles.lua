@@ -500,13 +500,14 @@ local prefixkeys = {
 	b = "bounty",
 	c = "conditional",
 	f = "fixed",
+	a = "accordion",
 }
 
 local function parse_monster_items(items)
 	if #items == 0 then return nil end
 	itemtbl = {}
 	for _, item in ipairs(items) do
-		local name, prefix, rate, suffix = item:match("^(.*) %(([pnbcf]*)(%d+)([pnbcf]*)%)$")
+		local name, prefix, rate, suffix = item:match("^ ?(.*) %(([pnbcfa]?)(%d+)([pnbcfa]?)%)$")
 		if suffix and suffix ~= "" then
 			prefix = suffix
 		end
