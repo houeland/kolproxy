@@ -636,12 +636,12 @@ function can_drink_normal_booze()
 end
 
 function have_unlocked_beach()
-	return have_item("bitchin' meatcar") or have_item("Desert Bus pass") or have_item("pumpkin carriage")
+	return have_item("bitchin' meatcar") or have_item("Desert Bus pass") or have_item("pumpkin carriage") or have_item("tin lizzie")
 end
 unlocked_beach = have_unlocked_beach
 
 function have_unlocked_island()
-	return have_item("dingy dinghy") or have_item("skeletal skiff")
+	return have_item("dingy dinghy") or have_item("skeletal skiff") or have_item("junk junk")
 end
 unlocked_island = have_unlocked_island
 

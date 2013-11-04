@@ -122,7 +122,7 @@ add_ascension_adventure_warning(function(zoneid)
 			return "You might want to turn up the Mind-Control Device.", "turn up Mind-Control Device"
 		end
 	elseif moonsign_area() == "Gnomish Gnomad Camp" then
-		if have_item("bitchin' meatcar") or have_item("pumpkin carriage") or have_item("Desert Bus pass") then
+		if have_unlocked_beach() then
 			if mcd() == 0 then
 				return "You might want to set the Annoy-o-Tron.", "set Annoy-o-Tron"
 			elseif mcd() < 10 and should_we_maximize_mcd() then
