@@ -541,7 +541,7 @@ local smith_stone_banjo_href = add_automation_script("smith-stone-banjo", functi
 		post_page("/hermit.php", { action = "trade", whichitem = get_itemid("banjo strings"), quantity = 1 })
 	end
 
-	return smith_items("banjo strings", "big rock")()
+	return smith_items("banjo strings", "big rock")
 end)
 
 function automate_lair_statues(text)
