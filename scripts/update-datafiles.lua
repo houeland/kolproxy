@@ -378,6 +378,7 @@ function parse_items()
 		if section and equip_sections[section] and name and bonuslist and not blacklist[name] and not name2 and not blacklist["bonuses: " .. name] then
 			if items[name] then
 				items[name].equip_bonuses = parse_mafia_bonuslist(bonuslist)
+				items[name].song_duration = tonumber(bonuslist:match("Song Duration: ([0-9]+)"))
 			else
 				hardwarn("modifiers:item does not exist", name)
 			end
@@ -405,6 +406,8 @@ function parse_items()
 		end
 	end
 
+	items["stolen accordion"].song_duration = 5 -- HACK: datafile is broken
+
 	return items
 end
 
@@ -417,12 +420,15 @@ function verify_items(data)
 	ok = ok and data["flaming pink shirt"].equipment_slot == "shirt"
 	ok = ok and data["mayfly bait necklace"].equip_bonuses["Item Drops from Monsters"] == 10 and data["mayfly bait necklace"].equip_bonuses["Meat from Monsters"] == 10
 	ok = ok and data["Jarlsberg's pan (Cosmic portal mode)"].equip_bonuses["Food Drops from Monsters"] == 50
+	ok = ok and data["stolen accordion"].song_duration == 5
+	ok = ok and data["toy accordion"].song_duration == 5
+	ok = ok and data["pygmy concertinette"].song_duration == 17
 	if ok then
 		return data
 	end
 
 	local testitems = {}
-	for _, x in ipairs { "Orcish Frat House blueprints", "Hell ramen", "water purification pills", "beastly paste", "leather chaps", "dried gelatinous cube", "flaming pink shirt", "mayfly bait necklace", "Jarlsberg's pan (Cosmic portal mode)" } do
+	for _, x in ipairs { "Orcish Frat House blueprints", "Hell ramen", "water purification pills", "beastly paste", "leather chaps", "dried gelatinous cube", "flaming pink shirt", "mayfly bait necklace", "Jarlsberg's pan (Cosmic portal mode)", "stolen accordion", "toy accordion", "pygmy concertinette" } do
 		testitems[x] = data[x]
 	end
 	hardwarn("verify_items failure:", table_to_json(testitems))

@@ -1,6 +1,7 @@
 function get_ascension_automation_settings(want_bonus)
 	local tbl = {
 		should_wear_weapons = challenge ~= "fist" and (
+				playerclass("Accordion Thief") or
 				have_item("Jarlsberg's pan (Cosmic portal mode)") or
 				have_item("Operation Patriot Shield") or
 				have_item("Trusty") or
@@ -256,6 +257,13 @@ function get_ascension_automation_settings(want_bonus)
 			"Staff of the All-Steak",
 			"Staff of the Healthy Breakfast",
 			"Staff of Fruit Salad",
+			"alarm accordion",
+			"peace accordion",
+			"Squeezebox of the Ages",
+			"Rock and Roll Legend",
+			"accordion file",
+			"baritone accordion",
+			"stolen accordion",
 			"hilarious comedy prop",
 			"rubber band gun",
 		}

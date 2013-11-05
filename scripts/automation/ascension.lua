@@ -2260,13 +2260,10 @@ endif
 		task = tasks.rotting_matilda,
 	}
 
+	local want_starting_items = classid() < 10 and (not AT_song_duration() or not have_item("turtle totem") or not have_item("saucepan") or not have_item("seal tooth"))
+
 	add_task {
-		when = not (
-			(have("Rock and Roll Legend") or not have_skill("The Ode to Booze") and have_item("stolen accordion")) and
-			have("turtle totem") and
-			have("saucepan") and
-			have("seal tooth")
-		) and challenge ~= "fist" and challenge ~= "zombie",
+		when = want_starting_items and meat() >= 200,
 		task = tasks.get_starting_items,
 	}
 
@@ -2815,11 +2812,11 @@ endif
 					end
 				}
 			else
-				script.maybe_ensure_buffs { "Mental A-cue-ity" }
 				return {
 					message = "get KGE outfit",
 					fam = "Slimeling",
 					buffs = { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+					maybe_buffs = { "Mental A-cue-ity" },
 					minmp = 25,
 					action = adventure {
 						zoneid = 257,
@@ -3178,39 +3175,6 @@ endwhile
 	}
 
 	add_task {
-		when = level() < 6 and (challenge ~= "fist" or fist_level >= 3) and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and ascensionstatus() == "Hardcore",
-		task = tasks.do_sewerleveling,
-	}
-
-	-- TODO: get kgs first if needed
-
-	add_task {
-		prereq = quest("Trial By Friar"),
-		f = script.do_friars,
-	}
-
-	add_task {
-		prereq = quest_text("this is Azazel in Hell") and not ascension_script_option("skip azazel quest"),
-		f = script.do_azazel,
-	}
-
-	do
-		local three_drunk = get_first_we_have { "sangria", "tequila with training wheels", "margarita", "strawberry daiquiri", "Mad Train wine", "ice-cold fotie" }
-		local one_drunk1, one_drunk2 = get_first_we_have({ "gin-soaked blotter paper", "ice-cold Sir Schlitz", "ice-cold Willer" }, 1)
-		add_task {
-			prereq = challenge == "fist" and whichday == 1 and have_skill("Liver of Steel") and drunkenness() == 14 and three_drunk and one_drunk1 and one_drunk2,
-			message = "drinking booze day 1 fist",
-			action = function()
-				script.ensure_buffs { "Ode to Booze" }
-				drink_item(three_drunk)
-				drink_item(one_drunk1)
-				drink_item(one_drunk2)
-				did_action = (drunkenness() == 19)
-			end
-		}
-	end
-
-	add_task {
 		prereq = level() >= 6 and quest("The Goblin Who Wouldn't Be King") and quest_text("haven't figured out how to decrypt it yet"),
 		f = script.unlock_cobbs_knob,
 	}
@@ -3280,6 +3244,26 @@ endwhile
 				end
 			end
 		end,
+	}
+
+	add_task {
+		when = quest("The Goblin Who Wouldn't Be King") and
+			not have_guard_outfit() and
+			can_wear_weapons(),
+		task = {
+			message = "get KGE outfit",
+			fam = "Slimeling",
+			buffs = { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+			maybe_buffs = { "Mental A-cue-ity" },
+			minmp = 25,
+			action = adventure {
+				zoneid = 257,
+				macro_function = macro_ppnoodlecannon,
+				noncombats = {
+					["Welcome to the Footlocker"] = "Loot the locker",
+				}
+			}
+		},
 	}
 
 	add_task {
@@ -3364,12 +3348,35 @@ endwhile
 	}
 
 	add_task {
-		when = not (
-			have("Rock and Roll Legend") and
-			have("turtle totem")
-		) and challenge == "fist" and meat() >= 200,
-		task = tasks.get_starting_items,
+		when = level() < 6 and (challenge ~= "fist" or fist_level >= 3) and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and ascensionstatus() == "Hardcore",
+		task = tasks.do_sewerleveling,
 	}
+
+	add_task {
+		prereq = quest("Trial By Friar"),
+		f = script.do_friars,
+	}
+
+	add_task {
+		prereq = quest_text("this is Azazel in Hell") and not ascension_script_option("skip azazel quest"),
+		f = script.do_azazel,
+	}
+
+	do
+		local three_drunk = get_first_we_have { "sangria", "tequila with training wheels", "margarita", "strawberry daiquiri", "Mad Train wine", "ice-cold fotie" }
+		local one_drunk1, one_drunk2 = get_first_we_have({ "gin-soaked blotter paper", "ice-cold Sir Schlitz", "ice-cold Willer" }, 1)
+		add_task {
+			prereq = challenge == "fist" and whichday == 1 and have_skill("Liver of Steel") and drunkenness() == 14 and three_drunk and one_drunk1 and one_drunk2,
+			message = "drinking booze day 1 fist",
+			action = function()
+				script.ensure_buffs { "Ode to Booze" }
+				drink_item(three_drunk)
+				drink_item(one_drunk1)
+				drink_item(one_drunk2)
+				did_action = (drunkenness() == 19)
+			end
+		}
+	end
 
 	add_task {
 		prereq = challenge == "fist" and
@@ -4953,6 +4960,11 @@ use gauze garter, gauze garter
 				x.buffs = nil
 			elseif not ignore_buffing_and_outfit then
 				script.ensure_buffs {}
+			end
+
+			if x.maybe_buffs then
+				script.maybe_ensure_buffs(x.maybe_buffs)
+				x.maybe_buffs = nil
 			end
 
 			script.heal_up()

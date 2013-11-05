@@ -37,13 +37,14 @@ function get_automation_tasks(script, cached_stuff)
 		end
 	}
 
+	-- TODO: split into 3 tasks
 	t.get_starting_items = {
 		message = "get starting items",
 		nobuffing = true,
 		action = function()
-			if not ((have("stolen accordion") or have_item("Rock and Roll Legend")) and have_item("turtle totem") and have_item("saucepan")) then
+			if not (have_item("stolen accordion") and have_item("turtle totem") and have_item("saucepan")) then
 				local pt, pturl, advagain
-				while not ((have("stolen accordion") or have_item("Rock and Roll Legend")) and have_item("turtle totem") and have_item("saucepan")) do
+				while not (have_item("stolen accordion") and have_item("turtle totem") and have_item("saucepan")) do
 					pt, pturl, advagain = script.buy_use_chewing_gum()
 					if not advagain then
 						critical "Failed to use chewing gum"
@@ -52,7 +53,7 @@ function get_automation_tasks(script, cached_stuff)
 				return pt, pturl
 			end
 
-			if not have_item("Rock and Roll Legend") and have_skill("The Ode to Booze") then
+			if playerclass("Accordion Thief") and (AT_song_duration() or 0) < 10 then
 				inform "pick up RnR"
 				script.ensure_worthless_item()
 				if not have_item("hermit permit") then
@@ -96,6 +97,12 @@ function get_automation_tasks(script, cached_stuff)
 				end
 				did_action = have_item("Rock and Roll Legend")
 				return result, resulturl, did_action
+			end
+
+			if not playerclass("Accordion Thief") and (AT_song_duration() or 0) < 5 then
+				inform "buy toy accordion"
+				set_result(buy_item("toy accordion", "z"))
+				did_action = have_item("toy accordion")
 			end
 
 			if not have_item("seal tooth") and challenge ~= "fist" and challenge ~= "zombie" then
@@ -350,7 +357,7 @@ mark m_done
 						fam = "Slimeling",
 						buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
 						bonus_target = { "item" },
-						minmp = 30,
+						minmp = 35,
 						action = adventure {
 							zoneid = 295,
 							macro_function = macro_noodleserpent,

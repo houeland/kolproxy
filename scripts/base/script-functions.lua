@@ -593,13 +593,18 @@ function can_equip_item(item)
 	-- TODO: boris/fist
 	local name = maybe_get_itemname(item)
 	if not name then return true end
-	local eqreqs = datafile("items")[name].equip_requirement or {}
-	for a, b in pairs(eqreqs) do
+	local itemdata = maybe_get_itemdata(name)
+	for a, b in pairs(itemdata.equip_requirement or {}) do
 		if a == "muscle" and basemuscle() < b then
 			return false
 		elseif a == "mysticality" and basemysticality() < b then
 			return false
 		elseif a == "moxie" and basemoxie() < b then
+			return false
+		end
+	end
+	if not playerclass("Accordion Thief") and itemdata.song_duration then
+		if name ~= "toy accordion" and name ~= "antique accordion" then
 			return false
 		end
 	end
@@ -639,3 +644,28 @@ function have_unlocked_island()
 	return have_item("dingy dinghy") or have_item("skeletal skiff")
 end
 unlocked_island = have_unlocked_island
+
+local AT_accordions = nil
+function AT_song_duration()
+	if playerclass("Accordion Thief") then
+		if not AT_accordions then
+			AT_accordions = {}
+			for a, b in pairs(datafile("items")) do
+				if b.song_duration then
+					table.insert(AT_accordions, { name = a, song_duration = b.song_duration })
+				end
+			end
+			table.sort(AT_accordions, function(a, b) return a.song_duration > b.song_duration end)
+		end
+		--print(tostring(AT_accordions))
+		for _, x in ipairs(AT_accordions) do
+			if have_item(x.name) then
+				return x.song_duration
+			end
+		end
+	elseif have_item("antique accordion") then
+		return 10
+	elseif have_item("toy accordion") then
+		return 5
+	end
+end

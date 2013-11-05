@@ -200,7 +200,7 @@ function getCurrentFightMonster()
 	-- something is screwed up if this returns nil
 	local current_fight = fight["currently fighting"]
 	if not current_fight then return nil end
-	
+
 	local monster = current_fight.data
 
 	if monster then

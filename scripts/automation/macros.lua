@@ -35,32 +35,6 @@ endif
 ]]
 end
 
--- if monstername procrastination
---   abort procrastination
--- endif
-
--- if monstername lobsterfrogman
---   abort lobsterfrogman
--- endif
-
-COMMON_MACROSTUFF_FLYERS = [[
-
-
-if hascombatitem rock band flyers
-  if hasskill Entangling Noodles
-    cast Entangling Noodles
-  endif
-  if (hasskill Broadside) && (!hascombatitem Rain-Doh blue balls)
-    cast Broadside
-  endif
-  if hasskill Blend
-    cast Blend
-  endif
-  use rock band flyers
-endif
-
-]]
-
 function attack_action()
 	return [[
 
@@ -109,35 +83,71 @@ function shieldbutt_action()
 ]]
 end
 
-function noodles_action()
-	if have_skill("Ambidextrous Funkslinging") then
-		return [[
-
-  if hasskill Entangling Noodles
-    cast Entangling Noodles
-  endif
-
-  if hascombatitem Rain-Doh blue balls
-    use Rain-Doh blue balls, Rain-Doh indigo cup
-  endif
-
-]]
-	else
-		return [[
-
-  if hasskill Entangling Noodles
-    cast Entangling Noodles
-  endif
-
-  if hascombatitem Rain-Doh blue balls
-    use Rain-Doh blue balls
-    use Rain-Doh indigo cup
-  endif
-
-]]
+function maybe_stun_monster(is_dangerous)
+	local want_stun = true
+	if is_dangerous == false and not have_item("rock band flyers") then
+		want_stun = false
 	end
+	local can_stun = true
+	local can_stagger = true
+	local mname = fight["currently fighting"] and fight["currently fighting"].name
+	local cfm = getCurrentFightMonster()
+	if mname == "oil tycoon" then
+		can_stun = false
+	end
+	local macrolines = {}
+	table.insert(macrolines, "")
+	if want_stun and can_stun then
+		if have_item("Rain-Doh blue balls") then
+			if have_skill("Ambidextrous Funkslinging") then
+				table.insert(macrolines, [[use Rain-Doh blue balls, Rain-Doh indigo cup]])
+			else
+				table.insert(macrolines, [[
+					use Rain-Doh blue balls
+					use Rain-Doh indigo cup]])
+			end
+		else
+			table.insert(macrolines, [[
+				if hasskill Broadside
+					cast Broadside
+				endif
+				if hasskill Blend
+					cast Blend
+				endif]])
+		end
+		if playerclass("Accordion Thief") then
+			table.insert(macrolines, [[
+				if hasskill Accordion Bash
+					cast Accordion Bash
+				endif]])
+		end
+		if playerclass("Pastamancer") then
+			table.insert(macrolines, [[
+				if hasskill Entangling Noodles
+					cast Entangling Noodles
+				endif]])
+		end
+	end
+
+	table.insert(macrolines, [[
+		if hasskill Steal Accordion
+			cast Steal Accordion
+		endif
+		if hascombatitem rock band flyers
+			use rock band flyers
+		endif]])
+
+	table.insert(macrolines, "")
+
+	return table.concat(macrolines, "\n\n")
 end
 
+function macro_killing_begins()
+-- use Cadenza?
+	return ""
+end
+
+noodles_action = maybe_stun_monster
 
 function conditional_salve_action(extra)
 	return [[
@@ -251,11 +261,13 @@ function macro_autoattack()
 
 pickpocket
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. maybe_stun_monster(false) .. [[
 
 if hasskill Static Shock
   cast Static Shock
 endif
+
+]] .. macro_killing_begins() .. [[
 
 ]]..conditional_salve_action()..[[
 
@@ -274,9 +286,9 @@ function macro_fist()
   return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
-]] .. noodles_action() .. [[
+]] .. maybe_stun_monster() .. [[
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. macro_killing_begins() .. [[
 
 ]]..conditional_salve_action()..[[
 
@@ -296,12 +308,7 @@ function macro_softcore(extrastuff)
   if have_equipped_item("Greatest American Pants") and macro_runawayfrom_monsters and macro_runawayfrom_monsters ~= "none" and get_daily_counter("item.fly away.free runaways") < 9 then
 	maybe_runaway = [[
 
-if hascombatitem rock band flyers
-  if hasskill Entangling Noodles
-    cast Entangling Noodles
-  endif
-  use rock band flyers
-endif
+]] .. maybe_stun_monster() .. [[
 
 if ]] .. "(monstername " .. table.concat(macro_runawayfrom_monsters, ") || (monstername ") .. ")" .. [[
 
@@ -315,25 +322,19 @@ abort Expected to run away!
 
   return [[
 
-if hascombatitem Rain-Doh indigo cup
-  use Rain-Doh indigo cup
-endif
-
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
 ]] .. maybe_runaway .. [[
 
-if hascombatitem Rain-Doh blue balls
-  use Rain-Doh blue balls
-endif
-
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. maybe_stun_monster() .. [[
 
 ]] .. (extrastuff or "") .. [[
 
 if (monstername tetchy pirate) || (monstername toothy pirate) || (monstername tipsy pirate)
   use The Big Book of Pirate Insults
 endif
+
+]] .. macro_killing_begins() .. [[
 
 ]] .. serpent_action() .. [[
 
@@ -406,12 +407,7 @@ endif
   if have_equipped_item("Greatest American Pants") and macro_runawayfrom_monsters and macro_runawayfrom_monsters ~= "none" and get_daily_counter("item.fly away.free runaways") < 9 then
 	maybe_runaway = [[
 
-if hascombatitem rock band flyers
-  if hasskill Entangling Noodles
-    cast Entangling Noodles
-  endif
-  use rock band flyers
-endif
+]] .. maybe_stun_monster() .. [[
 
 if ]] .. "(monstername " .. table.concat(macro_runawayfrom_monsters, ") || (monstername ") .. ")" .. [[
 
@@ -427,19 +423,11 @@ abort Expected to run away!
 
 ]] .. set_gaze .. [[
 
-if hascombatitem Rain-Doh indigo cup
-  use Rain-Doh indigo cup
-endif
-
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
 ]] .. maybe_runaway .. [[
 
-if (hascombatitem Rain-Doh blue balls) && (!monstername oil tycoon)
-  use Rain-Doh blue balls
-endif
-
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. maybe_stun_monster() .. [[
 
 ]] .. maybe_bellow .. [[
 
@@ -483,6 +471,8 @@ endif
 
 ]] .. boris_action() .. [[
 
+]] .. macro_killing_begins() .. [[
+
 while !times 5
 ]] .. boris_cleave_action() .. [[
 endwhile
@@ -494,21 +484,15 @@ function macro_softcore_boris_crook()
   return [[
 ]] .. COMMON_MACROSTUFF_START(25, 35) .. [[
 
-if hascombatitem Rain-Doh blue balls
-  use Rain-Doh blue balls
-  use Rain-Doh indigo cup
-endif
-if !hascombatitem Rain-Doh blue balls
-  cast Broadside
-endif
-
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. maybe_stun_monster() .. [[
 
 cast Intimidating Bellow
 
 while (!match the crook brook) && (!match You acquire)
   use peppermint crook
 endwhile
+
+]] .. macro_killing_begins() .. [[
 
 while !times 5
 ]] .. boris_cleave_action() .. [[
@@ -602,7 +586,7 @@ abort pastround 20
 abort hppercentbelow 50
 scrollwhendone
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. maybe_stun_monster() .. [[
 
 if monstername rampaging adding machine
 
@@ -621,6 +605,8 @@ endif
 if (monstername flaming troll) || (monstername Spam Witch) || (monstername 1335 HaX0r)
   cast Banishing Shout
 endif
+
+]] .. macro_killing_begins() .. [[
 
 while !times 5
 ]] .. boris_cleave_action() .. [[
@@ -654,9 +640,9 @@ endsub
 
 pickpocket
 
-]] .. noodles_action() .. [[
+]] .. maybe_stun_monster() .. [[
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. macro_killing_begins() .. [[
 
 sub kill_cannon
 
@@ -676,23 +662,7 @@ sub kill_serpent
   endwhile
 endsub
 
-if monstername angry bassist
-  call kill_cannon
-endif
-
-if monstername blue-haired girl
-  call kill_cannon
-endif
-
-if monstername evil ex-girlfriend
-  call kill_cannon
-endif
-
-if monstername peeved roommate
-  call kill_cannon
-endif
-
-if monstername random scenester
+if (monstername angry bassist) || (monstername blue-haired girl) || (monstername evil ex-girlfriend) || (monstername peeved roommate) || (monstername random scenester)
   call kill_cannon
 endif
 
@@ -700,11 +670,7 @@ if monstername drunken rat king
   call kill_serpent
 endif
 
-if monstername modern zmobie
-  call kill_cannon
-endif
-
-if monstername conjoined zmombie
+if (monstername modern zmobie) || (monstername conjoined zmombie)
   call kill_cannon
 endif
 
@@ -742,9 +708,6 @@ function macro_hardcore_boris(extrastuff)
   local maybe_zombify = [[
 
 ]]
-  local maybe_broadside = [[
-
-]]
   if mp() >= 20 and have_skill("Louder Bellows") then
     maybe_bellow = [[
 
@@ -763,15 +726,6 @@ endif
 ]]
     end
   end
-  if level() >= 11 then
-    maybe_broadside = [[
-
-if hasskill Broadside
-  cast Broadside
-endif
-
-]]
-  end
   if get_daily_counter("zombie.bear arm Bear Hugs used") < 10 then
     maybe_zombify = [[
 
@@ -785,9 +739,7 @@ endif
 
 ]] .. COMMON_MACROSTUFF_START(20, hplevel) .. [[
 
-]] .. maybe_broadside .. [[
-
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. maybe_stun_monster() .. [[
 
 ]] .. maybe_bellow .. [[
 
@@ -839,6 +791,8 @@ if (monstername senile lihc) || (monstername slick lihc)
   endif
 endif
 
+]] .. macro_killing_begins() .. [[
+
 if (monstername chalkdust wraith)
   if hasskill Kodiak Moment
     cast Kodiak Moment
@@ -868,15 +822,13 @@ function make_sniff_macro(name, action)
 
 if monstername ]] .. name .. [[
 
-
 ]] .. castolfaction .. [[
-
 
 endif
 
-]] .. noodles_action() .. [[
+]] .. maybe_stun_monster() .. [[
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. macro_killing_begins() .. [[
 
 ]]..conditional_salve_action()..[[
 
@@ -898,13 +850,17 @@ function make_cannonsniff_macro(name)
 	--print("DEBUG: making cannonsniff macro for", name, "vs", cfm)
 	local physresist = 0
 	local cfmhp = 10
+	local elem = nil
 	if cfm and cfm.Stats and cfm.Stats.Phys then
 		physresist = tonumber(cfm.Stats.Phys)
 	end
 	if cfm and cfm.Stats and cfm.Stats.HP then
 		cfmhp = tonumber(cfm.Stats.HP)
 	end
-	if physresist == 0 and cfmhp >= 100 then
+	if cfm and cfm.Stats and cfm.Stats.Element then
+		elem = cfm.Stats.Element
+	end
+	if physresist == 0 and cfmhp >= 100 and not elem then
 		return make_sniff_macro(name, serpent_action)
 	else
 		return make_sniff_macro(name, cannon_action)
@@ -918,9 +874,10 @@ function macro_romanticarrow()
 cast romantic arrow
 
 if (match "too stunned by your beauty")
-]] .. noodles_action() .. [[
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. maybe_stun_monster() .. [[
+
+]] .. macro_killing_begins() .. [[
 
 cast poison arrow
 
@@ -960,7 +917,9 @@ endif
 
 ]]..conditional_salve_action()..[[
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. maybe_stun_monster(false) .. [[
+
+]] .. macro_killing_begins() .. [[
 
 while !times 20
 
@@ -998,15 +957,15 @@ endsub
 
 if monstername ]] .. name .. [[
 
-]] .. noodles_action() .. [[
+]] .. maybe_stun_monster() .. [[
 
   call do_yellowray
   goto m_done
 endif
 
-]] .. noodles_action() .. [[
+]] .. maybe_stun_monster() .. [[
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. macro_killing_begins() .. [[
 
 while !times 3
 ]] .. cannon_action() .. [[
@@ -1021,11 +980,11 @@ function macro_noodlecannon()
   return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
-]] .. noodles_action() .. [[
+]] .. maybe_stun_monster() .. [[
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. conditional_salve_action() .. [[
 
-]]..conditional_salve_action()..[[
+]] .. macro_killing_begins() .. [[
 
 while !times 5
 ]] .. cannon_action() .. [[
@@ -1044,11 +1003,11 @@ function macro_noodleserpent()
   return [[
 ]] .. COMMON_MACROSTUFF_START(20, 40) .. [[
 
-]] .. noodles_action() .. [[
+]] .. maybe_stun_monster() .. [[
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. macro_killing_begins() .. [[
 
-]]..conditional_salve_action()..[[
+]] .. conditional_salve_action() .. [[
 
 while !times 5
 ]] .. serpent_action() .. [[
@@ -1066,11 +1025,11 @@ if hasskill Smash & Graaagh
   cast Smash & Graaagh
 endif
 
-]] .. noodles_action() .. [[
+]] .. maybe_stun_monster() .. [[
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. macro_killing_begins() .. [[
 
-]]..conditional_salve_action()..[[
+]] .. conditional_salve_action() .. [[
 
 while !times 5
 ]] .. cannon_action() .. [[
@@ -1083,9 +1042,9 @@ function macro_noodlegeyser(maxtimes)
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
 
-]] .. noodles_action() .. [[
+]] .. maybe_stun_monster(true) .. [[
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. macro_killing_begins() .. [[
 
 while !times ]] .. maxtimes .. [[
 
@@ -1100,13 +1059,13 @@ function macro_barrr()
   return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
-]] .. noodles_action() .. [[
+]] .. maybe_stun_monster() .. [[
 
 use The Big Book of Pirate Insults
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. macro_killing_begins() .. [[
 
-]]..conditional_salve_action()..[[
+]] .. conditional_salve_action() .. [[
 
 while !times 3
 ]] .. cannon_action() .. [[
@@ -1123,9 +1082,9 @@ function macro_spookyraven()
   return [[
 ]]..COMMON_MACROSTUFF_START(20, 5) .. [[
 
-]] .. noodles_action() .. [[
+]] .. maybe_stun_monster(true) .. [[
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. macro_killing_begins() .. [[
 
 while !times 5
 ]] .. geyser_action() .. [[
@@ -1138,11 +1097,11 @@ function macro_hiddencity()
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
-]] .. noodles_action() .. [[
+]] .. maybe_stun_monster() .. [[
 
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. macro_killing_begins() .. [[
 
-]]..conditional_salve_action()..[[
+]] .. conditional_salve_action() .. [[
 
 if hasskill Intimidating Bellow
   cast Intimidating Bellow
@@ -1202,11 +1161,9 @@ if monstername ]] .. name .. [[
   mark done_loop
 endif
 
-]] .. noodles_action() .. [[
+]] .. maybe_stun_monster() .. [[
 
-if hascombatitem rock band flyers
-  use rock band flyers
-endif
+]] .. macro_killing_begins() .. [[
 
 while !times 5
 ]] .. serpent_action() .. [[
@@ -1219,29 +1176,11 @@ function macro_bossbat()
   return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
-if monstername bodyguard
-  pickpocket
-]] .. noodles_action() .. [[
+]] .. maybe_stun_monster() .. [[
 
-  if hasskill Static Shock
-    cast Static Shock
-  endif
+]] .. macro_killing_begins() .. [[
 
-]]..conditional_salve_action()..[[
-
-  while !times 10
-]] .. attack_action() .. [[
-  endwhile
-  goto m_done
-endif
-
-if hasskill Entangling Noodles
-  cast Entangling Noodles
-endif
-
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
-
-]]..conditional_salve_action()..[[
+]] .. conditional_salve_action() .. [[
 
 while !times 3
 ]] .. cannon_action() .. [[
@@ -1333,9 +1272,7 @@ abort pastround 20
 abort hppercentbelow 50
 scrollwhendone
 
-]] .. noodles_action() .. [[
-
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. maybe_stun_monster() .. [[
 
 if monstername rampaging adding machine
 
@@ -1352,7 +1289,9 @@ if monstername rampaging adding machine
   endif
 endif
 
-]]..conditional_salve_action()..[[
+]] .. macro_killing_begins() .. [[
+
+]] .. conditional_salve_action() .. [[
 
 while !times 3
 ]] .. serpent_action() .. [[
@@ -1374,19 +1313,13 @@ endif
   end
   return [[
 
-if hascombatitem Rain-Doh indigo cup
-  use Rain-Doh indigo cup
-endif
-
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
-if hascombatitem Rain-Doh blue balls
-  use Rain-Doh blue balls
-endif
-
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
+]] .. maybe_stun_monster() .. [[
 
 ]] .. maybe_blackbox .. [[
+
+]] .. macro_killing_begins() .. [[
 
 while !times 5
 ]] .. serpent_action() .. [[

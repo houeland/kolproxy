@@ -1011,7 +1011,7 @@ function get_automation_scripts(cached_stuff)
 					print("DEBUG: castbuff returned nil:", buffname)
 				end
 				if not have_buff(buffname) and not have_intrinsic(buffname) then
-					if ptf:contains("too many songs stuck in your head") and try_shrugging then
+					if ptf:contains("can't fit") and ptf:contains("songs in your head") and try_shrugging then
 						for _, atname in ipairs(at_shruggable) do
 							if buff(atname) and not want_buffs[atname] then
 								shrug_buff(atname)
@@ -2924,7 +2924,7 @@ endif
 		go("moxie powerleveling", 109, make_cannonsniff_macro("zombie waltzers"), {
 			["Curtains"] = "Watch the dancers",
 			["Strung-Up Quartet"] = "&quot;Play 'Sono Un Amanten Non Un Combattente'&quot;",
-		}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric" }, "Slimeling", 30, { olfact = "zombie waltzers" })
+		}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric" }, "Slimeling", 35, { olfact = "zombie waltzers" })
 	end
 
 	function f.do_moxie_use_dancecard()
@@ -3984,6 +3984,7 @@ endif
 	end
 
 	function f.do_oasis_and_desert()
+		stop "TODO: Do desert/oasis"
 		if have_item("worm-riding hooks") and have_item("drum machine") then
 			inform "using drum machine"
 			set_result(use_item("drum machine"))
