@@ -3996,7 +3996,7 @@ endif
 	}
 
 	add_task {
-		prereq = have_buff("Ultrahydrated") and quest("A Pyramid Scheme") and not quest_text("you've found the little pyramid") and not have_item("Staff of Ed"),
+		prereq = have_buff("Ultrahydrated") and quest("A Pyramid Scheme") and not quest_text("found the little pyramid") and not have_item("Staff of Ed"),
 		f = script.do_oasis_and_desert,
 		message = "ultrahydrated",
 	}
@@ -4529,19 +4529,19 @@ endif
 	}
 
 	add_task {
-		prereq = quest("A Pyramid Scheme") and not quest_text("you've found the little pyramid") and not have_item("Staff of Ed"),
+		prereq = quest("A Pyramid Scheme") and not quest_text("found the little pyramid") and not have_item("Staff of Ed"),
 		f = script.do_oasis_and_desert,
 	}
 
 	add_task {
-		when = quest("A Pyramid Scheme") and quest_text("you've found the little pyramid") and have_item("Staff of Ed"),
+		when = quest("A Pyramid Scheme") and quest_text("found the little pyramid") and have_item("Staff of Ed"),
 		task = {
 			message = "unlock pyramid",
 			nobuffing = true,
 			action = function()
 				get_page("/place.php", { whichplace = "desertbeach", action = "db_pyramid1" })
 				refresh_quest()
-				if not quest_text("you've found the little pyramid") then
+				if not quest_text("found the little pyramid") then
 					did_action = true
 				end
 			end

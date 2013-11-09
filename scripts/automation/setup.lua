@@ -147,8 +147,8 @@ automation_script_details_list["custom-inventory-diff"] = { simple = true, descr
 
 automation_script_details_list["custom-cosmic-kitchen"] = { simple = true, description = "Cosmic kitchen dinner planner" }
 automation_script_details_list["custom-choose-mad-tea-party-hat"] = { simple = true, description = "Choose hat for mad tea party" }
-automation_script_details_list["custom-modifier-maximizer"] = { simple = true, description = "Modifier maximizer (preview)" }
-automation_script_details_list["custom-compute-net-worth"] = { simple = true, description = "Compute net worth (preview)" }
+automation_script_details_list["custom-modifier-maximizer"] = { simple = true, description = "Modifier maximizer" }
+automation_script_details_list["custom-compute-net-worth"] = { simple = true, description = "Compute net worth" }
 automation_script_details_list["display-tracked-variables"] = { simple = true, description = "Display tracked game variables (preview)" }
 automation_script_details_list["custom-mix-drinks"] = { simple = true, description = "List advanced cocktails you can craft (preview)" }
 automation_script_details_list["custom-ascension-checklist"] = { simple = true, description = "Pre-ascension pull stocking checklist" }

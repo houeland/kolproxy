@@ -95,8 +95,12 @@ add_charpane_line(function()
 		return uncertain and "?" or ""
 	end
 
+	local function mklink(whichbonus, text)
+		return string.format([[<a target="mainpane" href="%s">%s</a>]], modifier_maximizer_href { pwd = session.pwd, whichbonus = whichbonus }, text)
+	end
+
 	return {
-		{ normalname = "(Non)combat", compactname = "C/NC", value = string.format("%+d%%", com) .. uncertaintystr("Monsters will be more attracted to you") },
+		{ normalname = "(" .. mklink("Monsters will be less attracted to you", "Non") .. ")" .. mklink("Monsters will be more attracted to you", "combat"), compactname = mklink("Monsters will be more attracted to you", "C") .. "/" .. mklink("Monsters will be less attracted to you", "NC"), value = string.format("%+d%%", com) .. uncertaintystr("Monsters will be more attracted to you") },
 		{ normalname = "Item drops", compactname = "Item", value = string.format("%+.1f%%", floor_to_places(item, 1)) .. uncertaintystr("Item Drops from Monsters") .. table.concat(itemextrastrs), link = modifier_maximizer_href { pwd = session.pwd, whichbonus = "Item Drops from Monsters" }, link_name_only = true },
 		{ normalname = "ML", compactname = "ML", value = string.format("%+d", ml) .. uncertaintystr("Monster Level"), link = modifier_maximizer_href { pwd = session.pwd, whichbonus = "Monster Level" }, link_name_only = true },
 		{ normalname = "Initiative", compactname = "Init", value = string.format("%+d%%", adjusted_init) .. uncertaintystr("Combat Initiative") .. initbonusstr, tooltip = string.format("%+d%% initiative - %d%% ML penalty = %+d%% combined", initial_init, ml_init_penalty, adjusted_init), link = modifier_maximizer_href { pwd = session.pwd, whichbonus = "Combat Initiative" }, link_name_only = true },

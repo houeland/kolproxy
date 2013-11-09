@@ -2093,12 +2093,7 @@ mark m_done
 		elseif not session["zone.manor.wines needed"] then
 			inform "determine cellar wines"
 			determine_cellar_wines()
---			print("determine call over")
-			if session["zone.manor.wines needed"] then
-				print("got wine state set now!")
-				did_action = true
-			end
---			print("all determine over")
+			did_action = (session["zone.manor.wines needed"] ~= nil)
 		else
 			local manor3pt = get_page("/manor3.php")
 			local wines_needed_list = session["zone.manor.wines needed"]
@@ -2107,7 +2102,7 @@ mark m_done
 			local missing = {}
 			for wine in table.values(wines_needed_list) do
 				need = need + 1
-				if have(wine) then
+				if have_item(wine) then
 					got = got + 1
 				else
 					missing[wine] = true
@@ -2407,9 +2402,6 @@ mark m_done
 
 	function f.do_pyramid()
 		local pyramidpt = get_page("/pyramid.php")
--- 		if challenge == "fist" then
--- 			error "Redo pyramid in fist, do ratchets"
--- 		end
 		if pyramidpt:match("pyramid3a.gif") then
 			if not have_item("carved wooden wheel") then
 				script.bonus_target { "item" }
@@ -2537,6 +2529,8 @@ endif
 			end
 			local copied = retrieve_raindoh_monster()
 			if copied:contains("lobsterfrogman") then
+				inform "fight copied LFM"
+				script.ensure_mp(40)
 				use_item("Rain-Doh box full of monster")
 				local pt, url = get_page("/fight.php")
 				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro)
@@ -2938,7 +2932,7 @@ endif
 
 	function f.get_dinghy()
 		inform "make dingy dinghy"
-		stop("Make dingy dinghy")
+		stop("Make dingy dinghy") -- TODO: implement
 		if not have_item("dinghy plans") then
 			inform "shore for dinghy plans"
 			local function do_trip(tripid)

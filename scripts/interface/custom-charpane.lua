@@ -136,6 +136,35 @@ local function buff_sort_func(a, b)
 	return a.descid < b.descid
 end
 
+local function get_sorted_buff_array()
+	local sorting = {}
+	for descid, x in pairs(status().effects) do
+		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid, upeffect = x[4] }) -- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly
+	end
+	for descid, x in pairs(status().intrinsics) do
+		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid })
+	end
+	table.sort(sorting, buff_sort_func)
+	return sorting
+end
+
+local function make_strarrow(upeffect)
+	if upeffect then
+		local skillid = tonumber(upeffect:match("skill:([0-9]+)"))
+		local itemid = tonumber(upeffect:match("item:([0-9]+)"))
+		if skillid then
+			return string.format([[<img src="%s" style="cursor: pointer;" onclick="kolproxy_cast_skillid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", skillid)
+		elseif itemid then
+			if have_item(itemid) then
+				return string.format([[<img src="%s" style="cursor: pointer;" onclick="kolproxy_use_itemid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", itemid)
+			else
+				return string.format([[<img src="%s" style="cursor: pointer; opacity: 0.5;" onclick="kolproxy_use_itemid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", itemid)
+			end
+		end
+	end
+	return ""
+end
+
 local familiarfaves = nil
 local familiarfaves_id = nil
 local expired_fams = nil
@@ -667,40 +696,18 @@ function compact_charpane_buff_lines(lines)
 		["Everything Looks Blue"] = "blue",
 		["Everything Looks Yellow"] = "goldenrod",
 	}
-	local sorting = {}
-	for descid, x in pairs(status().effects) do
-		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid, upeffect = x[4] }) -- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly
-	end
-	for descid, x in pairs(status().intrinsics) do
-		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid })
-	end
-	table.sort(sorting, buff_sort_func)
-
 	local bufflines = {}
 
 	if tonumber(api_flag_config().hideefarrows) ~= 1 then
 		local curbuffline = nil
-		for _, x in ipairs(sorting) do
+		for _, x in ipairs(get_sorted_buff_array()) do
 			local styleinfo = ""
 			local imgstyleinfo = ""
 			if buff_colors[x.title] then
 				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
 				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
 			end
-			local strarrow = ""
-			if x.upeffect then
-				local skillid = tonumber(x.upeffect:match("skill:([0-9]+)"))
-				local itemid = tonumber(x.upeffect:match("item:([0-9]+)"))
-				if skillid then
-					strarrow = string.format([[<img src="%s" style="cursor: pointer;" onclick="kolproxy_cast_skillid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", skillid)
-				elseif itemid then
-					if have_item(itemid) then
-						strarrow = string.format([[<img src="%s" style="cursor: pointer;" onclick="kolproxy_use_itemid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", itemid)
-					else
-						strarrow = string.format([[<img src="%s" style="cursor: pointer; opacity: 0.5;" onclick="kolproxy_use_itemid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", itemid)
-					end
-				end
-			end
+			local strarrow = make_strarrow(x.upeffect)
 			local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>%s</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, display_duration(x.duration))
 			if not curbuffline then
 				curbuffline = "<td>" .. strarrow .. "</td>" .. str
@@ -714,7 +721,7 @@ function compact_charpane_buff_lines(lines)
 		end
 	else
 		local curbuffline = nil
-		for _, x in ipairs(sorting) do
+		for _, x in ipairs(get_sorted_buff_array()) do
 			local styleinfo = ""
 			local imgstyleinfo = ""
 			if buff_colors[x.title] then
@@ -748,40 +755,22 @@ function full_charpane_buff_lines(lines)
 		["Everything Looks Blue"] = "blue",
 		["Everything Looks Yellow"] = "goldenrod",
 	}
-	local sorting = {}
-	for descid, x in pairs(status().effects) do
-		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid }) -- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly
-	end
-	for descid, x in pairs(status().intrinsics) do
-		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid })
-	end
-	table.sort(sorting, buff_sort_func)
-
 	local bufflines = {}
 
 	if tonumber(api_flag_config().hideefarrows) ~= 1 then
-		for _, x in ipairs(sorting) do
+		for _, x in ipairs(get_sorted_buff_array()) do
 			local styleinfo = ""
 			local imgstyleinfo = ""
 			if buff_colors[x.title] then
 				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
 				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
 			end
-			local strarrow = ""
-			if x.upeffect then
-				local skillid = tonumber(x.upeffect:match("skill:([0-9]+)"))
-				local itemid = tonumber(x.upeffect:match("item:([0-9]+)"))
-				if skillid then
-					strarrow = string.format([[<img src="%s" style="cursor: pointer;" onclick="kolproxy_cast_skillid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", skillid)
-				elseif itemid then
-					strarrow = string.format([[<img src="%s" style="cursor: pointer;" onclick="kolproxy_use_itemid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", itemid)
-				end
-			end
+			local strarrow = make_strarrow(x.upeffect)
 			local str = string.format([[<tr><td>%s</td><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s %s</font><br></td></tr>]], strarrow, imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_duration(x.duration))
 			table.insert(bufflines, str)
 		end
 	else
-		for _, x in ipairs(sorting) do
+		for _, x in ipairs(get_sorted_buff_array()) do
 			local styleinfo = ""
 			local imgstyleinfo = ""
 			if buff_colors[x.title] then

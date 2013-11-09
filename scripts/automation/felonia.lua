@@ -20,7 +20,7 @@ local felonia_href = setup_turnplaying_script {
 		elseif quest_text("but first he needs you to") then
 			result, resulturl = get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_mayor" })
 			refresh_quest()
-			advagain = quest_text("investigate the Spooky Gravy Barrow")
+			advagain = quest_text("investigate the Spooky Gravy Burrow")
 		elseif quest_text("investigate the Spooky Gravy Burrow") then
 			script.want_familiar "Flaming Gravy Fairy"
 			if not have_item("spooky glove") and have_item("small leather glove") and have_item("spooky fairy gravy") then

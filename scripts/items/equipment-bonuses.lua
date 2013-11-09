@@ -27,6 +27,9 @@ function parse_item_bonuses(itemname)
 	bonuses = bonuses + { ["Meat from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Meat Drops from Monsters<]])) }
 	bonuses = bonuses + { ["Monster Level"] = tonumber(pt:match([[>([+-][0-9]+) to Monster Level<]])) }
 	bonuses = bonuses + { ["Combat Initiative"] = tonumber(pt:match([[>Combat Initiative ([+-][0-9]+)%%<]])) }
+	bonuses = bonuses + { ["Adventures per day"] = tonumber(pt:match([[>([+-][0-9]+) Adventure%(s%) per day when equipped.<]])) }
+	bonuses = bonuses + { ["Familiar Weight"] = tonumber(pt:match([[>([+-][0-9]+) to Familiar Weight<]])) }
+
 	if pt:contains(">Monsters will be more attracted to you.<") then
 		bonuses = bonuses + { ["Monsters will be more attracted to you"] = 5 }
 	end

@@ -407,6 +407,10 @@ mark m_done
 			end
 			script.ensure_buffs { "Ur-Kel's Aria of Annoyance" }
 			local ml = estimate_bonus("Monster Level")
+			if ml < 50 then
+				script.maybe_ensure_buffs { "Pride of the Puffin" }
+				ml = estimate_bonus("Monster Level")
+			end
 			if ml < 20 then
 				stop "Not enough +ML for Oil Peak (want 20+ for automation)"
 			elseif not ascensionstatus("Hardcore") and ml < 50 and not challenge then
@@ -584,36 +588,31 @@ mark m_done
 		end
 	end
 
-	function t.do_daily_dungeon()
-		if not have_gelatinous_cubeling_items() and script.have_familiar("Gelatinous Cubeling") then
-			stop "Get missing gelatinous cubeling items for daily dungeon"
-		end
-		return {
-			message = "do daily dungeon",
-			buffs = { "Astral Shell", "Elemental Saucesphere", "Scarysauce" },
-			equipment = { acc1 = "ring of Detect Boring Doors" },
-			minmp = 20,
-			action = function()
-				local advf = adventure {
-					zone = "The Daily Dungeon",
-					macro_function = macro_noodlecannon,
-					noncombats = {
-						["It's Almost Certainly a Trap"] = "Use your eleven-foot pole",
-						["The First Chest Isn't the Deepest."] = "Go through the boring door",
-						["I Wanna Be a Door"] = "Use your lockpicks",
-						["Second Chest"] = "Go through the boring door",
-						["The Final Reward"] = "Open it!",
-					},
-				}
-				local pt, pturl, advagain = advf()
-				if pt:contains("Daily Done, John.") then
-					cached_stuff.done_daily_dungeon = true
-					advagain = true
-				end
-				return pt, pturl, advagain
+	t.do_daily_dungeon = {
+		message = "do daily dungeon",
+		buffs = { "Astral Shell", "Elemental Saucesphere", "Scarysauce" },
+		equipment = { acc1 = first_wearable { "ring of Detect Boring Doors" } },
+		minmp = 20,
+		action = function()
+			local advf = adventure {
+				zone = "The Daily Dungeon",
+				macro_function = macro_noodlecannon,
+				noncombats = {
+					["It's Almost Certainly a Trap"] = have_item("eleven-foot pole") and "Use your eleven-foot pole" or "Proceed forward cautiously",
+					["The First Chest Isn't the Deepest."] = have_equipped_item("ring of Detect Boring Doors") and "Go through the boring door" or "Ignore the chest",
+					["I Wanna Be a Door"] = have_item("Pick-O-Matic lockpicks") and "Use your lockpicks" or "Use a skeleton key",
+					["Second Chest"] = have_equipped_item("ring of Detect Boring Doors") and "Go through the boring door" or "Ignore the chest",
+					["The Final Reward"] = "Open it!",
+				},
+			}
+			local pt, pturl, advagain = advf()
+			if pt:contains("Daily Done, John.") then
+				cached_stuff.done_daily_dungeon = true
+				advagain = true
 			end
-		}
-	end
+			return pt, pturl, advagain
+		end
+	}
 
 	return t
 end

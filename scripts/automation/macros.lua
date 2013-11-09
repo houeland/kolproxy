@@ -115,16 +115,22 @@ function maybe_stun_monster(is_dangerous)
 					cast Blend
 				endif]])
 		end
-		if playerclass("Accordion Thief") then
+		if playerclass("Turtle Tamer") then
 			table.insert(macrolines, [[
-				if hasskill Accordion Bash
-					cast Accordion Bash
+				if hasskill Shell Up
+					cast Shell Up
 				endif]])
 		end
 		if playerclass("Pastamancer") then
 			table.insert(macrolines, [[
 				if hasskill Entangling Noodles
 					cast Entangling Noodles
+				endif]])
+		end
+		if playerclass("Accordion Thief") then
+			table.insert(macrolines, [[
+				if hasskill Accordion Bash
+					cast Accordion Bash
 				endif]])
 		end
 	end
