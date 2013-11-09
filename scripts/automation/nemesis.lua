@@ -9,11 +9,11 @@ local required_items_perclass = {
 	{ lew = "Squeezebox of the Ages", ew = "Rock and Roll Legend", extra = "golden reeds", door = { "dirty hobo gloves", "insanely spicy jumping bean burrito" } },
 }
 
-local href = setup_turnplaying_script {
+setup_turnplaying_script {
 	name = "automate-nemesis",
-	description = "Automate Nemesis quest",
+	description = "Automate Nemesis quest (first part)",
 	--can_automate_inrun = true,
-	when = function() return not quest_completed("Me and My Nemesis") end,
+	when = function() return not quest_completed("Me and My Nemesis") and not quest_completed("A Dark and Dank and Sinister Quest") end,
 	macro = nil,
 	preparation = function()
 		local required_items = required_items_perclass[classid()]
@@ -34,7 +34,6 @@ local href = setup_turnplaying_script {
 		end
 	end,
 	adventuring = function()
--- TODO: continue after successfully completing one step
 
 	script = get_automation_scripts()
 	local required_items = required_items_perclass[classid()]
@@ -98,6 +97,8 @@ local href = setup_turnplaying_script {
 		result = "do nemesis cave"
 		result, resulturl = get_page("/cave.php")
 
+		script.wear {}
+
 		if not result:contains("A Large Chamber") then
 			-- TODO: check each step
 			async_post_page("/cave.php", { action = "door1", pwd = session.pwd, action = "dodoor1", whichitem = get_itemid(required_items.door[1]) })
@@ -144,9 +145,67 @@ local href = setup_turnplaying_script {
 			result, resulturl = cast_autoattack_macro()
 		end
 
-	-- TODO: Act reasonably while waiting for assassins
+		dorefresh()
+	elseif not quest("Me and My Nemesis") then
+		result = "pick up quest"
+		get_page("/guild.php", { place = "challenge" })
+		local pt = get_page("/guild.php", { place = "challenge" })
+		if pt:contains("You manage to steal your own pants yet") then
+			if equipment().pants then
+				result, resulturl, advagain = autoadventure { zoneid = 112, noncombatchoices = {
+					["Now's Your Pants!  I Mean... Your Chance!"] = "Yoink!",
+					["Aww, Craps"] = "Walk away",
+					["Dumpster Diving"] = "Punch the hobo",
+					["The Entertainer"] = "Introduce them to avant-garde",
+					["Under the Knife"] = "Umm, no thanks.  Seriously.",
+					["Please, Hammer"] = "&quot;Sure, I'll help.&quot;",
+				} }
+			else
+				stop "TODO: Do moxie guild quest"
+			end
+		elseif pt:contains("Have you captured the poltersandwich") then
+			result, resulturl, advagain = autoadventure { zoneid = 113, noncombatchoices = {
+				["A Sandwich Appears!"] = "sudo exorcise me a sandwich",
+				["Oh No, Hobo"] = "Give him a beating",
+				["Trespasser"] = "Tackle him",
+				["The Singing Tree"] = "&quot;No singing, thanks.&quot;",
+				["The Baker's Dilemma"] = "&quot;Sorry, I'm busy right now.&quot;",
+			} }
+		else
+			stop "TODO: Wait for nemesis assassins??? Or missing guild quest? Or missing nemesis quest?"
+		end
+	else
+		stop "TODO: Next quest step???"
+	end
+	__set_turnplaying_result(result, resulturl, advagain)
+end
+}
 
-		elseif quest_text("found a map to the secret tropical island") then
+setup_turnplaying_script {
+	name = "automate-nemesis-island",
+	description = "Automate Nemesis quest (second part)",
+	when = function() return have_item("secret tropical island volcano lair map") end,
+	macro = macro_noodlecannon,
+	preparation = function()
+		local required_items = required_items_perclass[classid()]
+		if not required_items then
+			critical "Class not supported for nemesis script."
+		end
+
+		local need_items = { "clown whip", "clownskin buckler", "ring of conflict" }
+		if not have_item(required_items.lew) then
+			table.insert(need_items, required_items.ew)
+		end
+		for _, x in ipairs(required_items.door) do
+			table.insert(need_items, x)
+		end
+
+		for _, x in ipairs(need_items) do
+			maybe_pull_item(x, 1)
+		end
+	end,
+	adventuring = function()
+		if quest_text("found a map to the secret tropical island") then
 			result = "do tropical island"
 			-- wear stuff
 			equip_item("pirate fledges", 2)
@@ -160,7 +219,7 @@ local href = setup_turnplaying_script {
 				if not have_buff("Smooth Movements") then
 					cast_skillid(5017, 2) -- smooth moves
 				end
-				result, resulturl, advagain = autoadventure { zoneid = 159 }
+				result, resulturl, advagain = autoadventure { zoneid = 159, macro = automation_macro }
 				if not advagain then
 					break
 				end
@@ -171,10 +230,12 @@ local href = setup_turnplaying_script {
 			end
 		elseif quest_text("put a stop to this Nemesis nonsense") then
 			if classid() == 1 then -- seal clubber
+				stop "TODO: Automate seal clubber island"
 			elseif classid() == 2 then -- turtle tamer
 				if not have_item("fouet de tortue-dressage") then
 					get_page("/volcanoisland.php", { pwd = pwd, action = "npc" })
 				end
+				stop "TODO: Automate turtle tamer island"
 			elseif classid() == 3 then -- pastamancer
 				if not have_item("encoded cult documents") then
 					get_page("/volcanoisland.php", { pwd = pwd, action = "npc" })
@@ -202,45 +263,12 @@ local href = setup_turnplaying_script {
 				automate_AT_nemesis_island()
 				result, resulturl = text, url
 			end
-		elseif not quest("Me and My Nemesis") then
-			result = "pick up quest"
-			get_page("/guild.php", { place = "challenge" })
-			local pt = get_page("/guild.php", { place = "challenge" })
-			if pt:contains("You manage to steal your own pants yet") then
-				if equipment().pants then
-					result, resulturl, advagain = autoadventure { zoneid = 112, noncombatchoices = {
-						["Now's Your Pants!  I Mean... Your Chance!"] = "Yoink!",
-						["Aww, Craps"] = "Walk away",
-						["Dumpster Diving"] = "Punch the hobo",
-						["The Entertainer"] = "Introduce them to avant-garde",
-						["Under the Knife"] = "Umm, no thanks.  Seriously.",
-						["Please, Hammer"] = "&quot;Sure, I'll help.&quot;",
-					} }
-				else
-					stop "TODO: Do moxie guild quest"
-				end
-			elseif pt:contains("Have you captured the poltersandwich") then
-				result, resulturl, advagain = autoadventure { zoneid = 113, noncombatchoices = {
-					["A Sandwich Appears!"] = "sudo exorcise me a sandwich",
-					["Oh No, Hobo"] = "Give him a beating",
-					["Trespasser"] = "Tackle him",
-					["The Singing Tree"] = "&quot;No singing, thanks.&quot;",
-					["The Baker's Dilemma"] = "&quot;Sorry, I'm busy right now.&quot;",
-				} }
-			else
-				stop "TODO: Wait for nemesis assassins??? Or missing guild quest? Or missing nemesis quest?"
-			end
 		else
 			stop "TODO: Next quest step???"
 		end
 		__set_turnplaying_result(result, resulturl, advagain)
 	end
 }
-
---add_printer("/questlog.php", function()
---	if not setting_enabled("enable turnplaying automation") or ascensionstatus() ~= "Aftercore" then return end
---	text = text:gsub("<b>Me and My Nemesis</b>", [[%0 <a href="]]..href { pwd = session.pwd }..[[" style="color:green">{ automate }</a>]])
---end)
 
 function nemesis_try_sauceror_potions()
 	if have_buff("Slimeform") then

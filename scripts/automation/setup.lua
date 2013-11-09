@@ -59,6 +59,9 @@ function run_automation_script(f, pwdsrc, scriptname)
 
 	local ok, text, url = xpcall(f, function(e) return { msg = e, trace = debug.traceback(e) } end)
 	if ok then
+		if url == "json" then
+			return text, resulturl
+		end
 		if not text:contains("<html") then
 			text = [[
 <html>
@@ -76,7 +79,7 @@ function run_automation_script(f, pwdsrc, scriptname)
 %0
 ]])
 		end
-		return text, url
+		return text, (url or resulturl)
 	else
 		local e = text
 		if critical_err then
@@ -244,10 +247,10 @@ function setup_turnplaying_script(tbl)
 
 		-- TODO: cache quest per pageload
 		local questlog_page = nil
-		local questlog_page_async = async_get_page("/questlog.php", { which = 1 })
 		function refresh_quest()
 			questlog_page = get_page("/questlog.php", { which = 1 })
 		end
+		refresh_quest()
 
 		function quest(name)
 			return questlog_page:contains([[<b>]] .. name .. [[</b>]])
@@ -255,7 +258,6 @@ function setup_turnplaying_script(tbl)
 		function quest_text(name)
 			return questlog_page:contains(name)
 		end
-		questlog_page = questlog_page_async()
 
 		function hidden_inform(msg)
 			add_error_trace_step(msg)

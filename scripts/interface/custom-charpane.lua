@@ -153,13 +153,9 @@ local function make_strarrow(upeffect)
 		local skillid = tonumber(upeffect:match("skill:([0-9]+)"))
 		local itemid = tonumber(upeffect:match("item:([0-9]+)"))
 		if skillid then
-			return string.format([[<img src="%s" style="cursor: pointer;" onclick="kolproxy_cast_skillid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", skillid)
+			return string.format([[<img src="%s" style="cursor: pointer;" class="strarrowskill" onclick="kolproxy_cast_skillid(%d, event.shiftKey)" data-skillid="%d">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", skillid, skillid)
 		elseif itemid then
-			if have_item(itemid) then
-				return string.format([[<img src="%s" style="cursor: pointer;" onclick="kolproxy_use_itemid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", itemid)
-			else
-				return string.format([[<img src="%s" style="cursor: pointer; opacity: 0.5;" onclick="kolproxy_use_itemid(%d)">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", itemid)
-			end
+			return string.format([[<img src="%s" style="cursor: pointer;%s" class="strarrowitem" onclick="kolproxy_use_itemid(%d, event.shiftKey)" data-itemid="%d">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", have_item(itemid) and "" or "opacity: 0.5;", itemid, itemid)
 		end
 	end
 	return ""
@@ -310,23 +306,65 @@ local function make_get_buffs_href()
 	return make_href("/kolproxy-frame-page", { url = "http://kol.obeliks.de" .. make_href("/buffbot/buff", { style = "kol", target = playername() }), pwd = session.pwd })
 end
 
+local shrug_buff_href = add_automation_script("custom-shrug-buff", function()
+	local chatpt = get_page("/submitnewchat.php", { graf = "/shrug " .. params.buffname, pwd = session.pwd })
+	if chatpt:contains("action=unbuff") then
+		local whichbuff = chatpt:match("whichbuff=([0-9]*)")
+		return tojson { whichbuff = whichbuff }, "json"
+	end
+
+	local function hardshrug_feedback(x)
+		local pt = get_page("/charpane.php")
+		for tr in pt:gmatch("<tr>.-</tr>") do
+			local effid = tr:match([[onClick='eff%("(.-)"%);']])
+			if effid == x.descid then
+				--local shrug1 = tr:match([[oncontextmenu='return shrug%(([0-9]+), ".-"%);']])
+				local buffid1, shrugitem1 = tr:match([[oncontextmenu='return hardshrug%(([0-9]+), ".-","(.-)"%);']])
+				if buffid1 and shrugitem1 then
+					return tojson { whichbuff = buffid1, remover = shrugitem1 }, "json"
+				end
+				local buffid2 = tr:match([[oncontextmenu='return hardshrug%(([0-9]+), ".-"%);']])
+				if buffid2 then
+					return tojson { whichbuff = buffid2, remover = "soft green echo eyedrop antidote" }, "json"
+				end
+			end
+		end
+		return tojson { error_message = "Cannot shrug." }, "json"
+	end
+
+	for _, x in ipairs(get_sorted_buff_array()) do
+		if x.title == params.buffname then
+			return hardshrug_feedback(x)
+		end
+	end
+	return tojson { error_message = "Nothing to shrug." }, "json"
+end)
+
 local function get_common_js()
 	return [[
 
 	<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/charpane.4.js"></script>
 	<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/window.20111231.js"></script>
+	<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
+
 	<script type="text/javascript">
 		function popup_effect(descid) {
 			var w = window.open("desc_effect.php?whicheffect=" + descid, "effect", "height=200,width=300")
 			if (w.focus) w.focus()
 		}
 		function maybe_shrug(buffname) {
-			$.get("/submitnewchat.php?graf=" + URLEncode("/shrug " + buffname) + "&pwd=]] .. session.pwd .. [[", function(data) {
-				if (data.match(/action=unbuff/)) {
-					var whichbuff = data.match(/whichbuff=([0-9]*)/)[1]
-					if (confirm("Do you want to shrug off " + buffname + "?")) {
+			$.getJSON("]] .. shrug_buff_href { pwd = session.pwd } .. [[&buffname=" + URLEncode(buffname), function(data) {
+				if (data.whichbuff) {
+					var shrugurl = 'charsheet.php?pwd=]] .. session.pwd .. [[&ajax=1&action=unbuff&whichbuff=' + data.whichbuff + '&noredirect=1'
+					var confirmmsg = "Do you want to shrug off " + buffname + "?"
+					if (data.remover) {
+						var aan = data.remover.match(/^[aeiou]/) ? 'an' : 'a'
+						shrugurl = 'uneffect.php?cp=1&ajax=1&pwd=]] .. session.pwd .. [[&using=1&whicheffect=' + data.whichbuff
+						confirmmsg = "Do you really want to remove " + buffname + "?\n\nNOTE:\nThis will consume "+aan+ " "+ data.remover + "."
+					}
+					if (confirm(confirmmsg)) {
 						$.ajax({
-							type: 'GET', url: 'charsheet.php?pwd=]] .. session.pwd .. [[&ajax=1&action=unbuff&whichbuff=' + whichbuff + '&noredirect=1',
+							type: 'GET', url: shrugurl,
 							cache: false,
 							global: false,
 							success: function(out) {
@@ -354,18 +392,26 @@ local function get_common_js()
 							}
 						})
 					}
-				} else if (data.match(/requires a soft green echo eyedrop antidote/)) {
-					alert("That requires a soft green echo eyedrop antidote.")
 				} else {
 					alert("Can't shrug that.")
 				}
 			})
 			return false
 		}
-		function kolproxy_use_itemid(itemid) {
+		function kolproxy_use_itemid(itemid, domulti) {
+			var quantity = 1
+			if (domulti) {
+				quantity = 0
+				var newquantity = prompt("How many times?")
+				if (newquantity >= 1) quantity = newquantity
+			}
+			var use_url = "/inv_use.php?whichitem=" + itemid + "&ajax=1&pwd=]] .. session.pwd .. [["
+			if (quantity != 1) {
+				use_url = "/multiuse.php?whichitem=" + itemid + "&quantity=" + quantity + "&ajax=1&action=useitem&pwd=]] .. session.pwd .. [["
+			}
 			$.ajax({
 				type: 'GET',
-				url: "/inv_use.php?whichitem=" + itemid + "&ajax=1&pwd=]] .. session.pwd .. [[",
+				url: use_url,
 				cache: false,
 				global: false,
 				success: function(out) {
@@ -394,10 +440,16 @@ local function get_common_js()
 			})
 			return false
 		}
-		function kolproxy_cast_skillid(skillid) {
+		function kolproxy_cast_skillid(skillid, domulti) {
+			var quantity = 1
+			if (domulti) {
+				quantity = 0
+				var newquantity = prompt("How many times?")
+				if (newquantity >= 1) quantity = newquantity
+			}
 			$.ajax({
 				type: 'GET',
-				url: "/skills.php?whichskill=" + skillid + "&ajax=1&action=Skillz&targetplayer=]] .. playerid() .. [[&quantity=1&pwd=]] .. session.pwd .. [[",
+				url: "/skills.php?whichskill=" + skillid + "&ajax=1&action=Skillz&targetplayer=]] .. playerid() .. [[&quantity=" + quantity + "&pwd=]] .. session.pwd .. [[",
 				cache: false,
 				global: false,
 				success: function(out) {
@@ -426,6 +478,10 @@ local function get_common_js()
 			})
 			return false
 		}
+		$(document).ready(function() {
+			$('.strarrowskill').bind('contextmenu', function(e) { e.preventDefault(); kolproxy_cast_skillid($(this).attr("data-skillid"), true) })
+			$('.strarrowitem').bind('contextmenu', function(e) { e.preventDefault(); kolproxy_use_itemid($(this).attr("data-itemid"), true) })
+		})
 	</script>
 
 	<script type="text/javascript">
@@ -486,8 +542,6 @@ function URLEncode(x)
 };
 
 	</script>
-
-	<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
 
 ]] .. get_outfit_slots_script()
 end
