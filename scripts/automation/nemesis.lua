@@ -184,7 +184,7 @@ end
 setup_turnplaying_script {
 	name = "automate-nemesis-island",
 	description = "Automate Nemesis quest (second part)",
-	when = function() return have_item("secret tropical island volcano lair map") end,
+	when = function() return have_item("secret tropical island volcano lair map") and not quest_completed("Me and My Nemesis") end,
 	macro = macro_noodlecannon,
 	preparation = function()
 		local required_items = required_items_perclass[classid()]
@@ -232,13 +232,10 @@ setup_turnplaying_script {
 			if classid() == 1 then -- seal clubber
 				stop "TODO: Automate seal clubber island"
 			elseif classid() == 2 then -- turtle tamer
-				if not have_item("fouet de tortue-dressage") then
-					get_page("/volcanoisland.php", { pwd = pwd, action = "npc" })
-				end
-				stop "TODO: Automate turtle tamer island"
+				automate_TT_nemesis_island()
 			elseif classid() == 3 then -- pastamancer
 				if not have_item("encoded cult documents") then
-					get_page("/volcanoisland.php", { pwd = pwd, action = "npc" })
+					get_page("/volcanoisland.php", { pwd = session.pwd, action = "npc" })
 				end
 				stop "TODO: Automate pastamancer island"
 -- "proxy:/volcanoisland.php?pwd=a412cd1e0a0d040806269162e564fcb1&action=tuba"  Nothing (get info)
@@ -315,6 +312,49 @@ function nemesis_try_sauceror_potions()
 				return nemesis_try_sauceror_potions()
 			end
 		end
+	end
+end
+
+function automate_TT_nemesis_island()
+	if not have_item("fouet de tortue-dressage") then
+		get_page("/volcanoisland.php", { pwd = session.pwd, action = "npc" })
+	end
+
+	async_get_page("/volcanoisland.php", { pwd = session.pwd, action = "npc" })
+	local ptnpc = get_page("/volcanoisland.php", { pwd = session.pwd, action = "npc" })
+	if ptnpc:contains("watch his turtles practice their backflips") then
+		stop "Finish quest."
+	end
+
+	script.bonus_target { "easy combat" }
+	script.ensure_buffs {}
+	script.wear { weapon = "fouet de tortue-dressage" }
+	script.want_familiar "Baby Gravy Fairy"
+	script.heal_up()
+	script.ensure_mp(50)
+	local function macro_nemesis_turtletamer()
+		return [[
+scrollwhendone
+
+abort pastround 20
+abort hppercentbelow 50
+
+if match "frenchturtle"
+  cast tortue
+  cast tortue
+  if hasskill Shell Up
+    cast Shell Up
+  endif
+  cast tortue
+  repeat
+endif
+
+]] .. macro_noodleserpent()
+	end
+	local pt, url = get_page("/volcanoisland.php", { pwd = session.pwd, action = "tuba" })
+	result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_nemesis_turtletamer)
+	if result:contains("escort it out of the compound") then
+		advagain = true
 	end
 end
 

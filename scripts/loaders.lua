@@ -163,9 +163,9 @@ load_file("interface", "other/chickencha/chibibuddy.lua")
 
 load_file("interface", "other/superbachelor/blank-out.lua")
 
-load_file("chat", "other/add-log-notes.lua")
+load_file("chat", "interface/add-log-notes.lua")
 
-load_file("interface", "other/lua-console.lua")
+load_file("interface", "interface/lua-console.lua")
 
 load_file("other", "paths/jarlsberg.lua")
 

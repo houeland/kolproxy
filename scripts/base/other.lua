@@ -509,6 +509,11 @@ add_ascension_assistance(function() return level() >= 2 and not have_item("conti
 	pick_up_continuum_transfunctioner()
 end)
 
+-- untinker bridge
+add_ascension_assistance(function() return have_item("abridged dictionary") end, function()
+	async_post_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker", pwd = session.pwd, preaction = "untinker", whichitem = get_itemid("abridged dictionary") })
+end)
+
 -- Use roflmao scrolls
 add_ascension_assistance(function() return level() >= 9 and have_item("64735 scroll") end, function()
 	use_item("64735 scroll")

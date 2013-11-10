@@ -8,11 +8,11 @@ add_warning {
 	end
 }
 
--- TODO: in-run only(?)
 add_warning {
 	message = "Your Juju Mojo Mask gaze does not correspond to your primary stat.",
 	type = "extra",
 	check = function()
+		if level() >= 13 then return false end
 		if have_intrinsic("Gaze of the Volcano God") and not mainstat_type("Muscle") then
 			return true
 		elseif have_intrinsic("Gaze of the Lightning God") and not mainstat_type("Mysticality") then
