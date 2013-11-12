@@ -53,8 +53,7 @@ add_printer("/fight.php", function()
 	end
 end)
 
-add_printer("/charpane.php", function()
-	-- TODO: slow for some reason!
+add_charpane_line(function()
 	if have_equipped_item("navel ring of navel gazing") or have_equipped_item("Greatest American Pants") or have_item("peppermint parasol") then
 		local runaways = get_daily_counter("item.fly away.free runaways")
 		local chancestr = "?"
@@ -74,22 +73,19 @@ add_printer("/charpane.php", function()
 		local compact = ("%s (%s)%s"):format(runaways, chancestr, remainingstr)
 		local normal = ("%s used (%s chance)%s"):format(runaways, chancestr, remainingstr)
 		local color = nil
-		if (familiarpicture() == "bandersnatch" and have_buff("Ode to Booze")) or (familiarpicture() == "stompboots") then
+		if (familiar("Frumious Bandersnatch") and have_buff("Ode to Booze")) or familiar("Pair of Stomping Boots") then
 			if have_equipped_item("navel ring of navel gazing") or have_equipped_item("Greatest American Pants") then
 				color = "gray"
 			end
 		end
 
-		print_charpane_value { normalname = "Flyaways", compactname = "Flyaways", compactvalue = compact, normalvalue = normal, color = color }
+		return { normalname = "Flyaways", compactname = "Flyaways", compactvalue = compact, normalvalue = normal, color = color }
 	end
 end)
 
 -- TODO: auto-adjust counter from messages?
 -- You're starting to get kinda queasy from all of this flying.
 -- Eurgh. At this point, you're officially airsick.
-
-
-
 
 
 

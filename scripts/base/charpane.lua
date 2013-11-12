@@ -21,7 +21,7 @@ function run_charpane_line_functions()
 		local lines = f()
 		if not lines then
 			lines = {}
-		elseif lines.value then
+		elseif lines.value or lines.compactvalue or lines.normalvalue then
 			lines = { lines }
 		end
 		for _, x in ipairs(lines) do

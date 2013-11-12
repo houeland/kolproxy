@@ -91,11 +91,16 @@ function solve_dad_sea_monkee_puzzle(text)
 	local clue8, clue9, clue10 = text:match("your ([A-Za-z ]-) betraying you%? As if on cue, ([0-9]+)%-sided triangles materialize and then disappear. So impossible that your ([A-Za-z]+) throbs.")
 	local clue4, clue5
 	if clue4and5 then
-		clue4, clue5 = clue4and5:match("([A-Za-z ]-) ([A-Za-z]+)$")
+		local first = clue4and5:match("^([A-Za-z]+)")
+		if first == "The" then
+			clue4, clue5 = clue4and5:match("(The [A-Za-z]+) ([A-Za-z]+)")
+		else
+			clue4, clue5 = clue4and5:match("([A-Za-z]+) ([A-Za-z]+)")
+		end
 	end
 	clue7 = tonumber(clue7)
 	clue9 = tonumber(clue9)
-	--print("DEBUG", { clue1 = clue1, clue2 = clue2, clue3 = clue3, clue4 = clue4, clue5 = clue5, clue6 = clue6, clue7 = clue7, clue8 = clue8, clue9 = clue9, clue10 = clue10 })
+	print("DEBUG", tostring { clue1 = clue1, clue2 = clue2, clue3 = clue3, clue4 = clue4, clue5 = clue5, clue6 = clue6, clue7 = clue7, clue8 = clue8, clue9 = clue9, clue10 = clue10 })
 	if clue1 and clue2 and clue3 and clue4 and clue5 and clue6 and clue7 and clue8 and clue9 and clue10 then
 		--print("DEBUG: Got all dad sea monkee clues!")
 	end
@@ -231,7 +236,11 @@ function solve_dad_sea_monkee_puzzle(text)
 		rounds[10] = rounds[clue10_values[clue10]]
 	end
 
-	return rounds
+	local strrounds = {}
+	for a, b in pairs(rounds) do
+		strrounds[tostring(a)] = b
+	end
+	return strrounds
 end
 
 add_processor("/fight.php", function()
@@ -251,11 +260,11 @@ add_printer("/fight.php", function()
 		local rounds = fight["zone.sea.dad sea monkee rounds"] or {}
 		local got_all_rounds = true
 		for i = 1, 10 do
-			if not rounds[i] then
+			if not rounds[tostring(i)] then
 				got_all_rounds = false
 			end
 		end
-		local elem = rounds[combat_round]
+		local elem = rounds[tostring(combat_round)]
 		if elem then
 			local want_spells = {
 				Hot = "Awesome Balls of Fire",
