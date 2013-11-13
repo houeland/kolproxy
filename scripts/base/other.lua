@@ -440,9 +440,13 @@ function add_ascension_assistance(checkf, f)
 		if last_checked ~= level() and not locked() and checkf() then
 			local scan = setup_automation_scan_page_results()
 			active_automation_assistance_scanner = scan
+			local new_last_checked = level()
+			function reset_last_checked()
+				new_last_checked = last_checked
+			end
 			pcall(f)
 			active_automation_assistance_scanner = nil
-			last_checked = level()
+			last_checked = new_last_checked
 			text = setup_automation_display_page_results(scan, text)
 		end
 	end)

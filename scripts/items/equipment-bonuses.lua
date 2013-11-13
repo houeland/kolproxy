@@ -27,7 +27,7 @@ function parse_item_bonuses(itemname)
 	bonuses = bonuses + { ["Meat from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Meat Drops from Monsters<]])) }
 	bonuses = bonuses + { ["Monster Level"] = tonumber(pt:match([[>([+-][0-9]+) to Monster Level<]])) }
 	bonuses = bonuses + { ["Combat Initiative"] = tonumber(pt:match([[>Combat Initiative ([+-][0-9]+)%%<]])) }
-	bonuses = bonuses + { ["Adventures per day"] = tonumber(pt:match([[>([+-][0-9]+) Adventure%(s%) per day when equipped.<]])) }
+	bonuses = bonuses + { ["Adventures per day"] = tonumber(pt:match([[>([+-][0-9]+) Adventure%(s%) per day when equipped.?<]])) }
 	bonuses = bonuses + { ["Familiar Weight"] = tonumber(pt:match([[>([+-][0-9]+) to Familiar Weight<]])) }
 
 	if pt:contains(">Monsters will be more attracted to you.<") then
@@ -78,11 +78,13 @@ end
 add_processor("/fight.php", function()
 	if newly_started_fight then
 		clear_cached_item_bonuses("stinky cheese eye")
+		clear_cached_item_bonuses("stinky cheese diaper")
 	end
 end)
 
 add_processor("/inv_equip.php", function()
 	clear_cached_item_bonuses("stinky cheese eye")
+	clear_cached_item_bonuses("stinky cheese diaper")
 end)
 
 add_processor("/choice.php", function()
@@ -102,6 +104,7 @@ end)
 
 local items_to_cache = {
 	"stinky cheese eye",
+	"stinky cheese diaper",
 	"Jekyllin hide belt",
 	"Grimacite gown",
 	"Moonthril Cuirass",
@@ -114,15 +117,21 @@ local items_to_cache = {
 	"Frown Exerciser",
 }
 
+function ensure_cached_item_bonuses(item)
+	if not get_cached_item_bonuses(item) then
+		set_cached_item_bonuses(item, parse_item_bonuses(item))
+	end
+end
+
 add_automator("all pages", function()
 	for _, itemname in ipairs(items_to_cache) do
-		if have_equipped_item(itemname) and not get_cached_item_bonuses(itemname) then
-			set_cached_item_bonuses(itemname, parse_item_bonuses(itemname))
+		if have_equipped_item(itemname) then
+			ensure_cached_item_bonuses(itemname)
 		end
 	end
 	for _, itemid in pairs(equipment()) do
 		if not maybe_get_itemname(itemid) and not get_cached_item_bonuses(itemid) then
-			set_cached_item_bonuses(itemid, parse_item_bonuses(itemid))
+			ensure_cached_item_bonuses(item)
 		end
 	end
 end)

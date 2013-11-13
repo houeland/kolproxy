@@ -1684,13 +1684,26 @@ endif
 			return
 		end
 
-		if ascensionstatus() ~= "Hardcore" then return end
-
 		if have_item("steel margarita") then
 			drink_item("steel margarita")
 		end
 
 		if drunkenness() >= estimate_max_safe_drunkenness() then return end
+
+		if ascensionpath("KOLHS") and meat() >= 3000 then
+			if have_item("single swig of vodka") and drunkenness() + 2 <= estimate_max_safe_drunkenness() then
+				scripts.ensure_buffs { "Ode to Booze" }
+				drink_item("single swig of vodka")
+			elseif have_item("bottle of fruity &quot;wine&quot;") and drunkenness() + 2 <= estimate_max_safe_drunkenness() then
+				scripts.ensure_buffs { "Ode to Booze" }
+				drink_item("single swig of vodka")
+			elseif have_item("can of the cheapest beer") and drunkenness() + 1 <= estimate_max_safe_drunkenness() then
+				scripts.ensure_buffs { "Ode to Booze" }
+				drink_item("single swig of vodka")
+			end
+		end
+
+		if ascensionstatus() ~= "Hardcore" then return end
 
 		if not can_drink_normal_booze() then return end
 

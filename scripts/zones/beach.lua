@@ -31,7 +31,7 @@ end)
 add_automator("/shore.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 	if text:contains([[MacGuffin diary]]) then
-		text, url = get_page("/diary.php", { whichpage = "1" }) -- Should it display the shore page or the diary page?
+		text, url = get_page("/diary.php", { whichpage = 1 }) -- Should it display the shore page or the diary page?
 	end
 end)
 
@@ -49,11 +49,32 @@ function get_desert_exploration()
 	end
 end
 
-add_automator("all pages", function()
-	if not setting_enabled("enable ascension assistance") then return end
-	if locked() then return end
-	if not have_item("desert sightseeing pamphlet") then return end
+add_automator("/fight.php", function()
+	if text:contains(">Desert exploration <b>+") then
+		local explored = get_desert_exploration()
+		text = text:gsub(">Desert exploration <b>%+[0-9]*%%</b>", [[%0 <span style="color:green">{&nbsp;]] .. tostring(explored) .. [[%% explored&nbsp;}</span>]])
+	end
+end)
+
+-- TODO: Do these by noncombat choice option text, not option ID
+add_ascension_assistance(function() return have_item("stone rose") end, function()
+	get_page("/place.php", { whichplace = "desertbeach", action = "db_gnasir" })
+	async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 805, option = 2 })
+	async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 805, option = 1 })
+end)
+
+add_ascension_assistance(function() return count_item("worm-riding manual page") >= 15 end, function()
+	get_page("/place.php", { whichplace = "desertbeach", action = "db_gnasir" })
+	async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 805, option = 2 })
+	async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 805, option = 1 })
+end)
+
+add_ascension_assistance(function() return have_item("desert sightseeing pamphlet") end, function()
+	local c = count_item("desert sightseeing pamphlet")
 	use_item("desert sightseeing pamphlet")
+	if count_item("desert sightseeing pamphlet") < c then
+		reset_last_checked()
+	end
 end)
 
 add_warning {
@@ -61,61 +82,30 @@ add_warning {
 	type = "warning",
 	when = "ascension",
 	zone = "The Arid, Extra-Dry Desert",
-	check = function() return can_wear_weapons() and not have_equipped("UV-resistant compass") end
+	check = function() return can_wear_weapons() and not have_equipped_item("UV-resistant compass") end
 }
 
---[[--
--- This is really the same warning, could this be restructured?
-add_always_zone_check(121, function()
-	if not have_buff("Ultrahydrated") then
-		local pt = get_page("/beach.php")
+add_warning {
+	message = "You might want to get Ultrahydrated first (from The Oasis)",
+	type = "warning",
+	when = "ascension",
+	zone = "The Arid, Extra-Dry Desert",
+	check = function()
+		if have_buff("Ultrahydrated") then return end
+		local pt = get_page("/place.php", { whichplace = "desertbeach" })
 		if pt:contains("Oasis") then
-			return "Ultrahydrated is required for the desert."
+			return true
 		end
 	end
-end)
+}
 
-add_always_zone_check(123, function()
-	if not have_buff("Ultrahydrated") then
-		local pt = get_page("/beach.php")
-		if pt:contains("Oasis") then
-			return "Ultrahydrated is required for the desert."
-		end
-	end
-end)
-
--- TODO: warn when continuing in the wrong zone
-
-add_always_zone_check(121, function()
-	if have_item("stone rose") and not have_item("can of black paint") then
-		return "You'll need a can of black paint for Gnasir."
-	end
-end)
-
-add_always_zone_check(123, function()
-	if have_item("stone rose") and not have_item("can of black paint") then
-		return "You'll need a can of black paint for Gnasir."
-	end
-end)
-
-add_always_zone_check(121, function()
-	if have_item("stone rose") and not have_item("drum machine") then
-		return "You'll need a drum machine for Gnasir."
-	end
-end)
-
-add_always_zone_check(123, function()
-	if have_item("stone rose") and not have_item("drum machine") then
-		return "You'll need a drum machine for Gnasir."
-	end
-end)
-
-add_always_zone_check(122, function()
-	if have_buff("Ultrahydrated") and have_item("stone rose") and have_item("drum machine") then
-		return "You already have the stone rose and a drum machine for Gnasir."
-	end
-end)
---]]--
+add_warning {
+	message = "You might want to use your worm-riding hooks and drum machine first.",
+	type = "warning",
+	when = "ascension",
+	zone = "The Arid, Extra-Dry Desert",
+	check = function() return have_item("worm-riding hooks") and have_item("drum machine") end,
+}
 
 -- pyramid
 add_itemdrop_counter("tomb ratchet", function(c)
