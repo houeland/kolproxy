@@ -43,44 +43,47 @@ function attack_action()
 ]]
 end
 
-function cannon_action()
-	return [[
+function cast_skill(names)
+	if type(names) == "string" then
+		names = { names }
+	end
+	for _, x in ipairs(names) do
+		if have_skill(x) then
+			return [[
 
-    cast Cannelloni Cannon
+
+	cast ]] .. x .. [[
+
+
 
 ]]
+		end
+	end
+	return [[
+
+abort No useful skill found.
+
+]]
+end
+
+function cannon_action()
+	return cast_skill { "Cannelloni Cannon", "Saucestorm" }
 end
 
 function elemental_damage_action()
-	return [[
-
-    cast Cannelloni Cannon
-
-]]
+	return cast_skill { "Cannelloni Cannon", "Saucestorm" }
 end
 
 function serpent_action()
-	return [[
-
-    cast Stringozzi Serpent
-
-]]
+	return cast_skill { "Stringozzi Serpent" }
 end
 
 function geyser_action()
-	return [[
-
-    cast Saucegeyser
-
-]]
+	return cast_skill { "Saucegeyser", "Weapon of the Pastalord" }
 end
 
 function shieldbutt_action()
-	return [[
-
-    cast Shieldbutt
-
-]]
+	return cast_skill { "Shieldbutt", "Cannelloni Cannon", "Saucestorm" }
 end
 
 function maybe_stun_monster(is_dangerous)
@@ -218,7 +221,9 @@ function fist_action()
   return [[
 
 if (monstername ghuol whelp || monstername chalkdust wraith || monstername ghost)
-  cast Cannelloni Cannon
+
+]] .. elemental_damage_action() .. [[
+
 endif
 
 if !(monstername ghuol whelp || monstername chalkdust wraith) && hasskill Drunken Baby Style
@@ -688,7 +693,9 @@ endwhile
 ]]..conditional_salve_action()..[[
 
 if monstername chalkdust wraith
-  cast Cannelloni Cannon
+
+]] .. elemental_damage_action() .. [[
+
 endif
 
 if !monstername chalkdust wraith

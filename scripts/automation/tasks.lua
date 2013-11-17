@@ -614,9 +614,31 @@ mark m_done
 		end
 	}
 
+	function t.get_uv_compass()
+		if not have_item("Shore Inc. Ship Trip Scrip") then
+			return {
+				message = "shore for scrip to buy compass",
+				action = script.take_shore_trip,
+			}
+		else
+			return {
+				message = "buy UV-resistant compass",
+				action = function()
+					buy_shore_inc_item("UV-resistant compass")
+					did_action = have_item("UV-resistant compass")
+				end
+			}
+		end
+	end
+
 	return t
 end
 
 function have_gelatinous_cubeling_items()
 	return have_item("eleven-foot pole") and have_item("ring of Detect Boring Doors") and have_item("Pick-O-Matic lockpicks")
+end
+
+function buy_shore_inc_item(item)
+	autoadventure { zoneid = get_zoneid("The Shore, Inc. Travel Agency"), noncombatchoices = { ["Welcome to The Shore, Inc."] = "Check out the gift shop" } }
+	return shop_buyitem(item, "shore")
 end

@@ -231,10 +231,11 @@ do
 			if tbl.when == "ascension" and freedralph() then return end
 			local zoneid = tonumber(params.snarfblat)
 			if want_zoneids and not want_zoneids[zoneid] then return end
+			local msg = tbl.message
+			local warnid = warnprefix .. "/" .. msg
+			if msg ~= "custom" and session["warning-" .. warnid] then return end
 			local check, checkid = tbl.check(zoneid)
 			if check then
-				local msg = tbl.message
-				local warnid = warnprefix .. "/" .. msg
 				if msg == "custom" and type(check) == "string" then
 					msg = check
 					warnid = checkid

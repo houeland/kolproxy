@@ -37,8 +37,8 @@ end)
 
 -- desert/oasis
 
-function get_desert_exploration()
-	local pt = get_page("/place.php", { whichplace = "desertbeach" })
+function get_desert_exploration(pt)
+	pt = pt or get_page("/place.php", { whichplace = "desertbeach" })
 	if pt:contains("zonefont/percent.gif") then
 		local snippet = pt:match("zonefont/lparen.gif.-zonefont/percent.gif")
 		local digits = ""
@@ -87,7 +87,7 @@ add_warning {
 
 add_warning {
 	message = "You might want to get Ultrahydrated first (from The Oasis)",
-	type = "warning",
+	type = "extra",
 	when = "ascension",
 	zone = "The Arid, Extra-Dry Desert",
 	check = function()
@@ -136,6 +136,7 @@ local function get_pyramid_action()
 		return action, "placed wheel"
 	end
 end
+get_ancient_buried_pyramid_action = get_pyramid_action
 
 -- TODO: make warning enabling/disabling more fine-grained? or coarse-grained?
 -- TODO: allow customization for when you want warnings?

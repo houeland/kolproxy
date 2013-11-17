@@ -1183,6 +1183,8 @@ add_printer("/lair6.php", function()
 		placedescs[4] = "Defeat Clancy"
 		placedescs[5] = "(skipped)"
 		placedescs[6] = "Defeat The Avatar of Boris"
+	elseif ascensionpath("KOLHS") then
+		placedescs[6] = "Defeat Principal Mooney"
 	end
 	local status = "<b>Chamber progress</b><br>"
 	for x, y in ipairs(placedescs) do

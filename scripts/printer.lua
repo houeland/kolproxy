@@ -13,6 +13,8 @@ function kolproxy_log_time_interval(msg, f) return f() end
 local printers = {}
 local noncombat_choice_texts = {}
 
+cannot_set_state = true
+
 function set_state()
 	error "You can't change state (counters, etc.) from add_printer(), that's just for changing what's displayed. You might want add_processor() instead for registering game state changes."
 end

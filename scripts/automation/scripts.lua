@@ -700,7 +700,9 @@ function get_automation_scripts(cached_stuff)
 						use_hottub()
 					end
 				else
-					critical "Failed to restore HP!"
+					if hp() < maxhp() / 2 then
+						critical "Failed to restore HP!"
+					end
 				end
 			end
 		end
@@ -1046,6 +1048,9 @@ function get_automation_scripts(cached_stuff)
 		if turns < duration then
 			f.cast_buff(buff)
 			if buffturns(buff) <= turns then
+				if turns == 0 then
+					return
+				end
 				critical("Failed to cast " .. buff)
 			end
 			f.ensure_buff_turns(buff, duration)
@@ -1692,13 +1697,13 @@ endif
 
 		if ascensionpath("KOLHS") and meat() >= 3000 then
 			if have_item("single swig of vodka") and drunkenness() + 2 <= estimate_max_safe_drunkenness() then
-				scripts.ensure_buffs { "Ode to Booze" }
+				script.ensure_buffs { "Ode to Booze" }
 				drink_item("single swig of vodka")
 			elseif have_item("bottle of fruity &quot;wine&quot;") and drunkenness() + 2 <= estimate_max_safe_drunkenness() then
-				scripts.ensure_buffs { "Ode to Booze" }
+				script.ensure_buffs { "Ode to Booze" }
 				drink_item("single swig of vodka")
 			elseif have_item("can of the cheapest beer") and drunkenness() + 1 <= estimate_max_safe_drunkenness() then
-				scripts.ensure_buffs { "Ode to Booze" }
+				script.ensure_buffs { "Ode to Booze" }
 				drink_item("single swig of vodka")
 			end
 		end
@@ -1706,6 +1711,8 @@ endif
 		if ascensionstatus() ~= "Hardcore" then return end
 
 		if not can_drink_normal_booze() then return end
+
+		if advs() >= 20 then return end
 
 		for i = 1, 5 do
 			if have_item("peppermint sprout") or have_item("peppermint twist") then
@@ -3991,68 +3998,121 @@ endif
 	end
 
 	function f.do_oasis_and_desert()
-		stop "TODO: Do desert/oasis"
 		if have_item("worm-riding hooks") and have_item("drum machine") then
 			inform "using drum machine"
 			set_result(use_item("drum machine"))
 			did_action = not have_item("worm-riding hooks")
-		elseif quest_text("got your walking shoes on") then
-			go("unlock oasis", 121, macro_noodleserpent, {
-				["Let's Make a Deal!"] = "Haggle for a better price",
-			}, { "Spirit of Bacon Grease" }, "Mini-Hipster", 45)
-			if get_result():contains("find yourself near an oasis") then
-				use_hottub()
-				did_action = true
-			end
-		elseif not have_buff("Ultrahydrated") then
-			inform "getting ultrahydrated"
-			if not have_item("ten-leaf clover") then
-				use_item("disassembled clover")
-			end
-			if have_item("ten-leaf clover") or challenge == "fist" then
-				result, resulturl, advagain = autoadventure { zoneid = 122, ignorewarnings = true }
-				if have_buff("Ultrahydrated") or get_result():contains("You acquire an item") then
-					did_action = advagain
-				end
-			else
-				f.trade_for_clover()
-				if not have_item("ten-leaf clover") and not have_item("disassembled clover") then
-					pull_in_softcore("disassembled clover")
-				end
-				if have_item("ten-leaf clover") or have_item("disassembled clover") then
-					did_action = true
-				else
-					--stop "No clover for ultrahydrated"
-					result, resulturl, advagain = autoadventure { zoneid = 122, ignorewarnings = true }
-					if have_buff("Ultrahydrated") or get_result():contains("You acquire an item") then
-						did_action = advagain
-					end
-				end
-			end
-		elseif quest_text("managed to stumble upon a hidden oasis") then
-			go("find gnasir", 123, macro_noodleserpent, nil, { "Spirit of Bacon Grease" }, "Mini-Hipster", 60)
-		elseif quest_text("tasked you with finding a stone rose") then
-			script.bonus_target { "item" }
-			if not (have("stone rose") and have_item("drum machine")) then
-				if have_item("stone rose") and ascensionstatus() ~= "Hardcore" then
-					pull_in_softcore("drum machine")
-				end
-				script.bonus_target { "item" }
-				go("get stone rose + drum machine", 122, macro_noodleserpent, nil, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 60)
-			elseif not have_item("can of black paint") then
-				inform "buying can of black paint"
+			return
+		elseif have_item("desert sightseeing pamphlet") then
+			inform "using desert sightseeing pamphlet"
+			set_result(use_item("desert sightseeing pamphlet"))
+			did_action = not have_item("desert sightseeing pamphlet")
+			return
+		end
+		local beachpt = get_page("/place.php", { whichplace = "desertbeach" })
+		if not beachpt:contains("Gnasir") then
+			return run_task {
+				message = "find gnasir",
+				minmp = 70,
+				equipment = { offhand = can_wear_weapons() and "UV-resistant compass" or nil },
+				action = adventure {
+					zone = "The Arid, Extra-Dry Desert",
+					macro_function = macro_noodleserpent,
+					noncombats = { ["A Sietch in Time"] = "Whoops." },
+				}
+			}
+		end
+		local need_stone_rose
+		local need_killing_jar
+		local need_black_paint
+		local need_manual_pages
+		local need_count
+
+		local function update_tracker()
+			local trackerpt = get_charpane_quest_status()
+			need_stone_rose = trackerpt:contains("<br>&nbsp;&nbsp;&nbsp;*  a stone rose")
+			need_killing_jar = trackerpt:contains("<br>&nbsp;&nbsp;&nbsp;*  a banshee's killing jar")
+			need_black_paint = trackerpt:contains("<br>&nbsp;&nbsp;&nbsp;*  a can of black paint")
+			need_manual_pages = trackerpt:contains("<br>&nbsp;&nbsp;&nbsp;*  the 15 pages of his worm-riding manual")
+			need_count = (need_stone_rose and 1 or 0) + (need_killing_jar and 1 or 0) + (need_black_paint and 1 or 0) + (need_manual_pages and 1 or 0)
+		end
+		update_tracker()
+		local original_count = need_count
+
+		local function give_to_gnasir()
+			get_page("/place.php", { whichplace = "desertbeach", action = "db_gnasir" })
+			result, resulturl = post_page("/choice.php", { pwd = session.pwd, whichchoice = 805, option = 2 })
+			async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 805, option = 1 })
+			update_tracker()
+		end
+
+		if need_black_paint then
+			inform "giving gnasir black paint"
+			if not have_item("can of black paint") then
 				buy_item("can of black paint", "l")
-				did_action = have_item("can of black paint")
-			else
-				go("return stone rose", 123, macro_noodleserpent, nil, { "Spirit of Bacon Grease" }, "Mini-Hipster", 60)
 			end
-		elseif quest_text("that's probably long enough") then
-			go("return to gnasir after waiting", 123, macro_noodleserpent, nil, { "Spirit of Bacon Grease" }, "Mini-Hipster", 60)
-		elseif quest_text("find fifteen missing pages") or quest_text("fourteen to go") or quest_text("thirteen to go") then
-			script.bonus_target { "item" }
-			go("find missing pages", 122, macro_noodleserpent, nil, { "Spirit of Bacon Grease" }, "Mini-Hipster", 60)
-		elseif quest_text("Time to take them back") then
-			go("return pages to gnasir", 123, macro_noodleserpent, nil, { "Spirit of Bacon Grease" }, "Mini-Hipster", 60)
+			if not have_item("can of black paint") then
+				critical "Failed to buy can of black paint"
+			end
+			give_to_gnasir()
+			did_action = need_count < original_count
+			return
+		elseif need_killing_jar and have_item("killing jar") then
+			inform "giving killing jar"
+			give_to_gnasir()
+			did_action = need_count < original_count
+			return
+		elseif need_stone_rose then
+			if have_item("stone rose") then
+				inform "giving stone rose"
+				give_to_gnasir()
+				did_action = need_count < original_count
+				return
+			else
+				script.bonus_target { "item" }
+				return run_task {
+					message = "get stone rose",
+					minmp = 60,
+					buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" },
+					familiar = "Slimeling",
+					action = adventure {
+						zone = "The Oasis",
+						macro_function = macro_noodleserpent,
+					}
+				}
+			end
+		else
+			if count_item("worm-riding manual page") >= 15 then
+				inform "giving manual pages"
+				give_to_gnasir()
+				did_action = need_count < original_count
+				return
+			end
+			if have_item("worm-riding hooks") and not have_item("drum machine") and ascensionstatus() ~= "Hardcore" then
+				pull_in_softcore("drum machine")
+			end
+			if have_item("worm-riding hooks") and have_item("drum machine") then
+				set_result(use_item("drum machine"))
+				did_action = not have_item("worm-riding hooks")
+				return
+			end
+			if not have_buff("Ultrahydrated") then
+				set_result(run_task {
+					message = "getting ultrahydrated",
+					action = adventure { zone = "The Oasis" }
+				})
+				did_action = have_buff("Ultrahydrated")
+				return
+			end
+			return run_task {
+				message = "explore desert",
+				minmp = 70,
+				equipment = { offhand = can_wear_weapons() and "UV-resistant compass" or nil },
+				action = adventure {
+					zone = "The Arid, Extra-Dry Desert",
+					macro_function = macro_noodleserpent,
+				}
+			}
 		end
 	end
 
@@ -4368,4 +4428,13 @@ function do_degrassi_untinker_quest()
 	async_post_page("/place.php", { whichplace = "forestvillage", preaction = "screwquest", action = "fv_untinker_quest" })
 	async_get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_innabox" })
 	async_get_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker" })
+end
+
+function get_charpane_quest_status()
+	local charpt = get_page("/charpane.php")
+	local tblstr = charpt:match([[<table id="nudges".-</table>]])
+	if not tblstr then
+		critical "Charpane quest tracker not found"
+	end
+	return tblstr
 end

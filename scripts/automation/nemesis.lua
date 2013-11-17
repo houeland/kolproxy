@@ -130,6 +130,7 @@ setup_turnplaying_script {
 
 				result, resulturl = get_page("/cave.php", { action = "cavern", pwd = session.pwd })
 				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?")
+				if not advagain then break end
 			else
 				break
 			end
@@ -183,7 +184,7 @@ end
 
 setup_turnplaying_script {
 	name = "automate-nemesis-island",
-	description = "Automate Nemesis quest (second part)",
+	description = "Automate Nemesis quest (second part, beta version)",
 	when = function() return have_item("secret tropical island volcano lair map") and not quest_completed("Me and My Nemesis") end,
 	macro = macro_noodlecannon,
 	preparation = function()

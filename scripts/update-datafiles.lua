@@ -899,12 +899,11 @@ function parse_zones()
 		if not zones_datafile[a] then
 			softwarn("Zone mismatch", zones_datafile_inverse[b], "vs", a)
 		end
-		if not zones_by_number[b] then
-			zones_by_number[b] = a
-		end
+		zones_by_number[b] = a
 	end
 
 	local zones = {}
+
 	for a, b in pairs(zones_by_number) do
 		local z = zones_datafile[b] or {}
 		z.zoneid = z.zoneid or a

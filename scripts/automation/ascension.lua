@@ -2738,7 +2738,7 @@ endif
 	end
 -- 	print("reagent pasta have", have_reagent_pastas, "need", need_total_reagent_pastas)
 
-	if advs() < 20 then
+	do
 		local pt, pturl, drank = script.drink_booze()
 		if pt then
 			return pt, pturl, drank
@@ -4529,6 +4529,16 @@ endif
 	}
 
 	add_task {
+		when = quest("A Pyramid Scheme") and
+			not quest_text("found the little pyramid") and
+			not have_item("Staff of Ed") and
+			can_wear_weapons() and
+			not have_item("UV-resistant compass") and
+			turns_to_next_sr >= 3,
+		task = tasks.get_uv_compass,
+	}
+
+	add_task {
 		prereq = quest("A Pyramid Scheme") and not quest_text("found the little pyramid") and not have_item("Staff of Ed"),
 		f = script.do_oasis_and_desert,
 	}
@@ -4986,9 +4996,10 @@ use gauze garter, gauze garter
 				x.minmp = 60
 			end
 
-			if x.fam then
+			x.familiar = x.familiar or x.fam
+			if x.familiar then
 				-- TODO: unequip fam?
-				local famt = script.want_familiar(x.fam)
+				local famt = script.want_familiar(x.familiar)
 				local fammpregen, famequip = famt.mpregen, famt.familiarequip
 				if fammpregen then
 					if challenge == "fist" then
@@ -5000,6 +5011,7 @@ use gauze garter, gauze garter
 				if famequip and towear and not towear.familiarequip and have(famequip) then
 					towear.familiarequip = famequip
 				end
+				x.familiar = nil
 				x.fam = nil
 			end
 

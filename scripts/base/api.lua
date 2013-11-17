@@ -413,7 +413,7 @@ function setup_functions()
 				local cached_skills_storedid = session["cached player skills.storedid"]
 				local currentid = ascensionpathid() .. "/" .. ascensionstatus()
 				if not cached_skills or cached_skills_storedid ~= currentid then
-					if kolproxycore_async_submit_page then
+					if kolproxycore_async_submit_page and not cannot_set_state then
 						cached_skills = raw_retrieve_skills()
 						session["cached player skills"] = cached_skills
 						session["cached player skills.storedid"] = currentid

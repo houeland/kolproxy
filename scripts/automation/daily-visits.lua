@@ -178,6 +178,8 @@ function do_daily_visits()
 	dopage("/choice.php", { whichchoice = 585, pwd = pwd, option = 1, action = "leave" })
 
 	if setting_enabled("automate daily visits/do lazy aftercore daily tasks") and ascensionstatus("Aftercore") then
+		-- TODO: use still
+
 		dopage("/campground.php", { preaction = "summonsnowcone", quantity = 3 })
 		dopage("/campground.php", { preaction = "summonstickers", quantity = 3 })
 		dopage("/campground.php", { preaction = "summonsugarsheets", quantity = 3 })
@@ -203,31 +205,18 @@ function do_daily_visits()
 		dopage("/campground.php", { preaction = "summonaa" })
 		dopage("/campground.php", { preaction = "summonthinknerd" })
 
+		queue_page_result(cast_skill("Lunch Break"))
+		queue_page_result(cast_skill("Advanced Cocktailcrafting"))
+		queue_page_result(cast_skill("Advanced Saucecrafting"))
+		queue_page_result(cast_skill("Pastamastery"))
+		queue_page_result(cast_skill("Summon Crimbo Candy"))
+
 		-- TODO: librams
 -- 		castSkillMax 8103 ref -- summon brickos
 -- 		castSkillMax 8100 ref -- summon candy hearts
 -- 		castSkillMax 8101 ref -- summon party favors
 -- 		castSkillMax 8102 ref -- summon love songs
 
-		queue_page_result(cast_skill("Lunch Break"))
-		queue_page_result(cast_skill("Summon Crimbo Candy"))
-
-		queue_page_result(cast_skill("Pastamastery", 16))
-		queue_page_result(cast_skill("Pastamastery", 8))
-		queue_page_result(cast_skill("Pastamastery", 4))
-		queue_page_result(cast_skill("Pastamastery", 2))
-		queue_page_result(cast_skill("Pastamastery", 1))
-		queue_page_result(cast_skill("Advanced Saucecrafting", 16))
-		queue_page_result(cast_skill("Advanced Saucecrafting", 8))
-		queue_page_result(cast_skill("Advanced Saucecrafting", 4))
-		queue_page_result(cast_skill("Advanced Saucecrafting", 2))
-		queue_page_result(cast_skill("Advanced Saucecrafting", 1))
-		queue_page_result(cast_skill("Advanced Cocktailcrafting", 16))
-		queue_page_result(cast_skill("Advanced Cocktailcrafting", 8))
-		queue_page_result(cast_skill("Advanced Cocktailcrafting", 4))
-		queue_page_result(cast_skill("Advanced Cocktailcrafting", 2))
-		queue_page_result(cast_skill("Advanced Cocktailcrafting", 1))
-		-- TODO: use still
 		queue_page_result(cast_skill("Request Sandwich"))
 		queue_page_result(cast_skill("Request Sandwich"))
 		queue_page_result(cast_skill("Request Sandwich"))
