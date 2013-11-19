@@ -55,7 +55,7 @@ add_processor("/mining.php", function()
 			image, title, height, width = celltext:match([[<img src='(http://images.kingdomofloathing.com/otherimages/mine/[a-z0-9]+.gif)' alt='[^']+' title='([^']+)' border=0 height=(50) width=(50)>]])
 			if image then
 				if image:match("wall1111.gif") or image:match("wallsparkle") then
-					tbl[id] = nil
+					tbl[tostring(id)] = nil
 				end
 			end
 		end
@@ -142,7 +142,7 @@ local function get_minestr(minetext, foundtbl)
 				end
 			else
 				if foundtbl[tostring(which)] then -- and alt == "Open Cavern" 
-					curtbl[which] = orechars[foundtbl[which]] or "0"
+					curtbl[which] = orechars[foundtbl[tostring(which)]] or "0"
 				elseif not image:match("wall1111.gif") and not image:match("wallsparkle") then
 					curtbl[which] = "0"
 				elseif distant_sparkles_visible and not image:match("wallsparkle") then
