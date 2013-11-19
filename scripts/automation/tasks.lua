@@ -269,7 +269,7 @@ mark m_done
 		return {
 			message = "sewerlevel to lvl 6",
 			fam = "Frumious Bandersnatch",
-			buffs = { "Springy Fusilli", "Spirit of Garlic", "Jaba&ntilde;ero Saucesphere", "Curiosity of Br'er Tarrypin" },
+			buffs = { "Springy Fusilli", "Spirit of Garlic" },
 			minmp = 70,
 			action = adventure {
 				zoneid = 166,

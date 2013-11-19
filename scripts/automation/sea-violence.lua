@@ -81,7 +81,7 @@ local violence_href = setup_turnplaying_script {
 				offhand = first_wearable { "Brimstone Bunker" },
 				pants = "Mer-kin gladiator tailpiece",
 			}
-			local damage_sources = have_buff("Frigidalmatian") or have_buff("Jalape&ntilde;o Saucesphere") or have_buff("Jaba&ntilde;ero Saucesphere") or have_buff("Scarysauce")
+			local damage_sources = have_buff("Frigidalmatian") or have_buff("Jalape&ntilde;o Saucesphere") or have_buff("Scarysauce")
 			switch_familiarid(0)
 			if have_equipped_item("Brimstone Bludgeon") and have_equipped_item("Brimstone Bunker") and count_item("crayon shavings") >= 10 and not damage_sources and familiarid() == 0 and have_skill("Ambidextrous Funkslinging") then
 				script.force_heal_up()

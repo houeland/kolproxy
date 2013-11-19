@@ -43,7 +43,7 @@ function attack_action()
 ]]
 end
 
-function cast_skill(names)
+function macro_cast_skill(names)
 	if type(names) == "string" then
 		names = { names }
 	end
@@ -59,6 +59,7 @@ function cast_skill(names)
 ]]
 		end
 	end
+	print("WARNING: No skills found: ", tostring(names))
 	return [[
 
 abort No useful skill found.
@@ -67,23 +68,23 @@ abort No useful skill found.
 end
 
 function cannon_action()
-	return cast_skill { "Cannelloni Cannon", "Saucestorm" }
+	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm" }
 end
 
 function elemental_damage_action()
-	return cast_skill { "Cannelloni Cannon", "Saucestorm" }
+	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm" }
 end
 
 function serpent_action()
-	return cast_skill { "Stringozzi Serpent" }
+	return macro_cast_skill { "Stringozzi Serpent", "Saucegeyser", "Weapon of the Pastalord", "Saucestorm", "Cannelloni Cannon" }
 end
 
 function geyser_action()
-	return cast_skill { "Saucegeyser", "Weapon of the Pastalord" }
+	return macro_cast_skill { "Saucegeyser", "Weapon of the Pastalord" }
 end
 
 function shieldbutt_action()
-	return cast_skill { "Shieldbutt", "Cannelloni Cannon", "Saucestorm" }
+	return macro_cast_skill { "Shieldbutt", "Cannelloni Cannon", "Saucestorm" }
 end
 
 function maybe_stun_monster(is_dangerous)
@@ -130,10 +131,25 @@ function maybe_stun_monster(is_dangerous)
 					cast Entangling Noodles
 				endif]])
 		end
+		if playerclass("Sauceror") and is_dangerous then
+			table.insert(macrolines, [[
+				if hasskill Soul Bubble
+					cast Soul Bubble
+				endif]])
+		end
 		if playerclass("Accordion Thief") then
 			table.insert(macrolines, [[
 				if hasskill Accordion Bash
 					cast Accordion Bash
+				endif]])
+		end
+	end
+
+	if can_stagger then
+		if playerclass("Sauceror") and have_skill("Itchy Curse Finger") then
+			table.insert(macrolines, [[
+				if hasskill Curse of Weaksauce
+					cast Curse of Weaksauce
 				endif]])
 		end
 	end

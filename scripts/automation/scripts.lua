@@ -394,6 +394,8 @@ function get_automation_scripts(cached_stuff)
 				cast_skillid(2012, math.floor(toburn / 10)) -- astral shell
 			elseif level() >= 8 and buffturns("A Few Extra Pounds") < hundreds and toburn >= 10 then
 				cast_skillid(1024, math.floor(toburn / 10)) -- holiday weight gain
+			elseif buffturns("Antibiotic Saucesphere") < hundreds and toburn >= 10 and not ignore_buffs["Antibiotic Saucesphere"] then
+				cast_skill("Antibiotic Saucesphere", math.floor(toburn / 10))
 			else
 				return f.burn_mp(downto, hundreds + 100, true)
 			end
@@ -798,7 +800,7 @@ function get_automation_scripts(cached_stuff)
 		["Pisces in the Skyces"] = function()
 			if not have_item("tobiko marble soda") then
 				script.ensure_mp(5)
-				cast_skill("Summon Alice's Army Cards")
+				set_result(cast_skill("Summon Alice's Army Cards"))
 				get_page("/place.php", { whichplace = "forestvillage" })
 				get_page("/gamestore.php")
 				get_page("/gamestore.php", { place = "cashier" })
@@ -843,7 +845,6 @@ function get_automation_scripts(cached_stuff)
 		["Curiosity of Br'er Tarrypin"] = { item = "totem" },
 		["Elemental Saucesphere"] = { item = "saucepan" },
 		["Jalape&ntilde;o Saucesphere"] = { item = "saucepan" },
-		["Jaba&ntilde;ero Saucesphere"] = { item = "saucepan" },
 		["Scarysauce"] = { item = "saucepan" },
 
 		["The Moxious Madrigal"] = { effectid = 61 },
@@ -1461,27 +1462,27 @@ endif
 	end
 
 	function f.make_reagent_pasta()
-		if count("dry noodles") < 1 then
+		if count_item("dry noodles") < 1 and have_skill("Pastamastery") then
 			ensure_mp(10)
-			cast_skillid(3006, 1) -- pastamastery
+			cast_skill("Pastamastery") -- pastamastery
 		end
-		if count("scrumptious reagent") < 1 then
+		if count_item("scrumptious reagent") < 1 and have_skill("Advanced Saucecrafting") then
 			ensure_mp(10)
-			cast_skillid(4006, 1) -- advanced saucecrafting
+			cast_skill("Advanced Saucecrafting") -- advanced saucecrafting
 		end
-		if have_item("Hell broth") then
+		if have_item("Hell broth") and have_item("dry noodles") then
 			inform "make hell ramen"
 			set_result(cook_items("Hell broth", "dry noodles"))
 			did_action = get_result():contains("Hell ramen")
-		elseif have_item("fancy schmancy cheese sauce") then
+		elseif have_item("fancy schmancy cheese sauce") and have_item("dry noodles") then
 			inform "make fettucini inconnu"
 			set_result(cook_items("fancy schmancy cheese sauce", "dry noodles"))
 			did_action = get_result():contains("fettucini Inconnu")
-		elseif have_item("hellion cube") then
+		elseif have_item("hellion cube") and have_item("scrumptious reagent") and have_item("dry noodles") then
 			inform "make hell broth"
 			set_result(cook_items("hellion cube", "scrumptious reagent"))
 			did_action = get_result():contains("Hell broth")
-		elseif have_item("goat cheese") then
+		elseif have_item("goat cheese") and have_item("scrumptious reagent") and have_item("dry noodles") then
 			inform "make cheese sauce"
 			set_result(cook_items("goat cheese", "scrumptious reagent"))
 			did_action = get_result():contains("fancy schmancy cheese sauce")
@@ -2026,7 +2027,7 @@ mark m_done
 					end
 				end
 				ensure_mp(150)
-				ensure_buffs { "Jalape&ntilde;o Saucesphere", "Jaba&ntilde;ero Saucesphere", "Spirit of Bacon Grease", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
+				ensure_buffs { "Spirit of Bacon Grease", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
 				maybe_ensure_buffs { "Mental A-cue-ity" }
 				async_get_page("/bigisland.php", { place = "camp", whichcamp = 1 })
 				result, resulturl = async_get_page("/bigisland.php", { action = "bossfight", pwd = get_pwd() })()
@@ -2132,7 +2133,7 @@ mark m_done
 				critical "Couldn't identify 3 wines needed for cellar"
 			elseif manor3pt:match("Summoning Chamber") then
 				inform "fight spookyraven"
-				ensure_buffs { "Springy Fusilli", "Astral Shell", "Jaba&ntilde;ero Saucesphere", "Spirit of Bacon Grease", "Jalape&ntilde;o Saucesphere" }
+				ensure_buffs { "Springy Fusilli", "Astral Shell", "Spirit of Bacon Grease" }
 				maybe_ensure_buffs_in_fist { "Astral Shell" }
 				fam "Frumious Bandersnatch"
 				use_hottub()
@@ -2443,7 +2444,7 @@ mark m_done
 				inform "fight ed"
 				fam "Frumious Bandersnatch"
 				f.heal_up()
-				ensure_buffs { "Jalape&ntilde;o Saucesphere", "Jaba&ntilde;ero Saucesphere", "Spirit of Garlic", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
+				ensure_buffs { "Spirit of Garlic", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
 				maybe_ensure_buffs { "Mental A-cue-ity" }
 				ensure_mp(100)
 				result, resulturl = get_page("/pyramid.php", { action = "lower" })
@@ -3620,8 +3621,8 @@ endif
 					stop "TODO: Fight bonerdagon in Boris"
 				end
 			else
-				ensure_buffs { "A Few Extra Pounds", "Jalape&ntilde;o Saucesphere", "Jaba&ntilde;ero Saucesphere", "Springy Fusilli", "Spirit of Garlic", "Astral Shell", "Ghostly Shell" }
-				maybe_ensure_buffs_in_fist { "A Few Extra Pounds", "Jalape&ntilde;o Saucesphere", "Jaba&ntilde;ero Saucesphere", "Astral Shell", "Ghostly Shell" }
+				ensure_buffs { "A Few Extra Pounds", "Springy Fusilli", "Spirit of Garlic", "Astral Shell", "Ghostly Shell" }
+				maybe_ensure_buffs_in_fist { "A Few Extra Pounds", "Astral Shell", "Ghostly Shell" }
 				fam "Knob Goblin Organ Grinder"
 				f.heal_up()
 				ensure_mp(50)
@@ -3663,7 +3664,7 @@ endif
 					stop "TODO: Do bedroom in challenge path at level < 7"
 				end
 			end
-			go("do bedroom", 108, macro, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Springy Fusilli", "Spirit of Garlic", "Jaba&ntilde;ero Saucesphere", "Jalape&ntilde;o Saucesphere" }, "Frumious Bandersnatch", 50, { choice_function = function(advtitle, choicenum)
+			go("do bedroom", 108, macro, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Springy Fusilli", "Spirit of Garlic" }, "Frumious Bandersnatch", 50, { choice_function = function(advtitle, choicenum)
 				if choicenum == 82 then
 					return "Kick it and see what happens"
 				elseif choicenum == 83 then
