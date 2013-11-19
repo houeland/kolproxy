@@ -336,6 +336,31 @@ function ascension_checklist_get_questitem_text()
 	end
 end
 
+-- TODO: move to another file
+function get_remaining_pvp_fights()
+	return tonumber(get_page("/peevpee.php", { place = "fight" }):match(">You have ([0-9]+) fights remaining today.<"))
+end
+
+function ascension_checklist_get_other_tasks_text()
+	local pvpfights = get_remaining_pvp_fights()
+	local todo = {}
+	if pvpfights and pvpfights > 0 then
+		table.insert(todo, [[
+<h2>PvP fights</h2>
+You have ]]..pvpfights..[[ fights remaining today.
+]])
+	end
+	local campgroundpt = get_page("/campground.php")
+	for x in campgroundpt:gmatch("<a.-</a>") do
+		if x:contains("action=garden") then
+			table.insert(todo, [[
+<h2>Campsite garden</h2>
+Your garden contains: ]] .. x:match([[title="(.-)"]]))
+		end
+	end
+	return table.concat(todo, "\n")
+end
+
 local cook_key_href = add_automation_script("custom-ascension-checklist-cook-key-lime", function()
 	local whichitem = tonumber(params.whichitem)
 	if whichitem and have_inventory_item(whichitem) then
@@ -562,6 +587,7 @@ td {
 </script></head>
 <body>
 ]] .. ascension_checklist_get_questitem_text() .. [[
+]] .. ascension_checklist_get_other_tasks_text() .. [[
 <h2>Consumable items</h2>
 ]] .. consumable_text .. [[
 <script type="text/javascript">

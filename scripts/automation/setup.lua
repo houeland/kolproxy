@@ -144,7 +144,7 @@ automation_script_details_list["automate-suburbandis"] = { when = function() ret
 automation_script_details_list["castle-farming"] = { simple_link = "beanstalk.php", description = "Automate Castle meat farming (link to beanstalk)" }
 --automation_script_details_list["lua-console"] = { simple = true, description = "Go to Lua console" }
 automation_script_details_list["add-log-notes"] = { simple = true, description = "Add note to ascension log" }
-automation_script_details_list["automate-aftercore-pulls"] = { simple = true, description = "Pull a selection of useful aftercore items from Hagnks storage" }
+automation_script_details_list["automate-aftercore-pulls"] = { simple = true, description = "Pull useful aftercore items from storage" }
 automation_script_details_list["setup-ascension-automation"] = { simple = true, description = "Setup ascension automation script" }
 automation_script_details_list["custom-inventory-diff"] = { simple = true, description = "Show items found this session" }
 
@@ -154,7 +154,7 @@ automation_script_details_list["custom-modifier-maximizer"] = { simple = true, d
 automation_script_details_list["custom-compute-net-worth"] = { simple = true, description = "Compute net worth" }
 automation_script_details_list["display-tracked-variables"] = { simple = true, description = "Display tracked game variables (preview)" }
 automation_script_details_list["custom-mix-drinks"] = { simple = true, description = "List advanced cocktails you can craft (preview)" }
-automation_script_details_list["custom-ascension-checklist"] = { simple = true, description = "Pre-ascension pull stocking checklist" }
+automation_script_details_list["custom-ascension-checklist"] = { simple = true, description = "Pre-ascension checklist" }
 
 custom_aftercore_automation_href = add_automation_script("custom-aftercore-automation", function()
 	local questlogcompleted_page = get_page("/questlog.php", { which = 2 })
