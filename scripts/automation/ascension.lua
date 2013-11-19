@@ -132,17 +132,12 @@ local function automate_hcnp_day(whichday)
 		function make_yellowray_macro(name)
 			return [[
 ]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
-sub stall
-]] .. stall_action() .. [[
-endsub
 
 if monstername ]] .. name .. [[
 
   use unbearable light
   goto m_done
 endif
-
-cast Entangling Noodles
 
 ]] .. COMMON_MACROSTUFF_FLYERS .. [[
 
@@ -2745,17 +2740,29 @@ endif
 		end
 	end
 
-	local do_powerleveling = nil
+	local do_powerleveling_sub = nil
 	use_dancecard = nil
 	if mainstat_type("Muscle") then
-		do_powerleveling = script.do_muscle_powerleveling
+		do_powerleveling_sub = script.do_muscle_powerleveling
 		use_dancecard = function() end
 	elseif mainstat_type("Mysticality") then
-		do_powerleveling = script.do_mysticality_powerleveling
+		do_powerleveling_sub = script.do_mysticality_powerleveling
 		use_dancecard = function() end
 	elseif mainstat_type("Moxie") then
-		do_powerleveling = script.do_moxie_powerleveling
+		do_powerleveling_sub = script.do_moxie_powerleveling
 		use_dancecard = script.do_moxie_use_dancecard
+	end
+
+	function do_powerleveling()
+		if have_item("plastic vampire fangs") and not day["vamped out.isabella"] and not cached_stuff.tried_vamping_out then
+			cached_stuff.tried_vamping_out = true
+			script.wear { acc1 = "plastic vampire fangs" }
+			inform("vamping out: " .. mainstat_type())
+			vamp_out(mainstat_type())
+			did_action = true
+		else
+			return do_powerleveling_sub()
+		end
 	end
 
 	if challenge == "fist" and not have_item("spangly sombrero") and familiarid() ~= 82 then
@@ -2784,7 +2791,7 @@ endif
 	}
 
 	add_task {
-		when = level() < 6 and (buffturns("The Moxious Madrigal") < 10 or buffturns("The Magical Mojomuscular Melody") < 10) and have_skill("The Moxious Madrigal") and have_skill("The Magical Mojomuscular Melody"),
+		when = AT_song_duration() and level() < 6 and (buffturns("The Moxious Madrigal") < 10 or buffturns("The Magical Mojomuscular Melody") < 10) and have_skill("The Moxious Madrigal") and have_skill("The Magical Mojomuscular Melody"),
 		task = tasks.extend_tmm_and_mojo,
 	}
 
@@ -4539,7 +4546,10 @@ endif
 	}
 
 	add_task {
-		prereq = quest("A Pyramid Scheme") and not quest_text("found the little pyramid") and not have_item("Staff of Ed"),
+		prereq = quest("A Pyramid Scheme") and
+			not quest_text("found the little pyramid") and
+			not have_item("Staff of Ed") and
+			(not can_wear_weapons() or have_item("UV-resistant compass")),
 		f = script.do_oasis_and_desert,
 	}
 

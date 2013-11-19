@@ -131,7 +131,7 @@ function maybe_stun_monster(is_dangerous)
 					cast Entangling Noodles
 				endif]])
 		end
-		if playerclass("Sauceror") and is_dangerous then
+		if playerclass("Sauceror") and (is_dangerous or level() >= 10) then
 			table.insert(macrolines, [[
 				if hasskill Soul Bubble
 					cast Soul Bubble

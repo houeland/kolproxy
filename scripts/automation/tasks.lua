@@ -227,13 +227,6 @@ abort pastround 20
 abort hppercentbelow 50
 scrollwhendone
 
-cast Entangling Noodles
-
-if match yellow eye
-  cast point at your opponent
-  goto m_done
-endif
-
 use finger cuffs
 
 while !times 10

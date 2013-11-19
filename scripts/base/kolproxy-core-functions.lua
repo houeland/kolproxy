@@ -267,33 +267,6 @@ function get_cached_item(name, f)
 	end
 end
 
-function do_submit_page(t, url, params)
-	kolproxy_debug_print("> do_submit_page(" .. tostring(url) .. ")\n" .. debug.traceback(""))
-	after_pageload_cache = {}
-	local tbl = nil
-	if params then
-		local tbl = {}
-		for a, b in pairs(params) do
-			if type(b) == "string" then
-				table.insert(tbl, { key = a, value = b })
-			elseif type(b) == "number" then
-				table.insert(tbl, { key = a, value = tostring(b) })
-			else
-				error("Unknown submit_page value type: " .. type(b))
-			end
-		end
-	end
-	local pt, pturl = raw_async_submit_page(t, url, tbl)()
-	kolproxy_debug_print("< do_submit_page(" .. tostring(url) .. ")")
-	return pt, pturl
-end
-
---function get_page(url, params) return do_submit_page("GET", url, params) end
-
---function post_page(url, params) return do_submit_page("POST", url, params) end
-
-
-
 local submit_page_listeners = {}
 
 function add_submit_page_listener(f)

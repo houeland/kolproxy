@@ -878,10 +878,10 @@ function get_automation_scripts(cached_stuff)
 			if show_spammy_automation_events then
 				print("  casting buff", name, "[current mp: " .. mp() .. "]")
 			end
-			ensure_mp(data.mpcost)
 			if spells[name] and spells[name].shrug_first then
 				shrug_buff(spells[name].shrug_first)
 			end
+			ensure_mp(data.mpcost)
 			return cast_skillid(data.skillid)
 		end 
 	end
@@ -1022,6 +1022,8 @@ function get_automation_scripts(cached_stuff)
 							end
 						end
 						critical("Too many AT songs to cast buff: " .. buffname)
+					elseif ptf:contains("can't use that skill") and ascensionpath("Way of the Surprising Fist") and not AT_song_duration() then
+						return
 					elseif not ok_to_fail and not ignore_failure[buffname] then
 						critical("Failed to ensure buff: " .. buffname)
 					end
@@ -3872,7 +3874,7 @@ endif
 		end
 
 		script.bonus_target { "noncombat", "item" }
-		castlego(script.unlock_top_floor, "finish castle quest", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
+		castlego(script.unlock_top_floor, "finish castle quest", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 50, { choice_function = function(advtitle, choicenum)
 			if advtitle == "Copper Feel" then
 				if not have_item("steam-powered model rocketship") then
 					return "Investigate the Whirligigs and Gimcrackery"
@@ -4012,7 +4014,7 @@ endif
 		end
 		local beachpt = get_page("/place.php", { whichplace = "desertbeach" })
 		if not beachpt:contains("Gnasir") then
-			return run_task {
+			set_result(run_task {
 				message = "find gnasir",
 				minmp = 70,
 				equipment = { offhand = can_wear_weapons() and "UV-resistant compass" or nil },
@@ -4021,7 +4023,12 @@ endif
 					macro_function = macro_noodleserpent,
 					noncombats = { ["A Sietch in Time"] = "Whoops." },
 				}
-			}
+			})
+			if not did_action and not locked() then
+				local beachpt = get_page("/place.php", { whichplace = "desertbeach" })
+				did_action = beachpt:contains("Gnasir")
+			end
+			return
 		end
 		local need_stone_rose
 		local need_killing_jar
@@ -4438,4 +4445,14 @@ function get_charpane_quest_status()
 		critical "Charpane quest tracker not found"
 	end
 	return tblstr
+end
+
+function vamp_out(targetstat)
+	result, resulturl = get_page("/town.php", { action = "vampout" })
+	result, resulturl = handle_adventure_result(result, resulturl, "?", nil, { ["Interview With You"] = "Visit Isabella's" })
+	if result:contains("A small bell chimes above the door of Isabella's as you enter.") then
+		for _, x in ipairs(interview_with_you_stat_choices[targetstat]) do
+			async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 546, option = x })
+		end
+	end
 end

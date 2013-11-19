@@ -372,10 +372,6 @@ function automate_S_nemesis_island()
 	local function macro_nemesis_sauceror()
 		return [[
 
-if hasskill Entangling Noodles
-  cast Entangling Noodles
-endif
-
 use 3898
 repeat
 

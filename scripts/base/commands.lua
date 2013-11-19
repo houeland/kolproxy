@@ -201,6 +201,10 @@ function switch_familiarid(id)
 end
 
 function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
+	if not pt then
+		print("WARNING: handle_adventure_result has no page text.", pt, url, zoneid, macro ~= nil, noncombatchoices ~= nil, specialnoncombatfunction ~= nil)
+		critical("handle_adventure_result has no page text. This should not happen! Network error?")
+	end
 	if url:contains("/fight.php") then
 		local advagain = nil
 		if pt:contains([[>You win the fight!<!--WINWINWIN--><]]) then
@@ -254,7 +258,13 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 		end
 		if optname and not pickchoice then
 			for nr, title in pt:gmatch([[<input type=hidden name=option value=([0-9])><input class=button type=submit value="([^>]+)">]]) do
---~ 				print("opt", nr, title)
+				if title == optname then
+					pickchoice = tonumber(nr)
+				end
+			end
+		end
+		if optname and not pickchoice then
+			for nr, title in pt:gmatch([[<input type=hidden name=option value=([0-9])><input class=button type=submit value="([^>]-) %[]]) do
 				if title == optname then
 					pickchoice = tonumber(nr)
 				end

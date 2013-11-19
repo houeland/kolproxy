@@ -357,13 +357,15 @@ add_choice_text("Interview With You", {
 	["Visit The Masquerade"] = "Get a vampire item",
 })
 
+interview_with_you_stat_choices = {
+	Muscle = { 1, 1 },
+	Mysticality = { 1, 3, 1 },
+	Moxie = { 1, 2, 2, 1 },
+}
+
 add_printer("/choice.php", function()
 	if adventure_title ~= "Interview With You" or not text:contains("A small bell chimes above the door of Isabella's as you enter.") then return end
-	local isabella_choices = {
-		Muscle = { 1, 1 },
-		Mysticality = { 1, 3, 1 },
-		Moxie = { 1, 2, 2, 1 },
-	}
+	local isabella_choices = interview_with_you_stat_choices
 	local function make_vamp_link(goal)
 		local tparams = {}
 		tparams.pwd = text:match([[<input type=hidden name=pwd value='([0-9a-f]+)'>]])
