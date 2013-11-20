@@ -1897,13 +1897,20 @@ endif
 	else
 		want_advs = 10
 	end
+
 	add_task {
 		when = advs() < want_advs,
 		task = {
 			message = "low on adventures",
 			nobuffing = true,
 			action = function()
-				stop("Fewer than " .. tostring(want_advs) .. " adventures left")
+				local final_eating = (estimate_max_fullness() - fullness()) <= 3 and (estimate_max_safe_drunkenness() - drunkenness()) <= 3
+				result, resulturl, ate = script.eat_food(final_eating)
+				if ate then
+					did_action = true
+				else
+					stop("Fewer than " .. tostring(want_advs) .. " adventures left")
+				end
 			end
 		}
 	}

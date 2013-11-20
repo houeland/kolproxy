@@ -107,3 +107,13 @@ add_warning {
 		return have_buff("Thrice-Cursed") or have_buff("Twice-Cursed") or have_buff("Once-Cursed")
 	end,
 }
+
+function use_hottub()
+	return async_get_page("/clan_viplounge.php", { action = "hottub" })
+end
+
+function get_remaining_hottub_uses()
+	local vippt = get_page("/clan_viplounge.php")
+	local uses = vippt:match([[title="A Relaxing Hot Tub %(([0-9]+) uses left today%)"]])
+	return tonumber(uses) or 0
+end

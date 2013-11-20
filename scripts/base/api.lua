@@ -349,10 +349,6 @@ function setup_functions()
 		end
 		count = count_item
 
-		function use_hottub()
-			return async_get_page("/clan_viplounge.php", { action = "hottub" })
-		end
-
 		function get_wand_data()
 			local wands = { "aluminum wand", "ebony wand", "hexagonal wand", "marble wand", "pine wand" }
 			for _, x in ipairs(wands) do

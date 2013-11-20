@@ -1503,7 +1503,7 @@ endif
 		end
 	end
 
-	function f.eat_food()
+	function f.eat_food(out_of_advs)
 		if ascension_script_option("eat manually") then return end
 		if challenge == "fist" then return end
 		if challenge == "boris" then return end
@@ -1611,6 +1611,21 @@ endif
 					eat_item("Knob pasty")
 					did_action = (fullness() == f + 1)
 					return result, resulturl, did_action
+				elseif out_of_advs then
+					if have_item("bag of QWOP") and get_remaining_hottub_uses() >= 2 then
+						inform "eat bag of qwop"
+						eat_item("bag of QWOP")
+						if have_buff("QWOPped Up") then
+							use_hottub()
+						end
+						did_action = (fullness() == f + 1)
+						return result, resulturl, did_action
+					elseif have_item("bag of GORF") then
+						inform "eat knob bag of gorf"
+						eat_item("bag of GORF")
+						did_action = (fullness() == f + 1)
+						return result, resulturl, did_action
+					end
 				end
 			end
 			if space() >= 6 then
