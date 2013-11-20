@@ -192,6 +192,30 @@ function verify_buffs(data)
 	end
 end
 
+function parse_passives()
+	local passives = {}
+
+	local section = nil
+	for l in io.lines("cache/files/modifiers.txt") do
+		l = remove_line_junk(l)
+		section = l:match([[^# (.*) section of modifiers.txt]]) or section
+		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
+		local name2 = l:match([[^# ([^	:]+)]])
+		if section == "Passive Skills" and name and bonuslist and not blacklist[name] and not blacklist["buff: " .. name] and not name2 then
+			passives[name] = { bonuses = parse_mafia_bonuslist(bonuslist) }
+		elseif section == "Passive Skills" and name2 and not blacklist[name2] and not passives[name2] then
+			passives[name2] = {}
+		end
+	end
+	return passives
+end
+
+function verify_passives(data)
+	if data["Mad Looting Skillz"].bonuses["Item Drops from Monsters"] == 20 and data["Nimble Fingers"].bonuses["Meat from Monsters"] == 20 and data["Thief Among the Honorable"].bonuses["Item Drops from Monsters"] == 5 and data["Greed"].bonuses["Item Drops from Monsters"] == -15 then
+		return data
+	end
+end
+
 function parse_outfits()
 	local outfits = {}
 	for l in io.lines("cache/files/outfits.txt") do
@@ -1004,6 +1028,7 @@ process("familiars")
 process("enthroned familiars")
 
 process("buffs")
+process("passives")
 
 process("items")
 process("outfits")

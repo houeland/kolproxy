@@ -47,6 +47,7 @@ function estimate_modifier_bonuses()
 	bonuses = bonuses + estimate_current_equipment_bonuses()
 	bonuses = bonuses + estimate_current_outfit_bonuses()
 	bonuses = bonuses + estimate_current_buff_bonuses()
+	bonuses = bonuses + estimate_current_passive_bonuses()
 	bonuses = bonuses + estimate_current_companion_bonuses()
 	bonuses = bonuses + estimate_current_other_bonuses()
 

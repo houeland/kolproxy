@@ -139,6 +139,7 @@ load_file("automation", "automation/sea-hatred.lua")
 load_file("interface", "items/equipment-bonuses.lua")
 load_file("interface", "interface/display-bonuses.lua")
 load_file("interface", "buffs/buff-bonuses.lua")
+load_file("interface", "buffs/passive-bonuses.lua")
 
 load_file("interface", "other/twillo/combat-display.lua")
 load_file("interface", "other/twillo/item-display.lua")

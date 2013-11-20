@@ -29,6 +29,7 @@ local vanilla_lep = {
 	jungman = true,
 }
 
+-- TODO: handle differently
 local function estimate_fam_meat()
 	-- TODO: Use familiar IDs/names instead
 	if vanilla_lep[familiarpicture()] then
@@ -40,27 +41,9 @@ local function estimate_fam_meat()
 	end
 end
 
-local function estimate_skill_meat()
-	local tw_meat = 0
-	local skillarray = {
-		["Greed"] = 50,
-		["Undying Greed"] = 25,
-		["Nimble Fingers"] = 20,
-		["Expert Panhandling"] = 10,
-		["Gnefarious Pickpocketing"] = 10,
-		["Thrift and Grift"] = 10,
-		["Envy"] = -15,
-	}
-	for skill, meat in pairs(skillarray) do
-		if have_skill(skill) then
-			tw_meat = tw_meat + meat
-		end
-	end
-	return tw_meat
-end
-
+-- TODO: handle differently
 function estimate_other_meat()
-	local meat = estimate_fam_meat() + estimate_skill_meat()
+	local meat = estimate_fam_meat()
 	if moonsign("Wombat") then
 		meat = meat + 20
 	end

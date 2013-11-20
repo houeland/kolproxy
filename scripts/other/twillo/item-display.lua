@@ -29,6 +29,7 @@ local vanilla_fairy = {
 	jungman = true,
 }
 
+-- TODO: handle differently
 local function estimate_fam_item()
 	if ascensionpath("Avatar of Boris") then
 		if clancy_instrumentid() == 3 then
@@ -55,26 +56,9 @@ local function estimate_fam_item()
 end
 __DONOTUSE_estimate_familiar_item_drop_bonus = estimate_fam_item
 
-
-local function estimate_skill_item()
-	local tw_item = 0
-	local skillarray = {
-		["Mad Looting Skillz"] = 20,
-		["Powers of Observatiogn"] = 10,
-		["Natural Born Scrabbler"] = 5,
-		["Envy"] = 30,
-		["Greed"] = -15,
-	}
-	for skill, item in pairs(skillarray) do
-		if have_skill(skill) then
-			tw_item = tw_item + item
-		end
-	end
-	return tw_item
-end
-
+-- TODO: handle differently
 function estimate_other_item()
-	local item = estimate_fam_item() + estimate_skill_item()
+	local item = estimate_fam_item()
 	if ascension["zone.manor.quartet song"] == "Le Mie Cose Favorite" then
 		item = item + 5
 	end

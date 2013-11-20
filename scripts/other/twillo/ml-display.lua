@@ -1,3 +1,4 @@
+-- TODO: handle differently
 function estimate_other_ml()
 	local ml = mcd()
 	if familiarid() == 109 then -- purse rat

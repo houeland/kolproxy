@@ -1,3 +1,4 @@
+-- TODO: move to another file
 function estimate_underwater_combat()
 	local com = 0
 	if have_buff("Colorfully Concealed") then
@@ -9,6 +10,7 @@ function estimate_underwater_combat()
 	return com
 end
 
+-- TODO: handle differently
 function estimate_other_combat()
 	local com = 0
 	if familiarid() == 69 then -- jumpsuited hound dog
@@ -20,6 +22,7 @@ function estimate_other_combat()
 	return com
 end
 
+-- TODO: move to another file
 function adjust_combat(com)
 	if com > 25 then
 		return 25 + math.floor((com - 25) / 5)
