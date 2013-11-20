@@ -97,3 +97,13 @@ add_printer("/clan_viplounge.php", function()
 		return x .. [[<hr><form action="]] .. faxbot_href {} .. [[" method="post"><input type=hidden name=pwd value="]]..session.pwd..[["><span style="color: green;">{ Choose monster: }</span> <select name="faxcommand"><option value="">-- nothing --</option>]] .. table.concat(optgroups) .. [[</select> <input class="button" type="submit" value="Get from FaxBot"></form>]]
 	end)
 end)
+
+add_warning {
+	message = "The hot tub will remove the Thrice-Cursed, Twice-Cursed, and Once-Cursed buffs.",
+	path = "/clan_viplounge.php",
+	type = "extra",
+	check = function()
+		if params.action ~= "hottub" then return end
+		return have_buff("Thrice-Cursed") or have_buff("Twice-Cursed") or have_buff("Once-Cursed")
+	end,
+}

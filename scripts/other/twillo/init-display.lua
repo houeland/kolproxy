@@ -9,6 +9,14 @@ local function estimate_fam_init()
 	end
 end
 
+function estimate_other_init()
+	local init = estimate_fam_init()
+	if moonsign("Vole") then
+		init = init + 20
+	end
+	return init
+end
+
 -- TODO: move to another file
 function compute_monster_initiative_bonus(ml)
 	local penalty = 0
