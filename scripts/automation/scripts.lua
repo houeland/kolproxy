@@ -1195,7 +1195,7 @@ function get_automation_scripts(cached_stuff)
 			if not tbl[a] and not neweq[a] and not ignore_slots[a] then
 				for _, x in ipairs(defaults[a] or {}) do
 					local itemname = canwear_itemname(x)
-					if itemname and a == "weapon" and tbl.offhand and ((maybe_get_itemdata(itemname) or {}).weapon_hands or 0) >= 2 then
+					if itemname and a == "weapon" and tbl.offhand and is_twohanded_weapon(itemname) then
 					elseif itemname and not do_not_wear[itemname] then
 						neweq[a] = get_itemid(itemname)
 						do_not_wear[itemname] = true
@@ -1210,7 +1210,7 @@ function get_automation_scripts(cached_stuff)
 			end
 		end
 
-		if neweq.weapon and ((maybe_get_itemdata(neweq.weapon) or {}).weapon_hands or 0) >= 2 then
+		if neweq.weapon and is_twohanded_weapon(neweq.weapon) then
 			neweq.offhand = nil
 		end
 

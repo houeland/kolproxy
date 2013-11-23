@@ -1,6 +1,4 @@
 --- TODO ---
--- 2-handed weapons
--- outfit bonuses
 -- halos
 -- check if we can really cast buffs
 -- buy items from NPCs
@@ -95,10 +93,22 @@ function maximize_skill_bonuses(scoref)
 	return options
 end
 
+local function score_item(scoref, item)
+	local itemid = maybe_get_itemid(item)
+	if not itemid then
+		return 0
+	end
+	return scoref(estimate_item_equip_bonuses(itemid))
+end
+
 modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", function()
 	local resultpt = ""
 	if params.equip_itemname and params.equip_slot then
-		resultpt = equip_item(params.equip_itemname, params.equip_slot)()
+		if params.equip_itemname == "(none)" then
+			resultpt = unequip_slot(params.equip_slot)()
+		else
+			resultpt = equip_item(params.equip_itemname, params.equip_slot)()
+		end
 	elseif params.cast_skillname then
 		resultpt = cast_skill(params.cast_skillname)()
 	elseif params.use_itemname then
@@ -160,7 +170,7 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		local item = { name = "(none)", score = 0 }
 		local extra = ""
 		if itemid then
-			item = { name = maybe_get_itemname(itemid), score = scoref(estimate_item_equip_bonuses(itemid)) }
+			item = { name = maybe_get_itemname(itemid), score = score_item(scoref, itemid) }
 			if item_in_outfit[itemid] then
 				extra = string.format("[outfit score: %+d]", chosen_outfit_score)
 			end
@@ -176,11 +186,25 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 	for _, slot in ipairs { "hat", "container", "shirt", "weapon", "offhand", "pants", "accessory" } do
 		local items = maximize_equipment_slot_bonuses(slot, scoref)
 		if slot == "accessory" then
-			suggested_equipment.acc1 = items[1]
-			suggested_equipment.acc2 = items[2]
-			suggested_equipment.acc3 = items[3]
+			suggested_equipment.acc1 = items[1].itemid
+			suggested_equipment.acc2 = items[2].itemid
+			suggested_equipment.acc3 = items[3].itemid
 		else
-			suggested_equipment[slot] = items[1]
+			suggested_equipment[slot] = items[1].itemid
+		end
+	end
+
+	if suggested_equipment.weapon and suggested_equipment.offhand and is_twohanded_weapon(suggested_equipment.weapon) then
+		local weapon_score = score_item(scoref, suggested_equipment.weapon)
+		local offhand_score = score_item(scoref, suggested_equipment.offhand)
+		local items = maximize_equipment_slot_bonuses("weapon", scoref)
+		for _, x in ipairs(items) do
+			if not x.itemid or not is_twohanded_weapon(x.itemid) then
+				if x.score + offhand_score >= weapon_score then
+					suggested_equipment.weapon = x.itemid
+				end
+				break
+			end
 		end
 	end
 
@@ -197,15 +221,17 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		end
 		if canuse then
 			local outfit_score = scoref(x.bonuses)
+			local outfit_item_score = 0
 			local current_score = 0
 			for _, y in ipairs(x.items) do
-				local old = suggested_equipment[get_itemdata(y).equipment_slot]
-				if old then
-					current_score = current_score + old.score
+				outfit_item_score = outfit_item_score + score_item(scoref, y)
+				current_score = current_score + score_item(scoref, suggested_equipment[get_itemdata(y).equipment_slot])
+				if is_twohanded_weapon(y) then
+					current_score = current_score + score_item(scoref, suggested_equipment.offhand)
 				end
 			end
-			if outfit_score - current_score > best_outfit_score then
-				best_outfit_score = outfit_score - current_score
+			if outfit_score + outfit_item_score - current_score > best_outfit_score and outfit_score > 0 then
+				best_outfit_score = outfit_score + outfit_item_score - current_score
 				best_outfit_items = x.items
 				chosen_outfit_score = outfit_score
 			end
@@ -215,22 +241,26 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 	for _, x in ipairs(best_outfit_items) do
 		local slot = get_itemdata(x).equipment_slot
 		if slot == "accessory" then slot = "acc3" end
-		suggested_equipment[slot] = { itemid = get_itemid(x) }
+		suggested_equipment[slot] = get_itemid(x)
 		item_in_outfit[get_itemid(x)] = true
+	end
+
+	if suggested_equipment.weapon and is_twohanded_weapon(suggested_equipment.weapon) then
+		suggested_equipment.offhand = nil
 	end
 
 	for _, slot in ipairs { "hat", "container", "shirt", "weapon", "offhand", "pants", "accessory" } do
 		if slot == "accessory" then
 			local newslots = reuse_equipment_slots {
-				acc1 = suggested_equipment.acc1.itemid,
-				acc2 = suggested_equipment.acc2.itemid,
-				acc3 = suggested_equipment.acc3.itemid,
+				acc1 = suggested_equipment.acc1,
+				acc2 = suggested_equipment.acc2,
+				acc3 = suggested_equipment.acc3,
 			}
 			add(slot, newslots.acc1, "acc1")
 			add(slot, newslots.acc2, "acc2")
 			add(slot, newslots.acc3, "acc3")
 		else
-			add(slot, suggested_equipment[slot].itemid, slot)
+			add(slot, suggested_equipment[slot], slot)
 		end
 	end
 
@@ -264,5 +294,11 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 
 	local contents = make_kol_html_frame("<table>" .. table.concat(equipmentlines, "\n") .. "</table><br><table>" .. table.concat(bufflines, "\n") .. "</table><br>" .. table.concat(links, " | "), "Modifier maximizer (preview)")
 
-	return [[<html style="margin: 0px; padding: 0px;"><head><script language=Javascript src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script></head><body style="margin: 0px; padding: 0px;">]] .. resultpt .. contents .. [[</body></html>]], requestpath
+	return [[<html style="margin: 0px; padding: 0px;">
+<head>
+<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
+<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/window.20111231.js"></script>
+</head>
+<body style="margin: 0px; padding: 0px;">]] .. resultpt .. contents .. [[</body>
+</html>]], requestpath
 end)

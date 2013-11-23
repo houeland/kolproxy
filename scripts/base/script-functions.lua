@@ -671,3 +671,9 @@ function AT_song_duration()
 		return 5
 	end
 end
+
+function is_twohanded_weapon(item)
+	local data = maybe_get_itemdata(item)
+	local hands = (data or {}).weapon_hands or 0
+	return hands >= 2
+end
