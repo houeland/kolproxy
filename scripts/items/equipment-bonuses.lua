@@ -13,8 +13,8 @@ function add_modifier_bonuses(target, source)
 	end
 end
 
-function parse_item_bonuses(itemname)
-	local descid = item_api_data(itemname).descid
+function parse_item_bonuses(item)
+	local descid = item_api_data(item).descid
 	local pt = get_page("/desc_item.php", { whichitem = descid })
 	local bonuses = make_bonuses_table {}
 	bonuses = bonuses + { ["Item Drops from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops from Monsters<]])) }
@@ -103,28 +103,28 @@ add_processor("/inventory.php", function()
 end)
 
 local items_to_cache = {
-	"stinky cheese eye",
-	"stinky cheese diaper",
-	"Jekyllin hide belt",
-	"Grimacite gown",
-	"Moonthril Cuirass",
-	"hairshirt",
-	"over-the-shoulder Folder Holder",
-	"Tuesday's ruby",
-	"spooky little girl",
-	"card sleeve",
-	"Yearbook Club Camera",
-	"Frown Exerciser",
+	["stinky cheese eye"] = true,
+	["stinky cheese diaper"] = true,
+	["Jekyllin hide belt"] = true,
+	["Grimacite gown"] = true,
+	["Moonthril Cuirass"] = true,
+	["hairshirt"] = true,
+	["over-the-shoulder Folder Holder"] = true,
+	["Tuesday's ruby"] = true,
+	["spooky little girl"] = true,
+	["card sleeve"] = true,
+	["Yearbook Club Camera"] = true,
+	["Frown Exerciser"] = true,
 }
 
-function ensure_cached_item_bonuses(item)
+local function ensure_cached_item_bonuses(item)
 	if not get_cached_item_bonuses(item) then
 		set_cached_item_bonuses(item, parse_item_bonuses(item))
 	end
 end
 
 add_automator("all pages", function()
-	for _, itemname in ipairs(items_to_cache) do
+	for itemname, _ in pairs(items_to_cache) do
 		if have_equipped_item(itemname) then
 			ensure_cached_item_bonuses(itemname)
 		end
@@ -143,7 +143,7 @@ add_automator("all pages", function()
 	end
 end)
 
-function estimate_item_equip_bonuses(item)
+local function estimate_item_equip_bonuses_uncached(item)
 	local itemarray = {
 		["parasitic tentacles"] = { ["Combat Initiative"] = math.min(15, level()) * (2 + (have_buff("Yuletide Mutations") and 1 or 0)) },
 		["frosty halo"] = { ["Item Drops from Monsters"] = (not equipment().weapon and not equipment().offhand) and 25 or nil },
@@ -158,7 +158,7 @@ function estimate_item_equip_bonuses(item)
 		["Colonel Mustard's Lonely Spades Club Jacket"] = { ["Combat Initiative"] = "?", ["Item Drops from Monsters"] = "?", ["Meat from Monsters"] = "?" }, -- 1-3%
 	}
 
-	for _, itemname in ipairs(items_to_cache) do
+	for itemname, _ in pairs(items_to_cache) do
 		itemarray[itemname] = "cached"
 	end
 
@@ -199,10 +199,18 @@ function estimate_item_equip_bonuses(item)
 	end
 end
 
+function estimate_item_equip_bonuses(item)
+	if items_to_cache[maybe_get_itemname(item)] then
+		ensure_cached_item_bonuses(item)
+	end
+	return estimate_item_equip_bonuses_uncached(item)
+end
+
+-- TODO: always cache bonuses first here
 function estimate_current_equipment_bonuses()
 	local bonuses = {}
 	for _, itemid in pairs(equipment()) do
-		add_modifier_bonuses(bonuses, estimate_item_equip_bonuses(itemid))
+		add_modifier_bonuses(bonuses, estimate_item_equip_bonuses_uncached(itemid))
 	end
 	return bonuses
 end

@@ -115,6 +115,13 @@ function maybe_get_itemdata(name)
 	return get_item_data_by_id(id)
 end
 
+function get_itemdata(name)
+	local data = maybe_get_itemdata(name)
+	if not data then
+		error("No item data found for: " .. tostring(name))
+	end
+	return data
+end
 
 function maybe_get_monsterdata(name, image)
 	local realname = nil

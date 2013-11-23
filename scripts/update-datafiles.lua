@@ -297,7 +297,7 @@ function verify_buff_recast_skills(data)
 			data[x] = nil
 		end
 		if not processed_datafiles["skills"][y] then
-			hardwarn("unknown recast skill", y)
+			softwarn("unknown recast skill", y)
 			data[x] = nil
 		end
 	end
@@ -371,9 +371,9 @@ function parse_items()
 		if name and req and not blacklist[name] then
 			if items[name] then
 				local reqtbl = {}
-				reqtbl.muscle = tonumber(req:match("Mus: ([0-9]+)"))
-				reqtbl.mysticality = tonumber(req:match("Mys: ([0-9]+)"))
-				reqtbl.moxie = tonumber(req:match("Mox: ([0-9]+)"))
+				reqtbl.Muscle = tonumber(req:match("Mus: ([0-9]+)"))
+				reqtbl.Mysticality = tonumber(req:match("Mys: ([0-9]+)"))
+				reqtbl.Moxie = tonumber(req:match("Mox: ([0-9]+)"))
 				if req ~= "none" and not next(reqtbl) then
 					hardwarn("unknown equip requirement", req, "for", name)
 				end
@@ -383,7 +383,7 @@ function parse_items()
 						reqtbl[a] = nil
 					end
 				end
-				items[name].equip_requirement = reqtbl
+				items[name].equip_requirements = reqtbl
 				items[name].power = power
 				items[name].weapon_hands = tonumber((weaptype or ""):match("^([0-9]+)%-handed"))
 			else
@@ -403,6 +403,10 @@ function parse_items()
 			if items[name] then
 				items[name].equip_bonuses = parse_mafia_bonuslist(bonuslist)
 				items[name].song_duration = tonumber(bonuslist:match("Song Duration: ([0-9]+)"))
+				if bonuslist:match("Single Equip") then
+					items[name].equip_requirements = items[name].equip_requirements or {}
+					items[name].equip_requirements["You may not equip more than one of these at a time"] = true
+				end
 			else
 				hardwarn("modifiers:item does not exist", name)
 			end
@@ -439,7 +443,7 @@ function verify_items(data)
 	local ok = true
 	ok = ok and data["Orcish Frat House blueprints"] and data["Boris's Helm"]
 	ok = ok and data["Hell ramen"].fullness == 6 and data["water purification pills"].drunkenness == 3 and data["beastly paste"].spleen == 4
-	ok = ok and data["leather chaps"].equip_requirement.moxie == 65
+	ok = ok and data["leather chaps"].equip_requirements.Moxie == 65
 	ok = ok and data["dried gelatinous cube"].id == 6256
 	ok = ok and data["flaming pink shirt"].equipment_slot == "shirt"
 	ok = ok and data["mayfly bait necklace"].equip_bonuses["Item Drops from Monsters"] == 10 and data["mayfly bait necklace"].equip_bonuses["Meat from Monsters"] == 10
@@ -447,12 +451,13 @@ function verify_items(data)
 	ok = ok and data["stolen accordion"].song_duration == 5
 	ok = ok and data["toy accordion"].song_duration == 5
 	ok = ok and data["pygmy concertinette"].song_duration == 17
+	ok = ok and data["ring of conflict"].equip_requirements["You may not equip more than one of these at a time"] == true
 	if ok then
 		return data
 	end
 
 	local testitems = {}
-	for _, x in ipairs { "Orcish Frat House blueprints", "Hell ramen", "water purification pills", "beastly paste", "leather chaps", "dried gelatinous cube", "flaming pink shirt", "mayfly bait necklace", "Jarlsberg's pan (Cosmic portal mode)", "stolen accordion", "toy accordion", "pygmy concertinette" } do
+	for _, x in ipairs { "Orcish Frat House blueprints", "Hell ramen", "water purification pills", "beastly paste", "leather chaps", "dried gelatinous cube", "flaming pink shirt", "mayfly bait necklace", "Jarlsberg's pan (Cosmic portal mode)", "stolen accordion", "toy accordion", "pygmy concertinette", "ring of conflict" } do
 		testitems[x] = data[x]
 	end
 	hardwarn("verify_items failure:", table_to_json(testitems))

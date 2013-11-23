@@ -154,30 +154,83 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 	end
 
 	local equipmentlines = {}
-	for _, slot in ipairs { "hat", "container", "shirt", "weapon", "offhand", "pants", "accessory" } do
-		local items = maximize_equipment_slot_bonuses(slot, scoref)
-		local function add(itemid, where)
-			local item = { name = "(none)", score = 0 }
-			if itemid then
-				item = { name = maybe_get_itemname(itemid), score = scoref(estimate_item_equip_bonuses(itemid)) }
-			end
-			if equipment()[where] == itemid then
-				table.insert(equipmentlines, string.format([[<tr style="color: gray"><td>%s</td><td>%s (%+d)</td></tr>]], slot, item.name, item.score))
-			else
-				table.insert(equipmentlines, string.format([[<tr style="color: green"><td>%s</td><td><a href="%s" style="color: green">%s</a> (%+d)</td></tr>]], slot, modifier_maximizer_href { pwd = session.pwd, whichbonus = params.whichbonus, equip_itemname = item.name, equip_slot = where }, item.name, item.score))
+	local item_in_outfit = {}
+	local chosen_outfit_score = 0
+	local function add(slot, itemid, where)
+		local item = { name = "(none)", score = 0 }
+		local extra = ""
+		if itemid then
+			item = { name = maybe_get_itemname(itemid), score = scoref(estimate_item_equip_bonuses(itemid)) }
+			if item_in_outfit[itemid] then
+				extra = string.format("[outfit score: %+d]", chosen_outfit_score)
 			end
 		end
-		if slot == "accessory" then
-			local neweq = reuse_equipment_slots {
-				acc1 = items[1].itemid,
-				acc2 = items[2].itemid,
-				acc3 = items[3].itemid,
-			}
-			add(neweq.acc1, "acc1")
-			add(neweq.acc2, "acc2")
-			add(neweq.acc3, "acc3")
+		if equipment()[where] == itemid then
+			table.insert(equipmentlines, string.format([[<tr style="color: gray"><td>%s</td><td>%s (%+d)</td><td>%s</td></tr>]], slot, item.name, item.score, extra))
 		else
-			add(items[1].itemid, slot)
+			table.insert(equipmentlines, string.format([[<tr style="color: green"><td>%s</td><td><a href="%s" style="color: green">%s</a> (%+d)</td><td>%s</td></tr>]], slot, modifier_maximizer_href { pwd = session.pwd, whichbonus = params.whichbonus, equip_itemname = item.name, equip_slot = where }, item.name, item.score, extra))
+		end
+	end
+
+	local suggested_equipment = {}
+	for _, slot in ipairs { "hat", "container", "shirt", "weapon", "offhand", "pants", "accessory" } do
+		local items = maximize_equipment_slot_bonuses(slot, scoref)
+		if slot == "accessory" then
+			suggested_equipment.acc1 = items[1]
+			suggested_equipment.acc2 = items[2]
+			suggested_equipment.acc3 = items[3]
+		else
+			suggested_equipment[slot] = items[1]
+		end
+	end
+
+	local best_outfit_items = {}
+	local best_outfit_score = 0
+	for xname, x in pairs(datafile("outfits")) do
+		local canuse = true
+		for _, y in ipairs(x.items) do
+			if not maybe_get_itemid(y) then
+				canuse = false
+			elseif not have_item(y) or not can_equip_item(y) then
+				canuse = false
+			end
+		end
+		if canuse then
+			local outfit_score = scoref(x.bonuses)
+			local current_score = 0
+			for _, y in ipairs(x.items) do
+				local old = suggested_equipment[get_itemdata(y).equipment_slot]
+				if old then
+					current_score = current_score + old.score
+				end
+			end
+			if outfit_score - current_score > best_outfit_score then
+				best_outfit_score = outfit_score - current_score
+				best_outfit_items = x.items
+				chosen_outfit_score = outfit_score
+			end
+		end
+	end
+
+	for _, x in ipairs(best_outfit_items) do
+		local slot = get_itemdata(x).equipment_slot
+		if slot == "accessory" then slot = "acc3" end
+		suggested_equipment[slot] = { itemid = get_itemid(x) }
+		item_in_outfit[get_itemid(x)] = true
+	end
+
+	for _, slot in ipairs { "hat", "container", "shirt", "weapon", "offhand", "pants", "accessory" } do
+		if slot == "accessory" then
+			local newslots = reuse_equipment_slots {
+				acc1 = suggested_equipment.acc1.itemid,
+				acc2 = suggested_equipment.acc2.itemid,
+				acc3 = suggested_equipment.acc3.itemid,
+			}
+			add(slot, newslots.acc1, "acc1")
+			add(slot, newslots.acc2, "acc2")
+			add(slot, newslots.acc3, "acc3")
+		else
+			add(slot, suggested_equipment[slot].itemid, slot)
 		end
 	end
 
@@ -210,11 +263,6 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 	end
 
 	local contents = make_kol_html_frame("<table>" .. table.concat(equipmentlines, "\n") .. "</table><br><table>" .. table.concat(bufflines, "\n") .. "</table><br>" .. table.concat(links, " | "), "Modifier maximizer (preview)")
-
--- TODO: submit page to kolproxy lua maximizer page instead of raw javascript to server?
--- TODO: support difficult slots: acc1-3 => 1-3, offhand???
--- TODO: support casting buffs
--- TODO: support using items
 
 	return [[<html style="margin: 0px; padding: 0px;"><head><script language=Javascript src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script></head><body style="margin: 0px; padding: 0px;">]] .. resultpt .. contents .. [[</body></html>]], requestpath
 end)

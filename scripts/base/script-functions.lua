@@ -591,16 +591,14 @@ function estimate_mallsell_profit(item, amount)
 end
 
 function can_equip_item(item)
-	-- TODO: boris/fist
-	local name = maybe_get_itemname(item)
-	if not name then return true end
-	local itemdata = maybe_get_itemdata(name)
-	for a, b in pairs(itemdata.equip_requirement or {}) do
-		if a == "muscle" and basemuscle() < b then
+	local itemdata = maybe_get_itemdata(item)
+	if not itemdata then return true end
+	for a, b in pairs(itemdata.equip_requirements or {}) do
+		if a == "Muscle" and basemuscle() < b then
 			return false
-		elseif a == "mysticality" and basemysticality() < b then
+		elseif a == "Mysticality" and basemysticality() < b then
 			return false
-		elseif a == "moxie" and basemoxie() < b then
+		elseif a == "Moxie" and basemoxie() < b then
 			return false
 		end
 	end
@@ -608,6 +606,9 @@ function can_equip_item(item)
 		if name ~= "toy accordion" and name ~= "antique accordion" then
 			return false
 		end
+	end
+	if not can_wear_weapons() and (itemdata.equipment_slot == "weapon" or itemdata.equipment_slot == "offhand") then
+		return false
 	end
 	return true
 end
