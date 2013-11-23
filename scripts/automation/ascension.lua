@@ -1864,7 +1864,7 @@ endif
 					script.ensure_mp(2)
 					summon_clipart("time halo")
 				end
-				script.wear { acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" } }
+				script.wear { acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" }, acc3 = first_wearable { "gold wedding ring" } }
 
 				if ascension_script_option("overdrink with nightcap") then
 					if can_drink_normal_booze() then
@@ -3362,7 +3362,7 @@ endwhile
 	}
 
 	add_task {
-		when = level() < 6 and (challenge ~= "fist" or fist_level >= 3) and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and ascensionstatus() == "Hardcore",
+		when = level() < 6 and (challenge ~= "fist" or fist_level >= 3) and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and not ascensionpath("Class Act II: A Class For Pigs") and ascensionstatus() == "Hardcore",
 		task = tasks.do_sewerleveling,
 	}
 
@@ -3868,7 +3868,7 @@ endif
 	}
 
 	add_task {
-		when = DD_keys < 3 and not cached_stuff.done_daily_dungeon,
+		when = DD_keys < 3 and (have_gelatinous_cubeling_items() or not script.have_familiar("Gelatinous Cubeling")) and not cached_stuff.done_daily_dungeon,
 		task = tasks.do_daily_dungeon,
 	}
 
@@ -4301,6 +4301,11 @@ endif
 		end
 	}
 
+
+	add_task {
+		when = DD_keys < 3 and not cached_stuff.done_daily_dungeon,
+		task = tasks.do_daily_dungeon,
+	}
 
 	add_task {
 		prereq = level() < 10,

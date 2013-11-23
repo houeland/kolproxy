@@ -395,13 +395,14 @@ mark m_done
 				-- spiky turtle helmet or crown of thrones w/ el vibrato megadrone
 				-- astral belt, C.A.R.N.I.V.O.R.E. button, grumpy old man charrrm bracelet, ring of aggravate monster
 				-- Boris: Song of Cockiness, Overconfident
+			script.bonus_target { "monster level" }
 			if have_skill("Gristlesphere") then
 				script.ensure_buffs { "Gristlesphere" }
 			end
 			script.ensure_buffs { "Ur-Kel's Aria of Annoyance" }
 			local ml = estimate_bonus("Monster Level")
 			if ml < 50 then
-				script.maybe_ensure_buffs { "Pride of the Puffin" }
+				script.maybe_ensure_buffs { "Pride of the Puffin", "Ur-Kel's Aria of Annoyance" }
 				ml = estimate_bonus("Monster Level")
 			end
 			if ml < 20 then
@@ -634,4 +635,8 @@ end
 function buy_shore_inc_item(item)
 	autoadventure { zoneid = get_zoneid("The Shore, Inc. Travel Agency"), noncombatchoices = { ["Welcome to The Shore, Inc."] = "Check out the gift shop" } }
 	return shop_buyitem(item, "shore")
+end
+
+function buy_hermit_item(item, quantity)
+	return async_post_page("/hermit.php", { action = "trade", whichitem = get_itemid(item), quantity = quantity or 1 })
 end

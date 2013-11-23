@@ -337,6 +337,8 @@ function get_automation_scripts(cached_stuff)
 				set_mcd(0)
 			elseif t == "initiative" then
 				want_bonus.plusinitiative = true
+			elseif t == "monster level" then
+				want_bonus.monster_level = true
 			else
 				error("Unknown bonus target: " .. t)
 			end
@@ -995,7 +997,13 @@ function get_automation_scripts(cached_stuff)
 			"The Magical Mojomuscular Melody",
 			"Fat Leon's Phat Loot Lyric",
 		}
-		if level() >= 13 and have_buff("Ur-Kel's Aria of Annoyance") and not want_buffs["Ur-Kel's Aria of Annoyance"] then
+		if want_bonus.monster_level then
+			if mcd() < 10 then
+				set_mcd(10) -- HACK: don't want this to be done here!
+			end
+			table.insert(xs, "Pride of the Puffin")
+			table.insert(xs, "Ur-Kel's Aria of Annoyance")
+		elseif level() >= 13 and have_buff("Ur-Kel's Aria of Annoyance") and not want_buffs["Ur-Kel's Aria of Annoyance"] then
 			shrug_buff("Ur-Kel's Aria of Annoyance")
 			set_mcd(0) -- HACK: don't want this to be done here!
 		end
@@ -1187,7 +1195,8 @@ function get_automation_scripts(cached_stuff)
 			if not tbl[a] and not neweq[a] and not ignore_slots[a] then
 				for _, x in ipairs(defaults[a] or {}) do
 					local itemname = canwear_itemname(x)
-					if itemname and not do_not_wear[itemname] then
+					if itemname and a == "weapon" and tbl.offhand and ((maybe_get_itemdata(itemname) or {}).weapon_hands or 0) >= 2 then
+					elseif itemname and not do_not_wear[itemname] then
 						neweq[a] = get_itemid(itemname)
 						do_not_wear[itemname] = true
 						if halos[itemname] or a == "weapon" or a == "offhand" then
@@ -1488,6 +1497,12 @@ endif
 			inform "make cheese sauce"
 			set_result(cook_items("goat cheese", "scrumptious reagent"))
 			did_action = get_result():contains("fancy schmancy cheese sauce")
+		elseif not have_skill("Advanced Saucecrafting") and have_item("dry noodles") then
+			inform "make painful penne pasta"
+			script.ensure_worthless_item()
+			buy_hermit_item("jaba&ntilde;ero pepper")
+			set_result(cook_items("jaba&ntilde;ero pepper", "dry noodles"))
+			did_action = get_result():contains("painful penne pasta")
 		end
 		return result, resulturl, did_action
 	end
@@ -1628,6 +1643,17 @@ endif
 					end
 				end
 			end
+			if space() >= 3 and not have_skill("Advanced Saucecrafting") then
+				if have_item("painful penne pasta") then
+					inform "eat painful penne pasta"
+					local f = fullness()
+					result, resulturl = eat_item("painful penne pasta")()
+					did_action = (fullness() == f + 3)
+					return result, resulturl, did_action
+				else
+					return script.make_reagent_pasta()
+				end
+			end
 			if space() >= 6 then
 				local f = fullness()
 				if count("Hell ramen") + count("fettucini Inconnu") >= 2 then
@@ -1719,10 +1745,10 @@ endif
 				drink_item("single swig of vodka")
 			elseif have_item("bottle of fruity &quot;wine&quot;") and drunkenness() + 2 <= estimate_max_safe_drunkenness() then
 				script.ensure_buffs { "Ode to Booze" }
-				drink_item("single swig of vodka")
+				drink_item("bottle of fruity &quot;wine&quot;")
 			elseif have_item("can of the cheapest beer") and drunkenness() + 1 <= estimate_max_safe_drunkenness() then
 				script.ensure_buffs { "Ode to Booze" }
-				drink_item("single swig of vodka")
+				drink_item("can of the cheapest beer")
 			end
 		end
 
@@ -1742,7 +1768,21 @@ endif
 						local twists = count("peppermint twist")
 						inform "mixing peppermint booze"
 						set_result(mix_items(x, "peppermint twist"))
-						if count("peppermint twist") ~= twists - 1 then
+
+						if get_result():contains("Your cocktail set is not advanced enough") then
+							if have_item("Queue Du Coq cocktailcrafting kit") then
+								print "  using cocktailcrafting kit"
+								set_result(use_item("Queue Du Coq cocktailcrafting kit"))
+								did_action = not have_item("Queue Du Coq cocktailcrafting kit")
+							else
+								print "  buying cocktailcrafting kit"
+								set_result(buy_item("Queue Du Coq cocktailcrafting kit", "m"))
+								session["__script.have cocktailcrafting kit"] = "yes"
+								did_action = have_item("Queue Du Coq cocktailcrafting kit")
+							end
+							local pt, pturl = get_result()
+							return pt, pturl, did_action
+						elseif count("peppermint twist") ~= twists - 1 then
 							critical "Failed to mix peppermint booze"
 						end
 						break
@@ -2969,57 +3009,23 @@ endif
 	end
 
 	function f.get_dinghy()
-		inform "make dingy dinghy"
-		stop("Make dingy dinghy") -- TODO: implement
 		if not have_item("dinghy plans") then
-			inform "shore for dinghy plans"
-			local function do_trip(tripid)
-				-- TODO
-				did_action = false
-			end
-			local shore_tower_items = {
-				["stick of dynamite"] = 1,
-				["tropical orchid"] = 2,
-				["barbed-wire fence"] = 3,
-			}
-
-			local tbl = session["zone.lair.itemsneeded"]
-			if not tbl then
-				async_post_page("/campground.php", { action = "telescopelow" })
-				tbl = session["zone.lair.itemsneeded"] or {}
-			end
-			local need_item = nil
-			local want_adv = nil
-			for from, to in pairs(tbl) do
-				if shore_tower_items[to] then
-					need_item = to
-					want_adv = shore_tower_items[to]
-				end
-			end
-			if not need_item then
-				critical "Don't know which shore tower item is needed."
-			end
-			if trips == 1 then
-				do_trip(want_adv)
-				did_action = have(need_item)
-			elseif trips >= 2 and trips < 5 and have_item(need_item) then
-				local whichtrip = {
-					["Muscle"] = 1,
-					["Mysticality"] = 2,
-					["Moxie"] = 3,
-				}
-				do_trip(whichtrip[mainstat_type()])
-			elseif trips < 5 then
-				inform "shoring even though we might miss tower item now"
-				do_trip(want_adv)
+			if count_item("Shore Inc. Ship Trip Scrip") >= 3 then
+				inform "buy dinghy plans"
+				buy_shore_inc_item("dinghy plans")
+				did_action = have_item("dinghy plans")
 			else
-				critical "Already taken 5 shore trips without getting dinghy"
+				inform "shore for dinghy plans"
+				local scrip = count_item("Shore Inc. Ship Trip Scrip")
+				result, resulturl = script.take_shore_trip()
+				did_action = count_item("Shore Inc. Ship Trip Scrip") > scrip
 			end
 		elseif not have_item("dingy planks") then
 			inform "buy dingy planks"
 			set_result(buy_item("dingy planks", "m"))
 			did_action = have_item("dingy planks")
 		else
+			inform "use dinghy plans"
 			set_result(use_item("dinghy plans"))
 			did_action = have_item("dingy dinghy")
 		end
@@ -3603,7 +3609,7 @@ endif
 				go("do crypt alcove", 261, (challenge == "fist" and macro_fist or macro_stasis), noncombattbl, { "Butt-Rock Hair", "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Springy Fusilli", "Spirit of Garlic" }, "Rogue Program", 20)
 			end
 		elseif cyrpt:match("Defiled Cranny") then
-			script.bonus_target { "noncombat" }
+			script.bonus_target { "noncombat", "monster level" }
 			maybe_ensure_buffs { "Mental A-cue-ity", "Ur-Kel's Aria of Annoyance" }
 			go("do crypt cranny", 262, macro_noodlecannon, noncombattbl, { "Spirit of Garlic", "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Ur-Kel's Aria of Annoyance" }, "Baby Bugged Bugbear", 35)
 		elseif cyrpt:match("Defiled Niche") and (not trailed or trailed == "dirty old lihc") then
