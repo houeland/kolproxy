@@ -1,4 +1,4 @@
-function kolproxy_log_time_interval(msg, f) return f() end
+function log_time_interval(msg, f) return f() end
 
 local function load_wrapped_function(path)
 	local wrapped_env = {}
@@ -24,7 +24,7 @@ local automate_wrapped = load_wrapped_function("scripts/automate.lua")
 local printer_wrapped = load_wrapped_function("scripts/printer.lua")
 
 local function descit(what, pt, url)
---	print("DEBUG descit:", what, "url", url, "pt", type(pt), type(pt) == "string" and pt:len())
+--	print("DEBUG descit:", what, "url", url, "pt", type(pt), type(pt) == "string" and pt:len(), kolproxy_can_read_state())
 end
 
 local function add_raw_message_to_page(pagetext, msg)
@@ -57,7 +57,7 @@ local function run_wrapped_function_internal(f_env)
 
 	descit("start")
 
-	if not can_read_state() then
+	if not kolproxy_can_read_state() then
 		local pt, url = submit_original_request()
 
 		f_env.requestpath = f_env.request_path

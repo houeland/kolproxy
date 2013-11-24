@@ -8,7 +8,7 @@ module = nil
 package = nil
 set_state = nil
 
-function kolproxy_log_time_interval(msg, f) return f() end
+function log_time_interval(msg, f) return f() end
 
 local printers = {}
 local noncombat_choice_texts = {}
@@ -25,7 +25,7 @@ reset_pageload_cache()
 
 local mods = {}
 
-kolproxy_log_time_interval("mods setup", function()
+log_time_interval("mods setup", function()
 -- if text:match([[src="[^"]*%?[^"]*.js"]]) then
 -- 	print("\n\n\n=======\n\n\n", "Warning: ? query js file (CDM should fix this)", path, text:match([[src="[^"]*%?[^"]*.js"]]), "\n\n\n=======\n\n\n")
 -- end
@@ -109,7 +109,7 @@ mods["/loggedout.php"] = {
 
 end)
 
-kolproxy_log_time_interval("run mods", function()
+log_time_interval("run mods", function()
 for from, to in pairs(mods[path] or {}) do
 	text = text:gsub(from, to, 1)
 end
@@ -119,7 +119,7 @@ if not can_read_state() then
 	return text
 end
 
-kolproxy_log_time_interval("printer setup", function()
+log_time_interval("printer setup", function()
 function get_noncombat_choice_spoilers(advtitle)
 	return noncombat_choice_texts[advtitle]
 end
@@ -138,14 +138,14 @@ setup_variables()
 reset_charpane_values()
 end)
 
-kolproxy_log_time_interval("run printers", function()
+log_time_interval("run printers", function()
 if path == "/charpane.php" and text:contains("inf_small.gif") then
 	-- Hack for valhalla
 else
 	text = run_functions(path, text, function(target, pt)
 		for _, x in ipairs(printers[target] or {}) do
 			getfenv(x.f).text = pt
---			kolproxy_log_time_interval("run:" .. tostring(x.scriptname), x.f)
+--			log_time_interval("run:" .. tostring(x.scriptname), x.f)
 			x.f()
 			pt = getfenv(x.f).text
 		end
@@ -159,7 +159,7 @@ if choice_adventure_number or path == "/choice.php" then
 	text = do_choice_page_printing(text, title, adventure_title, choice_adventure_number)
 end
 
-kolproxy_log_time_interval("finish printing", function()
+log_time_interval("finish printing", function()
 if path == "/fight.php" then
 	if text:contains("state['fightover'] = true;") or text:contains("<!--WINWINWIN-->") or text:contains("You slink away, dejected and defeated.") then -- TODO: HACK! state fightover only works with combat bar enabled!!
 -- 		print("resetting fight state!")
@@ -170,7 +170,7 @@ end
 if path:contains("afterlife.php") or path:contains("charpane.php") then
 elseif text:contains("charpane.php") then
 	-- ensure API load before returning page
-	kolproxy_log_time_interval("do ensure-status", status)
+	log_time_interval("do ensure-status", status)
 end
 
 text = text:gsub("</head>", function(head) return string.format([[<script type="text/javascript">var kolproxy_effective_url = %q</script>%s]], path .. query, head) end)

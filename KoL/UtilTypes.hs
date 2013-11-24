@@ -35,7 +35,7 @@ data SessionDataType = SessionDataType {
 	doDbLogAction_ :: RefType -> (Database.SQLite3Modded.Database -> IO ()) -> IO (),
 	doStateAction_ :: RefType -> (Database.SQLite3Modded.Database -> IO ()) -> IO (),
 	stateData_ :: IORef (Maybe (DiscerningStateIdentifier, StateType)),
-	luaInstances_ :: IORef (Data.Map.Map (String, LuaScriptType) (MVar Scripting.LuaModded.LuaState)),
+	luaInstances_ :: IORef (Data.Map.Map (Bool, String, LuaScriptType) (MVar Scripting.LuaModded.LuaState)),
 	lastStoredState_ :: IORef (Maybe String),
 	storedStateId_ :: IORef (Integer, Integer),
 	cachedActionbar_ :: IORef (Maybe String)

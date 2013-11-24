@@ -7,7 +7,6 @@ dofile("scripts/base/charpane.lua")
 dofile("scripts/base/api.lua")
 dofile("scripts/base/commands.lua")
 
-
 -- TODO: redo the rest of this code
 function setup_variables()
 	if path == "/charpane.php" then

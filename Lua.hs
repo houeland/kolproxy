@@ -554,7 +554,7 @@ setup_lua_instance level filename setupref = do
 				0 -> fromIntegral <$> Lua.gettop l
 				_ -> throwIO =<< LuaError <$> Lua.tostring l (-1)
 
-		register_function "can_read_state" $ \ref l -> do
+		register_function "kolproxy_can_read_state" $ \ref l -> do
 			x <- canReadState ref
 			Lua.pushboolean l x
 			return 1
@@ -661,30 +661,20 @@ get_cached_lua_instance_for_code level filename ref runcodebit = do
 	let make_lsetup = log_time_interval ref ("setup lua instance: " ++ filename ++ "|" ++ show level) $ setup_lua_instance level filename ref
 
 	canread <- canReadState ref
-	if canread || level == WHENEVER
-		then do
-			-- TODO: Wrap in MVar instead of IORef?
-			insts <- readIORef (luaInstances_ $ sessionData $ ref)
-			case Data.Map.lookup (filename, level) insts of
-				-- Use MVar to only run one piece of code in an instance at a time, e.g. sequence one processor after another serially.
-				-- TODO: Use a Chan to enforce order?
-				Just existingmv -> withMVar existingmv runcodebit
-				_ -> do
-					either_l_setup <- make_lsetup
-					case either_l_setup of
-						Right l_setup -> do
-							mv_l <- newMVar l_setup
-							let newinsts = Data.Map.insert (filename, level) mv_l insts
-							writeIORef (luaInstances_ $ sessionData $ ref) newinsts
-							withMVar mv_l runcodebit
-						Left err -> return $ Left err
-		else do
+	-- TODO: Wrap in MVar instead of IORef?
+	insts <- readIORef (luaInstances_ $ sessionData $ ref)
+	case Data.Map.lookup (canread, filename, level) insts of
+		-- Using MVar to only run one piece of code in an instance at a time, e.g. sequence one processor after another serially.
+		-- TODO: Use a Chan to enforce order?
+		Just existingmv -> withMVar existingmv runcodebit
+		_ -> do
 			either_l_setup <- make_lsetup
 			case either_l_setup of
 				Right l_setup -> do
-					x <- runcodebit l_setup
-					log_time_interval ref "close lua" $ Lua.close l_setup
-					return x
+					mv_l <- newMVar l_setup
+					let newinsts = Data.Map.insert (canread, filename, level) mv_l insts
+					writeIORef (luaInstances_ $ sessionData $ ref) newinsts
+					withMVar mv_l runcodebit
 				Left err -> return $ Left err
 
 run_lua_code level filename ref dosetvars = do

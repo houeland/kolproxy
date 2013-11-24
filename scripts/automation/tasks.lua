@@ -400,6 +400,7 @@ mark m_done
 				script.ensure_buffs { "Gristlesphere" }
 			end
 			script.ensure_buffs { "Ur-Kel's Aria of Annoyance" }
+			script.want_familiar "Baby Bugged Bugbear"
 			local ml = estimate_bonus("Monster Level")
 			if ml < 50 then
 				script.maybe_ensure_buffs { "Pride of the Puffin", "Ur-Kel's Aria of Annoyance" }
@@ -526,10 +527,10 @@ mark m_done
 							elseif advtitle == "Lost in the Great Overlook Lodge" then
 								for _, x in ipairs { "Investigate Room 237", "Search the pantry", "Follow the faint sound of music", "Wait -- who's that?" } do
 									if pagetext:contains(x) then
-										if pagetext == cached_stuff.previous_twin_peak_noncombat_pagetext then
+										if x == cached_stuff.previous_twin_peak_noncombat_option then
 											stop "Failed to make progress in Twin Peak"
 										end
-										cached_stuff.previous_twin_peak_noncombat_pagetext = pagetext
+										cached_stuff.previous_twin_peak_noncombat_option = x
 										return x
 									end
 								end

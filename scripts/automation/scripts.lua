@@ -112,43 +112,50 @@ function get_automation_scripts(cached_stuff)
 	-- TODO: remove this, handle as generic "want items, mprestore" etc.
 	local familiar_data = {
 		["Kolproxy Test Fam"] = { id = 12345, fallback = "Midget Clownfish" },
-		["Leprechaun"] = { id = 2 },
-		["Baby Gravy Fairy"] = { id = 15 },
-		["Flaming Gravy Fairy"] = { id = 34, fallback = "Frozen Gravy Fairy" },
-		["Frozen Gravy Fairy"] = { id = 35, fallback = "Stinky Gravy Fairy" },
-		["Stinky Gravy Fairy"] = { id = 36 },
-		["Star Starfish"] = { id = 17, mpregen = true, attack = true },
-		["Smiling Rat"] = { id = 142 },
-		["Reassembled Blackbird"] = { id = 59 },
-		["Slimeling"] = { id = 112, f = feed_slimeling, mpregen = true, attack = true, fallback = "Baby Gravy Fairy" },
-		["Mini-Hipster"] = { id = 136, mpregen = true, attack = true, familiarequip = "fixed-gear bicycle", fallback = "Rogue Program" },
-		["Rogue Program"] = { id = 135, mpregen = true, attack = true, fallback = "Midget Clownfish" },
-		["Jumpsuited Hound Dog"] = { id = 69, fallback = "Slimeling" },
-		["Frumious Bandersnatch"] = { id = 105, fallback = "Mini-Hipster" },
-		["Rock Lobster"] = { id = 114, mpregen = true, attack = true, fallback = "Rogue Program" },
-		["Knob Goblin Organ Grinder"] = { id = 139, attack = true, fallback = "Llama Lama" },
-		["Midget Clownfish"] = { id = 106, mpregen = true, attack = true, fallback = "Star Starfish" },
-		["Stocking Mimic"] = { id = 120, mpregen = true, attack = true, familiarequip = "bag of many confections", fallback = "Rogue Program" },
-		["Hobo Monkey"] = { id = 89, fallback = "He-Boulder" },
-		["He-Boulder"] = { id = 113, mpregen = true, fallback = "Leprechaun" },
-		["Baby Bugged Bugbear"] = { id = 124, familiarequip = "bugged balaclava", fallback = "Frumious Bandersnatch" },
-		["Llama Lama"] = { id = 90, fallback = "Bloovian Groose" },
-		["Exotic Parrot"] = { id = 72, fallback = "Llama Lama" },
+		["Leprechaun"] = {},
+		["Baby Gravy Fairy"] = {},
+		["Flaming Gravy Fairy"] = { fallback = "Frozen Gravy Fairy" },
+		["Frozen Gravy Fairy"] = { fallback = "Stinky Gravy Fairy" },
+		["Stinky Gravy Fairy"] = {},
+		["Star Starfish"] = { mpregen = true, attack = true },
+		["Smiling Rat"] = {},
+		["Reassembled Blackbird"] = {},
+		["Slimeling"] = { f = feed_slimeling, mpregen = true, attack = true, fallback = "Baby Gravy Fairy" },
+		["Mini-Hipster"] = { mpregen = true, attack = true, familiarequip = "fixed-gear bicycle", fallback = "Rogue Program" },
+		["Rogue Program"] = { mpregen = true, attack = true, fallback = "Midget Clownfish" },
+		["Jumpsuited Hound Dog"] = { fallback = "Slimeling" },
+		["Frumious Bandersnatch"] = { fallback = "Mini-Hipster" },
+		["Rock Lobster"] = { mpregen = true, attack = true, fallback = "Rogue Program" },
+		["Knob Goblin Organ Grinder"] = { attack = true, fallback = "Llama Lama" },
+		["Midget Clownfish"] = { mpregen = true, attack = true, fallback = "Star Starfish" },
+		["Stocking Mimic"] = { mpregen = true, attack = true, familiarequip = "bag of many confections", fallback = "Rogue Program" },
+		["Hobo Monkey"] = { fallback = "He-Boulder" },
+		["He-Boulder"] = { mpregen = true, fallback = "Leprechaun" },
+		["Baby Bugged Bugbear"] = { familiarequip = "bugged balaclava", fallback = "Frumious Bandersnatch" },
+		["Llama Lama"] = { fallback = "Bloovian Groose" },
+		["Exotic Parrot"] = { fallback = "Llama Lama" },
+		["Pair of Stomping Boots"] = { attack = true, fallback = "Slimeling" },
+		["Tickle-Me Emilio"] = { mpregen = true, attack = true, fallback = "Rogue Program" },
+		["Bloovian Groose"] = { fallback = "Midget Clownfish" },
+		["Obtuse Angel"] = { fallback = "Slimeling" },
+		["Reagnimated Gnome"] = { familiarequip = "gnomish housemaid's kgnee", fallback = "Hovering Sombrero" },
+		["Hovering Sombrero"] = { fallback = "(ignore familiar)" },
+		["Angry Jung Man"] = { fallback = "Slimeling" },
+		["Gelatinous Cubeling"] = { fallback = "Slimeling" },
 		["Mad Hatrack with spangly sombrero"] = { id = 82, familiarequip = "spangly sombrero", fallback = "Slimeling even in fist", needsequip = true },
 		["Scarecrow with spangly mariachi pants"] = { id = 152, familiarequip = "spangly mariachi pants", fallback = "Mad Hatrack with spangly sombrero", needsequip = true },
 		["Scarecrow with studded leather boxer shorts"] = { id = 152, familiarequip = "studded leather boxer shorts", needsequip = true, fallback = "Llama Lama" },
 		["Scarecrow with Boss Bat britches"] = { id = 152, familiarequip = "Boss Bat britches", needsequip = true, mpregen = true, fallback = "Rogue Program" },
-		["Pair of Stomping Boots"] = { id = 150, attack = true, fallback = "Slimeling" },
 		["Jumpsuited Hound Dog for +combat"] = { id = 69, fallback = "Llama Lama" },
 		["Slimeling even in fist"] = { id = 112, f = feed_slimeling, mpregen = true, attack = true, fallback = "Slimeling" },
-		["Tickle-Me Emilio"] = { id = 157, mpregen = true, attack = true, fallback = "Rogue Program" },
-		["Bloovian Groose"] = { id = 154, fallback = "Midget Clownfish" },
-		["Obtuse Angel"] = { id = 146, fallback = "Slimeling" },
-		["Reagnimated Gnome"] = { id = 162, familiarequip = "gnomish housemaid's kgnee", fallback = "Hovering Sombrero" },
-		["Hovering Sombrero"] = { id = 18, fallback = "(ignore familiar)" },
-		["Angry Jung Man"] = { id = 165, fallback = "Slimeling" },
-		["Gelatinous Cubeling"] = { id = 171, fallback = "Slimeling" },
 	}
+	-- TODO: check when using the id instead
+	for a, b in pairs(familiar_data) do
+		local famid = maybe_get_familiarid(a)
+		if famid then
+			b.id = famid
+		end
+	end
 
 	local function raw_want_familiar(famname_input)
 		-- TODO: improve fallbacks and priorities
@@ -1500,7 +1507,9 @@ endif
 		elseif not have_skill("Advanced Saucecrafting") and have_item("dry noodles") then
 			inform "make painful penne pasta"
 			script.ensure_worthless_item()
-			buy_hermit_item("jaba&ntilde;ero pepper")
+			if not have_item("jaba&ntilde;ero pepper") then
+				buy_hermit_item("jaba&ntilde;ero pepper")
+			end
 			set_result(cook_items("jaba&ntilde;ero pepper", "dry noodles"))
 			did_action = get_result():contains("painful penne pasta")
 		end
@@ -1646,6 +1655,7 @@ endif
 			if space() >= 3 and not have_skill("Advanced Saucecrafting") then
 				if have_item("painful penne pasta") then
 					inform "eat painful penne pasta"
+					script.heal_up()
 					local f = fullness()
 					result, resulturl = eat_item("painful penne pasta")()
 					did_action = (fullness() == f + 3)

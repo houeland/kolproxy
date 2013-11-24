@@ -7,7 +7,7 @@ require = nil
 module = nil
 package = nil
 
-function kolproxy_log_time_interval(msg, f) return f() end
+function log_time_interval(msg, f) return f() end
 
 local processors = {}
 
@@ -17,7 +17,7 @@ if not can_read_state() then
 	return text
 end
 
-kolproxy_log_time_interval("process:initialize", function()
+log_time_interval("process:initialize", function()
 error_on_writing_text_or_url = false
 
 reset_pageload_cache()
@@ -58,7 +58,7 @@ end)
 -- 	set_ascension_state("zone-"..zone.."-encounters", table_to_str(tbl))
 -- end
 
-kolproxy_log_time_interval("process:check semirare and skills", function()
+log_time_interval("process:check semirare and skills", function()
 do
 	local function matches(x)
 		if newly_started_fight and encounter_source == "adventure" and monstername(x) then
@@ -87,12 +87,12 @@ if text:contains("You acquire a skill") or text:contains("You leargn a new skill
 end
 end)
 
-kolproxy_log_time_interval("process:run functions", function()
+log_time_interval("process:run functions", function()
 run_functions(path, text, function(target, pt)
 	for _, x in ipairs(processors[target] or {}) do
 		getfenv(x.f).text = pt
 		error_on_writing_text_or_url = true
---		kolproxy_log_time_interval("run:" .. tostring(x.scriptname), x.f)
+--		log_time_interval("run:" .. tostring(x.scriptname), x.f)
 		x.f()
 		error_on_writing_text_or_url = false
 	end

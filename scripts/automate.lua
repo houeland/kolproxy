@@ -1,6 +1,6 @@
 -- automate.lua
 
-function kolproxy_log_time_interval(msg, f) return f() end
+function log_time_interval(msg, f) return f() end
 
 local automators = {}
 
@@ -10,7 +10,7 @@ if not can_read_state() then
 	return text
 end
 
-kolproxy_log_time_interval("automate:initialize", function()
+log_time_interval("automate:initialize", function()
 reset_pageload_cache()
 
 which = path
@@ -21,14 +21,14 @@ end
 setup_variables()
 end)
 
-kolproxy_log_time_interval("run automators", function()
+log_time_interval("run automators", function()
 if which ~= "/loggedout.php" then
 	local automate_url = path
 	text = run_functions(path, text, function(target, pt)
 		for _, x in ipairs(automators[target] or {}) do
 			getfenv(x.f).text = pt
 			getfenv(x.f).url = automateurl
--- 			kolproxy_log_time_interval("run:" .. tostring(x.scriptname), x.f)
+-- 			log_time_interval("run:" .. tostring(x.scriptname), x.f)
 			x.f()
 			pt = getfenv(x.f).text
 			automateurl = getfenv(x.f).url

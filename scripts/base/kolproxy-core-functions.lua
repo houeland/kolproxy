@@ -31,6 +31,8 @@ function reset_datafile_cache()
 		familiarid_name_lookup[y.famid] = x
 	end
 	datafile("outfits")
+	datafile("semirares")
+	monster_name_lookup = {}
 	for monstername, monster in pairs(datafile("monsters")) do
 		if monster.image then
 			monster_image_lookup[monster.image] = monstername
@@ -200,9 +202,8 @@ function get_recipes_by_type(typename)
 	return recipes
 end
 
-local semirares_datafile = load_datafile("semirares")
 function get_semirare_encounters()
-	return semirares_datafile
+	return datafile("semirares")
 end
 
 function raw_async_submit_page(rqtype, rqpath, rqparams)
@@ -256,7 +257,7 @@ function get_cached_function(f)
 		return v
 	else
 -- 		print("calling raw f")
--- 		v = kolproxy_log_time_interval("get_cached_function: " .. tostring(f), f)
+-- 		v = log_time_interval("get_cached_function: " .. tostring(f), f)
 		v = f()
 		after_pageload_cache[f] = v
 		return v
@@ -586,3 +587,8 @@ function load_buff_extension_info()
 	return info
 end
 
+function can_read_state()
+	if kolproxy_can_read_state() then
+		return pcall(status)
+	end
+end

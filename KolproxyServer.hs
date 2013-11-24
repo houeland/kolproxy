@@ -30,7 +30,7 @@ import qualified Data.Map
 import qualified Network.Socket
 
 doSERVER_DEBUG _ = return ()
--- doSERVER_DEBUG x = putStrLn $ "SERVER DEBUG: " ++ x
+--doSERVER_DEBUG x = putStrLn $ "SERVER DEBUG: " ++ x
 
 make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff = do
 	slowconn <- readIORef $ use_slow_http_ref_ $ globalref

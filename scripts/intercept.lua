@@ -1,8 +1,6 @@
 -- intercept.lua
 
--- TODO? check for valid pwd!
-
-function kolproxy_log_time_interval(msg, f) return f() end
+function log_time_interval(msg, f) return f() end
 
 local interceptors = {}
 
@@ -13,7 +11,7 @@ if not can_read_state() then
 	return
 end
 
-kolproxy_log_time_interval("intercept:initialize", function()
+log_time_interval("intercept:initialize", function()
 reset_pageload_cache()
 
 path = requestpath -- temporary workaround for backwards compatibility
@@ -27,40 +25,7 @@ function submit_original_request()
 end
 end)
 
--- 			let inrunoption = case choice of
--- 				21 -> 2 -- not trapped in the wrong body
--- 				46 -> 3 -- fight vampire, maybe doubtful?
--- 				105 -> 1 -- gaze into mirror in bathroom
--- 				108 -> 4 -- walk away from craps
--- 				109 -> 1 -- fight hobo
--- 				110 -> 4 -- introduce them to avantgarde
--- 				113 -> 2 -- fight knob goblin chef
--- 				118 -> 2 -- don't do wounded guard quest
--- 				120 -> 4 -- ennui outta here
--- 				123 -> 2 -- raise your hands in hidden temple
--- 				177 -> 5 -- blackberry cobbler, leave
--- 				402 -> 2 -- don't hold a grudge in bathroom, gain myst
--- 				otherwise -> -1
--- 			let aftercoreoption = case choice of
--- 				9 -> 3 -- leave the wheel alone in the castle
--- 				10 -> 3 -- leave the wheel alone in the castle
--- 				11 -> 3 -- leave the wheel alone in the castle
--- 				12 -> 3 -- leave the wheel alone in the castle
--- 				21 -> -1 -- trapped in the wrong body?
--- 				26 -> 2 -- take the scorched path
--- 				28 -> 2 -- investigate the moist crater for spices
--- 				89 -> 2 -- fight TT knight in the gallery
--- 				90 -> 2 -- watch the dancers in ballroom
--- 				112 -> 2 -- no time for harold's bell
--- 				178 -> 2 -- blow popsicle stand in airship
--- 				182 -> 1 -- fight in the airship
--- 				207 -> 2 -- leave hot door alone in burnbarrel
--- 				213 -> 2 -- leave piping hot in burnbarrel
--- 				214 -> 1 -- kick stuff into the hole in the heap
--- 				216 -> 2 -- begone from the compostal service
--- 				otherwise -> inrunoption
-
-text, url = kolproxy_log_time_interval("run intercepts", function()
+text, url = log_time_interval("run intercepts", function()
 for _, x in ipairs(interceptors[requestpath] or {}) do
 	local t, u = x.f()
 	if t then
@@ -109,6 +74,7 @@ end
 load_script("base/util.lua")
 
 envstoreinfo.g_env.setup_functions()
+
 tostring = envstoreinfo.g_env.tostring
 
 local function add_interceptor_raw(file, func)
