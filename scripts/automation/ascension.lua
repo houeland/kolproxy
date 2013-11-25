@@ -86,6 +86,10 @@ local function automate_hcnp_day(whichday)
 		return not unlocked_island() and not have_item("skeleton")
 	end
 
+	local function unlocked_knob()
+		return level() >= 5 and not have_item("Cobb's Knob map")
+	end
+
 	-- TODO: do these properly
 	local function started_war()
 		return quest("Make War, Not... Oh, Wait")
@@ -2262,7 +2266,7 @@ endif
 		task = tasks.rotting_matilda,
 	}
 
-	local want_starting_items = classid() < 10 and (not AT_song_duration() or not have_item("turtle totem") or not have_item("saucepan") or not have_item("seal tooth"))
+	local want_starting_items = classid() < 10 and (not AT_song_duration() or not have_item("turtle totem") or not have_item("saucepan") or (not have_item("seal tooth") and challenge ~= "fist" and challenge ~= "zombie"))
 
 	add_task {
 		when = want_starting_items and meat() >= 200,
@@ -2542,7 +2546,8 @@ endif
 		}
 
 		add_task {
-			when = not have_item("Knob Goblin encryption key") and (level() < 5 or have_item("Cobb's Knob map")),
+			when = not have_item("Knob Goblin encryption key") and
+				not unlocked_knob(),
 			task = {
 				message = "get encryption key",
 				fam = day1spleenfam,
@@ -2798,7 +2803,7 @@ endif
 	}
 
 	add_task {
-		when = AT_song_duration() and level() < 6 and (buffturns("The Moxious Madrigal") < 10 or buffturns("The Magical Mojomuscular Melody") < 10) and have_skill("The Moxious Madrigal") and have_skill("The Magical Mojomuscular Melody"),
+		when = AT_song_duration() and level() < 5 and (buffturns("The Moxious Madrigal") < 10 or buffturns("The Magical Mojomuscular Melody") < 10) and have_skill("The Moxious Madrigal") and have_skill("The Magical Mojomuscular Melody"),
 		task = tasks.extend_tmm_and_mojo,
 	}
 
@@ -2806,12 +2811,18 @@ endif
 		return have_item("Knob Goblin elite helm") and have_item("Knob Goblin elite polearm") and have_item("Knob Goblin elite pants")
 	end
 
+	local function can_disguise_as_guard()
+		return have_guard_outfit() and can_equip_item("Knob Goblin elite helm") and can_equip_item("Knob Goblin elite polearm") and can_equip_item("Knob Goblin elite pants")
+	end
+
 	local function have_harem_outfit()
 		return have_item("Knob Goblin harem veil") and have_item("Knob Goblin harem pants")
 	end
 
 	add_task {
-		prereq = use_new_faxing and not have_item("Knob Goblin encryption key") and (level() < 5 or have_item("Cobb's Knob map")),
+		prereq = use_new_faxing and
+			not have_item("Knob Goblin encryption key") and
+			not unlocked_knob(),
 		f = script.unlock_cobbs_knob,
 	}
 
@@ -2845,7 +2856,10 @@ endif
 	}
 
 	add_task {
-		when = have_item("Cobb's Knob lab key") and not cached_stuff.learned_lab_password and not quest("The Goblin Who Wouldn't Be King") and not challenge,
+		when = not cached_stuff.learned_lab_password and
+			have_item("Cobb's Knob lab key") and
+			can_wear_weapons() and
+			(can_disguise_as_guard() or (not quest("The Goblin Who Wouldn't Be King") and not challenge)),
 		task = function()
 			local pt = get_page("/cobbsknob.php", { action = "dispensary" })
 			if pt:contains("FARQUAR") then
@@ -2856,19 +2870,29 @@ endif
 					action = function() did_action = true end,
 				}
 			else
-				if have_item("Knob Goblin elite helm") and have_item("Knob Goblin elite polearm") and have_item("Knob Goblin elite pants") then
-					return {
-						message = "learn knob lab password",
-						action = adventure { zoneid = 257 },
-						equipment = { hat = "Knob Goblin elite helm", weapon = "Knob Goblin elite polearm", pants = "Knob Goblin elite pants" },
-					}
-				else
-					critical "No goblin elite outfit to learn the lab password"
-				end
+				return {
+					message = "learn knob lab password",
+					action = adventure { zoneid = 257 },
+					equipment = { hat = "Knob Goblin elite helm", weapon = "Knob Goblin elite polearm", pants = "Knob Goblin elite pants" },
+				}
 			end
 		end
 	}
 
+	add_task {
+		when = mainstat_type("Muscle") and
+			ascensionstatus("Hardcore") and
+			meat() < 2000 and
+			unlocked_knob(),
+		task = {
+			message = "farm treasury meat",
+			familiar = "He-Boulder",
+			action = adventure {
+				zone = "Cobb's Knob Treasury",
+				macro_function = macro_autoattack,
+			}
+		}
+	}
 
 	-- TODO: do if we're in hardcore, can fax and have a rack-fam
 	add_task {
@@ -3194,16 +3218,14 @@ endwhile
 	}
 
 	add_task {
-		prereq = not have_item("Knob Goblin encryption key") and (level() < 5 or have_item("Cobb's Knob map")),
+		prereq = not have_item("Knob Goblin encryption key") and
+			not unlocked_knob(),
 		f = script.unlock_cobbs_knob,
 	}
 
 	add_task {
 		prereq = quest("The Goblin Who Wouldn't Be King") and
-			have_guard_outfit() and
-			can_wear_weapons() and
-			basemuscle() >= 15 and
-			basemoxie() >= 15,
+			can_disguise_as_guard(),
 		f = function()
 			script.knob_goblin_king_with_cake(macro_noodlecannon)
 		end,
@@ -3304,10 +3326,7 @@ endwhile
 	add_task {
 		prereq = not have_item("Knob Goblin seltzer") and
 			not have_item("Knob Goblin pet-buffing spray") and
-			have_guard_outfit() and
-			can_wear_weapons() and
-			basemuscle() >= 15 and
-			basemoxie() >= 15,
+			can_disguise_as_guard(),
 		f = function()
 			if not have_item("Knob Goblin pet-buffing spray") then
 				inform "buying pet-buffing spray"

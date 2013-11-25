@@ -870,32 +870,25 @@ function verify_consumables(data)
 end
 
 function parse_zones()
-	local fobj = io.open("cache/files/zones.json")
-	local zones_datafile = fobj:read("*a")
-	fobj:close()
-	zones_datafile = json_to_table(zones_datafile)
-
-	local mafia_adventures = {}
-	local mafia_adventures_inverse = {}
+	local zones = {}
 	for l in io.lines("cache/files/adventures.txt") do
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
-		if tbl[2] and tbl[5] then
-			local zoneid = tonumber(tbl[2]:match("adventure=([0-9]*)"))
-			if zoneid then
-				mafia_adventures[tbl[5]] = zoneid
-				mafia_adventures_inverse[zoneid] = tbl[5]
-			end
+		local zoneurl, name = tbl[2], tbl[5]
+		if zoneurl and name then
+			zones[name] = { zoneid = tonumber(zoneurl:match("adventure=([0-9]*)")) }
 		end
 	end
 
-	local mafia_combats = {}
 	local found_valid = false
-	local mafia_zoneid_monsters = {}
 	for l in io.lines("cache/files/combats.txt") do
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
-		if mafia_adventures[tbl[1]] then
+		local name, combat_percent = tbl[1], tonumber(tbl[2])
+		if zones[name] then
+			if combat_percent and combat_percent ~= -1 then
+--				zones[name].combat_percent = combat_percent -- SKIP: terrible data
+			end
 			local monsters = {}
 			for xidx, x in ipairs(tbl) do
 				if xidx >= 3 then
@@ -903,54 +896,19 @@ function parse_zones()
 					table.insert(monsters, xprefix or x)
 				end
 			end
-			--print("DEBUG zone", tbl[1], mafia_adventures[tbl[1]], table.concat(monsters, " + "))
-			mafia_zoneid_monsters[mafia_adventures[tbl[1]]] = monsters
+			table.sort(monsters)
+			zones[name].monsters = monsters
 			found_valid = true
 		elseif found_valid and tbl[1] and tbl[1] ~= "" and not l:match("^#") and tbl[2] ~= "0" then
-			softwarn("unknown adventure zone", tbl[1])
+			hardwarn("unknown adventure zone", tbl[1])
 		end
 	end
-
-	local zones_by_number = {}
-
-	local zones_datafile_inverse = {}
-	for a, b in pairs(zones_datafile) do
-		if not mafia_adventures[a] then
-			softwarn("Zone mismatch", a, "vs", mafia_adventures_inverse[b.zoneid])
-		end
-		if b.zoneid then
-			zones_datafile_inverse[b.zoneid] = a
-			zones_by_number[b.zoneid] = a
-		end
-	end
-
-	for a, b in pairs(mafia_adventures) do
-		if not zones_datafile[a] then
-			softwarn("Zone mismatch", zones_datafile_inverse[b], "vs", a)
-		end
-		zones_by_number[b] = a
-	end
-
-	local zones = {}
-
-	for a, b in pairs(zones_by_number) do
-		local z = zones_datafile[b] or {}
-		z.zoneid = z.zoneid or a
-		if not mafia_zoneid_monsters[z.zoneid] then
-			softwarn("zones:unknown monsters in", z.zoneid, b)
-		end
-		local monsters = mafia_zoneid_monsters[z.zoneid] or {}
-		table.sort(monsters)
-		z.monsters = z.monsters or monsters
-		zones[b] = z
-	end
-
 	return zones
 end
 
 function verify_zones(data)
 	for a, b in pairs(data) do
-		for _, x in ipairs(b.monsters) do
+		for _, x in ipairs(b.monsters or {}) do
 			if not processed_datafiles["monsters"][x:lower()] then
 				softwarn("zones:unknown monster", x, "in", a)
 			end
@@ -959,11 +917,17 @@ function verify_zones(data)
 
 	if data["The Dungeons of Doom"].zoneid == 39 then
 		if data["McMillicancuddy's Farm"].zoneid == 155 then
-			if data["The Spooky Forest"].zoneid == 15 and data["The Spooky Forest"]["combat rate"] == 85 then
+			if data["The Spooky Forest"].zoneid == 15 then -- and data["The Spooky Forest"].combat_percent == 85 then
 				return data
 			end
 		end
 	end
+
+	local testzones = {}
+	for _, x in ipairs { "The Dungeons of Doom", "McMillicancuddy's Farm", "The Spooky Forest" } do
+		testzones[x] = data[x]
+	end
+	hardwarn("verify_zones failure:", table_to_json(testzones))
 end
 
 function parse_choice_spoilers()

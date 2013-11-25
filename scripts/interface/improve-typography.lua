@@ -8,7 +8,7 @@ register_setting {
 add_printer("all pages", function()
 	if not setting_enabled("enable experimental implementations/improve typography") then return end
 	if text:contains("<html") then
-		text = text:gsub(" %-%- ", "<wbr>&mdash;<wbr>")
+--		text = text:gsub(" %-%- ", "<wbr>&mdash;<wbr>")
 		text = text:gsub("</head>", [[
 <style type="text/css">
 blockquote {

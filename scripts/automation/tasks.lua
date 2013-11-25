@@ -43,14 +43,14 @@ function get_automation_tasks(script, cached_stuff)
 		nobuffing = true,
 		action = function()
 			if not (have_item("stolen accordion") and have_item("turtle totem") and have_item("saucepan")) then
-				local pt, pturl, advagain
+				inform "buy and use chewing gum"
 				while not (have_item("stolen accordion") and have_item("turtle totem") and have_item("saucepan")) do
-					pt, pturl, advagain = script.buy_use_chewing_gum()
+					result, resulturl, advagain = script.buy_use_chewing_gum()
 					if not advagain then
 						critical "Failed to use chewing gum"
 					end
 				end
-				return pt, pturl
+				return result, resulturl
 			end
 
 			if playerclass("Accordion Thief") and (AT_song_duration() or 0) < 10 then
@@ -256,13 +256,14 @@ mark m_done
 		if advs() < 12 then
 			stop "Fewer than 12 advs for sewerleveling"
 		end
-		script.ensure_buffs { "Pisces in the Skyces" }
-		script.shrug_buff("Ode to Booze")
-		script.maybe_ensure_buffs { "Mental A-cue-ity" }
+		if have_buff("Ode to Booze") then
+			script.shrug_buff("Ode to Booze")
+		end
 		return {
 			message = "sewerlevel to lvl 6",
 			fam = "Frumious Bandersnatch",
-			buffs = { "Springy Fusilli", "Spirit of Garlic" },
+			buffs = { "Springy Fusilli", "Spirit of Garlic", "Pisces in the Skyces" },
+			maybe_buffs = { "Mental A-cue-ity" },
 			minmp = 70,
 			action = adventure {
 				zoneid = 166,
@@ -395,32 +396,32 @@ mark m_done
 				-- spiky turtle helmet or crown of thrones w/ el vibrato megadrone
 				-- astral belt, C.A.R.N.I.V.O.R.E. button, grumpy old man charrrm bracelet, ring of aggravate monster
 				-- Boris: Song of Cockiness, Overconfident
-			script.bonus_target { "monster level" }
 			if have_skill("Gristlesphere") then
 				script.ensure_buffs { "Gristlesphere" }
-			end
-			script.ensure_buffs { "Ur-Kel's Aria of Annoyance" }
-			script.want_familiar "Baby Bugged Bugbear"
-			local ml = estimate_bonus("Monster Level")
-			if ml < 50 then
-				script.maybe_ensure_buffs { "Pride of the Puffin", "Ur-Kel's Aria of Annoyance" }
-				ml = estimate_bonus("Monster Level")
-			end
-			if ml < 20 then
-				stop "Not enough +ML for Oil Peak (want 20+ for automation)"
-			elseif not ascensionstatus("Hardcore") and ml < 50 and not challenge then
-				-- TODO: Trigger this if script options set to go fast
-				stop "Not enough +ML for Oil Peak (want 50+ for SCNP automation)"
 			end
 			return {
 				message = "do oil peak",
 				fam = "Baby Bugged Bugbear",
 				buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "A Few Extra Pounds", "Ur-Kel's Aria of Annoyance" },
+				bonus_target = { "monster level" },
 				minmp = 60,
-				action = adventure {
-					zoneid = 298,
-					macro_function = macro_noodleserpent,
-				}
+				action = function()
+					local ml = estimate_bonus("Monster Level")
+					if ml < 50 then
+						script.maybe_ensure_buffs { "Pride of the Puffin" }
+						ml = estimate_bonus("Monster Level")
+					end
+					if ml < 20 then
+						stop "Not enough +ML for Oil Peak (want 20+ for automation)"
+					elseif not ascensionstatus("Hardcore") and ml < 50 and not challenge then
+						-- TODO: Trigger this if script options set to go fast
+						stop "Not enough +ML for Oil Peak (want 50+ for SCNP automation)"
+					end
+					return (adventure {
+						zoneid = 298,
+						macro_function = macro_noodleserpent,
+					})()
+				end
 			}
 		elseif quest_text("should check out A-Boo Peak and see") or quest_text("should keep clearing the ghosts out of A-Boo Peak") then
 			local hauntedness = get_aboo_peak_hauntedness()
@@ -493,93 +494,85 @@ mark m_done
 				}
 			end
 		elseif quest_text("need to solve the mystery of Twin Peak") then
---			-- TODO: track steps!
-
 -- 			-- TODO: boost item drops & noncombats, sniff either topiary
--- 			-- TODO: ensure 4+ stench resistance
--- 			-- TODO: one choice adv
--- 			-- TODO: ensure +50% item drops (excluding familiars)
--- 			-- TODO: one choice adv
--- 			-- TODO: ensure "jar of oil"
--- 			-- TODO: one choice adv
--- 			-- TODO: ensure combat init +40%
--- 			-- TODO: one choice adventure
 
-			if session["__script.automate twin peak"] == "yes" then
-				return {
-					message = "solve twin peak mystery",
-					fam = "Slimeling",
-					buffs = { "Fat Leon's Phat Loot Lyric", "Astral Shell", "Elemental Saucesphere" },
-					bonus_target = { "noncombat", "item" },
-					minmp = 50,
-					action = function()
+			return {
+				message = "solve twin peak mystery",
+				fam = "Slimeling",
+				buffs = { "Fat Leon's Phat Loot Lyric", "Astral Shell", "Elemental Saucesphere" },
+				bonus_target = { "noncombat", "item" },
+				minmp = 50,
+				action = function()
+					if not cached_stuff.previous_twin_peak_noncombat_option then
 						if get_resistance_level("Stench") < 4 and not have_buff("Red Door Syndrome") then
 							script.ensure_buffs { "Red Door Syndrome" }
 						end
 						if get_resistance_level("Stench") < 4 then
 							script.want_familiar "Exotic Parrot"
 						end
-						local force_advagain = false
-						local function ncfunc(advtitle, choicenum, pagetext)
-							if advtitle == "Welcome to the Great Overlook Lodge" then
-								force_advagain = true
-								return "", 1
-							elseif advtitle == "Lost in the Great Overlook Lodge" then
-								for _, x in ipairs { "Investigate Room 237", "Search the pantry", "Follow the faint sound of music", "Wait -- who's that?" } do
-									if pagetext:contains(x) then
-										if x == cached_stuff.previous_twin_peak_noncombat_option then
-											stop "Failed to make progress in Twin Peak"
-										end
-										cached_stuff.previous_twin_peak_noncombat_option = x
-										return x
-									end
-								end
-							else
-								return "", 1
-							end
+						if get_resistance_level("Stench") < 4 then
+							stop "Need 4+ stench resistance"
 						end
-
-						if have_item("rusty hedge trimmers") then
-							set_result(use_item("rusty hedge trimmers"))
-							result, resulturl = get_page("/choice.php")
-							result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, nil, ncfunc)
-							if not have_item("rusty hedge trimmers") then
-								advagain = true
-							end
-						else
-							result, resulturl, advagain = autoadventure { zoneid = 297, macro = macro_noodlecannon(), noncombatchoices = nil, specialnoncombatfunction = ncfunc, ignorewarnings = true }
+					elseif cached_stuff.previous_twin_peak_noncombat_option == "Investigate Room 237" then
+						if estimate_bonus("Item Drops from Monsters") - __DONOTUSE_estimate_familiar_item_drop_bonus() + estimate_bonus("Food Drops from Monsters") < 50 then
+							stop "Need 50%+ item drops from monsters"
 						end
-						if force_advagain then
-							-- TODO: Why is this necessary? No adventure again at great overlook? Do a test for page result instead?
-							advagain = true
-						end
-						return result, resulturl, advagain
-					end
-				}
-			else
-				return {
-					message = "check twin peak requirements",
-					buffs = { "Fat Leon's Phat Loot Lyric", "Astral Shell", "Elemental Saucesphere" },
-					bonus_target = { "noncombat", "item" },
-					action = function()
+					elseif cached_stuff.previous_twin_peak_noncombat_option == "Search the pantry" then
 						if not have_item("jar of oil") then
 							use_item("bubblin' crude", 12)
 						end
-						if get_resistance_level("Stench") < 4 and not have_buff("Red Door Syndrome") then
-							script.ensure_buffs { "Red Door Syndrome" }
+						if not have_item("jar of oil") then
+							stop "Need jar of oil"
 						end
-						if get_resistance_level("Stench") < 4 then
-							script.want_familiar "Exotic Parrot"
+					elseif cached_stuff.previous_twin_peak_noncombat_option == "Follow the faint sound of music" or cached_stuff.previous_twin_peak_noncombat_option == "Wait -- who's that?" then
+						if estimate_bonus("Combat Initiative") < 40 then
+							script.bonus_target { "initiative", "noncombat", "item" }
+							maybe_ensure_buffs { "Springy Fusilli" }
 						end
-						if get_resistance_level("Stench") >= 4 and estimate_bonus("Item Drops from Monsters") - __DONOTUSE_estimate_familiar_item_drop_bonus() + estimate_bonus("Food Drops from Monsters") >= 50 and have_item("jar of oil") and estimate_bonus("Combat Initiative") >= 40 then
-							session["__script.automate twin peak"] = "yes"
-							did_action = true
-						else
-							stop "TODO: solve twin peak mystery (or get 4+ stench resist, +50% items, jar of oil, and +40% init and run again)"
+						if estimate_bonus("Combat Initiative") < 40 then
+							maybe_ensure_buffs { "Sugar Rush" }
+						end
+						if estimate_bonus("Combat Initiative") < 40 then
+							stop "Need 40%+ combat initiative"
 						end
 					end
-				}
-			end
+					local force_advagain = false
+					local function ncfunc(advtitle, choicenum, pagetext)
+						if advtitle == "Welcome to the Great Overlook Lodge" then
+							force_advagain = true
+							return "", 1
+						elseif advtitle == "Lost in the Great Overlook Lodge" then
+							for _, x in ipairs { "Investigate Room 237", "Search the pantry", "Follow the faint sound of music", "Wait -- who's that?" } do
+								if pagetext:contains(x) then
+									if x == cached_stuff.previous_twin_peak_noncombat_option then
+										stop "Failed to make progress in Twin Peak"
+									end
+									cached_stuff.previous_twin_peak_noncombat_option = x
+									return x
+								end
+							end
+						else
+							return "", 1
+						end
+					end
+
+					if have_item("rusty hedge trimmers") then
+						set_result(use_item("rusty hedge trimmers"))
+						result, resulturl = get_page("/choice.php")
+						result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, nil, ncfunc)
+						if not have_item("rusty hedge trimmers") then
+							advagain = true
+						end
+					else
+						result, resulturl, advagain = autoadventure { zoneid = 297, macro = macro_noodlecannon(), noncombatchoices = nil, specialnoncombatfunction = ncfunc, ignorewarnings = true }
+					end
+					if force_advagain then
+						-- TODO: Why is this necessary? No adventure again at great overlook? Do a test for page result instead?
+						advagain = true
+					end
+					return result, resulturl, advagain
+				end
+			}
 		end
 	end
 

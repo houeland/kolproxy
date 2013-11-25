@@ -28,7 +28,7 @@ add_warning {
 	message = "The untinker quest is at the degrassi knoll. Make sure to pick it up first if you want to complete it.",
 	type = "warning",
 	when = "ascension",
-	zone = "Degrassi Knoll",
+	zone = "The Degrassi Knoll Garage",
 	check = function(zoneid)
 		if not have_degrassi then
 			local pt = get_page("/questlog.php", { which = 1 })

@@ -7,6 +7,7 @@ function reuse_equipment_slots(neweq)
 				if neweq[x] == equipment()[y] and not used[y] then
 					remap[x] = y
 					used[y] = true
+					break
 				end
 			end
 		end
@@ -598,13 +599,6 @@ function get_automation_scripts(cached_stuff)
 				else
 					critical "Failed to buy MMJ as lvl 9+ AT"
 				end
-			elseif have_item("Cobb's Knob lab key") and ((have("Knob Goblin elite helm") and have_item("Knob Goblin elite polearm") and have_item("Knob Goblin elite pants")) or (level() >= 8 and not quest("The Goblin Who Wouldn't Be King"))) and not have_item("Knob Goblin seltzer") and can_wear_weapons() and not have_item("Knob Goblin seltzer") then
-				buy_item("Knob Goblin seltzer", "k", 5)
-				if have_item("Knob Goblin seltzer") then
-					return f.ensure_mp(amount, true)
-				else
-					critical "Failed to buy knob goblin seltzer (should have key and outfit)"
-				end
 			elseif kgs_available and not have_item("Knob Goblin seltzer") then
 				buy_item("Knob Goblin seltzer", "k", 5)
 				if have_item("Knob Goblin seltzer") then
@@ -945,7 +939,7 @@ function get_automation_scripts(cached_stuff)
 					table.insert(xs, "Heavy Petting")
 					table.insert(xs, "Peeled Eyeballs")
 				end
-			elseif level() < 6 then
+			elseif level() <= 4 then
 				table.insert(xs, "The Moxious Madrigal")
 				table.insert(xs, "The Magical Mojomuscular Melody")
 			end
@@ -954,9 +948,9 @@ function get_automation_scripts(cached_stuff)
 			end
 			if level() >= 6 then
 				table.insert(xs, "Leash of Linguini")
--- 				if mainstat_type() ~= "Muscle" then
--- 					table.insert(xs, "Empathy")
--- 				end
+				if meat() >= 7000 then
+					table.insert(xs, "Empathy")
+				end
 			end
 			if ((mainstat_type("Mysticality") and level() >= 9) or (level() >= 11) or (highskill_at_run and mmj_available)) and level() < 13 and challenge ~= "fist" then
 				table.insert(xs, "Ur-Kel's Aria of Annoyance")
@@ -978,7 +972,7 @@ function get_automation_scripts(cached_stuff)
 				table.insert(xs, "Salamanderenity")
 			end
 		end
-		if not cached_stuff.learned_lab_password or not have_item("Cobb's Knob lab key") then
+		if not cached_stuff.learned_lab_password or not have_item("Cobb's Knob lab key") or meat() < 2000 then
 			local function tabledel(t)
 				for x, y in pairs(t) do
 					-- TODO: do more generally?
