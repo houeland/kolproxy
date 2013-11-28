@@ -234,7 +234,7 @@ function setup_functions()
 			}
 			return areas[moonsign()]
 		end
-		function get_equipment()
+		function equipment()
 			local eq = {}
 			for a, b in pairs(status().equipment) do
 				eq[a] = tonumber(b)
@@ -246,7 +246,10 @@ function setup_functions()
 			eq.cardsleeve = nil
 			return eq
 		end
-		equipment = get_equipment
+		function get_equipment()
+			print("WARNING: get_equipment() is deprecated, use equipment()")
+			return equipment()
+		end
 		function fullness() return tonumber(status().full) end
 		function drunkenness() return tonumber(status().drunk) end
 		function spleen() return tonumber(status().spleen) end

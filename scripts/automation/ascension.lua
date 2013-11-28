@@ -5254,7 +5254,9 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 		pathdesc = ascensionstatus()
 	end
 	local path_is_ok = true
-	if (not ok_paths[ascensionpathid()] and not ok_paths[ascensionpathname()]) or (ascensionpathid() == 0 and ascensionstatus() ~= "Hardcore") then
+	if ascensionpath("Class Act II: A Class For Pigs") and playerclass("Pastamancer") then
+		path_is_ok = true
+	elseif (not ok_paths[ascensionpathid()] and not ok_paths[ascensionpathname()]) or (ascensionpathid() == 0 and ascensionstatus() ~= "Hardcore") then
 		path_is_ok = false
 	end
 	if not path_is_ok then

@@ -1216,7 +1216,7 @@ function get_automation_scripts(cached_stuff)
 		end
 
 		neweq = reuse_equipment_slots(neweq)
--- 		print("setting equipment: ", table_to_str(neweq))
+--		print("DEBUG: setting equipment: ", table_to_str(neweq))
 		set_equipment(neweq)
 	end
 
@@ -1288,7 +1288,7 @@ endif
 								buy_item("fortune cookie", "m")
 								local old_full = fullness()
 								set_result(eat_item("fortune cookie"))
-								did_action = (fullness() == old_full + 1)
+								did_action = (fullness() == old_full + 1) or (old_full == estimate_max_fullness())
 							else
 								did_action = true
 							end
@@ -1304,7 +1304,7 @@ endif
 								buy_item("fortune cookie", "m")
 								local old_full = fullness()
 								set_result(eat_item("fortune cookie"))
-								did_action = (fullness() == old_full + 1)
+								did_action = (fullness() == old_full + 1) or (old_full == estimate_max_fullness())
 							else
 								did_action = true
 							end
@@ -1490,11 +1490,11 @@ endif
 			inform "make fettucini inconnu"
 			set_result(cook_items("fancy schmancy cheese sauce", "dry noodles"))
 			did_action = get_result():contains("fettucini Inconnu")
-		elseif have_item("hellion cube") and have_item("scrumptious reagent") and have_item("dry noodles") then
+		elseif have_item("hellion cube") and have_item("scrumptious reagent") and have_item("dry noodles") and have_skill("Advanced Saucecrafting") then
 			inform "make hell broth"
 			set_result(cook_items("hellion cube", "scrumptious reagent"))
 			did_action = get_result():contains("Hell broth")
-		elseif have_item("goat cheese") and have_item("scrumptious reagent") and have_item("dry noodles") then
+		elseif have_item("goat cheese") and have_item("scrumptious reagent") and have_item("dry noodles") and have_skill("Advanced Saucecrafting") then
 			inform "make cheese sauce"
 			set_result(cook_items("goat cheese", "scrumptious reagent"))
 			did_action = get_result():contains("fancy schmancy cheese sauce")

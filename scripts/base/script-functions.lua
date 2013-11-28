@@ -584,15 +584,16 @@ end
 
 function estimate_mallsell_profit(item, amount)
 	amount = amount or 1
-	local buyoneprice = estimate_mallbuy_cost(item, 10)
-	if buyoneprice then
-		return buyoneprice * amount/10 * 0.85
+	local buytenprice = estimate_mallbuy_cost(item, 10)
+	if buytenprice then
+		return buytenprice/10 * 0.85 * amount
 	end
 end
 
 function can_equip_item(item)
 	local itemdata = maybe_get_itemdata(item)
 	if not itemdata then return true end
+	local name = get_itemname(item)
 	for a, b in pairs(itemdata.equip_requirements or {}) do
 		if a == "Muscle" and basemuscle() < b then
 			return false
@@ -607,7 +608,8 @@ function can_equip_item(item)
 			return false
 		end
 	end
-	if not can_wear_weapons() and (itemdata.equipment_slot == "weapon" or itemdata.equipment_slot == "offhand") then
+	if name == "Trusty" then
+	elseif not can_wear_weapons() and (itemdata.equipment_slot == "weapon" or itemdata.equipment_slot == "offhand") then
 		return false
 	end
 	return true

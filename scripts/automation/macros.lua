@@ -849,13 +849,13 @@ function make_sniff_macro(name, action)
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
+]] .. maybe_stun_monster() .. [[
+
 if monstername ]] .. name .. [[
 
 ]] .. castolfaction .. [[
 
 endif
-
-]] .. maybe_stun_monster() .. [[
 
 ]] .. macro_killing_begins() .. [[
 
@@ -1150,11 +1150,35 @@ endwhile
 end
 
 function make_gremlin_macro(name, wrongmsg)
+	local maybeheal = ""
+	if not have_skill("Tao of the Terrapin") then
+		maybeheal = [[
+  if (!hppercentbelow 90) && (hasskill Tattle) && (!mpbelow 25)
+    cast Tattle
+    goto do_return
+  endif
+  if hasskill Saucy Salve
+	cast Saucy Salve
+	goto do_return
+  endif
+  if hasskill Lasagna Bandages
+	cast Lasagna Bandages
+	goto do_return
+  endif
+]]
+	end
+	local use_magnet = [[use molybdenum magnet]]
+	if have_skill("Ambidextrous Funkslinging") then
+		use_magnet = [[use rock band flyers, molybdenum magnet]]
+	end
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 40) .. [[
 
 sub stall
 ]]..conditional_salve_action("goto do_return")..[[
+
+]]..maybeheal..[[
+
   if hasskill Static Shock
 	cast Static Shock
 	goto do_return
@@ -1179,7 +1203,9 @@ if monstername ]] .. name .. [[
 
   mark wait_loop
   if match "whips out a"
-    use rock band flyers, molybdenum magnet
+
+]] .. use_magnet .. [[
+
 	abort should be dead
   endif
   if match "]] .. wrongmsg .. [["
