@@ -50,6 +50,8 @@ local function estimate_fam_item()
 		return fairy_bonus(buffedfamiliarweight() * 2)
 	elseif familiarpicture() == "spanglepants" and familiarid() == 152 then
 		return fairy_bonus(buffedfamiliarweight() * 2)
+	elseif familiarpicture() == "skirt" and familiarid() == 152 then
+		return fairy_bonus(buffedfamiliarweight() * 4)
 	else
 		return 0
 	end
