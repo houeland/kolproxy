@@ -521,6 +521,12 @@ function get_automation_scripts(cached_stuff)
 		if maxmp() < amount + need_extra then
 			if challenge == "boris" or challenge == "jarlsberg" then
 				return
+			elseif maxmp() < 20 and level() < 6 then
+				if not session["__script.low maxmp"] then
+					print("SCRIPT WARNING: Max MP is very low.")
+					session["__script.low maxmp"] = true
+				end
+				return
 			else
 				critical("Maxmp < " .. (amount + need_extra) .. " when trying to ensure MP")
 			end
@@ -706,7 +712,8 @@ function get_automation_scripts(cached_stuff)
 					end
 				else
 					if hp() < maxhp() / 2 then
-						critical "Failed to restore HP!"
+						session["__script.cannot restore HP"] = true
+--						critical "Failed to restore HP!"
 					end
 				end
 			end
@@ -1353,7 +1360,7 @@ endif
 		local towear = {}
 		local finalcheckfunc = nil
 		if extra then
-			if extra.olfact then
+			if extra.olfact and have_skill("Transcendent Olfaction") then
 				if not trailed then
 					minmp = minmp + 40
 				elseif trailed ~= extra.olfact then
@@ -1474,11 +1481,11 @@ endif
 	end
 
 	function f.make_reagent_pasta()
-		if count_item("dry noodles") < 1 and have_skill("Pastamastery") then
+		if count_item("dry noodles") < 1 and have_skill("Pastamastery") and level() >= 4 and maxmp() >= 15 then
 			ensure_mp(10)
 			cast_skill("Pastamastery") -- pastamastery
 		end
-		if count_item("scrumptious reagent") < 1 and have_skill("Advanced Saucecrafting") then
+		if count_item("scrumptious reagent") < 1 and have_skill("Advanced Saucecrafting") and level() >= 4 and maxmp() >= 15 then
 			ensure_mp(10)
 			cast_skill("Advanced Saucecrafting") -- advanced saucecrafting
 		end
@@ -1638,15 +1645,25 @@ endif
 						end
 						did_action = (fullness() == f + 1)
 						return result, resulturl, did_action
+					elseif have_item("Knob nuts") then
+						inform "eat knob nuts"
+						eat_item("Knob nuts")
+						did_action = (fullness() == f + 1)
+						return result, resulturl, did_action
 					elseif have_item("bag of GORF") then
 						inform "eat knob bag of gorf"
 						eat_item("bag of GORF")
 						did_action = (fullness() == f + 1)
 						return result, resulturl, did_action
+					elseif meat() >= 40 then
+						inform "eat fortune cookie"
+						buy_item("fortune cookie", "m")
+						eat_item("fortune cookie")()
+						did_action = (fullness() == f + 1 and script.get_turns_until_sr() ~= nil)
 					end
 				end
 			end
-			if space() >= 3 and not have_skill("Advanced Saucecrafting") then
+			if space() >= 3 and not have_skill("Advanced Saucecrafting") and advs() < 30 then
 				if have_item("painful penne pasta") then
 					inform "eat painful penne pasta"
 					script.heal_up()
@@ -1654,7 +1671,7 @@ endif
 					result, resulturl = eat_item("painful penne pasta")()
 					did_action = (fullness() == f + 3)
 					return result, resulturl, did_action
-				else
+				elseif level() >= 3 and meat() >= 500 then
 					return script.make_reagent_pasta()
 				end
 			end
@@ -3457,7 +3474,11 @@ mark m_done
 					use_item("disassembled clover")
 				end
 				if have_item("ten-leaf clover") then
-					script.ensure_buffs { "Astral Shell" }
+					local eq = { hat = first_wearable { "Knob Goblin harem veil", "bum cheek" } }
+					script.wear(eq)
+					if get_resistance_level("Stench") <= 0 then
+						script.ensure_buffs { "Astral Shell" }
+					end
 					if get_resistance_level("Stench") <= 0 then
 						script.maybe_ensure_buffs { "Elemental Saucesphere", "Oilsphere" }
 					end
@@ -3465,11 +3486,19 @@ mark m_done
 						wear { pants = "Greatest American Pants" }
 						script.get_gap_buff("Super Structure")
 					end
-					go("clovering sonars", 31, nil, nil, { "Leash of Linguini", "Empathy", "Astral Shell" }, "Exotic Parrot", 10)
+					go("clovering sonars", 31, nil, nil, { "Leash of Linguini", "Empathy", "Astral Shell" }, "Exotic Parrot", 10, { equipment = eq })
+					did_action = (count("sonar-in-a-biscuit") >= 2)
+					if get_result():contains("need some sort of stench protection") then
+						print("SCRIPT INFO: need some sort of stench protection")
+						if session["__script.no stench resist"] then
+							stop "Need stench resistance."
+						end
+						session["__script.no stench resist"] = true
+						did_action = true
+					end
 				else
 					stop "No ten-leaf clover for sonars!"
 				end
-				did_action = (count("sonar-in-a-biscuit") == 2)
 			elseif have_item("enchanted bean") then
 				go("getting sonars", 32, (macrofunc or macro_autoattack), nil, { "Leash of Linguini", "Empathy", "Fat Leon's Phat Loot Lyric", "Butt-Rock Hair" }, "Slimeling", 10 + (extra_mp or 0))
 			else
@@ -3732,7 +3761,7 @@ endif
 			zone_stasis_macro = macro_noodlecannon
 		end
 		script.maybe_ensure_buffs { "Silent Running" }
-		if fullness() + count("hellion cube") * 6 + 6 <= estimate_max_fullness() and ascensionstatus() == "Hardcore" and challenge ~= "zombie" then
+		if fullness() + count("hellion cube") * 6 + 6 <= estimate_max_fullness() and script_want_reagent_pasta() then
 			go("getting hellion cubes", 239, make_cannonsniff_macro("Hellion"), nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
 		elseif not have_item("box of birthday candles") then
 			go("getting candles", 238, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, { "Scarecrow with Boss Bat britches", "Rogue Program" }, 15)

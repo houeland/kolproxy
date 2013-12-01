@@ -38,18 +38,28 @@ local function estimate_fam_item()
 			return 0
 		end
 	end
-	-- TODO: Use familiar names instead of pictures
-	-- Preferably datafile
 	if familiar("Steam-Powered Cheerleader") then
 		return fairy_bonus(math.floor(buffedfamiliarweight() * get_steampowered_cheerleader_bonus_multiplier()))
-	elseif vanilla_fairy[familiarpicture()] then
-		return fairy_bonus(buffedfamiliarweight())
-	elseif familiarpicture() == "hounddog" then
+	elseif familiar("Fancypants Scarecrow") or familiar("Mad Hatrack") then
+		local famequip = equipment().familiarequip
+		if famequip then
+			local name = maybe_get_itemname(famequip)
+			if name then
+				local d = datafile("hatrack")[name]
+				if d then
+					local mult = d.familiar_types["Baby Gravy Fairy"]
+					if mult then
+						return fairy_bonus(math.floor(buffedfamiliarweight() * mult))
+					end
+				end
+			end
+		end
+		return 0
+	elseif familiar("Jumpsuited Hound Dog") then
 		return fairy_bonus(math.floor(buffedfamiliarweight() * 1.25))
-	elseif familiarpicture() == "spanglehat" and familiarid() == 82 then
-		return fairy_bonus(buffedfamiliarweight() * 2)
-	elseif familiarpicture() == "spanglepants" and familiarid() == 152 then
-		return fairy_bonus(buffedfamiliarweight() * 2)
+	elseif vanilla_fairy[familiarpicture()] then
+		-- TODO: use data file for fairies
+		return fairy_bonus(buffedfamiliarweight())
 	else
 		return 0
 	end

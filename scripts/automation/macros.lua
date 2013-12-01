@@ -1,5 +1,8 @@
 function COMMON_MACROSTUFF_START(rounds, hplevel) 
 	local lobsterwarning = ""
+	if session["__script.cannot restore HP"] then
+		hplevel = 0
+	end
 	if level() < 10 then
 		lobsterwarning = [[
 
@@ -43,7 +46,17 @@ function attack_action()
 ]]
 end
 
-function macro_cast_skill(names)
+function cast_olfaction()
+	return [[
+
+if hasskill Transcendent Olfaction then
+  cast Transcendent Olfaction
+endif
+
+]]
+end
+
+function maybe_macro_cast_skill(names)
 	if type(names) == "string" then
 		names = { names }
 	end
@@ -59,6 +72,11 @@ function macro_cast_skill(names)
 ]]
 		end
 	end
+end
+
+function macro_cast_skill(names)
+	local command = maybe_macro_cast_skill(names)
+	if command then return command end
 	print("WARNING: No skills found: ", tostring(names))
 	return [[
 
@@ -68,15 +86,18 @@ abort No useful skill found.
 end
 
 function cannon_action()
-	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm" }
+	if have_skill("Crab Claw Technique") and have_equipped("Rock and Roll Legend") and not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } then
+		return attack_action()
+	end
+	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Concerto de los Muertos", "Bawdy Refrain" }
 end
 
 function elemental_damage_action()
-	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm" }
+	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Concerto de los Muertos", "Bawdy Refrain" }
 end
 
 function serpent_action()
-	return macro_cast_skill { "Stringozzi Serpent", "Saucegeyser", "Weapon of the Pastalord", "Saucestorm", "Cannelloni Cannon" }
+	return macro_cast_skill { "Stringozzi Serpent", "Saucegeyser", "Weapon of the Pastalord", "Saucestorm", "Cannelloni Cannon", "Cone of Zydeco" }
 end
 
 function geyser_action()
@@ -142,6 +163,12 @@ function maybe_stun_monster(is_dangerous)
 				if hasskill Accordion Bash
 					cast Accordion Bash
 				endif]])
+			if have_equipped("Rock and Roll Legend") or have_equipped("peace accordion") then
+				table.insert(macrolines, [[
+					if hasskill Cadenza
+						cast Cadenza
+					endif]])
+			end
 		end
 	end
 
@@ -665,28 +692,33 @@ sub wait_and_stall
   mark do_return
 endsub
 
-pickpocket
+
+sub kill_cannon
 
 ]] .. maybe_stun_monster() .. [[
 
 ]] .. macro_killing_begins() .. [[
-
-sub kill_cannon
 
 ]]..conditional_salve_action()..[[
 
   while !times 5
 ]] .. cannon_action() .. [[
   endwhile
+  abort Should be dead!
 endsub
 
 sub kill_serpent
+
+]] .. maybe_stun_monster() .. [[
+
+]] .. macro_killing_begins() .. [[
 
 ]]..conditional_salve_action()..[[
 
   while !times 3
 ]] .. serpent_action() .. [[
   endwhile
+  abort Should be dead!
 endsub
 
 if (monstername angry bassist) || (monstername blue-haired girl) || (monstername evil ex-girlfriend) || (monstername peeved roommate) || (monstername random scenester)
@@ -700,6 +732,12 @@ endif
 if (monstername modern zmobie) || (monstername conjoined zmombie)
   call kill_cannon
 endif
+
+pickpocket
+
+]] .. maybe_stun_monster() .. [[
+
+]] .. macro_killing_begins() .. [[
 
 mark start_loop
 while mppercentbelow 90
@@ -845,7 +883,6 @@ endwhile
 end
 
 function make_sniff_macro(name, action)
-	local castolfaction = "cast Transcendent Olfaction"
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
@@ -853,7 +890,7 @@ function make_sniff_macro(name, action)
 
 if monstername ]] .. name .. [[
 
-]] .. castolfaction .. [[
+]] .. cast_olfaction() .. [[
 
 endif
 
@@ -932,14 +969,13 @@ endif
 end
 
 function macro_8bit_realm()
-	local castolfaction = "cast Transcendent Olfaction"
 	return [[
 ]] .. COMMON_MACROSTUFF_START(25, 30) .. [[
 
 if monstername Blooper
 
 
-]] .. castolfaction .. [[
+]] .. cast_olfaction() .. [[
 
 
 endif
@@ -1280,7 +1316,6 @@ endif
 end
 
 function macro_orc_chasm()
-	local castolfaction = "cast Transcendent Olfaction"
   local maybeuse334s = ""
   local function multiuse(item1, item2)
     if have_skill("Ambidextrous Funkslinging") then
@@ -1312,7 +1347,7 @@ function macro_orc_chasm()
 if monstername xxx pr0n
 
 
-]] .. castolfaction .. [[
+]] .. cast_olfaction() .. [[
 
 
 endif

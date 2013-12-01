@@ -634,7 +634,13 @@ function parse_hatrack()
 		l = remove_line_junk(l)
 		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
 		if name and bonuslist and not blacklist[name] and processed_datafiles["items"][name] then
-			hatrack[name] = bonuslist:match([[Familiar Effect: "(.-)"]])
+			local desc = bonuslist:match([[Familiar Effect: "(.-)"]])
+			if desc then
+				hatrack[name] = { description = desc, familiar_types = {} }
+				hatrack[name].familiar_types["Baby Gravy Fairy"] = tonumber(desc:match("([0-9.]+)xFairy"))
+				hatrack[name].familiar_types["Leprechaun"] = tonumber(desc:match("([0-9.]+)xLep"))
+				hatrack[name].familiar_types["Levitating Potato"] = tonumber(desc:match("([0-9.]+)xPotato"))
+			end
 		end
 	end
 
@@ -642,9 +648,13 @@ function parse_hatrack()
 end
 
 function verify_hatrack(data)
-	if data["Cloaca-Cola fatigues"]:lower():contains("potato") and data["Cloaca-Cola fatigues"]:contains("7") then
-		if data["asbestos helmet turtle"]:lower():contains("fairy") and data["asbestos helmet turtle"]:contains("20") then
-			return data
+	if data["Cloaca-Cola fatigues"].familiar_types["Levitating Potato"] and data["Cloaca-Cola fatigues"].description:contains("7") then
+		if data["asbestos helmet turtle"].familiar_types["Baby Gravy Fairy"] and data["asbestos helmet turtle"].description:contains("20") then
+			if data["frilly skirt"].familiar_types["Baby Gravy Fairy"] == 4 then
+				if data["spangly sombrero"].familiar_types["Baby Gravy Fairy"] == 2 then
+					return data
+				end
+			end
 		end
 	end
 end

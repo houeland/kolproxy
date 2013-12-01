@@ -115,6 +115,18 @@ local function automate_hcnp_day(whichday)
 		return not have_item("rock band flyers")
 	end
 
+	function script_want_reagent_pasta()
+		return ascensionstatus("Hardcore") and have_skill("Pastamastery") and have_skill("Advanced Saucecrafting")
+	end
+
+	function script_want_milk()
+		return ascensionstatus("Aftercore") or have_skill("Advanced Saucecrafting")
+	end
+
+	function script_want_ode()
+		return ascensionstatus("Aftercore") or have_skill("The Ode to Booze")
+	end
+
 	challenge = nil
 	if ascensionpath("Way of the Surprising Fist") then
 		challenge = "fist"
@@ -2244,8 +2256,10 @@ endif
 	add_task {
 		prereq = want_shore() and
 			challenge == "boris" and
+			unlocked_beach() and
 			not unlocked_island() and
-			turns_to_next_sr >= 5 and
+			turns_to_next_sr >= 3 and
+			meat() >= 1000 and
 			(have("Clancy's lute") or clancy_instrumentid() == 3),
 		f = script.get_dinghy,
 	}
@@ -2297,410 +2311,6 @@ endif
 		when = not have_item("digital key") and trailed == "Blooper" and ascensionstatus() == "Hardcore",
 		task = tasks.do_8bit_realm,
 	}
-
-	if highskill_at_run then
-		local day1spleenfam = "Rogue Program"
-		local day1spleenfam_macro_function = macro_stasis
-		local day1spleenfam_buffs = { "The Moxious Madrigal", "The Magical Mojomuscular Melody" }
-		local day1spleenfam_minmp = 5
-		if have_item("spangly mariachi pants") and spleen() < 12 then
-			day1spleenfam = "Bloovian Groose"
-			day1spleenfam_macro_function = macro_autoattack
-			day1spleenfam_buffs = { "The Moxious Madrigal", "Power Ballad of the Arrowsmith" }
-			day1spleenfam_minmp = 10
-		end
-		if spleen() >= 12 and mp() >= 35 then
-			day1spleenfam = "Mini-Hipster"
-			day1spleenfam_macro_function = macro_stasis
-			day1spleenfam_buffs = { "The Moxious Madrigal", "The Magical Mojomuscular Melody" }
-			day1spleenfam_minmp = 30
-		end
-		if fullness() <= 1 and (ascension["familiar.organ grinder.bit types"] or {}).boss then
-			day1spleenfam = "Knob Goblin Organ Grinder"
-			day1spleenfam_macro_function = macro_autoattack
-			day1spleenfam_buffs = { "The Moxious Madrigal", "Power Ballad of the Arrowsmith" }
-			day1spleenfam_minmp = 10
-		end
-
-		local function count_mixed_swill()
-			return count("blended frozen swill") + count("fruity girl swill") + count("tropical swill")
-		end
-
-		if not have_item("spangly mariachi pants") and familiarid() ~= 152 then
-			async_get_page("/familiar.php", { pwd = get_pwd(), action = "unequip", famid = 152 })
-		end
-
-		add_task {
-			when = not have_item("shining halo"),
-			task = {
-				message = "summon shining halo",
-				action = function()
-					script.ensure_mp(2)
-					async_post_page("/campground.php", { preaction = "summoncliparts" })
-					async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "01", clip2 = "06", clip3 = "06" })
-					did_action = have_item("shining halo")
-				end
-			}
-		}
-
-		add_task {
-			when = not have_item("studded leather boxer shorts"),
-			task = {
-				message = "buying studded leather boxer shorts",
-				action = function()
-					buy_item("studded leather boxer shorts", "z")
-					did_action = have_item("studded leather boxer shorts")
-				end
-			}
-		}
-
-		-- consumption
-
-		add_task {
-			-- TODO: do it only on day 1, revamp day 2+ eating?
-			when = not ascension["fortune cookie numbers"] and fullness() <= 2,
-			task = {
-				message = "eat fortune cookie",
-				action = function()
-					if not have_item("fortune cookie") then
-						buy_item("fortune cookie", "m")
-					end
-					set_result(eat_item("fortune cookie")())
-					did_action = ascension["fortune cookie numbers"]
-				end
-			}
-		}
-
-		add_task {
-			when = have_item("badass pie") and level() >= 4 and level() < 6 and fullness() <= 1,
-			task = {
-				message = "eat badass pie",
-				action = function()
-					eat_item("badass pie")
-					did_action = fullness() >= 2
-				end
-			}
-		}
-
-		local function drink_swill()
-			if drunkenness() + 4 > estimate_max_safe_drunkenness() then
-				critical "Too drunk to safely drink mixed swill"
-			end
-			script.ensure_buffs { "Ode to Booze" }
-			script.ensure_buff_turns("Ode to Booze", 4)
-			if have_item("blended frozen swill") then
-				set_result(drink_item("blended frozen swill"))
-			elseif have_item("fruity girl swill") then
-				set_result(drink_item("fruity girl swill"))
-			elseif have_item("tropical swill") then
-				set_result(drink_item("tropical swill"))
-			end
-		end
-
-		add_task {
-			when = (daysthisrun() == 1) and drunkenness() <= 4 and count_mixed_swill() >= 2,
-			task = {
-				message = "drink swill day 1",
-				action = function()
-					drink_swill()
-					if drunkenness() <= 4 then
-						drink_swill()
-					end
-					did_action = drunkenness() >= 5
-				end
-			}
-		}
-
-		add_task {
-			when = (daysthisrun() == 1) and drunkenness() <= 10 and count_mixed_swill() >= 1 and count("distilled fortified wine") >= 2,
-			task = {
-				message = "drink rest for day 1",
-				action = function()
-					drink_swill()
-					for i = 1, 10 do
-						if drunkenness() < estimate_max_safe_drunkenness() then
-							script.ensure_buffs { "Ode to Booze" }
-							set_result(drink_item("distilled fortified wine"))
-						end
-					end
-					did_action = drunkenness() == estimate_max_safe_drunkenness()
-				end
-			}
-		}
-
-		add_task {
-			when = (daysthisrun() == 1) and drunkenness() <= 12 and have_item("Typical Tavern swill"),
-			task = {
-				message = "mix swill booze",
-				action = function()
-					for i = 1, 5 do
-						script.ensure_mp(10)
-						cast_skillid(5014, 1) -- advanced cocktailcrafting
-					end
-					local c = count_mixed_swill()
-					if have_item("magical ice cubes") then
-						set_result(mix_items("Typical Tavern swill", "magical ice cubes"))
-					elseif have_item("little paper umbrella") then
-						set_result(mix_items("Typical Tavern swill", "little paper umbrella"))
-					elseif have_item("coconut shell") then
-						set_result(mix_items("Typical Tavern swill", "coconut shell"))
-					end
-					if count_mixed_swill() > c then
-						did_action = true
-					end
-				end
-			}
-		}
-
-		add_task {
-			when = (daysthisrun() == 1) and fullness() <= estimate_max_fullness() - 6 and (have("Hell ramen") or have_item("Hell broth") or have_item("hellion cube")),
-			task = {
-				message = "eat hell ramen day 1",
-				action = function()
-					if have_item("Hell ramen") then
-						local a = advs()
-						set_result(eat_item("Hell ramen"))
-						did_action = (advs() > a)
-					else
-						result, resulturl, did_action = script.make_reagent_pasta()
-					end
-				end
-			}
-		}
-
-		-- adventuring
-
-		add_task {
-			when = not cached_stuff.mox_guild_is_open,
-			task = function()
-				async_get_page("/guild.php", { place = "challenge" })
-				local guildpt = get_page("/guild.php")
-				if guildpt:match("scg") then
-					cached_stuff.mox_guild_is_open = true
-					return {
-						message = "already opened guild store",
-						action = function() did_action = true end,
-					}
-				else
--- 					if not quest("Suffering For His Art") then
--- 						async_get_page("/town_wrong.php", { place = "artist" })
--- 						async_post_page("/town_wrong.php", { place = "artist", getquest = 1 })
--- 					end
-					script.maybe_ensure_buffs { "Cat-Alyzed" }
-					return {
-						message = "do mox guild quest",
-						fam = day1spleenfam,
-						buffs = day1spleenfam_buffs,
-						minmp = day1spleenfam_minmp,
-						action = adventure {
-							zoneid = 112,
-							macro_function = day1spleenfam_macro_function,
-							noncombats = {
-								["Now's Your Pants!  I Mean... Your Chance!"] = "Yoink!",
-								["Aww, Craps"] = "Walk away",
-								["Dumpster Diving"] = "Punch the hobo",
-								["The Entertainer"] = "Introduce them to avant-garde",
-								["Under the Knife"] = "Umm, no thanks.  Seriously.",
-								["Please, Hammer"] = "&quot;Sure, I'll help.&quot;",
-							}
-						}
-					}
-				end
-			end
-		}
-
-		add_task {
-			when = cached_stuff.mox_guild_is_open and not cached_stuff.used_all_still_charges and not have_item("tonic water"),
-			task = {
-				message = "distill tonic water",
-				action = function()
-					result, resulturl = post_page("/guild.php", { place = "still" })
-					local lights = tonumber(get_result():match("black readout with ([0-9]*) bright green lights on it"))
-					if lights and (daysthisrun() == 1 or lights > 6) then
-						if not have_item("soda water") then
-							buy_item("soda water", "m", 1)
-						end
-						if not have_item("soda water") then
-							critical "Failed to buy soda water"
-						end
-						async_post_page("/guild.php", { action = "stillfruit", whichitem = get_itemid("soda water"), quantity = 1 })
-					end
-					if not have_item("tonic water") then
-						cached_stuff.used_all_still_charges = true
-					end
-					did_action = true
-				end
-			}
-		}
-
-		add_task {
-			when = quest("Ooh, I Think I Smell a Bat."),
-			task = {
-				message = "do bat quest",
-				nobuffing = true,
-				action = function()
-					script.maybe_ensure_buffs { "Spirit of Garlic" }
-					return script.do_boss_bat(macro_noodlecannon, 20)
-				end,
-			}
-		}
-
-		add_task {
-			when = not have_item("Knob Goblin encryption key") and
-				not unlocked_knob(),
-			task = {
-				message = "get encryption key",
-				fam = day1spleenfam,
-				buffs = day1spleenfam_buffs,
-				minmp = day1spleenfam_minmp,
-				action = adventure {
-					zoneid = 114,
-					macro_function = day1spleenfam_macro_function,
-					noncombats = {
-						["Up In Their Grill"] = "Grab the sausage, so to speak.  I mean... literally.",
-						["Knob Goblin BBQ"] = "Kick the chef",
-						["Ennui is Wasted on the Young"] = "&quot;Since you're bored, you're boring.  I'm outta here.&quot;",
-						["Malice in Chains"] = "Plot a cunning escape",
-						["When Rocks Attack"] = "&quot;Sorry, gotta run.&quot;",
-					}
-				},
-				after_action = function()
-					if have_item("Knob Goblin encryption key") then
-						did_action = true
-					end
-				end
-			}
-		}
-
-		add_task {
-			when = quest("Ooh, I Think I Smell a Rat"),
-			task = {
-				message = "do rat cellar",
-				action = function()
-					return script.do_tavern({ "Scarecrow with Boss Bat britches", "Rogue Program" }, 20, macro_noodlecannon)
-				end
-			}
-		}
-
-		add_task {
-			when = quest("Trial By Friar"),
-			task = {
-				message = "do friars quest",
-				action = script.do_friars,
-			}
-		}
-
-		add_task {
-			when = quest_text("this is Azazel in Hell") and (daysthisrun() == 1 or (daysthisrun() <= 2 and ascensionstatus() == "Hardcore")),
-			task = {
-				message = "do azazel quest",
-				action = script.do_azazel,
-			}
-		}
-
-		-- TODO: automate
-		add_task {
-			when = DD_keys < 1 and level() >= 6,
-			task = {
-				message = "get DD key",
-				action = function()
-					stop "TODO: get DD key day 1"
-				end
-			}
-		}
-
-		add_task {
-			when = quest("Looking for a Larva in All the Wrong Places"),
-			task = {
-				message = "find larva",
-				fam = day1spleenfam,
-				buffs = day1spleenfam_buffs,
-				minmp = day1spleenfam_minmp,
-				action = adventure {
-					zoneid = 15,
-					macro_function = day1spleenfam_macro_function,
-					noncombats = {
-						["Arboreal Respite"] = "Explore the stream",
-						["Consciousness of a Stream"] = "March to the marsh",
-					}
-				}
-			}
-		}
-
-		add_task {
-			when = not cached_stuff.unlocked_manor and not have_item("Spookyraven library key"),
-			task = function()
-				local townright = get_page("/town_right.php")
-				if townright:contains("The Haunted Pantry") then
-					return {
-						message = "unlock manor",
-						fam = day1spleenfam,
-						buffs = day1spleenfam_buffs,
-						minmp = day1spleenfam_minmp,
-						action = adventure {
-							zoneid = 113,
-							macro_function = day1spleenfam_macro_function,
-							noncombats = {
-								["Oh No, Hobo"] = "Give him a beating",
-								["Trespasser"] = "Tackle him",
-								["The Singing Tree"] = "&quot;No singing, thanks.&quot;",
-								["The Baker's Dilemma"] = "&quot;Sorry, I'm busy right now.&quot;",
-							}
-						},
-						after_action = function()
-							if get_result():contains("The Manor in Which You're Accustomed") then
-								did_action = true
-							end
-						end
-					}
-				else
-					cached_stuff.unlocked_manor = true
-					return {
-						message = "already unlocked manor",
-						action = function() did_action = true end,
-					}
-				end
-			end
-		}
-
-		add_task {
-			prereq = not have_item("Spookyraven library key"),
-			f = script.get_library_key,
-		}
-
-		add_task {
-			when = not cached_stuff.unlocked_upstairs and not have_item("Spookyraven ballroom key"),
-			task = function()
-				local manor = get_page("/manor.php")
-				if not manor:match("Stairs Up") then
-					return {
-						message = "unlock upstairs",
-						fam = "Scarecrow with Boss Bat britches",
-						buffs = { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic", "A Few Extra Pounds", "The Moxious Madrigal" },
-						bonus_target = { "noncombat" },
-						minmp = 30,
-						action = adventure {
-							zoneid = 104,
-							macro_function = macro_noodlecannon,
-							choice_function = function(advtitle, choicenum)
-								if advtitle == "Take a Look, it's in a Book!" then
-									return "", 99
-								elseif advtitle == "Melvil Dewey Would Be Ashamed" then
-									return "Gaffle the purple-bound book"
-								end
-							end
-						},
-					}
-				else
-					cached_stuff.unlocked_upstairs = true
-					return {
-						message = "already unlocked upstairs",
-						action = function() did_action = true end,
-					}
-				end
-			end
-		}
-	end
 
 	if challenge == "fist" and have_item("Game Grid token") and not have_item("finger cuffs") and not (have("spangly sombrero") and have_item("spangly mariachi pants")) then
 		return script.finger_cuffs()
@@ -2857,6 +2467,7 @@ endif
 
 	add_task {
 		when = not cached_stuff.learned_lab_password and
+			not cached_stuff.failed_to_learn_lab_password and
 			have_item("Cobb's Knob lab key") and
 			can_wear_weapons() and
 			(can_disguise_as_guard() or (not quest("The Goblin Who Wouldn't Be King") and not challenge)),
@@ -2869,11 +2480,18 @@ endif
 					nobuffing = true,
 					action = function() did_action = true end,
 				}
-			else
+			elseif can_disguise_as_guard() then
 				return {
 					message = "learn knob lab password",
 					action = adventure { zoneid = 257 },
 					equipment = { hat = "Knob Goblin elite helm", weapon = "Knob Goblin elite polearm", pants = "Knob Goblin elite pants" },
+				}
+			else
+				cached_stuff.failed_to_learn_lab_password = true
+				return {
+					message = "cannot learn knob lab password",
+					nobuffing = true,
+					action = function() did_action = true end,
 				}
 			end
 		end
@@ -2921,7 +2539,7 @@ endif
 	}
 
 	add_task {
-		prereq = (classid() == 3 or classid() == 4) and session["__script.opened myst guild store"] ~= "yes",
+		prereq = (classid() == 3 or classid() == 4) and session["__script.opened myst guild store"] ~= "yes" and meat() >= 200,
 		f = script.open_myst_guildstore,
 	}
 
@@ -2967,7 +2585,8 @@ endif
 	}
 
 	add_task {
-		prereq = quest("Ooh, I Think I Smell a Rat") and challenge ~= "fist",
+		prereq = quest("Ooh, I Think I Smell a Rat") and
+			challenge ~= "fist",
 		f = script.do_tavern,
 	}
 
@@ -2997,7 +2616,7 @@ endif
 	}
 
 	add_task {
-		prereq = challenge == "fist" and whichday == 1 and fullness() <= 1 and drunkenness() == 0 and level() < 6,
+		prereq = challenge == "fist" and whichday == 1 and fullness() <= 1 and drunkenness() == 0 and level() < 6 and (mp() >= 50 or advs() <= 20),
 		message = "consuming day 1 fist, first time",
 		action = function()
 			local f = fullness()
@@ -3187,7 +2806,9 @@ endwhile
 	}
 
 	add_task {
-		when = quest("Ooh, I Think I Smell a Bat.") and challenge ~= "fist",
+		when = quest("Ooh, I Think I Smell a Bat.") and
+			challenge ~= "fist" and
+			(not session["__script.no stench resist"] or have_item("Knob Goblin harem veil")),
 		task = {
 			message = "do bat quest",
 			nobuffing = true,
@@ -3233,7 +2854,8 @@ endwhile
 
 	add_task {
 		prereq = quest("The Goblin Who Wouldn't Be King") and
-			have_harem_outfit(),
+			have_harem_outfit() and
+			unlocked_knob(),
 		f = function()
 			script.wear { hat = "Knob Goblin harem veil", pants = "Knob Goblin harem pants" }
 			if have_buff("Knob Goblin Perfume") then
@@ -3256,6 +2878,23 @@ endwhile
 				end
 			end
 		end,
+	}
+
+	add_task {
+		when = quest("The Goblin Who Wouldn't Be King") and
+			session["__script.no stench resist"] and
+			not have_harem_outfit() and
+			unlocked_knob(),
+		task = {
+			message = "get harem outfit",
+			fam = "Slimeling",
+			buffs = { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini" },
+			minmp = 25,
+			action = adventure {
+				zone = "Cobb's Knob Harem",
+				macro_function = macro_ppnoodlecannon,
+			}
+		},
 	}
 
 	add_task {
@@ -3306,6 +2945,7 @@ endwhile
 		prereq = quest("The Goblin Who Wouldn't Be King") and
 			challenge == "fist" and
 			not have_harem_outfit() and
+			unlocked_knob() and
 			can_yellow_ray(),
 		f = function()
 			script.go("yellow raying harem girl", 259, make_yellowray_macro("harem girl"), {}, {}, "He-Boulder", 15)
@@ -3316,6 +2956,7 @@ endwhile
 		prereq = function() return quest("The Goblin Who Wouldn't Be King") and
 			challenge == "jarlsberg" and
 			not have_harem_outfit() and
+			unlocked_knob() and
 			ensure_yellow_ray() end,
 		f = function()
 			script.go("yellow raying harem girl", 259, make_yellowray_macro("harem girl"), {}, {}, "He-Boulder", 15)
@@ -3855,7 +3496,7 @@ endif
 
 	add_task {
 		prereq = quest("Ooh, I Think I Smell a Bat.") and
-			challenge == "fist",
+			(not session["__script.no stench resist"] or have_item("Knob Goblin harem veil")),
 		f = script.do_boss_bat,
 	}
 
@@ -3928,6 +3569,7 @@ endif
 		add_task {
 			prereq = want_shore() and
 				not unlocked_island() and
+				unlocked_beach() and
 				turns_to_next_sr >= 5 and
 				not have_frat_war_outfit(),
 			f = script.get_dinghy,
@@ -4257,11 +3899,6 @@ endif
 	add_task {
 		prereq = mainstat_type("Muscle") and not have_item("Spookyraven gallery key") and level() < 13,
 		f = script.do_muscle_powerleveling,
-	}
-
-	add_task {
-		prereq = quest("Ooh, I Think I Smell a Bat.") and challenge == "fist",
-		f = script.do_boss_bat,
 	}
 
 	add_task {
@@ -5260,7 +4897,7 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 		path_is_ok = false
 	end
 	if not path_is_ok then
-		path_support_text = string.format([[<p style="color: darkorange">You are currently in %s. This is not a well supported path for the ascension script.</p>]], pathdesc)
+		path_support_text = string.format([[<p style="color: darkorange">You are currently in %s (%s). This is not a well supported path for the ascension script.</p>]], pathdesc, playerclassname())
 	else
 		path_support_text = string.format([[<p>You are currently in %s.</p>]], pathdesc)
 	end

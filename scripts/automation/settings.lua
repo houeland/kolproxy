@@ -10,7 +10,8 @@ function get_ascension_automation_settings(want_bonus)
 				have_item("Brimstone Bludgeon") or
 				have_item("Brimstone Bunker") or
 				have_item("right bear arm") or
-				have_item("left bear arm")
+				have_item("left bear arm") or
+				session["__script.no halos"]
 			),
 		ignore_buffs = {
 			["A Fake Kolproxy Buff To Ignore"] = true,

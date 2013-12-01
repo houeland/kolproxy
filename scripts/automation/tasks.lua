@@ -25,6 +25,13 @@ function get_automation_tasks(script, cached_stuff)
 				async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "04", clip2 = "04", clip3 = "04" })
 			end
 
+			if not have_item("shining halo") then
+				print("SCRIPT WARNING: failed to summon clip art items")
+				session["__script.no halos"] = true
+				did_action = true
+				return
+			end
+
 			if not have_item("shining halo") or not have_item("Ur-Donut") or not have_item("bucket of wine") then
 				print(have("shining halo"), have_item("Ur-Donut"), have_item("bucket of wine"))
 				critical "Error getting clip art items"

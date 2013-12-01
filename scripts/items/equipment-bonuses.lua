@@ -131,7 +131,7 @@ add_automator("all pages", function()
 	end
 	for _, itemid in pairs(equipment()) do
 		if not maybe_get_itemname(itemid) and not get_cached_item_bonuses(itemid) then
-			ensure_cached_item_bonuses(item)
+			ensure_cached_item_bonuses(itemid)
 		end
 	end
 end)
