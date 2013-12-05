@@ -4884,14 +4884,15 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 		return get_page("/main.php")
 	end
 
-	local ok_paths = { [0] = true, ["Way of the Surprising Fist"] = true, ["Avatar of Boris"] = true, [10] = true, ["Avatar of Jarlsberg"] = true, ["BIG!"] = true }
+	local ok_paths = { [0] = true, ["Avatar of Boris"] = true, [10] = true, ["Avatar of Jarlsberg"] = true, ["BIG!"] = true }
+-- ["Way of the Surprising Fist"] = true -- needs updates
 	local path_support_text = ""
 	local pathdesc = string.format([[%s %s]], ascensionstatus(), ascensionpathname())
 	if ascensionpathid() == 0 then
 		pathdesc = ascensionstatus()
 	end
 	local path_is_ok = true
-	if ascensionpath("Class Act II: A Class For Pigs") and playerclass("Pastamancer") then
+	if ascensionpath("Class Act II: A Class For Pigs") and (playerclass("Pastamancer") or playerclass("Accordion Thief")) then
 		path_is_ok = true
 	elseif (not ok_paths[ascensionpathid()] and not ok_paths[ascensionpathname()]) or (ascensionpathid() == 0 and ascensionstatus() ~= "Hardcore") then
 		path_is_ok = false

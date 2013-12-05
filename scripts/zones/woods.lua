@@ -123,6 +123,23 @@ add_processor("/choice.php", function()
 	end
 end)
 
+add_warning {
+	message = "There's a semirare soon, be careful not to lose it by unlocking the hidden city.",
+	zone = "The Hidden Temple",
+	type = "extra",
+	when = "ascension",
+	check = function()
+		return semirare_in_next_N_turns(3)
+	end,
+}
+
+add_extra_ascension_warning("use item: stone wool", function()
+	-- TODO: this is not a big problem since it gives 5 turns, remove warning?
+	if semirare_in_next_N_turns(3) then
+		return "There's a semirare soon, be careful not to lose it by unlocking the hidden city.", "stone wool usage"
+	end
+end)
+
 -- friars
 
 add_itemdrop_counter("hellion cube", function(c)

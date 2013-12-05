@@ -6,13 +6,38 @@ add_choice_text("Finger-Lickin'... Death.", { -- choice adventure number: 4
 
 -- shore
 
-add_ascension_warning("/shore.php", function()
-	if params.whichtrip then
-		if level() >= 11 and not have_item("forged identification documents") and not have_item("your father's MacGuffin diary") then
-			return "You don't have the forged identification documents.", "shoring without forged identification documents"
+add_warning {
+	message = "You might be shoring over a semirare.",
+	path = "/choice.php",
+	type = "warning",
+	check = function()
+		if tonumber(params.whichchoice) == 793 then
+			local opt = tonumber(params.option)
+			if opt and opt >= 1 and opt <= 3 then
+				if ascensionpath("Way of the Surprising Fist") then
+					return semirare_in_next_N_turns(5)
+				else
+					return semirare_in_next_N_turns(3)
+				end
+			end
 		end
-	end
-end)
+	end,
+}
+
+add_warning {
+	message = "You don't have the forged identification documents.",
+	path = "/choice.php",
+	type = "warning",
+	when = "ascension",
+	check = function()
+		if tonumber(params.whichchoice) == 793 then
+			local opt = tonumber(params.option)
+			if opt and opt >= 1 and opt <= 3 then
+				return level() >= 11 and not have_item("forged identification documents") and not have_item("your father's MacGuffin diary")
+			end
+		end
+	end,
+}
 
 add_automator("/beach.php", function()
 	if not setting_enabled("automate simple tasks") then return end
@@ -28,11 +53,10 @@ add_automator("/beach.php", function()
 	end
 end)
 
-add_automator("/shore.php", function()
-	if not setting_enabled("automate simple tasks") then return end
-	if text:contains([[MacGuffin diary]]) then
-		text, url = get_page("/diary.php", { whichpage = 1 }) -- Should it display the shore page or the diary page?
-	end
+add_ascension_assistance(function() return have_item("your father's MacGuffin diary") end, function()
+	-- TODO: Show something first time to show this actually happened
+	async_get_page("/diary.php", { whichpage = 1 })
+	async_get_page("/diary.php", { textversion = 1 })
 end)
 
 -- desert/oasis

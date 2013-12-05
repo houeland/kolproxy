@@ -155,13 +155,14 @@ add_always_adventure_warning(function()
 	end
 end)
 
-add_always_warning("/shore.php", function()
-	if params.whichtrip then
-		SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info(turnsthisrun())
-		for _, x in ipairs(good_numbers) do
-			if x >= 0 and x <= 2 then
-				return "You might be shoring over a semirare", "shoring over semirare"
-			end
+function semirare_in_next_N_turns(N)
+	local SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info()
+	local result = nil
+	for _, x in ipairs(good_numbers) do
+		if x < N then
+			return true
 		end
+		result = false
 	end
-end)
+	return result
+end
