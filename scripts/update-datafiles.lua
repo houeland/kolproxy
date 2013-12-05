@@ -149,6 +149,7 @@ local function parse_mafia_bonuslist(bonuslist)
 
 		["Familiar Weight"] = "Familiar Weight",
 
+		["Smithsness"] = "Smithsness",
 		-- TODO: add more modifiers
 	}
 

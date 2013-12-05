@@ -57,6 +57,20 @@ function estimate_modifier_bonuses()
 	-- TODO: Separate between combat and underwater combat?
 	bonuses = bonuses + make_bonuses_table { ["Monsters will be more attracted to you"] = estimate_underwater_combat() }
 
+	-- TODO: Estimate as part of item bonuses?
+	if have_equipped_item("Sheila Take a Crossbow") then
+		bonuses = bonuses + make_bonuses_table { ["Combat Initiative"] = bonuses["Smithsness"] * 1 }
+	end
+	if have_equipped_item("A Light that Never Goes Out") then
+		bonuses = bonuses + make_bonuses_table { ["Item Drops from Monsters"] = bonuses["Smithsness"] * 1 }
+	end
+	if have_equipped_item("Half a Purse") then
+		bonuses = bonuses + make_bonuses_table { ["Meat from Monsters"] = bonuses["Smithsness"] * 2 }
+	end
+	if have_equipped_item("Hand in Glove") then
+		bonuses = bonuses + make_bonuses_table { ["Monster Level"] = bonuses["Smithsness"] * 1 }
+	end
+
 	return bonuses
 end
 
