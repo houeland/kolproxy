@@ -640,11 +640,23 @@ function compact_charpane_hpmp_lines(lines)
 	else
 		table.insert(lines, string.format([[MP: <b>%s</b><br>]], format_hpmp(mp(), maxmp())))
 	end
+	if playerclass("Seal Clubber") then
+		table.insert(lines, string.format([[Fury: <b>%s</b><br>]], fury()))
+	end
+	if playerclass("Sauceror") then
+		table.insert(lines, string.format([[Soulsauce: <b>%s</b><br>]], soulsauce()))
+	end
 	table.insert(lines, string.format([[Meat: <b>%s</b><br>]], format_integer(meat())))
 	table.insert(lines, string.format([[Turns: <b>%s</b> <span class="tiny">(%s played, day %s)</span><br>]], advs(), turnsthisrun(), daysthisrun()))
 end
 
 function full_charpane_hpmp_lines(lines)
+	if playerclass("Seal Clubber") then
+		table.insert(lines, string.format([[<center>Fury: <b>%d gal.</b></center>]], fury()))
+	end
+	if playerclass("Sauceror") then
+		table.insert(lines, string.format([[<center>Soulsauce: <b>%s</b></center>]], soulsauce()))
+	end
 	table.insert(lines, [[<table cellpadding=3 align=center>]])
 	table.insert(lines, string.format([[<tr><td align=center><img src="http://images.kingdomofloathing.com/itemimages/hp.gif" class=hand title="Hit Points" alt="Hit Points"><br><span class=black>%s</span></td>]], format_hpmp(hp(), maxhp())))
 	if ascensionpath("Zombie Slayer") then
@@ -718,6 +730,9 @@ function compact_charpane_equipment_lines(lines)
 end
 
 function compact_charpane_familiar_lines(lines, fams)
+	if pastathrallid() ~= 0 then
+		table.insert(lines, string.format("<center>%s</center>", describe_pastathrall(pastathrallid())))
+	end
 	if familiarid() ~= 0 then
 		table.insert(lines, "<center>" .. get_familiar_grid_line(fams) .. "</center>")
 		table.insert(lines, string.format([[<center>%s lbs.<!-- kolproxy charpane familiar text area --></center>]], buffedfamiliarweight()))
@@ -731,6 +746,9 @@ function compact_charpane_familiar_lines(lines, fams)
 end
 
 function full_charpane_familiar_lines(lines, fams)
+	if pastathrallid() ~= 0 then
+		table.insert(lines, string.format("<center><font size=2>%s</font></center>", describe_pastathrall(pastathrallid())))
+	end
 	if familiarid() ~= 0 then
 		table.insert(lines, "<center>" .. get_familiar_grid_line(fams) .. "</center>")
 		table.insert(lines, string.format([[<center><font size=2>%s lbs.<!-- kolproxy charpane familiar text area --></font></center>]], buffedfamiliarweight()))

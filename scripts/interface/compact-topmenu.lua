@@ -61,7 +61,7 @@ html, body{
 <body style='margin:0px;'>
 	<div class='centerBox outerContainer'>
 		<div class='centerBox innerContainer'>
-			<div class='abc a'><span class='title'><a target='mainpane' href='inventory.php?which=1'>inv</a><span class="sep"></span><a target='mainpane' href='inventory.php?which=2'>ent</a><span class="sep"></span><a target='mainpane' href='inventory.php?which=3'>ory</a></span><br><a target='mainpane' href='inventory.php?which=4'>fav</a> <a target='mainpane' href='craft.php'>craft</a><br><a target='mainpane' href='sellstuff.php'>sell</a></div>
+			<div class='abc a'><span class='title'><a target='mainpane' href='inventory.php?which=1'>inv</a><span class="sep"></span><a target='mainpane' href='inventory.php?which=2'>ent</a><span class="sep"></span><a target='mainpane' href='inventory.php?which=3'>ory</a></span><br><a target='mainpane' href='inventory.php?which=f0'>fav</a> <a target='mainpane' href='craft.php'>craft</a><br><a target='mainpane' href='sellstuff.php'>sell</a></div>
 
 			<div class='abc'><span class='title'><a target='mainpane' href='main.php'>main</a> <a target='mainpane' href='messages.php'>mess</a></span><br><a target='mainpane' href='campground.php'>ca</a><span class="sep"></span><a target='mainpane' href='campground.php?action=telescopelow'>mp</a> <a target='mainpane' href='account.php'>opt</a> <a target='mainpane' href='custom-settings?pwd=]] .. session.pwd .. [['>kp</a><br><a target='mainpane' href='questlog.php?which=1'>qu</a><span class="sep"></span><a target='mainpane' href='questlog.php?which=4'>est</a> <a target='mainpane' href='skills.php'>skills</a> </div>
 

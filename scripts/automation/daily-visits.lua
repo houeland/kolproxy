@@ -178,8 +178,6 @@ function do_daily_visits()
 	dopage("/choice.php", { whichchoice = 585, pwd = pwd, option = 1, action = "leave" })
 
 	if setting_enabled("automate daily visits/do lazy aftercore daily tasks") and ascensionstatus("Aftercore") then
-		-- TODO: use still
-
 		dopage("/campground.php", { preaction = "summonsnowcone", quantity = 3 })
 		dopage("/campground.php", { preaction = "summonstickers", quantity = 3 })
 		dopage("/campground.php", { preaction = "summonsugarsheets", quantity = 3 })
@@ -199,6 +197,7 @@ function do_daily_visits()
 		end
 
 		dopage("/campground.php", { preaction = "summonradlibs", quantity = 3 })
+		dopage("/campground.php", { preaction = "summonsmithsness", quantity = 3 })
 
 		dopage("/campground.php", { preaction = "summonhilariousitems" })
 		dopage("/campground.php", { preaction = "summonspencersitems" })
@@ -227,6 +226,8 @@ function do_daily_visits()
 		queue_page_result(cast_skill("Request Sandwich"))
 		queue_page_result(cast_skill("Request Sandwich"))
 		queue_page_result(cast_skill("Request Sandwich"))
+
+		-- TODO: use still
 	end
 
 	for _, x in ipairs(daily_items) do

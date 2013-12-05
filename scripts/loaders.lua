@@ -32,6 +32,8 @@ load_file("item", "items/sugar-sheet.lua")
 load_file("item", "items/pantsgiving.lua")
 load_file("interface", "items/beararms.lua")
 
+load_file("item", "classes/pastathrall.lua")
+
 load_file("familiar", "familiars/butt-away.lua")
 load_file("familiar", "familiars/llama.lua")
 load_file("familiar", "familiars/pixie.lua")
@@ -147,7 +149,7 @@ load_file("interface", "other/twillo/ml-display.lua")
 load_file("interface", "other/twillo/init-display.lua")
 load_file("interface", "other/twillo/meat-display.lua")
 
-load_file("interface", "other/bmaher/compact-topmenu.lua")
+load_file("interface", "interface/compact-topmenu.lua")
 
 load_file("interface", "other/demon_llama/monster-data.lua")
 load_file("interface", "other/demon_llama/phylum-treasures.lua")
@@ -158,11 +160,11 @@ load_file("warning", "other/demon_llama/dictionary-warning.lua")
 
 load_file("interface", "other/nion/basement.lua")
 
-load_file("interface", "other/chickencha/lvl12.lua")
-load_file("interface", "other/chickencha/chess.lua")
-load_file("interface", "other/chickencha/chibibuddy.lua")
+load_file("automation", "automation/turn-in-war-items.lua")
+load_file("automation", "automation/chess-puzzle.lua")
+load_file("interface", "items/chibibuddy.lua")
 
-load_file("interface", "other/superbachelor/blank-out.lua")
+load_file("interface", "items/blank-out.lua")
 
 load_file("chat", "interface/add-log-notes.lua")
 

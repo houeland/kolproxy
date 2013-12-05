@@ -136,8 +136,6 @@ function setup_functions()
 		function turnsthisrun() return tonumber(status().turnsthisrun) end
 		function familiarid() return tonumber(status().familiar) end
 		function familiarpicture() return status().familiarpic end
-		function familiarname()
-		end
 		function familiar(name)
 			return familiarid() == get_familiarid(name)
 		end
@@ -285,6 +283,10 @@ function setup_functions()
 		end
 		function api_flag_config() return status().flag_config end
 		function autoattack_is_set() return tonumber(status().flag_config.autoattack) ~= 0 end
+		function pastathrallid() return tonumber(status().pastathrall) or 0 end
+		function pastathralllevel() return tonumber(status().pastathralllevel) or 0 end
+		function fury() return tonumber(status().fury) or 0 end
+		function soulsauce() return tonumber(status().soulsauce) or 0 end
 
 		function substats_for_level(x)
 			if x == 1 then
