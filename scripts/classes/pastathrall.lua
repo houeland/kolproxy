@@ -24,3 +24,17 @@ function describe_pastathrall(thrallid)
 		return string.format("Lvl. %d {thrallid:%d???}", pastathralllevel(), thrallid)
 	end
 end
+
+local thrall_name_lookup = {}
+for id, x in ipairs(thralls) do
+	thrall_name_lookup[x.name] = id
+end
+
+function pastathrall(name)
+	local id = thrall_name_lookup[name]
+	if id then
+		return pastathrallid() == id
+	else
+		error("Unknow pasta thrall: " .. tostring(name))
+	end
+end

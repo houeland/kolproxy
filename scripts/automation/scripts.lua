@@ -382,6 +382,7 @@ function get_automation_scripts(cached_stuff)
 				print("  burning excess MP from " .. mp() .. " down to " .. downto)
 			end
 			local toburn = mp() - downto
+			infoline("burning " .. toburn .. " excess MP")
 -- 			print("burn mp", toburn, hundreds, "level", level())
 			if have_buff("Salamanderenity") and buffturns("Salamanderenity") < hundreds and toburn >= 5 then
 				cast_skillid(65, math.floor(toburn / 5)) -- salamander
@@ -534,7 +535,7 @@ function get_automation_scripts(cached_stuff)
 		if mp() < amount + need_extra then
 			local need = amount + need_extra - mp()
 			if show_spammy_automation_events and not recursed then
-				print("  restoring MP to " .. (amount + need_extra) .. "+, need " .. need)
+				infoline("restoring MP to " .. (amount + need_extra) .. "+, need " .. need)
 			end
 			if need > 1000 then
 				stop "Trying to restore more than 1000 MP at once"
@@ -886,7 +887,7 @@ function get_automation_scripts(cached_stuff)
 		local data = datafile("skills")[skillname]
 		buffs[name] = function()
 			if show_spammy_automation_events then
-				print("  casting buff", name, "[current mp: " .. mp() .. "]")
+				infoline("casting buff", name, "[current mp: " .. mp() .. "]")
 			end
 			if spells[name] and spells[name].shrug_first then
 				shrug_buff(spells[name].shrug_first)
@@ -900,7 +901,7 @@ function get_automation_scripts(cached_stuff)
 		local data = spells[name]
 		buffs[name] = function()
 			if show_spammy_automation_events then
-				print("  casting buff", name, "[current mp: " .. mp() .. "]")
+				infoline("casting buff", name, "[current mp: " .. mp() .. "]")
 			end
 			ensure_mp(data.mpcost)
 			if spells[name] and spells[name].shrug_first then
@@ -1421,6 +1422,9 @@ endif
 		end
 		script.wear(towear)
 		script.heal_up()
+		if mp() < minmp then
+			infoline("ensuring " .. minmp .. " MP to fight")
+		end
 		script.ensure_mp(minmp)
 		if finalcheckfunc then
 			finalcheckfunc()
@@ -3230,12 +3234,14 @@ endif
 		local guildpt = get_page("/guild.php")
 		if guildpt:match("scg") then
 			cached_stuff.have_moxie_guild_access = true
-			inform "get tonic water"
-			if challenge ~= "fist" then
-				if count_item("soda water") < 10 then
-					buy_item("soda water", "m", 10)
+			if have_skill("Superhuman Cocktailcrafting") then
+				inform "get tonic water"
+				if challenge ~= "fist" then
+					if count_item("soda water") < 10 then
+						buy_item("soda water", "m", 10)
+					end
+					async_post_page("/guild.php", { action = "stillfruit", whichitem = get_itemid("soda water"), quantity = 10 })
 				end
-				async_post_page("/guild.php", { action = "stillfruit", whichitem = get_itemid("soda water"), quantity = 10 })
 			end
 			did_action = true
 		else

@@ -14,6 +14,9 @@ function estimate_other_init()
 	if moonsign("Vole") then
 		init = init + 20
 	end
+	if pastathrall("Angel Hair Wisp") then
+		init = init + 5 * pastathralllevel()
+	end
 	return init
 end
 

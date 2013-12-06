@@ -75,5 +75,8 @@ function estimate_other_item()
 	if moonsign("Packrat") then
 		item = item + 10
 	end
+	if pastathrall("Spice Ghost") then
+		item = item + 10 + pastathralllevel()
+	end
 	return item
 end

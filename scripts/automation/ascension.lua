@@ -23,12 +23,6 @@ can_change_familiar = nil
 
 ignore_buffing_and_outfit = nil
 
-local function check_for_highskill_run()
-	if classid() == 6 and have_item("astral belt") and moonsign() == "Vole" and current_ascension_number() >= 100 and ascensionpathid() == 0 then
-		--return true
-	end
-end
-
 function softcore_stoppable_action(msg)
 	if stop_on_potentially_unwanted_softcore_actions then
 		stop("Stopping before: " .. tostring(msg))
@@ -46,6 +40,8 @@ local function write_log_line(msg)
 end
 
 local finished = false
+
+local do_debug_infoline = function() end
 
 local function automate_hcnp_day(whichday)
 	reset_error_trace_steps()
@@ -73,6 +69,14 @@ local function automate_hcnp_day(whichday)
 		print(formatted)
 		write_log_line(formatted)
 	end
+
+	function infoline(...)
+		local msg = table.concat({ ... }, " ")
+		add_error_trace_step(msg)
+		print("  " .. msg)
+		write_log_line("  " .. msg)
+	end
+	do_debug_infoline = infoline
 
 	local function can_yellow_ray()
 		return not have_buff("Everything Looks Yellow")
@@ -446,11 +450,6 @@ endif
 				critical("Trying to sniff " .. name .. " in Boris")
 			end
 		end
-	elseif ascensionpathid() == 0 then
-		highskill_at_run = check_for_highskill_run()
-		if not have_skill("Stringozzi Serpent") and have_skill("Cannelloni Cannon") then
-			serpent_action = cannon_action
-		end
 	end
 	if not have_skill("Saucy Salve") then
 		conditional_salve_action = function() return [[
@@ -580,7 +579,7 @@ endif
 	end
 
 	kgs_available = cached_stuff.learned_lab_password and have_item("Cobb's Knob lab key")
-	mmj_available = cached_stuff.mox_guild_is_open and (classid() == 3 or classid() == 4 or (classid() == 6 and level() >= 9))
+	mmj_available = cached_stuff.mox_guild_is_open and (classid() == 3 or classid() == 4 or (classid() == 6 and level() >= 9)) -- TODO: fix
 
 	script.bonus_target {}
 	script.set_runawayfrom(nil)
@@ -1908,7 +1907,7 @@ endif
 	}
 
 	local want_advs = 0
-	if highskill_at_run or challenge then
+	if challenge then
 		want_advs = 5
 	else
 		want_advs = 10
@@ -2534,12 +2533,14 @@ endif
 	}
 
 	add_task {
-		prereq = not cached_stuff.have_moxie_guild_access and (classid() == 5 or classid() == 6) and not have_item("tonic water") and meat() >= 100,
+		prereq = not cached_stuff.have_moxie_guild_access and
+			(playerclass("Disco Bandit") and have_skill("Superhuman Cocktailcrafting")) or playerclass("Accordion Thief") and
+			meat() >= 100,
 		f = script.unlock_guild_and_get_tonic_water,
 	}
 
 	add_task {
-		prereq = (classid() == 3 or classid() == 4) and session["__script.opened myst guild store"] ~= "yes" and meat() >= 200,
+		prereq = (playerclass("Pastamancer") or playerclass("Sauceror")) and session["__script.opened myst guild store"] ~= "yes" and meat() >= 200,
 		f = script.open_myst_guildstore,
 	}
 
@@ -4698,6 +4699,9 @@ use gauze garter, gauze garter
 			end
 
 			if x.minmp then
+				if mp() < x.minmp then
+					infoline("ensuring " .. x.minmp .. " MP to fight")
+				end
 				script.ensure_mp(x.minmp)
 				x.minmp = nil
 			end
@@ -4826,7 +4830,7 @@ end
 
 local function do_loop(whichday)
 	if show_spammy_automation_events then
-		enable_function_debug_output()
+		enable_function_debug_output(true, function(...) do_debug_infoline(...) end)
 	end
 	print("Running automation script, day", whichday)
 -- 	if autoattack_is_set() then

@@ -89,11 +89,11 @@ function cannon_action()
 	if have_skill("Crab Claw Technique") and have_equipped("Rock and Roll Legend") and not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } then
 		return attack_action()
 	end
-	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Concerto de los Muertos", "Bawdy Refrain" }
+	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Bawdy Refrain" }
 end
 
 function elemental_damage_action()
-	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Concerto de los Muertos", "Bawdy Refrain" }
+	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Bawdy Refrain" }
 end
 
 function serpent_action()

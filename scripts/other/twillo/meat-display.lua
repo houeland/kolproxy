@@ -47,5 +47,8 @@ function estimate_other_meat()
 	if moonsign("Wombat") then
 		meat = meat + 20
 	end
+	if pastathrall("Lasagmbie") then
+		meat = meat + 20 + 2 * pastathralllevel()
+	end
 	return meat
 end

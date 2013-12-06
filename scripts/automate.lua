@@ -6,13 +6,13 @@ local automators = {}
 
 function wrapped_function()
 
+reset_pageload_cache()
+
 if not can_read_state() then
 	return text
 end
 
 log_time_interval("automate:initialize", function()
-reset_pageload_cache()
-
 which = path
 if (requestpath == "/login.php" and text == "kolproxy login redirect") or (requestpath == "/afterlife.php" and path == "/main.php" and text == "kolproxy afterlife ascension") then
 	which = "player login"

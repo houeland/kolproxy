@@ -2,16 +2,18 @@ function setup_functions()
 	local cached_api_item_data = {}
 	local function setup_functions_raw()
 		local function_debug_output_enabled = false
+		local debug_infoline = function() end
 		function print_debug(...)
 			if function_debug_output_enabled then
-				print(...)
+				debug_infoline(...)
 			end
 		end
-		function enable_function_debug_output(newstate)
+		function enable_function_debug_output(newstate, f)
 			if newstate == nil then
 				newstate = true
 			end
 			function_debug_output_enabled = newstate
+			debug_infoline = f
 		end
 
 		function status()

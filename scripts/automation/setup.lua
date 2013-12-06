@@ -228,6 +228,10 @@ end
 
 result, resulturl = "?", "?"
 
+function infoline(...)
+	print("  " .. table.concat({ ... }, " "))
+end
+
 function setup_turnplaying_script(tbl)
 	check_supported_table_values(tbl, { "preparation", "macro" }, { "name", "adventuring" })
 	automation_script_details_list[tbl.name] = tbl
@@ -271,6 +275,12 @@ function setup_turnplaying_script(tbl)
 			end
 			local formatted = string.format("[%s] %s (level %s.%02d, %s turns remaining, %s full, %s drunk, %s spleen, %s meat, %s / %s HP, %s)", turnsthisrun(), tostring(msg), level(), level_progress() * 100, advs(), fullness(), drunkenness(), spleen(), meat(), hp(), maxhp(), mpstr)
 			print(formatted)
+		end
+
+		function infoline(...)
+			local msg = table.concat({ ... }, " ")
+			add_error_trace_step(msg)
+			print("  " .. msg)
 		end
 
 		function __set_turnplaying_result(result_, resulturl_, advagain_)
