@@ -672,6 +672,7 @@ function AT_song_duration()
 	elseif have_item("toy accordion") then
 		return 5
 	end
+	return 0
 end
 
 function is_twohanded_weapon(item)

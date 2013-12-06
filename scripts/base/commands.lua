@@ -202,8 +202,15 @@ end
 
 function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
 	if not pt then
-		print("WARNING: handle_adventure_result has no page text.", pt, url, zoneid, macro ~= nil, noncombatchoices ~= nil, specialnoncombatfunction ~= nil)
-		critical("handle_adventure_result has no page text. This should not happen! Network error?")
+		local function desc(what)
+			what = tostring(what)
+			if what:len() > 100 then
+				what = what:sub(1, 90) .. "...len" .. what:len()
+			end
+			return what
+		end
+		print("WARNING: handle_adventure_result has no page text.", desc(pt), desc(url), desc(zoneid), macro ~= nil, noncombatchoices ~= nil, specialnoncombatfunction ~= nil)
+		error("handle_adventure_result has no page text. This should not happen! Network error?")
 	end
 	if url:contains("/fight.php") then
 		local advagain = nil

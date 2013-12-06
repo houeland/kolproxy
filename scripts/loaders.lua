@@ -52,6 +52,7 @@ load_file("familiar", "familiars/drops.lua")
 load_file("familiar", "familiars/steam-powered-cheerleader.lua")
 
 load_file("skill", "skills/summons.lua")
+load_file("skill", "skills/inigo.lua")
 
 load_file("zone", "zones/vip-lounge.lua")
 load_file("zone", "zones/dod.lua")

@@ -611,5 +611,5 @@ function show_item_locations() {
 end)
 
 add_printer("/ascend.php", function()
-	text = text:gsub("Are you ready to take the plunge%?", [[%0 <a href="]] .. href { pwd = session.pwd } .. [[" style="color:green">{ Storage stocking checklist }</a>]])
+	text = text:gsub("Are you ready to take the plunge%?", [[%0 <a href="]] .. href { pwd = session.pwd } .. [[" style="color:green">{ View pre-ascension checklist }</a>]])
 end)

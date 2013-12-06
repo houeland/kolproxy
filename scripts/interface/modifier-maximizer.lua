@@ -74,7 +74,12 @@ function maximize_skill_bonuses(scoref)
 	local options = {}
 
 	for buffname, castname in pairs(datafile("buff-recast-skills")) do
-		if have_skill(castname) then
+		local can_cast = have_skill(castname)
+		if playerclass("Pastamancer") and castname:match("^Bind ") then
+			-- TODO: Add line to switch pasta thrall
+			can_cast = false
+		end
+		if can_cast then
 			local score = scoref(estimate_buff_bonuses(buffname))
 			if score then
 				table.insert(options, { name = castname, effect = buffname, score = score })

@@ -129,7 +129,7 @@ add_warning {
 	type = "extra",
 	when = "ascension",
 	check = function()
-		return semirare_in_next_N_turns(3)
+		return semirare_in_next_N_turns(3) and not semirare_in_next_N_turns(1)
 	end,
 }
 

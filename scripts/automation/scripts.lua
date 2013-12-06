@@ -1039,7 +1039,7 @@ function get_automation_scripts(cached_stuff)
 							end
 						end
 						critical("Too many AT songs to cast buff: " .. buffname)
-					elseif ptf:contains("can't use that skill") and ascensionpath("Way of the Surprising Fist") and not AT_song_duration() then
+					elseif ptf:contains("can't use that skill") and ascensionpath("Way of the Surprising Fist") and AT_song_duration() == 0 then
 						return
 					elseif not ok_to_fail and not ignore_failure[buffname] then
 						critical("Failed to ensure buff: " .. buffname)
@@ -1367,8 +1367,8 @@ endif
 				elseif trailed ~= extra.olfact then
 					stop("Trailing " .. trailed .. " when trying to olfact " .. extra.olfact)
 				end
-				extra.olfact = nil
 			end
+			extra.olfact = nil
 			if extra.choice_function then
 				specialnoncombatfunction = extra.choice_function
 				extra.choice_function = nil

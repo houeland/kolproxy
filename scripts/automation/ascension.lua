@@ -1875,28 +1875,25 @@ endif
 			message = "end of day",
 			nobuffing = true,
 			action = function()
+				if can_drink_normal_booze() and not have_item("bucket of wine") then
+					script.ensure_mp(2)
+					summon_clipart("bucket of wine")
+				end
 				if not have_item("time halo") then
 					script.ensure_mp(2)
 					summon_clipart("time halo")
 				end
 				script.wear { acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" }, acc3 = first_wearable { "gold wedding ring" } }
-
-				if ascension_script_option("overdrink with nightcap") then
-					if can_drink_normal_booze() then
-						script.maybe_ensure_buffs { "Ode to Booze" }
-						if have_buff("Ode to Booze") then
-							script.ensure_buff_turns("Ode to Booze", 10)
-						end
-						if not have_item("bucket of wine") then
-							script.ensure_mp(2)
-							summon_clipart("bucket of wine")
-						end
-						if buffturns("Ode to Booze") >= 10 and have_item("bucket of wine") then
-							set_result(drink_item("bucket of wine"))
-							result = add_message_to_page(get_result(), "<p>Overdrunk, finished day. (Do PvP?)</p>", "Ascension script:")
-							finished = true
-							return
-						end
+				if ascension_script_option("overdrink with nightcap") and can_drink_normal_booze() then
+					script.maybe_ensure_buffs { "Ode to Booze" }
+					if have_buff("Ode to Booze") then
+						script.ensure_buff_turns("Ode to Booze", 10)
+					end
+					if buffturns("Ode to Booze") >= 10 and have_item("bucket of wine") then
+						set_result(drink_item("bucket of wine"))
+						result = add_message_to_page(get_result(), "<p>Overdrunk, finished day. (Do PvP?)</p>", "Ascension script:")
+						finished = true
+						return
 					end
 				end
 				result, resulturl = get_page("/inventory.php", { which = 1 })
@@ -2279,7 +2276,7 @@ endif
 		task = tasks.rotting_matilda,
 	}
 
-	local want_starting_items = classid() < 10 and (not AT_song_duration() or not have_item("turtle totem") or not have_item("saucepan") or (not have_item("seal tooth") and challenge ~= "fist" and challenge ~= "zombie"))
+	local want_starting_items = classid() < 10 and (AT_song_duration() == 0 or not have_item("turtle totem") or not have_item("saucepan") or (not have_item("seal tooth") and challenge ~= "fist" and challenge ~= "zombie"))
 
 	add_task {
 		when = want_starting_items and meat() >= 200,
@@ -2412,7 +2409,7 @@ endif
 	}
 
 	add_task {
-		when = AT_song_duration() and level() < 5 and (buffturns("The Moxious Madrigal") < 10 or buffturns("The Magical Mojomuscular Melody") < 10) and have_skill("The Moxious Madrigal") and have_skill("The Magical Mojomuscular Melody"),
+		when = AT_song_duration() > 0 and level() < 5 and (buffturns("The Moxious Madrigal") < 10 or buffturns("The Magical Mojomuscular Melody") < 10) and have_skill("The Moxious Madrigal") and have_skill("The Magical Mojomuscular Melody"),
 		task = tasks.extend_tmm_and_mojo,
 	}
 
@@ -4662,14 +4659,14 @@ use gauze garter, gauze garter
 			x.equipment = nil
 
 			x.minmp = x.minmp or 0
-			if x.olfact then
+			if x.olfact and have_skill("Transcendent Olfaction") then
 				if not trailed then
 					x.minmp = x.minmp + 40
 				elseif trailed ~= x.olfact then
 					stop("Trailing " .. trailed .. " when trying to olfact " .. x.olfact)
 				end
-				x.olfact = nil
 			end
+			x.olfact = nil
 
 			if arrowed_possible and x.minmp < 60 then
 				x.minmp = 60

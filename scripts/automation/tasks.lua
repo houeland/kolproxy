@@ -60,7 +60,7 @@ function get_automation_tasks(script, cached_stuff)
 				return result, resulturl
 			end
 
-			if playerclass("Accordion Thief") and (AT_song_duration() or 0) < 10 then
+			if playerclass("Accordion Thief") and AT_song_duration() < 10 then
 				inform "pick up RnR"
 				script.ensure_worthless_item()
 				if not have_item("hermit permit") then
@@ -106,7 +106,7 @@ function get_automation_tasks(script, cached_stuff)
 				return result, resulturl, did_action
 			end
 
-			if not playerclass("Accordion Thief") and (AT_song_duration() or 0) < 5 then
+			if not playerclass("Accordion Thief") and AT_song_duration() < 5 then
 				inform "buy toy accordion"
 				set_result(buy_item("toy accordion", "z"))
 				did_action = have_item("toy accordion")
