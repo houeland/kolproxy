@@ -2304,7 +2304,7 @@ endif
 	}
 
 	add_task {
-		when = not have_item("digital key") and trailed == "Blooper" and ascensionstatus() == "Hardcore",
+		when = not have_item("digital key") and trailed == "Blooper",
 		task = tasks.do_8bit_realm,
 	}
 

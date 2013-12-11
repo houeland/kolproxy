@@ -19,9 +19,9 @@ local function load_wrapped_function(path)
 	return wrapped
 end
 
-local intercept_wrapped = load_wrapped_function("scripts/intercept.lua")
-local automate_wrapped = load_wrapped_function("scripts/automate.lua")
-local printer_wrapped = load_wrapped_function("scripts/printer.lua")
+local intercept_wrapped = load_wrapped_function("scripts/kolproxy-internals/intercept.lua")
+local automate_wrapped = load_wrapped_function("scripts/kolproxy-internals/automate.lua")
+local printer_wrapped = load_wrapped_function("scripts/kolproxy-internals/printer.lua")
 
 local function descit(what, pt, url)
 --	print("DEBUG descit:", what, "url", url, "pt", type(pt), type(pt) == "string" and pt:len(), kolproxy_can_read_state())

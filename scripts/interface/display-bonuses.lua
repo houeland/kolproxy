@@ -47,8 +47,12 @@ function estimate_modifier_bonuses()
 	bonuses = bonuses + estimate_current_equipment_bonuses()
 	bonuses = bonuses + estimate_current_outfit_bonuses()
 	bonuses = bonuses + estimate_current_buff_bonuses()
+	bonuses = bonuses + estimate_current_intrinsic_bonuses()
 	bonuses = bonuses + estimate_current_passive_bonuses()
+	bonuses = bonuses + estimate_current_familiar_bonuses()
 	bonuses = bonuses + estimate_current_companion_bonuses()
+	bonuses = bonuses + estimate_current_pastathrall_bonuses()
+--	bonuses = bonuses + estimate_current_moonsign_bonuses()
 	bonuses = bonuses + estimate_current_other_bonuses()
 
 	bonuses["Monsters will be more attracted to you (base)"] = bonuses["Monsters will be more attracted to you"]
@@ -121,7 +125,7 @@ add_charpane_line(function()
 	end
 
 	return {
-		{ normalname = "(" .. mklink("Monsters will be less attracted to you", "Non") .. ")" .. mklink("Monsters will be more attracted to you", "combat"), compactname = mklink("Monsters will be more attracted to you", "C") .. "/" .. mklink("Monsters will be less attracted to you", "NC"), value = string.format("%+d%%", com) .. uncertaintystr("Monsters will be more attracted to you") .. ncbonusstr, tooltip = "Bonuses above +-25% are less effective" },
+		{ normalname = "(" .. mklink("Monsters will be less attracted to you", "Non") .. ")" .. mklink("Monsters will be more attracted to you", "combat"), compactname = mklink("Monsters will be more attracted to you", "C") .. "/" .. mklink("Monsters will be less attracted to you", "NC"), value = string.format("%+d%%", com) .. uncertaintystr("Monsters will be more attracted to you") .. ncbonusstr, tooltip = "Bonuses beyond &plusmn;25% are less effective" },
 		{ normalname = "Item drops", compactname = "Item", value = string.format("%+.1f%%", floor_to_places(item, 1)) .. uncertaintystr("Item Drops from Monsters") .. table.concat(itemextrastrs), link = modifier_maximizer_href { pwd = session.pwd, whichbonus = "Item Drops from Monsters" }, link_name_only = true },
 		{ normalname = "ML", compactname = "ML", value = string.format("%+d", ml) .. uncertaintystr("Monster Level"), link = modifier_maximizer_href { pwd = session.pwd, whichbonus = "Monster Level" }, link_name_only = true },
 		{ normalname = "Initiative", compactname = "Init", value = string.format("%+d%%", adjusted_init) .. uncertaintystr("Combat Initiative") .. initbonusstr, tooltip = string.format("%+d%% initiative - %d%% ML penalty = %+d%% combined", initial_init, ml_init_penalty, adjusted_init), link = modifier_maximizer_href { pwd = session.pwd, whichbonus = "Combat Initiative" }, link_name_only = true },

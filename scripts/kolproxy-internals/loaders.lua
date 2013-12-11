@@ -3,6 +3,7 @@ load_file("base", "base/fight-page.lua")
 load_file("base", "base/other.lua")
 load_file("base", "base/mafiaexpression-evaluator.lua")
 load_file("base", "base/npc-stores.lua")
+load_file("base", "mechanics/game-mechanics.lua")
 
 load_file("data", "data/mine-aggregate-prediction.lua")
 
@@ -34,6 +35,10 @@ load_file("interface", "items/beararms.lua")
 
 load_file("item", "classes/pastathrall.lua")
 
+load_file("skill", "skills/summons.lua")
+load_file("skill", "skills/inigo.lua")
+load_file("skill", "skills/pastamancer-spells.lua")
+
 load_file("familiar", "familiars/butt-away.lua")
 load_file("familiar", "familiars/llama.lua")
 load_file("familiar", "familiars/pixie.lua")
@@ -50,9 +55,7 @@ load_file("familiar", "familiars/hatrack.lua")
 load_file("familiar", "familiars/happy-medium.lua")
 load_file("familiar", "familiars/drops.lua")
 load_file("familiar", "familiars/steam-powered-cheerleader.lua")
-
-load_file("skill", "skills/summons.lua")
-load_file("skill", "skills/inigo.lua")
+load_file("familiar", "familiars/familiar-bonuses.lua")
 
 load_file("zone", "zones/vip-lounge.lua")
 load_file("zone", "zones/dod.lua")
@@ -99,19 +102,19 @@ load_file("automation", "automation/tune-flavour-of-magic.lua")
 load_file("automation", "automation/trick-or-treat.lua")
 
 load_file("other", "other/mmg-blocker.lua")
-load_file("other", "other/visit-people-warnings.lua")
-load_file("other", "other/adventure-notices.lua")
-load_file("other", "other/check-florist-friar.lua")
+load_file("other", "adventure-warnings/visit-people-warnings.lua")
+load_file("other", "adventure-warnings/adventure-notices.lua")
+load_file("other", "adventure-warnings/check-florist-friar.lua")
 -- load_file("other", "other/chrome-volcano.lua")
 -- load_file("other", "other/nemesis-fight-music.lua")
 -- load_file("other", "other/hookah-printer.lua")
 
 -- load_file("other", "other/log-everything.lua")
 
-load_file("chat", "other/chat-kolmafia-links.lua")
-load_file("chat", "other/chat-pvp-announcements.lua")
+load_file("chat", "chat/chat-kolmafia-links.lua")
+load_file("chat", "chat/chat-pvp-announcements.lua")
 
-load_file("chat", "other/chat-commands.lua")
+load_file("chat", "chat/chat-commands.lua")
 
 -- load_file("interface", "other/itemdrop-decorator.lua")
 
@@ -142,13 +145,8 @@ load_file("automation", "automation/sea-hatred.lua")
 load_file("interface", "items/equipment-bonuses.lua")
 load_file("interface", "interface/display-bonuses.lua")
 load_file("interface", "buffs/buff-bonuses.lua")
-load_file("interface", "buffs/passive-bonuses.lua")
-
-load_file("interface", "other/twillo/combat-display.lua")
-load_file("interface", "other/twillo/item-display.lua")
-load_file("interface", "other/twillo/ml-display.lua")
-load_file("interface", "other/twillo/init-display.lua")
-load_file("interface", "other/twillo/meat-display.lua")
+load_file("interface", "buffs/intrinsic-bonuses.lua")
+load_file("interface", "skills/passive-bonuses.lua")
 
 load_file("interface", "interface/compact-topmenu.lua")
 
@@ -172,6 +170,7 @@ load_file("chat", "interface/add-log-notes.lua")
 load_file("interface", "interface/lua-console.lua")
 
 load_file("other", "paths/jarlsberg.lua")
+load_file("other", "paths/moonsigns.lua")
 
 load_file("zone", "zones/wandering-monsters.lua")
 

@@ -37,3 +37,17 @@ add_warning {
 		return check_hidden_tavern_access()
 	end
 }
+
+local places = {
+	{ zone = "A Massive Ziggurat", choice = "Legend of the Temple in the Hidden City", option = "Leave" },
+	{ zone = "An Overgrown Shrine (Southwest)", choice = "Water You Dune", option = "Place your head in the impression", fallback = "Back away", sphere = "dripping" },
+	{ zone = "An Overgrown Shrine (Northwest)", choice = "Earthbound and Down", option = "Place your head in the impression", fallback = "Step away from the altar", sphere = "moss-covered" },
+	{ zone = "An Overgrown Shrine (Southeast)", choice = "Fire When Ready", option = "Place your head in the impression", fallback = "Back off", sphere = "scorched" },
+	{ zone = "An Overgrown Shrine (Northeast)", choice = "Air Apparent", option = "Place your head in the impression", fallback = "Leave the altar", sphere = "crackling" },
+}
+--elseif citypt:contains("Hidden Apartment Building") and citypt:contains("Hidden Hospital") and citypt:contains("Hidden Office Building") and citypt:contains("Hidden Bowling Alley") then
+
+function remaining_hidden_city_liana_zones()
+	local citypt = get_page("/place.php", { whichplace = "hiddencity" })
+	error "TODO: Not implemented."
+end

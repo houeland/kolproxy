@@ -31,10 +31,23 @@ for id, x in ipairs(thralls) do
 end
 
 function pastathrall(name)
+	if name == nil then return pastathrallid() ~= 0 end
 	local id = thrall_name_lookup[name]
 	if id then
 		return pastathrallid() == id
 	else
 		error("Unknow pasta thrall: " .. tostring(name))
+	end
+end
+
+function estimate_current_pastathrall_bonuses()
+	if pastathrall("Angel Hair Wisp") then
+		return make_bonuses_table { ["Combat Initiative"] = 5 * pastathralllevel() }
+	elseif pastathrall("Spice Ghost") then
+		return make_bonuses_table { ["Item Drops from Monsters"] = 10 + pastathralllevel() }
+	elseif pastathrall("Lasagmbie") then
+		return make_bonuses_table { ["Meat from Monsters"] = 20 + 2 * pastathralllevel() }
+	else
+		return make_bonuses_table {}
 	end
 end

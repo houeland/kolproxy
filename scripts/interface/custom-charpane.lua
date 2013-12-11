@@ -729,13 +729,21 @@ function compact_charpane_equipment_lines(lines)
 	table.insert(lines, string.format("<center>%s<br>%s</center><br>", get_equip_line { "hat", "container", "shirt", "weapon", "offhand" }, get_equip_line { "pants", "acc1", "acc2", "acc3", "familiarequip" }))
 end
 
+function charpane_familiar_weight_line()
+	if familiar("Reanimated Reanimator") then
+		return string.format([[%s lbs. (<a href="main.php?talktoreanimator=1" target="mainpane">chat</a>)]], buffedfamiliarweight())
+	else
+		return string.format("%s lbs.", buffedfamiliarweight())
+	end
+end
+
 function compact_charpane_familiar_lines(lines, fams)
 	if pastathrallid() ~= 0 then
 		table.insert(lines, string.format("<center>%s</center>", describe_pastathrall(pastathrallid())))
 	end
 	if familiarid() ~= 0 then
 		table.insert(lines, "<center>" .. get_familiar_grid_line(fams) .. "</center>")
-		table.insert(lines, string.format([[<center>%s lbs.<!-- kolproxy charpane familiar text area --></center>]], buffedfamiliarweight()))
+		table.insert(lines, string.format([[<center>%s<!-- kolproxy charpane familiar text area --></center>]], charpane_familiar_weight_line()))
 	elseif ascensionpath("Avatar of Boris") then
 		table.insert(lines, [[<center>]] .. get_clancy_display() .. [[</center>]])
 	elseif ascensionpath("Avatar of Jarlsberg") then
@@ -751,7 +759,7 @@ function full_charpane_familiar_lines(lines, fams)
 	end
 	if familiarid() ~= 0 then
 		table.insert(lines, "<center>" .. get_familiar_grid_line(fams) .. "</center>")
-		table.insert(lines, string.format([[<center><font size=2>%s lbs.<!-- kolproxy charpane familiar text area --></font></center>]], buffedfamiliarweight()))
+		table.insert(lines, string.format([[<center><font size=2>%s<!-- kolproxy charpane familiar text area --></font></center>]], charpane_familiar_weight_line()))
 	elseif ascensionpath("Avatar of Boris") then
 		table.insert(lines, [[<center>]] .. get_clancy_display() .. [[</center>]])
 	elseif ascensionpath("Avatar of Jarlsberg") then

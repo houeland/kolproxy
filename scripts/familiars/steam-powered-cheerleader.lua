@@ -20,6 +20,7 @@ function get_steampowered_cheerleader_bonus_multiplier()
 end
 
 add_printer("/charpane.php", function()
+	-- TODO: Rewrite using fam-describing function
 	if familiarpicture() == "cheerleader" then
 		normal = string.format("%1.1fx weight", get_steampowered_cheerleader_bonus_multiplier())
 		compact = normal

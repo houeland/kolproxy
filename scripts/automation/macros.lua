@@ -860,7 +860,7 @@ endif
 
 ]] .. macro_killing_begins() .. [[
 
-if (monstername chalkdust wraith)
+if (monstername chalkdust wraith) || (monstername Ghost)
   if hasskill Kodiak Moment
     cast Kodiak Moment
   endif

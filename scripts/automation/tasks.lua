@@ -534,10 +534,10 @@ mark m_done
 					elseif cached_stuff.previous_twin_peak_noncombat_option == "Follow the faint sound of music" or cached_stuff.previous_twin_peak_noncombat_option == "Wait -- who's that?" then
 						if estimate_bonus("Combat Initiative") < 40 then
 							script.bonus_target { "initiative", "noncombat", "item" }
-							maybe_ensure_buffs { "Springy Fusilli" }
+							script.maybe_ensure_buffs { "Springy Fusilli" }
 						end
 						if estimate_bonus("Combat Initiative") < 40 then
-							maybe_ensure_buffs { "Sugar Rush" }
+							script.maybe_ensure_buffs { "Sugar Rush" }
 						end
 						if estimate_bonus("Combat Initiative") < 40 then
 							stop "Need 40%+ combat initiative"

@@ -134,7 +134,12 @@ local function parse_mafia_bonuslist(bonuslist)
 		["Stench Damage"] = "Stench Damage",
 
 		["Spell Damage"] = "Spell Damage",
+		["Spell Damage Percent"] = "Spell Damage %", -- Spell Damage +150%
 		["Weapon Damage"] = "Weapon Damage",
+		["Weapon Damage Percent"] = "Weapon Damage %",
+
+		["Critical Hit Percent"] = "% chance of Critical Hit", -- +20% chance of Critical Hit
+		["Spell Critical Percent"] = "% Chance of Spell Critical Hit", -- +20% Chance of Spell Critical Hit
 
 		["Maximum HP"] = "Maximum HP",
 		["Maximum MP"] = "Maximum MP",
