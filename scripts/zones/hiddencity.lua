@@ -38,6 +38,24 @@ add_warning {
 	end
 }
 
+function have_mcclusky_file_items()
+	return have_item("boring binder clip") and have_item("McClusky file (page 1)") and have_item("McClusky file (page 2)") and have_item("McClusky file (page 3)") and have_item("McClusky file (page 4)") and have_item("McClusky file (page 5)")
+end
+
+add_ascension_assistance(function() return have_mcclusky_file_items() and not ascensionpath("Bees Hate You") end, function()
+	use_item("boring binder clip")
+end)
+
+add_warning {
+	message = "You might want to use the boring binder clip first.",
+	type = "warning",
+	when = "ascension",
+	zone = "The Hidden Office Building",
+	check = function()
+		return have_mcclusky_file_items()
+	end
+}
+
 local places = {
 	{ zone = "A Massive Ziggurat", choice = "Legend of the Temple in the Hidden City", option = "Leave" },
 	{ zone = "An Overgrown Shrine (Southwest)", unlockzone = "The Hidden Hospital", choice = "Water You Dune", option = "Place your head in the impression", fallback = "Back away", sphere = "dripping" },

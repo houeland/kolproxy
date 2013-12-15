@@ -149,9 +149,17 @@ add_always_adventure_warning(function()
 		end
 		local msg = "Next turn might be a semirare."
 		if lastsemi then
-			msg = msg .. "\n<br>Last semirare was " .. lastsemi .. "."
+			msg = msg .. "\n<br>Last semirare was " .. lastsemi .. ". (You cannot get the same one twice in a row.)"
 		end
 		return msg, "semirare-" .. turnsthisrun(), "Disable the warning for turn " .. (turnsthisrun() + 1) .. " and adventure", "teal", "Semirare warning: "
+	end
+end)
+
+add_extra_always_adventure_warning(function()
+	SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info(turnsthisrun())
+
+	if not next(good_numbers) and tonumber(SRmin) and tonumber(SRmin) <= 1 and tonumber(SRmax) and tonumber(SRmax) >= 0 then
+		return "The semirare window will start soon (and you do not have fortune cookie numbers).", "semirare-range-" .. SRmin, "Disable the warning for turn " .. (turnsthisrun() + 1) .. " and adventure"
 	end
 end)
 

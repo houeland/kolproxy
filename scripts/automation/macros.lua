@@ -49,7 +49,7 @@ end
 function cast_olfaction()
 	return [[
 
-if hasskill Transcendent Olfaction then
+if hasskill Transcendent Olfaction
   cast Transcendent Olfaction
 endif
 
