@@ -295,10 +295,21 @@ local function format_hpmp(c, m)
 end
 
 local function make_optimize_diet_href()
+	local myitems = {}
+	if have_item("tiny plastic sword") then table.insert(myitems, "tps") end
+	if have_item("tuxedo shirt") then table.insert(myitems, "tuxedo") end
+	-- Tuxedo shirt is cheap, use webpage default even if we don't have it
+	local myperms = {}
+	if have_skill("Saucemaven") then table.insert(myperms, "saucemaven") end
+	if have_skill("Pizza Lover") then table.insert(myperms, "pizzalover") end
+	if not next(myperms) then myperms = { "none" } end
 	return make_href("/kolproxy-frame-page", { url = "http://www.houeland.com" .. make_href("/kol/diets", {
 		foodspace = math.max(0, estimate_max_fullness() - fullness()),
 		boozespace = math.max(0, estimate_max_safe_drunkenness() - drunkenness()),
 		spleenspace = math.max(0, estimate_max_spleen() - spleen()),
+		itemsavailable = table.concat(myitems),
+		permsavailable = table.concat(myperms),
+		classid = classid(),
 	}), pwd = session.pwd })
 end
 

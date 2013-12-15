@@ -353,8 +353,14 @@ end)
 
 -- highlands 
 
+function estimate_twin_peak_effective_plusitem()
+	local cur_item = estimate_bonus("Item Drops from Monsters") - estimate_current_familiar_bonuses()["Item Drops from Monsters"]
+	local cur_food = estimate_bonus("Food Drops from Monsters") - estimate_current_familiar_bonuses()["Food Drops from Monsters"]
+	return cur_item + cur_food
+end
+
 add_choice_text("Lost in the Great Overlook Lodge", function()
-	local cur_item = estimate_bonus("Item Drops from Monsters") - __DONOTUSE_estimate_familiar_item_drop_bonus() + estimate_bonus("Food Drops from Monsters")
+	local cur_item = estimate_twin_peak_effective_plusitem()
 	local cur_init = estimate_bonus("Combat Initiative")
 	local pantry_text = string.format([[<span style="color: %s">%s. Currently: %+d%%</span><br>%s]], cur_item >= 50 and "green" or "darkorange", "Requires +50% items from monsters", cur_item, "(+food% bonuses help here, but familiars giving +item% bonus are not included.)")
 	return { -- choice adventure number: 606

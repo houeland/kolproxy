@@ -521,7 +521,7 @@ mark m_done
 							stop "Need 4+ stench resistance"
 						end
 					elseif cached_stuff.previous_twin_peak_noncombat_option == "Investigate Room 237" then
-						if estimate_bonus("Item Drops from Monsters") - __DONOTUSE_estimate_familiar_item_drop_bonus() + estimate_bonus("Food Drops from Monsters") < 50 then
+						if estimate_twin_peak_effective_plusitem() < 50 then
 							stop "Need 50%+ item drops from monsters"
 						end
 					elseif cached_stuff.previous_twin_peak_noncombat_option == "Search the pantry" then
