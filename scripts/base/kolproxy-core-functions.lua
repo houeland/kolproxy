@@ -444,7 +444,7 @@ function load_script_files(env)
 		warn = false
 	end
 
-	run_file_with_environment("kolproxy-internals/loaders.lua", { load_file = load_file }, {})
+	run_file_with_environment("kolproxy-internal/loaders.lua", { load_file = load_file }, {})
 
 	global_env.register_setting = nil
 end

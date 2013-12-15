@@ -17,7 +17,7 @@ function load_file(category, name)
 	end
 end
 
-dofile("scripts/kolproxy-internals/loaders.lua")
+dofile("scripts/kolproxy-internal/loaders.lua")
 
 -- print("sendchat rawinput", f_env.raw_input_params)
 

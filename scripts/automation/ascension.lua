@@ -71,7 +71,12 @@ local function automate_hcnp_day(whichday)
 	end
 
 	function infoline(...)
-		local msg = table.concat({ ... }, " ")
+		local tbl = {}
+		for i = 1, select("#", ...) do
+			local e = select(i, ...)
+			table.insert(tbl, tostring(e))
+		end
+		local msg = table.concat(tbl, " ")
 		add_error_trace_step(msg)
 		print("  " .. msg)
 		write_log_line("  " .. msg)

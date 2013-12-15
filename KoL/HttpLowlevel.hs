@@ -53,7 +53,7 @@ instance ConnFunctionsBundle Handle Data.ByteString.ByteString where
 
 	connGetLine conn = do
 		x <- Data.ByteString.hGetLine conn
--- 		putStrLn $ "connGetLine: " ++ (Data.ByteString.Char8.unpack x)
+-- 		putDebugStrLn $ "connGetLine: " ++ (Data.ByteString.Char8.unpack x)
 		return $ (Data.ByteString.Char8.unpack x) ++ "\n"
 
 	connPut conn d = Data.ByteString.hPut conn (Data.ByteString.Char8.pack $ d)
@@ -103,7 +103,19 @@ instance ConnFunctionsBundle (MVar SslConn) Data.ByteString.ByteString where
 		let newconn = conn { sslconn_sendBuffer = [] }
 		return (newconn, ())
 
-	connGetContents _mvconn = throwIO $ InternalError "SslConn:connGetContents should not be called"
+	connGetContents mvconn = modifyMVar mvconn $ \conn -> do
+		let recur prebuild = do
+			mrb <- try $ recvData (sslconn_c conn)
+			case mrb of
+				Right rb -> if (Data.ByteString.Lazy.null rb)
+					then return prebuild
+					else recur (rb:prebuild)
+				Left err -> do
+					putWarningStrLn $ "connGetContents error: " ++ (show (err :: SomeException))
+					return prebuild
+		ret <- recur [sslconn_recvBuffer conn]
+		let newconn = conn { sslconn_recvBuffer = Data.ByteString.Lazy.empty }
+		return (newconn, Data.ByteString.concat $ Data.ByteString.Lazy.toChunks $ Data.ByteString.Lazy.concat $ reverse $ ret)
 
 read_till_empty conn = do
 	x <- connGetLine conn
@@ -117,7 +129,7 @@ getResponseHead conn = parseResponseHead <$> read_till_empty conn
 
 switchResponse _ _ _ (Left e) _ = return $ Left e
 switchResponse conn allow_retry bdy_sent (Right (cd, rn, hdrs)) rqst = do
--- 	putStrLn $ "DEBUG:switchResponse: " ++ (show (cd, rn, hdrs, rqst))
+-- 	putDebugStrLn $ "switchResponse: " ++ (show (cd, rn, hdrs, rqst))
 	x <- case matchResponse (rqMethod rqst) cd of
 		Continue -> if bdy_sent
 			then do {- keep waiting -}
@@ -140,7 +152,7 @@ switchResponse conn allow_retry bdy_sent (Right (cd, rn, hdrs)) rqst = do
 			case lookupHeader HdrTransferEncoding hdrs of
 				Just s -> case filter isAlphaNum $ map toLower s of
 					"chunked" -> do
--- 						putStrLn $ "DEBUG:chunked"
+-- 						putDebugStrLn $ "chunked"
 						let parse_chunks = do
 							l <- connGetLine conn
 							let size = case readHex l of
@@ -148,7 +160,7 @@ switchResponse conn allow_retry bdy_sent (Right (cd, rn, hdrs)) rqst = do
 								_ -> 0
 							if size > 0
 								then do
--- 									putStrLn $ "  get a chunk, size " ++ (show size) ++ "..."
+-- 									putDebugStrLn $ "  get a chunk, size " ++ (show size) ++ "..."
 									x <- connGetBlock conn size
 									void $ connGetLine conn
 									xs <- parse_chunks
@@ -164,15 +176,15 @@ switchResponse conn allow_retry bdy_sent (Right (cd, rn, hdrs)) rqst = do
 				Nothing -> case lookupHeader HdrContentLength hdrs of
 					Just x -> case read_as x of
 						Just size -> do
--- 							putStrLn $ "DEBUG:linear"
+-- 							putDebugStrLn $ "linear"
 							bdy <- connGetBlock conn size
 							return $ Right $ Response cd rn hdrs bdy
 						_ -> return $ responseParseError "unrecognized content-length value" x
 					Nothing -> do
-						putStrLn $ "WARNING! No content-length header!"
+						putWarningStrLn $ "No content-length header!"
 						bdy <- connGetContents conn
 						return $ Right $ Response cd rn hdrs bdy
--- 	putStrLn $ "DEBUG:/switchResponse: " ++ (show (cd,rn,hdrs,rqst))
+-- 	putDebugStrLn $ "/switchResponse: " ++ (show (cd,rn,hdrs,rqst))
 	return x
 
 mkreq_slow useragent cookie absuri params forproxy =
@@ -198,12 +210,12 @@ simple_http_withproxy rq = do
 	auth <- case use_proxy of
 		Nothing -> getAuth rq
 		Just p -> getAuth $ Request { rqURI = fromJust $ parseURI $ ("proxy://" ++ p ++ "/"), rqMethod = GET, rqHeaders = [], rqBody = "" }
--- 	putStrLn $ "rawsimple connecting to " ++ show auth
---	putStrLn $ "  http to " ++ show (host auth)
+-- 	putDebugStrLn $ "rawsimple connecting to " ++ show auth
+--	putDebugStrLn $ "  http to " ++ show (host auth)
 	s <- openStream (host auth) $ fromMaybe 80 (port auth)
--- 	putStrLn $ "  prenorm: " ++ show rq
+-- 	putDebugStrLn $ "  prenorm: " ++ show rq
 	let nrq = normalizeRequest (defaultNormalizeRequestOptions { normDoClose = True, normForProxy = True }) rq
--- 	putStrLn $ "  asking for " ++ show nrq
+-- 	putDebugStrLn $ "  asking for " ++ show nrq
 	Network.HTTP.HandleStream.sendHTTP s nrq
 
 simple_https_direct rq = do
@@ -211,7 +223,7 @@ simple_https_direct rq = do
 
 	s <- mkconnectsocket
 	hostA <- head <$> Network.BSD.hostAddresses <$> Network.BSD.getHostByName (host auth)
---	putStrLn $ "  https to " ++ show (host auth)
+--	putDebugStrLn $ "  https to " ++ show (host auth)
 	let a = Network.Socket.SockAddrInet (toEnum 443) hostA
 	Network.Socket.connect s a
 	h <- Network.Socket.socketToHandle s ReadWriteMode
@@ -236,7 +248,7 @@ mkCode resp = case rspCode resp of
 	(a, b, c) -> fromIntegral $ a * 100 + b * 10 + c
 
 doHTTPreq (absuri, rq) = do
---	putStrLn $ "doHTTPreq: " ++ show absuri
+--	putDebugStrLn $ "doHTTPreq: " ++ show absuri
 	use_proxy <- getEnvironmentSetting "KOLPROXY_USE_PROXY_SERVER"
 	r <- case (use_proxy, uriScheme absuri) of
 		(Nothing, "https:") -> simple_https_direct rq
@@ -244,16 +256,16 @@ doHTTPreq (absuri, rq) = do
 	case r of
 		Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp)
 		Left ce -> do
-			putStrLn $ "doHTTPreq: " ++ (show ce)
+			putWarningStrLn $ "doHTTPreq: " ++ (show ce)
 			throwIO $ InternalError $ "doHTTPreq[" ++ (show ce) ++ "]"
 
 doHTTPSreq (absuri, rq) = do
---	putStrLn $ "doHTTPSreq: " ++ show absuri
+--	putDebugStrLn $ "doHTTPSreq: " ++ show absuri
 	r <- simple_https_direct rq
 	case r of
 		Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp)
 		Left ce -> do
-			putStrLn $ "doHTTPSreq: " ++ (show ce)
+			putWarningStrLn $ "doHTTPSreq: " ++ (show ce)
 			throwIO $ InternalError $ "doHTTPSreq[" ++ (show ce) ++ "]"
 
 kolproxy_withVersion v hs = case v of
@@ -298,7 +310,7 @@ kolproxy_receiveHTTP conn = do
 			
 	-- TODO: handle favicon.ico better?
 	h <- Network.Stream.fmapE (\es -> kolproxy_parseRequestHead (map (Network.BufferType.buf_toStr Network.BufferType.bufferOps) es)) (readTillEmpty1 Network.BufferType.bufferOps (readLine conn))
--- 	putStrLn $ "getRequestHead: " ++ (show h)
+-- 	putDebugStrLn $ "getRequestHead: " ++ (show h)
 	case h of
 		Left x -> return $ Left x
 		Right (rm, uri, hdrs) -> do
@@ -344,7 +356,7 @@ kolproxy_openTCPConnection server = do
 		bracketOnError (mkconnectsocket) (\s -> Network.Socket.sClose s) $ \s -> do
 			-- TODO: use getAddrInfo and stuff? for ipv6??
 			hostA <- getHostAddr hostname
--- 			putStrLn $ "opentcp connecting to " ++ show auth ++ " | " ++ show hostname ++ " -> " ++ show hostA
+-- 			putDebugStrLn $ "opentcp connecting to " ++ show auth ++ " | " ++ show hostname ++ " -> " ++ show hostA
 			let a = Network.Socket.SockAddrInet (toEnum portnum) hostA
 			Network.Socket.connect s a
 --			r <- randomRIO (1, 100 :: Integer)
@@ -411,13 +423,13 @@ __old_fast_mkconnthing server = do
 								kill_it
 							(_, Right (_, _, hdrs, _, _)) -> case lookup "Connection" hdrs of
 								Just "close" -> do
-									putStrLn $ "WARNING: server closed connection"
+									putWarningStrLn $ "server closed connection"
 									kill_it
 								_ -> do
 									trefreshed <- getCurrentTime
 									return (Right (cf_stored, trefreshed, pending - 1, thiskillfunc), True)
 							_ -> do
-								putStrLn $ "WARNING: no headers from server, closing connection"
+								putWarningStrLn $ "no headers from server, closing connection"
 								kill_it) `catch` (\e -> do
 									doHTTPLOWLEVEL_DEBUG $ "http put exception for " ++ (uriPath absuri) ++ ": " ++ (show (e :: SomeException))
 									throwIO e)
@@ -438,7 +450,7 @@ __old_fast_mkconnthing server = do
 --						when (r < 5) $ throwIO $ NetworkError $ "faked random write error!"
 						connFlush c -- Maybe TODO???: only flush when done requesting???
 					else do
--- 						putStrLn $ "DEBUG: waiting with request for " ++ show (rqURI rq) ++ " (" ++ show req_nr ++ ")"
+-- 						putDebugStrLn $ "waiting with request for " ++ show (rqURI rq) ++ " (" ++ show req_nr ++ ")"
 						return ()
 				return (requesting_it, req_nr)
 			writeChan rchan $ Just (isok, (absuri, rq, mvdest, ref))
@@ -512,13 +524,13 @@ fast_mkconnthing server = do
 							(True, _) -> kill_it
 							(_, Right (_, _, hdrs, _, _)) -> case lookup "Connection" hdrs of
 								Just "close" -> do
-									putStrLn $ "WARNING: server closed connection"
+									putWarningStrLn $ "server closed connection"
 									kill_it
 								_ -> do
 									trefreshed <- getCurrentTime
 									return (Right (cf_stored, trefreshed, pending - 1, thiskillfunc), True)
 							_ -> do
-								putStrLn $ "WARNING: no headers from server, closing connection"
+								putWarningStrLn $ "no headers from server, closing connection"
 								kill_it) `catch` (\e -> do
 									doHTTPLOWLEVEL_DEBUG $ "http put exception for " ++ (uriPath absuri) ++ ": " ++ (show (e :: SomeException))
 									throwIO e)

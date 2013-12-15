@@ -44,7 +44,7 @@ doProcessPage ref uri params = do
 
 	(xf, mvf) <- (nochangeRawRetrievePageFunc ref) ref uri params True
 	when ((uriPath uri) == "/actionbar.php") $ do
-		putStrLn $ "DEBUG: requested actionbar: " ++ show uri ++ " | " ++ show params
+		putDebugStrLn $ "requested actionbar: " ++ show uri ++ " | " ++ show params
 		writeIORef (cachedActionbar_ $ sessionData $ ref) Nothing
 
 	let status_after_func = do
@@ -66,17 +66,17 @@ doProcessPage ref uri params = do
 				status_before <- status_before_func
 				status_after <- status_after_func
 				log_page_result ref (Right status_before) log_time state_before uri params effuri pagetext status_after state_after
-				return ()) `catch` (\e -> putStrLn $ "processpage logging error: " ++ (show (e :: KolproxyException)))
+				return ()) `catch` (\e -> putErrorStrLn $ "processpage logging exception: " ++ (show (e :: KolproxyException)))
 
 			return (y, pagetext, effuri, hdrs, code)
 		putMVar mv =<< case x of
 			Right (Right msg, _, effuri, hdrs, code) -> do
 				return $ Right (msg, effuri, hdrs, code)
 			Right (Left (msg, trace), pagetext, effuri, hdrs, code) -> do
-				putStrLn $ "Error processing page[" ++ show uri ++ "]: " ++ msg ++ "\n" ++ trace
+				putErrorStrLn $ "Error processing page[" ++ show uri ++ "]: " ++ msg ++ "\n" ++ trace
 				return $ Left (add_error_message_to_page ("process-page.lua error: " ++ msg ++ "\n" ++ trace) pagetext, effuri, hdrs, code)
 			Left e -> do
-				putStrLn $ "Exception while processing page[" ++ show uri ++ "]: " ++ (show (e :: SomeException))
+				putErrorStrLn $ "Exception while processing page[" ++ show uri ++ "]: " ++ (show (e :: SomeException))
 				return $ Left (add_error_message_to_page ("process-page.lua exception: " ++ (show e)) (Data.ByteString.Char8.pack "{ Kolproxy page processing. }"), mkuri "/error", [], 500)
 
 	return $ do
@@ -94,7 +94,7 @@ statusfunc ref = do
 		case x of
 			Right r -> return r
 			Left err -> throwIO err) `catch` (\e -> do
-                        	putStrLn $ "statusfunc exception: " ++ show (e :: SomeException)
+                        	putWarningStrLn $ "statusfunc exception: " ++ show (e :: SomeException)
                         	throwIO e))
 
 -- TODO: Redo how scripts are run and used to do chat, make it more similar to normal pages
@@ -129,13 +129,13 @@ kolProxyHandlerWhenever uri params baseref = do
 								let newuriparams = map (\(x, y) -> (x, if x == "graf" then Data.ByteString.Char8.unpack newgraf else y)) uriparams
 								let newuri = uri { uriQuery = "?" ++ (formEncode newuriparams) }
 								let newparams = params
---								putStrLn $ "DEBUG: send chat uri: " ++ show newuri
---								putStrLn $ "DEBUG: send chat params: " ++ show newparams
---								putStrLn $ "DEBUG:   want to graf: " ++ show (Data.ByteString.Char8.drop 20 msg)
+--								putDebugStrLn $ "send chat uri: " ++ show newuri
+--								putDebugStrLn $ "send chat params: " ++ show newparams
+--								putDebugStrLn $ "  want to graf: " ++ show (Data.ByteString.Char8.drop 20 msg)
 								handle_normally newuri newparams
 							else return $ Right (msg, uri, [], 200)
 				Left (msg, trace) -> do
-					putStrLn $ "sendchat error: " ++ (msg ++ "\n" ++ trace)
+					putWarningStrLn $ "sendchat error: " ++ (msg ++ "\n" ++ trace)
 					handle_normally uri params
 		_ -> join $ (processPage ref) ref uri params
 	resptext <- case uriPath uri of
@@ -146,11 +146,12 @@ kolProxyHandlerWhenever uri params baseref = do
 			case x of
 				Right msg -> return msg
 				Left (msg, trace) -> do
-					putStrLn $ "chat error: " ++ (msg ++ "\n" ++ trace)
+					putWarningStrLn $ "chat error: " ++ (msg ++ "\n" ++ trace)
 					return text
 		_ -> return text
 	makeResponseWithNoExtraHeaders resptext effuri [("Content-Type", "application/json; charset=UTF-8"), ("Cache-Control", "no-cache")]
 
+-- TODO: Remove
 handleRequest ref uri effuri headers params pagetext = do
 	let allparams = concat $ catMaybes $ [decodeUrlParams uri, decodeUrlParams effuri, params]
 
@@ -181,7 +182,7 @@ make_ref baseref = do
 		force_latest_status_parse ref
 		void $ loadState ref
 		return True) `catch` (\e -> do
-			putStrLn $ "loadstate exception: " ++ show (e :: SomeException)
+			putWarningStrLn $ "loadstate exception: " ++ show (e :: SomeException)
 			return False)
 	return ref { stateValid_ = state_is_ok }
 
@@ -204,18 +205,18 @@ kolProxyHandler uri params baseref = do
 
 	let handle_login (pt, effuri, allhdrs, code) = do
 		let hdrs = filter (\(x, _y) -> (x == "Set-Cookie" || x == "Location")) allhdrs
-		putStrLn $ "DEBUG: Login requested " ++ (show $ uriPath uri) ++ ", got " ++ (show $ uriPath effuri)
-		putStrLn $ "  HTTP headers: " ++ show hdrs
+		putDebugStrLn $ "Login requested " ++ (show $ uriPath uri) ++ ", got " ++ (show $ uriPath effuri)
+		putDebugStrLn $ "  HTTP headers: " ++ show allhdrs
 		let new_cookie = case filter (\(a, _b) -> a == "Set-Cookie") hdrs of
 			[] -> Nothing
 			(x:xs) -> Just $ intercalate "; " (map ((takeWhile (/= ';')) . snd) (x:xs)) -- TODO: Make readable
-		putStrLn $ "  old cookie: " ++ (show $ cookie_ $ connection $ origref)
-		putStrLn $ "  new cookie: " ++ (show new_cookie)
+		putDebugStrLn $ "  old cookie: " ++ (show $ cookie_ $ connection $ origref)
+		putDebugStrLn $ "  new cookie: " ++ (show new_cookie)
 		if isNothing new_cookie
 			then do
-				putStrLn $ "Error: No cookie from logging in!"
-				putStrLn $ "  headers: " ++ (show hdrs)
-				putStrLn $ "  url: " ++ (show effuri)
+				putErrorStrLn $ "No cookie from logging in!"
+				putErrorStrLn $ "  headers: " ++ (show hdrs)
+				putErrorStrLn $ "  url: " ++ (show effuri)
 				handleRequest origref uri effuri hdrs params pt
 			else (do
 				newref <- do
@@ -224,18 +225,17 @@ kolProxyHandler uri params baseref = do
 					writeIORef (latestRawJson_ $ sessionData $ origref) Nothing
 					writeIORef (latestValidJson_ $ sessionData $ origref) Nothing
 					make_ref $ baseref { otherstuff_ = (otherstuff_ origref) { connection_ = (connection_ $ otherstuff_ $ origref) { cookie_ = new_cookie } } }
-				putStrLn $ "INFO: login.php -> getting server state"
+				putInfoStrLn $ "login.php -> getting server state"
 				ai <- getApiInfo newref
-				putStrLn $ "INFO: Logging in as " ++ (charName ai) ++ " (ascension " ++ (show $ ascension ai) ++ ")"
+				putInfoStrLn $ "Logging in as " ++ (charName ai) ++ " (ascension " ++ (show $ ascension ai) ++ ")"
 				what <- loadSettingsFromServer newref
-				putStrLn $ "INFO: settings loaded: " ++ (fromMaybe "nothing" what)
+				putInfoStrLn $ "settings loaded: " ++ (fromMaybe "nothing" what)
 				writeIORef (have_logged_in_ref_ $ globalstuff_ $ newref) True
 
 				forkIO_ "proxy:compresslogs" $ compressLogs (charName ai) (ascension ai)
 
-				putStrLn $ "DEBUG login.php contents: " ++ (Data.ByteString.Char8.unpack pt)
 				makeRedirectResponse pt uri hdrs) `catch` (\e -> do
-					putStrLn $ "Error: Failed to log in. Exception: " ++ (show (e :: Control.Exception.SomeException))
+					putErrorStrLn $ "Failed to log in. Exception: " ++ (show (e :: Control.Exception.SomeException))
 					if (code >= 300 && code < 400)
 						then makeRedirectResponse pt uri hdrs
 						else makeResponse pt uri hdrs)
@@ -246,10 +246,10 @@ kolProxyHandler uri params baseref = do
 			Just p_sensitive -> return $ Just $ do
 				loginrequestfunc <- case lookup "password" p_sensitive of
 					Just "" -> do
-						putStrLn $ "Logging in..."
+						putInfoStrLn $ "Logging in..."
 						return internalKolRequest
 					_ -> do
-						putStrLn $ "Logging in over https..."
+						putInfoStrLn $ "Logging in over https..."
 						return internalKolHttpsRequest
 				(pt, effuri, allhdrs, code) <- loginrequestfunc uri (Just p_sensitive) (Nothing, useragent_ $ connection $ origref, hostUri_ $ connection $ origref, Nothing) True
 				handle_login (pt, effuri, allhdrs, code)
@@ -284,7 +284,7 @@ kolProxyHandler uri params baseref = do
 --			if and [not canread, uriPath uri /= "/login.php", uriPath uri /= "/afterlife.php"]
 --				then do
 --					-- TODO: Can this still be reached?
---					putStrLn $ "Error: Can't read state! Don't log in for the first time in a day while in a fight or choice noncombat, and don't log in while in valhalla!"
+--					putErrorStrLn $ "Can't read state! Don't log in for the first time in a day while in a fight or choice noncombat, and don't log in while in valhalla!"
 --					gp <- getpage
 --					case gp of
 --						Left (pt, effuri, _hdrs, _code) -> makeErrorResponse pt effuri []
@@ -306,10 +306,10 @@ kolProxyHandler uri params baseref = do
 	return retresp
 
 runKolproxy = (do
-	have_process_page <- doesFileExist "scripts/process-page.lua"
+	have_process_page <- doesFileExist "scripts/kolproxy-internal/process-page.lua"
 	if have_process_page
 		then do
-			putStrLn $ "INFO: Starting..."
+			putInfoStrLn $ "Starting..."
 			createDirectoryIfMissing True "cache"
 			createDirectoryIfMissing True "cache/data"
 			createDirectoryIfMissing True "cache/files"
@@ -320,14 +320,14 @@ runKolproxy = (do
 			createDirectoryIfMissing True "logs/parsed"
 			createDirectoryIfMissing True "scripts/custom-autoload"
 		else do
-			putStrLn $ "WARNING: Trying to start without required files in the \"scripts\" directory."
-			putStrLn $ "         Did you unzip the files correctly?"
+			putWarningStrLn $ "Trying to start without required files in the \"scripts\" directory."
+			putWarningStrLn $ "  Did you unzip the files correctly?"
 			-- TODO: give error message in browser
 	portenv <- getEnvironmentSetting "KOLPROXY_PORT"
 	let portnum = case portenv of
 		Just x -> fromJust $ read_as x :: Integer
 		Nothing -> 18481
-	runProxyServer kolProxyHandler kolProxyHandlerWhenever portnum) `catch` (\e -> putStrLn ("DEBUG: runKolproxy exception: " ++ show (e :: Control.Exception.SomeException)))
+	runProxyServer kolProxyHandler kolProxyHandlerWhenever portnum) `catch` (\e -> putDebugStrLn ("runKolproxy exception: " ++ show (e :: Control.Exception.SomeException)))
 
 main = platform_init $ do
 	hSetBuffering stdout LineBuffering
@@ -335,7 +335,7 @@ main = platform_init $ do
 	case args of
 		["--runbotscript", botscriptfilename] -> runbot botscriptfilename
 		_ -> runKolproxy
-	putStrLn $ "INFO: Done! (main finished)"
+	putInfoStrLn $ "Done! (main finished)"
 	return ()
 
 runbot filename = do

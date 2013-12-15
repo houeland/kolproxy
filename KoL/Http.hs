@@ -34,8 +34,8 @@ parseUriServerBugWorkaround rawuri = do
 		Just z -> return $ Just z
 		_ -> do -- Workaround for broken KoL redirect, e.g. trade counter-offer doesn't urlencode()
 			let newx = map remapper rawuri
-			putStrLn $ "KOL SERVER BUG: parse failure, invalid URL received from server: " ++ (show rawuri) ++ " (shout at Jick or CDMoyer)"
-			putStrLn $ "  using " ++ (show newx) ++ " instead"
+			putInfoStrLn $ "KOL SERVER BUG: parse failure, invalid URL received from server: " ++ (show rawuri) ++ " (shout at Jick or CDMoyer)"
+			putInfoStrLn $ "  using " ++ (show newx) ++ " instead"
 			return $ parseURIReference newx
 
 -- TODO: combine these three
@@ -43,41 +43,40 @@ internalKolHttpsRequest url params cu _noredirect = do
 	let (cucookie, useragent, host, _getconn) = cu
 	let Just reqabsuri = url `relativeTo` host
 	(effuri, body, hdrs, code) <- doHTTPSreq (mkreq True useragent cucookie reqabsuri params True)
-	let addheaders = filter (\(x, _y) -> x == "Set-Cookie") hdrs
+	let addheaders = hdrs -- filter (\(x, _y) -> x == "Set-Cookie") hdrs
 	return (body, effuri, addheaders, code)
 
 internalKolRequest url params cu noredirect = do
 	let (cucookie, useragent, host, getconn) = cu
 	let Just reqabsuri = url `relativeTo` host
--- 	putStrLn $ "DEBUG: single-req " ++ show absuri
+-- 	putDebugStrLn $ "single-req " ++ show absuri
 	(effuri, body, hdrs, code) <- doHTTPreq (mkreq True useragent cucookie reqabsuri params True)
 
 	if noredirect
 		then return (body, effuri, hdrs, code)
 		else case (code >= 300 && code < 400) of
 			True -> do
-				-- TODO: does this happen?
+				putWarningStrLn $ "Redirecting from internalKolRequest"
 				case lookup "Location" hdrs of
 					Just lochdruri -> do
 						cookie <- case lookup "Set-Cookie" hdrs of
 							Just hdrstr -> do
 								let cookie = takeWhile (/= ';') hdrstr
-								putStrLn $ "set-cookie_single: " ++ cookie
+								putDebugStrLn $ "set-cookie_single: " ++ cookie
 								return $ Just cookie
 							Nothing -> return cucookie
-
-						putStrLn $ "  DEBUG singlereq gotpage: " ++ show effuri
-						putStrLn $ "    hdrs: " ++ show hdrs
-						putStrLn $ "    constructed cookie: " ++ show cookie
+						putDebugStrLn $ "  singlereq gotpage: " ++ show effuri
+						putDebugStrLn $ "    hdrs: " ++ show hdrs
+						putDebugStrLn $ "    constructed cookie: " ++ show cookie
 						let addheaders = filter (\(x, _) -> x == "Set-Cookie") hdrs
 						case parseURI lochdruri of
 							Nothing -> do
 								Just to <- parseUriServerBugWorkaround lochdruri
--- 								putStrLn $ "==> redirected " ++ (show url) ++ " -> " ++ (show to)
+-- 								putDebugStrLn $ "--> redirected " ++ (show url) ++ " -> " ++ (show to)
 								(text, effurl, headers, c) <- internalKolRequest to Nothing (cookie, useragent, host, getconn) noredirect
 								return (text, effurl, addheaders ++ headers, c)
 							Just to -> do
--- 								putStrLn $ "==> redirected " ++ (show url) ++ " -> " ++ (show to)
+-- 								putDebugStrLn $ "==> redirected " ++ (show url) ++ " -> " ++ (show to)
 								(text, effurl, headers, c) <- internalKolRequest to Nothing (cookie, useragent, host, getconn) noredirect
 								return (text, effurl, addheaders ++ headers, c)
 					_ -> throwIO $ InternalError $ "Error parsing redirect: No location header"
@@ -104,7 +103,7 @@ load_api_status_to_mv ref mv apixf = do
 			"/maint.php" -> throwIO $ NotLoggedInException
 			"/afterlife.php" -> throwIO $ InValhallaException
 			_ -> do
-				putStrLn $ "WARNING: got uri: " ++ (show xuri) ++ " when raw-getting API"
+				putWarningStrLn $ "got uri: " ++ (show xuri) ++ " when raw-getting API"
 				throwIO $ UrlMismatchException "/api.php" xuri
 		return jsobj)
 	writeIORef (latestRawJson_ $ sessionData $ ref) (Just apires)
@@ -114,7 +113,7 @@ load_api_status_to_mv ref mv apixf = do
 	putMVar mv apires
 
 internalKolRequest_pipelining ref uri params should_invalidate_cache = do
--- 	putStrLn $ "DEBUG: pipeline-req " ++ show uri
+-- 	putDebugStrLn $ "pipeline-req " ++ show uri
 	let host = hostUri_ $ connection $ ref
 
 	curjsonmv <- if should_invalidate_cache
@@ -140,7 +139,7 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 				x <- (readMVar mv_x) `catch` (\e -> do
 					-- TODO: when does this happen?
 					-- TODO: make it not happen
-					putStrLn $ "WARNING: httpreq read exception for " ++ (uriPath reqabsuri) ++ ": " ++ (show (e :: SomeException))
+					putWarningStrLn $ "httpreq read exception for " ++ (uriPath reqabsuri) ++ ": " ++ (show (e :: SomeException))
 					throwIO e)
 				case x of
 					Right rx -> return rx
@@ -161,14 +160,13 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 					case parseURI lochdruri of
 						Nothing -> do
 							Just to <- parseUriServerBugWorkaround lochdruri
--- 							putStrLn $ "DEBUG --> local redirected " ++ (show retabsuri) ++ " -> " ++ (show to)
+-- 							putDebugStrLn $ "--> local redirected " ++ (show retabsuri) ++ " -> " ++ (show to)
 							(y, mvy) <- internalKolRequest_pipelining ref to Nothing should_invalidate_cache
 							(a, b, c, d) <- y
 							themv <- mvy
 							return ((a, b, addheaders ++ c, d), themv)
 						Just to -> do
-							-- TODO: does this happen?
-							putStrLn $ "DEBUG ==> remote redirected " ++ (show retabsuri) ++ " => " ++ (show to)
+							putDebugStrLn $ "==> remote redirected " ++ (show retabsuri) ++ " => " ++ (show to)
 							-- TODO: make new getconn and use pipelining
 							(a, b, c, d) <- internalKolRequest to Nothing (cookie_ $ connection $ ref, useragent_ $ connection $ ref, host, Nothing) False
 							return ((a, b, c, d), curjsonmv)

@@ -105,6 +105,6 @@ function load_file(category, name)
 	end
 end
 
-dofile("scripts/kolproxy-internals/loaders.lua")
+dofile("scripts/kolproxy-internal/loaders.lua")
 
 return run_wrapped_function

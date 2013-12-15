@@ -15,7 +15,7 @@ function load_file(category, name)
 	end
 end
 
-dofile("scripts/kolproxy-internals/loaders.lua")
+dofile("scripts/kolproxy-internal/loaders.lua")
 
 do
 	local f = io.open("logs/chat/sentchat-dump.raw", "a+")

@@ -112,14 +112,14 @@ do_db_query db query params = (do
 	r <- getresults []
 	Database.SQLite3Modded.finalize s
 	return r) `catch` (\e -> do
-		putStrLn $ "db exception: " ++ (show (e :: SomeException))
-		putStrLn $ "  for query: " ++ query
+		putWarningStrLn $ "db exception: " ++ (show (e :: SomeException))
+		putWarningStrLn $ "  for query: " ++ query
 		throwIO e)
 
 do_db_query_ db query params = void $ do_db_query db query params
 
 forkIO_ name x = void $ forkIO $ x `catch` (\e -> do
-	putStrLn $ "WARNING: " ++ name ++ " exception: " ++ (show (e :: SomeException))
+	putWarningStrLn $ name ++ " exception: " ++ (show (e :: SomeException))
 	return ())
 
 get_custom_autoload_script_files = do
@@ -127,5 +127,10 @@ get_custom_autoload_script_files = do
 	return $ filter (=~ "\\.lua$") filenames
 
 debug_do msg x = (x) `catch` (\e -> do
-	putStrLn $ "DEBUG: " ++ msg ++ " exception: " ++ show (e :: SomeException)
+	putDebugStrLn $ msg ++ " exception: " ++ show (e :: SomeException)
 	throwIO e)
+
+putErrorStrLn msg = putStrLn $ "ERROR: " ++ msg
+putWarningStrLn msg = putStrLn $ "WARNING: " ++ msg
+putInfoStrLn msg = putStrLn $ "INFO: " ++ msg
+putDebugStrLn msg = putStrLn $ "DEBUG: " ++ msg

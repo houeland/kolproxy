@@ -723,7 +723,7 @@ setvars vars text allparams l = do
 
 runProcessScript ref uri effuri pagetext allparams = do
 	let vars = [("path", uriPath effuri), ("query", uriQuery effuri), ("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
-	rets <- run_lua_code PROCESS "scripts/process-page.lua" ref (setvars vars pagetext allparams)
+	rets <- run_lua_code PROCESS "scripts/kolproxy-internal/process-page.lua" ref (setvars vars pagetext allparams)
 	return $ case rets of
 		Right [Just t] -> Right $ t
 		Right xs -> Left ("Lua process call error, return values = " ++ (show xs), "")
@@ -731,7 +731,7 @@ runProcessScript ref uri effuri pagetext allparams = do
 
 runPrinterScript ref uri effuri pagetext allparams = do
 	let vars = [("path", uriPath effuri), ("query", uriQuery effuri), ("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
-	rets <- run_lua_code PRINTER "scripts/printer.lua" ref (setvars vars pagetext allparams)
+	rets <- run_lua_code PRINTER "scripts/kolproxy-internal/printer.lua" ref (setvars vars pagetext allparams)
 	return $ case rets of
 		Right [Just t] -> Right $ t
 		Right xs -> Left ("Lua printer call error, return values = " ++ (show xs), "")
@@ -739,7 +739,7 @@ runPrinterScript ref uri effuri pagetext allparams = do
 
 runChatScript ref uri effuri pagetext allparams = do
 	let vars = [("path", uriPath effuri), ("query", uriQuery effuri), ("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
-	rets <- run_lua_code WHENEVER "scripts/chat.lua" ref (setvars vars pagetext allparams)
+	rets <- run_lua_code WHENEVER "scripts/kolproxy-internal/chat.lua" ref (setvars vars pagetext allparams)
 	return $ case rets of
 		Right [Just t] -> Right $ t
 		Right xs -> Left ("Lua chat call error, return values = " ++ (show xs), "")
@@ -747,35 +747,35 @@ runChatScript ref uri effuri pagetext allparams = do
 
 runSendChatScript ref uri allparams = do
 	let vars = [("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
-	rets <- run_lua_code WHENEVER "scripts/sendchat.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
+	rets <- run_lua_code WHENEVER "scripts/kolproxy-internal/sendchat.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
 	return $ case rets of
 		Right [Just t] -> Right $ t
 		Right xs -> Left ("Lua chat call error, return values = " ++ (show xs), "")
 		Left err -> Left err
 
 runSentChatScript ref msg = do
-	void $ run_lua_code WHENEVER "scripts/sentchat.lua" ref (setvars [] msg [])
+	void $ run_lua_code WHENEVER "scripts/kolproxy-internal/sentchat.lua" ref (setvars [] msg [])
 	return ()
 
-runAutomateScript ref uri effuri pagetext allparams = do
-	let vars = [("path", uriPath effuri), ("query", uriQuery effuri), ("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
-	rets <- run_lua_code AUTOMATE "scripts/automate.lua" ref (setvars vars pagetext allparams)
-	return $ case rets of
-		Right [Just t] -> Right t
-		Right xs -> Left ("Lua automate call error, return values = " ++ (show xs), "")
-		Left err -> Left err
+--runAutomateScript ref uri effuri pagetext allparams = do
+--	let vars = [("path", uriPath effuri), ("query", uriQuery effuri), ("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
+--	rets <- run_lua_code AUTOMATE "scripts/kolproxy-internal/automate.lua" ref (setvars vars pagetext allparams)
+--	return $ case rets of
+--		Right [Just t] -> Right t
+--		Right xs -> Left ("Lua automate call error, return values = " ++ (show xs), "")
+--		Left err -> Left err
 
-runInterceptScript ref uri allparams reqtype = do
-	let vars = [("requestpath", uriPath uri), ("requestquery", uriQuery uri), ("request_type", reqtype)]
-	rets <- run_lua_code INTERCEPT "scripts/intercept.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
-	return $ case rets of
-		Right [Just t, Just u] -> Right (t, mkuri $ Data.ByteString.Char8.unpack $ u)
-		Right xs -> Left ("Lua intercept call error, return values = " ++ (show xs), "")
-		Left err -> Left err
+--runInterceptScript ref uri allparams reqtype = do
+--	let vars = [("requestpath", uriPath uri), ("requestquery", uriQuery uri), ("request_type", reqtype)]
+--	rets <- run_lua_code INTERCEPT "scripts/kolproxy-internal/intercept.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
+--	return $ case rets of
+--		Right [Just t, Just u] -> Right (t, mkuri $ Data.ByteString.Char8.unpack $ u)
+--		Right xs -> Left ("Lua intercept call error, return values = " ++ (show xs), "")
+--		Left err -> Left err
 
 runBrowserRequestScript ref uri allparams reqtype = do
 	let vars = [("request_path", uriPath uri), ("request_query", uriQuery uri), ("request_type", reqtype)]
-	rets <- run_lua_code BROWSERREQUEST "scripts/browser-request.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
+	rets <- run_lua_code BROWSERREQUEST "scripts/kolproxy-internal/browser-request.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
 	return $ case rets of
 		Right [Just t, Just u] -> Right (t, mkuri $ Data.ByteString.Char8.unpack $ u)
 		Right xs -> Left (Data.ByteString.Char8.pack $ ("Lua browser request call error, return values = " ++ (show xs)), "")
@@ -786,7 +786,7 @@ runBotScript baseref filename = do
 	return ()
 
 runLogParsingScript log_db = do
-	code <- readFile "scripts/parselog.lua"
+	code <- readFile "scripts/kolproxy-internal/parselog.lua"
 	runLogScript log_db code
 
 runLogScript log_db code = do
@@ -907,7 +907,7 @@ runLogScript log_db code = do
 	return (jsonstr, maybeloginfo)
 
 run_datafile_parsers = do
-	code <- readFile "scripts/update-datafiles.lua"
+	code <- readFile "scripts/kolproxy-internal/update-datafiles.lua"
 
 	lstate <- Lua.newstate
 	Lua.openlibs lstate

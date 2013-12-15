@@ -2269,6 +2269,7 @@ mark m_done
 	end
 
 	function f.do_hidden_city()
+		-- TODO: Remove redundant information, put in zones/hiddencity.lua
 		local places = {
 			{ zone = "A Massive Ziggurat", choice = "Legend of the Temple in the Hidden City", option = "Leave" },
 			{ zone = "An Overgrown Shrine (Southwest)", choice = "Water You Dune", option = "Place your head in the impression", fallback = "Back away", sphere = "dripping" },
@@ -2390,10 +2391,50 @@ mark m_done
 					}
 				}
 			}
-		else
-			if not can_wear_weapons() then
-				stop "Kill lianas manually without machete"
+		elseif not can_wear_weapons() then
+			local remaining = remaining_hidden_city_liana_zones()
+			remaining["A Massive Ziggurat"] = nil
+			local function findplace(name)
+				for _, x in ipairs(places) do
+					if x.zone == name then
+						return x
+					end
+				end
 			end
+			local x
+			if not cached_stuff.unlocked_massive_ziggurat then
+				x = findplace("A Massive Ziggurat")
+			elseif next(remaining) then
+				x = findplace(next(remaining))
+			end
+			if not x then
+				critical("Kill lianas without machete")
+			end
+			run_task {
+				message = "cut liana at "..x.zone.." (without machete)",
+				fam = "Angry Jung Man",
+				action = adventure {
+					zone = x.zone,
+					macro_function = macro_noodleserpent,
+					choice_function = function(advtitle, choicenum, pagetext)
+						if advtitle == x.choice then
+							if x.zone == "A Massive Ziggurat" then
+								cached_stuff.unlocked_massive_ziggurat = true
+							end
+							if pagetext:contains(x.option) then
+								return x.option
+							else
+								return x.fallback
+							end
+						end
+					end,
+				}
+			}
+			if get_result():contains("New Area Unlocked") then
+				did_action = true
+			end
+		else
+			-- TODO: Merge with code above
 			for _, x in ipairs(places) do
 				for i = 1, 5 do
 					did_action = false

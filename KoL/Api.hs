@@ -68,7 +68,7 @@ asyncGetItemInfoObj itemid ref = do
 		case decodeStrict jsonobj :: Result JSValue of
 			Ok x -> return x
 			Error err -> do
--- 				putStrLn $ "Item API returned:\n  ===\n\n" ++ jsonobj ++ "\n\n  ===\n\n"
+-- 				putDebugStrLn $ "Item API returned:\n  ===\n\n" ++ jsonobj ++ "\n\n  ===\n\n"
 				throwIO $ ApiPageException err
 
 
@@ -99,7 +99,7 @@ postPageRawNoScripts url params ref = do
 			if uriPath goturi == "/login.php" || uriPath goturi == "/maint.php"
 				then throwIO $ NotLoggedInException
 				else do
-					putStrLn $ "got uri: " ++ (show goturi) ++ " when raw-getting " ++ (url)
+					putInfoStrLn $ "got uri: " ++ (show goturi) ++ " when raw-getting " ++ (url)
 					throwIO $ UrlMismatchException url goturi
 
 rawAsyncNochangeGetPageRawNoScripts url ref = do
@@ -112,7 +112,7 @@ rawAsyncNochangeGetPageRawNoScripts url ref = do
 				if uriPath goturi == "/login.php" || uriPath goturi == "/maint.php"
 					then throwIO $ NotLoggedInException
 					else do
-						putStrLn $ "got uri: " ++ (show goturi) ++ " when raw-getting " ++ (url)
+						putInfoStrLn $ "got uri: " ++ (show goturi) ++ " when raw-getting " ++ (url)
 						throwIO $ UrlMismatchException url goturi
 
 nochangeGetPageRawNoScripts url ref = Data.ByteString.Char8.unpack <$> (join $ rawAsyncNochangeGetPageRawNoScripts url ref)

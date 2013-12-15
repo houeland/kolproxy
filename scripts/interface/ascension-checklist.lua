@@ -98,12 +98,6 @@ consumable_items_normal_impact = {
 	-- { amount, item-list }
 	{ 9, { "Breathetastic&trade; Premium Canned Air", "Instant Karma" } },
 
-	{ 1, { "phial of hotness" } },
-	{ 1, { "phial of coldness" } },
-	{ 1, { "phial of stench" } },
-	{ 1, { "phial of spookiness" } },
-	{ 1, { "phial of sleaziness" } },
-
 	{ 3, { "stone wool" } },
 	{ 2, { "divine champagne popper" } },
 	{ 2, { "crystal skull" } },
@@ -227,6 +221,12 @@ consumable_items_low_impact = {
 	{ 3, { "gummi trilobite" } },
 	{ 2, { "bunch of bananas" } },
 	{ 3, { "Uncle Crimbo's Rations" } },
+
+	{ 1, { "phial of hotness" } },
+	{ 1, { "phial of coldness" } },
+	{ 1, { "phial of stench" } },
+	{ 1, { "phial of spookiness" } },
+	{ 1, { "phial of sleaziness" } },
 }
 
 equipment_items = {
