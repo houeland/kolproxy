@@ -89,7 +89,9 @@ canReadState ref = return $ stateValid_ ref :: IO Bool
 create_db place filename = do
 	path <- getDirectoryPath place filename
 	db <- Database.SQLite3Modded.open path
-	do_db_query_ db "PRAGMA fullfsync = 1;" []
+	envfullfsync <- getEnvironmentSetting "KOLPROXY_SQLITE_FULLFSYNC"
+	when (envfullfsync == Just "1") $ do
+		do_db_query_ db "PRAGMA fullfsync = 1;" []
 	return db
 
 do_db_query db query params = (do
