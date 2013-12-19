@@ -128,6 +128,8 @@ function do_daily_visits()
 		"set of jacks",
 		"Taco Dan's Taco Stand Flier",
 		"Trivial Avocations board game",
+		"warbear breakfast machine",
+		"warbear soda machine",
 	}
 	-- TODO? neverending soda
 
