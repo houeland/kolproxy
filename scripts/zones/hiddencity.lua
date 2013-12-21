@@ -1,9 +1,17 @@
 add_warning {
-	message = "You might want to equip an antique machete to cut away dense lianas without taking a turn (from The Hidden Park).",
+	message = "You can equip an antique machete to cut away dense lianas without taking a turn (found in The Hidden Park).",
 	type = "warning",
 	when = "ascension",
 	zone = { "An Overgrown Shrine (Northwest)", "An Overgrown Shrine (Southwest)", "An Overgrown Shrine (Northeast)", "An Overgrown Shrine (Southeast)", "A Massive Ziggurat" },
-	check = function() return can_wear_weapons() and not have_equipped("antique machete") end
+	check = function(zoneid)
+		if not can_wear_weapons() then return end
+		if have_equipped_item("antique machete") or have_equipped_item("machetito") or have_equipped_item("muculent machete") or have_equipped_item("papier-m&acirc;ch&eacute;te") then return end
+		for x, _ in pairs(remaining_hidden_city_liana_zones()) do
+			if get_zoneid(x) == zoneid then
+				return true
+			end
+		end
+	end
 }
 
 local have_hidden_tavern_access = nil
