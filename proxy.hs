@@ -152,18 +152,18 @@ kolProxyHandlerWhenever uri params baseref = do
 	makeResponseWithNoExtraHeaders resptext effuri [("Content-Type", "application/json; charset=UTF-8"), ("Cache-Control", "no-cache")]
 
 -- TODO: Remove
-handleRequest ref uri effuri headers params pagetext = do
-	let allparams = concat $ catMaybes $ [decodeUrlParams uri, decodeUrlParams effuri, params]
-
-	xresptext <- if skipRunningPrinters_ ref
-		then return $ Right $ pagetext
-		else log_time_interval ref ("printing: " ++ (show uri)) $ runPrinterScript ref uri effuri pagetext allparams
-
-	case xresptext of
-		Right msg -> log_time_interval ref ("making response") $ makeResponse msg effuri headers
-		Left (msg, trace) -> do
-			let pt = add_error_message_to_page ("printer.lua error: " ++ msg ++ "\n" ++ trace) pagetext
-			log_time_interval ref ("making response") $ makeErrorResponse pt effuri headers
+--handleRequest ref uri effuri headers params pagetext = do
+--	let allparams = concat $ catMaybes $ [decodeUrlParams uri, decodeUrlParams effuri, params]
+--
+--	xresptext <- if skipRunningPrinters_ ref
+--		then return $ Right $ pagetext
+--		else log_time_interval ref ("printing: " ++ (show uri)) $ runPrinterScript ref uri effuri pagetext allparams
+--
+--	case xresptext of
+--		Right msg -> log_time_interval ref ("making response") $ makeResponse msg effuri headers
+--		Left (msg, trace) -> do
+--			let pt = add_error_message_to_page ("printer.lua error: " ++ msg ++ "\n" ++ trace) pagetext
+--			log_time_interval ref ("making response") $ makeErrorResponse pt effuri headers
 
 make_ref baseref = do
 	let ref = baseref {
@@ -217,7 +217,8 @@ kolProxyHandler uri params baseref = do
 				putErrorStrLn $ "No cookie from logging in!"
 				putErrorStrLn $ "  headers: " ++ (show hdrs)
 				putErrorStrLn $ "  url: " ++ (show effuri)
-				handleRequest origref uri effuri hdrs params pt
+--				handleRequest origref uri effuri hdrs params pt
+				makeErrorResponse pt effuri hdrs
 			else (do
 				newref <- do
 					mv <- newEmptyMVar
@@ -263,35 +264,23 @@ kolProxyHandler uri params baseref = do
 			pt <- showLogs (lookup "which" allparams) (fromJust $ lookup "pwd" allparams)
 			makeResponse (Data.ByteString.Char8.pack pt) uri []
 
-		"/custom-settings" -> check_pwd_for $ Just $ do
-			case lookup "action" allparams of
-				Nothing -> return ()
-				Just "set state" -> do
-					case (lookup "stateset" allparams, lookup "name" allparams, lookup "value" allparams) of
-						(Just stateset, Just name, Just value) -> setState origref stateset name value
-						_ -> return () -- TODO: Handle as error?
-				Just x -> throwIO $ InternalError $ "Custom settings action not recognized: " ++ x
-			handleRequest origref uri uri [] params (Data.ByteString.Char8.pack "Empty page.")
+--		"/custom-settings" -> check_pwd_for $ Just $ do
+--			case lookup "action" allparams of
+--				Nothing -> return ()
+--				Just "set state" -> do
+--					case (lookup "stateset" allparams, lookup "name" allparams, lookup "value" allparams) of
+--						(Just stateset, Just name, Just value) -> setState origref stateset name value
+--						_ -> return () -- TODO: Handle as error?
+--				Just x -> throwIO $ InternalError $ "Custom settings action not recognized: " ++ x
+--			makeResponse (Data.ByteString.Char8.pack $ "Empty page.") uri []
 
 		"/kolproxy-automation-script" -> check_pwd_for $ Nothing
+		"/kolproxy-script" -> check_pwd_for $ Nothing
 
 		_ -> return Nothing
 
 	retresp <- log_time_interval origref ("run handler for: " ++ (show uri)) $ case response of
 		Just r -> r
---		do
---			canread <- canReadState origref
---			if and [not canread, uriPath uri /= "/login.php", uriPath uri /= "/afterlife.php"]
---				then do
---					-- TODO: Can this still be reached?
---					putErrorStrLn $ "Can't read state! Don't log in for the first time in a day while in a fight or choice noncombat, and don't log in while in valhalla!"
---					gp <- getpage
---					case gp of
---						Left (pt, effuri, _hdrs, _code) -> makeErrorResponse pt effuri []
---						Right (pt, effuri, hdrs, _code) -> if (uriPath effuri) `elem` ["/fight.php", "/choice.php"]
---							then makeErrorResponse (add_error_message_to_page "Error: kolproxy can't read state!" pt) effuri []
---							else handleRequest origref uri effuri hdrs params pt -- Because we still want to run printer here(?)
---				else r
 		Nothing -> do
 			canread_before <- canReadState origref
 

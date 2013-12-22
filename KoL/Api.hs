@@ -40,7 +40,7 @@ data ApiInfo = ApiInfo {
 	ascension :: Integer,
 	daysthisrun :: Integer,
 	pwd :: String
-} -- deriving (Read, Show, Data, Typeable)
+}
 
 rawDecodeApiInfo jscomb = do
 		ApiInfo { charName = getstr "name", turnsplayed = getnum "turnsplayed", ascension = getnum "ascensions" + 1, daysthisrun = getnum "daysthisrun", pwd = getstr "pwd" }
@@ -53,7 +53,6 @@ rawDecodeApiInfo jscomb = do
 			Ok (JSString s) -> jss where
 				Just jss = read_as (fromJSString s)
 			Ok (JSRational _ r) -> round r
---			Ok JSNull -> 0 -- HACK for when rollover is broken and not set yet. Removed, no longer relevant?
 			_ -> throw $ InternalError $ "Error parsing API number " ++ what
 
 getApiInfo ref = rawDecodeApiInfo <$> readlateststatus ref
@@ -85,7 +84,7 @@ getPlayerId name ref = do
 		_ -> Nothing
 
 -- TODO: Remove?
-getRawCharpaneText ref = nochangeGetPageRawNoScripts "/charpane.php" ref
+-- getRawCharpaneText ref = nochangeGetPageRawNoScripts "/charpane.php" ref
 
 
 

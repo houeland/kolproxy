@@ -76,8 +76,6 @@ get_latest_kolproxy_version = do
 set_state ref stateset var value = do
 	canread <- canReadState ref
 	unless canread $ failLua $ "Error: Trying to set state \"" ++ var ++ "\" before state is available."
---	if stateset `elem` ["ascension", "day", "fight", "session"]
--- HACK: Allow temporarily!
 	if stateset `elem` ["character", "ascension", "day", "fight", "session"]
 		then setState ref stateset var value
 		else failLua $ "cannot write to stateset " ++ (show $ stateset)
