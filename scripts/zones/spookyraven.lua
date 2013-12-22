@@ -92,7 +92,7 @@ add_printer("/manor3.php", function()
 	local wines_needed_status = {}
 	if not text:match("Summoning Chamber") then
 		for wine in table.values(wines_needed_list) do
-			if have(wine) then
+			if have_item(wine) then
 				wines_needed_status[wine] = "have"
 			else
 				wines_needed_status[wine] = "need"

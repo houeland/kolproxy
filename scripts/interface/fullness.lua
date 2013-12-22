@@ -163,7 +163,7 @@ local function check_eating_warning(itemid, quantity, whicheffect)
 		end
 	end
 	whicheffect = whicheffect or "Got Milk"
-	if not buff(whicheffect) then
+	if not have_buff(whicheffect) then
 		return "You do not have " .. whicheffect .. " active.", "eating without " .. whicheffect
 	end
 	local item = maybe_get_itemdata(tonumber(params.whichitem))
@@ -191,7 +191,7 @@ add_aftercore_warning("/inv_eat.php", function()
 end)
 
 add_extra_ascension_warning("/inv_eat.php", function()
-	if have_buff("Got Milk") or have_item("milk of magnesium") or (have("glass of goat's milk") and (classid() == 4 or have_skill("Advanced Saucecrafting"))) then
+	if have_buff("Got Milk") or have_item("milk of magnesium") or (have_item("glass of goat's milk") and (classid() == 4 or have_skill("Advanced Saucecrafting"))) then
 		return check_eating_warning(tonumber(params.whichitem), (tonumber(params.quantity) or 1))
 	end
 end)
@@ -213,7 +213,7 @@ end)
 add_always_warning("/cafe.php", function()
 	if params.action ~= "CONSUME!" or tonumber(params.cafeid) ~= 1 then return end
 	-- Chez Snotee
-	if ascensionstatus() == "Aftercore" or (have_buff("Got Milk") or have_item("milk of magnesium") or (have("glass of goat's milk") and (classid() == 4 or have_skill("Advanced Saucecrafting")))) then
+	if ascensionstatus() == "Aftercore" or (have_buff("Got Milk") or have_item("milk of magnesium") or (have_item("glass of goat's milk") and (classid() == 4 or have_skill("Advanced Saucecrafting")))) then
 		if not have_buff("Got Milk") then
 			return "You do not have Got Milk active.", "eating without Got Milk"
 		end

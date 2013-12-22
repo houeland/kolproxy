@@ -164,14 +164,14 @@ add_printer("/campground.php", function()
 			local tbl, unknown_potions, unknown_effects = get_dod_potion_status()
 			local unknowndata = {}
 			for x in table.values(unknown_potions) do
-				table.insert(unknowndata, x .. " (" .. count(x) .. ")")
+				table.insert(unknowndata, x .. " (" .. count_item(x) .. ")")
 			end
 			local dodpotstatus = {}
 			local function handle_eff(eff, overridecolor)
 				local color = "darkorange"
 				for a, b in pairs(tbl) do
 					if b == eff then
-						if have(a) then
+						if have_item(a) then
 							color = "green"
 						end
 						return [[<span style="color: ]] .. (overridecolor or color) .. [[">]] .. string.format("%s = %s", eff, a) .. [[</span>]]
@@ -218,14 +218,14 @@ add_printer("/campground.php", function()
 			}
 			local function check_key(x)
 				if x == "Boris's key" or x == "Jarlsberg's key" or x == "Sneaky Pete's key" or x == "skeleton key" then
-					if have(x) then
+					if have_item(x) then
 						return string.format([[<span style="color: green">%s</span>]], x)
 					else
 						return string.format([[<span style="color: darkorange">%s</span>]], x)
 					end
 				elseif x == "digital key" then
-					local pixels = count("white pixel") + math.min(count("red pixel"), count("green pixel"), count("blue pixel"))
-					if have(x) then
+					local pixels = count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel"))
+					if have_item(x) then
 						return string.format([[<span style="color: green">%s</span>]], x)
 					elseif pixels >= 30 then
 						return string.format([[<span style="color: green">%s</span> (%d pixels)]], x, pixels)
@@ -242,18 +242,18 @@ add_printer("/campground.php", function()
 					end
 					local have_star_everything = have_item("Richard's star key") and have_item("star hat") and have_star_weapon
 					for y in table.values(wantstaritems) do
-						if have(y) then
+						if have_item(y) then
 							table.insert(extrastrs, string.format([[<span style="color: green">%s</span>]], y))
 						elseif y == "star hat" or not have_star_weapon then
 							table.insert(extrastrs, string.format([[<span style="color: darkorange">%s</span>]], y))
 						end
 					end
 					if not have_star_everything then
-						table.insert(extrastrs, make_plural(count("star"), "star", "stars"))
-						table.insert(extrastrs, make_plural(count("line"), "line", "lines"))
-						table.insert(extrastrs, make_plural(count("star chart"), "chart", "charts"))
+						table.insert(extrastrs, make_plural(count_item("star"), "star", "stars"))
+						table.insert(extrastrs, make_plural(count_item("line"), "line", "lines"))
+						table.insert(extrastrs, make_plural(count_item("star chart"), "chart", "charts"))
 					end
-					if have(x) then
+					if have_item(x) then
 						return string.format([[<span style="color: green">%s</span> (%s)]], x, table.concat(extrastrs, ", "))
 					else
 						return string.format([[<span style="color: darkorange">%s</span> (%s)]], x, table.concat(extrastrs, ", "))
@@ -555,7 +555,7 @@ function automate_lair_statues(text)
 		local missing_scuba_keys = {}
 		for _, x in ipairs(scuba_keys) do
 			if x.have_item() then
-			elseif have(x.key) then
+			elseif have_item(x.key) then
 				print("using", x.key)
 				post_page("/lair2.php", { prepreaction = x.prepreaction, answer = x.answer })
 			else
@@ -576,7 +576,7 @@ function automate_lair_statues(text)
 			if next(missing_scuba_keys) then
 				local count_key_and_item = 0
 				for _, x in ipairs(scuba_keys) do
-					if have(x.key) and x.have_item() then
+					if have_item(x.key) and x.have_item() then
 						count_key_and_item = count_key_and_item + 1
 					end
 				end
@@ -612,9 +612,9 @@ function automate_lair_statues(text)
 
 	if not have_item("stone tablet (Squeezings of Woe)") then
 		if not have_item("digital key") and setting_enabled("enable ascension assistance") then
-			if count("white pixel") + math.min(count("red pixel"), count("green pixel"), count("blue pixel")) >= 30 then
-				if count("white pixel") < 30 then
-					local to_make = 30 - count("white pixel")
+			if count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel")) >= 30 then
+				if count_item("white pixel") < 30 then
+					local to_make = 30 - count_item("white pixel")
 					shop_buyitem({ ["white pixel"] = to_make }, "mystic")
 				end
 				shop_buyitem("digital key", "mystic")
@@ -924,7 +924,7 @@ local function show_tower_items(levelidxs)
 	for _, level in ipairs(levelidxs) do
 		local needitem = itemsneeded[level + 1]
 		if needitem then
-			local color = have(needitem) and "green" or "orange"
+			local color = have_item(needitem) and "green" or "orange"
 			local leveltext = [[<span style="color: ]] .. color .. [[">{ ]] .. needitem .. [[ }</span>]]
 			text = text:gsub([[<img src="http://images.kingdomofloathing.com/otherimages/lair/tower]] .. level, function(imgtag)
 				return [[<div style="position: relative;"><div style="position: absolute; left: -205px; top: 35px; width: 200px; height: 100px; text-align: right;">]] .. leveltext .. [[</div></div>]] .. imgtag
@@ -982,7 +982,7 @@ add_automator("/fight.php", function()
 	local function known_win(level)
 		local itemsneeded = session["zone.lair.itemsneeded"] or {}
 		local needitem = itemsneeded[level + 1]
-		return needitem and have(needitem)
+		return needitem and have_item(needitem)
 	end
 	if text:contains([[<a href="lair4.php">Go back to the Sorceress' Tower</a>]]) and text:contains("WINWINWIN") then
 		local lair4pt = get_page("/lair4.php")
@@ -1087,11 +1087,11 @@ function automate_lair6_place(place, text)
 					get_page("/charpane.php") -- Workaround for CDM updating bug
 					local eq = equipment()
 					local weight = buffedfamiliarweight()
-					if weight and weight < 20 and have_inventory("sugar shield") then
+					if weight and weight < 20 and have_inventory_item("sugar shield") then
 						equip_item("sugar shield")
 						get_page("/charpane.php") -- Workaround for CDM updating bug
 						weight = buffedfamiliarweight()
-					elseif weight and weight < 20 and have_inventory("astral pet sweater") then
+					elseif weight and weight < 20 and have_inventory_item("astral pet sweater") then
 						equip_item("astral pet sweater")
 						get_page("/charpane.php") -- Workaround for CDM updating bug
 						weight = buffedfamiliarweight()

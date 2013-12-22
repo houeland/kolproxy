@@ -483,7 +483,7 @@ endwhile
 								pull_storage_items { "rave whistle" }
 							end
 							for name, value in pairs(rave_items) do
-								if have(name) then
+								if have_item(name) then
 									print("have", name, ": ", value)
 									raveosity = raveosity + value
 								end
@@ -615,7 +615,7 @@ end
 function automate_AT_nemesis_island()
 			local pwd = get_session_state("pwd") -- inserting pwd, boo!
 			get_page("/volcanoisland.php", { pwd = pwd, action = "npc" })
-			if count("hacienda key") < 5 then
+			if count_item("hacienda key") < 5 then
 				text = "explore barracks"
 				for i = 1, 100 do
 					print("exploring barracks...", i)
@@ -623,7 +623,7 @@ function automate_AT_nemesis_island()
 						cast_skillid(1010) -- tongue of the walrus
 						cast_skillid(3012) -- cocoon
 					end
-					if count("hacienda key") >= 5 then
+					if count_item("hacienda key") >= 5 then
 						break
 					end
 					if not have_buff("The Sonata of Sneakiness") then

@@ -148,7 +148,10 @@ function setup_functions()
 			end
 			return buffslist()[name] ~= nil
 		end
-		buff = have_buff
+		function buff(...)
+			print("WARNING: buff() is deprecated, use have_buff()")
+			return have_buff(...)
+		end
 		function buffturns(name) return buffslist()[name] or 0 end
 		function have_intrinsic(name) return intrinsicslist()[name] ~= nil end
 		function adventures() return tonumber(status().adventures) end
@@ -326,17 +329,26 @@ function setup_functions()
 				return false
 			end
 		end
-		have_inventory = have_inventory_item
+		function have_inventory(...)
+			print("WARNING: have_inventory() is deprecated, use have_inventory_item()")
+			return have_inventory_item(...)
+		end
 
 		function have_equipped_item(name)
 			return get_cached_equip_counts()[get_itemid(name)] ~= nil
 		end
-		have_equipped = have_equipped_item
+		function have_equipped(...)
+			print("WARNING: have_equipped() is deprecated, use have_equipped_item()")
+			return have_equipped_item(...)
+		end
 
 		function count_equipped_item(name)
 			return get_cached_equip_counts()[get_itemid(name)] or 0
 		end
-		count_equipped = count_equipped_item
+		function count_equipped(...)
+			print("WARNING: count_equipped() is deprecated, use count_equipped_item()")
+			return count_equipped_item(...)
+		end
 
 		function have_item(name)
 			if have_inventory_item(name) then
@@ -345,21 +357,31 @@ function setup_functions()
 				return have_equipped_item(name)
 			end
 		end
-		have = have_item
+		function have(...)
+			print("WARNING: have() is deprecated, use have_item()")
+			return have_item(...)
+		end
 
-		function count_inventory(name)
+		function count_inventory_item(name)
 			return inventory()[get_itemid(name)] or 0
+		end
+		function count_inventory(...)
+			print("WARNING: count_inventory() is deprecated, use count_inventory_item()")
+			return count_inventory_item(...)
 		end
 
 		function count_item(name)
-			return count_inventory(name) + count_equipped(name)
+			return count_inventory_item(name) + count_equipped_item(name)
 		end
-		count = count_item
+		function count(...)
+			print("WARNING: count() is deprecated, use count_item()")
+			return count_item(...)
+		end
 
 		function get_wand_data()
 			local wands = { "aluminum wand", "ebony wand", "hexagonal wand", "marble wand", "pine wand" }
 			for _, x in ipairs(wands) do
-				if have(x) then
+				if have_item(x) then
 					local itemid = get_itemid(x)
 					local pt = get_page("/wand.php", { whichwand = itemid })
 					if pt:contains("Zap an item") then

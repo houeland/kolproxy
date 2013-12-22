@@ -11,7 +11,7 @@ sugar_sheet_items = {
 add_processor("/fight.php", function()
 	if newly_started_fight then
 		for _, x in ipairs(sugar_sheet_items) do
-			if have_equipped(x) then
+			if have_equipped_item(x) then
 				increase_ascension_counter("sugar sheet." .. x .. ".fights used", count_equipped_item(x))
 			end
 		end

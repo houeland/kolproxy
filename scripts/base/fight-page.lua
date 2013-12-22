@@ -77,7 +77,7 @@ add_printer("/fight.php", function()
 	if awesome_monsters[monstername()] then
 		color = "royalblue"
 		if awesome_monsters[monstername()] ~= "" then
-			local numitems = count(awesome_monsters[monstername()])
+			local numitems = count_item(awesome_monsters[monstername()])
 			if monstername("Blooper") then
 				numitems = count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel"))
 			end
@@ -90,7 +90,7 @@ add_printer("/fight.php", function()
 -- 	elseif other_item_dropping_monsters[monstername()] then
 -- 		local dropdata = {}
 -- 		for i table.values(other_item_dropping_monsters[monstername()]) do
--- 			table.insert(dropdata, i .. ":" .. count(i)
+-- 			table.insert(dropdata, i .. ":" .. count_item(i)
 -- 		end
 -- 		extra = extra .. [[<br><center style="font-size: 75%%; color: gray">[]] .. table.concat(dropdata, ", ") .. [[]</center>]]
 	end
@@ -133,7 +133,7 @@ add_printer("/fight.php", function()
 	if tower_monster_items[monstername()] then
 		local item_name = tower_monster_items[monstername()]
 		local item_id = get_itemid(item_name)
-		if have(item_name) then
+		if have_item(item_name) then
 			-- TODO: use make_href
 			extra = extra .. [[<br><center style="font-size: 75%%; color: green">[<a href="fight.php?action=useitem&whichitem=]]..item_id..[[" style="color: green">Use ]] .. item_name .. [[</a>]</center>]] -- should be POST, not GET
 		else

@@ -53,7 +53,7 @@ add_printer("/beanstalk.php", function()
 		local want = { "Tissue Paper Immateria", "Tin Foil Immateria", "Gauze Immateria", "Plastic Wrap Immateria" }
 		local got = 0
 		for item in table.values(want) do
-			if have(item) then
+			if have_item(item) then
 				got = got + 1
 			end
 		end
@@ -70,7 +70,7 @@ add_printer("/beanstalk.php", function()
 		local status = "<b>Required items</b><br>"
 		for _, item in ipairs(want) do
 			local itemtext = "?"
-			if have(item) then
+			if have_item(item) then
 				itemtext = [[<span style="color: green;">]] .. item .. [[</span>]]
 			else
 				itemtext = [[<span style="color: darkorange;">]] .. item .. [[</span>]]

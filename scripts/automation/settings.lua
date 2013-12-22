@@ -291,7 +291,7 @@ function get_ascension_automation_settings(want_bonus)
 				itemname = x
 			end
 		elseif type(x) == "table" then
-			if have(x.name) and x.check and x.check() and can_equip_item(x.name) then
+			if have_item(x.name) and x.check and x.check() and can_equip_item(x.name) then
 				if want_bonus.easy_combat and datafile("items")[x.name] and ((datafile("items")[x.name].equip_bonuses or {})["Monster Level"] or 0) > 0 then
 				else
 					itemname = x.name
@@ -307,7 +307,7 @@ function get_ascension_automation_settings(want_bonus)
 	if have_item("pirate fledges") then
 		table.insert(tbl.sell_items, "The Big Book of Pirate Insults")
 	end
-	if count("meat paste") >= 10 or (moonsign_area() == "Degrassi Knoll" and challenge ~= "zombie") then
+	if count_item("meat paste") >= 10 or (moonsign_area() == "Degrassi Knoll" and challenge ~= "zombie") then
 		table.insert(tbl.sell_items, "meat paste")
 	end
 

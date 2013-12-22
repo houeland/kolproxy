@@ -234,7 +234,7 @@ function estimate_current_outfit_bonuses()
 				-- WORKAROUND: Sometimes checks for unknown items.
 				-- TODO: Make this never happen using solid consistency checks and synchronized datafile loading.
 				wearing = false
-			elseif not have_equipped(y) then
+			elseif not have_equipped_item(y) then
 				wearing = false
 			end
 		end

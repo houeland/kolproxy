@@ -160,7 +160,7 @@ add_ascension_adventure_warning(function()
 end)
 
 add_ascension_adventure_warning(function()
-	if basemuscle() >= 40 and (have("Moonthril Cuirass") or have_item("Mint-in-box Moonthril Cuirass")) and not have_equipped_item("Moonthril Cuirass") and level() < 13 then
+	if basemuscle() >= 40 and (have_item("Moonthril Cuirass") or have_item("Mint-in-box Moonthril Cuirass")) and not have_equipped_item("Moonthril Cuirass") and level() < 13 then
 		return "You might want to wear your Moonthril Cuirass for stats.", "wear Moonthril Cuirass"
 	end
 end)
@@ -172,7 +172,7 @@ add_ascension_adventure_warning(function()
 end)
 
 add_ascension_adventure_warning(function()
-	if basemysticality() >= 35 and have_inventory("hockey stick of furious angry rage") and level() < 13 then
+	if basemysticality() >= 35 and have_inventory_item("hockey stick of furious angry rage") and level() < 13 then
 		return "You might want to wear your hockey stick of furious angry rage for stats.", "wear hockey stick of furious angry rage"
 	end
 end)
@@ -197,7 +197,7 @@ end)
 
 
 -- add_ascension_adventure_warning(function()
--- 	if mainstat_type("Moxie") and basemoxie() >= 60 and have_inventory("spangly sombrero") and level() < 13 then
+-- 	if mainstat_type("Moxie") and basemoxie() >= 60 and have_inventory_item("spangly sombrero") and level() < 13 then
 -- -- TODO: and not in an outfit-required place
 -- 		return "You might want to wear your spangly sombrero for stats.", "wear spangly sombrero"
 -- 	end
@@ -684,7 +684,7 @@ add_interceptor("__IGNORE__ use item: Degrassi Knoll shopping list", function()
 					return ret
 				end
 				function try_to_create(name)
-					if _itemhave(name) then
+					if have_item(name) then
 						return { have = { name }, buy = {}, missing = {}, order = {} }
 					end
 					if can_buy[name] then

@@ -44,7 +44,7 @@ local href = add_automation_script("custom-mix-drinks", function()
 	local resptext = ""
 	local advcock = { "pink pony", "fuzzbump", "slip 'n' slide", "ocean motion", "ducha de oro", "horizontal tango", "roll in the hay", "a little sump'm sump'm", "slap and tickle", "perpendicular hula", "rockin' wagon", "calle de miel", "tropical swill", "fruity girl swill", "blended frozen swill", "bungle in the jungle" }
 	function can_make(name)
-		local available = count(name)
+		local available = count_item(name)
 		local craftable = 0
 		local craft_steps = {}
 		if cocktailcrafting_recipes[name] then
@@ -84,7 +84,7 @@ local href = add_automation_script("custom-mix-drinks", function()
 	function handle_recipe(name)
 		local txt = ""
 		for _, x in pairs(cocktailcrafting_recipes[name]) do
-			txt = txt .. x .. " (" .. count(x) ..  ")  "
+			txt = txt .. x .. " (" .. count_item(x) ..  ")  "
 		end
 		local amount, steps = can_make(name)
 		if amount > 0 then

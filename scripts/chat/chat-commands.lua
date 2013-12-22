@@ -136,7 +136,7 @@ local function match_amount_and_item(line)
 	if not item then
 		return item, err
 	elseif amount == "*" then
-		amount = count_inventory(item)
+		amount = count_inventory_item(item)
 	end
 	return tonumber(amount), item
 end

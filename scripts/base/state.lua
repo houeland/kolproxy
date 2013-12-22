@@ -1,17 +1,15 @@
---~ function get_request_state(name) return get_state("request", name) end
+-- function get_request_state(name) return get_state("request", name) end
 function get_fight_state(name) return get_state("fight", name) end
 function get_session_state(name) return get_state("session", name) end
 function get_day_state(name) return get_state("day", name) end
 function get_ascension_state(name, value) return get_state("ascension", name) end
 function get_character_state(name) return get_state("character", name) end
 
---~ function set_request_state(name, value) set_state("request", name, value) end
+-- function set_request_state(name, value) set_state("request", name, value) end
 function set_fight_state(name, value) set_state("fight", name, value) end
 function set_session_state(name, value) set_state("session", name, value) end
 function set_day_state(name, value) set_state("day", name, value) end
 function set_ascension_state(name, value) set_state("ascension", name, value) end
---function set_character_state(name, value) error("No set_character_state from Lua") end
--- HACK: allow temporarily!
 function set_character_state(name, value) set_state("character", name, value) end
 
 

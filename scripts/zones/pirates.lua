@@ -175,14 +175,14 @@ add_interceptor("use item: Orcish Frat House blueprints", function() -- TODO: sp
 	for _, opt in ipairs(options) do
 		local possible = true
 		for _, want in pairs(opt.equipment) do
-			if not have(want) and not buyable[want] then
+			if not have_item(want) and not buyable[want] then
 				possible = false
 			elseif want == "homoerotic frat-paddle" and not can_wear_weapons() then
 				-- Can't use in fist or boris
 				possible = false
 			end
 		end
-		if opt.inventory and count(opt.inventory.name) < opt.inventory.amount then
+		if opt.inventory and count_item(opt.inventory.name) < opt.inventory.amount then
 			possible = false
 		end
 -- 		print("option", choicenum, possible)
@@ -190,7 +190,7 @@ add_interceptor("use item: Orcish Frat House blueprints", function() -- TODO: sp
 -- 			print("doing option", opt.choicenum)
 			local eq = equipment()
 			for where, want in pairs(opt.equipment) do
-				if not have(want) then
+				if not have_item(want) then
 					buy_item(want, "4", 1)
 				end
 				equip_item(want, where)
@@ -266,7 +266,7 @@ end)
 -- belowdecks
 
 add_ascension_zone_check(160, function()
-	if have_buff("On the Trail") and not have_item("Talisman o' Nam") and count("snakehead charrrm") + count("gaudy key") < 2 then
+	if have_buff("On the Trail") and not have_item("Talisman o' Nam") and count_item("snakehead charrrm") + count_item("gaudy key") < 2 then
 		local trailed = retrieve_trailed_monster()
 		if trailed ~= "gaudy pirate" then
 			return "You are on the trail of '" .. tostring(trailed) .. "' when you might want to sniff a gaudy pirate."

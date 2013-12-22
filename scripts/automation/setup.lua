@@ -208,7 +208,7 @@ end)
 function maybe_pull_item(name, input_amount)
 	local amount = input_amount or 1
 	if count_item(name) < amount then
-		pull_storage_item(name, amount - count(name))
+		pull_storage_item(name, amount - count_item(name))
 		if input_amount and count_item(name) < input_amount then
 			critical("Couldn't pull " .. tostring(amount) .. "x " .. tostring(name))
 		end

@@ -18,11 +18,11 @@ local function build_spoiler(pre, value, to)
 		local itemtext
 		if to.getitem then
 			if type(to.getitem) == "string" then
-				itemtext = tostring(to.getitem) .. " [" .. count_inventory(to.getitem) .. " in inventory]"
+				itemtext = tostring(to.getitem) .. " [" .. count_inventory_item(to.getitem) .. " in inventory]"
 			elseif type(to.getitem) == "table" then
 				local itemtbl = {}
 				for _, x in ipairs(to.getitem) do
-					table.insert(itemtbl, tostring(x) .. " [" .. count_inventory(tostring(x)) .. " in inventory]")
+					table.insert(itemtbl, tostring(x) .. " [" .. count_inventory_item(tostring(x)) .. " in inventory]")
 				end
 				itemtext = table.concat(itemtbl, " + ")
 			end
@@ -34,11 +34,11 @@ local function build_spoiler(pre, value, to)
 		end
 		if to.countitem then
 			if type(to.countitem) == "string" then
-				itemtext = " [" .. count_inventory(to.countitem) .. " in inventory]"
+				itemtext = " [" .. count_inventory_item(to.countitem) .. " in inventory]"
 			elseif type(to.countitem) == "table" then
 				local itemtbl = {}
 				for _, x in ipairs(to.countitem) do
-					table.insert(itemtbl, count_inventory(x))
+					table.insert(itemtbl, count_inventory_item(x))
 				end
 				itemtext = " [" .. table.concat(itemtbl, " + ") .. " in inventory]"
 			end

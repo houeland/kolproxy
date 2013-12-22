@@ -245,12 +245,12 @@ end
 
 local porko_href = add_automation_script("automate-porko", function()
 	local numtimes = tonumber(params.numtimes) or 0
-	local before_isotopes = count("lunar isotope")
+	local before_isotopes = count_item("lunar isotope")
 	local before_turns = advs()
 	for i = 1, numtimes do
 		automate_porko_play()
 	end
-	local after_isotopes = count("lunar isotope")
+	local after_isotopes = count_item("lunar isotope")
 	local after_turns = advs()
 	text = [[
 <html>

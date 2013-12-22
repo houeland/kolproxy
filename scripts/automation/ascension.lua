@@ -34,7 +34,7 @@ local debug_show_empty_messages = false
 local cached_stuff = {}
 
 local function write_log_line(msg)
-	local f = io.open(string.format("logs/scripts/scripted-ascension-log-%s-%s.txt", playername(), ascensions_count() + 1), "a+")
+	local f = io.open(string.format("logs/scripts/scripted-ascension-log-%s-%s.txt", playername(), current_ascension_number()), "a+")
 	f:write(msg.."\n")
 	f:close()
 end
@@ -496,7 +496,7 @@ endif
 	end
 
 	local function countif(x)
-		if have(x) then
+		if have_item(x) then
 			return 1
 		else
 			return 0
@@ -510,7 +510,7 @@ endif
 		local ret = {}
 		for x in table.values(tbl) do
 			local ctr = 1
-			while count(x) >= ctr and n >= 0 do
+			while count_item(x) >= ctr and n >= 0 do
 				table.insert(ret, x)
 				n = n - 1
 				ctr = ctr + 1
@@ -578,7 +578,7 @@ endif
 	council_text = council_text_async()
 	questlog_page = questlog_page_async()
 
-	local DD_keys = countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") + count("fat loot token")
+	local DD_keys = countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") + count_item("fat loot token")
 	if ascensionstatus() ~= "Hardcore" or cached_stuff.completed_daily_dungeon then
 		DD_keys = 100
 	end
@@ -1438,7 +1438,7 @@ endif
 			if ascension_script_option("ignore automatic pulls") then
 				return
 			end
-			if not have(item) then
+			if not have_item(item) then
 				critical("Failed to pull " .. tostring(item))
 			end
 		end
@@ -1451,7 +1451,7 @@ endif
 	end
 
 	add_task {
-		when = not have_item("digital key") and count("white pixel") + math.min(count("red pixel"), count("green pixel"), count("blue pixel")) >= 30,
+		when = not have_item("digital key") and count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel")) >= 30,
 		task = tasks.make_digital_key,
 	}
 
@@ -1461,7 +1461,7 @@ endif
 			message = "untinker dictionary",
 			nobuffing = true,
 			action = function()
-				if not have_inventory("Loathing Legion necktie") then
+				if not have_inventory_item("Loathing Legion necktie") then
 					for x in table.values { "acc1", "acc2", "acc3" } do
 						if equipment()[x] == get_itemid("Loathing Legion necktie") then
 							unequip_slot(x)
@@ -1481,7 +1481,7 @@ endif
 			message = "untinker clockwork maid",
 			nobuffing = true,
 			action = function()
-				if not have_inventory("Loathing Legion necktie") then
+				if not have_inventory_item("Loathing Legion necktie") then
 					for x in table.values { "acc1", "acc2", "acc3" } do
 						if equipment()[x] == get_itemid("Loathing Legion necktie") then
 							unequip_slot(x)
@@ -1502,7 +1502,7 @@ endif
 			message = "untinker heavy metal thunderrr guitarrr",
 			nobuffing = true,
 			action = function()
-				if not have_inventory("Loathing Legion necktie") then
+				if not have_inventory_item("Loathing Legion necktie") then
 					for x in table.values { "acc1", "acc2", "acc3" } do
 						if equipment()[x] == get_itemid("Loathing Legion necktie") then
 							unequip_slot(x)
@@ -1534,7 +1534,7 @@ endif
 			message = "turn legion moondial into necktie",
 			nobuffing = true,
 			action = function()
-				if not have_inventory("Loathing Legion moondial") then
+				if not have_inventory_item("Loathing Legion moondial") then
 					script.wear {}
 				end
 				get_page("/inv_use.php", { whichitem = get_itemid("Loathing Legion moondial"), switch = 1, fold = "Loathing Legion necktie", pwd = get_pwd() })
@@ -1550,7 +1550,7 @@ endif
 				message = "pull " .. item,
 				nobuffing = true,
 				action = function()
-					if have(pullname or item) then
+					if have_item(pullname or item) then
 						critical("Already have " .. tostring(pullname) .. " but not " .. tostring(item))
 					end
 					cached_stuff["ignore pull: " .. tostring(item)] = "yes"
@@ -1558,7 +1558,7 @@ endif
 						stop("Trying to pull " .. item .. " late in the run [run again to ignore]")
 					end
 					ascension_automation_pull_item(pullname or item)
-					if have(pullname or item) then
+					if have_item(pullname or item) then
 						did_action = true
 					else
 						stop("Tried to pull " .. tostring(pullname or item) .. " [run again to ignore]")
@@ -2228,7 +2228,7 @@ endif
 	}
 
 	add_task {
-		prereq = quest_text("this is Azazel in Hell") and challenge == "boris" and daysthisrun() == 1 and (have("Clancy's lute") or clancy_instrumentid() == 3) and estimate_max_fullness() - fullness() >= 5,
+		prereq = quest_text("this is Azazel in Hell") and challenge == "boris" and daysthisrun() == 1 and (have_item("Clancy's lute") or clancy_instrumentid() == 3) and estimate_max_fullness() - fullness() >= 5,
 		f = script.do_azazel,
 	}
 
@@ -2261,7 +2261,7 @@ endif
 			not unlocked_island() and
 			turns_to_next_sr >= 3 and
 			meat() >= 1000 and
-			(have("Clancy's lute") or clancy_instrumentid() == 3),
+			(have_item("Clancy's lute") or clancy_instrumentid() == 3),
 		f = script.get_dinghy,
 	}
 
@@ -2313,7 +2313,7 @@ endif
 		task = tasks.do_8bit_realm,
 	}
 
-	if challenge == "fist" and have_item("Game Grid token") and not have_item("finger cuffs") and not (have("spangly sombrero") and have_item("spangly mariachi pants")) then
+	if challenge == "fist" and have_item("Game Grid token") and not have_item("finger cuffs") and not (have_item("spangly sombrero") and have_item("spangly mariachi pants")) then
 		return script.finger_cuffs()
 	end
 
@@ -2325,7 +2325,7 @@ endif
 	end
 
 	need_total_reagent_pastas = 4 * 2
-	have_reagent_pastas = 2 + count("hellion cube") + count("goat cheese") + count("Hell ramen") + count("Hell broth") + count("fettucini Inconnu") + count("fancy schmancy cheese sauce")
+	have_reagent_pastas = 2 + count_item("hellion cube") + count_item("goat cheese") + count_item("Hell ramen") + count_item("Hell broth") + count_item("fettucini Inconnu") + count_item("fancy schmancy cheese sauce")
 	if ascensionstatus() ~= "Hardcore" then
 		have_reagent_pastas = 100
 	elseif fullness() > 9 then
@@ -2515,7 +2515,7 @@ endif
 
 	-- TODO: do if we're in hardcore, can fax and have a rack-fam
 	add_task {
-		when = challenge == "fist" and not (have("spangly sombrero") and have_item("spangly mariachi pants")) and level() < 6 and count("finger cuffs") >= 5,
+		when = challenge == "fist" and not (have_item("spangly sombrero") and have_item("spangly mariachi pants")) and level() < 6 and count_item("finger cuffs") >= 5,
 		task = tasks.yellow_ray_sleepy_mariachi,
 	}
 
@@ -2626,7 +2626,7 @@ endif
 			if not have_item("fortune cookie") then
 				buy_item("fortune cookie", "m")
 			end
-			if count("pumpkin beer") < 3 then
+			if count_item("pumpkin beer") < 3 then
 				if not have_item("fermenting powder") and have_item("pumpkin") then
 					buy_item("fermenting powder", "m")
 				end
@@ -2638,7 +2638,7 @@ endif
 				async_post_page("/gamestore.php", { action = "buysnack", whichsnack = get_itemid("tobiko-infused sake") })
 			end
 			script.ensure_buffs { "Ode to Booze" }
-			if not have_item("fortune cookie") or count("pumpkin beer") < 3 or not have_item("tobiko-infused sake") or buffturns("Ode to Booze") < 5 then
+			if not have_item("fortune cookie") or count_item("pumpkin beer") < 3 or not have_item("tobiko-infused sake") or buffturns("Ode to Booze") < 5 then
 				stop "Failed to get items to consume on day 1 fist"
 			end
 			eat_item("fortune cookie")
@@ -2655,7 +2655,7 @@ endif
 		prereq = challenge == "fist" and whichday == 1 and fullness() <= 3 and drunkenness() == 5 and level() < 7 and have_item("distilled fortified wine"),
 		message = "consuming day 1 fist, second time",
 		action = function()
-			if count("pumpkin beer") < 1 or count("distilled fortified wine") < 3 then
+			if count_item("pumpkin beer") < 1 or count_item("distilled fortified wine") < 3 then
 				stop "Didn't have items to consume on day 1 fist"
 			end
 			script.ensure_buffs { "Ode to Booze" }
@@ -2670,7 +2670,7 @@ endif
 	}
 
 	add_task {
-		prereq = challenge == "fist" and whichday == 1 and fullness() <= 3 and level() < 8 and (count("Hell ramen") + count("Hell broth") + count("hellion cube") >= 2) and (advs() < 10 or meat() >= 1000),
+		prereq = challenge == "fist" and whichday == 1 and fullness() <= 3 and level() < 8 and (count_item("Hell ramen") + count_item("Hell broth") + count_item("hellion cube") >= 2) and (advs() < 10 or meat() >= 1000),
 		message = "eating reagent pasta",
 		action = function()
 			local kitchen = get_page("/campground.php", { action = "inspectkitchen" })
@@ -2678,7 +2678,7 @@ endif
 				if not have_item("Dramatic&trade; range") and meat() < 1000 then
 					stop "Not enough meat for dramatic range"
 				end
-				if count("hellion cube") < 2 then
+				if count_item("hellion cube") < 2 then
 					stop "Not enough hellion cubes"
 				end
 				if not have_item("Dramatic&trade; range") then
@@ -2691,7 +2691,7 @@ endif
 					critical "Failed to install dramatic range"
 				end
 			end
-			if count("Hell ramen") >= 2 then
+			if count_item("Hell ramen") >= 2 then
 				inform "eating hell ramen"
 				eat_item("Hell ramen")
 				eat_item("Hell ramen")
@@ -2710,7 +2710,7 @@ endif
 		prereq = challenge == "fist" and whichday >= 2 and level() >= 7 and (advs() < 50 or not quest("Am I My Trapper's Keeper?")) and fullness() <= 9 and (whichday == 2 or have_reagent_pastas >= 8),
 		f = function()
 			if whichday == 2 and fullness() <= 3 then
-				if count("Hell ramen") >= 2 then
+				if count_item("Hell ramen") >= 2 then
 					inform "eating hell ramen in fist"
 					eat_item("Hell ramen")
 					eat_item("Hell ramen")
@@ -2721,10 +2721,10 @@ endif
 					inform "making reagent pasta"
 					script.make_reagent_pasta()
 				end
-			elseif whichday >= 3 and fullness() <= 3 and (have("glass of goat's milk") or have_item("milk of magnesium") or have_buff("Got Milk")) then
+			elseif whichday >= 3 and fullness() <= 3 and (have_item("glass of goat's milk") or have_item("milk of magnesium") or have_buff("Got Milk")) then
 				if not have_item("milk of magnesium") and not have_buff("Got Milk") then
 					inform "making milk"
-					if count("scrumptious reagent") < 1 then
+					if count_item("scrumptious reagent") < 1 then
 						script.ensure_mp(10)
 						cast_skillid(4006, 1) -- advanced saucecrafting
 					end
@@ -2732,7 +2732,7 @@ endif
 					if have_item("milk of magnesium") then
 						did_action = true
 					end
-				elseif count("Hell ramen") + count("fettucini Inconnu") >= 2 then
+				elseif count_item("Hell ramen") + count_item("fettucini Inconnu") >= 2 then
 					if not have_buff("Got Milk") then
 						inform "using milk"
 						use_item("milk of magnesium")
@@ -3058,8 +3058,8 @@ endwhile
 	add_task {
 		prereq = challenge == "fist" and
 			quest("Suffering For His Art") and
-			have("pail of pretentious paint") and
-			have("pretentious paintbrush"),
+			have_item("pail of pretentious paint") and
+			have_item("pretentious paintbrush"),
 		f = script.unlock_manor,
 	}
 
@@ -3115,7 +3115,7 @@ endwhile
 		end,
 	}
 
-	if challenge == "fist" and have_buff("Everything Looks Yellow") and not (have("Knob Goblin harem veil") and have_item("Knob Goblin harem pants")) and quest("The Goblin Who Wouldn't Be King") then
+	if challenge == "fist" and have_buff("Everything Looks Yellow") and not (have_item("Knob Goblin harem veil") and have_item("Knob Goblin harem pants")) and quest("The Goblin Who Wouldn't Be King") then
 		add_task {
 			prereq = not have_item("Spookyraven library key"),
 			f = script.get_library_key,
@@ -3238,7 +3238,7 @@ endwhile
 	end
 
 	add_task {
-		prereq = challenge == "fist" and drunkenness() < 3 and (have("pumpkin") or have_item("pumpkin beer")),
+		prereq = challenge == "fist" and drunkenness() < 3 and (have_item("pumpkin") or have_item("pumpkin beer")),
 		f = function()
 			inform "drinking early-day booze in fist"
 			drink_1_drunk_booze_loop()
@@ -3379,7 +3379,7 @@ endif
 	}
 
 	add_task {
-		when = not have_item("digital key") and cached_stuff.campground_psychoses == "mystic" and count("white pixel") + math.min(count("red pixel"), count("green pixel"), count("blue pixel")) < 30,
+		when = not have_item("digital key") and cached_stuff.campground_psychoses == "mystic" and count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel")) < 30,
 		task = {
 			message = "get digital key (mystic's jar)",
 			fam = "Slimeling",
@@ -3543,7 +3543,7 @@ endif
 
 	add_task {
 		prereq =
-			have("Spookyraven ballroom key") and
+			have_item("Spookyraven ballroom key") and
 			level() < 11 and
 			ascension["zone.manor.quartet song"] ~= "Sono Un Amante Non Un Combattente",
 		f = function()
@@ -3773,7 +3773,7 @@ endif
 						end
 						pull_in_softcore("frilly skirt")
 					end
-					if have_item("frilly skirt") and count("hot wing") >= 3 then
+					if have_item("frilly skirt") and count_item("hot wing") >= 3 then
 						script.wear { pants = "frilly skirt" }
 						use_item("Orcish Frat House blueprints")
 						async_get_page("/choice.php")
@@ -3814,7 +3814,7 @@ endif
 					if daysthisrun() >= 2 and not ascensionstatus("Hardcore") then
 						local want_ore = questlog_page:match("bring him back 3 chunks of ([a-z]+ ore)")
 						if want_ore and get_itemid(want_ore) then
-							local got = count(want_ore)
+							local got = count_item(want_ore)
 							if got < 3 then
 								if want_ore == "chrome ore" and not have_item("acoustic guitarrr") and not have_item("heavy metal thunderrr guitarrr") then
 									pull_in_softcore("heavy metal thunderrr guitarrr")
@@ -3822,7 +3822,7 @@ endif
 									return
 								else
 									pull_in_softcore(want_ore)
-									did_action = count(want_ore) > got
+									did_action = count_item(want_ore) > got
 									return
 								end
 							end
@@ -3882,7 +3882,7 @@ endif
 	add_task {
 		when = (challenge == "boris" or challenge == "zombie") and
 			not cached_stuff.unlocked_hidden_temple and
-			((have("Greatest American Pants") and get_daily_counter("item.fly away.free runaways") < 9) or daysthisrun() >= 2),
+			((have_item("Greatest American Pants") and get_daily_counter("item.fly away.free runaways") < 9) or daysthisrun() >= 2),
 		task = {
 			message = "unlock hidden temple",
 			nobuffing = true,
@@ -4283,12 +4283,12 @@ endif
 
 	add_task {
 		prereq =
-			count("star chart") < 3 and
-			(challenge ~= "fist" or count("star chart") < 2) and
-			(challenge ~= "boris" or count("star chart") < 2) and
+			count_item("star chart") < 3 and
+			(challenge ~= "fist" or count_item("star chart") < 2) and
+			(challenge ~= "boris" or count_item("star chart") < 2) and
 			not have_item("Richard's star key") and
 			(not trailed or trailed == "Astronomer") and
-			have("steam-powered model rocketship") and ascensionstatus() == "Hardcore",
+			have_item("steam-powered model rocketship") and ascensionstatus() == "Hardcore",
 		f = function()
 			if have_item("BitterSweetTarts") and not have_buff("Full of Wist") then
 				use_item("BitterSweetTarts")
@@ -4335,11 +4335,11 @@ endif
 
 -- 	add_task {
 -- 		prereq = not (
--- 			have("pine wand") or
--- 			have("ebony wand") or
--- 			have("hexagonal wand") or
--- 			have("aluminum wand") or
--- 			have("marble wand")
+-- 			have_item("pine wand") or
+-- 			have_item("ebony wand") or
+-- 			have_item("hexagonal wand") or
+-- 			have_item("aluminum wand") or
+-- 			have_item("marble wand")
 -- 		) and meat() >= 5000 and challenge ~= "fist",
 -- 		f = script.get_dod_wand,
 -- 	}
@@ -4364,7 +4364,7 @@ endif
 				stop "Level to 13."
 			end
 			inform "level to 13"
-			if count("disassembled clover") >= 3 then -- TODO: uncloset and trade them as well
+			if count_item("disassembled clover") >= 3 then -- TODO: uncloset and trade them as well
 				use_item("disassembled clover")
 			end
 			use_dancecard()
@@ -4411,10 +4411,10 @@ endif
 					if get_result():contains(a) then
 						local needitem = b.item or dod_reverse[b.potion]
 						local got = false
-						if needitem and moonsign_area() == "Gnomish Gnomad Camp" and not have(needitem) then
+						if needitem and moonsign_area() == "Gnomish Gnomad Camp" and not have_item(needitem) then
 							buy_item(needitem, "n")
 						end
-						if needitem and have(needitem) then
+						if needitem and have_item(needitem) then
 							got = true
 						else
 							got_items = false
@@ -4439,7 +4439,7 @@ endif
 						local thisok = false
 						local item = itemsneeded[level + 1]
 						if item then
-							if have(item) then
+							if have_item(item) then
 								print("have lair", level, item)
 								thisok = true
 							else
@@ -4689,7 +4689,7 @@ use gauze garter, gauze garter
 						script.burn_mp(x.minmp + 20)
 					end
 				end
-				if famequip and towear and not towear.familiarequip and have(famequip) then
+				if famequip and towear and not towear.familiarequip and have_item(famequip) then
 					towear.familiarequip = famequip
 				end
 				x.familiar = nil

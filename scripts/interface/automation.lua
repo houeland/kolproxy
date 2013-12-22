@@ -8,7 +8,7 @@ local function get_aftercore_buffs(tbl)
 		end,
 	}
 	for _, x in ipairs(tbl) do
-		if not buff(x) then
+		if not have_buff(x) then
 			buff_functions[x]()
 		end
 	end

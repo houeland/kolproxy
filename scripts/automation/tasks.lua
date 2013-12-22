@@ -33,7 +33,7 @@ function get_automation_tasks(script, cached_stuff)
 			end
 
 			if not have_item("shining halo") or not have_item("Ur-Donut") or not have_item("bucket of wine") then
-				print(have("shining halo"), have_item("Ur-Donut"), have_item("bucket of wine"))
+				print(have_item("shining halo"), have_item("Ur-Donut"), have_item("bucket of wine"))
 				critical "Error getting clip art items"
 			end
 
@@ -169,14 +169,14 @@ function get_automation_tasks(script, cached_stuff)
 					did_action = have_item("continuum transfunctioner")
 				end
 			}
-		elseif count("white pixel") < 30 then
+		elseif count_item("white pixel") < 30 then
 			return {
 				message = "make white pixels",
 				nobuffing = true,
 				action = function()
-					local to_make = 30 - count("white pixel")
+					local to_make = 30 - count_item("white pixel")
 					shop_buyitem({ ["white pixel"] = to_make }, "mystic")
-					did_action = (count("white pixel") >= 30)
+					did_action = (count_item("white pixel") >= 30)
 				end
 			}
 		else
@@ -193,7 +193,7 @@ function get_automation_tasks(script, cached_stuff)
 
 	function t.do_8bit_realm()
 		local action = nil
-		local pixels = count("white pixel") + math.min(count("red pixel"), count("green pixel"), count("blue pixel"))
+		local pixels = count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel"))
 		if pixels < 30 then
 			if not have_item("continuum transfunctioner") then
 				return {

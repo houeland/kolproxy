@@ -318,7 +318,7 @@ function ascension_checklist_get_questitem_text()
 		table.insert(quest_items, { name = x, link = "Use " .. x })
 	end
 	for x in table.values(quest_items) do
-		if have(x.name) then
+		if have_item(x.name) then
 			table.insert(ordered_items, [[<tr><td>]] .. x.link .. [[</td></tr>]])
 		end
 	end
@@ -527,7 +527,7 @@ local href = add_automation_script("custom-ascension-checklist", function()
 	do
 		sorted_mapped = {}
 		function stocked(name)
-			return inventory[name] or closet[name] or storage[name] or have_equipped(name)
+			return inventory[name] or closet[name] or storage[name] or have_equipped_item(name)
 		end
 		for _, x in ipairs(equipment_items) do
 			cheap, names = x[1], x[2]

@@ -85,7 +85,7 @@ add_automator("/palinshelves.php", function()
 end)
 
 add_ascension_zone_check(119, function()
-	if meat() < 500 and not have_item("&quot;I Love Me, Vol. I&quot;") and not (have("photograph of God") and have_item("hard rock candy")) then
+	if meat() < 500 and not have_item("&quot;I Love Me, Vol. I&quot;") and not (have_item("photograph of God") and have_item("hard rock candy")) then
 		return "Palindome items cost 500 meat."
 	end
 end)

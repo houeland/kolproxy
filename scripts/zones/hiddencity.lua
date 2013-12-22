@@ -30,7 +30,7 @@ add_warning {
 	when = "ascension",
 	zone = "The Hidden Apartment Building",
 	check = function()
-		if buff("Thrice-Cursed") then return end
+		if have_buff("Thrice-Cursed") then return end
 		return check_hidden_tavern_access()
 	end
 }

@@ -86,7 +86,7 @@ abort No useful skill found.
 end
 
 function cannon_action()
-	if have_skill("Crab Claw Technique") and have_equipped("Rock and Roll Legend") and not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } then
+	if have_skill("Crab Claw Technique") and have_equipped_item("Rock and Roll Legend") and not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } then
 		return attack_action()
 	end
 	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Bawdy Refrain" }
@@ -163,7 +163,7 @@ function maybe_stun_monster(is_dangerous)
 				if hasskill Accordion Bash
 					cast Accordion Bash
 				endif]])
-			if have_equipped("Rock and Roll Legend") or have_equipped("peace accordion") then
+			if have_equipped_item("Rock and Roll Legend") or have_equipped_item("peace accordion") then
 				table.insert(macrolines, [[
 					if hasskill Cadenza
 						cast Cadenza
@@ -626,7 +626,7 @@ end
 function macro_softcore_boris_orc_chasm()
   local maybeuse334s = ""
 
-  if not have_item("668 scroll") and count("334 scroll") >= 2 then
+  if not have_item("668 scroll") and count_item("334 scroll") >= 2 then
     maybeuse334s = [[
 
   use 334 scroll
@@ -1335,7 +1335,7 @@ function macro_orc_chasm()
     end
   end
 
-  if not have_item("668 scroll") and count("334 scroll") >= 2 then
+  if not have_item("668 scroll") and count_item("334 scroll") >= 2 then
     maybeuse334s = multiuse("334 scroll", "334 scroll")
   end
 

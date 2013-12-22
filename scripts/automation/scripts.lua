@@ -94,14 +94,14 @@ function get_automation_scripts(cached_stuff)
 		local feed_items = get_ascension_automation_settings().slimeling_feed_items
 		local feed_except_one = get_ascension_automation_settings().slimeling_feed_except_one
 		for i in table.values(feed_items) do
-			if have(i) then
+			if have_item(i) then
 				feed(i)
 			end
 		end
 		for tbl in table.values(feed_except_one) do
 			for i in table.values(tbl) do
-				if count(i) > 1 then
-					if count(i) > 10 then
+				if count_item(i) > 1 then
+					if count_item(i) > 10 then
 						stop("More than 10 of " .. i .. " when feeding slimeling")
 					end
 					feed(i)
@@ -166,7 +166,7 @@ function get_automation_scripts(cached_stuff)
 			for f in table.values(famname_input) do
 				if not missing_fams[f] then
 					local d = familiar_data[f]
-					if not (d.needsequip and not have(d.familiarequip)) then
+					if not (d.needsequip and not have_item(d.familiarequip)) then
 						if not famname then
 							famname = f
 						elseif not next_famname_input then
@@ -187,7 +187,7 @@ function get_automation_scripts(cached_stuff)
 			return
 		end
 		local d = familiar_data[famname]
-		if missing_fams[famname] or (d and d.needsequip and not have(d.familiarequip)) then
+		if missing_fams[famname] or (d and d.needsequip and not have_item(d.familiarequip)) then
 			if famname == "Rogue Program" and spleen() < 12 then
 				return raw_want_familiar("Bloovian Groose")
 			else
@@ -231,7 +231,7 @@ function get_automation_scripts(cached_stuff)
 			if d.f then
 				d.f()
 			end
-			if familiar_data[famname].familiarequip and not have(familiar_data[famname].familiarequip) then
+			if familiar_data[famname].familiarequip and not have_item(familiar_data[famname].familiarequip) then
 				if not have_item("fixed-gear bicycle") and have_item("ironic moustache") then
 					unequip_slot("familiarequip")
 					use_item("ironic moustache")
@@ -245,12 +245,12 @@ function get_automation_scripts(cached_stuff)
 					if have_item("bugged beanie") then
 						use_item("bugged beanie")
 					end
-					if not have(familiar_data[famname].familiarequip) then
+					if not have_item(familiar_data[famname].familiarequip) then
 						critical "Failed to get bugged balaclava"
 					end
 				end
 			end
-			return { mpregen = familiar_data[famname].mpregen, familiarequip = familiar_data[famname].familiarequip and have(familiar_data[famname].familiarequip) and familiar_data[famname].familiarequip }
+			return { mpregen = familiar_data[famname].mpregen, familiarequip = familiar_data[famname].familiarequip and have_item(familiar_data[famname].familiarequip) and familiar_data[famname].familiarequip }
 		else
 			error("Unknown familiar: " .. tostring(famname))
 		end
@@ -438,7 +438,7 @@ function get_automation_scripts(cached_stuff)
 			else
 				use_item("ten-leaf clover")
 			end
-			if count("ten-leaf clover") > c then
+			if count_item("ten-leaf clover") > c then
 				critical "Failed to hide ten-leaf clover"
 			end
 			did_action = true
@@ -452,8 +452,8 @@ function get_automation_scripts(cached_stuff)
 
 		-- TODO: don't use wallets on fist path
 		for w in table.values(use_items) do
-			if have(w) then
-				if count(w) >= 100 then
+			if have_item(w) then
+				if count_item(w) >= 100 then
 					stop("Somehow have 100+ of " .. tostring(w) .. " when trying to use items")
 				end
 				set_result(use_item(w))
@@ -462,7 +462,7 @@ function get_automation_scripts(cached_stuff)
 		end
 		for w in table.values(use_except_one) do
 			if count_item(w) >= 2 then
-				if count(w) >= 100 then
+				if count_item(w) >= 100 then
 					stop("Somehow have 100+ of " .. tostring(w) .. " when trying to use items")
 				end
 				set_result(use_item(w))
@@ -474,8 +474,8 @@ function get_automation_scripts(cached_stuff)
 			local sell_items = get_ascension_automation_settings().sell_items
 			local sell_except_one = get_ascension_automation_settings().sell_except_one
 			for s in table.values(sell_items) do
-				if have(s) then
-					if count(s) >= 100 then
+				if have_item(s) then
+					if count_item(s) >= 100 then
 						stop("Somehow have 100+ of " .. tostring(s) .. " when trying to sell items")
 					end
 					set_result(sell_item(s))
@@ -483,8 +483,8 @@ function get_automation_scripts(cached_stuff)
 				end
 			end
 			for s in table.values(sell_except_one) do
-				if count(s) >= 2 then
-					if count(s) >= 100 then
+				if count_item(s) >= 2 then
+					if count_item(s) >= 100 then
 						stop("Somehow have 100+ of " .. tostring(s) .. " when trying to sell items")
 					end
 					set_result(sell_item(s))
@@ -559,19 +559,19 @@ function get_automation_scripts(cached_stuff)
 				["tiny house"] = 24,
 			}
 			for name, limit in pairs(restore_items) do
-				if have(name) and (mp() + limit < maxmp()) then
+				if have_item(name) and (mp() + limit < maxmp()) then
 					use_item(name)
 					return f.ensure_mp(amount, true)
 				end
 			end
 			for name, limit in pairs(restore_items) do
-				if have(name) and (mp() + limit * 0.75 < maxmp()) then
+				if have_item(name) and (mp() + limit * 0.75 < maxmp()) then
 					use_item(name)
 					return f.ensure_mp(amount, true)
 				end
 			end
 			for name, limit in pairs(restore_items) do
-				if have(name) and (mp() + limit * 0.5 < maxmp()) then
+				if have_item(name) and (mp() + limit * 0.5 < maxmp()) then
 					use_item(name)
 					return f.ensure_mp(amount, true)
 				end
@@ -763,7 +763,7 @@ function get_automation_scripts(cached_stuff)
 			local f = cast_skillid(53) -- summon crimbo candy
 			local candies = { "Angry Farmer candy", "Crimbo fudge", "Crimbo peppermint bark", "Crimbo candied pecan" }
 			for _, x in ipairs(candies) do
-				if have(x) then
+				if have_item(x) then
 					return use_item(x)
 				end
 			end
@@ -872,10 +872,10 @@ function get_automation_scripts(cached_stuff)
 	}
 
 	function f.shrug_buff(buffname)
-		if buff(buffname) then
+		if have_buff(buffname) then
 			print("  shrugging buff", buffname, spells[buffname].effectid)
 			async_get_page("/charsheet.php", { pwd = get_pwd(), ajax = 1, action = "unbuff", whichbuff = spells[buffname].effectid })
-			if buff(buffname) then
+			if have_buff(buffname) then
 				critical("Failed to shrug buff: " .. buffname)
 			end
 		end
@@ -929,7 +929,7 @@ function get_automation_scripts(cached_stuff)
 			if want_bonus.boris_song then
 				table.insert(xs, want_bonus.boris_song)
 			end
-			if want_bonus.clancy_item and have(want_bonus.clancy_item) then
+			if want_bonus.clancy_item and have_item(want_bonus.clancy_item) then
 				use_item(want_bonus.clancy_item)
 			end
 		elseif ascensionpath("Avatar of Jarlsberg") and not ignore_buffing_and_outfit then
@@ -1033,7 +1033,7 @@ function get_automation_scripts(cached_stuff)
 				if not have_buff(buffname) and not have_intrinsic(buffname) then
 					if ptf:contains("can't fit") and ptf:contains("songs in your head") and try_shrugging then
 						for _, atname in ipairs(at_shruggable) do
-							if buff(atname) and not want_buffs[atname] then
+							if have_buff(atname) and not want_buffs[atname] then
 								shrug_buff(atname)
 								return try_casting_buff(buffname, false)
 							end
@@ -1057,7 +1057,7 @@ function get_automation_scripts(cached_stuff)
 			if have_buff(x) and (x == "A Few Extra Pounds" or x == "The Magical Mojomuscular Melody") and buffturns(x) < 2 then
 				-- TODO: do this more generally than matching on name for buffs to be extended?
 				try_casting_buff(x, false)
--- 				print("bumped", x, buff(x))
+-- 				print("bumped", x, have_buff(x))
 			end
 		end
 	end
@@ -1340,7 +1340,7 @@ endif
 -- 			end
 -- 		end
 -- 		if not have_numbers then
--- 			if have(want_itemname) and not ascension["fortune cookie numbers"] then
+-- 			if have_item(want_itemname) and not ascension["fortune cookie numbers"] then
 -- 				buy_item("fortune cookie", "m")
 -- 				if not have_item("fortune cookie") then
 -- 					critical("Failed to buy a fortune cookie")
@@ -1412,9 +1412,9 @@ endif
 		if towear.familiarequip == "sugar shield" and not have_item("sugar shield") then
 			towear.familiarequip = nil
 		end
-		if famequip and not towear.familiarequip and have(famequip) then
+		if famequip and not towear.familiarequip and have_item(famequip) then
 			towear.familiarequip = famequip
-		elseif (famequip == "spangly sombrero" or famequip == "spangly mariachi pants") and have(famequip) then -- TODO: hackish for spanglerack
+		elseif (famequip == "spangly sombrero" or famequip == "spangly mariachi pants") and have_item(famequip) then -- TODO: hackish for spanglerack
 			towear.familiarequip = famequip
 		end
 		if not towear.familiarequip and have_item("astral pet sweater") then
@@ -1460,7 +1460,7 @@ endif
 		async_get_page("/town_wrong.php")
 		async_get_page("/arcade.php", { action = "skeeball", pwd = get_pwd() })
 		result, resulturl = post_page("/arcade.php", { action = "redeem", whichitem = get_itemid("finger cuffs"), quantity = 10 })
-		if count("finger cuffs") >= 10 then
+		if count_item("finger cuffs") >= 10 then
 			did_action = true
 			return result, resulturl, did_action
 		else
@@ -1469,7 +1469,7 @@ endif
 	end
 
 	function f.ensure_worthless_item()
-		if not (have("worthless trinket") or have_item("worthless gewgaw") or have_item("worthless knick-knack")) then
+		if not (have_item("worthless trinket") or have_item("worthless gewgaw") or have_item("worthless knick-knack")) then
 			print "  getting worthless item"
 			if not have_item("chewing gum on a string") then
 				buy_item("chewing gum on a string", "m")
@@ -1681,7 +1681,7 @@ endif
 			end
 			if space() >= 6 then
 				local f = fullness()
-				if count("Hell ramen") + count("fettucini Inconnu") >= 2 then
+				if count_item("Hell ramen") + count_item("fettucini Inconnu") >= 2 then
 					if have_buff("Got Milk") then
 						inform "eating reagent pasta with milk"
 						eat_item("Hell ramen")
@@ -1790,7 +1790,7 @@ endif
 						if not have_item("peppermint twist") then
 							use_item("peppermint sprout")
 						end
-						local twists = count("peppermint twist")
+						local twists = count_item("peppermint twist")
 						inform "mixing peppermint booze"
 						set_result(mix_items(x, "peppermint twist"))
 
@@ -1807,7 +1807,7 @@ endif
 							end
 							local pt, pturl = get_result()
 							return pt, pturl, did_action
-						elseif count("peppermint twist") ~= twists - 1 then
+						elseif count_item("peppermint twist") ~= twists - 1 then
 							critical "Failed to mix peppermint booze"
 						end
 						break
@@ -2080,8 +2080,8 @@ mark m_done
 				table.insert(turnins, "hippy medical kit")
 			end
 			for x in table.values(turnins) do
-				if have(x) then
-					async_get_page("/bigisland.php", { action = "turnin", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid(x), quantity = count(x) })
+				if have_item(x) then
+					async_get_page("/bigisland.php", { action = "turnin", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid(x), quantity = count_item(x) })
 				end
 			end
 			local camppt = get_page("/bigisland.php", { place = "camp", whichcamp = 2 })
@@ -2115,10 +2115,10 @@ mark m_done
 				result, resulturl = async_get_page("/bigisland.php", { action = "bossfight", pwd = get_pwd() })()
 				result, resulturl, did_action = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(15))
 			else
-				if count("gauze garter") < 10 then
+				if count_item("gauze garter") < 10 then
 					inform "buying gauze garters"
 					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("gauze garter"), quantity = 10 })
-					did_action = (count("gauze garter") >= 10)
+					did_action = (count_item("gauze garter") >= 10)
 				else
 					inform "spending remaining quarters"
 					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("superamplified boom box"), quantity = 2 })
@@ -2592,9 +2592,9 @@ mark m_done
 				did_action = have_item("ancient bronze token")
 			elseif pyramidpt:match("pyramid4_[12345].gif") then
 				if have_item("tomb ratchet") then
-					local c = count("tomb ratchet")
+					local c = count_item("tomb ratchet")
 					use_item("tomb ratchet")
-					did_action = count("tomb ratchet") < c
+					did_action = count_item("tomb ratchet") < c
 				else
 					script.bonus_target { "noncombat" }
 					go("turn middle chamber wheel", 125, macro_noodleserpent, {
@@ -2643,7 +2643,7 @@ mark m_done
 		else
 			-- TODO: use GAP +item% buff if available, GAP structure buff
 			softcore_stoppable_action("fight hatchling")
-			go("fight hatchling", 127, (challenge == "boris" and count("peppermint crook") >= 3 and macro_softcore_boris_crook) or macro_ppnoodlecannon, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 30, { equipment = { familiarequip = "sugar shield", pants = (challenge == "boris" and have_item("Greatest American Pants")) and "Greatest American Pants" or nil } })
+			go("fight hatchling", 127, (challenge == "boris" and count_item("peppermint crook") >= 3 and macro_softcore_boris_crook) or macro_ppnoodlecannon, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 30, { equipment = { familiarequip = "sugar shield", pants = (challenge == "boris" and have_item("Greatest American Pants")) and "Greatest American Pants" or nil } })
 		end
 	end
 
@@ -2652,12 +2652,12 @@ mark m_done
 		if not ascensionstatus("Hardcore") then
 			macro = macro_softcore_lfm
 		end
-		if count("barrel of gunpowder") >= 5 then
+		if count_item("barrel of gunpowder") >= 5 then
 			inform "talk to lighthouse guy"
 			wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
 			async_get_page("/bigisland.php", { place = "lighthouse", action = "pyro", pwd = get_pwd() })
 			async_get_page("/bigisland.php", { place = "lighthouse", action = "pyro", pwd = get_pwd() })
-			did_action = (have("tequila grenade") and have_item("molotov cocktail cocktail"))
+			did_action = (have_item("tequila grenade") and have_item("molotov cocktail cocktail"))
 		elseif have_item("Rain-Doh box full of monster") then
 			if challenge == "boris" then
 				macro = macro_softcore_boris([[
@@ -2667,7 +2667,7 @@ if monstername lobsterfrogman
 endif
 
 ]])
-				if count("barrel of gunpowder") >= 4 then
+				if count_item("barrel of gunpowder") >= 4 then
 					macro = macro_softcore_boris
 				end
 			end
@@ -2710,9 +2710,9 @@ endif
 					script.bonus_target { "combat" }
 					script.ensure_buffs {}
 					if have_buff("Song of Battle") and ascensionstatus() == "Hardcore" then
-						go("do sonofa beach, " .. make_plural(count("barrel of gunpowder"), "barrel", "barrels"), 136, macro_hardcore_boris, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
+						go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro_hardcore_boris, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
 					elseif have_buff("Song of Battle") and have_item("Rain-Doh black box") then
-						go("do sonofa beach, " .. make_plural(count("barrel of gunpowder"), "barrel", "barrels"), 136, macro_copy_lfm, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
+						go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro_copy_lfm, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
 					else
 						stop "TODO: Do sonofa in Boris"
 					end
@@ -2725,12 +2725,12 @@ endif
 					async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 600, option = 2 })
 				end
 				if have_buff("Waking the Dead") then
-					go("do sonofa beach, " .. make_plural(count("barrel of gunpowder"), "barrel", "barrels"), 136, macro_noodleserpent, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
+					go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro_noodleserpent, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
 				else
 					stop "TODO: Do sonofa in zombie"
 				end
 			else
-				go("do sonofa beach, " .. make_plural(count("barrel of gunpowder"), "barrel", "barrels"), 136, macro, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
+				go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
 			end
 			if have_buff("Beaten Up") then
 				use_hottub()
@@ -2838,7 +2838,7 @@ endif
 				script.bonus_target { "item" }
 				maybe_ensure_buffs { "Brother Flying Burrito's Blessing" }
 				local bufftbl = { "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy", "Spirit of Garlic" }
-				if count("glass of goat's milk") < 2 or not have_buff("Brother Flying Burrito's Blessing") then
+				if count_item("glass of goat's milk") < 2 or not have_buff("Brother Flying Burrito's Blessing") then
 					table.insert(bufftbl, "Heavy Petting")
 					table.insert(bufftbl, "Peeled Eyeballs")
 				end
@@ -2871,7 +2871,7 @@ endif
 					did_action = have_item("heavy metal thunderrr guitarrr")
 				else
 					ascension_automation_pull_item(want_ore)
-					did_action = count(want_ore) > got
+					did_action = count_item(want_ore) > got
 				end
 			else
 				go("get mining outfit", 270, macro_noodlecannon, {}, { "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy", "Spirit of Garlic" }, "Slimeling", 35, { choice_function = function(advtitle, choicenum)
@@ -3057,7 +3057,7 @@ endif
 
 	function f.do_moxie_powerleveling()
 		script.do_moxie_use_dancecard()
--- 		print("  mainstat", basemainstat(), "dance cards", count("dance card"), "advs", advs(), "trail turns", buffturns("On the Trail"))
+-- 		print("  mainstat", basemainstat(), "dance cards", count_item("dance card"), "advs", advs(), "trail turns", buffturns("On the Trail"))
 		script.bonus_target { "noncombat", "item" }
 		go("moxie powerleveling", 109, make_cannonsniff_macro("zombie waltzers"), {
 			["Curtains"] = "Watch the dancers",
@@ -3104,7 +3104,7 @@ endif
 				wear { hat = "eyepatch", pants = "swashbuckling pants", acc3 = "stuffed shoulder parrot" }
 				buy_item("The Big Book of Pirate Insults", "r")
 				buy_item("abridged dictionary", "r")
-				did_action = (have("The Big Book of Pirate Insults") and have_item("abridged dictionary"))
+				did_action = (have_item("The Big Book of Pirate Insults") and have_item("abridged dictionary"))
 			else
 				if challenge == "fist" then
 					go("farm > sign for meat", 226, macro_noodlecannon, { ["Typographical Clutter"] = "The lower-case L" }, { "Smooth Movements", "The Sonata of Sneakiness", "Polka of Plenty" }, "Slimeling", 25)
@@ -3303,10 +3303,10 @@ endif
 
 	function f.make_star_key()
 		local got_enough = false
-		if count("star chart") >= 3 or ((challenge == "fist" or challenge == "boris") and count("star chart") >= 2) then
-			if count("star") >= 8+5 and count("line") >= 7+3 then
-				sparestars = count("star") - 8 - 5
-				sparelines = count("line") - 7 - 3
+		if count_item("star chart") >= 3 or ((challenge == "fist" or challenge == "boris") and count_item("star chart") >= 2) then
+			if count_item("star") >= 8+5 and count_item("line") >= 7+3 then
+				sparestars = count_item("star") - 8 - 5
+				sparelines = count_item("line") - 7 - 3
 				if sparestars >= 5 and sparelines >= 6 then
 					got_enough = true
 				elseif sparestars >= 6 and sparelines >= 5 then
@@ -3327,15 +3327,15 @@ endif
 				shop_buyitem("star hat", "starchart")
 			end
 			if not have_item("star crossbow") and not have_item("star staff") and not have_item("star sword") and can_wear_weapons() then
-				if count("star") >= 5 and count("line") >= 6 then
+				if count_item("star") >= 5 and count_item("line") >= 6 then
 					shop_buyitem("star crossbow", "starchart")
-				elseif count("star") >= 6 and count("line") >= 5 then
+				elseif count_item("star") >= 6 and count_item("line") >= 5 then
 					shop_buyitem("star staff", "starchart")
-				elseif count("star") >= 7 and count("line") >= 4 then
+				elseif count_item("star") >= 7 and count_item("line") >= 4 then
 					shop_buyitem("star sword", "starchart")
 				end
 			end
-			if have_item("Richard's star key") and have_item("star hat") and (have("star crossbow") or have_item("star staff") or have_item("star sword") or challenge == "fist" or challenge == "boris") then
+			if have_item("Richard's star key") and have_item("star hat") and (have_item("star crossbow") or have_item("star staff") or have_item("star sword") or challenge == "fist" or challenge == "boris") then
 				did_action = true
 			end
 		else
@@ -3426,7 +3426,7 @@ endif
 			cast_skill("Egg Man")
 		end
 		if not have_item("Azazel's lollipop") then
-			if count("imp air") >= 5 and have_item("observational glasses") then
+			if count_item("imp air") >= 5 and have_item("observational glasses") then
 				inform "solve mourn"
 				if not challenge then
 					wear { weapon = "hilarious comedy prop", offhand = "Victor, the Insult Comic Hellhound Puppet" }
@@ -3457,8 +3457,8 @@ mark m_done
 				if challenge == "fist" then
 					macro_laughfloor = macro_fist
 				end
-				if count("imp air") < 5 then
-					go("mourn, imp air: " .. count("imp air"), 242, macro_laughfloor, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
+				if count_item("imp air") < 5 then
+					go("mourn, imp air: " .. count_item("imp air"), 242, macro_laughfloor, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
 				else
 					-- TODO: buff for finding faster?
 					script.bonus_target { "combat" }
@@ -3466,7 +3466,7 @@ mark m_done
 				end
 			end
 		elseif not have_item("Azazel's unicorn") then
-			if count("bus pass") >= 5 and (count("sponge cake") + count("comfy pillow") + count("booze-soaked cherry")) >= 2 and (count("gin-soaked blotter paper") + count("giant marshmallow") + count("beer-scented teddy bear")) >= 2 then
+			if count_item("bus pass") >= 5 and (count_item("sponge cake") + count_item("comfy pillow") + count_item("booze-soaked cherry")) >= 2 and (count_item("gin-soaked blotter paper") + count_item("giant marshmallow") + count_item("beer-scented teddy bear")) >= 2 then
 				inform "solve sven golly"
 				local bognort = have_item("giant marshmallow") and "giant marshmallow" or "gin-soaked blotter paper"
 				local stinkface = have_item("beer-scented teddy bear") and "beer-scented teddy bear" or "gin-soaked blotter paper"
@@ -3479,7 +3479,7 @@ mark m_done
 				result, resulturl = post_page("/pandamonium.php", { action = "sven", bandmember = "Jim", togive = get_itemid(jim), preaction = "try" })
 				did_action = have_item("Azazel's unicorn")
 			else
-				if count("bus pass") < 5 then
+				if count_item("bus pass") < 5 then
 				function macro_backstage()
 					return [[
 ]] .. macro_smash_and_graagh .. [[
@@ -3487,7 +3487,7 @@ mark m_done
 
 ]] .. macro_ppnoodlecannon()
 				end
-					go("sven golly, bus passes: " .. count("bus pass"), 243, macro_backstage, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
+					go("sven golly, bus passes: " .. count_item("bus pass"), 243, macro_backstage, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
 				else
 					-- TODO: buff for finding faster?
 					go("sven golly, getting items", 243, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)
@@ -3534,7 +3534,7 @@ mark m_done
 						script.get_gap_buff("Super Structure")
 					end
 					go("clovering sonars", 31, nil, nil, { "Leash of Linguini", "Empathy", "Astral Shell" }, "Exotic Parrot", 10, { equipment = eq })
-					did_action = (count("sonar-in-a-biscuit") >= 2)
+					did_action = (count_item("sonar-in-a-biscuit") >= 2)
 					if get_result():contains("need some sort of stench protection") then
 						print("SCRIPT INFO: need some sort of stench protection")
 						if session["__script.no stench resist"] then
@@ -3808,11 +3808,11 @@ endif
 			zone_stasis_macro = macro_noodlecannon
 		end
 		script.maybe_ensure_buffs { "Silent Running" }
-		if fullness() + count("hellion cube") * 6 + 6 <= estimate_max_fullness() and script_want_reagent_pasta() then
+		if fullness() + count_item("hellion cube") * 6 + 6 <= estimate_max_fullness() and script_want_reagent_pasta() then
 			go("getting hellion cubes", 239, make_cannonsniff_macro("Hellion"), nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
 		elseif not have_item("box of birthday candles") then
 			go("getting candles", 238, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, { "Scarecrow with Boss Bat britches", "Rogue Program" }, 15)
-		elseif (count("hot wing") < 3 or (meat() < 1000 and fullness() < 5)) and not have_item("box of birthday candles") then
+		elseif (count_item("hot wing") < 3 or (meat() < 1000 and fullness() < 5)) and not have_item("box of birthday candles") then
 			go("getting hot wings", 238, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "Slimeling even in fist", 20)
 --		elseif have_reagent_pastas < 4 and not highskill_at_run and ascensionstatus() == "Hardcore" and challenge ~= "zombie" then
 --			go("getting more hellion cubes", 239, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
@@ -3820,7 +3820,7 @@ endif
 			go("getting dodecagram", 239, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling even in fist", 20)
 		elseif not have_item("eldritch butterknife") then
 			go("getting butterknife", 237, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, { "Scarecrow with Boss Bat britches", "Rogue Program" }, 15)
-		elseif count("hot wing") < 3 then
+		elseif count_item("hot wing") < 3 then
 			go("getting hot wings", 238, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "Slimeling", 20)
 		else
 			inform "do ritual"
@@ -4036,7 +4036,7 @@ endif
 
 	function f.find_black_market()
 		use_dancecard()
-		local have_blackbird_parts = (have("broken wings") and have_item("sunken eyes")) or have_item("reassembled blackbird")
+		local have_blackbird_parts = (have_item("broken wings") and have_item("sunken eyes")) or have_item("reassembled blackbird")
 		if have_item("black market map") and ((challenge ~= "boris" and challenge ~= "jarlsberg") or have_blackbird_parts) then
 			inform "locate black market"
 			meatpaste_items("broken wings", "sunken eyes")
@@ -4071,7 +4071,7 @@ endif
 				local towear = {}
 				local famt = fam "Slimeling"
 				local fammpregen, famequip = famt.mpregen, famt.familiarequip
-				if famequip and have(famequip) then
+				if famequip and have_item(famequip) then
 					towear.familiarequip = famequip
 				end
 				wear(towear)
@@ -4263,15 +4263,15 @@ endif
 					if get_result():contains("It's Always Swordfish") then
 						did_action = true
 					end
-				elseif count("snakehead charrrm") >= 2 then
+				elseif count_item("snakehead charrrm") >= 2 then
 					inform "pasting talisman"
 					meatpaste_items("snakehead charrrm", "snakehead charrrm")
 					did_action = have_item("Talisman o' Nam")
 				elseif have_item("gaudy key") then
 					inform "using gaudy key"
-					local charms = count("snakehead charrrm")
+					local charms = count_item("snakehead charrrm")
 					set_result(use_item("gaudy key"))
-					did_action = (count("snakehead charrrm") > charms)
+					did_action = (count_item("snakehead charrrm") > charms)
 				else
 					if have_item("Rain-Doh box full of monster") then
 						local copied = retrieve_raindoh_monster()
@@ -4346,7 +4346,7 @@ endif
 					async_get_page("/plains.php")
 				end
 -- 				use_dancecard()
-				if meat() < 500 and not (have("photograph of God") and have_item("hard rock candy")) and not have_item("&quot;I Love Me, Vol. I&quot;") then
+				if meat() < 500 and not (have_item("photograph of God") and have_item("hard rock candy")) and not have_item("&quot;I Love Me, Vol. I&quot;") then
 					stop "Not enough meat for palindome"
 				end
 				script.bonus_target { "item" }

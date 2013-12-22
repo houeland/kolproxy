@@ -45,9 +45,9 @@ add_automator("/fight.php", function()
 		if have_item("evil eye") then
 			-- This currently uses any evil eyes you have, even if the Nook is completed.
 			session["used evil eye"] = nil
-			local c = count("evil eye")
+			local c = count_item("evil eye")
 			use_item("evil eye")
-			if count("evil eye") == c - 1 then
+			if count_item("evil eye") == c - 1 then
 				session["used evil eye"] = "Automatically used."
 			end
 		end
