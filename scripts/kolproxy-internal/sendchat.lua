@@ -1,3 +1,4 @@
+dofile("scripts/base/datafile.lua")
 dofile("scripts/base/util.lua")
 dofile("scripts/base/base-lua-functions.lua")
 

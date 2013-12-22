@@ -112,6 +112,8 @@ function dofile(f)
 	load_script("../" .. f)
 end
 
+load_script("base/datafile.lua")
+
 load_script("base/util.lua")
 
 envstoreinfo.g_env.setup_functions()

@@ -89,6 +89,7 @@ return text
 
 end
 
+dofile("scripts/base/datafile.lua")
 dofile("scripts/base/util.lua")
 
 function load_file(category, name)

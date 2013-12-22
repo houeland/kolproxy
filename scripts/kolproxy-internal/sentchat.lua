@@ -1,3 +1,5 @@
+dofile("scripts/base/datafile.lua")
+
 local function run_wrapped_function(f_env)
 
 text = f_env.text

@@ -314,10 +314,21 @@ function changed_feature_setting(what) {
 	return text
 end
 
-add_printer("/custom-settings", function()
+add_interceptor("/custom-settings", function()
+	if params.pwd ~= session.pwd then
+		error("Invalid pwd field")
+	end
+
+	if params.action == "set state" then
+		if params.stateset and params.name and params.value then
+			set_state(params.stateset, params.name, params.value)
+			return "Done.", requestpath
+		end
+	end
+
 	if params.page == "customize features" then
 		text = get_customize_features_page()
-		return
+		return text, requestpath
 	end
 
 	local baselevel = character["settings base level"] or "limited"
@@ -393,4 +404,5 @@ function clear_lua_script_cache(button) {
 ]] .. text .. [[
 		</body>
 		</html>]]
+	return text, requestpath
 end)

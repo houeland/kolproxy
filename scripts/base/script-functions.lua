@@ -261,12 +261,23 @@ do
 			add_interceptor("/kolproxy-automation-script", function()
 				local scriptname = params["automation-script"]
 				if not scriptname or params.pwd ~= localsession.pwd then
-					error "Error: Invalid settings when running automation script"
+					error("Error: Invalid settings when running automation script")
 				end
 				if automation_scripts[scriptname] then
 					return run_automation_script(automation_scripts[scriptname], params.pwd, scriptname)
 				else
-					error "Error: Automation script not found"
+					error("Error: Automation script not found")
+				end
+			end)
+			add_interceptor("/kolproxy-script", function()
+				local scriptname = params["scriptname"]
+				if not scriptname or params.pwd ~= localsession.pwd then
+					error("Error: Invalid settings when running automation script")
+				end
+				if automation_scripts[scriptname] then
+					return run_automation_script(automation_scripts[scriptname], params.pwd, scriptname)
+				else
+					error("Error: Kolproxy script not found")
 				end
 			end)
 			added_automation_handler = true

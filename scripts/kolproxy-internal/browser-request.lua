@@ -1,18 +1,27 @@
 function log_time_interval(msg, f) return f() end
 
-local function load_wrapped_function(path)
+local shared_env = {}
+setmetatable(shared_env, { __index = _G })
+do
+	local f, e = loadfile("scripts/base/datafile.lua")
+	if not f then error(e, 2) end
+	setfenv(f, shared_env)
+	f()
+end
+
+local function load_wrapped_function(wrapperpath)
 	local wrapped_env = {}
-	function wrapped_env.loadfile(path)
-		local f, e = loadfile(path)
+	function wrapped_env.loadfile(loadfilepath)
+		local f, e = loadfile(loadfilepath)
 		if not f then error(e, 2) end
 		setfenv(f, wrapped_env)
 		return f, e
 	end
 	wrapped_env._G = wrapped_env
 
-	setmetatable(wrapped_env, { __index = _G })
+	setmetatable(wrapped_env, { __index = shared_env })
 
-	local f, e = loadfile(path)
+	local f, e = loadfile(wrapperpath)
 	if not f then error(e, 2) end
 	setfenv(f, wrapped_env)
 	local wrapped = f()
