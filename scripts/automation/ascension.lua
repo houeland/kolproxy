@@ -1945,6 +1945,18 @@ endif
 	local use_new_faxing = ascensionpath("BIG!") and script.have_familiar("Obtuse Angel")
 
 	add_task {
+		when = tonumber(ascension["dance card turn"]) == turnsthisrun(),
+		task = tasks.rotting_matilda,
+	}
+
+	local want_starting_items = classid() < 10 and (AT_song_duration() == 0 or not have_item("turtle totem") or not have_item("saucepan") or (not have_item("seal tooth") and challenge ~= "fist" and challenge ~= "zombie"))
+
+	add_task {
+		when = want_starting_items and meat() >= 200,
+		task = tasks.get_starting_items,
+	}
+
+	add_task {
 		when = use_new_faxing and not cached_stuff.handled_icy_peak and can_photocopy(),
 		task = function()
 			local mc = get_page("/mclargehuge.php")
@@ -2277,18 +2289,6 @@ endif
 	}
 
 	add_task {
-		when = tonumber(ascension["dance card turn"]) == turnsthisrun(),
-		task = tasks.rotting_matilda,
-	}
-
-	local want_starting_items = classid() < 10 and (AT_song_duration() == 0 or not have_item("turtle totem") or not have_item("saucepan") or (not have_item("seal tooth") and challenge ~= "fist" and challenge ~= "zombie"))
-
-	add_task {
-		when = want_starting_items and meat() >= 200,
-		task = tasks.get_starting_items,
-	}
-
-	add_task {
 		when = have_item("strange leaflet") and not cached_stuff.used_strange_leaflet,
 		task = {
 			message = "using strange leaflet",
@@ -2536,7 +2536,7 @@ endif
 
 	add_task {
 		prereq = not cached_stuff.have_moxie_guild_access and
-			(playerclass("Disco Bandit") and have_skill("Superhuman Cocktailcrafting")) or playerclass("Accordion Thief") and
+			((playerclass("Disco Bandit") and have_skill("Superhuman Cocktailcrafting")) or playerclass("Accordion Thief")) and
 			meat() >= 100,
 		f = script.unlock_guild_and_get_tonic_water,
 	}
@@ -4664,6 +4664,9 @@ use gauze garter, gauze garter
 			x.equipment = nil
 
 			x.minmp = x.minmp or 0
+			if x.minmp > 20 and playerclass("Pastamancer") then
+				x.minmp = x.minmp / 2
+			end
 			if x.olfact and have_skill("Transcendent Olfaction") then
 				if not trailed then
 					x.minmp = x.minmp + 40

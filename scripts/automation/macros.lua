@@ -671,6 +671,9 @@ end
 
 
 function macro_stasis()
+	if maxhp() < 30 or maxmp() < 30 or not have_skill("Tao of the Terrapin") then
+		return macro_noodlecannon()
+	end
 	return [[
 ]] .. COMMON_MACROSTUFF_START(25, 30) .. [[
 

@@ -903,10 +903,10 @@ function get_automation_scripts(cached_stuff)
 			if show_spammy_automation_events then
 				infoline("casting buff", name, "[current mp: " .. mp() .. "]")
 			end
-			ensure_mp(data.mpcost)
 			if spells[name] and spells[name].shrug_first then
 				shrug_buff(spells[name].shrug_first)
 			end
+			ensure_mp(data.mpcost)
 			return cast_skillid(data.skillid)
 		end 
 	end
@@ -1065,12 +1065,9 @@ function get_automation_scripts(cached_stuff)
 	function f.ensure_buff_turns(buff, duration)
 		f.ensure_buffs { buff }
 		local turns = buffturns(buff)
-		if turns < duration then
+		if turns > 0 and turns < duration then
 			f.cast_buff(buff)
 			if buffturns(buff) <= turns then
-				if turns == 0 then
-					return
-				end
 				critical("Failed to cast " .. buff)
 			end
 			f.ensure_buff_turns(buff, duration)
@@ -3256,7 +3253,9 @@ endif
 			async_get_page("/guild.php", { place = "challenge" })
 			buy_item("magical mystery juice", "2")
 		end
+		-- TODO: Check *actual* buying, not just having one from somewhere
 		if have_item("magical mystery juice") then
+			inform "opened myst guild store"
 			session["__script.opened myst guild store"] = "yes"
 			did_action = true
 		else
@@ -3274,6 +3273,7 @@ endif
 		async_get_page("/guild.php", { place = "challenge" })
 		local guildpt = get_page("/guild.php")
 		if guildpt:match("scg") then
+			inform "unlocked moxie guild"
 			cached_stuff.have_moxie_guild_access = true
 			if have_skill("Superhuman Cocktailcrafting") then
 				inform "get tonic water"

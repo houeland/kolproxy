@@ -123,6 +123,7 @@ function get_ascension_automation_settings(want_bonus)
 				{ name = "Spooky Putty mitre", check = function() return (level() < 13) end },
 				"Boris's Helm",
 				"Brimstone Beret",
+				"astral chapeau",
 				{ name = "miner's helmet", check = function() return want_bonus.extraplusitems end },
 				"double-ice cap",
 				"reinforced beaded headband",
@@ -266,6 +267,7 @@ function get_ascension_automation_settings(want_bonus)
 			"baritone accordion",
 			"stolen accordion",
 			"hilarious comedy prop",
+			"ironic battle spoon",
 			"rubber band gun",
 		}
 		tbl.default_equipment.offhand = {
