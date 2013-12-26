@@ -19,7 +19,9 @@ end)
 
 local function set_wandering_copied_monster()
 	if day["wandering copied monster"] and not day["wandering copied monster"]["next monster start"] then
-		day["wandering copied monster"]["next monster start"] = turnsthisrun() + 15
+		local tbl = day["wandering copied monster"]
+		tbl["next monster start"] = turnsthisrun() + 15
+		day["wandering copied monster"] = tbl
 	end
 end
 

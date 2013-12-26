@@ -121,6 +121,7 @@ function do_daily_visits()
 		"cursed microwave",
 		"cursed pony keg",
 		"Emblem of Ak'gyxoth",
+		"festive warbear bank",
 		"glass gnoll eye",
 		"handmade hobby horse",
 		"Idol of Ak'gyxoth",
