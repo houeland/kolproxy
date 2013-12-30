@@ -50,13 +50,13 @@ add_printer("/charpane.php", function()
 		elseif tbl.boss then
 			types = "badass pie"
 		else
-			element_list = {}
+			local element_list = {}
 			for _, x in ipairs(grind_messages) do
 				if tbl[x.bit] and x.bit ~= "normal" then
 					table.insert(element_list, x.bit)
 				end
 			end
-			if table.maxn(element_list) > 0 then
+			if #element_list > 0 then
 				types = table.concat(element_list, ", ")
 			else
 				types = "liver and let pie"

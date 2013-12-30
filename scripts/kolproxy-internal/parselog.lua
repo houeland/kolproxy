@@ -1,6 +1,7 @@
 local parse_aftercore_turns = false
 
 loadfile("scripts/base/base-lua-functions.lua")()
+loadfile("scripts/base/datafile.lua")()
 loadfile("scripts/base/kolproxy-core-functions.lua")()
 
 local xmeta = { __index = function(t, k)

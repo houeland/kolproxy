@@ -289,12 +289,12 @@ function repeat_send_form(targeturl, action, howmany, pwd, itemids)
 	local this_form = {}
 	for _, n in ipairs(itemids) do
 		table.insert(this_form, n)
-		if table.maxn(this_form) >= 11 then
+		if #this_form >= 11 then
 			send_form(this_form)
 			this_form = {}
 		end
 	end
-	if table.maxn(this_form) > 0 then
+	if #this_form > 0 then
 		send_form(this_form)
 		this_form = {}
 	end

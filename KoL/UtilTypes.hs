@@ -23,7 +23,8 @@ type DiscerningStateIdentifier = (String, Integer, Integer, String) -- name, asc
 -- TODO: make this a record with named fields instead of a tuple?
 type StateType = (Data.Map.Map String String, Data.Map.Map String String, Data.Map.Map String String, Data.Map.Map String String, Data.Map.Map String String)
 
-data LuaScriptType = WHENEVER | PROCESS | PRINTER | AUTOMATE | INTERCEPT | BOTSCRIPT | BROWSERREQUEST
+data LuaScriptType = WHENEVER | PROCESS | BOTSCRIPT | BROWSERREQUEST
+-- Deprecated: PRINTER | AUTOMATE | INTERCEPT | 
 	deriving (Show, Ord, Eq)
 
 -- This entire thing should be locked up into DiscerningStateIdentifier. log/state actions don't really belong.

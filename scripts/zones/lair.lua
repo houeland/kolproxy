@@ -99,7 +99,7 @@ add_processor("/campground.php", function()
 -- 	print("itemsneeded: ", table.concat(itemsneeded, "?"))
 	table.sort(itemsneeded, function(a, b) return whereidx[a] < whereidx[b] end)
 -- 	print("itemsneeded: ", table.concat(itemsneeded, "|"))
-	if table.maxn(itemsneeded) > 0 then
+	if #itemsneeded > 0 then
 		session["zone.lair.itemsneeded"] = itemsneeded
 	end
 end)

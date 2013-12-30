@@ -22,7 +22,7 @@ local minelayout_href = add_automation_script("automate-spading-mine-layouts", f
 			if pt:match("Find New Cavern") then
 				post_page("/mining.php", { mine = "1", reset = "1", pwd = params.pwd })
 			end
-			set_ascension_state("mining.results.1", "")
+			ascension["mining.results.1"] = nil
 			local mine_order = {
 				49, 50, 51, 52, 53, 54,
 				41, 42, 43, 44, 45, 46,
@@ -43,7 +43,7 @@ local minelayout_href = add_automation_script("automate-spading-mine-layouts", f
 				print("Error while spading mining: Itznotyerzitz Mine wasn't cleared.")
 				error("Error while spading mining: Itznotyerzitz Mine wasn't cleared.")
 			else
-				local line = "mining.results.1 (kolproxy, " .. charpane.charName:match([[^"(.+)"$]]) .. ", " .. os.date() .. "): "..tostring(get_ascension_state("mining.results.1")).."\n"
+				local line = "mining.results.1 (kolproxy, " .. charpane.charName:match([[^"(.+)"$]]) .. ", " .. os.date() .. "): "..tostring(ascension["mining.results.1"]).."\n"
 				table.insert(layout_results, line)
 				f = io.open("spading-log.txt", "a+")
 				f:write(line)

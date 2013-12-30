@@ -1330,7 +1330,7 @@ endif
 		end
 -- 		do
 -- 			local SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info(turnsthisrun())
--- 			if table.maxn(good_numbers) == 0 and turnsthisrun() < 700 then
+-- 			if #good_numbers == 0 and turnsthisrun() < 700 then
 -- 				if SRmin and SRmin <= 10 then
 -- 					critical "Semirare soon, without fortune cookie numbers"
 -- 				end
@@ -2258,7 +2258,7 @@ mark m_done
 						table.insert(best_zones, z)
 					end
 				end
-				local next_zone = best_zones[math.random(table.maxn(best_zones))]
+				local next_zone = best_zones[math.random(#best_zones)]
 --				print("bestzone", table_to_str(best_zones), best, "going to", next_zone)
 				go("get cellar wines", next_zone, macro_noodleserpent, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 50)
 			end

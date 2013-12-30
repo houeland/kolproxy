@@ -99,7 +99,7 @@ add_printer("/fight.php", function()
 	loadzone = session["adventure.lastzone"]
 	if loadzone == 157 then
 		local tbl = ascension["zone.pirates.insults"] or {}
-		extra = extra .. [[<br><center style="font-size: 75%%; color: green">]] .. table.maxn(tbl).." / 8 insults</center>"
+		extra = extra .. [[<br><center style="font-size: 75%%; color: green">]] .. #tbl .." / 8 insults</center>"
 	end
 
 	-- TODO-future: this should be in lair.lua

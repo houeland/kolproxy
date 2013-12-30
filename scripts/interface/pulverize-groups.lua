@@ -33,7 +33,7 @@ add_printer("/craft.php", function()
 
 			newoptions = ""
 			for _, x in ipairs(order) do
-				if table.maxn(optgroups[x]) > 0 then
+				if #optgroups[x] > 0 then
 					if x == "Fake" then
 						newoptions = newoptions .. table.concat(optgroups[x])
 					else

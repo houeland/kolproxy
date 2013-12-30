@@ -383,7 +383,7 @@ end
 
 function automate_DB_nemesis_island()
 			text = "automate DB island!"
-			local pwd = get_session_state("pwd") -- inserting pwd, boo!
+			local pwd = session.pwd
 			get_page("/account.php", { action = "autoattack", whichattack = "0", ajax = "1", pwd = pwd }) -- unset autoattack, bleh
 			local skillnames = { "Break It On Down", "Pop and Lock It", "Run Like the Wind" }
 			if have_skill("Gothy Handwave") then
@@ -613,7 +613,7 @@ endif
 end
 
 function automate_AT_nemesis_island()
-			local pwd = get_session_state("pwd") -- inserting pwd, boo!
+			local pwd = session.pwd
 			get_page("/volcanoisland.php", { pwd = pwd, action = "npc" })
 			if count_item("hacienda key") < 5 then
 				text = "explore barracks"

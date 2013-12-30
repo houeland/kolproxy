@@ -584,20 +584,20 @@ setup_lua_instance level filename setupref = do
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)
 				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)
 				register_function "get_api_itemid_info" get_api_itemid_info
-			PRINTER -> do
-				Lua.registerhsfunction lstate "get_state" (get_state setupref)
-				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)
-				register_function "get_api_itemid_info" get_api_itemid_info
-			AUTOMATE -> do
-				Lua.registerhsfunction lstate "set_state" (set_state setupref)
-				Lua.registerhsfunction lstate "get_state" (get_state setupref)
-				register_function "get_api_itemid_info" get_api_itemid_info
-				register_function "kolproxycore_async_submit_page" async_submit_page_func
-			INTERCEPT -> do
-				Lua.registerhsfunction lstate "set_state" (set_state setupref)
-				Lua.registerhsfunction lstate "get_state" (get_state setupref)
-				register_function "get_api_itemid_info" get_api_itemid_info
-				register_function "kolproxycore_async_submit_page" async_submit_page_func
+--			PRINTER -> do
+--				Lua.registerhsfunction lstate "get_state" (get_state setupref)
+--				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)
+--				register_function "get_api_itemid_info" get_api_itemid_info
+--			AUTOMATE -> do
+--				Lua.registerhsfunction lstate "set_state" (set_state setupref)
+--				Lua.registerhsfunction lstate "get_state" (get_state setupref)
+--				register_function "get_api_itemid_info" get_api_itemid_info
+--				register_function "kolproxycore_async_submit_page" async_submit_page_func
+--			INTERCEPT -> do
+--				Lua.registerhsfunction lstate "set_state" (set_state setupref)
+--				Lua.registerhsfunction lstate "get_state" (get_state setupref)
+--				register_function "get_api_itemid_info" get_api_itemid_info
+--				register_function "kolproxycore_async_submit_page" async_submit_page_func
 			BROWSERREQUEST -> do
 				Lua.registerhsfunction lstate "set_state" (set_state setupref)
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)
@@ -727,13 +727,13 @@ runProcessScript ref uri effuri pagetext allparams = do
 		Right xs -> Left ("Lua process call error, return values = " ++ (show xs), "")
 		Left err -> Left err
 
-runPrinterScript ref uri effuri pagetext allparams = do
-	let vars = [("path", uriPath effuri), ("query", uriQuery effuri), ("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
-	rets <- run_lua_code PRINTER "scripts/kolproxy-internal/printer.lua" ref (setvars vars pagetext allparams)
-	return $ case rets of
-		Right [Just t] -> Right $ t
-		Right xs -> Left ("Lua printer call error, return values = " ++ (show xs), "")
-		Left err -> Left err
+--runPrinterScript ref uri effuri pagetext allparams = do
+--	let vars = [("path", uriPath effuri), ("query", uriQuery effuri), ("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
+--	rets <- run_lua_code PRINTER "scripts/kolproxy-internal/printer.lua" ref (setvars vars pagetext allparams)
+--	return $ case rets of
+--		Right [Just t] -> Right $ t
+--		Right xs -> Left ("Lua printer call error, return values = " ++ (show xs), "")
+--		Left err -> Left err
 
 runChatScript ref uri effuri pagetext allparams = do
 	let vars = [("path", uriPath effuri), ("query", uriQuery effuri), ("requestpath", uriPath uri), ("requestquery", uriQuery uri)]

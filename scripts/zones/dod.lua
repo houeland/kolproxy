@@ -67,7 +67,7 @@ function get_dod_potion_status()
 		end
 	end
 
-	if table.maxn(unknown_effects) == 1 and table.maxn(unknown_potions) == 1 then -- only one missing effect and one missing potion
+	if #unknown_effects == 1 and #unknown_potions == 1 then -- only one missing effect and one missing potion
 		tbl[unknown_potions[1]] = unknown_effects[1]
 		return tbl, {}, {}
 	else

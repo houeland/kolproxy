@@ -545,7 +545,7 @@ local href = add_automation_script("custom-ascension-checklist", function()
 				end
 			end
 		end
-		if table.maxn(sorted_mapped) > 0 then
+		if #sorted_mapped > 0 then
 			table.sort(sorted_mapped, function(a, b)
 				if a.sortclass ~= b.sortclass then return a.sortclass < b.sortclass end
 				return a.tr < b.tr

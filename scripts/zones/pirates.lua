@@ -93,9 +93,9 @@ add_printer("/fight.php", function()
 	if text:contains("The pirate sneers at you and replies") then
 		local tbl = ascension["zone.pirates.insults"] or {}
 		if fight["pirate.new insult"] == "yes" then
-			text = text:gsub("(The pirate sneers at you and replies &quot;)(.-)(&quot;)", [[%1<span style="color: darkorange">%2</span>%3 (]]..table.maxn(tbl).." / 8 insults)")
+			text = text:gsub("(The pirate sneers at you and replies &quot;)(.-)(&quot;)", [[%1<span style="color: darkorange">%2</span>%3 (]]..#tbl.." / 8 insults)")
 		else
-			text = text:gsub("(The pirate sneers at you and replies &quot;)(.-)(&quot;)", [[%1<span style="color: darkslategray">%2</span>%3 (]]..table.maxn(tbl).." / 8 insults)")
+			text = text:gsub("(The pirate sneers at you and replies &quot;)(.-)(&quot;)", [[%1<span style="color: darkslategray">%2</span>%3 (]]..#tbl.." / 8 insults)")
 		end
 	end
 end)
@@ -151,7 +151,7 @@ end)
 add_printer("/cove.php", function()
 	if not text:contains([[title="The F'c'le (1)"]]) then
 		local tbl = ascension["zone.pirates.insults"] or {}
-		local count = table.maxn(tbl)
+		local count = #tbl
 		local chance = 0
 		if count >= 3 then
 			chance = count / 8 * (count - 1) / 7 * (count - 2) / 6

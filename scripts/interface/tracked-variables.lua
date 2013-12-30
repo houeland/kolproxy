@@ -6,7 +6,7 @@ local href = add_automation_script("display-tracked-variables", function()
 -- Last semirare?
 	table.insert(asctbl, { title = "Manor quartet song", value = ascension["zone.manor.quartet song"] })
 	table.insert(asctbl, { title = "Ballroom dance card turncount", value = ascension["dance card turn"] })
-	table.insert(asctbl, { title = "Number of pirate insults", value = table.maxn(ascension["zone.pirates.insults"] or {}) })
+	table.insert(asctbl, { title = "Number of pirate insults", value = #(ascension["zone.pirates.insults"] or {}) })
 	table.insert(asctbl, { title = "Island war arena ML progress", value = string.format("Frat = %d, Hippy = %d", ascension["zone.island.frat arena flyerML"] or 0, ascension["zone.island.hippy arena flyerML"] or 0) })
 -- Battlefield kills?
 

@@ -29,7 +29,7 @@ local vanilla_fairy = {
 	jungman = true,
 }
 
-local function leprechaun_bonus(weight)
+function leprechaun_bonus(weight)
 	return 2 * fairy_bonus(weight)
 end
 local vanilla_lep = {
@@ -103,6 +103,8 @@ function estimate_current_familiar_bonuses()
 	elseif familiar("Hobo Monkey") then
 		-- SPADE: Is this floored?
 		return make_bonuses_table { ["Meat from Monsters"] = leprechaun_bonus(buffedfamiliarweight() * 1.25), }
+	elseif familiar("Reanimated Reanimator") then
+		return estimate_reanimated_reanimator_bonuses()
 	else
 		-- TODO: Use familiar IDs/names instead
 		local bonuses = make_bonuses_table {}

@@ -3745,7 +3745,7 @@ endif
 				use_dancecard()
 				-- barrr
 				local tbl = ascension["zone.pirates.insults"] or {}
-				local insults = table.maxn(tbl)
+				local insults = #tbl
 				if insults < 7 or quest_text("A salty old pirate named Cap'm Caronch has offered to let you join his crew if you find some treasure for him") then
 					script.do_barrr(insults)
 				elseif have_item("Cap'm Caronch's nasty booty") then

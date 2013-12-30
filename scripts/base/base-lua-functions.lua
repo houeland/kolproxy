@@ -188,15 +188,17 @@ function str_to_table(str) -- TODO: redo properly!
 	return tbl
 end
 
+-- TODO: remove?
 function parse_params_raw(str)
 	local tbl = parse_request_param_string(str)
-	if table.maxn(tbl) == 0 then
+	if #tbl == 0 then
 		return nil
 	else
 		return tbl
 	end
 end
 
+-- TODO: remove?
 function parse_params(str)
 	local rawtbl = parse_params_raw(str)
 	local tbl = {}
@@ -207,7 +209,7 @@ function parse_params(str)
 end
 
 function random_choice(tbl)
-	return tbl[math.random(1, table.maxn(tbl))]
+	return tbl[math.random(1, #tbl)]
 end
 
 function floor_to_places(value, places)

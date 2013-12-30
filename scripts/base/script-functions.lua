@@ -175,7 +175,7 @@ do
 			if zoneid_to_check ~= adv_zoneid then return end
 			local x = checkfunc()
 			if x then
-				local xidx = table.maxn(__zone_checks[zoneid_to_check])
+				local xidx = #__zone_checks[zoneid_to_check]
 				return x, "zonecheck-" .. zoneid_to_check .. "-" .. xidx
 			end
 		end)

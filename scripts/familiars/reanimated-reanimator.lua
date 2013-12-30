@@ -9,3 +9,41 @@ add_processor("/fight.php", function()
 		encountered_wandering_copied_monster()
 	end
 end)
+
+function update_reanimated_reanimator_bonuses_cache()
+	local pt = get_page("/main.php", { talktoreanimator = 1 })
+	local parts = pt:match("including:<br><b>.-</b>")
+	local legs = tonumber(parts:match(">([0-9]*) leg")) or 0
+	local skulls = tonumber(parts:match(">([0-9]*) skull")) or 0
+	session["familiar.reanimator cached bonuses"] = { legs = legs, skulls = skulls }
+end
+
+function reset_reanimated_reanimator_bonuses_cache()
+	session["familiar.reanimator cached bonuses"] = nil
+end
+
+function estimate_reanimated_reanimator_bonuses()
+	local bonuses = make_bonuses_table {}
+	local cached = session["familiar.reanimator cached bonuses"] or {}
+	local legs = cached.legs or 0
+	local skulls = cached.skulls or 0
+	if legs then bonuses = bonuses + { ["Item Drops from Monsters"] = fairy_bonus(legs) } end
+	if skulls then bonuses = bonuses + { ["Meat from Monsters"] = leprechaun_bonus(skulls) } end
+	return bonuses
+end
+
+add_processor("/familiar.php", function()
+	reset_reanimated_reanimator_bonuses_cache()
+end)
+
+add_processor("/fight.php", function()
+	if familiar("Reanimated Reanimator") then
+		reset_reanimated_reanimator_bonuses_cache()
+	end
+end)
+
+add_automator("all pages", function()
+	if familiar("Reanimated Reanimator") and not locked() and not session["familiar.reanimator cached bonuses"] then
+		update_reanimated_reanimator_bonuses_cache()
+	end
+end)
