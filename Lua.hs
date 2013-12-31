@@ -20,7 +20,6 @@ import Network.URI
 import Network.CGI
 import System.IO.Error (isUserError, ioeGetErrorString)
 import Text.JSON
-import Text.Regex.TDFA
 import Text.XML.Light
 import qualified Data.ByteString.Char8
 import qualified Data.Map
@@ -68,8 +67,8 @@ peekJustDouble l idx = (__peekJust l idx) :: IO Double
 get_current_kolproxy_version = return $ kolproxy_version_number :: IO String
 
 get_latest_kolproxy_version = do
-	version <- getHTTPFileData kolproxy_version_string (mkuri "http://www.houeland.com/kolproxy/latest-version")
-	if (length version <= 100) && (version =~ "^[0-9A-Za-z.-]+$")
+	version <- getHTTPFileData kolproxy_version_string (mkuri "http://www.houeland.com/kolproxy/latest-version.json")
+	if (length version <= 1000)
 		then return version
 		else return "?"
 
@@ -532,8 +531,12 @@ setup_lua_instance level filename setupref = do
 			return 1
 		
 		register_function "get_latest_kolproxy_version" $ \_ref l -> do
-			Lua.pushstring l =<< get_latest_kolproxy_version
-			return 1
+			versionstr <- get_latest_kolproxy_version
+			case decodeStrict versionstr of
+				Ok jsonobj -> do
+					push_jsvalue l jsonobj
+					return 1
+				_ -> return 0
 
 		register_function "get_shutdown_secret_key" $ \ref l -> do
 			Lua.pushstring l (shutdown_secret_ $ globalstuff_ $ ref)

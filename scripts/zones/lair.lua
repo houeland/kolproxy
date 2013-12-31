@@ -853,7 +853,7 @@ function solve_hedge_maze_puzzle()
 					post_page("/hedgepuzzle.php", { action = x.tile })
 					return true, x
 				else
-					print("do in hedge maze:", x)
+					print("do in hedge maze:", tostring(x))
 					return false, x
 				end
 			end

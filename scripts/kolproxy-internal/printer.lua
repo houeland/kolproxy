@@ -1,5 +1,7 @@
 -- printer.lua
 
+local script_files_kolproxy_version = "3.22-alpha"
+
 -- io = nil
 os = nil
 -- debug = nil
@@ -32,17 +34,30 @@ log_time_interval("mods setup", function()
 
 if path == "/login.php" then
 	local current_version = get_current_kolproxy_version()
-	local latest_version = get_latest_kolproxy_version()
+	local latest_version_raw = get_latest_kolproxy_version()
+	local latest_version
+	local milestoneid
+	if type(latest_version_raw) == "table" and type(latest_version_raw.alpha) == "table" then
+		if latest_version_raw.alpha.version and latest_version_raw.alpha.version:gmatch("^[A-Za-z0-9.-]*$") then
+			latest_version = latest_version_raw.alpha.version
+			milestoneid = tonumber(latest_version_raw.alpha.milestone)
+		end
+	end
+
 	mods["/login.php"] = {
 --		[ [[<input class=button type=submit value="Log In" name=submitbutton id=submitbutton>]] ] = [[<input class="button" type="submit" value="Log In" style="color: gray" name="submitbutton" id="submitbutton" disabled="disabled">]],
 --		["<font size=1>If you've forgotten your password"] = [[<div id="jswarning" style="color: red">You have to turn on javascript, otherwise you'll submit your password in cleartext!</div><script type="text/javascript">if (md5s) { document.getElementById('jswarning').style.display = 'none'; document.getElementById('submitbutton').value = 'Log In'; document.getElementById('submitbutton').disabled = ''; document.getElementById('submitbutton').style.color = 'black'; }</script>%0]],
 	}
 	local version_link = ""
 	print("current version", current_version, "latest version", latest_version)
-	if current_version ~= "3.22-dev" then
+	if current_version ~= script_files_kolproxy_version then
 		version_link = [[<a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; text-decoration: none;">{ Kolproxy v]]..current_version..[[ incorrect installation. }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; font-size: smaller;">{ Click here to download a working version. }</a>]]
-	elseif latest_version and current_version ~= latest_version and latest_version ~= "3.21-alpha" then
-		version_link = [[<a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; text-decoration: none;">{ Kolproxy v]]..current_version..[[, latest version is v]]..latest_version..[[ }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; font-size: smaller;">{ Click here to upgrade. }</a>]]
+	elseif latest_version and current_version ~= latest_version then
+		local extralinks = string.format([[<a href="https://github.com/houeland/kolproxy/commits/%s" target="_blank" style="color: darkorange">changelog</a>]], latest_version)
+		if milestoneid then
+			extralinks = string.format([[<a href="https://github.com/houeland/kolproxy/issues?milestone=%d&state=closed" target="_blank" style="color: darkorange">List of fixes</a>, %s]], milestoneid, extralinks)
+		end
+		version_link = [[<a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; text-decoration: none;">{ Kolproxy v]]..current_version..[[ }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; font-size: smaller;">{ Latest version is v]]..latest_version..[[, click to upgrade. }</a><br><span style="color: darkorange; font-size: smaller;">{ ]] .. extralinks .. [[ }</span>]]
 	else
 		version_link = [[<span style="color: green">{ Kolproxy v]]..current_version..[[ }</span>]]
 	end
