@@ -21,14 +21,15 @@ import qualified Data.Digest.Pure.MD5
 import qualified Database.SQLite3Modded
 
 
-kolproxy_version_number = "3.22-alpha"
+
+kolproxy_version_number = "3.22-beta"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 
+
+
+
 get_md5 str = show $ Data.Digest.Pure.MD5.md5 $ Data.ByteString.Lazy.Char8.pack str
-
-
-
 
 matchGroups :: String -> String -> [[String]]
 matchGroups regex text = map tail $ (match rx text :: [[String]])
