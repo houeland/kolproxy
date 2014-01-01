@@ -12,7 +12,7 @@ end)
 
 function update_reanimated_reanimator_bonuses_cache()
 	local pt = get_page("/main.php", { talktoreanimator = 1 })
-	local parts = pt:match("including:<br><b>.-</b>")
+	local parts = pt:match("including:<br><b>.-</b>") or ""
 	local legs = tonumber(parts:match(">([0-9]*) leg")) or 0
 	local skulls = tonumber(parts:match(">([0-9]*) skull")) or 0
 	session["familiar.reanimator cached bonuses"] = { legs = legs, skulls = skulls }
