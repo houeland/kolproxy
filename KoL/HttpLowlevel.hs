@@ -21,8 +21,8 @@ import Network.CGI (formEncode)
 import Network.HTTP
 import Network.Socket
 import Network.Stream (ConnError(..), failWith, fmapE)
-import Network.TLS hiding (server)
-import Network.TLS.Extra
+import qualified Network.TLS
+import qualified Network.TLS.Extra
 import Network.URI
 import Numeric (readHex)
 import System.IO
@@ -63,7 +63,7 @@ instance ConnFunctionsBundle Handle Data.ByteString.ByteString where
 	connGetContents conn = Data.ByteString.hGetContents conn
 
 data SslConn = SslConn {
-	sslconn_c :: TLSCtx,
+	sslconn_c :: Network.TLS.TLSCtx,
 	sslconn_sendBuffer :: [Data.ByteString.Lazy.ByteString],
 	sslconn_recvBuffer :: Data.ByteString.Lazy.ByteString
 }
@@ -72,7 +72,7 @@ instance ConnFunctionsBundle (MVar SslConn) Data.ByteString.ByteString where
 	connGetBlock mvconn size = modifyMVar mvconn $ \conn -> do
 		let f prebuild want rb
 			| (want == 0) = return (prebuild, rb)
-			| (Data.ByteString.Lazy.null rb) = recvData (sslconn_c conn) >>= f prebuild want
+			| (Data.ByteString.Lazy.null rb) = Network.TLS.recvData' (sslconn_c conn) >>= f prebuild want
 			| otherwise = do
 				let (n, rest) = Data.ByteString.Lazy.splitAt want rb
 				f (n:prebuild) (want - Data.ByteString.Lazy.length n) rest
@@ -82,7 +82,7 @@ instance ConnFunctionsBundle (MVar SslConn) Data.ByteString.ByteString where
 
 	connGetLine mvconn = modifyMVar mvconn $ \conn -> do
 		let f prebuild rb
-			| (Data.ByteString.Lazy.null rb) = recvData (sslconn_c conn) >>= f prebuild
+			| (Data.ByteString.Lazy.null rb) = Network.TLS.recvData' (sslconn_c conn) >>= f prebuild
 			| otherwise = do
 				let (n, rest) = Data.ByteString.Lazy.Char8.break (== '\n') rb
 				if Data.ByteString.Lazy.null rest
@@ -99,13 +99,13 @@ instance ConnFunctionsBundle (MVar SslConn) Data.ByteString.ByteString where
 
 	connFlush mvconn = modifyMVar mvconn $ \conn -> do
 		let oldbuff = sslconn_sendBuffer conn
-		sendData (sslconn_c conn) $ Data.ByteString.Lazy.concat oldbuff
+		Network.TLS.sendData (sslconn_c conn) $ Data.ByteString.Lazy.concat oldbuff
 		let newconn = conn { sslconn_sendBuffer = [] }
 		return (newconn, ())
 
 	connGetContents mvconn = modifyMVar mvconn $ \conn -> do
 		let recur prebuild = do
-			mrb <- try $ recvData (sslconn_c conn)
+			mrb <- try $ Network.TLS.recvData' (sslconn_c conn)
 			case mrb of
 				Right rb -> if (Data.ByteString.Lazy.null rb)
 					then return prebuild
@@ -227,9 +227,9 @@ simple_https_direct rq = do
 	let a = Network.Socket.SockAddrInet (toEnum 443) hostA
 	Network.Socket.connect s a
 	h <- Network.Socket.socketToHandle s ReadWriteMode
-	g <- makeSystem
-	c <- client (defaultParams { pCiphers = ciphersuite_strong }) g h
-	handshake c
+	rng <- makeSystem
+	c <- Network.TLS.contextNewOnHandle h (Network.TLS.defaultParamsClient { Network.TLS.pCiphers = Network.TLS.Extra.ciphersuite_strong }) rng
+	Network.TLS.handshake c
 
 	mvc <- newMVar (SslConn { sslconn_c = c, sslconn_sendBuffer = [], sslconn_recvBuffer = Data.ByteString.Lazy.empty })
 
@@ -240,7 +240,7 @@ simple_https_direct rq = do
 	rsp <- getResponseHead mvc
 	resresp <- switchResponse mvc True False rsp rq
 
-	bye c
+	Network.TLS.bye c
 
 	return resresp
 
@@ -334,8 +334,8 @@ mkconnectsocket = debug_do "mkconnectsocket" $ do
 mklistensocket portnum = debug_do "mklistensocket" $ do
 	proto <- Network.BSD.getProtocolNumber "tcp"
 	flags <- do
-		listenpublic <- getEnvironmentSetting "KOLPROXY_LISTEN_PUBLIC"
-		if listenpublic == Just "1"
+		listenpublic <- kolproxy_is_listening_publicly
+		if listenpublic
 			then return [AI_ADDRCONFIG, AI_PASSIVE]
 			else return [AI_ADDRCONFIG]
 	let hints = Network.Socket.defaultHints {

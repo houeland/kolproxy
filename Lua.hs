@@ -529,7 +529,7 @@ setup_lua_instance level filename setupref = do
 		register_function "get_current_kolproxy_version" $ \_ref l -> do
 			Lua.pushstring l =<< get_current_kolproxy_version
 			return 1
-		
+
 		register_function "get_latest_kolproxy_version" $ \_ref l -> do
 			versionstr <- get_latest_kolproxy_version
 			case decodeStrict versionstr of
@@ -560,6 +560,10 @@ setup_lua_instance level filename setupref = do
 			Lua.pushboolean l x
 			return 1
 
+		register_function "kolproxy_is_listening_publicly" $ \_ref l -> do
+			Lua.pushboolean l =<< kolproxy_is_listening_publicly
+			return 1
+		
 		register_function "list_custom_autoload_script_files" $ \_ref l -> do
 			filenames <- get_custom_autoload_script_files
 			Lua.newtable l

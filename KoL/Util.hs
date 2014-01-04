@@ -22,7 +22,7 @@ import qualified Database.SQLite3Modded
 
 
 
-kolproxy_version_number = "3.23-dev"
+kolproxy_version_number = "3.23-alpha"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 
@@ -85,6 +85,10 @@ get_sessid ref = cookie_to_sessid $ cookie_ $ connection $ ref
 canReadState ref = return $ stateValid_ ref :: IO Bool
 
 
+
+kolproxy_is_listening_publicly = do
+	listenpublic <- getEnvironmentSetting "KOLPROXY_LISTEN_PUBLIC"
+	return (listenpublic == Just "1")
 
 
 create_db place filename = do

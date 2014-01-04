@@ -1,4 +1,7 @@
 add_automation_script("lua-console", function()
+	if kolproxy_is_listening_publicly() then
+		return "Disabled for public kolproxy servers.", requestpath
+	end
 	local prefilltext = params.command or ""
 	output = ""
 	if params.command then
