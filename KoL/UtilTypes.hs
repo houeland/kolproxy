@@ -2,7 +2,7 @@
 
 module KoL.UtilTypes where
 
-import Prelude hiding (read, catch)
+import Prelude
 import Control.Concurrent
 import Control.Exception
 import Data.IORef

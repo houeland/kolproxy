@@ -1,17 +1,3 @@
-function deepcopy(t)
-	if type(t) ~= 'table' then return t end
-	local mt = getmetatable(t)
-	local res = {}
-	for k,v in pairs(t) do
-	if type(v) == 'table' then
-			v = deepcopy(v)
-		end
-		res[k] = v
-	end
-	setmetatable(res,mt)
-	return res
-end
-
 local function beesIncreaser(name, base_data)
 	local bees = {
 		["beebee gunners"] = true,
@@ -67,7 +53,7 @@ function buildCurrentFightMonsterDataCache(monster_name, fight_text)
 	end
 
 	if not monster then return nil end
-	monster = deepcopy(monster)
+	monster = table.copy(monster)
 
 	local ml_increases = {
 		HP = true,

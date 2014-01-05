@@ -2,7 +2,7 @@ module KoL.Http where
 
 -- TODO: Merge with HttpLowlevel or at least restructure
 
-import Prelude hiding (read, catch)
+import Prelude
 import Logging
 import KoL.HttpLowlevel
 import KoL.Util
@@ -12,7 +12,6 @@ import Control.Exception
 import Control.Monad
 import Data.IORef
 import Data.List (intercalate)
-import Data.Maybe
 import Data.Time
 import Network.URI
 import Text.JSON

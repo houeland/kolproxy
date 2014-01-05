@@ -53,12 +53,27 @@ local error_count_critical = 0
 local error_count_hard = 0
 local error_count_soft = 0
 
-local function hardwarn(...)
-	print("WARNING: downloaded data files inconsistent,", ...)
+local function format_param(x)
+	if type(x) == "string" then
+		return string.format("%q", x)
+	elseif type(x) == "table" then
+		return tojson(x)
+	else
+		return tostring(x)
+	end
+end
+
+local function hardwarn(msg, ...)
+	local printtbl = {}
+	table.insert(printtbl, "WARNING: downloaded data files inconsistent, " .. tostring(msg))
+	for _, x in ipairs { ... } do
+		table.insert(printtbl, format_param(x))
+	end
+	print(unpack(printtbl))
 	error_count_hard = error_count_hard + 1
 end
 
-local softwarn = function(...)
+local function softwarn(...)
 	-- Errors that are just too frequent to spam warnings for
 	--print("NOTICE: downloaded data files inconsistent,", ...)
 	error_count_soft = error_count_soft + 1
@@ -266,7 +281,7 @@ function parse_skills()
 	for l in io.lines("cache/files/classskills.txt") do
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
-		local skillid, name, mpcost = tonumber(tbl[1]), tbl[2], tonumber(tbl[4])
+		local skillid, name, mpcost = tonumber(tbl[1]), tbl[2], tonumber(tbl[5])
 		if skillid and name and mpcost then
 			skills[name] = { skillid = skillid, mpcost = mpcost }
 		end
@@ -280,6 +295,12 @@ function verify_skills(data)
 			return data
 		end
 	end
+
+	local testskills = {}
+	for _, x in ipairs { "Summon Sugar Sheets", "Leash of Linguini" } do
+		testskills[x] = data[x]
+	end
+	hardwarn("verify_skills failure:", testskills)
 end
 
 function parse_buff_recast_skills(skills)
@@ -381,7 +402,7 @@ function parse_items()
 				reqtbl.Mysticality = tonumber(req:match("Mys: ([0-9]+)"))
 				reqtbl.Moxie = tonumber(req:match("Mox: ([0-9]+)"))
 				if req ~= "none" and not next(reqtbl) then
-					hardwarn("unknown equip requirement", req, "for", name)
+					hardwarn("unknown equip requirement for", name, req)
 				end
 				-- Mafia data files frequently show no equipment requirements as e.g. "Mus: 0" instead of "none"
 				for a, b in pairs(reqtbl) do
@@ -466,7 +487,7 @@ function verify_items(data)
 	for _, x in ipairs { "Orcish Frat House blueprints", "Hell ramen", "water purification pills", "beastly paste", "leather chaps", "dried gelatinous cube", "flaming pink shirt", "mayfly bait necklace", "Jarlsberg's pan (Cosmic portal mode)", "stolen accordion", "toy accordion", "pygmy concertinette", "ring of conflict" } do
 		testitems[x] = data[x]
 	end
-	hardwarn("verify_items failure:", table_to_json(testitems))
+	hardwarn("verify_items failure:", testitems)
 end
 
 local function parse_monster_stats(stats, monster_debug_line)
@@ -591,7 +612,7 @@ function parse_monsters()
 		local tbl = split_tabbed_line(l)
 		local name, image, stats = tbl[1], tbl[2], tbl[3]
 		if image == "" then image = nil end
-		__parse_monster_debug = table_to_json(tbl)
+		__parse_monster_debug = tojson(tbl)
 		if not l:match("^#") and name and stats then
 			--print("DEBUG parsing monster", name)
 			table.remove(tbl, 1)
@@ -612,7 +633,7 @@ function verify_monsters(data)
 	for xi, x in pairs(data) do
 		for _, y in ipairs(x.Items or {}) do
 			if not processed_datafiles["items"][y.Name] then
-				hardwarn([[monsters:item does not exist: "]] .. tostring(y.Name) .. [[" (from ]] .. tostring(xi) .. [[)]])
+				hardwarn("monsters:item does not exist:", xi, y.Name)
 			end
 		end
 	end
@@ -630,7 +651,7 @@ function verify_monsters(data)
 			end
 		end
 	end
-	print("DEBUG:", table_to_json(data["hellion"]))
+	print("DEBUG:", tojson(data["hellion"]))
 end
 
 function parse_hatrack()
@@ -676,8 +697,20 @@ function parse_recipes()
 	for l in io.lines("cache/files/concoctions.txt") do
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
-		if tbl[2] == "CLIPART" then
+		local itemname, crafttype = tbl[1], tbl[2]
+		if crafttype == "CLIPART" then
 			add_recipe(tbl[1], { type = "cliparts", clips = { tonumber(tbl[3]), tonumber(tbl[4]), tonumber(tbl[5]) } })
+		elseif crafttype == "SMITH" then
+		elseif crafttype == "MIX" or crafttype == "ACOCK" or crafttype == "SCOCK" or crafttype == "SACOCK" then
+			table.remove(tbl, 1)
+			table.remove(tbl, 1)
+			add_recipe(tbl[1], { type = "cocktailcrafting", ingredients = tbl })
+		elseif crafttype == "COOK" then
+			table.remove(tbl, 1)
+			table.remove(tbl, 1)
+			add_recipe(tbl[1], { type = "cooking", ingredients = tbl })
+		elseif crafttype == "BSTILL" or crafttype == "MSTILL" then
+			add_recipe(tbl[1], { type = "still", base = tbl[3] })
 		end
 	end
 
@@ -853,14 +886,14 @@ function verify_semirares(data)
 	if not next(missing) then
 		return data
 	end
-	hardwarn("verify_semirares failure:", table_to_json(missing))
+	hardwarn("verify_semirares failure:", missing)
 end
 
 function parse_mallprices()
 	local fobj = io.open("cache/files/mallprices.json")
 	local mallprices_datafile = fobj:read("*a")
 	fobj:close()
-	return json_to_table(mallprices_datafile)
+	return fromjson(mallprices_datafile)
 end
 
 function verify_mallprices(data)
@@ -874,7 +907,7 @@ function parse_consumables()
 	local fobj = io.open("cache/files/consumable-advgain.json")
 	local consumables_datafile = fobj:read("*a")
 	fobj:close()
-	return json_to_table(consumables_datafile)
+	return fromjson(consumables_datafile)
 end
 
 function verify_consumables(data)
@@ -926,7 +959,7 @@ function verify_zones(data)
 	for a, b in pairs(data) do
 		for _, x in ipairs(b.monsters or {}) do
 			if not processed_datafiles["monsters"][x:lower()] then
-				softwarn("zones:unknown monster", x, "in", a)
+				softwarn("zones:unknown monster", x, a)
 			end
 		end
 	end
@@ -943,7 +976,7 @@ function verify_zones(data)
 	for _, x in ipairs { "The Dungeons of Doom", "McMillicancuddy's Farm", "The Spooky Forest" } do
 		testzones[x] = data[x]
 	end
-	hardwarn("verify_zones failure:", table_to_json(testzones))
+	hardwarn("verify_zones failure:", testzones)
 end
 
 function parse_choice_spoilers()
@@ -969,7 +1002,7 @@ function parse_choice_spoilers()
 			end
 		end
 	end
-	local rawspoilers = json_to_table(table.concat(jsonlines, "\n"))
+	local rawspoilers = fromjson(table.concat(jsonlines, "\n"))
 	local choice_spoilers = {}
 	for a, b in pairs(rawspoilers) do
 		table.remove(b, 1)
@@ -992,7 +1025,7 @@ function process(datafile)
 	if dataok then
 		local verifyok, verified = pcall(verifyf, data)
 		if verifyok and verified then
-			local json = table_to_json(verified)
+			local json = tojson(verified)
 			local fobj = io.open("cache/data/" .. filename .. ".json", "w")
 			fobj:write(json)
 			fobj:close()

@@ -2,7 +2,7 @@
 
 module KolproxyServer where
 
-import Prelude hiding (read, catch)
+import Prelude
 import HardcodedGameStuff
 import Logging
 import PlatformLowlevel

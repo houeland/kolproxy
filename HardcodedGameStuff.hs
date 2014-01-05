@@ -1,17 +1,15 @@
 module HardcodedGameStuff where
 
-import Prelude hiding (read, catch)
+import Prelude
 import Lua
 import PlatformLowlevel
 import KoL.Http
 import KoL.Util
---import KoL.UtilTypes
 import Control.Exception
 import Control.Monad
 import Data.Maybe
 import Data.Time.Clock
 import System.Directory
---import Text.Regex.TDFA
 import qualified Data.ByteString.Char8
 
 doWriteDataFile filename filedata = best_effort_atomic_file_write filename "." filedata

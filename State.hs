@@ -4,7 +4,7 @@ module State where
 
 -- TODO: Change fight to be an actual separate state table?
 
-import Prelude hiding (read, catch)
+import Prelude
 import PlatformLowlevel
 import Logging
 import KoL.Util
@@ -17,6 +17,7 @@ import Control.Monad
 import Data.IORef
 import Data.List
 import Data.Maybe
+import Data.Time.Clock
 import System.IO.Error (isDoesNotExistError)
 import Text.JSON
 import Text.Printf
@@ -114,6 +115,7 @@ registerUpdatedState ref stateset var = do
 
 	-- TODO: How should more-recent changes for things that are not stored on the server be handled
 	-- TODO: Only do this for the same things as above, when the settings are stored?
+	-- TODO: store number of writes like in json
 
 	ai <- getApiInfo ref
 	tablename <- get_state_tablename ref "character"
@@ -281,6 +283,72 @@ loadStateJSON_old ref jsobj = do
 			putStrLn $ "INFO: no turnsplayed timestamp for server settings"
 			return ["Nothing"]
 
+loadStateJSON_new ref jsobj = do
+	ai <- getApiInfo ref
+	let stuff = fromJSObject $ jsobj
+	Just (stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
+	lstp <- getState ref "character" "turnsplayed last state change"
+
+	let lookupjsobj which =
+		case lookup which stuff of
+			Just (JSObject jo) -> Just $ fromJSObject $ jo
+			_ -> Nothing
+
+	let lookupjsstr which obj =
+		case lookup which obj of
+			Just (JSString str) -> Just $ fromJSString str
+			_ -> Nothing
+
+	let decodestate xin = Data.Map.fromList remapped
+		where
+			Just (JSObject x) = xin
+			list = fromJSObject x
+			remapped = map (\(x, y) -> (x, encode y)) list
+
+	should_use_server_data <- do
+		case lookup "timestamp" stuff of
+			Just (JSObject tstampobj) -> do
+				let Just (JSRational _ jsr) = lookup "turnsplayed" $ fromJSObject $ tstampobj
+				let tserver = round jsr
+				let should_use_server_data = case read_as =<< lstp :: Maybe Integer of
+					Just tlocal -> (tserver >= tlocal)
+					Nothing -> True
+				if should_use_server_data
+					then do
+						putStrLn $ "INFO: server settings are recent " ++ show (tserver, lstp)
+						return True
+					else do
+						putStrLn $ "WARNING: server settings are old " ++ show (tserver, lstp)
+						return False
+			_ -> do
+				putStrLn $ "INFO: no turnsplayed timestamp for server settings"
+				return False
+
+	if should_use_server_data
+		then do
+			putStrLn $ "  loading character state"
+			let Just charlist = lookupjsobj "character"
+			(what, newstate) <- if (lookupjsstr "name" charlist) == (Just $ charName $ ai)
+				then do
+					let storedcharmap = decodestate $ lookup "state" charlist
+					putStrLn $ "  loading ascension state"
+					let Just asclist = lookupjsobj "ascension"
+					if (Just $ show $ ascension $ ai) == (lookupjsstr "ascension" asclist)
+						then do
+							let storedascmap = decodestate $ lookup "state" asclist
+							putStrLn $ "  loading day state"
+							let Just daylist = lookupjsobj "day"
+							if (lookupjsstr "ascension-day" daylist) == (Just $ (show $ ascension $ ai) ++ "-" ++ (show $ daysthisrun $ ai))
+								then do
+									let storeddaymap = decodestate $ lookup "state" daylist
+									return (["character", "ascension", "day"], (requestmap, sessionmap, storedcharmap, storedascmap, storeddaymap))
+								else return (["character", "ascension"], (requestmap, sessionmap, storedcharmap, storedascmap, daymap))
+						else return (["character"], (requestmap, sessionmap, storedcharmap, ascmap, daymap))
+				else return (["Nothing"], (requestmap, sessionmap, charmap, ascmap, daymap))
+			writeIORef (state ref) $ Just (stid, newstate)
+			return what
+		else return ["Nothing"]
+
 mirrorStateIntoDatabase ref = do
 	Just (_, (_requestmap, _sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
 	-- TODO: Again, should this really be spun off into another thread?
@@ -328,17 +396,22 @@ storeSettingsOnServer ref store_reason = do
 loadSettingsFromServer ref = do
 	json <- nochangeGetPageRawNoScripts ("/actionbar.php?action=fetch&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") ref
 	case fromJSObject <$> decodeStrict json of
-		Ok list -> case (lookup "kolproxy state" list) of
-			Just x -> do
+		Ok list -> case (lookup "kolproxy json state" list :: Maybe JSValue, lookup "kolproxy state" list :: Maybe JSValue) of
+			(Just (JSObject x), _) -> do
+				what_list <- loadStateJSON_new ref x
+				mirrorStateIntoDatabase ref
+				return $ Just $ show what_list
+			(_, Just x) -> do
 				what_list <- loadStateJSON_old ref x
 				mirrorStateIntoDatabase ref
 				return $ Just $ show what_list
-			Nothing -> return Nothing
+			_ -> return Nothing
 		Error err -> do
 			putStrLn $ "ERROR: Invalid actionbar data: " ++ err
 			putStrLn $ "  Your server data was most likely corrupted by a buggy GreaseMonkey script."
 			putStrLn $ "  To reset it, first turn on the combat bar by going to KoL options -> Combat -> Enable Combat Bar."
 			putStrLn $ "  Then, fight a monster, drag some skills onto the combat bar, win the fight, and log out. That should fix it."
-			writeFile "DEBUG-invalid-actionbar-data.json" json
+			t <- getCurrentTime
+			writeFile ("DEBUG-invalid-actionbar-data-" ++ show t ++ ".json") json
 			-- TODO: Wipe the actionbar?
 			throwIO StateException

@@ -28,7 +28,7 @@ module Database.SQLite3Modded (
                         )
     where
 
-import Prelude hiding (read)
+import Prelude
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Internal as BSI
 import qualified Data.ByteString.UTF8 as UTF8

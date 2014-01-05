@@ -1,6 +1,6 @@
 module Logging where
 
-import Prelude hiding (catch, read)
+import Prelude
 import KoL.Util
 import KoL.UtilTypes
 import Control.Applicative

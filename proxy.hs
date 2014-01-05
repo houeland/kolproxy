@@ -1,4 +1,4 @@
-import Prelude hiding (read, catch)
+import Prelude
 import HardcodedGameStuff
 import KolproxyServer
 import Logging

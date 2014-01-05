@@ -2,7 +2,7 @@
 
 module KoL.HttpLowlevel where
 
-import Prelude hiding (read, catch)
+import Prelude
 import Logging
 import KoL.Util
 import KoL.UtilTypes
@@ -65,32 +65,32 @@ instance ConnFunctionsBundle Handle Data.ByteString.ByteString where
 data SslConn = SslConn {
 	sslconn_c :: Network.TLS.TLSCtx,
 	sslconn_sendBuffer :: [Data.ByteString.Lazy.ByteString],
-	sslconn_recvBuffer :: Data.ByteString.Lazy.ByteString
+	sslconn_recvBuffer :: Data.ByteString.ByteString
 }
 
 instance ConnFunctionsBundle (MVar SslConn) Data.ByteString.ByteString where
 	connGetBlock mvconn size = modifyMVar mvconn $ \conn -> do
 		let f prebuild want rb
 			| (want == 0) = return (prebuild, rb)
-			| (Data.ByteString.Lazy.null rb) = Network.TLS.recvData' (sslconn_c conn) >>= f prebuild want
+			| (Data.ByteString.null rb) = Network.TLS.recvData (sslconn_c conn) >>= f prebuild want
 			| otherwise = do
-				let (n, rest) = Data.ByteString.Lazy.splitAt want rb
-				f (n:prebuild) (want - Data.ByteString.Lazy.length n) rest
+				let (n, rest) = Data.ByteString.splitAt want rb
+				f (n:prebuild) (want - Data.ByteString.length n) rest
 		(ret, rb) <- f [] (fromIntegral size) (sslconn_recvBuffer conn)
 		let newconn = conn { sslconn_recvBuffer = rb }
-		return (newconn, Data.ByteString.concat $ Data.ByteString.Lazy.toChunks $ Data.ByteString.Lazy.concat $ reverse $ ret)
+		return (newconn, Data.ByteString.concat $ reverse $ ret)
 
 	connGetLine mvconn = modifyMVar mvconn $ \conn -> do
 		let f prebuild rb
-			| (Data.ByteString.Lazy.null rb) = Network.TLS.recvData' (sslconn_c conn) >>= f prebuild
+			| (Data.ByteString.null rb) = Network.TLS.recvData (sslconn_c conn) >>= f prebuild
 			| otherwise = do
-				let (n, rest) = Data.ByteString.Lazy.Char8.break (== '\n') rb
-				if Data.ByteString.Lazy.null rest
+				let (n, rest) = Data.ByteString.Char8.break (== '\n') rb
+				if Data.ByteString.null rest
 					then f (n:prebuild) rest
-					else return ((n:prebuild), Data.ByteString.Lazy.Char8.tail rest)
+					else return ((n:prebuild), Data.ByteString.Char8.tail rest)
 		(ret, rb) <- f [] (sslconn_recvBuffer conn)
 		let newconn = conn { sslconn_recvBuffer = rb }
-		return (newconn, Data.ByteString.Lazy.Char8.unpack (Data.ByteString.Lazy.concat $ reverse $ (Data.ByteString.Lazy.Char8.pack "\n"):ret))
+		return (newconn, Data.ByteString.Char8.unpack (Data.ByteString.concat $ reverse $ (Data.ByteString.Char8.pack "\n"):ret))
 
 	connPut mvconn d = modifyMVar mvconn $ \conn -> do
 		let oldbuff = sslconn_sendBuffer conn
@@ -105,17 +105,17 @@ instance ConnFunctionsBundle (MVar SslConn) Data.ByteString.ByteString where
 
 	connGetContents mvconn = modifyMVar mvconn $ \conn -> do
 		let recur prebuild = do
-			mrb <- try $ Network.TLS.recvData' (sslconn_c conn)
+			mrb <- try $ Network.TLS.recvData (sslconn_c conn)
 			case mrb of
-				Right rb -> if (Data.ByteString.Lazy.null rb)
+				Right rb -> if (Data.ByteString.null rb)
 					then return prebuild
 					else recur (rb:prebuild)
 				Left err -> do
-					putWarningStrLn $ "connGetContents error: " ++ (show (err :: SomeException))
+					putErrorStrLn $ "connGetContents error: " ++ (show (err :: SomeException))
 					return prebuild
 		ret <- recur [sslconn_recvBuffer conn]
-		let newconn = conn { sslconn_recvBuffer = Data.ByteString.Lazy.empty }
-		return (newconn, Data.ByteString.concat $ Data.ByteString.Lazy.toChunks $ Data.ByteString.Lazy.concat $ reverse $ ret)
+		let newconn = conn { sslconn_recvBuffer = Data.ByteString.empty }
+		return (newconn, Data.ByteString.concat $ reverse $ ret)
 
 read_till_empty conn = do
 	x <- connGetLine conn
@@ -231,7 +231,7 @@ simple_https_direct rq = do
 	c <- Network.TLS.contextNewOnHandle h (Network.TLS.defaultParamsClient { Network.TLS.pCiphers = Network.TLS.Extra.ciphersuite_strong }) rng
 	Network.TLS.handshake c
 
-	mvc <- newMVar (SslConn { sslconn_c = c, sslconn_sendBuffer = [], sslconn_recvBuffer = Data.ByteString.Lazy.empty })
+	mvc <- newMVar (SslConn { sslconn_c = c, sslconn_sendBuffer = [], sslconn_recvBuffer = Data.ByteString.empty })
 
 	connPut mvc (show rq)
 	connPut mvc (Data.ByteString.Char8.unpack $ rqBody rq)

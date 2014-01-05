@@ -2,7 +2,7 @@
 
 module PlatformLowlevel where
 
-import Prelude hiding (read, catch)
+import Prelude
 import Control.Applicative
 import Control.Monad
 import System.Directory

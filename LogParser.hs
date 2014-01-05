@@ -1,6 +1,6 @@
 module LogParser (showLogs, compressLogs) where
 
-import Prelude hiding (read, catch)
+import Prelude
 import Lua
 import PlatformLowlevel
 import KoL.Http
@@ -21,12 +21,9 @@ import qualified Data.ByteString.Lazy
 import qualified Data.ByteString.Lazy.Char8
 import qualified Data.ByteString.Lazy.Internal
 import qualified Data.ByteString.UTF8
-import qualified Database.SQLite3Modded
 
 scan_through_database_lua_logparse filename basefilename = do
-	log_db <- Database.SQLite3Modded.open filename
-	(jsonlog, maybeloginfo) <- runLogParsingScript log_db
-	Database.SQLite3Modded.close log_db
+	(jsonlog, maybeloginfo) <- runLogParsingScript filename
 
 	putStrLn $ show $ maybeloginfo
 	case maybeloginfo of

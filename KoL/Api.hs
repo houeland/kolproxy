@@ -1,6 +1,6 @@
 module KoL.Api where
 
-import Prelude hiding (read, catch)
+import Prelude
 import KoL.Util
 import KoL.UtilTypes
 import Control.Applicative

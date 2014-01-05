@@ -25,6 +25,19 @@ if table then
 		table.sort(keys)
 		return keys
 	end
+
+	local function deepcopy(t)
+		if type(t) ~= "table" then return t end
+		local mt = getmetatable(t)
+		local res = {}
+		for k,v in pairs(t) do
+			res[k] = deepcopy(v)
+		end
+		setmetatable(res, mt)
+		return res
+	end
+
+	table.copy = deepcopy
 end
 
 exported_raw_tostring = tostring

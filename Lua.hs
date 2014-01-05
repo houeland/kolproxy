@@ -2,7 +2,7 @@
 
 module Lua where
 
-import Prelude hiding (read, catch)
+import Prelude
 import Logging
 import State
 import KoL.Http
@@ -762,22 +762,6 @@ runSentChatScript ref msg = do
 	void $ run_lua_code WHENEVER "scripts/kolproxy-internal/sentchat.lua" ref (setvars [] msg [])
 	return ()
 
---runAutomateScript ref uri effuri pagetext allparams = do
---	let vars = [("path", uriPath effuri), ("query", uriQuery effuri), ("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
---	rets <- run_lua_code AUTOMATE "scripts/kolproxy-internal/automate.lua" ref (setvars vars pagetext allparams)
---	return $ case rets of
---		Right [Just t] -> Right t
---		Right xs -> Left ("Lua automate call error, return values = " ++ (show xs), "")
---		Left err -> Left err
-
---runInterceptScript ref uri allparams reqtype = do
---	let vars = [("requestpath", uriPath uri), ("requestquery", uriQuery uri), ("request_type", reqtype)]
---	rets <- run_lua_code INTERCEPT "scripts/kolproxy-internal/intercept.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
---	return $ case rets of
---		Right [Just t, Just u] -> Right (t, mkuri $ Data.ByteString.Char8.unpack $ u)
---		Right xs -> Left ("Lua intercept call error, return values = " ++ (show xs), "")
---		Left err -> Left err
-
 runBrowserRequestScript ref uri allparams reqtype = do
 	let vars = [("request_path", uriPath uri), ("request_query", uriQuery uri), ("request_type", reqtype)]
 	rets <- run_lua_code BROWSERREQUEST "scripts/kolproxy-internal/browser-request.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
@@ -790,9 +774,12 @@ runBotScript baseref filename = do
 	run_lua_code BOTSCRIPT filename baseref (setvars [] (Data.ByteString.Char8.pack "") [])
 	return ()
 
-runLogParsingScript log_db = do
+runLogParsingScript filename = do
+	log_db <- Database.SQLite3Modded.open filename
 	code <- readFile "scripts/kolproxy-internal/parselog.lua"
-	runLogScript log_db code
+	ret <- runLogScript log_db code
+	Database.SQLite3Modded.close log_db
+	return ret
 
 runLogScript log_db code = do
 	lstate <- Lua.newstate
