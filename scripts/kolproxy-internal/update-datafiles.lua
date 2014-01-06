@@ -1067,4 +1067,4 @@ process("consumables")
 
 process("zones")
 
-print(string.format("INFO: %d errors, %d warnings displayed, %d notices ignored (expected with current data files: 0 errors, 0 warnings displayed, and fewer than 5000 notices ignored)", error_count_critical, error_count_hard, error_count_soft))
+print(string.format("INFO: %d errors, %d warnings displayed, %d notices ignored (expected with current data files: 0 errors, 0 warnings displayed, and fewer than 1000 notices ignored)", error_count_critical, error_count_hard, error_count_soft))

@@ -400,11 +400,11 @@ loadSettingsFromServer ref = do
 			(Just (JSObject x), _) -> do
 				what_list <- loadStateJSON_new ref x
 				mirrorStateIntoDatabase ref
-				return $ Just $ show what_list
+				return $ Just $ show what_list ++ " (JSON format)"
 			(_, Just x) -> do
 				what_list <- loadStateJSON_old ref x
 				mirrorStateIntoDatabase ref
-				return $ Just $ show what_list
+				return $ Just $ show what_list ++ " (WARNING: old state format)"
 			_ -> return Nothing
 		Error err -> do
 			putStrLn $ "ERROR: Invalid actionbar data: " ++ err
