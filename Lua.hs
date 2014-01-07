@@ -128,6 +128,7 @@ parse_request_param_string _ref l = do
 			return 1
 		_ -> return 0
 
+-- TODO: remove obsolete function
 get_recipes _ref l = do
 	Lua.pushstring l =<< readFile "cache/data/recipes"
 	return 1
@@ -576,7 +577,7 @@ setup_lua_instance level filename setupref = do
 
 		register_function "parse_request_param_string" parse_request_param_string
 
-		register_function "get_recipes" get_recipes
+		register_function "get_recipes" get_recipes -- TODO: remove obsolete function
 
 		case level of
 			WHENEVER -> do

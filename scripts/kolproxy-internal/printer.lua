@@ -1,6 +1,6 @@
 -- printer.lua
 
-local script_files_kolproxy_version = "3.24-alpha"
+local script_files_kolproxy_version = "3.25-dev"
 
 -- io = nil
 os = nil

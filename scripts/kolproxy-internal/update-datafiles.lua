@@ -83,6 +83,38 @@ local function softwarn(...)
 	error_count_soft = error_count_soft + 1
 end
 
+function verify_data_fits(correct_data, datafile_data)
+	local function check_value(expected, found)
+		if type(expected) == "table" then
+			if type(found) == "table" then
+				for a, b in pairs(expected) do
+					if not check_value(b, found[a]) then
+						return false
+					end
+				end
+				return true
+			else
+				return false
+			end
+		else
+			return tojson(expected) == tojson(found)
+		end
+	end
+	local ok = true
+	for correct_name, correct_value in pairs(correct_data) do
+		local data_value = datafile_data[correct_name]
+		if not check_value(correct_value, data_value) then
+			printwarning("Verification failed for", correct_name)
+			printwarning("  expected:", correct_value)
+			printwarning("  found:   ", data_value)
+			ok = false
+		end
+	end
+	if ok then
+		return datafile_data
+	end
+end
+
 function string.contains(a, b) return a:find(b, 1, true) end
 
 local function split_line_on(what, l)
@@ -114,66 +146,78 @@ end
 
 local function parse_mafia_bonuslist(bonuslist)
 	local checks = {
-		["Initiative"] = "Combat Initiative",
-		["Item Drop"] = "Item Drops from Monsters",
-		["Meat Drop"] = "Meat from Monsters",
-		["Monster Level"] = "Monster Level",
-		["Combat Rate"] = "Monsters will be more attracted to you",
+		-- TODO: Rename these three to include the "%"
+		["Initiative"] = "Combat Initiative", -- "Combat Initiative +25%"
+		["Item Drop"] = "Item Drops from Monsters", -- "+25% Item Drops from Monsters"
+		["Meat Drop"] = "Meat from Monsters", -- "+30% Meat from Monsters"
+		["Monster Level"] = "Monster Level", -- "+15 to Monster Level"
+		["Combat Rate"] = "Monsters will be more attracted to you", -- "Monsters will be more attracted to you."
 
-		["Muscle"] = "Muscle",
-		["Mysticality"] = "Mysticality",
-		["Moxie"] = "Moxie",
-		["Hobo Power"] = "Hobo Power",
-		["PvP Fights"] = "PvP fights per day", -- PvP fight(s) per day when equipped
-		["Adventures"] = "Adventures per day", -- Adventure(s) per day when equipped.
-		["Muscle Percent"] = "Muscle %", -- Muscle +15%
-		["Mysticality Percent"] = "Mysticality %",
-		["Moxie Percent"] = "Moxie %",
+		["Muscle"] = "Muscle", -- "Muscle +10"
+		["Mysticality"] = "Mysticality", -- "Mysticality +10"
+		["Moxie"] = "Moxie", -- "Moxie +10"
+		["Hobo Power"] = "Hobo Power", -- "+25 Hobo Power"
+		-- TODO: Rename to "Fights"(?) and "Day"(?)
+		["PvP Fights"] = "PvP fights per day", -- "+5 PvP Fight(s) per day", "+6 PvP fight(s) per day when equipped.", "+5 PvP Fights per Day"
+		["Adventures"] = "Adventures per day", -- "+3 Adventure(s) per day", "+3 Adventure(s) per day when equipped."
+		["Muscle Percent"] = "Muscle %", -- "Muscle +30%"
+		["Mysticality Percent"] = "Mysticality %", -- "Mysticality +30%"
+		["Moxie Percent"] = "Moxie %", -- "Moxie +30%"
 
-		["Damage Absorption"] = "Damage Absorption",
-		["Damage Reduction"] = "Damage Reduction",
+		["Damage Absorption"] = "Damage Absorption", -- "Damage Absorption +50"
+		["Damage Reduction"] = "Damage Reduction", -- "Damage Reduction: 10"
 
-		["Cold Resistance"] = "Cold Resistance",
-		["Hot Resistance"] = "Hot Resistance",
-		["Sleaze Resistance"] = "Sleaze Resistance",
-		["Spooky Resistance"] = "Spooky Resistance",
-		["Stench Resistance"] = "Stench Resistance",
-		["Slime Resistance"] = "Slime Resistance",
+		["Cold Resistance"] = "Cold Resistance", -- "Sublime Cold Resistance (+9)"
+		["Hot Resistance"] = "Hot Resistance", -- "Sublime Hot Resistance (+9)"
+		["Sleaze Resistance"] = "Sleaze Resistance", -- "Sublime Sleaze Resistance (+9)"
+		["Spooky Resistance"] = "Spooky Resistance", -- "Sublime Spooky Resistance (+9)"
+		["Stench Resistance"] = "Stench Resistance", -- "Sublime Stench Resistance (+9)"
+		["Slime Resistance"] = "Slime Resistance", -- "Slight Slime Resistance (+1)"
 
-		["Cold Spell Damage"] = "Damage to Cold Spells",
-		["Hot Spell Damage"] = "Damage to Hot Spells",
-		["Sleaze Spell Damage"] = "Damage to Sleaze Spells",
-		["Spooky Spell Damage"] = "Damage to Spooky Spells",
-		["Stench Spell Damage"] = "Damage to Stench Spells",
+		["Cold Spell Damage"] = "Damage to Cold Spells", -- "+30 Damage to Cold Spells"
+		["Hot Spell Damage"] = "Damage to Hot Spells", -- "+10 Damage to Hot Spells"
+		["Sleaze Spell Damage"] = "Damage to Sleaze Spells", -- "+10 Damage to Sleaze Spells"
+		["Spooky Spell Damage"] = "Damage to Spooky Spells", -- "+75 Damage to Spooky Spells"
+		["Stench Spell Damage"] = "Damage to Stench Spells", -- "+15 Damage to Stench Spells"
 
-		["Cold Damage"] = "Cold Damage",
-		["Hot Damage"] = "Hot Damage",
-		["Sleaze Damage"] = "Sleaze Damage",
-		["Spooky Damage"] = "Spooky Damage",
-		["Stench Damage"] = "Stench Damage",
+		["Cold Damage"] = "Cold Damage", -- "+25 Cold Damage"
+		["Hot Damage"] = "Hot Damage", -- "+25 Hot Damage"
+		["Sleaze Damage"] = "Sleaze Damage", -- "+25 Sleaze Damage"
+		["Spooky Damage"] = "Spooky Damage", -- "+25 Spooky Damage"
+		["Stench Damage"] = "Stench Damage", -- "+25 Stench Damage"
 
-		["Spell Damage"] = "Spell Damage",
-		["Spell Damage Percent"] = "Spell Damage %", -- Spell Damage +150%
-		["Weapon Damage"] = "Weapon Damage",
-		["Weapon Damage Percent"] = "Weapon Damage %",
+		["Spell Damage"] = "Spell Damage", -- "Spell Damage +40"
+		["Spell Damage Percent"] = "Spell Damage %", -- "Spell Damage +150%"
+		["Weapon Damage"] = "Weapon Damage", -- "Weapon Damage +7"
+		["Weapon Damage Percent"] = "Weapon Damage %", -- "Weapon Damage +50%"
 
-		["Critical Hit Percent"] = "% chance of Critical Hit", -- +20% chance of Critical Hit
-		["Spell Critical Percent"] = "% Chance of Spell Critical Hit", -- +20% Chance of Spell Critical Hit
+		-- TODO: Rename to "Chance"
+		["Critical Hit Percent"] = "% chance of Critical Hit", -- "+5% Chance of Critical Hit", "+20% chance of Critical Hit"
+		["Spell Critical Percent"] = "% Chance of Spell Critical Hit", -- "+20% Chance of Spell Critical Hit"
 
-		["Maximum HP"] = "Maximum HP",
-		["Maximum MP"] = "Maximum MP",
+		["Maximum HP"] = "Maximum HP", -- "Maximum HP +20"
+		["Maximum MP"] = "Maximum MP", -- "Maximum MP +20"
 
-		["HP Regen Min"] = "Regenerate minimum HP per adventure", -- Regenerate 10-15 HP and MP per adventure
+		-- TODO: Find better names for these. "(minimum)" at the end? Rename to "Adventure"(?)
+		["HP Regen Min"] = "Regenerate minimum HP per adventure", -- "Regenerate 30-60 HP per adventure", "Regenerate 10-15 HP and MP per adventure"
 		["HP Regen Max"] = "Regenerate maximum HP per adventure",
-		["MP Regen Min"] = "Regenerate minimum MP per adventure",
+		["MP Regen Min"] = "Regenerate minimum MP per adventure", -- "Regenerate 10-15 MP per adventure"
 		["MP Regen Max"] = "Regenerate maximum MP per adventure",
 
-		["Food Drop"] = "Food Drops from Monsters",
-		["Booze Drop"] = "Booze Drops from Monsters",
+		-- TODO: Rename these two to include the "%"
+		["Food Drop"] = "Food Drops from Monsters", -- "+30% Food Drops from Monsters"
+		["Booze Drop"] = "Booze Drops from Monsters", -- "+30% Booze Drops from Monsters"
 
-		["Familiar Weight"] = "Familiar Weight",
+		["Familiar Weight"] = "Familiar Weight", -- "+5 to Familiar Weight"
 
-		["Smithsness"] = "Smithsness",
+		["Smithsness"] = "Smithsness", -- "+5 Smithsness"
+
+		-- TODO: Rename to "per"(?)
+		["Experience"] = "Stats Per Fight", -- "+2 Stat(s) Per Fight"
+		["Experience (Muscle)"] = "Muscle Stats Per Fight", -- "+2 Muscle Stat(s) Per Fight"
+		["Experience (Mysticality)"] = "Mysticality Stats Per Fight", -- "+2 Mysticality Stat(s) Per Fight"
+		["Experience (Moxie)"] = "Moxie Stats Per Fight", -- "+2 Moxie Stat(s) Per Fight"
+
 		-- TODO: add more modifiers
 	}
 
@@ -212,9 +256,13 @@ function parse_buffs()
 end
 
 function verify_buffs(data)
-	if data["Peppermint Twisted"].bonuses["Combat Initiative"] == 40 and data["Peppermint Twisted"].bonuses["Monster Level"] == 10 and data["Peeled Eyeballs"].bonuses["Meat from Monsters"] == -20 and data["On the Trail"] then
-		return data
-	end
+	local correct_data = {
+		["Peppermint Twisted"] = { bonuses = { ["Combat Initiative"] = 40, ["Monster Level"] = 10 } },
+		["Peeled Eyeballs"] = { bonuses = { ["Stats Per Fight"] = -1, ["Meat from Monsters"] = -20, ["Item Drops from Monsters"] = 15 } },
+		["On the Trail"] = {},
+		["Aloysius' Antiphon of Aptitude"] = { bonuses = { ["Muscle Stats Per Fight"] = 1, ["Mysticality Stats Per Fight"] = 1, ["Moxie Stats Per Fight"] = 1 } },
+	}
+	return verify_data_fits(correct_data, data)
 end
 
 function parse_passives()
@@ -471,27 +519,24 @@ function parse_items()
 end
 
 function verify_items(data)
-	local ok = true
-	ok = ok and data["Orcish Frat House blueprints"] and data["Boris's Helm"]
-	ok = ok and data["Hell ramen"].fullness == 6 and data["water purification pills"].drunkenness == 3 and data["beastly paste"].spleen == 4
-	ok = ok and data["leather chaps"].equip_requirements.Moxie == 65
-	ok = ok and data["dried gelatinous cube"].id == 6256
-	ok = ok and data["flaming pink shirt"].equipment_slot == "shirt"
-	ok = ok and data["mayfly bait necklace"].equip_bonuses["Item Drops from Monsters"] == 10 and data["mayfly bait necklace"].equip_bonuses["Meat from Monsters"] == 10
-	ok = ok and data["Jarlsberg's pan (Cosmic portal mode)"].equip_bonuses["Food Drops from Monsters"] == 50
-	ok = ok and data["stolen accordion"].song_duration == 5
-	ok = ok and data["toy accordion"].song_duration == 5
-	ok = ok and data["pygmy concertinette"].song_duration == 17
-	ok = ok and data["ring of conflict"].equip_requirements["You may not equip more than one of these at a time"] == true
-	if ok then
-		return data
-	end
-
-	local testitems = {}
-	for _, x in ipairs { "Orcish Frat House blueprints", "Hell ramen", "water purification pills", "beastly paste", "leather chaps", "dried gelatinous cube", "flaming pink shirt", "mayfly bait necklace", "Jarlsberg's pan (Cosmic portal mode)", "stolen accordion", "toy accordion", "pygmy concertinette", "ring of conflict" } do
-		testitems[x] = data[x]
-	end
-	hardwarn("verify_items failure:", testitems)
+	local correct_data = {
+		["Orcish Frat House blueprints"] = {},
+		["Boris's Helm"] = { equip_bonuses = { ["Combat Initiative"] = 25 }, power = 100 },
+		["Hell ramen"] = { fullness = 6 },
+		["water purification pills"] = { drunkenness = 3 },
+		["beastly paste"] = { spleen = 4 },
+		["leather chaps"] = { equip_requirements = { Moxie = 65 } },
+		["dried gelatinous cube"] = { id = 6256 },
+		["flaming pink shirt"] = { equipment_slot = "shirt" },
+		["mayfly bait necklace"] = { equip_bonuses = { ["Item Drops from Monsters"] = 10, ["Meat from Monsters"] = 10 } },
+		["Jarlsberg's pan (Cosmic portal mode)"] = { equip_bonuses = { ["Food Drops from Monsters"] = 50 } },
+		["stolen accordion"] = { song_duration = 5 },
+		["toy accordion"] = { song_duration = 5 },
+		["pygmy concertinette"] = { song_duration = 17 },
+		["ring of conflict"] = { equip_bonuses = { ["Monsters will be more attracted to you"] = -5 }, equip_requirements = { ["You may not equip more than one of these at a time"] = true } },
+		["Juju Mojo Mask"] = { equip_bonuses = { ["Stats Per Fight"] = 2 } },
+	}
+	return verify_data_fits(correct_data, data)
 end
 
 local function parse_monster_stats(stats, monster_debug_line)
@@ -723,22 +768,6 @@ function parse_recipes()
 	return recipes
 end
 
-function verify_data_fits(correct_data, datafile_data)
-	local ok = true
-	for correct_name, correct_value in pairs(correct_data) do
-		local data_value = datafile_data[correct_name]
-		if tojson(correct_value) ~= tojson(data_value) then
-			printwarning("Verification failed for", correct_name)
-			printwarning("  expected:", correct_value)
-			printwarning("  found:   ", data_value)
-			ok = false
-		end
-	end
-	if ok then
-		return datafile_data
-	end
-end
-
 function verify_recipes(data)
 	local correct_data = {
 		["potion of X-ray vision"] = { { type = "cliparts", clips = { 4, 6, 8 } } },
@@ -764,9 +793,11 @@ function parse_familiars()
 end
 
 function verify_familiars(data)
-	if data["Frumious Bandersnatch"].famid == 105 and data["Oily Woim"].famid == 168 then
-		return data
-	end
+	local correct_data = {
+		["Frumious Bandersnatch"] = { famid = 105 },
+		["Oily Woim"] = { famid = 168 },
+	}
+	return verify_data_fits(correct_data, data)
 end
 
 function parse_enthroned_familiars()
