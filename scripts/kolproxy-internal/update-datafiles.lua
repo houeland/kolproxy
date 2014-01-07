@@ -63,13 +63,17 @@ local function format_param(x)
 	end
 end
 
-local function hardwarn(msg, ...)
+local function printwarning(msg, ...)
 	local printtbl = {}
-	table.insert(printtbl, "WARNING: downloaded data files inconsistent, " .. tostring(msg))
+	table.insert(printtbl, tostring(msg))
 	for _, x in ipairs { ... } do
 		table.insert(printtbl, format_param(x))
 	end
 	print(unpack(printtbl))
+end
+
+local function hardwarn(msg, ...)
+	printwarning("WARNING: downloaded data files inconsistent, " .. tostring(msg), ...)
 	error_count_hard = error_count_hard + 1
 end
 
@@ -543,8 +547,8 @@ local function parse_monster_stats(stats, monster_debug_line)
 			if stats:sub(i, i) == " " then
 				softwarn("monsters.txt:malformed line", monster_debug_line)
 			else
-				error_count_critical = error_count_critical + 1
-				print("ERROR: failed to parse monster stat", stats:sub(i))
+				error_count_hard = error_count_hard + 1
+				print("WARNING: failed to parse monster stat", stats:sub(i))
 				print("DEBUG: ", monster_debug_line)
 				return statstbl
 			end
@@ -699,29 +703,48 @@ function parse_recipes()
 		local tbl = split_tabbed_line(l)
 		local itemname, crafttype = tbl[1], tbl[2]
 		if crafttype == "CLIPART" then
-			add_recipe(tbl[1], { type = "cliparts", clips = { tonumber(tbl[3]), tonumber(tbl[4]), tonumber(tbl[5]) } })
+			add_recipe(itemname, { type = "cliparts", clips = { tonumber(tbl[3]), tonumber(tbl[4]), tonumber(tbl[5]) } })
 		elseif crafttype == "SMITH" then
 		elseif crafttype == "MIX" or crafttype == "ACOCK" or crafttype == "SCOCK" or crafttype == "SACOCK" then
 			table.remove(tbl, 1)
 			table.remove(tbl, 1)
-			add_recipe(tbl[1], { type = "cocktailcrafting", ingredients = tbl })
+			table.sort(tbl)
+			add_recipe(itemname, { type = "cocktailcrafting", ingredients = tbl })
 		elseif crafttype == "COOK" then
 			table.remove(tbl, 1)
 			table.remove(tbl, 1)
-			add_recipe(tbl[1], { type = "cooking", ingredients = tbl })
+			table.sort(tbl)
+			add_recipe(itemname, { type = "cooking", ingredients = tbl })
 		elseif crafttype == "BSTILL" or crafttype == "MSTILL" then
-			add_recipe(tbl[1], { type = "still", base = tbl[3] })
+			add_recipe(itemname, { type = "still", base = tbl[3] })
 		end
 	end
 
 	return recipes
 end
 
-function verify_recipes(data)
-	local xray = data["potion of X-ray vision"][1]
-	if xray.clips[1] == 4 and xray.clips[2] == 6 and xray.clips[3] == 8 then
-		return data
+function verify_data_fits(correct_data, datafile_data)
+	local ok = true
+	for correct_name, correct_value in pairs(correct_data) do
+		local data_value = datafile_data[correct_name]
+		if tojson(correct_value) ~= tojson(data_value) then
+			printwarning("Verification failed for", correct_name)
+			printwarning("  expected:", correct_value)
+			printwarning("  found:   ", data_value)
+			ok = false
+		end
 	end
+	if ok then
+		return datafile_data
+	end
+end
+
+function verify_recipes(data)
+	local correct_data = {
+		["potion of X-ray vision"] = { { type = "cliparts", clips = { 4, 6, 8 } } },
+		["margarita"] = { { type = "cocktailcrafting", ingredients = { "bottle of tequila", "lemon" } } },
+	}
+	return verify_data_fits(correct_data, data)
 end
 
 function parse_familiars()

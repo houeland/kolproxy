@@ -591,20 +591,6 @@ setup_lua_instance level filename setupref = do
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)
 				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)
 				register_function "get_api_itemid_info" get_api_itemid_info
---			PRINTER -> do
---				Lua.registerhsfunction lstate "get_state" (get_state setupref)
---				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)
---				register_function "get_api_itemid_info" get_api_itemid_info
---			AUTOMATE -> do
---				Lua.registerhsfunction lstate "set_state" (set_state setupref)
---				Lua.registerhsfunction lstate "get_state" (get_state setupref)
---				register_function "get_api_itemid_info" get_api_itemid_info
---				register_function "kolproxycore_async_submit_page" async_submit_page_func
---			INTERCEPT -> do
---				Lua.registerhsfunction lstate "set_state" (set_state setupref)
---				Lua.registerhsfunction lstate "get_state" (get_state setupref)
---				register_function "get_api_itemid_info" get_api_itemid_info
---				register_function "kolproxycore_async_submit_page" async_submit_page_func
 			BROWSERREQUEST -> do
 				Lua.registerhsfunction lstate "set_state" (set_state setupref)
 				Lua.registerhsfunction lstate "get_state" (get_state setupref)

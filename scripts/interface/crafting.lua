@@ -1,17 +1,13 @@
 local href = add_automation_script("custom-mix-drinks", function()
-	-- TODO: make get_recipes return a table
-	local recp = str_to_table(get_recipes())
 	local cocktailcrafting_recipes = {}
-	local still_recipes = {}
-	for a, b in pairs(recp) do
-		if b.type == "cocktailcrafting" then
-			cocktailcrafting_recipes[a] = str_to_table(b.ingredients)
-		end
-		if b.type == "still" then
--- 			still_recipes[a] = b.ingredient -- TODO: fix
-			still_recipes[a] = str_to_table("[(1, " .. b.ingredient .. ")]")[1]
-		end
+	for a, b in pairs(get_recipes_by_type("cocktailcrafting")) do
+		cocktailcrafting_recipes[a] = b.ingredients
 	end
+	local still_recipes = {}
+	for a, b in pairs(get_recipes_by_type("still")) do
+		still_recipes[a] = b.base
+	end
+
 	local cached_ids = {}
 	local garnishes = {
 		["coconut shell"] = true,
