@@ -231,6 +231,7 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 				end
 				local pt, url = post_page("/fight.php", { action = "macro", macrotext = macrotext })
 -- 				print("recurse with macro")
+				if not pt then print("DEBUG: recurse with macro -> handle_adventure_result(nil)") end
 				return handle_adventure_result(pt, url, zoneid, nil, noncombatchoices, specialnoncombatfunction)
 			else
 				print("fight.php unhandled url", url)
@@ -283,6 +284,7 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 		if pickchoice then
 			local pt, url = post_page("/choice.php", { pwd = session.pwd, whichchoice = choice_adventure_number, option = pickchoice })
 -- 			print("choice ->", url)
+			if not pt then print("DEBUG: choice -> handle_adventure_result(nil)") end
 			return handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
 		else
 			print("choice", adventure_title, choice_adventure_number)

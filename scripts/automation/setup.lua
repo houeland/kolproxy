@@ -220,6 +220,7 @@ function cast_autoattack_macro()
 	local macroid = attid:match("^99([0-9]+)$")
 	if tonumber(macroid) then
 		local pt, pturl = post_page("/fight.php", { action = "macro", macrotext = "", whichmacro = macroid })
+		if not pt then print("DEBUG: cast_autoattack_macro() -> handle_adventure_result(nil)") end
 		return handle_adventure_result(pt, pturl)
 	else
 		return result, resulturl, advagain
