@@ -273,7 +273,7 @@ add_printer("/campground.php", function()
 			local guitar_items = {
 				"4-dimensional guitar",
 				"acoustic guitarrr",
-				"Crimbo ukelele",
+				"Crimbo ukulele",
 				"Disco Banjo",
 				"dueling banjo",
 				"half-sized guitar",
