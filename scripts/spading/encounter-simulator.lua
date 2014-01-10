@@ -1,3 +1,22 @@
+add_processor("/fight.php", function()
+	if requestpath == "/adventure.php" and fight.zone then
+		local zoneid = get_zoneid(fight.zone)
+		local zone = maybe_get_zonename(zoneid)
+		if zoneid and zone then
+			local queue = ascension["zone monster queue"] or {}
+			local ztbl = queue["z" .. zoneid] or {}
+			table.insert(ztbl, monstername() or "?")
+			if #ztbl > 5 then
+				table.remove(ztbl, 1)
+			end
+			print("DEBUG fight zoneid", fight.zone, monstername(), maybe_get_zonename(fight.zone))
+			print("  monster queue:", tojson(ztbl))
+			queue["z" .. zoneid] = ztbl
+			ascension["zone monster queue"] = queue
+		end
+	end
+end)
+
 local function normalized_probabilities(tbl_p_unscaled)
 	local p_sum = 0.0
 	for _, p in pairs(tbl_p_unscaled) do
@@ -169,6 +188,8 @@ make_blank_state = function()
 	}
 	return setmetatable(s, { __index = state_methods })
 end
+
+encounter_simulator_make_blank_state = make_blank_state
 
 local function make_policy(settings)
 	local policy = {}

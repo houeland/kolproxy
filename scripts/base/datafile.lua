@@ -25,16 +25,21 @@ local itemid_name_lookup = {}
 local monster_image_lookup = {}
 local monster_name_lookup = {}
 local familiarid_name_lookup = {}
+local zoneid_name_lookup = {}
 function reset_datafile_cache()
+	local function make_name_lookup(datafilename, field)
+		local tbl = {}
+		for x, y in pairs(datafile(datafilename)) do
+			if y[field] then
+				itemid_name_lookup[y[field]] = x
+			end
+		end
+		return tbl
+	end
 	datafile_cache = {}
-	itemid_name_lookup = {}
-	for x, y in pairs(datafile("items")) do
-		itemid_name_lookup[y.id] = x
-	end
-	familiarid_name_lookup = {}
-	for x, y in pairs(datafile("familiars")) do
-		familiarid_name_lookup[y.famid] = x
-	end
+	itemid_name_lookup = make_name_lookup("items", "id")
+	familiarid_name_lookup = make_name_lookup("familiars", "famid")
+	zoneid_name_lookup = make_name_lookup("zones", "zoneid")
 	datafile("outfits")
 	datafile("semirares")
 	monster_name_lookup = {}
@@ -222,4 +227,21 @@ function load_buff_extension_info()
 		end
 	end
 	return info
+end
+
+function get_zoneid(name)
+       	if type(name) == "number" then
+                return name
+	end
+
+	local zoneid = (datafile("zones")[name] or {}).zoneid
+	if not zoneid then
+		error("Unknown zone: " .. tostring(name))
+	end
+	return zoneid
+end
+
+function maybe_get_zonename(zone)
+	local id = get_zoneid(zone)
+	return zoneid_name_lookup[id]
 end

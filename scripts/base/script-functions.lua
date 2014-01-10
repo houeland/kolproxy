@@ -199,18 +199,6 @@ do
 		raw_add_zone_check(zid, f)
 	end
 
-	function get_zoneid(name)
-        	if type(name) == "number" then
-	                return name
-		end
-
-		local zoneid = (datafile("zones")[name] or {}).zoneid
-		if not zoneid then
-			error("Unknown zone: " .. tostring(name))
-		end
-		return zoneid
-	end
-
 	function add_warning(tbl)
 		-- TODO: deprecate some of these
 		check_supported_table_values(tbl, {}, { "message", "check", "severity", "zone", "when", "idgenerator", "path" })

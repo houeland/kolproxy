@@ -993,14 +993,19 @@ function parse_zones()
 --				zones[name].combat_percent = combat_percent -- SKIP: terrible data
 			end
 			local monsters = {}
+			local monster_encounter_list = {}
 			for xidx, x in ipairs(tbl) do
 				if xidx >= 3 then
-					local xprefix = x:match("^(.+): [0-9oe-]+$")
+					local xprefix, xsuffix = x:match("^(.+): ([0-9oe-]+)$")
 					table.insert(monsters, xprefix or x)
+					for i = 1, tonumber(xsuffix) or 1 do
+						table.insert(monster_encounter_list, xprefix or x)
+					end
 				end
 			end
 			table.sort(monsters)
 			zones[name].monsters = monsters
+			zones[name].monster_encounter_list = monster_encounter_list
 			found_valid = true
 		elseif found_valid and tbl[1] and tbl[1] ~= "" and not l:match("^#") and tbl[2] ~= "0" then
 			hardwarn("unknown adventure zone", tbl[1])
