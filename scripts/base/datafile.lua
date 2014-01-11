@@ -31,7 +31,7 @@ function reset_datafile_cache()
 		local tbl = {}
 		for x, y in pairs(datafile(datafilename)) do
 			if y[field] then
-				itemid_name_lookup[y[field]] = x
+				tbl[y[field]] = x
 			end
 		end
 		return tbl

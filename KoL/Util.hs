@@ -22,7 +22,7 @@ import qualified Database.SQLite3Modded
 
 
 
-kolproxy_version_number = "3.25-dev"
+kolproxy_version_number = "3.25-beta"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 

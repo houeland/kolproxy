@@ -91,6 +91,9 @@ add_ascension_zone_check(119, function()
 end)
 
 add_ascension_adventure_warning(function(zoneid)
+	if zoneid == 119 and not have_equipped_item("Mega Gem") and have_item("Mega Gem") then
+		return "You might want to equip the Mega Gem when adventuring in the Palindome.", "not wearing mega gem in palindome"
+	end
 	if zoneid ~= 119 and have_equipped_item("Mega Gem") then
 		return "You might want to unequip the Mega Gem when you're not adventuring in the Palindome.", "wearing mega gem outside palindome"
 	end

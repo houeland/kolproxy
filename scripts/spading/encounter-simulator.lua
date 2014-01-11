@@ -1,4 +1,13 @@
+register_setting {
+	name = "track monster queues",
+	description = "Track adventure zone monster queues (experimental)",
+	group = "other",
+	default_level = "enthusiast",
+	parent = "enable experimental implementations",
+}
+
 add_processor("/fight.php", function()
+	if not setting_enabled("track monster queues") then return end
 	if requestpath == "/adventure.php" and fight.zone then
 		local zoneid = get_zoneid(fight.zone)
 		local zone = maybe_get_zonename(zoneid)
@@ -9,8 +18,8 @@ add_processor("/fight.php", function()
 			if #ztbl > 5 then
 				table.remove(ztbl, 1)
 			end
-			print("DEBUG fight zoneid", fight.zone, monstername(), maybe_get_zonename(fight.zone))
-			print("  monster queue:", tojson(ztbl))
+			--print("DEBUG fight zoneid", fight.zone, monstername(), maybe_get_zonename(fight.zone))
+			--print("  monster queue:", tojson(ztbl))
 			queue["z" .. zoneid] = ztbl
 			ascension["zone monster queue"] = queue
 		end

@@ -143,6 +143,8 @@ function do_daily_visits()
 
 	if campground_pt:contains("Humongous Buried Skull") then
 		add_result([[<span style="color: darkorange">Skipped harvesting garden (<b>skulldozer ready</b>).</span>]])
+	elseif campground_pt:contains("wintergarden1.gif") or campground_pt:contains("wintergarden2.gif") then
+		add_result([[Skipped harvesting garden (waiting for frost flower).]])
 	elseif setting_enabled("automate daily visits/harvest garden") then
 		dopage("/campground.php", { action = "garden", pwd = pwd })
 	else
@@ -188,8 +190,8 @@ function do_daily_visits()
 		if setting_enabled("automate daily visits/summon clip art") then
 			local cliparts = table.keys(get_recipes_by_type("cliparts"))
 			table.sort(cliparts, function(a, b)
-				if not estimate_mallsell_profit(b) then return true end
 				if not estimate_mallsell_profit(a) then return false end
+				if not estimate_mallsell_profit(b) then return true end
 				return estimate_mallsell_profit(a) > estimate_mallsell_profit(b)
 			end)
 			queue_page_result(summon_clipart(cliparts[1]))
