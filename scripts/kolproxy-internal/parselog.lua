@@ -280,10 +280,14 @@ for _, xidx in ipairs(tbl) do
 		end
 		if x.retrievedurl:contains("fight.php") then
 			if x.pagetext:contains("fires a badly romantic arrow") then
-				xtbl.fired_romantic_arrow = true
+				xtbl.familiar_wandering_monster = "romantic arrow"
+			elseif x.pagetext:contains("nods and begins calculating how much glow-juice he'll need") then
+				xtbl.familiar_wandering_monster = "glow-juice"
 			end
 			if x.pagetext:contains("shot with a love arrow earlier") then
 				xtbl.encounter_source = "Obtuse Angel"
+			elseif x.pagetext:contains("You stop for a moment because you feel the hairs on the back of your neck stand up") then
+				xtbl.encounter_source = "Reanimated Reanimator"
 			end
 		end
 		if xtbl.title or xtbl.pulls or xtbl.gained_effects or xtbl.lost_effects or xtbl.gained_effects or xtbl.lost_effects or xtbl.new_runstate then

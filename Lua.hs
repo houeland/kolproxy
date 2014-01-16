@@ -22,9 +22,13 @@ import System.IO.Error (isUserError, ioeGetErrorString)
 import Text.JSON
 import Text.XML.Light
 import qualified Data.ByteString.Char8
+import qualified Data.ByteString.UTF8
 import qualified Data.Map
 import qualified Database.SQLite3Modded
 import qualified Scripting.LuaModded as Lua
+
+-- TODO: Remove type-based Lua.peek/Lua.push
+-- TODO: Remove Lua.registerhsfunction
 
 local_maybepeek l n test peek = do
 	v <- test l n
@@ -42,6 +46,11 @@ instance Lua.StackValue Data.ByteString.Char8.ByteString where
 	peek l1 n1 = local_maybepeek l1 n1 Lua.isstring (\l2 n2 -> Lua.tobytestring l2 n2)
 	valuetype _ = Lua.TSTRING
 
+--instance Lua.StackValue String where
+--	push l x = Lua.pushbytestring l $ Data.ByteString.UTF8.fromString x
+--	peek l1 n1 = local_maybepeek l1 n1 Lua.isstring (\l2 n2 -> Data.ByteStrying.UTF8.toString <$> Lua.tobytestring l2 n2)
+--	valuetype _ = Lua.TSTRING
+
 instance Lua.StackValue JSValue where
 	push l x = push_jsvalue l x
 	peek _l _n = throwIO $ LuaError $ "ERROR: Attempting to peek a jsvalue from Lua"
@@ -54,6 +63,7 @@ instance Lua.StackValue Element where
 
 failLua msg = throwIO $ LuaError $ msg
 
+-- TODO: Remove
 __peekJust l idx = do
 	x <- Lua.peek l idx
 	case x of
@@ -72,18 +82,27 @@ get_latest_kolproxy_version = do
 		then return version
 		else return "?"
 
-set_state ref stateset var value = do
+set_state ref l = do
+	stateset <- peekJustString l 1
+	var <- peekJustString l 2
+	value <- peekJustString l 3
 	canread <- canReadState ref
 	unless canread $ failLua $ "Error: Trying to set state \"" ++ var ++ "\" before state is available."
 	if stateset `elem` ["character", "ascension", "day", "fight", "session"]
-		then setState ref stateset var value
+		then setState ref stateset var value >> return 0
 		else failLua $ "cannot write to stateset " ++ (show $ stateset)
 
-get_state ref stateset var = do
+get_state ref l = do
+	stateset <- peekJustString l 1
+	var <- peekJustString l 2
 	canread <- canReadState ref
 	unless canread $ failLua $ "Error: Trying to get state \"" ++ var ++ "\" before state is available."
 	if stateset `elem` ["character", "ascension", "day", "fight", "session"]
-		then fromMaybe "" <$> getState ref stateset var
+		then do
+			maybevalue <- getState ref stateset var
+			case maybevalue of
+				Just value -> Lua.pushbytestring l (Data.ByteString.Char8.pack value) >> return 1
+				_ -> return 0
 		else failLua $ "cannot read stateset " ++ (show $ stateset)
 
 -- TODO: Check if this is really OK. It's not in valhalla!
@@ -172,6 +191,7 @@ async_submit_page ref method inputuristr params = do
 	xf <- (processPage ref) ref (mkuri final_url) final_params
 	return xf
 
+-- TODO: Remove
 __add_table_contents l tbl = do
 	mapM_ (\(x, y) -> do
 		Lua.push l x
@@ -191,7 +211,7 @@ push_jsvalue l jsval = do
 		JSNull -> Lua.pushnil l
 		JSBool b -> Lua.pushboolean l b
 		JSRational _ r -> Lua.pushnumber l (fromRational r)
-		JSString jss -> Lua.pushstring l (fromJSString jss)
+		JSString jss -> Lua.pushbytestring l $ Data.ByteString.Char8.pack $ fromJSString $ jss
 		JSArray jsarr -> do
 			Lua.newtable l
 			add_table_contents_integer_json l (zip [1..] jsarr)
@@ -383,7 +403,7 @@ async_submit_page_func ref l1 = do
 make_href _ref l = do
 	inputuristr <- peekJustString l 1
 	params <- parse_keyvalue_luatbl l 2
-	case parseURIReference inputuristr of	
+	case parseURIReference inputuristr of
 		Just inputuri -> do
 			case (stripPrefix "/" (uriPath inputuri), uriQuery inputuri) of
 				(Just _, "") -> do
@@ -561,10 +581,10 @@ setup_lua_instance level filename setupref = do
 			Lua.pushboolean l x
 			return 1
 
-		register_function "kolproxy_is_listening_publicly" $ \_ref l -> do
-			Lua.pushboolean l =<< kolproxy_is_listening_publicly
+		register_function "kolproxy_is_listening_publicly" $ \ref l -> do
+			Lua.pushboolean l $ listen_public ref
 			return 1
-		
+
 		register_function "list_custom_autoload_script_files" $ \_ref l -> do
 			filenames <- get_custom_autoload_script_files
 			Lua.newtable l
@@ -588,13 +608,24 @@ setup_lua_instance level filename setupref = do
 				Lua.registerhsfunction lstate "set_chat_state" (set_state_whenever setupref)
 				Lua.registerhsfunction lstate "get_chat_state" (get_state_whenever setupref)
 			PROCESS -> do
-				Lua.registerhsfunction lstate "set_state" (set_state setupref)
-				Lua.registerhsfunction lstate "get_state" (get_state setupref)
+				register_function "set_state" set_state
+				register_function "get_state" get_state
 				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)
 				register_function "get_api_itemid_info" get_api_itemid_info
 			BROWSERREQUEST -> do
-				Lua.registerhsfunction lstate "set_state" (set_state setupref)
-				Lua.registerhsfunction lstate "get_state" (get_state setupref)
+				Lua.registerhsfunction lstate "__test_ret1" (return "helloø" :: IO String) -- OK
+				register_function "__test_ret2" $ \_ref l -> do
+					Lua.pushstring l "helloø" -- OK
+					return 1
+				register_function "__test_ret3" $ \_ref l -> do
+					Lua.pushbytestring l $ Data.ByteString.Char8.pack "helloø" -- Bad
+					return 1
+				register_function "__test_ret4" $ \_ref l -> do
+					Lua.pushbytestring l $ Data.ByteString.UTF8.fromString "helloø" -- OK
+					return 1
+
+				register_function "set_state" set_state
+				register_function "get_state" get_state
 				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)
 				register_function "get_api_itemid_info" get_api_itemid_info
 				register_function "kolproxycore_enumerate_state" kolproxycore_enumerate_state

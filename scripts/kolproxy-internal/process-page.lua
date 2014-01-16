@@ -75,7 +75,8 @@ do
 		if matches(x) then
 			print("INFO: SEMIRARE!!!", x)
 			ascension["last semirare"] = { encounter = x, turn = turnsthisrun() }
-			--ascension["fortune cookie numbers"] = nil
+			print("INFO: Forgetting old fortune cookie numbers: ", tojson(ascension["fortune cookie numbers"]))
+			ascension["fortune cookie numbers"] = nil
 		end
 	end
 end

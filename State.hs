@@ -368,7 +368,7 @@ mirrorStateIntoDatabase ref = do
 		putMVar mv ()
 	void $ takeMVar mv
 
-storeSettingsOnServer ref store_reason = do
+storeSettingsOnServer ref store_reason = when (store_state_in_actionbar ref) $ do
 	Just (_, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
 	let daymap = Data.Map.filterWithKey (\x _y -> not $ isPrefixOf "fight." x) extra_daymap
 	let statedesc = show (charmap, ascmap, daymap)

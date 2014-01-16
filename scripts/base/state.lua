@@ -17,6 +17,7 @@ local function setup_state_table(statename)
 	setmetatable(tbl, { __index = function(t, k)
 		-- TODO: REMOVE TEMPORARY WORKAROUNDS
 		local function parse_value(v)
+			if v == nil then return nil end
 			if v == "" then return nil end
 			local pref = v:sub(1, 1)
 			if pref == "{" then

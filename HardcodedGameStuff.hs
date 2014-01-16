@@ -120,7 +120,6 @@ download_data_files = do
 
 	dldatafile "http://www.houeland.com/kol/mallprices.json"
 	dldatafile "http://www.houeland.com/kol/consumable-advgain.json"
-	dldatafile "http://www.houeland.com/kol/zones.json"
 
 	return ()
 

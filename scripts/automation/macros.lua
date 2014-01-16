@@ -724,7 +724,7 @@ sub kill_serpent
   abort Should be dead!
 endsub
 
-if (monstername angry bassist) || (monstername blue-haired girl) || (monstername evil ex-girlfriend) || (monstername peeved roommate) || (monstername random scenester)
+if (monstername angry bassist) || (monstername blue-haired girl) || (monstername evil ex-girlfriend) || (monstername peeved roommate) || (monstername random scenester) || (monstername black crayon)
   call kill_cannon
 endif
 

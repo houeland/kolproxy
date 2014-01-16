@@ -74,6 +74,15 @@ data ProcessingRefStuff = ProcessingRefStuff {
 	getstatusfunc_ :: RefType -> IO (IO (JSObject JSValue))
 }
 
+data EnvironmentSettings = EnvironmentSettings {
+	store_state_in_actionbar_ :: Bool,
+	store_state_locally_ :: Bool,
+	store_ascension_logs_ :: Bool,
+	store_info_logs_ :: Bool,
+	listen_public_ :: Bool,
+	sqlite_fullfsync_ :: Bool
+}
+
 data GlobalRefStuff = GlobalRefStuff {
 	logindents_ :: IORef Integer,
 	blocking_lua_scripting_ :: IORef Bool,
@@ -86,7 +95,8 @@ data GlobalRefStuff = GlobalRefStuff {
 	use_slow_http_ref_ :: IORef Bool,
 	have_logged_in_ref_ :: IORef Bool,
 	lastDatafileUpdate_ :: IORef UTCTime,
-	doChatLogAction_ :: (Database.SQLite3Modded.Database -> IO ()) -> IO ()
+	doChatLogAction_ :: (Database.SQLite3Modded.Database -> IO ()) -> IO (),
+	environment_settings_ :: EnvironmentSettings
 }
 
 data OtherRefStuff = OtherRefStuff {
@@ -111,10 +121,16 @@ getstatusfunc ref = (getstatusfunc_ $ processingstuff_ $ ref) ref
 connection ref = connection_ $ otherstuff_ $ ref
 state ref = if stateValid_ ref
 	then stateData_ $ sessionData $ ref
-	else throw $ InternalError $ "Invalid state while trying to read"
+	else throw $ InternalError $ "Invalid state while trying to read"
 sessionData ref = sessionData_ $ otherstuff_ $ ref
 logindents ref = logindents_ $ globalstuff_ $ ref
 blocking_lua_scripting ref = blocking_lua_scripting_ $ globalstuff_ $ ref
+listen_public ref = listen_public_ $ environment_settings_ $ globalstuff_ $ ref
+sqlite_fullfsync ref = sqlite_fullfsync_ $ environment_settings_ $ globalstuff_ $ ref
+store_state_in_actionbar ref = store_state_in_actionbar_ $ environment_settings_ $ globalstuff_ $ ref
+store_state_locally ref = store_state_locally_ $ environment_settings_ $ globalstuff_ $ ref
+store_ascension_logs ref = store_ascension_logs_ $ environment_settings_ $ globalstuff_ $ ref
+store_info_logs ref = store_info_logs_ $ environment_settings_ $ globalstuff_ $ ref
 
 doDbLogAction ref action = (doDbLogAction_ $ sessionData $ ref) ref action
 doChatLogAction ref action = (doChatLogAction_ $ globalstuff_ $ ref) action

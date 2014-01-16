@@ -201,6 +201,19 @@ handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logch
 					Left err -> mkResponse (5,0,0) [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")] $ Data.ByteString.Char8.pack $ "Error:\n\n" ++ show err
 
 make_globalref = do
+	environment_settings <- do
+	        listenpublic <- getEnvironmentSetting "KOLPROXY_LISTEN_PUBLIC"
+	        envfullfsync <- getEnvironmentSetting "KOLPROXY_SQLITE_FULLFSYNC"
+	        actionbarstate <- getEnvironmentSetting "KOLPROXY_STORE_STATE_IN_ACTIONBAR"
+		return $ EnvironmentSettings {
+			store_state_in_actionbar_ = (actionbarstate /= Just "0"),
+			store_state_locally_ = True,
+			store_ascension_logs_ = True,
+			store_info_logs_ = True,
+			listen_public_ = (listenpublic == Just "1"),
+			sqlite_fullfsync_ = (envfullfsync == Just "1")
+		}
+
 	let openlog filename = do
 		h <- openFile ("logs/info/" ++ filename) AppendMode
 		hSetBuffering h LineBuffering
@@ -215,7 +228,7 @@ make_globalref = do
 	shutdown_secret <- get_md5 <$> show <$> (randomIO :: IO Integer)
 	shutdown_ref <- newIORef False
 
-	chatopendb <- create_db "sqlite3 chatlog" "chat-log.sqlite3"
+	chatopendb <- create_db (sqlite_fullfsync_ environment_settings) "sqlite3 chatlog" "chat-log.sqlite3"
 	do_db_query_ chatopendb "CREATE TABLE IF NOT EXISTS public(mid INTEGER PRIMARY KEY NOT NULL, time INTEGER NOT NULL, channel TEXT NOT NULL, playerid INTEGER NOT NULL, msg TEXT NOT NULL, rawjson TEXT NOT NULL);" []
 	do_db_query_ chatopendb "CREATE TABLE IF NOT EXISTS private(idx INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, time INTEGER NOT NULL, playerid INTEGER NOT NULL, msg TEXT NOT NULL, rawjson TEXT NOT NULL);" []
 	do_db_query_ chatopendb "CREATE TABLE IF NOT EXISTS other(idx INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, time INTEGER NOT NULL, msg TEXT NOT NULL, rawjson TEXT NOT NULL);" []
@@ -231,6 +244,7 @@ make_globalref = do
 	have_logged_in_ref <- newIORef False
 	tnow <- getCurrentTime
 	last_datafile_update_ref <- newIORef $ addUTCTime (fromInteger (-60000)) tnow
+
 	return GlobalRefStuff {
 		logindents_ = indentref,
 		blocking_lua_scripting_ = blockluaref,
@@ -243,7 +257,8 @@ make_globalref = do
 		doChatLogAction_ = \action -> writeChan chatlogchan action,
 		use_slow_http_ref_ = use_slow_http_ref,
 		have_logged_in_ref_ = have_logged_in_ref,
-		lastDatafileUpdate_ = last_datafile_update_ref
+		lastDatafileUpdate_ = last_datafile_update_ref,
+		environment_settings_ = environment_settings
 	}
 
 kolproxy_setup_refstuff = do
@@ -293,7 +308,7 @@ runProxyServer r rwhenever portnum = do
 				Just x -> return (m, x)
 				Nothing -> do
 					putStrLn $ "DB: Opening log database: " ++ filename
-					opendb <- create_db "sqlite3 log" filename
+					opendb <- create_db (sqlite_fullfsync _log_fakeref) "sqlite3 log" filename
 					do_db_query_ opendb "CREATE TABLE IF NOT EXISTS pageloads(idx INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, time TEXT NOT NULL, statusbefore TEXT, statusafter TEXT, statebefore TEXT, stateafter TEXT, sessionid TEXT NOT NULL, requestedurl TEXT NOT NULL, parameters TEXT, retrievedurl TEXT, pagetext TEXT);" []
 					x <- newChan
 					forkIO_ "kps:dblogchan" $ forever $ do
@@ -309,7 +324,7 @@ runProxyServer r rwhenever portnum = do
 				Just x -> return (m, x)
 				Nothing -> do
 					putStrLn $ "  DB: Opening state database: " ++ filename
-					statedb <- create_db "state" filename
+					statedb <- create_db (sqlite_fullfsync _log_fakeref) "state" filename
 					putStrLn $ "  DB: State database loaded."
 					x <- newChan
 					forkIO_ "kps:dbstatechan" $ forever $ do
@@ -327,18 +342,14 @@ runProxyServer r rwhenever portnum = do
 		when (envlaunch /= Just "0") $ do
 			platform_launch portnum
 
-	sock <- mklistensocket portnum
+	sock <- mklistensocket (listen_public _log_fakeref) portnum
 
 	let do_loop = do
 		should_stop <- readIORef $ shutdown_ref_ $ globalref
 		unless should_stop $ do
 			doSERVER_DEBUG "listening on socket"
 			(sh, _) <- debug_do "accept socket" $ Network.Socket.accept sock
-#if __GLASGOW_HASKELL__ <= 702
-			let mksockconn sh = socketConnection "???" sh
-#else
 			let mksockconn sh = socketConnection "???" (fromIntegral portnum) sh
-#endif
 			h <- debug_do "socket connection" $ mksockconn sh
 			doSERVER_DEBUG $ "doing socket:" ++ (show sh)
 			launched <- readIORef launched_ref

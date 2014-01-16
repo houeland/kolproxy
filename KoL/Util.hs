@@ -22,7 +22,7 @@ import qualified Database.SQLite3Modded
 
 
 
-kolproxy_version_number = "3.25-beta"
+kolproxy_version_number = "3.26-dev"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 
@@ -84,19 +84,10 @@ get_sessid ref = cookie_to_sessid $ cookie_ $ connection $ ref
 
 canReadState ref = return $ stateValid_ ref :: IO Bool
 
-
-
-kolproxy_is_listening_publicly = do
-	listenpublic <- getEnvironmentSetting "KOLPROXY_LISTEN_PUBLIC"
-	return (listenpublic == Just "1")
-
-
-create_db place filename = do
+create_db fullfsync place filename = do
 	path <- getDirectoryPath place filename
 	db <- Database.SQLite3Modded.open path
-	envfullfsync <- getEnvironmentSetting "KOLPROXY_SQLITE_FULLFSYNC"
-	when (envfullfsync == Just "1") $ do
-		do_db_query_ db "PRAGMA fullfsync = 1;" []
+	when fullfsync $ do_db_query_ db "PRAGMA fullfsync = 1;" []
 	return db
 
 do_db_query db query params = (do

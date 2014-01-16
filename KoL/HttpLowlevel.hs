@@ -331,13 +331,11 @@ mkconnectsocket = debug_do "mkconnectsocket" $ do
 		Network.Socket.setSocketOption s Network.Socket.KeepAlive 1
 		return s
 
-mklistensocket portnum = debug_do "mklistensocket" $ do
+mklistensocket listenpublic portnum = debug_do "mklistensocket" $ do
 	proto <- Network.BSD.getProtocolNumber "tcp"
-	flags <- do
-		listenpublic <- kolproxy_is_listening_publicly
-		if listenpublic
-			then return [AI_ADDRCONFIG, AI_PASSIVE]
-			else return [AI_ADDRCONFIG]
+	let flags = if listenpublic
+		then [AI_ADDRCONFIG, AI_PASSIVE]
+		else [AI_ADDRCONFIG]
 	let hints = Network.Socket.defaultHints {
 		addrFlags = flags,
 		addrFamily = Network.Socket.AF_INET,

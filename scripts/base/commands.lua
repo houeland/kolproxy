@@ -116,12 +116,12 @@ function set_equipment(tbl)
 		end
 	end
 	for a, b in pairs(eq) do
-		if b ~= tbl[a] then
+		if b ~= get_itemid(tbl[a]) then
 			error("Wearing " .. tostring(a) .. ":" .. tostring(b) .. " after trying to wear " .. getnamedesc(tbl[a]))
 		end
 	end
 	for a, b in pairs(tbl) do
-		if eq[a] ~= b then
+		if eq[a] ~= get_itemid(b) then
 			error("Wearing " .. tostring(a) .. ":" .. tostring(eq[a]) .. " after trying to wear " .. getnamedesc(b))
 		end
 	end
@@ -171,7 +171,7 @@ end
 function uncloset_item(name, qty)
 	return async_get_page("/inventory.php", { action = "closetpull", pwd = session.pwd, qty = qty or 1, whichitem = get_itemid(name), ajax = 1 })
 end
-		
+
 function autosell_item(name, amount)
 	print_debug("  selling", name)
 	return async_get_page("/sellstuff.php", { action = "sell", ajax = 1, type = "quant", ["whichitem[]"] = get_itemid(name), howmany = amount or 1, pwd = session.pwd })
