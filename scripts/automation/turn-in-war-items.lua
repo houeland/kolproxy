@@ -47,7 +47,7 @@ function turn_in_war_items(campid, what)
 		all1 = dimes_all,
 		junk2 = quarters_junk,
 		all2 = quarters_all,
-	}	
+	}
 	local turnins = {}
 	for _, x in ipairs(itemlists[what..campid]) do
 		if have_item(x) then

@@ -77,7 +77,7 @@ loadState ref = do
 				Left err -> do
 					putStrLn $ "DEBUG loadState exception: " ++ show err
 					throwIO (err :: SomeException)
-					
+
 -- TODO: Remove, replace with sqlite database for caching
 readMapFromFile filename = do
 	catchJust (\e -> if isDoesNotExistError e then Just e else Nothing)

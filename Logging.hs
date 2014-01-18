@@ -75,7 +75,7 @@ lua_log_line ref msg action = do
 	x <- action
 	end <- getCurrentTime
 	appendline ref h_lua_log_ $ printf "[%8.1fms] %s" (diffms start end) msg
-	return x 
+	return x
 
 log_retrieval ref msg start end = do
 	ct <- getCurrentTime

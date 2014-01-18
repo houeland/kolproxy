@@ -895,7 +895,7 @@ function get_automation_scripts(cached_stuff)
 			end
 			ensure_mp(data.mpcost)
 			return cast_skillid(data.skillid)
-		end 
+		end
 	end
 
 	for _, name in pairs { "Pep Talk" } do
@@ -909,7 +909,7 @@ function get_automation_scripts(cached_stuff)
 			end
 			ensure_mp(data.mpcost)
 			return cast_skillid(data.skillid)
-		end 
+		end
 	end
 
 	function f.cast_buff(buffname)
@@ -3972,7 +3972,7 @@ endif
 
 	function f.do_castle()
 		if ascension_script_option("manual castle quest") then
-			stop "STOPPED: Ascension script option set to do castle quest manually" 
+			stop "STOPPED: Ascension script option set to do castle quest manually"
 		end
 
 		script.bonus_target { "noncombat", "item" }
@@ -4014,7 +4014,7 @@ endif
 
 	function f.unlock_hits()
 		if ascension_script_option("manual castle quest") then
-			stop "STOPPED: Ascension script option set to do castle quest manually" 
+			stop "STOPPED: Ascension script option set to do castle quest manually"
 		end
 
 		script.bonus_target { "noncombat", "item" }

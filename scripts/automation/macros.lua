@@ -1,4 +1,4 @@
-function COMMON_MACROSTUFF_START(rounds, hplevel) 
+function COMMON_MACROSTUFF_START(rounds, hplevel)
 	local lobsterwarning = ""
 	if session["__script.cannot restore HP"] then
 		hplevel = 0
@@ -1146,7 +1146,7 @@ endwhile
 ]]
 end
 
-function macro_spookyraven() 
+function macro_spookyraven()
   return [[
 ]]..COMMON_MACROSTUFF_START(20, 5) .. [[
 

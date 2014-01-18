@@ -5,7 +5,7 @@ add_choice_text("Turn Your Head and Coffin", { -- choice adventure number: 153
 	["Leave them all be"] = { leave_noturn = true, good_choice = true },
 })
 
-add_choice_text("Skull, Skull, Skull", function() 
+add_choice_text("Skull, Skull, Skull", function()
 	if ascensionpath("Zombie Slayer") then
 		return { -- choice adventure number: 155
 			["Check behind the first one"] = "Gain moxie, or get Hovering Skull familiar if you don't already have it",

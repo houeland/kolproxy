@@ -295,7 +295,7 @@ kolproxy_parseRequestHead reqhead = case reqhead of
 
 			requestCommand l = case (l, words l) of
 				([], _) -> Network.Stream.failWith Network.Stream.ErrorClosed
-				(_, (rqm:uri:version)) -> 
+				(_, (rqm:uri:version)) ->
 					case (parseURIReference $ moduri uri, lookup rqm rqMethodMap) of
 						(Just u, Just r) -> return (version, r, u)
 						(Just u, Nothing) -> return (version, Custom rqm, u)
@@ -307,7 +307,7 @@ kolproxy_parseRequestHead reqhead = case reqhead of
 kolproxy_receiveHTTP conn = do
 	let kolproxy_headerName x = map toLower (f $ f $ x)
 		where f = reverse . dropWhile isSpace
-			
+
 	-- TODO: handle favicon.ico better?
 	h <- Network.Stream.fmapE (\es -> kolproxy_parseRequestHead (map (Network.BufferType.buf_toStr Network.BufferType.bufferOps) es)) (readTillEmpty1 Network.BufferType.bufferOps (readLine conn))
 -- 	putDebugStrLn $ "getRequestHead: " ++ (show h)
@@ -373,7 +373,7 @@ kolproxy_openTCPConnection server = do
 					case Network.BSD.hostAddresses hostN of
 						[]     -> throwIO $ NetworkError $ ("openTCPConnection: no addresses in host entry for " ++ show h)
 						(ha:_) -> return ha)
-		getHostByName_safe h = 
+		getHostByName_safe h =
 			catchIO (Network.BSD.getHostByName h)
 				(\ _ -> throwIO $ NetworkError $ ("openTCPConnection: host lookup failure for " ++ show h))
 

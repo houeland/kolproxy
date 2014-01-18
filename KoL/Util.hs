@@ -61,7 +61,7 @@ getBaseDirectory filetype = do
 		"sqlite3 log" -> basedir ++ "logs/raw/"
 		"sqlite3 chatlog" -> basedir ++ "logs/chat/"
 		"state" -> basedir ++ "state/"
-		_ -> throw $ InternalError $ "Invalid directory path type: " ++ filetype
+		_ -> throw $ InternalError $ "Invalid directory path type: " ++ filetype
 	createDirectoryIfMissing True dirpath
 	return dirpath
 
@@ -104,7 +104,7 @@ do_db_query db query params = (do
 					Database.SQLite3Modded.SQLNull -> Nothing
 					Database.SQLite3Modded.SQLText t -> Just t
 					Database.SQLite3Modded.SQLInteger i -> Just $ Data.ByteString.Char8.pack $ show i
-					_ -> throw $ InternalError $ "Unexpected database contents") rawcs
+					_ -> throw $ InternalError $ "Unexpected database contents") rawcs
 				getresults (acc ++ [convertedcs])
 			Database.SQLite3Modded.Done -> return acc
 	r <- getresults []

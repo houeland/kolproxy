@@ -164,7 +164,7 @@ doReadDataFile filename = do
 			throwIO $ InternalError $ "Failed to read data file: " ++ filename
 
 get_submit_uri_params _ref method inputuristr params = do
-	case parseURIReference inputuristr of	
+	case parseURIReference inputuristr of
 		Just inputuri -> do
 			case (stripPrefix "/" (uriPath inputuri), uriQuery inputuri) of
 				(Just _, "") -> do

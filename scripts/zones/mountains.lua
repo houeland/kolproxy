@@ -141,7 +141,7 @@ local function get_minestr(minetext, foundtbl)
 					curtbl[which] = "0"
 				end
 			else
-				if foundtbl[tostring(which)] then -- and alt == "Open Cavern" 
+				if foundtbl[tostring(which)] then -- and alt == "Open Cavern"
 					curtbl[which] = orechars[foundtbl[tostring(which)]] or "0"
 				elseif not image:match("wall1111.gif") and not image:match("wallsparkle") then
 					curtbl[which] = "0"
@@ -261,7 +261,7 @@ add_printer("/mining.php", function()
 					return [[<td class="linkminecell]]..mineclass..[[" style="height: ]] .. height .. [[px; width: ]] .. width .. [[px; ]] .. bgstyle .. [[">]] .. linkdata .. [[<center style="line-height: 50px;"><span style="color: ]] .. linkcolor .. [[;">]] .. linktext .. [[</span></center></a></td>]]
 				else
 					local background = [[background-image: url(']] .. image .. [['); background-repeat: no-repeat;]]
-					if tbl[tostring(which)] then -- and alt == "Open Cavern" 
+					if tbl[tostring(which)] then -- and alt == "Open Cavern"
 						celldata = [[<center><img src="http://images.kingdomofloathing.com/itemimages/]] .. tbl[tostring(which)] .. [[.gif"></center>]]
 						if wantore and orechars[tbl[tostring(which)]] == wantore then
 							background = "background-color: green;"
@@ -351,7 +351,7 @@ add_automator("/tutorial.php", function()
 	end
 end)
 
--- highlands 
+-- highlands
 
 function estimate_twin_peak_effective_plusitem()
 	local cur_item = estimate_bonus("Item Drops from Monsters") - estimate_current_familiar_bonuses()["Item Drops from Monsters"]

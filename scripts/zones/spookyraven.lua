@@ -88,7 +88,7 @@ add_printer("/manor3.php", function()
 	local wines, valid_permutations = get_wine_cellar_data(tbl)
 
 	local wines_needed_list = session["zone.manor.wines needed"] or {}
-	
+
 	local wines_needed_status = {}
 	if not text:match("Summoning Chamber") then
 		for wine in table.values(wines_needed_list) do
@@ -99,7 +99,7 @@ add_printer("/manor3.php", function()
 			end
 		end
 	end
-	
+
 	function get_zone_wines(z)
 		local wine_names = {}
 		for wine, count in pairs(wines[z]) do

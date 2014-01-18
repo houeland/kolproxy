@@ -326,7 +326,7 @@ function change(what, amount) {
 function doit() {
 	var params = { "pwd": "]] .. session.pwd .. [[", "automation-script": "custom-cosmic-kitchen-crafting" }
 	for (xi in selected_items) {
-		params[xi] = selected_items[xi]
+		params[xi] = selected_items[xi]
 	}
 	window.location.href = "/kolproxy-automation-script?" + $.param(params)
 }

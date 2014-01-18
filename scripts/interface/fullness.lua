@@ -150,7 +150,7 @@ add_extra_always_warning("/inv_booze.php", function()
 	elseif whichitem == get_itemid("steel margarita") then
 		safe = true
 	end
-	
+
 	if not safe then
 		return "This booze will make you fallen-down drunk.", "overdrinking", "OK, I'm done for today, disable the warning and do it."
 	end

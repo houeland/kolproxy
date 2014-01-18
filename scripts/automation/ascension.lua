@@ -927,7 +927,7 @@ endif
 			end
 		end
 	end
-	
+
 	if drunkenness() > estimate_max_safe_drunkenness() then
 		stop "Overdrunk"
 	end

@@ -179,7 +179,7 @@ end
 sell_item = autosell_item
 
 function add_store_item(name, amount, price, limit)
-	return async_get_page("/managestore.php", { action = "additem", ajax = 1, item1 = get_itemid(name), limit1 = limit, price1 = price, qty1 = amount or 1, pwd = session.pwd }) 
+	return async_get_page("/managestore.php", { action = "additem", ajax = 1, item1 = get_itemid(name), limit1 = limit, price1 = price, qty1 = amount or 1, pwd = session.pwd })
 end
 stock_item = add_store_item
 

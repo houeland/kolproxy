@@ -38,12 +38,12 @@ end
 
 local function add_raw_message_to_page(pagetext, msg)
         local pre_, dv_, mid_, end_, post_ = pagetext:match("^(.+)(<div style='overflow: auto'><center><table)(.+)(</body></html>)(.*)$")
-        if pre_ and dv_ and mid_ and end_ and post_ then  
+        if pre_ and dv_ and mid_ and end_ and post_ then
                 local wrappedmsg = [[<center><table width=95%><tr><td>]] .. msg .. [[</td></tr></table></center>]]
                 return pre_ .. wrappedmsg .. "<br>" .. dv_ .. mid_ .. end_ .. post_
         elseif pagetext:match("<body>") then
                 return pagetext:gsub("<body>", function(a) return a .. msg end)
-        else   
+        else
                 return msg .. pagetext
         end
 end
@@ -59,7 +59,7 @@ local function run_wrapped_function_internal(f_env)
 		local a, b, c = kolproxycore_async_submit_page(f_env.request_type, f_env.request_path, tbl)()
 		if a then
 			return a, b
-		else   
+		else
 			error("Error downloading page " .. tostring(f_env.request_path) .. ":<br><br>" .. tostring(b))
 		end
 	end

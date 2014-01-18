@@ -80,7 +80,7 @@ function print_charpane_lines(text)
 		else
 			ct = "<span" .. style .. ">" .. ct .. "</span>"
 		end
-		
+
 		if using_kolproxy_quick_charpane then
 			text = text:gsub("(<!%-%- kolproxy charpane familiar text area %-%->)", function(one) return "<br>" .. ct .. one end)
 		elseif text:contains("<!-- charpane compact") then -- compact mode

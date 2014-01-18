@@ -53,7 +53,7 @@ function incompatible(choiceid, branch, result, permutation, escher, pe)
 	else
 		local prediction = room_layout[choiceid][("ABC"):find(permutation:sub(branch, branch))]
 		if prediction == "Escher" then prediction = escher end
-		return result ~= prediction	
+		return result ~= prediction
 	end
 end
 
@@ -139,7 +139,7 @@ P(92:ABC:93 | D) * P(D) =
   P(D | 92:ABC:93 ^ starteven) * P(92:ABC:93 | starteven) * P(starteven) +
   P(D | 92:ABC:93 ^ ~starteven) * P(92:ABC:93 | ~starteven) * P(~starteven)
 
-P(D) = P(D | starteven) * P(starteven) + P(D | ~starteven) * P(~starteven)
+P(D) = P(D | starteven) * P(starteven) + P(D | ~starteven) * P(~starteven)
 
 P(92:ABC:93 | D) * P(D) = P(92:ABC:93 ^ D) =
   P(92:ABC:93 ^ D ^ starteven) +
@@ -152,7 +152,7 @@ P(92:ABC:93 | D) * P(D) =
 
 P(92:ABC:93 | D) =
   (P(92:ABC:93 ^ D | starteven) * P(starteven) + P(92:ABC:93 ^ D | ~starteven) * P(~starteven)) /
-  (P(D | starteven) * P(starteven) + P(D | ~starteven) * P(~starteven))
+  (P(D | starteven) * P(starteven) + P(D | ~starteven) * P(~starteven))
 
 ]]--
 

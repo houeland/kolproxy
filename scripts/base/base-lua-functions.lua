@@ -51,7 +51,7 @@ if pretty_print_tables then
 	local next_ = next
 	local tableconcat_ = table.concat
 	local loop_tbl = {}
-	
+
 	local function pretty_tostring_key(x)
 		if type_(x) == "string" then
 			return stringformat_("%q", x)
