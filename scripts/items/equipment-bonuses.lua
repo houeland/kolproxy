@@ -13,9 +13,7 @@ function add_modifier_bonuses(target, source)
 	end
 end
 
-function parse_item_bonuses(item)
-	local descid = item_api_data(item).descid
-	local pt = get_page("/desc_item.php", { whichitem = descid })
+function parse_modifier_bonuses_page(pt)
 	local bonuses = make_bonuses_table {}
 	bonuses = bonuses + { ["Item Drops from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops from Monsters<]])) }
 	bonuses = bonuses + { ["Item Drops from Monsters (Dreadsylvania only)"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops from Monsters %(Dreadsylvania only%)<]])) }
@@ -27,6 +25,7 @@ function parse_item_bonuses(item)
 	bonuses = bonuses + { ["Meat from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Meat Drops from Monsters<]])) }
 	bonuses = bonuses + { ["Monster Level"] = tonumber(pt:match([[>([+-][0-9]+) to Monster Level<]])) }
 	bonuses = bonuses + { ["Combat Initiative"] = tonumber(pt:match([[>Combat Initiative ([+-][0-9]+)%%<]])) }
+	bonuses = bonuses + { ["Combat Initiative"] = tonumber(pt:match([[>([+-][0-9]+)%% Combat Initiative<]])) }
 	bonuses = bonuses + { ["Adventures per day"] = tonumber(pt:match([[>([+-][0-9]+) Adventure%(s%) per day when equipped.?<]])) }
 	bonuses = bonuses + { ["Familiar Weight"] = tonumber(pt:match([[>([+-][0-9]+) to Familiar Weight<]])) }
 
@@ -36,7 +35,13 @@ function parse_item_bonuses(item)
 	if pt:contains(">Monsters will be less attracted to you.<") then
 		bonuses = bonuses + { ["Monsters will be more attracted to you"] = -5 }
 	end
+	return bonuses
+end
 
+function parse_item_bonuses(item)
+	local descid = item_api_data(item).descid
+	local pt = get_page("/desc_item.php", { whichitem = descid })
+	local bonuses = parse_modifier_bonuses_page(pt)
 	return bonuses
 end
 
@@ -60,19 +65,35 @@ add_automator("all pages", function()
 	end
 end)
 
-function set_cached_item_bonuses(name, tbl)
-	session["cached item bonuses: " .. get_itemid(name)] = tbl
+-- TODO: move to different file
+
+function set_cached_modifier_bonuses(source, name, tbl)
+	session["cached "..source.." bonuses: " .. tostring(name)] = tbl
 end
 
-function get_cached_item_bonuses(name)
-	local tbl = session["cached item bonuses: " .. get_itemid(name)]
+function get_cached_modifier_bonuses(source, name)
+	local tbl = session["cached "..source.." bonuses: " .. tostring(name)]
 	if tbl then
 		return make_bonuses_table(tbl)
 	end
 end
 
+function clear_cached_modifier_bonuses(source, name)
+	return set_cached_modifier_bonuses(source, name, nil)
+end
+
+-- TODO: remove/inline
+
+function set_cached_item_bonuses(name, tbl)
+	return set_cached_modifier_bonuses("item", get_itemid(name), tbl)
+end
+
+function get_cached_item_bonuses(name)
+	return get_cached_modifier_bonuses("item", get_itemid(name))
+end
+
 function clear_cached_item_bonuses(name)
-	return set_cached_item_bonuses(name, nil)
+	return set_cached_modifier_bonuses("item", get_itemid(name), nil)
 end
 
 add_processor("/fight.php", function()

@@ -1,7 +1,16 @@
+add_automator("all pages", function()
+	-- TODO: invalidate cache when using slimy shoulders item
+	if have_skill("Slimy Shoulders") and not get_cached_modifier_bonuses("skill", "Slimy Shoulders") then
+		local pt = get_page("/desc_skill.php", { whichskill = datafile("skills")["Slimy Shoulders"].skillid, self = "true" })
+		local bonuses = parse_modifier_bonuses_page(pt)
+		set_cached_modifier_bonuses("skill", "Slimy Shoulders", bonuses)
+	end
+end)
+
 function estimate_passive_bonuses(passivename)
 	local passivearray = {
 		["Expert Panhandling"] = { ["Meat from Monsters"] = 10 }, -- TODO: 15 when wearing a saucepan
-		["Slimy Shoulders"] = { ["Combat Initiative"] = 20 }, -- TODO: Depends on number of sweat glands used
+		["Slimy Shoulders"] = get_cached_modifier_bonuses("skill", "Slimy Shoulders") or {},--{ ["Combat Initiative"] = 20 },
 	}
 
 	if passivearray[passivename] then

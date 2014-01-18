@@ -92,7 +92,7 @@ function get_semirare_info()
 
 	local lastsemi = (ascension["last semirare"] or {}).encounter
 
-	return SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi
+	return SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi, lastturn
 end
 
 add_charpane_line(function()
@@ -156,10 +156,10 @@ add_always_adventure_warning(function()
 end)
 
 add_extra_always_adventure_warning(function()
-	SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info(turnsthisrun())
+	SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi, lastturn = get_semirare_info(turnsthisrun())
 
 	if not next(good_numbers) and tonumber(SRmin) and tonumber(SRmin) <= 1 and tonumber(SRmax) and tonumber(SRmax) >= 0 then
-		return "The semirare window will start soon (and you do not have fortune cookie numbers).", "semirare-range-" .. SRmin, "Disable the warning for turn " .. (turnsthisrun() + 1) .. " and adventure"
+		return "The semirare window will start soon (and you do not have fortune cookie numbers).", "semirare-range-" .. tostring(lastturn), "Disable the warning for this semirare window and adventure"
 	end
 end)
 
