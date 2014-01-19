@@ -2,15 +2,18 @@ local function load_slots()
 	local slots = ascension["interface.outfit slots"] or {}
 	slots.outfits = slots.outfits or { {}, {}, {}, {}, {} }
 	slots.familiars = slots.familiars or { 0, 0, 0, 0, 0 }
+	slots.famequiplocked = slots.famequiplocked or { false, false, false, false, false }
+	slots.selected = slots.selected or 1
 	-- >>> TODO: TEMPORARY WORKAROUND >>> --
 	for i = 1, 5 do
 		slots.familiars[i] = slots.familiars[i] or 0
 	end
+	ascension["interface.outfit slots"] = slots
 	-- <<< TODO: TEMPORARY WORKAROUND <<< --
-	slots.selected = slots.selected or 1
-	ascension["interface.outfit slots"] = slots -- TODO: TEMPORARY WORKAROUND
 	return slots
 end
+
+-- http://localhost:18481/familiar.php?action=lockequip&pwd=PWD&frominv=1
 
 function switch_outfit_slot(slot)
 	local slots = load_slots()
@@ -34,9 +37,9 @@ switch_outfit_slot_href = add_automation_script("custom-outfit-slot", function()
 	local slot = tonumber(params.slot)
 	if load_slots().outfits[slot] then
 		switch_outfit_slot(slot)
-		return "Done.", requestpath
+		return "Done."
 	end
-	return "Failed.", requestpath
+	return "Failed."
 end)
 
 function get_outfit_slots_script()

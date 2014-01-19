@@ -129,12 +129,18 @@ do
 		__raw_add_warning("/adventure.php", function()
 			return f(tonumber(params.snarfblat))
 		end)
+		__raw_add_warning("/mining.php", function()
+			return f("mining")
+		end)
 	end
 
 	local function add_raw_extra_adventure_warning(f)
 		localtable.insert(__raw_extra_adventure_warnings, f)
 		__raw_add_extra_warning("/adventure.php", function()
 			return f(tonumber(params.snarfblat))
+		end)
+		__raw_add_extra_warning("/mining.php", function()
+			return f("mining")
 		end)
 	end
 

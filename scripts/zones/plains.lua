@@ -63,6 +63,20 @@ add_choice_text("Rod Nevada, Vendor", { -- choice adventure number: 130
 	["Decline"] =  { leave_noturn = true },
 })
 
+add_choice_text("A Pre-War Dresser Drawer, Pa!", function()
+	if have_skill("Torso Awaregness") then
+		return {
+			["Look in the drawer"] = { getitem = "Ye Olde Navy Fleece" },
+			["Ignawer the drawer"] = { leave_noturn = true },
+		}
+	else
+		return {
+			["Look in the drawer"] = { getmeatmin = 200, getmeatmax = 300 },
+			["Ignawer the drawer"] = { leave_noturn = true },
+		}
+	end
+end)
+
 add_printer("/palinshelves.php", function()
 	set_shelf = function(text, shelf, choose)
 		text = text:gsub("(<select name="..shelf..">.-<option value=[0-9]*)(>"..choose.."</option>)", [[%1 selected="selected"%2]]) -- TODO-future: redo for faster regex?

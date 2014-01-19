@@ -252,6 +252,13 @@ add_choice_text("History is Fun!", { -- choice adventure number: 87
 	["Read Chapter 3:  Last Days"] = { disabled = true },
 })
 
+add_choice_text("Melvil Dewey Would Be Ashamed", { -- choice adventure number: 163
+	["Hork the gray-bound volume"] = { text = "Get spooky spellbook (sells for 2000 Meat)" },
+	["Yoink the green-bound tome"] = { text = "Get stinky spellbook (sells for 2000 Meat)" },
+	["Gaffle the purple-bound book"] = { text = "Get sleazy spellbook (sells for 2000 Meat)" },
+	["Leave without taking anything"] = { leave_noturn = true },
+})
+
 -- bathroom
 
 add_choice_text("Having a Medicine Ball", function() -- choice adventure number: 105
