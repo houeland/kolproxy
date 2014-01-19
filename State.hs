@@ -314,12 +314,9 @@ loadStateJSON_new ref jsobj = do
 					Just tlocal -> (tserver >= tlocal)
 					Nothing -> True
 				if should_use_server_data
-					then do
-						putStrLn $ "INFO: server settings are recent " ++ show (tserver, lstp)
-						return True
-					else do
-						putStrLn $ "WARNING: server settings are old " ++ show (tserver, lstp)
-						return False
+					then putStrLn $ "INFO: server settings are recent " ++ show (tserver, lstp)
+					else putStrLn $ "WARNING: server settings are old " ++ show (tserver, lstp)
+				return should_use_server_data
 			_ -> do
 				putStrLn $ "INFO: no turnsplayed timestamp for server settings"
 				return False

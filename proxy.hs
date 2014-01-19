@@ -82,7 +82,7 @@ doProcessPage ref uri params = do
 	return $ do
 		readMVar mv
 
-doProcessPageWhenever ref uri params = do
+doProcessPageChat ref uri params = do
 	xf <- fst <$> internalKolRequest_pipelining ref uri params False
 	return $ do
 		Right <$> xf
@@ -98,10 +98,10 @@ statusfunc ref = do
                         	throwIO e))
 
 -- TODO: Redo how scripts are run and used to do chat, make it more similar to normal pages
-kolProxyHandlerWhenever uri params baseref = do
+kolProxyHandlerChat uri params baseref = do
 	let ref = baseref {
 		processingstuff_ = ProcessingRefStuff {
-			processPage_ = doProcessPageWhenever,
+			processPage_ = doProcessPageChat,
 			nochangeRawRetrievePageFunc_ = internalKolRequest_pipelining,
 			getstatusfunc_ = statusfunc
 		}
@@ -260,7 +260,7 @@ kolProxyHandler uri params baseref = do
 			writeIORef (blocking_lua_scripting origref) False
 			makeResponse (Data.ByteString.Char8.pack $ "Cleared Lua script cache.") uri []
 
-		"/custom-logs" -> check_pwd_for $ Just $ do
+		"/custom-logs" -> check_pwd_for $ Just $ do
 			pt <- showLogs (lookup "which" allparams) (fromJust $ lookup "pwd" allparams)
 			makeResponse (Data.ByteString.Char8.pack pt) uri []
 
@@ -316,7 +316,7 @@ runKolproxy = (do
 	let portnum = case portenv of
 		Just x -> fromJust $ read_as x :: Integer
 		Nothing -> 18481
-	runProxyServer kolProxyHandler kolProxyHandlerWhenever portnum) `catch` (\e -> putDebugStrLn ("runKolproxy exception: " ++ show (e :: Control.Exception.SomeException)))
+	runProxyServer kolProxyHandler kolProxyHandlerChat portnum) `catch` (\e -> putDebugStrLn ("runKolproxy exception: " ++ show (e :: Control.Exception.SomeException)))
 
 main = platform_init $ do
 	hSetBuffering stdout LineBuffering
@@ -361,7 +361,7 @@ runbot filename = do
 
 	let okref = baseref {
 		processingstuff_ = ProcessingRefStuff {
-			processPage_ = doProcessPageWhenever,
+			processPage_ = doProcessPageChat,
 			nochangeRawRetrievePageFunc_ = internalKolRequest_pipelining,
 			getstatusfunc_ = statusfunc
 		},

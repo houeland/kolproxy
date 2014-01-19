@@ -17,13 +17,23 @@ import qualified Database.SQLite3Modded
 import qualified Network.HTTP
 import qualified Scripting.LuaModded
 
+-- Global state
+--   Environment settings
+--   Chat log
+--   Info log
+-- Session state
+--   Ascension log
+--   Request handler sequence
+--   ascension/day/session Lua state
+--   status/inventory cache
+
 -- TODO: make this a record with named fields instead of a tuple?
 type DiscerningStateIdentifier = (String, Integer, Integer, String) -- name, ascension, rollover, sessid
 
 -- TODO: make this a record with named fields instead of a tuple?
 type StateType = (Data.Map.Map String String, Data.Map.Map String String, Data.Map.Map String String, Data.Map.Map String String, Data.Map.Map String String)
 
-data LuaScriptType = WHENEVER | PROCESS | BOTSCRIPT | BROWSERREQUEST
+data LuaScriptType = CHAT | PROCESS | BOTSCRIPT | BROWSERREQUEST
 	deriving (Show, Ord, Eq)
 
 -- This entire thing should be locked up into DiscerningStateIdentifier. log/state actions don't really belong.
@@ -31,7 +41,6 @@ data SessionDataType = SessionDataType {
 	jsonStatusPageMVarRef_ :: IORef (MVar (Either SomeException (JSObject JSValue))),
 	latestRawJson_ :: IORef (Maybe (Either SomeException (JSObject JSValue))),
 	latestValidJson_ :: IORef (Maybe (JSObject JSValue)),
-	itemData_ :: IORef (Maybe (Int -> Maybe [(String, String)], String -> Maybe [(String, String)])),
 	doDbLogAction_ :: RefType -> (Database.SQLite3Modded.Database -> IO ()) -> IO (),
 	doStateAction_ :: RefType -> (Database.SQLite3Modded.Database -> IO ()) -> IO (),
 	stateData_ :: IORef (Maybe (DiscerningStateIdentifier, StateType)),
@@ -44,10 +53,11 @@ data SessionDataType = SessionDataType {
 type ConnChanActionType = (Either SomeException (URI, Data.ByteString.ByteString, [(String, String)], Integer, Network.HTTP.Response Data.ByteString.ByteString))
 type ConnChanType = Chan (URI, Network.HTTP.Request Data.ByteString.ByteString, MVar ConnChanActionType, RefType)
 
+-- TODO: pair connection and lastretrieve
 data ServerSessionType = ServerSessionType {
-	wheneverConnection_ :: ConnChanType,
+	chatConnection_ :: ConnChanType,
 	sequenceConnection_ :: ConnChanType,
-	wheneverLastRetrieve_ :: IORef UTCTime,
+	chatLastRetrieve_ :: IORef UTCTime,
 	sequenceLastRetrieve_ :: IORef UTCTime,
 	sessConnData_ :: SessionDataType
 }
@@ -77,6 +87,7 @@ data EnvironmentSettings = EnvironmentSettings {
 	store_state_in_actionbar_ :: Bool,
 	store_state_locally_ :: Bool,
 	store_ascension_logs_ :: Bool,
+	store_chat_logs_ :: Bool,
 	store_info_logs_ :: Bool,
 	listen_public_ :: Bool,
 	sqlite_fullfsync_ :: Bool
@@ -129,13 +140,14 @@ sqlite_fullfsync ref = sqlite_fullfsync_ $ environment_settings_ $ globalstuff_ 
 store_state_in_actionbar ref = store_state_in_actionbar_ $ environment_settings_ $ globalstuff_ $ ref
 store_state_locally ref = store_state_locally_ $ environment_settings_ $ globalstuff_ $ ref
 store_ascension_logs ref = store_ascension_logs_ $ environment_settings_ $ globalstuff_ $ ref
+store_chat_logs ref = store_chat_logs_ $ environment_settings_ $ globalstuff_ $ ref
 store_info_logs ref = store_info_logs_ $ environment_settings_ $ globalstuff_ $ ref
 
 doDbLogAction ref action = (doDbLogAction_ $ sessionData $ ref) ref action
 doChatLogAction ref action = (doChatLogAction_ $ globalstuff_ $ ref) action
 doStateAction ref action = (doStateAction_ $ sessionData $ ref) ref action
 
-data KolproxyException = UrlMismatchException String URI | NotLoggedInException | InValhallaException | ApiPageException String | HttpRequestException URI SomeException | StateException | InternalError String | LuaError String | NetworkError String
+data KolproxyException = UrlMismatchException String URI | NotLoggedInException | InValhallaException | ApiPageException String | HttpRequestException URI SomeException | StateException | InternalError String | LuaError String | NetworkError String
 	deriving (Typeable)
 
 instance Exception KolproxyException

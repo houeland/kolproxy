@@ -7,24 +7,9 @@ import KoL.Http
 import KoL.Util
 import Control.Exception
 import Control.Monad
-import Data.Maybe
 import Data.Time.Clock
 import System.Directory
 import qualified Data.ByteString.Char8
-
-doWriteDataFile filename filedata = best_effort_atomic_file_write filename "." filedata
-
-load_data_file url = getHTTPFileData kolproxy_version_string $ mkuri url
-
-load_mafia_file url func = do
-	text <- load_data_file ("http://kolmafia.svn.sourceforge.net/viewvc/kolmafia/src/data/" ++ url)
-	let filtered = filter (\x -> case x of
-		"" -> False
-		'#':_ -> False
-		_ -> True) (tail $ lines text)
-	let split_line x = map head $ matchGroups "([^\t]*)\t" (x ++ "\t")
-	let mapped = mapMaybe func $ map split_line filtered
-	return mapped
 
 -- TODO: gradual slowing
 update_data_files = do
@@ -73,17 +58,6 @@ update_data_files = do
 					return ())
 
 download_data_files = do
---	when False $ do
---		mix_concoctions <- load_mafia_file "concoctions.txt" (\x -> case x of
---			name:"MIX":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
---			name:"ACOCK":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
---			name:"SCOCK":ingredients -> Just (name, [("type", "cocktailcrafting"), ("ingredients", show $ zip ([1..]::[Integer]) ingredients)])
---			name:"BSTILL":[source] -> Just (name, [("type", "still"), ("ingredient", show source)])
---			name:"MSTILL":[source] -> Just (name, [("type", "still"), ("ingredient", show source)])
---			_ -> Nothing)
---		doWriteDataFile "cache/data/recipes" (show mix_concoctions)
-
---	when False $ do
 --		pulverizegroups <- do
 --			jstext <- load_data_file "http://userscripts.org/scripts/source/67792.user.js"
 --			let groupslines = takeWhile (\x -> not (x =~ "}\\);")) $ dropWhile (\x -> not (x =~ "var groupList")) $ lines jstext
@@ -104,12 +78,11 @@ download_data_files = do
 --					then map (\ix -> read_e ix :: Integer) worthless
 --					else [])) (zip [0..] groupnames)
 --			return regrouped
---		doWriteDataFile "cache/data/pulverize-groups" (show pulverizegroups)
 
 	let dldatafile x = do
 		let [[basename]] = matchGroups ".*/([^/]+)$" x
-		filedata <- load_data_file x
-		doWriteDataFile ("cache/files/" ++ basename) filedata
+		filedata <- getHTTPFileData x
+		best_effort_atomic_file_write ("cache/files/" ++ basename) "." filedata
 
 	mapM_ (\x -> dldatafile ("http://svn.code.sf.net/p/kolmafia/code/src/data/" ++ x)) ["adventures.txt", "classskills.txt", "concoctions.txt", "combats.txt", "encounters.txt", "equipment.txt", "familiars.txt", "foldgroups.txt", "fullness.txt", "inebriety.txt", "items.txt", "modifiers.txt", "monsters.txt", "npcstores.txt", "outfits.txt", "spleenhit.txt", "statuseffects.txt", "zapgroups.txt"]
 

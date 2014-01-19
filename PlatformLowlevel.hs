@@ -71,21 +71,21 @@ best_effort_atomic_file_write path basedir filedata = do
 #else
 best_effort_atomic_file_write path basedir filedata = do
 -- 	writeFile path filedata
-	putStrLn $ "DEBUG: writing file " ++ path ++ " (" ++ (show $ length $ filedata) ++ " chars)"
+--	putDebugStrLn $ "writing file " ++ path ++ " (" ++ (show $ length $ filedata) ++ " chars)"
 	(fp, h) <- openBinaryTempFile basedir "temp-file.tmp"
 	enc1 <- hGetEncoding h
 	hSetEncoding h utf8
 	enc2 <- hGetEncoding h
 	hSetBinaryMode h True
 	enc3 <- hGetEncoding h
-	putStrLn $ "  encoding: " ++ show (enc1, enc2, enc3)
+--	putDebugStrLn $ "  encoding: " ++ show (enc1, enc2, enc3)
 	hPutStrLn h filedata
-	putStrLn $ "  wrote file data: " ++ fp
+--	putDebugStrLn $ "  wrote file data: " ++ fp
 	hClose h
-	putStrLn $ "  closed file: " ++ fp
+--	putDebugStrLn $ "  closed file: " ++ fp
 	(renameFile fp path) `catch` (\e -> do
-		putStrLn $ "windows file write error: " ++ show (e :: SomeException)
-		putStrLn $ "  perfoming an unsafe non-atomic write instead"
+		putWarningStrLn $ "windows file write error: " ++ show (e :: SomeException)
+		putWarningStrLn $ "  perfoming an unsafe non-atomic write instead"
 		writeFile path (filedata ++ "\n")
 		removeFile fp)
 #endif

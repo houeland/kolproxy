@@ -31,7 +31,7 @@ scan_through_database_lua_logparse filename basefilename = do
 			writeFile ("logs/parsed/parsed-log-" ++ basefilename ++ ".json") jsonlog
 			let utf8bs = Data.ByteString.UTF8.fromString jsonlog
 			let base64gzippedjsonlog = Data.ByteString.Char8.unpack $ Data.ByteString.Base64.encode $ Data.ByteString.concat $ Data.ByteString.Lazy.toChunks $ Codec.Compression.GZip.compress $ Data.ByteString.Lazy.fromChunks $ [utf8bs]
-			ret <- postHTTPFileData kolproxy_version_string (mkuri "http://www.houeland.com/kolproxy/ascension-log") [("action", "store"), ("playerid", show playerid), ("secretkey", secretkey), ("charactername", name), ("ascensionnumber", show ascnum), ("base64gzippedjsonlog", base64gzippedjsonlog)]
+			ret <- postHTTPFileData "http://www.houeland.com/kolproxy/ascension-log" [("action", "store"), ("playerid", show playerid), ("secretkey", secretkey), ("charactername", name), ("ascensionnumber", show ascnum), ("base64gzippedjsonlog", base64gzippedjsonlog)]
 			putStrLn $ "ret: " ++ ret
 			case matchGroups "logid: ([0-9a-z]{40})" ret of
 				[[logid]] -> do

@@ -17,12 +17,12 @@ import Network.URI
 import Text.JSON
 import qualified Data.ByteString.Char8
 
-getHTTPFileData useragent url = do
-	(_, body, _, _) <- doHTTPreq (mkreq True useragent Nothing url Nothing True)
+getHTTPFileData url = do
+	(_, body, _, _) <- doHTTPreq (mkreq True kolproxy_version_string Nothing (mkuri url) Nothing True)
 	return $ Data.ByteString.Char8.unpack body
 
-postHTTPFileData useragent url params = do
-	(_, body, _, _) <- doHTTPreq (mkreq True useragent Nothing url (Just params) True)
+postHTTPFileData url params = do
+	(_, body, _, _) <- doHTTPreq (mkreq True kolproxy_version_string Nothing (mkuri url) (Just params) True)
 	return $ Data.ByteString.Char8.unpack body
 
 parseUriServerBugWorkaround rawuri = do
@@ -123,7 +123,7 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 		else readIORef (jsonStatusPageMVarRef_ $ sessionData $ ref)
 	retrieval_start <- getCurrentTime
 	slowconn <- readIORef $ use_slow_http_ref_ $ globalstuff_ $ ref
-	let (reqabsuri, r) = mkreq slowconn (useragent_ $ connection $ ref) (cookie_ $ connection $ ref) (uri `relativeTo` host) params True
+	let (reqabsuri, r) = mkreq slowconn (useragent_ $ connection $ ref) (cookie_ $ connection $ ref) (uri `relativeTo` host) params True
 	mv_x <- newEmptyMVar
 	writeChan (getconn_ $ connection $ ref) (reqabsuri, r, mv_x, ref)
 
@@ -167,7 +167,7 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 						Just to -> do
 							putDebugStrLn $ "==> remote redirected " ++ (show retabsuri) ++ " => " ++ (show to)
 							-- TODO: make new getconn and use pipelining
-							(a, b, c, d) <- internalKolRequest to Nothing (cookie_ $ connection $ ref, useragent_ $ connection $ ref, host, Nothing) False
+							(a, b, c, d) <- internalKolRequest to Nothing (cookie_ $ connection $ ref, useragent_ $ connection $ ref, host, Nothing) False
 							return ((a, b, c, d), curjsonmv)
 				_ -> return ((body, retabsuri, hdrs, code), curjsonmv))
 

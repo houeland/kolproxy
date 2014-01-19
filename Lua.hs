@@ -77,7 +77,7 @@ peekJustDouble l idx = (__peekJust l idx) :: IO Double
 get_current_kolproxy_version = return $ kolproxy_version_number :: IO String
 
 get_latest_kolproxy_version = do
-	version <- getHTTPFileData kolproxy_version_string (mkuri "http://www.houeland.com/kolproxy/latest-version.json")
+	version <- getHTTPFileData "http://www.houeland.com/kolproxy/latest-version.json"
 	if (length version <= 1000)
 		then return version
 		else return "?"
@@ -108,12 +108,12 @@ get_state ref l = do
 -- TODO: Check if this is really OK. It's not in valhalla!
 get_ref_playername ref = KoL.Api.charName <$> KoL.Api.getApiInfo ref
 
-set_state_whenever ref var value = void $ do
+set_chat_state ref var value = void $ do
 	charname <- get_ref_playername ref
 	chatmap <- Data.Map.insert var value <$> readMapFromFile ("chat-" ++ charname ++ ".state")
 	writeMapToFile ("chat-" ++ charname ++ ".state") chatmap
 
-get_state_whenever ref var = do
+get_chat_state ref var = do
 	charname <- get_ref_playername ref
 	chatmap <- readMapFromFile ("chat-" ++ charname ++ ".state")
 	return $ fromMaybe "" (Data.Map.lookup var chatmap)
@@ -127,6 +127,7 @@ get_player_id ref l = do
 		Nothing -> return "-1"
 	return 1
 
+-- TODO: remove
 parse_request_param_string _ref l = do
 	str <- peekJustString l 1
 	case read_as str :: Maybe [(String, String)] of
@@ -146,11 +147,6 @@ parse_request_param_string _ref l = do
 			mapM_ pushkeyvalue (zip ([1..] :: [Integer]) xs)
 			return 1
 		_ -> return 0
-
--- TODO: remove obsolete function
-get_recipes _ref l = do
-	Lua.pushstring l =<< readFile "cache/data/recipes"
-	return 1
 
 doReadDataFile filename = do
 	filedata <- readFile filename
@@ -597,16 +593,14 @@ setup_lua_instance level filename setupref = do
 
 		register_function "parse_request_param_string" parse_request_param_string
 
-		register_function "get_recipes" get_recipes -- TODO: remove obsolete function
-
 		case level of
-			WHENEVER -> do
+			CHAT -> do
 				register_function "get_character_name" $ \ref l -> do
 					Lua.pushstring l =<< get_ref_playername ref
 					return 1
 				register_function "get_player_id" get_player_id
-				Lua.registerhsfunction lstate "set_chat_state" (set_state_whenever setupref)
-				Lua.registerhsfunction lstate "get_chat_state" (get_state_whenever setupref)
+				Lua.registerhsfunction lstate "set_chat_state" (set_chat_state setupref)
+				Lua.registerhsfunction lstate "get_chat_state" (get_chat_state setupref)
 			PROCESS -> do
 				register_function "set_state" set_state
 				register_function "get_state" get_state
@@ -702,7 +696,7 @@ get_cached_lua_instance_for_code level filename ref runcodebit = do
 
 run_lua_code level filename ref dosetvars = do
 	get_cached_lua_instance_for_code level filename ref $ \l -> do
-		log_time_interval ref "prepare for lua code" $ do
+		log_time_interval ref "prepare for lua code" $ do
 			top <- Lua.gettop l
 			when (top > 1) $ do
 				putStrLn $ "ERROR: Lua top is " ++ show top
@@ -762,7 +756,7 @@ runProcessScript ref uri effuri pagetext allparams = do
 
 runChatScript ref uri effuri pagetext allparams = do
 	let vars = [("path", uriPath effuri), ("query", uriQuery effuri), ("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
-	rets <- run_lua_code WHENEVER "scripts/kolproxy-internal/chat.lua" ref (setvars vars pagetext allparams)
+	rets <- run_lua_code CHAT "scripts/kolproxy-internal/chat.lua" ref (setvars vars pagetext allparams)
 	return $ case rets of
 		Right [Just t] -> Right $ t
 		Right xs -> Left ("Lua chat call error, return values = " ++ (show xs), "")
@@ -770,14 +764,14 @@ runChatScript ref uri effuri pagetext allparams = do
 
 runSendChatScript ref uri allparams = do
 	let vars = [("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
-	rets <- run_lua_code WHENEVER "scripts/kolproxy-internal/sendchat.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
+	rets <- run_lua_code CHAT "scripts/kolproxy-internal/sendchat.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
 	return $ case rets of
 		Right [Just t] -> Right $ t
 		Right xs -> Left ("Lua chat call error, return values = " ++ (show xs), "")
 		Left err -> Left err
 
 runSentChatScript ref msg = do
-	void $ run_lua_code WHENEVER "scripts/kolproxy-internal/sentchat.lua" ref (setvars [] msg [])
+	void $ run_lua_code CHAT "scripts/kolproxy-internal/sentchat.lua" ref (setvars [] msg [])
 	return ()
 
 runBrowserRequestScript ref uri allparams reqtype = do

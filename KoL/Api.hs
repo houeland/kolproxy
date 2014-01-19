@@ -103,7 +103,7 @@ postPageRawNoScripts url params ref = do
 
 rawAsyncNochangeGetPageRawNoScripts url ref = do
 	f <- fst <$> (nochangeRawRetrievePageFunc ref) ref (mkuri url) Nothing False
-	return $ do
+	return $ do
 		(body, goturi, _, _) <- f
 		if ((uriPath goturi) == (uriPath $ mkuri url))
 			then return body

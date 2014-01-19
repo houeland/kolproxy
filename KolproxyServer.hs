@@ -49,7 +49,6 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff = do
 	tnow <- getCurrentTime
 	lrs <- newIORef tnow
 	lrw <- newIORef tnow
-	idata <- newIORef Nothing
 	statedata <- newIORef Nothing
 	-- TODO: Change this raw API decoding business?
 	let dologaction ref action = do
@@ -68,14 +67,13 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff = do
 	actionbarref <- newIORef Nothing
 	return ServerSessionType {
 		sequenceConnection_ = cs,
-		wheneverConnection_ = cw,
+		chatConnection_ = cw,
 		sequenceLastRetrieve_ = lrs,
-		wheneverLastRetrieve_ = lrw,
+		chatLastRetrieve_ = lrw,
 		sessConnData_ = SessionDataType {
 			jsonStatusPageMVarRef_ = jspmvref,
 			latestRawJson_ = lrjref,
 			latestValidJson_ = lvjref,
-			itemData_ = idata,
 			doDbLogAction_ = dologaction,
 			doStateAction_ = dostateaction,
 			stateData_ = statedata,
@@ -86,7 +84,7 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff = do
 		}
 	}
 
-handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logchan sh dblogstuff statestuff globalref = do
+handle_connection sessionmastermv mvsequence mvchat h logchan dropping_logchan sh dblogstuff statestuff globalref = do
 	recvdata <- kolproxy_receiveHTTP h
 	doSERVER_DEBUG "> got request"
 	case recvdata of
@@ -164,7 +162,7 @@ handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logch
 							sessionconn <- make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff
 							return (Data.Map.insert m_id sessionconn m, sessionconn)
 
-				let useWhenever = (uriPath uri) `elem` ["/favicon.ico", "/newchatmessages.php", "/submitnewchat.php"]
+				let isChat = (uriPath uri) `elem` ["/favicon.ico", "/newchatmessages.php", "/submitnewchat.php"]
 
 				let useragent = case findHeader HdrUserAgent req of
 					Just browseragent -> if (browseragent =~ "Safari") && (not (browseragent =~ "Chrome"))
@@ -173,16 +171,16 @@ handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logch
 					_ -> kolproxy_version_string ++ " (" ++ platform_name ++ ")"
 
 				let baseref = RefType {
-					logstuff_ = LogRefStuff { logchan_ = if useWhenever then dropping_logchan else logchan, solid_logchan_ = logchan },
+					logstuff_ = LogRefStuff { logchan_ = if isChat then dropping_logchan else logchan, solid_logchan_ = logchan },
 					processingstuff_ = undefined,
 					otherstuff_ = OtherRefStuff {
 						connection_ = ConnectionType {
 							cookie_ = cookie,
 							useragent_ = useragent,
 							hostUri_ = fromJust $ parseURI kolproxy_host,
-							lastRetrieve_ = if useWhenever then wheneverLastRetrieve_ sc else sequenceLastRetrieve_ sc,
-							connLogSymbol_ = if useWhenever then "w" else "s",
-							getconn_ = if useWhenever then wheneverConnection_ sc else sequenceConnection_ sc
+							lastRetrieve_ = if isChat then chatLastRetrieve_ sc else sequenceLastRetrieve_ sc,
+							connLogSymbol_ = if isChat then "c" else "s",
+							getconn_ = if isChat then chatConnection_ sc else sequenceConnection_ sc
 						},
 						sessionData_ = sessConnData_ sc
 					},
@@ -192,7 +190,7 @@ handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logch
 				}
 
 				mymv <- newEmptyMVar
-				writeChan (if useWhenever then mvwhenever else mvsequence) (uri, params, baseref, mymv)
+				writeChan (if isChat then mvchat else mvsequence) (uri, params, baseref, mymv)
 				eitherresp <- takeMVar mymv
 
 				-- TODO: is this ever Left? When there are read errors from server?
@@ -209,6 +207,7 @@ make_globalref = do
 			store_state_in_actionbar_ = (actionbarstate /= Just "0"),
 			store_state_locally_ = True,
 			store_ascension_logs_ = True,
+			store_chat_logs_ = True,
 			store_info_logs_ = True,
 			listen_public_ = (listenpublic == Just "1"),
 			sqlite_fullfsync_ = (envfullfsync == Just "1")
@@ -273,7 +272,7 @@ kolproxy_setup_refstuff = do
 
 	return (logchan, dropping_logchan, globalref)
 
-runProxyServer r rwhenever portnum = do
+runProxyServer r rchat portnum = do
 	(logchan, dropping_logchan, globalref) <- kolproxy_setup_refstuff
 
 	-- TODO: get rid of fakeref here!
@@ -292,12 +291,12 @@ runProxyServer r rwhenever portnum = do
 			log_time_uri _log_fakeref "request" uri
 			resp <- log_time_interval _log_fakeref ("creating response for: " ++ (show uri)) $ r uri params cookie
 			return resp) :: IO (Either SomeException (Response Data.ByteString.Char8.ByteString)))
-	mvwhenever <- newChan
+	mvchat <- newChan
 	forkIO_ "kps:mvwhen" $ forever $ do
-		(uri, params, cookie, mvresp) <- readChan mvwhenever
+		(uri, params, cookie, mvresp) <- readChan mvchat
 		forkIO_ "kps:mvwhentry" $ do -- Serve asynced, possible private-message loss until server is fixed
 -- 		do -- Serve synced, possible hang on timeouts, still can't guarantee private-messages
-			putMVar mvresp =<< (try $ rwhenever uri params cookie)
+			putMVar mvresp =<< (try $ rchat uri params cookie)
 
 	sessionmastermv <- newMVar Data.Map.empty
 
@@ -355,7 +354,7 @@ runProxyServer r rwhenever portnum = do
 			launched <- readIORef launched_ref
 			if launched
 				then ((forkIO_ "kps:handleconn" $ do
-					resp <- handle_connection sessionmastermv mvsequence mvwhenever h logchan dropping_logchan sh dblogstuff statestuff globalref
+					resp <- handle_connection sessionmastermv mvsequence mvchat h logchan dropping_logchan sh dblogstuff statestuff globalref
 					send_http_response h resp
 					end_http h) `catch` (\e -> do
 						putStrLn $ "proxyError IO: " ++ (show (e :: IOException))) `catch` (\e -> do
