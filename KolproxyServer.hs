@@ -84,119 +84,111 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff = do
 		}
 	}
 
-handle_connection sessionmastermv mvsequence mvchat h logchan dropping_logchan sh dblogstuff statestuff globalref = do
-	recvdata <- kolproxy_receiveHTTP h
+handle_kol_request sessionmastermv mvsequence mvchat logchan dropping_logchan dblogstuff statestuff globalref req send_response = do
+	let cookie = findHeader HdrCookie req
+	let Just uri = parseURIReference $ modded (show $ rqURI req)
+		where modded x = if "//" `isPrefixOf` x then modded (tail x) else x
+	let params = case rqBody req of
+		"" -> Nothing
+		x -> Just $ formDecode $ x
+
+	kolproxy_host <- fromMaybe "http://www.kingdomofloathing.com/" <$> getEnvironmentSetting "KOLPROXY_SERVER"
+
+	sc <- modifyMVar sessionmastermv $ \m -> do
+		use_proxy <- getEnvironmentSetting "KOLPROXY_USE_PROXY_SERVER" -- TODO: merge with doHTTPreq code
+		let kolproxy_direct_connection = case use_proxy of
+			Nothing -> kolproxy_host
+			Just p -> "proxy://" ++ p ++ "/"
+		let m_id = (cookie_to_sessid cookie, kolproxy_direct_connection)
+		doSERVER_DEBUG $ "m: " ++ (show $ Data.Map.keys m)
+		case Data.Map.lookup m_id m of
+			Just x -> do
+				doSERVER_DEBUG $ "returning (m, x) " ++ show m_id
+				return (m, x)
+			Nothing -> do
+				doSERVER_DEBUG $ "+++ making new (m, x) +++ " ++ show m_id
+				sessionconn <- make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff
+				return (Data.Map.insert m_id sessionconn m, sessionconn)
+
+	let isChat = (uriPath uri) `elem` ["/favicon.ico", "/newchatmessages.php", "/submitnewchat.php"]
+
+	let useragent = case findHeader HdrUserAgent req of
+		Just browseragent -> if (browseragent =~ "Safari") && (not (browseragent =~ "Chrome"))
+			then kolproxy_version_string ++ " (" ++ platform_name ++ ")" ++ " " ++ browseragent ++ " NginxSafariBugWorkaround/1.0 (Faking Chrome/version)"
+			else kolproxy_version_string ++ " (" ++ platform_name ++ ")" ++ " " ++ browseragent
+		_ -> kolproxy_version_string ++ " (" ++ platform_name ++ ")"
+
+	let baseref = RefType {
+		logstuff_ = LogRefStuff { logchan_ = if isChat then dropping_logchan else logchan, solid_logchan_ = logchan },
+		processingstuff_ = undefined,
+		otherstuff_ = OtherRefStuff {
+			connection_ = ConnectionType {
+				cookie_ = cookie,
+				useragent_ = useragent,
+				hostUri_ = fromJust $ parseURI kolproxy_host,
+				-- TODO: merge the isChat parts
+				lastRetrieve_ = if isChat then chatLastRetrieve_ sc else sequenceLastRetrieve_ sc,
+				connLogSymbol_ = if isChat then "c" else "s",
+				getconn_ = if isChat then chatConnection_ sc else sequenceConnection_ sc
+			},
+			sessionData_ = sessConnData_ sc
+		},
+		stateValid_ = False,
+		globalstuff_ = globalref
+	}
+
+	writeChan (if isChat then mvchat else mvsequence) (uri, params, baseref, send_response)
+
+data HandleConnectionResult = PlainResult String String | HtmlResult String String Bool | KolRequest (Request String)
+
+handle_connection globalref recvdata sessionmastermv = do
 	doSERVER_DEBUG "> got request"
 	case recvdata of
 		Left err -> do
 			if err == ErrorClosed
 				then putStrLn $ "INFO: Web browser closed connection before completing page request."
 				else putStrLn $ "WARNING: Error receiving browser request: " ++ (show err)
-			makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack $ "Error getting request from browser: " ++ show err) "/kolproxy-error" [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")]
-		Right req -> case uriPath $ rqURI $ req of
-			"/kolproxy-test" -> do
-				makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack "Kolproxy is alive.") "/kolproxy-test" [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")]
-			"/kolproxy-network-test" -> do
-				let test url = do
-					putStrLn $ "Testing slow: " ++ url
-					(effuri, body, hdrs, code) <- doHTTPreq (mkreq True "kolproxy-network-test" Nothing (mkuri url) Nothing True)
-					putStrLn $ "  result: " ++ (show (effuri, Data.ByteString.Char8.length $ body, code))
-					putStrLn $ "  headers: " ++ show hdrs
+			return $ PlainResult ("Error getting request from browser: " ++ show err) "/kolproxy-error"
+		Right req -> do
+			let uri = uriPath $ rqURI $ req
+			let send_plain str = return $ PlainResult str uri
+			let send_html str = return $ HtmlResult str uri False
+			case uri of
+				"/kolproxy-test" -> send_plain "Kolproxy is alive."
+				"/kolproxy-network-test" -> do
+					let test url = do
+						putStrLn $ "Testing slow: " ++ url
+						(effuri, body, hdrs, code) <- doHTTPreq (mkreq True "kolproxy-network-test" Nothing (mkuri url) Nothing True)
+						putStrLn $ "  result: " ++ (show (effuri, Data.ByteString.Char8.length $ body, code))
+						putStrLn $ "  headers: " ++ show hdrs
 
-					putStrLn $ "Testing fast: " ++ url
-					(effuri, body, hdrs, code) <- doHTTPreq (mkreq False "kolproxy-network-test" Nothing (mkuri url) Nothing True)
-					putStrLn $ "  result: " ++ (show (effuri, Data.ByteString.Char8.length $ body, code))
-					putStrLn $ "  headers: " ++ show hdrs
-				test "http://www.houeland.com/kolproxy/latest-version"
-				test "http://www.kingdomofloathing.com/sendjickmail.php"
-				test "http://www.kingdomofloathing.com/login.php"
-				makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack "Simple network is OK?") "/kolproxy-network-test" [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")]
-			"/kolproxy-secretkey" -> do
-				makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack $ "Kolproxy session key: " ++ (show $ shutdown_secret_ $ globalref)) "/kolproxy-secretkey" [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")]
-			"/kolproxy-use-slow-http" -> do
-				let maybeparams = decodeUrlParams $ rqURI $ req
-				if (lookup "secretkey" =<< maybeparams) == Just (shutdown_secret_ $ globalref)
-					then do
-						writeIORef (use_slow_http_ref_ globalref) True
-						modifyMVar sessionmastermv $ \_m -> return (Data.Map.empty, "Modified.")
-						makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack "<html><body>Switched to slow HTTP/1.0.<br><br><a href=\"/\">Back to login</a>.</body></html>") "/kolproxy-test" [("Content-Type", "text/html; charset=UTF-8"), ("Cache-Control", "no-cache")]
-					else do
-						makeErrorResponse (Data.ByteString.Char8.pack "<html><body><p style=\"color: darkorange\">Denied.</p></body></html>") "/kolproxy-shutdown" []
-			"/kolproxy-troubleshooting" -> do
-				let text = "Badly behaving network equipment, firewalls, or anti-virus are frequent sources of kolproxy problems.<br><a href=\"/kolproxy-use-slow-http?secretkey=" ++ (shutdown_secret_ $ globalref) ++ "\">Click here to try using slower HTTP/1.0 requests instead, which might help.</a>"
-				makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack text) "/kolproxy-troubleshooting" [("Content-Type", "text/html; charset=UTF-8"), ("Cache-Control", "no-cache")]
-			"/kolproxy-shutdown" -> do
-				let maybeparams = decodeUrlParams $ rqURI $ req
-				if (lookup "secretkey" =<< maybeparams) == Just (shutdown_secret_ $ globalref)
-					then do
-						writeIORef (shutdown_ref_ $ globalref) True
-						makeResponse (Data.ByteString.Char8.pack "<html><body><p style=\"color: green\">Closing.</p></body></html>") "/kolproxy-shutdown" []
-					else do
-						makeErrorResponse (Data.ByteString.Char8.pack "<html><body><p style=\"color: darkorange\">Denied.</p></body></html>") "/kolproxy-shutdown" []
-			_ -> do
-				doSERVER_DEBUG $ "got request: " ++ (show $ rqURI req) ++ " [" ++ show sh ++ "]"
-				let cookie = findHeader HdrCookie req
-				let Just uri = parseURIReference $ modded (show $ rqURI req)
-					where modded x = if "//" `isPrefixOf` x then modded (tail x) else x
-				let params = case rqBody req of
-					"" -> Nothing
-					x -> Just $ formDecode $ x
-
-				let skip_running_printers = False
-
-				kolproxy_host <- fromMaybe "http://www.kingdomofloathing.com/" <$> getEnvironmentSetting "KOLPROXY_SERVER"
-
-				sc <- modifyMVar sessionmastermv $ \m -> do
-					use_proxy <- getEnvironmentSetting "KOLPROXY_USE_PROXY_SERVER" -- TODO: merge with doHTTPreq code
-					let kolproxy_direct_connection = case use_proxy of
-						Nothing -> kolproxy_host
-						Just p -> "proxy://" ++ p ++ "/"
-					let m_id = (cookie_to_sessid cookie, kolproxy_direct_connection)
-					doSERVER_DEBUG $ "m: " ++ (show $ Data.Map.keys m)
-					case Data.Map.lookup m_id m of
-						Just x -> do
-							doSERVER_DEBUG $ "returning (m, x) " ++ show m_id
-							return (m, x)
-						Nothing -> do
-							doSERVER_DEBUG $ "+++ making new (m, x) +++ " ++ show m_id
-							sessionconn <- make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff
-							return (Data.Map.insert m_id sessionconn m, sessionconn)
-
-				let isChat = (uriPath uri) `elem` ["/favicon.ico", "/newchatmessages.php", "/submitnewchat.php"]
-
-				let useragent = case findHeader HdrUserAgent req of
-					Just browseragent -> if (browseragent =~ "Safari") && (not (browseragent =~ "Chrome"))
-						then kolproxy_version_string ++ " (" ++ platform_name ++ ")" ++ " " ++ browseragent ++ " NginxSafariBugWorkaround/1.0 (Faking Chrome/version)"
-						else kolproxy_version_string ++ " (" ++ platform_name ++ ")" ++ " " ++ browseragent
-					_ -> kolproxy_version_string ++ " (" ++ platform_name ++ ")"
-
-				let baseref = RefType {
-					logstuff_ = LogRefStuff { logchan_ = if isChat then dropping_logchan else logchan, solid_logchan_ = logchan },
-					processingstuff_ = undefined,
-					otherstuff_ = OtherRefStuff {
-						connection_ = ConnectionType {
-							cookie_ = cookie,
-							useragent_ = useragent,
-							hostUri_ = fromJust $ parseURI kolproxy_host,
-							lastRetrieve_ = if isChat then chatLastRetrieve_ sc else sequenceLastRetrieve_ sc,
-							connLogSymbol_ = if isChat then "c" else "s",
-							getconn_ = if isChat then chatConnection_ sc else sequenceConnection_ sc
-						},
-						sessionData_ = sessConnData_ sc
-					},
-					stateValid_ = False,
-					globalstuff_ = globalref,
-					skipRunningPrinters_ = skip_running_printers
-				}
-
-				mymv <- newEmptyMVar
-				writeChan (if isChat then mvchat else mvsequence) (uri, params, baseref, mymv)
-				eitherresp <- takeMVar mymv
-
-				-- TODO: is this ever Left? When there are read errors from server?
-				return $ case eitherresp of
-					Right resp -> resp
-					Left err -> mkResponse (5,0,0) [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")] $ Data.ByteString.Char8.pack $ "Error:\n\n" ++ show err
+						putStrLn $ "Testing fast: " ++ url
+						(effuri, body, hdrs, code) <- doHTTPreq (mkreq False "kolproxy-network-test" Nothing (mkuri url) Nothing True)
+						putStrLn $ "  result: " ++ (show (effuri, Data.ByteString.Char8.length $ body, code))
+						putStrLn $ "  headers: " ++ show hdrs
+					test "http://www.houeland.com/kolproxy/latest-version"
+					test "http://www.kingdomofloathing.com/sendjickmail.php"
+					test "http://www.kingdomofloathing.com/login.php"
+					send_plain "Simple network is OK?"
+				"/kolproxy-secretkey" -> send_plain ("Kolproxy session key: " ++ (show $ shutdown_secret_ $ globalref))
+				"/kolproxy-use-slow-http" -> do
+					let maybeparams = decodeUrlParams $ rqURI $ req
+					if (lookup "secretkey" =<< maybeparams) == Just (shutdown_secret_ $ globalref)
+						then do
+							writeIORef (use_slow_http_ref_ globalref) True
+							modifyMVar sessionmastermv $ \_m -> return (Data.Map.empty, "Modified.")
+							send_html "<html><body>Switched to slow HTTP/1.0.<br><br><a href=\"/\">Back to login</a>.</body></html>"
+						else send_html "<html><body><p style=\"color: darkorange\">Denied.</p></body></html>"
+				"/kolproxy-troubleshooting" -> do
+					let line1 = "Badly behaving network equipment, firewalls, or anti-virus are frequent sources of kolproxy problems.<br>"
+					let line2 = "<a href=\"/kolproxy-use-slow-http?secretkey=" ++ (shutdown_secret_ $ globalref) ++ "\">Click here to try using slower HTTP/1.0 requests instead, which might help.</a>"
+					send_html $ line1 ++ line2
+				"/kolproxy-shutdown" -> do
+					let maybeparams = decodeUrlParams $ rqURI $ req
+					if (lookup "secretkey" =<< maybeparams) == Just (shutdown_secret_ $ globalref)
+						then return $ HtmlResult "<html><body><p style=\"color: green\">Closing.</p></body></html>" uri True
+						else send_html "<html><body><p style=\"color: darkorange\">Denied.</p></body></html>"
+				_ -> return $ KolRequest req
 
 make_globalref = do
 	environment_settings <- do
@@ -225,7 +217,6 @@ make_globalref = do
 	hlua <- openlog "lua-log.txt"
 	hhttp <- openlog "http-log.txt"
 	shutdown_secret <- get_md5 <$> show <$> (randomIO :: IO Integer)
-	shutdown_ref <- newIORef False
 
 	chatopendb <- create_db (sqlite_fullfsync_ environment_settings) "sqlite3 chatlog" "chat-log.sqlite3"
 	do_db_query_ chatopendb "CREATE TABLE IF NOT EXISTS public(mid INTEGER PRIMARY KEY NOT NULL, time INTEGER NOT NULL, channel TEXT NOT NULL, playerid INTEGER NOT NULL, msg TEXT NOT NULL, rawjson TEXT NOT NULL);" []
@@ -252,7 +243,6 @@ make_globalref = do
 		h_lua_log_ = hlua,
 		h_http_log_ = hhttp,
 		shutdown_secret_ = shutdown_secret,
-		shutdown_ref_ = shutdown_ref,
 		doChatLogAction_ = \action -> writeChan chatlogchan action,
 		use_slow_http_ref_ = use_slow_http_ref,
 		have_logged_in_ref_ = have_logged_in_ref,
@@ -281,22 +271,29 @@ runProxyServer r rchat portnum = do
 		sessionData_ = undefined
 	}
 	let logref = LogRefStuff { logchan_ = logchan, solid_logchan_ = logchan }
-	let _log_fakeref = RefType { logstuff_ = logref, processingstuff_ = undefined, otherstuff_ = _fake_other, stateValid_ = undefined, globalstuff_ = globalref, skipRunningPrinters_ = undefined }
+	let _log_fakeref = RefType { logstuff_ = logref, processingstuff_ = undefined, otherstuff_ = _fake_other, stateValid_ = undefined, globalstuff_ = globalref }
+
+	let try_handling send_response x = do
+		result <- try x
+		(send_response $ case result of
+			Right resp -> resp
+			Left err -> mkResponse (5,0,0) [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")] $ Data.ByteString.Char8.pack $ "Error:\n\n" ++ show (err :: SomeException)) `catch` (\e -> do
+				putWarningStrLn $ "send_response exception: " ++ show (e :: SomeException))
 
 	mvsequence <- newChan
 	forkIO_ "kps:mvseq" $ forever $ do
-		(uri, params, cookie, mvresp) <- readChan mvsequence
-		putMVar mvresp =<< ((try $ do
+		(uri, params, cookie, send_response) <- readChan mvsequence
+		try_handling send_response $ debug_do ("sequence response for: " ++ show uri) $ do
 			log_file_retrieval _log_fakeref ("proxy:" ++ show uri) params
 			log_time_uri _log_fakeref "request" uri
-			resp <- log_time_interval _log_fakeref ("creating response for: " ++ (show uri)) $ r uri params cookie
-			return resp) :: IO (Either SomeException (Response Data.ByteString.Char8.ByteString)))
+			resp <- log_time_interval _log_fakeref ("creating response for: " ++ show uri) $ r uri params cookie
+			return resp
 	mvchat <- newChan
-	forkIO_ "kps:mvwhen" $ forever $ do
-		(uri, params, cookie, mvresp) <- readChan mvchat
-		forkIO_ "kps:mvwhentry" $ do -- Serve asynced, possible private-message loss until server is fixed
+	forkIO_ "kps:mvchat" $ forever $ do
+		(uri, params, cookie, send_response) <- readChan mvchat
+		forkIO_ "kps:mvchattry" $ do -- Serve asynced, possible private-message loss until server is fixed
 -- 		do -- Serve synced, possible hang on timeouts, still can't guarantee private-messages
-			putMVar mvresp =<< (try $ rchat uri params cookie)
+			try_handling send_response $ debug_do ("chat response for: " ++ show uri) $ rchat uri params cookie
 
 	sessionmastermv <- newMVar Data.Map.empty
 
@@ -332,11 +329,9 @@ runProxyServer r rchat portnum = do
 					return (Data.Map.insert filename x m, x)
 		writeChan chan action
 
-	launched_ref <- newIORef False
 	forkIO_ "kps:updatedatafiles" $ do
 		update_data_files
 	forkIO_ "kps:launchkolproxy" $ do
-		writeIORef launched_ref True
 		envlaunch <- getEnvironmentSetting "KOLPROXY_LAUNCH_BROWSER"
 		when (envlaunch /= Just "0") $ do
 			platform_launch portnum
@@ -344,30 +339,31 @@ runProxyServer r rchat portnum = do
 	sock <- mklistensocket (listen_public _log_fakeref) portnum
 
 	let do_loop = do
-		should_stop <- readIORef $ shutdown_ref_ $ globalref
-		unless should_stop $ do
-			doSERVER_DEBUG "listening on socket"
-			(sh, _) <- debug_do "accept socket" $ Network.Socket.accept sock
-			let mksockconn sh = socketConnection "???" (fromIntegral portnum) sh
-			h <- debug_do "socket connection" $ mksockconn sh
-			doSERVER_DEBUG $ "doing socket:" ++ (show sh)
-			launched <- readIORef launched_ref
-			if launched
-				then ((forkIO_ "kps:handleconn" $ do
-					resp <- handle_connection sessionmastermv mvsequence mvchat h logchan dropping_logchan sh dblogstuff statestuff globalref
-					send_http_response h resp
-					end_http h) `catch` (\e -> do
-						putStrLn $ "proxyError IO: " ++ (show (e :: IOException))) `catch` (\e -> do
-							putStrLn $ "proxyError Some: " ++ (show (e :: SomeException))
-							throwIO e))
-				else do
-					void $ kolproxy_receiveHTTP h
-					let resp = mkResponse (5,0,3) [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")] $ Data.ByteString.Char8.pack "Error: Kolproxy is still loading data files. Try again in a minute."
-					send_http_response h resp
-					end_http h
-			doSERVER_DEBUG "...done with socket"
-			do_loop
-	do_loop
+		doSERVER_DEBUG "listening on socket"
+		(sh, _) <- debug_do "accept socket" $ Network.Socket.accept sock
+		h <- debug_do "socket connection" $ socketConnection "???" (fromIntegral portnum) sh
+		doSERVER_DEBUG $ "doing socket:" ++ (show sh)
+
+		let send_response resp = do
+			send_http_response h resp
+			end_http h
+
+		recvdata <- debug_do "receive HTTP" $ kolproxy_receiveHTTP h
+		hcr <- handle_connection globalref recvdata sessionmastermv
+		case hcr of
+			PlainResult pt uri -> do
+				resp <- makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack pt) uri [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")]
+				send_response resp
+				do_loop
+			HtmlResult pt uri shutdown -> do
+				resp <- makeResponse (Data.ByteString.Char8.pack pt) uri []
+				send_response resp
+				when (not shutdown) $ do_loop
+			KolRequest req -> do
+				handle_kol_request sessionmastermv mvsequence mvchat logchan dropping_logchan dblogstuff statestuff globalref req send_response
+				do_loop
+
+	debug_do "do_loop" do_loop
 
 	putStrLn "Shutting down."
 

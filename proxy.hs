@@ -151,20 +151,6 @@ kolProxyHandlerChat uri params baseref = do
 		_ -> return text
 	makeResponseWithNoExtraHeaders resptext effuri [("Content-Type", "application/json; charset=UTF-8"), ("Cache-Control", "no-cache")]
 
--- TODO: Remove
---handleRequest ref uri effuri headers params pagetext = do
---	let allparams = concat $ catMaybes $ [decodeUrlParams uri, decodeUrlParams effuri, params]
---
---	xresptext <- if skipRunningPrinters_ ref
---		then return $ Right $ pagetext
---		else log_time_interval ref ("printing: " ++ (show uri)) $ runPrinterScript ref uri effuri pagetext allparams
---
---	case xresptext of
---		Right msg -> log_time_interval ref ("making response") $ makeResponse msg effuri headers
---		Left (msg, trace) -> do
---			let pt = add_error_message_to_page ("printer.lua error: " ++ msg ++ "\n" ++ trace) pagetext
---			log_time_interval ref ("making response") $ makeErrorResponse pt effuri headers
-
 make_ref baseref = do
 	let ref = baseref {
 		processingstuff_ = ProcessingRefStuff {
@@ -264,16 +250,6 @@ kolProxyHandler uri params baseref = do
 			pt <- showLogs (lookup "which" allparams) (fromJust $ lookup "pwd" allparams)
 			makeResponse (Data.ByteString.Char8.pack pt) uri []
 
---		"/custom-settings" -> check_pwd_for $ Just $ do
---			case lookup "action" allparams of
---				Nothing -> return ()
---				Just "set state" -> do
---					case (lookup "stateset" allparams, lookup "name" allparams, lookup "value" allparams) of
---						(Just stateset, Just name, Just value) -> setState origref stateset name value
---						_ -> return () -- TODO: Handle as error?
---				Just x -> throwIO $ InternalError $ "Custom settings action not recognized: " ++ x
---			makeResponse (Data.ByteString.Char8.pack $ "Empty page.") uri []
-
 		"/kolproxy-automation-script" -> check_pwd_for $ Nothing
 		"/kolproxy-script" -> check_pwd_for $ Nothing
 
@@ -355,8 +331,7 @@ runbot filename = do
 			sessionData_ = sessConnData_ sc
 		},
 		stateValid_ = False,
-		globalstuff_ = globalref,
-		skipRunningPrinters_ = True
+		globalstuff_ = globalref
 	}
 
 	let okref = baseref {

@@ -101,7 +101,6 @@ data GlobalRefStuff = GlobalRefStuff {
 	h_lua_log_ :: Handle,
 	h_http_log_ :: Handle,
 	shutdown_secret_ :: String,
-	shutdown_ref_ :: IORef Bool,
 	use_slow_http_ref_ :: IORef Bool,
 	have_logged_in_ref_ :: IORef Bool,
 	lastDatafileUpdate_ :: IORef UTCTime,
@@ -119,8 +118,7 @@ data RefType = RefType {
 	processingstuff_ :: ProcessingRefStuff,
 	otherstuff_ :: OtherRefStuff,
 	stateValid_ :: Bool,
-	globalstuff_ :: GlobalRefStuff,
-	skipRunningPrinters_ :: Bool
+	globalstuff_ :: GlobalRefStuff
 }
 
 getlogchan ref = logchan_ $ logstuff_ $ ref
