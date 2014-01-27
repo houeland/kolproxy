@@ -276,7 +276,7 @@ function get_ascension_automation_settings(want_bonus)
 		tbl.default_equipment.offhand = {
 			"Jarlsberg's pan (Cosmic portal mode)",
 			"Jarlsberg's pan",
-			"third-hand lantern",
+			"A Light that Never Goes Out",
 			{ name = "Operation Patriot Shield", check = function() return level() < 13 end },
 			"Bag o' Tricks",
 			"Rain-Doh green lantern",
