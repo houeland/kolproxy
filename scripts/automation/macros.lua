@@ -1010,6 +1010,9 @@ sub stall
 endsub
 
 sub do_yellowray
+  if hascombatitem Golden Light
+    use Golden Light
+  endif
   if hascombatitem unbearable light
     use unbearable light
   endif
