@@ -46,6 +46,7 @@ platform_launch portnum = void $ createProcess (shell $ "open http://localhost:"
 #endif
 
 #ifdef platform_windows
+import KoL.Util
 import Control.Exception
 --import GHC.IO.Encoding
 import Network
@@ -73,11 +74,11 @@ best_effort_atomic_file_write path basedir filedata = do
 -- 	writeFile path filedata
 --	putDebugStrLn $ "writing file " ++ path ++ " (" ++ (show $ length $ filedata) ++ " chars)"
 	(fp, h) <- openBinaryTempFile basedir "temp-file.tmp"
-	enc1 <- hGetEncoding h
+	_enc1 <- hGetEncoding h
 	hSetEncoding h utf8
-	enc2 <- hGetEncoding h
+	_enc2 <- hGetEncoding h
 	hSetBinaryMode h True
-	enc3 <- hGetEncoding h
+	_enc3 <- hGetEncoding h
 --	putDebugStrLn $ "  encoding: " ++ show (enc1, enc2, enc3)
 	hPutStrLn h filedata
 --	putDebugStrLn $ "  wrote file data: " ++ fp
