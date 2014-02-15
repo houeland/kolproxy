@@ -76,13 +76,32 @@ end)
 
 -- adventure mistake warnings
 
+add_processor("/desc_item.php", function()
+	if text:contains(">Buddy Bjorn<") then
+		session["Buddy Bjorn occupied"] = not text:contains(">Nobody<")
+	end
+end)
+
+add_processor("/desc_item.php", function()
+	if text:contains(">Crown of Thrones<") then
+		session["Crown of Thrones occupied"] = not text:contains(">Nobody<")
+	end
+end)
+
 add_always_adventure_warning(function()
 	if have_equipped_item("Crown of Thrones") then
-		if (session["cached enthroned familiar"] or "none") == "none" then
-			cache_enthroned_familiar()
-		end
-		if session["cached enthroned familiar"] == "none" then
+		estimate_item_equip_bonuses("Crown of Thrones")
+		if not session["Crown of Thrones occupied"] then
 			return "You might want to put a familiar in your Crown of Thrones.", "familiar in CoT"
+		end
+	end
+end)
+
+add_always_adventure_warning(function()
+	if have_equipped_item("Buddy Bjorn") then
+		estimate_item_equip_bonuses("Buddy Bjorn")
+		if not session["Buddy Bjorn occupied"] then
+			return "You might want to put a familiar in your Buddy Bjorn.", "familiar in Buddy Bjorn"
 		end
 	end
 end)

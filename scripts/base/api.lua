@@ -69,9 +69,10 @@ function setup_functions()
 				"Avatar of Boris",
 				"Zombie Master",
 				nil,
-				"Avatar of Jarlsberg"
+				"Avatar of Jarlsberg",
+				"Avatar of Sneaky Pete",
 			}
-			return classnames[classid()]
+			return classnames[classid()] or ("{classid:" .. classid() .. "}")
 		end
 		function playerclass(check)
 			-- TODO: validate

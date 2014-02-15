@@ -365,6 +365,12 @@ mirrorStateIntoDatabase ref = do
 		putMVar mv ()
 	void $ takeMVar mv
 
+download_actionbar ref = do
+	json <- nochangeGetPageRawNoScripts ("/actionbar.php?action=fetch&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") ref
+	t <- getCurrentTime
+	writeFile ("logs/info/actionbar-data-" ++ show t ++ ".json") json
+	return json
+
 storeSettingsOnServer ref store_reason = when (store_state_in_actionbar ref) $ do
 	Just (_, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
 	let daymap = Data.Map.filterWithKey (\x _y -> not $ isPrefixOf "fight." x) extra_daymap
@@ -379,11 +385,11 @@ storeSettingsOnServer ref store_reason = when (store_state_in_actionbar ref) $ d
 		cachedactionbar <- readIORef (cachedActionbar_ $ sessionData $ ref)
 		json <- case cachedactionbar of
 			Just x -> return x
-			_ -> nochangeGetPageRawNoScripts ("/actionbar.php?action=fetch&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") ref
+			_ -> download_actionbar ref
 		let Ok storedjslist = fromJSObject <$> decodeStrict json
-		stateobj_old <- makeStateJSON_old ref
+		--stateobj_old <- makeStateJSON_old ref
 		stateobj_new <- makeStateJSON_new ref newstateid
-		let newjson = encodeStrict $ toJSObject $ filter (\(x, _) -> x /= "kolproxy state" && x /= "kolproxy json state") storedjslist ++ [("kolproxy state", JSObject stateobj_old)] ++ [("kolproxy json state", JSObject stateobj_new)]
+		let newjson = encodeStrict $ toJSObject $ filter (\(x, _) -> x /= "kolproxy state" && x /= "kolproxy json state") storedjslist ++ [("kolproxy json state", JSObject stateobj_new)]
 		void $ postPageRawNoScripts "/actionbar.php" [("action", "set"), ("for", "kolproxy " ++ kolproxy_version_number ++ " by Eleron"), ("format", "json"), ("bar", newjson), ("pwd", pwd ai)] ref
 		putStrLn $ "INFO: stored settings on server (" ++ (show $ length newjson) ++ " bytes.) because: " ++ store_reason
 		writeIORef (cachedActionbar_ $ sessionData $ ref) (Just newjson)
@@ -391,7 +397,7 @@ storeSettingsOnServer ref store_reason = when (store_state_in_actionbar ref) $ d
 		writeIORef (storedStateId_ $ sessionData $ ref) newstateid
 
 loadSettingsFromServer ref = do
-	json <- nochangeGetPageRawNoScripts ("/actionbar.php?action=fetch&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") ref
+	json <- download_actionbar ref
 	case fromJSObject <$> decodeStrict json of
 		Ok list -> case (lookup "kolproxy json state" list :: Maybe JSValue, lookup "kolproxy state" list :: Maybe JSValue) of
 			(Just (JSObject x), _) -> do
@@ -408,7 +414,5 @@ loadSettingsFromServer ref = do
 			putStrLn $ "  Your server data was most likely corrupted by a buggy GreaseMonkey script."
 			putStrLn $ "  To reset it, first turn on the combat bar by going to KoL options -> Combat -> Enable Combat Bar."
 			putStrLn $ "  Then, fight a monster, drag some skills onto the combat bar, win the fight, and log out. That should fix it."
-			t <- getCurrentTime
-			writeFile ("DEBUG-invalid-actionbar-data-" ++ show t ++ ".json") json
 			-- TODO: Wipe the actionbar?
 			throwIO StateException

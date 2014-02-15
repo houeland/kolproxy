@@ -44,7 +44,7 @@ local blacklist = {
 
 	["recast buff warning: Overconfident"] = true,
 
-	["Dungeons of Doom"] = true,
+	["effect: Loaded Forwarbear"] = true,
 }
 
 local processed_datafiles = {}
@@ -493,6 +493,7 @@ function parse_items()
 			local effect = bonuslist:match([[Effect: "(.-)"]])
 			if not effect then
 				hardwarn("modifiers:useitem effect does not exist", name, effect)
+			elseif blacklist["effect: " .. effect] then
 			elseif items[name] then
 				items[name].use_effect = effect
 			elseif not name:match("^# ") then
@@ -513,9 +514,15 @@ function parse_items()
 		end
 	end
 
-	items["stolen accordion"].song_duration = 5 -- HACK: datafile is broken
+	local fixed_items = {}
 
-	return items
+	for x, y in pairs(items) do
+		fixed_items[x:gsub([["]], [[&quot;]])] = y
+	end
+
+	fixed_items["stolen accordion"].song_duration = 5 -- HACK: datafile is broken
+
+	return fixed_items
 end
 
 function verify_items(data)

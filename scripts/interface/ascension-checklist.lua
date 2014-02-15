@@ -295,7 +295,7 @@ equipment_items = {
 	{ false, { "little box of fireworks" } },
 	{ false, { "Operation Patriot Shield", "pilgrim shield" } },
 	{ false, { "flaming pink shirt", "liar's pants" } },
-	{ false, { "Crown of Thrones" } },
+	{ false, { "Buddy Bjorn", "Crown of Thrones" } },
 	{ false, { "Juju Mojo Mask", "V for Vivala mask" } },
 	{ false, { "Greatest American Pants", "navel ring of navel gazing" } },
 	{ false, { "Loathing Legion knife", "Loathing Legion necktie", "Loathing Legion moondial", "Loathing Legion helicopter", "Loathing Legion universal screwdriver", "Loathing Legion jackhammer" } },

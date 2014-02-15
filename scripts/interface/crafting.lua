@@ -96,7 +96,7 @@ local href = add_automation_script("custom-mix-drinks", function()
 	for x, name in pairs(advcock) do
 		resptext = resptext .. handle_recipe(name) .. "<br>"
 	end
-	if classid() == 5 or classid() == 6 then
+	if classid() == 5 or classid() == 6 or ascensionpath("Avatar of Sneaky Pete") then
 		resptext = resptext .. "<br><br>"
 		for x, name in pairs(SHC) do
 			resptext = resptext .. handle_recipe(name) .. "<br>"

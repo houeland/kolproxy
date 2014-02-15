@@ -112,12 +112,13 @@ handle_kol_request sessionmastermv mvsequence mvchat logchan dropping_logchan db
 
 	let isChat = (uriPath uri) `elem` ["/favicon.ico", "/newchatmessages.php", "/submitnewchat.php"]
 
-	let useragent = case findHeader HdrUserAgent req of
+	let useragent = kolproxy_version_string ++ " (" ++ platform_name ++ ")" ++ case findHeader HdrUserAgent req of
 		Just browseragent -> if (browseragent =~ "Safari") && (not (browseragent =~ "Chrome"))
-			then kolproxy_version_string ++ " (" ++ platform_name ++ ")" ++ " " ++ browseragent ++ " NginxSafariBugWorkaround/1.0 (Faking Chrome/version)"
-			else kolproxy_version_string ++ " (" ++ platform_name ++ ")" ++ " " ++ browseragent
-		_ -> kolproxy_version_string ++ " (" ++ platform_name ++ ")"
+			then " " ++ browseragent ++ " NginxSafariBugWorkaround/1.0 (Faking Chrome/version)"
+			else " " ++ browseragent
+		_ -> ""
 
+	-- TODO: merge the isChat parts: logchan, lastRetreieve, connLogSymbol, getconn, mvseq
 	let baseref = RefType {
 		logstuff_ = LogRefStuff { logchan_ = if isChat then dropping_logchan else logchan, solid_logchan_ = logchan },
 		processingstuff_ = undefined,
@@ -126,7 +127,6 @@ handle_kol_request sessionmastermv mvsequence mvchat logchan dropping_logchan db
 				cookie_ = cookie,
 				useragent_ = useragent,
 				hostUri_ = fromJust $ parseURI kolproxy_host,
-				-- TODO: merge the isChat parts
 				lastRetrieve_ = if isChat then chatLastRetrieve_ sc else sequenceLastRetrieve_ sc,
 				connLogSymbol_ = if isChat then "c" else "s",
 				getconn_ = if isChat then chatConnection_ sc else sequenceConnection_ sc

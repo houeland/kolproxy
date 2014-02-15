@@ -6,21 +6,21 @@
 local function getFightBody(htmlPageText)
 	--get fight body
 	local pos, _ = htmlPageText:find([==[<span id=['"]monname['"]]==])
-	if not pos then
-		return htmlPageText
-	end
+	if not pos then return htmlPageText end
 	part1 = htmlPageText:sub(pos)
-	
+
 	local _, pos1 = part1:find("</span>")
+	if not pos1 then return htmlPageText end
 	part1 = part1:sub(pos1 + 1)
-	
+
 	local pos2, _ = part1:find([[<a name="end">]])
+	if not pos2 then return htmlPageText end
 	part2 = part1:sub(0, pos2 - 1)
 	--remove monster intro text
 	part2 = part2:gsub([[<blockquote>(.-)</blockquote>]], "")
 	return part2
 end
-	
+
 local blackList ={
 	[[%b<>]], --any html tags
 	[[You lose %d+]], --damage FROM monsters
@@ -38,7 +38,7 @@ local function stripOutBlackList(fightBodyText)
 	for item in table.values(blackList) do
 		fightBodyText = fightBodyText:gsub(item, "")
 	end
-	
+
 	return fightBodyText
 end
 

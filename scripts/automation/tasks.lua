@@ -329,24 +329,24 @@ mark m_done
 			end
 			pt = get_page("/place.php", { whichplace = "orc_chasm", action = "bridge" .. pieces })
 			if pt:contains("have to check out that lumber camp down there") then
-				if have_item("smut orc keepsake box") then
+				-- TODO: bees hate you
+				if have_item("snow boards") then
+					return maketask_use_item("snow boards")
+				elseif have_item("smut orc keepsake box") then
+					return maketask_use_item("smut orc keepsake box")
+				elseif count_item("snow berries") >= 2 then
 					return {
-						message = "use keepsake box",
-						fam = "Slimeling",
+						message = "buy snow boards",
 						nobuffing = true,
-						minmp = 0,
 						action = function()
-							local c = count_item("smut orc keepsake box")
-							use_item("smut orc keepsake box")()
-							did_action = count_item("smut orc keepsake box") == c - 1
+							shop_buyitem("snow boards", "snowgarden")
+							did_action = have_item("snow boards")
 						end
 					}
 				elseif ascensionstatus("Softcore") then
 					return {
 						message = "pull keepsake box",
-						fam = "Slimeling",
 						nobuffing = true,
-						minmp = 0,
 						action = function()
 							pull_in_softcore("smut orc keepsake box")
 							did_action = have_item("smut orc keepsake box")
@@ -420,7 +420,7 @@ mark m_done
 					end
 					if ml < 20 then
 						stop "Not enough +ML for Oil Peak (want 20+ for automation)"
-					elseif not ascensionstatus("Hardcore") and ml < 50 and not challenge then
+					elseif not ascensionstatus("Hardcore") and ml < 50 and ascensionpathid() == 0 then
 						-- TODO: Trigger this if script options set to go fast
 						stop "Not enough +ML for Oil Peak (want 50+ for SCNP automation)"
 					end
@@ -640,4 +640,16 @@ end
 
 function buy_hermit_item(item, quantity)
 	return async_post_page("/hermit.php", { action = "trade", whichitem = get_itemid(item), quantity = quantity or 1 })
+end
+
+function maketask_use_item(item)
+	return {
+		message = "use item: " .. tostring(item),
+		nobuffing = true,
+		action = function()
+			local c = count_item(item)
+			use_item(item)()
+			did_action = count_item(item) == c - 1
+		end
+	}
 end

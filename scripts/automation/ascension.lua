@@ -19,8 +19,6 @@ lowskill_fist_run = nil
 
 highskill_at_run = nil
 
-can_change_familiar = nil
-
 ignore_buffing_and_outfit = nil
 
 function softcore_stoppable_action(msg)
@@ -88,7 +86,7 @@ local function automate_hcnp_day(whichday)
 	end
 
 	local function can_photocopy()
-		return not cached_stuff.have_faxed_today and have_item("Clan VIP Lounge key") and not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg")
+		return not cached_stuff.have_faxed_today and have_item("Clan VIP Lounge key") and not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete")
 	end
 
 	local function want_shore()
@@ -463,12 +461,6 @@ endif
 
 ]]
 		end
-	end
-
-	if ascensionpath("Avatar of Boris") or ascensionpath("Avatar of Jarlsberg") then
-		can_change_familiar = false
-	else
-		can_change_familiar = true
 	end
 
 	if not cached_stuff.gotten_guild_challenge then
@@ -1888,7 +1880,7 @@ endif
 					script.ensure_mp(2)
 					summon_clipart("time halo")
 				end
-				script.wear { acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" }, acc3 = first_wearable { "gold wedding ring" } }
+				script.wear { hat = first_wearable { "Hairpiece On Fire" }, acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" }, acc3 = first_wearable { "gold wedding ring" } }
 				if ascension_script_option("overdrink with nightcap") and can_drink_normal_booze() then
 					script.maybe_ensure_buffs { "Ode to Booze" }
 					if have_buff("Ode to Booze") then
@@ -2468,7 +2460,7 @@ endif
 
 	add_task {
 		when = not cached_stuff.learned_lab_password and
-			not cached_stuff.failed_to_learn_lab_password and
+			(can_disguise_as_guard() or not cached_stuff.failed_to_learn_lab_password) and
 			have_item("Cobb's Knob lab key") and
 			can_wear_weapons() and
 			(can_disguise_as_guard() or (not quest("The Goblin Who Wouldn't Be King") and not challenge)),
@@ -2884,6 +2876,27 @@ endwhile
 	}
 
 	add_task {
+		when = (playerclass("Seal Clubber") or playerclass("Turtle Tamer")) and
+			not kgs_available and
+			not have_guard_outfit() and
+			can_wear_weapons(),
+		task = {
+			message = "get KGE outfit",
+			fam = "Slimeling",
+			buffs = { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+			maybe_buffs = { "Mental A-cue-ity" },
+			minmp = 25,
+			action = adventure {
+				zoneid = 257,
+				macro_function = macro_ppnoodlecannon,
+				noncombats = {
+					["Welcome to the Footlocker"] = "Loot the locker",
+				}
+			}
+		},
+	}
+
+	add_task {
 		when = quest("The Goblin Who Wouldn't Be King") and
 			session["__script.no stench resist"] and
 			not have_harem_outfit() and
@@ -3025,7 +3038,7 @@ endwhile
 	}
 
 	add_task {
-		when = level() < 6 and (challenge ~= "fist" or fist_level >= 3) and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and not ascensionpath("Class Act II: A Class For Pigs") and ascensionstatus() == "Hardcore",
+		when = level() < 6 and (challenge ~= "fist" or fist_level >= 3) and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and not ascensionpath("Class Act II: A Class For Pigs") and ascensionstatus() == "Hardcore" and not ascensionpath("Avatar of Sneaky Pete"),
 		task = tasks.do_sewerleveling,
 	}
 
@@ -4837,7 +4850,7 @@ local function do_loop(whichday)
 	if show_spammy_automation_events then
 		enable_function_debug_output(true, function(...) do_debug_infoline(...) end)
 	end
-	print("Running automation script, day", whichday)
+	print("Running ascension automation script...")
 -- 	if autoattack_is_set() then
 -- 		disable_autoattack()
 -- 	end

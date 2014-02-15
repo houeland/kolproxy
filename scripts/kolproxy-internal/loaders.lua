@@ -163,6 +163,7 @@ load_file("interface", "other/nion/basement.lua")
 
 load_file("automation", "automation/turn-in-war-items.lua")
 load_file("automation", "automation/chess-puzzle.lua")
+load_file("automation", "automation/wolf-game.lua")
 load_file("interface", "items/chibibuddy.lua")
 
 load_file("interface", "items/blank-out.lua")

@@ -31,6 +31,7 @@ kolproxy_command_preview_for["autoattack"] = true
 kolproxy_command_preview_for["fam"] = true
 kolproxy_command_preview_for["familiar"] = true
 kolproxy_command_preview_for["enthrone"] = true
+kolproxy_command_preview_for["bjornify"] = true
 kolproxy_command_preview_for["count"] = true
 kolproxy_command_preview_for["cook"] = true
 kolproxy_command_preview_for["mix"] = true

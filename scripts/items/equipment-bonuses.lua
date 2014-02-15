@@ -45,25 +45,45 @@ function parse_item_bonuses(item)
 	return bonuses
 end
 
-add_processor("/familiar.php", function()
-	session["cached enthroned familiar"] = nil
-end)
+--add_processor("/familiar.php", function()
+--	session["cached enthroned familiar"] = nil
+--end)
 
-function cache_enthroned_familiar()
-	local pt = get_page("/desc_item.php", { whichitem = 239178788 })
-	local line = pt:match([[>Current Occupant.-<br>]])
-	local famtype = line:match("<b>.+, the (.-)</b><br>")
-	if line:match([[<b>Nobody</b>]]) then
-		famtype = "none"
-	end
-	session["cached enthroned familiar"] = famtype
-end
+--function cache_enthroned_familiar()
+--	local pt = get_page("/desc_item.php", { whichitem = 239178788 })
+--	local line = pt:match([[>Current Occupant.-<br>]])
+--	local famtype = line:match("<b>.+, the (.-)</b><br>")
+--	if line:match([[<b>Nobody</b>]]) then
+--		famtype = "none"
+--	end
+--	session["cached enthroned familiar"] = famtype
+--end
 
-add_automator("all pages", function()
-	if have_equipped_item("Crown of Thrones") and not session["cached enthroned familiar"] then
-		cache_enthroned_familiar()
-	end
-end)
+--add_automator("all pages", function()
+--	if have_equipped_item("Crown of Thrones") and not session["cached enthroned familiar"] then
+--		cache_enthroned_familiar()
+--	end
+--end)
+
+--add_processor("/familiar.php", function()
+--	session["cached bjornified familiar"] = nil
+--end)
+
+--function cache_bjornified_familiar()
+--	local pt = get_page("/desc_item.php", { whichitem = 697608546 })
+--	local line = pt:match([[>Current Occupant.-<br>]])
+--	local famtype = line:match("<b>.+, the (.-)</b><br>")
+--	if line:match([[<b>Nobody</b>]]) then
+--		famtype = "none"
+--	end
+--	session["cached bjornified familiar"] = famtype
+--end
+
+--add_automator("all pages", function()
+--	if have_equipped_item("Buddy Bjorn") and not session["cached bjornified familiar"] then
+--		cache_bjornified_familiar()
+--	end
+--end)
 
 -- TODO: move to different file
 
@@ -108,6 +128,11 @@ add_processor("/inv_equip.php", function()
 	clear_cached_item_bonuses("stinky cheese diaper")
 end)
 
+add_processor("/familiar.php", function()
+	clear_cached_item_bonuses("Crown of Thrones")
+	clear_cached_item_bonuses("Buddy Bjorn")
+end)
+
 add_processor("/choice.php", function()
 	if text:contains("snow suit") then
 		clear_cached_item_bonuses("Snow Suit")
@@ -136,6 +161,8 @@ local items_to_cache = {
 	["card sleeve"] = true,
 	["Yearbook Club Camera"] = true,
 	["Frown Exerciser"] = true,
+	["Crown of Thrones"] = true,
+	["Buddy Bjorn"] = true,
 }
 
 local function ensure_cached_item_bonuses(item)
@@ -197,12 +224,19 @@ local function estimate_item_equip_bonuses_uncached(item)
 		itemarray["scratch 'n' sniff crossbow"] = scratchnsniff_bonuses
 	end
 
-	if have_equipped_item("Crown of Thrones") then
-		local famtype = session["cached enthroned familiar"]
-		if famtype and famtype ~= "none" then
-			itemarray["Crown of Thrones"] = datafile("enthroned familiars")[famtype]
-		end
-	end
+--	if have_equipped_item("Crown of Thrones") then
+--		local famtype = session["cached enthroned familiar"]
+--		if famtype and famtype ~= "none" then
+--			itemarray["Crown of Thrones"] = datafile("enthroned familiars")[famtype]
+--		end
+--	end
+
+--	if have_equipped_item("Buddy Bjorn") then
+--		local famtype = session["cached bjornified familiar"]
+--		if famtype and famtype ~= "none" then
+--			itemarray["Buddy Bjorn"] = datafile("enthroned familiars")[famtype]
+--		end
+--	end
 
 	local unknown_table = { ["Combat Initiative"] = "?", ["Item Drops from Monsters"] = "?", ["Meat from Monsters"] = "?", ["Monster Level"] = "?", ["Monsters will be more attracted to you"] = "?" }
 	local name = maybe_get_itemname(item)

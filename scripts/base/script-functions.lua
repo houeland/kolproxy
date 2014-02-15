@@ -503,6 +503,8 @@ function estimate_max_fullness()
 		mf = 20
 	elseif ascensionpath("Avatar of Jarlsberg") then
 		mf = 10
+	elseif ascensionpath("Avatar of Sneaky Pete") then
+		mf = 5
 	end
 	if have_skill("Stomach of Steel") then
 		mf = mf + 5
@@ -541,6 +543,8 @@ function estimate_max_safe_drunkenness()
 		dlimit = 5
 	elseif ascensionpath("Avatar of Jarlsberg") then
 		dlimit = 10
+	elseif ascensionpath("Avatar of Sneaky Pete") then
+		dlimit = 20
 	end
 
 	if have_skill("Liver of Steel") then
@@ -548,6 +552,9 @@ function estimate_max_safe_drunkenness()
 	end
 	if have_skill("Nightcap") then
 		dlimit = dlimit + 5
+	end
+	if have_skill("Hard Drinker") then
+		dlimit = dlimit + 10
 	end
 
 	return dlimit - 1
@@ -592,7 +599,7 @@ function estimate_mallsell_profit(item, amount)
 	amount = amount or 1
 	local buytenprice = estimate_mallbuy_cost(item, 10)
 	if buytenprice then
-		return buytenprice/10 * 0.85 * amount
+		return buytenprice / 10 * 0.85 * amount
 	end
 end
 
@@ -615,7 +622,10 @@ function can_equip_item(item)
 		end
 	end
 	if name == "Trusty" then
-	elseif not can_wear_weapons() and (itemdata.equipment_slot == "weapon" or itemdata.equipment_slot == "offhand") then
+	elseif (itemdata.equipment_slot == "weapon" or itemdata.equipment_slot == "offhand") and not can_wear_weapons() then
+		return false
+	end
+	if itemdata.equipment_slot == "shirt" and not have_skill("Torso Awaregness") and not have_skill("Best Dressed") then
 		return false
 	end
 	return true

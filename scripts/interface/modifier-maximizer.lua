@@ -133,6 +133,13 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		"Mysticality",
 		"Moxie",
 		"Adventures per day",
+		"PvP fights per day",
+		"Cold Resistance",
+		"Hot Resistance",
+		"Sleaze Resistance",
+		"Spooky Resistance",
+		"Stench Resistance",
+		"Slime Resistance",
 	}
 
 	local whichbonus = params.whichbonus or "Item Drops from Monsters"

@@ -5,18 +5,22 @@ function get_ascension_automation_settings(want_bonus)
 				have_item("Jarlsberg's pan (Cosmic portal mode)") or
 				have_item("Operation Patriot Shield") or
 				have_item("Trusty") or
+				have_item("Sneaky Pete's basket") or
 				challenge == "zombie" or
 				challenge == "jarlsberg" or
 				have_item("Brimstone Bludgeon") or
 				have_item("Brimstone Bunker") or
+				have_item("astral shield") or
 				have_item("right bear arm") or
 				have_item("left bear arm") or
+				have_item("Meat Tenderizer is Murder") or
+				have_item("A Light that Never Goes Out") or
+				have_item("Staff of the Headmaster's Victuals") or
+				have_item("Saucepanic") or
+				have_item("Frankly Mr. Shank") or
 				session["__script.no halos"]
 			),
-		ignore_buffs = {
-			["A Fake Kolproxy Buff To Ignore"] = true,
-			["Another Example Kolproxy Buff"] = true,
-		},
+		ignore_buffs = {},
 		slimeling_feed_items = {
 			"snapdragon pistil", "elephant stinger",
 			"spooky stick",
@@ -141,11 +145,13 @@ function get_ascension_automation_settings(want_bonus)
 				"cornuthaum",
 				"Knob Goblin elite helm",
 				"mariachi hat",
+				"helmet turtle",
 				"snorkel",
 			},
 			container = {
 				{ name = "Rain-Doh red wings", check = function() return want_bonus.plusinitiative end },
 				"Camp Scout backpack",
+				"Buddy Bjorn",
 				"Misty Cape",
 				"Misty Cloak",
 				"Misty Robe",
@@ -250,7 +256,6 @@ function get_ascension_automation_settings(want_bonus)
 			"Staff of the Black Kettle",
 			"Staff of the Soupbone",
 			"Brimstone Bludgeon",
-			"Staff of the Headmaster's Victuals",
 			"ice sickle",
 			"haiku katana",
 			"right bear arm",
@@ -262,6 +267,8 @@ function get_ascension_automation_settings(want_bonus)
 			"Staff of the All-Steak",
 			"Staff of the Healthy Breakfast",
 			"Staff of Fruit Salad",
+			"Shakespeare's Sister's Accordion",
+			"Staff of the Headmaster's Victuals",
 			"alarm accordion",
 			"peace accordion",
 			"Squeezebox of the Ages",
@@ -269,26 +276,32 @@ function get_ascension_automation_settings(want_bonus)
 			"accordion file",
 			"baritone accordion",
 			"stolen accordion",
+			"Saucepanic",
+			"Frankly Mr. Shank",
+			"Meat Tenderizer is Murder",
+			"Sneaky Pete's basket",
 			"hilarious comedy prop",
 			"ironic battle spoon",
 			"rubber band gun",
+			"seal-clubbing club",
+			"turtle totem",
 		}
 		tbl.default_equipment.offhand = {
 			"Jarlsberg's pan (Cosmic portal mode)",
 			"Jarlsberg's pan",
-			"A Light that Never Goes Out",
 			{ name = "Operation Patriot Shield", check = function() return level() < 13 end },
 			"Bag o' Tricks",
 			"Rain-Doh green lantern",
 			"Operation Patriot Shield",
+			"astral shield",
 			"Brimstone Bunker",
+			"A Light that Never Goes Out",
+			"Ouija Board, Ouija Board",
 			"left bear arm",
 			"giant clay ashtray",
 			"hot plate",
+			"magical ice cubes",
 		}
-	end
-	if not have_skill("Torso Awaregness") then
-		tbl.default_equipment.shirt = nil
 	end
 	function tbl.canwear_itemname(x)
 		local itemname = nil
@@ -307,7 +320,7 @@ function get_ascension_automation_settings(want_bonus)
 		return itemname
 	end
 
-	if have_item("powdered wig") and basemoxie() >= 20 then
+	if tbl.canwear_itemname("powdered wig") then
 		table.insert(tbl.sell_items, "Van der Graaf helmet")
 	end
 	if have_item("pirate fledges") then

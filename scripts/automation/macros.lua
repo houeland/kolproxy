@@ -1,8 +1,8 @@
 function COMMON_MACROSTUFF_START(rounds, hplevel)
-	local lobsterwarning = ""
 	if session["__script.cannot restore HP"] then
 		hplevel = 0
 	end
+	local lobsterwarning = ""
 	if level() < 10 then
 		lobsterwarning = [[
 
@@ -10,6 +10,16 @@ if monstername lobsterfrogman
   abort LFM
 endif
 
+
+]]
+	end
+	local petemug = ""
+	if ascensionpath("Avatar of Sneaky Pete") then
+		petemug = [[
+
+if hasskill Mug for the Audience
+  cast Mug for the Audience
+endif
 
 ]]
 	end
@@ -34,8 +44,8 @@ if monstername clingy pirate
   endif
 endif
 
+]] .. petemug
 
-]]
 end
 
 function attack_action()
@@ -88,24 +98,35 @@ end
 function cannon_action()
 	if have_skill("Crab Claw Technique") and have_equipped_item("Rock and Roll Legend") and not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } then
 		return attack_action()
+	elseif ascensionpath("Avatar of Sneaky Pete") then
+		return attack_action()
+	end
+	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Bawdy Refrain", fury() >= 1 and "Furious Wallop" or "???", "Kneebutt", "Toss", "Clobber" }
+end
+
+function elemental_damage_action()
+	if ascensionpath("Avatar of Sneaky Pete") and have_intrinsic("Gaze of the Trickster God") then -- TODO: elemental damage in general
+		return attack_action()
 	end
 	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Bawdy Refrain" }
 end
 
-function elemental_damage_action()
-	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Bawdy Refrain" }
-end
-
 function serpent_action()
-	return macro_cast_skill { "Stringozzi Serpent", "Saucegeyser", "Weapon of the Pastalord", "Saucestorm", "Cannelloni Cannon", "Cone of Zydeco" }
+	if ascensionpath("Avatar of Sneaky Pete") then
+		return attack_action()
+	end
+	return macro_cast_skill { "Stringozzi Serpent", "Saucegeyser", "Weapon of the Pastalord", "Saucestorm", "Cannelloni Cannon", "Cone of Zydeco", fury() >= 1 and "Furious Wallop" or "???", "Kneebutt" }
 end
 
 function geyser_action()
+	if ascensionpath("Avatar of Sneaky Pete") then
+		return attack_action()
+	end
 	return macro_cast_skill { "Saucegeyser", "Weapon of the Pastalord" }
 end
 
 function shieldbutt_action()
-	return macro_cast_skill { "Shieldbutt", "Cannelloni Cannon", "Saucestorm" }
+	return macro_cast_skill { "Shieldbutt", "Cannelloni Cannon", "Saucestorm", fury() >= 1 and "Furious Wallop" or "???" }
 end
 
 function maybe_stun_monster(is_dangerous)
@@ -138,6 +159,9 @@ function maybe_stun_monster(is_dangerous)
 				endif
 				if hasskill Blend
 					cast Blend
+				endif
+				if hasskill Snap Fingers
+					cast Snap Fingers
 				endif]])
 		end
 		if playerclass("Turtle Tamer") then
@@ -239,22 +263,30 @@ end
 function stall_action()
 	return conditional_salve_action("goto stall_do_return") .. [[
   if hasskill Static Shock
-	cast Static Shock
-	goto stall_do_return
+    cast Static Shock
+    goto stall_do_return
   endif
   if hascombatitem seal tooth
-	use seal tooth
-	goto stall_do_return
+    use seal tooth
+    goto stall_do_return
   endif
   if hascombatitem spices
-	use spices
-	goto stall_do_return
+    use spices
+    goto stall_do_return
   endif
   if hasskill suckerpunch
     cast suckerpunch
-	goto stall_do_return
+    goto stall_do_return
   endif
-  cast sing
+  if hasskill sing
+    cast sing
+    goto stall_do_return
+  endif
+  if hascombatitem spectre scepter
+    use spectre scepter
+    goto stall_do_return
+  endif
+  abort Need stalling skill or item
   mark stall_do_return
 
 ]]
@@ -1237,7 +1269,15 @@ sub stall
     cast suckerpunch
 	goto do_return
   endif
-  cast sing
+  if hasskill sing
+    cast sing
+    goto do_return
+  endif
+  if hascombatitem spectre scepter
+    use spectre scepter
+    goto do_return
+  endif
+  abort Need stalling skill or item
   mark do_return
 endsub
 

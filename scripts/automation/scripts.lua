@@ -259,7 +259,7 @@ function get_automation_scripts(cached_stuff)
 
 	-- TODO: set the familiar equipment here
 	function f.want_familiar(famname)
-		if can_change_familiar == false or ascension_script_option("100% familiar run") then
+		if not can_change_familiar() or ascension_script_option("100% familiar run") then
 			return {}
 		end
 		if challenge == "zombie" and famname ~= "Reassembled Blackbird" then
@@ -3570,9 +3570,9 @@ mark m_done
 	end
 
 	function f.make_meatcar()
-		if not have_item("Degrassi Knoll shopping list") and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" then
+		if not have_item("Degrassi Knoll shopping list") and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and not ascensionpath("Avatar of Sneaky Pete") then
 			inform "get shopping list"
-			async_get_page("/guild.php", { place = "paco" })
+			set_result(async_get_page("/guild.php", { place = "paco" }))
 			if have_item("Degrassi Knoll shopping list") then
 				did_action = true
 			else
@@ -4557,4 +4557,8 @@ function vamp_out(targetstat)
 			async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 546, option = x })
 		end
 	end
+end
+
+function can_change_familiar()
+	return not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete")
 end

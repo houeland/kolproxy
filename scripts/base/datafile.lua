@@ -71,6 +71,8 @@ function maybe_get_itemid(name)
 		return nil
 	end
 
+	if name == "Sneaky Pete's basket" then return 7261 end -- TODO: Workaround
+
 	local t = type(name)
 	if t == "number" then
 		return name
