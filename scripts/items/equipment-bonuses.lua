@@ -1,3 +1,4 @@
+-- <TODO>: move to different file
 function add_modifier_bonuses(target, source)
 	if not source then
 		print("WARNING: no source for add_modifier_bonuses()")
@@ -38,55 +39,6 @@ function parse_modifier_bonuses_page(pt)
 	return bonuses
 end
 
-function parse_item_bonuses(item)
-	local descid = item_api_data(item).descid
-	local pt = get_page("/desc_item.php", { whichitem = descid })
-	local bonuses = parse_modifier_bonuses_page(pt)
-	return bonuses
-end
-
---add_processor("/familiar.php", function()
---	session["cached enthroned familiar"] = nil
---end)
-
---function cache_enthroned_familiar()
---	local pt = get_page("/desc_item.php", { whichitem = 239178788 })
---	local line = pt:match([[>Current Occupant.-<br>]])
---	local famtype = line:match("<b>.+, the (.-)</b><br>")
---	if line:match([[<b>Nobody</b>]]) then
---		famtype = "none"
---	end
---	session["cached enthroned familiar"] = famtype
---end
-
---add_automator("all pages", function()
---	if have_equipped_item("Crown of Thrones") and not session["cached enthroned familiar"] then
---		cache_enthroned_familiar()
---	end
---end)
-
---add_processor("/familiar.php", function()
---	session["cached bjornified familiar"] = nil
---end)
-
---function cache_bjornified_familiar()
---	local pt = get_page("/desc_item.php", { whichitem = 697608546 })
---	local line = pt:match([[>Current Occupant.-<br>]])
---	local famtype = line:match("<b>.+, the (.-)</b><br>")
---	if line:match([[<b>Nobody</b>]]) then
---		famtype = "none"
---	end
---	session["cached bjornified familiar"] = famtype
---end
-
---add_automator("all pages", function()
---	if have_equipped_item("Buddy Bjorn") and not session["cached bjornified familiar"] then
---		cache_bjornified_familiar()
---	end
---end)
-
--- TODO: move to different file
-
 function set_cached_modifier_bonuses(source, name, tbl)
 	session["cached "..source.." bonuses: " .. tostring(name)] = tbl
 end
@@ -101,18 +53,24 @@ end
 function clear_cached_modifier_bonuses(source, name)
 	return set_cached_modifier_bonuses(source, name, nil)
 end
+-- </TODO>: move to different file
 
--- TODO: remove/inline
+local function parse_item_bonuses(item)
+	local descid = item_api_data(item).descid
+	local pt = get_page("/desc_item.php", { whichitem = descid })
+	local bonuses = parse_modifier_bonuses_page(pt)
+	return bonuses
+end
 
-function set_cached_item_bonuses(name, tbl)
+local function set_cached_item_bonuses(name, tbl)
 	return set_cached_modifier_bonuses("item", get_itemid(name), tbl)
 end
 
-function get_cached_item_bonuses(name)
+local function get_cached_item_bonuses(name)
 	return get_cached_modifier_bonuses("item", get_itemid(name))
 end
 
-function clear_cached_item_bonuses(name)
+local function clear_cached_item_bonuses(name)
 	return set_cached_modifier_bonuses("item", get_itemid(name), nil)
 end
 
@@ -223,20 +181,6 @@ local function estimate_item_equip_bonuses_uncached(item)
 		itemarray["scratch 'n' sniff sword"] = scratchnsniff_bonuses
 		itemarray["scratch 'n' sniff crossbow"] = scratchnsniff_bonuses
 	end
-
---	if have_equipped_item("Crown of Thrones") then
---		local famtype = session["cached enthroned familiar"]
---		if famtype and famtype ~= "none" then
---			itemarray["Crown of Thrones"] = datafile("enthroned familiars")[famtype]
---		end
---	end
-
---	if have_equipped_item("Buddy Bjorn") then
---		local famtype = session["cached bjornified familiar"]
---		if famtype and famtype ~= "none" then
---			itemarray["Buddy Bjorn"] = datafile("enthroned familiars")[famtype]
---		end
---	end
 
 	local unknown_table = { ["Combat Initiative"] = "?", ["Item Drops from Monsters"] = "?", ["Meat from Monsters"] = "?", ["Monster Level"] = "?", ["Monsters will be more attracted to you"] = "?" }
 	local name = maybe_get_itemname(item)

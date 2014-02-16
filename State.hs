@@ -17,7 +17,7 @@ import Control.Monad
 import Data.IORef
 import Data.List
 import Data.Maybe
-import Data.Time.Clock
+import Data.Time.Clock.POSIX
 import System.IO.Error (isDoesNotExistError)
 import Text.JSON
 import Text.Printf
@@ -367,8 +367,8 @@ mirrorStateIntoDatabase ref = do
 
 download_actionbar ref = do
 	json <- nochangeGetPageRawNoScripts ("/actionbar.php?action=fetch&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") ref
-	t <- getCurrentTime
-	writeFile ("logs/info/actionbar-data-" ++ show t ++ ".json") json
+	t <- getPOSIXTime
+	writeFile ("logs/actionbar/actionbar-data-" ++ show t ++ ".json") json
 	return json
 
 storeSettingsOnServer ref store_reason = when (store_state_in_actionbar ref) $ do

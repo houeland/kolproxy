@@ -20,29 +20,27 @@ local faxbot_category_order = {
 }
 
 local blacklist = {
-	["Kung Fu Fighting"] = true,
-	["Fast as Lightning"] = true,
-	["Expert Timing"] = true,
-	["Gaze of the Trickster God"] = true,
+	["buff: Kung Fu Fighting"] = true,
+	["buff: Fast as Lightning"] = true,
+	["buff: Expert Timing"] = true,
+	["buff: Gaze of the Trickster God"] = true,
 	["buff: Overconfident"] = true,
-	["Iron Palms"] = true,
-	["Missing Kidney"] = true,
+	["buff: Iron Palms"] = true,
+	["buff: Missing Kidney"] = true,
 
-	["A Little Bit Evil (Seal Clubber)"] = true,
-	["A Little Bit Evil (Turtle Tamer)"] = true,
-	["A Little Bit Evil (Pastamancer)"] = true,
-	["A Little Bit Evil (Sauceror)"] = true,
-	["A Little Bit Evil (Disco Bandit)"] = true,
-	["A Little Bit Evil (Accordion Thief)"] = true,
-	["Buy! Sell! Buy! Sell!"] = true,
+	["buff: A Little Bit Evil (Seal Clubber)"] = true,
+	["buff: A Little Bit Evil (Turtle Tamer)"] = true,
+	["buff: A Little Bit Evil (Pastamancer)"] = true,
+	["buff: A Little Bit Evil (Sauceror)"] = true,
+	["buff: A Little Bit Evil (Disco Bandit)"] = true,
+	["buff: A Little Bit Evil (Accordion Thief)"] = true,
+	["buff: Buy! Sell! Buy! Sell!"] = true,
 
 	[""] = true,
 	["especially homoerotic frat-paddle"] = true,
 
 	["bonuses: jalape&ntilde;o slices"] = true,
 	["bonuses: frosty halo"] = true,
-
-	["recast buff warning: Overconfident"] = true,
 
 	["effect: Loaded Forwarbear"] = true,
 }
@@ -246,12 +244,23 @@ function parse_buffs()
 		section = l:match([[^# (.*) section of modifiers.txt]]) or section
 		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
 		local name2 = l:match([[^# ([^	:]+)]])
-		if section == "Status Effects" and name and bonuslist and not blacklist[name] and not blacklist["buff: " .. name] and not name2 then
+		if section == "Status Effects" and name and bonuslist and not blacklist["buff: " .. name] and not name2 then
 			buffs[name] = { bonuses = parse_mafia_bonuslist(bonuslist) }
-		elseif section == "Status Effects" and name2 and not blacklist[name2] and not buffs[name2] then
+		elseif section == "Status Effects" and name2 and not blacklist["buff: " .. name2] and not buffs[name2] then
 			buffs[name2] = {}
 		end
 	end
+
+	for l in io.lines("cache/files/statuseffects.txt") do
+		l = remove_line_junk(l)
+		local tbl = split_tabbed_line(l)
+		local buffname, usecmd = tbl[2], tbl[5]
+		if buffname and not buffs[buffname] and not blacklist["buff: " .. buffname] then
+			softwarn("missing buff", buffname)
+			buffs[buffname] = {}
+		end
+	end
+
 	return buffs
 end
 
@@ -274,9 +283,9 @@ function parse_passives()
 		section = l:match([[^# (.*) section of modifiers.txt]]) or section
 		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
 		local name2 = l:match([[^# ([^	:]+)]])
-		if section == "Passive Skills" and name and bonuslist and not blacklist[name] and not blacklist["buff: " .. name] and not name2 then
+		if section == "Passive Skills" and name and bonuslist and not blacklist["buff: " .. name] and not name2 then
 			passives[name] = { bonuses = parse_mafia_bonuslist(bonuslist) }
-		elseif section == "Passive Skills" and name2 and not blacklist[name2] and not passives[name2] then
+		elseif section == "Passive Skills" and name2 and not blacklist["buff: " .. name2] and not passives[name2] then
 			passives[name2] = {}
 		end
 	end
@@ -362,7 +371,7 @@ function parse_buff_recast_skills(skills)
 		local tbl = split_tabbed_line(l)
 		local buffname, usecmd = tbl[2], tbl[5]
 		local castname = (usecmd or ""):match("^cast 1 ([^|]+)")
-		if buffname and castname and not blacklist[buffname] then
+		if buffname and castname and not blacklist["buff: " .. buffname] then
 			buff_recast_skills[buffname] = castname
 		end
 	end

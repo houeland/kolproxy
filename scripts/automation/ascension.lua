@@ -4119,9 +4119,9 @@ endif
 				else
 					if not have_item("pumpkin") and not have_item("pumpkin bomb") then
 						script.bonus_target { "combat" }
-						pull_in_scboris("unbearable light")
 						local macro = make_yellowray_macro("War")
 						if not script.have_familiar("He-Boulder") then
+							pull_in_softcore("unbearable light")
 							macro = "use unbearable light"
 						end
 						script.go("yellow raying frat house", 134, macro, {
@@ -4129,7 +4129,7 @@ endif
 							["Fratacombs"] = "Wander this way",
 							["One Less Room Than In That Movie"] = "Officers' Lounge",
 						}, {}, "He-Boulder", 20, { equipment = { hat = "filthy knitted dread sack", pants = "filthy corduroys" } })
-						did_action = have_frat_war_outfit() or (did_action and have_item("unbearable light"))
+						did_action = have_frat_war_outfit()
 					else
 						stop "TODO: Get frat war outfit [not automated when it's day 2]"
 					end
