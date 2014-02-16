@@ -402,6 +402,8 @@ function setup_functions()
 		function clancy_wantsattention() return status().clancy_wantsattention end
 
 		function horde_size() return tonumber(status().horde) end
+		function petelove() return tonumber(status().petelove) or 0 end -- Not automatically up-to-date
+		function petehate() return tonumber(status().petehate) or 0 end
 
 		function raw_retrieve_skills()
 			if locked() then

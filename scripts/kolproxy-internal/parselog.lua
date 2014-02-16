@@ -290,6 +290,20 @@ for _, xidx in ipairs(tbl) do
 				xtbl.encounter_source = "Reanimated Reanimator"
 			end
 		end
+
+		if x.pagetext:contains(">There once was a bleary-eyed cyclops<") then
+			xtbl.semirare = true
+		end
+		for _, sx in ipairs(datafile("semirares")) do
+			if xtbl.title == sx then
+				if xtbl.new_fight and not xtbl.encounter_source then
+					xtbl.semirare = true
+				elseif not x.retrievedurl:contains("fight.php") then
+					xtbl.semirare = true
+				end
+			end
+		end
+
 		if xtbl.title or xtbl.pulls or xtbl.gained_effects or xtbl.lost_effects or xtbl.gained_effects or xtbl.lost_effects or xtbl.new_runstate then
 			if xtbl.title then
 				print(xtbl.statusafter.turnsthisrun, xtbl.title, xtbl.zonename, x.idx)

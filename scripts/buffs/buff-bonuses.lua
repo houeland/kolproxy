@@ -1,3 +1,23 @@
+function parse_buff_bonuses(buffname)
+	local descid = nil
+	for a, b in pairs(status().effects) do
+		if b[1] == buffname then
+			descid = a
+		end
+	end
+	local pt = get_page("/desc_effect.php", { whicheffect = descid })
+	local bonuses = parse_modifier_bonuses_page(pt)
+	return bonuses
+end
+
+add_automator("all pages", function()
+	for buffname, _ in pairs(buffslist()) do
+		if not datafile("buffs")[buffname] and not get_cached_modifier_bonuses("buff", buffname) then
+			ensure_cached_modifier_bonuses("buff", buffname, parse_buff_bonuses)
+		end
+	end
+end)
+
 function estimate_buff_bonuses(buffname)
 	local buffarray = {
 		["Sole Soul"] = { ["Item Drops from Monsters"] = math.min(buffturns("Sole Soul"), 300) },
@@ -30,7 +50,8 @@ function estimate_buff_bonuses(buffname)
 		return make_bonuses_table(datafile("buffs")[buffname].bonuses or {})
 	else
 		-- unknown
-		return make_bonuses_table {}
+		local unknown_table = { ["Combat Initiative"] = "?", ["Item Drops from Monsters"] = "?", ["Meat from Monsters"] = "?", ["Monster Level"] = "?", ["Monsters will be more attracted to you"] = "?" }
+		return make_bonuses_table(unknown_table) + make_bonuses_table(get_cached_modifier_bonuses("buff", buffname) or {})
 	end
 end
 

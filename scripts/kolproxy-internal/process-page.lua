@@ -60,6 +60,7 @@ end)
 
 log_time_interval("process:check semirare and skills", function()
 do
+	-- TODO: Move to separate file
 	local function matches(x)
 		if newly_started_fight and encounter_source == "adventure" and monstername(x) then
 			return true

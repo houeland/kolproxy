@@ -115,6 +115,17 @@ function get_companion_display()
 	return string.format("Companion: %s (%s)", name, bonus)
 end
 
+function get_motorbike_display()
+	local lovehate = {}
+	if petelove() > 1 then
+		table.insert(lovehate, tostring(petelove()) .. " love")
+	end
+	if petehate() > 1 then
+		table.insert(lovehate, tostring(petelove()) .. " hate")
+	end
+	return [[<a target=mainpane href=main.php?action=motorcycle><img src=http://images.kingdomofloathing.com/itemimages/motorbike.gif width=30 height=30 border=0 alt="Your Motorcycle" title="Your Motorcycle"></a><br>]] .. table.concat(lovehate, ", ") .. "<br>"
+end
+
 local function kolproxy_custom_charpane_mode()
 	if tonumber(api_flag_config().compactchar) ~= 0 then
 		return "compact"
@@ -759,6 +770,8 @@ function compact_charpane_familiar_lines(lines, fams)
 		table.insert(lines, [[<center>]] .. get_clancy_display() .. [[</center>]])
 	elseif ascensionpath("Avatar of Jarlsberg") then
 		table.insert(lines, [[<center>]] .. get_companion_display() .. [[</center>]])
+	elseif ascensionpath("Avatar of Sneaky Pete") then
+		table.insert(lines, [[<center>]] .. get_motorbike_display() .. [[</center>]])
 	else
 		table.insert(lines, [[<center><a href="familiar.php" target="mainpane">No familiar</a></center>]])
 	end
@@ -775,6 +788,8 @@ function full_charpane_familiar_lines(lines, fams)
 		table.insert(lines, [[<center>]] .. get_clancy_display() .. [[</center>]])
 	elseif ascensionpath("Avatar of Jarlsberg") then
 		table.insert(lines, [[<center>]] .. get_companion_display() .. [[</center>]])
+	elseif ascensionpath("Avatar of Sneaky Pete") then
+		table.insert(lines, [[<center>]] .. get_motorbike_display() .. [[</center>]])
 	else
 		table.insert(lines, [[<center><a href="familiar.php" target="mainpane">No familiar</a></center>]])
 	end

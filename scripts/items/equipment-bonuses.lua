@@ -53,9 +53,16 @@ end
 function clear_cached_modifier_bonuses(source, name)
 	return set_cached_modifier_bonuses(source, name, nil)
 end
+
+function ensure_cached_modifier_bonuses(source, name, f)
+	if not get_cached_modifier_bonuses(source, name) then
+		set_cached_modifier_bonuses(source, name, f(name))
+	end
+end
+
 -- </TODO>: move to different file
 
-local function parse_item_bonuses(item)
+function parse_item_bonuses(item)
 	local descid = item_api_data(item).descid
 	local pt = get_page("/desc_item.php", { whichitem = descid })
 	local bonuses = parse_modifier_bonuses_page(pt)
@@ -72,6 +79,10 @@ end
 
 local function clear_cached_item_bonuses(name)
 	return set_cached_modifier_bonuses("item", get_itemid(name), nil)
+end
+
+local function ensure_cached_item_bonuses(item)
+	return ensure_cached_modifier_bonuses("item", get_itemid(item), parse_item_bonuses)
 end
 
 add_processor("/fight.php", function()
@@ -122,12 +133,6 @@ local items_to_cache = {
 	["Crown of Thrones"] = true,
 	["Buddy Bjorn"] = true,
 }
-
-local function ensure_cached_item_bonuses(item)
-	if not get_cached_item_bonuses(item) then
-		set_cached_item_bonuses(item, parse_item_bonuses(item))
-	end
-end
 
 add_automator("all pages", function()
 	for itemname, _ in pairs(items_to_cache) do

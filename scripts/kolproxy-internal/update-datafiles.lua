@@ -234,7 +234,8 @@ function parse_buffs()
 	local buffs = {}
 	buffs["A Little Bit Evil"] = {}
 	buffs["Buy!  Sell!  Buy!  Sell!"] = {}
-	buffs["Everything Looks Yellow"] = {}
+	buffs["Bored With Explosions"] = {}
+	buffs["Everything Looks Yellow"] = {} -- TODO: remove, no longer needed
 	buffs["Everything Looks Red"] = {}
 	buffs["Everything Looks Blue"] = {}
 
@@ -270,6 +271,8 @@ function verify_buffs(data)
 		["Peeled Eyeballs"] = { bonuses = { ["Stats Per Fight"] = -1, ["Meat from Monsters"] = -20, ["Item Drops from Monsters"] = 15 } },
 		["On the Trail"] = {},
 		["Aloysius' Antiphon of Aptitude"] = { bonuses = { ["Muscle Stats Per Fight"] = 1, ["Mysticality Stats Per Fight"] = 1, ["Moxie Stats Per Fight"] = 1 } },
+		["Everything Looks Yellow"] = {},
+		["Buy!  Sell!  Buy!  Sell!"] = {},
 	}
 	return verify_data_fits(correct_data, data)
 end
