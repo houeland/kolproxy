@@ -283,7 +283,7 @@ runKolproxy = (do
 			createDirectoryIfMissing True "logs/scripts"
 			createDirectoryIfMissing True "logs/info"
 			createDirectoryIfMissing True "logs/parsed"
-			createDirectoryIfMissing True "logs/actionbar"
+			createDirectoryIfMissing True "logs/api"
 			createDirectoryIfMissing True "scripts/custom-autoload"
 		else do
 			putWarningStrLn $ "Trying to start without required files in the \"scripts\" directory."

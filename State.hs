@@ -368,7 +368,7 @@ mirrorStateIntoDatabase ref = do
 download_actionbar ref = do
 	json <- nochangeGetPageRawNoScripts ("/actionbar.php?action=fetch&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") ref
 	t <- getPOSIXTime
-	writeFile ("logs/actionbar/actionbar-data-" ++ show t ++ ".json") json
+	writeFile ("logs/api/actionbar-data-" ++ show t ++ ".json") json
 	return json
 
 storeSettingsOnServer ref store_reason = when (store_state_in_actionbar ref) $ do

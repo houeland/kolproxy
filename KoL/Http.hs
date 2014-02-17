@@ -13,6 +13,7 @@ import Control.Monad
 import Data.IORef
 import Data.List (intercalate)
 import Data.Time
+import Data.Time.Clock.POSIX
 import Network.URI
 import Text.JSON
 import qualified Data.ByteString.Char8
@@ -96,7 +97,8 @@ load_api_status_to_mv ref mv apixf = do
 				case decodeStrict x of
 					Ok jsobj -> return jsobj
 					Error err -> do
-						writeFile "DEBUG-invalid-api-result.json" x
+						t <- getPOSIXTime
+						writeFile ("logs/api/invalid-api-result-" ++ show t ++ ".json") x
 						throwIO $ ApiPageException err
 			"/login.php" -> throwIO $ NotLoggedInException
 			"/maint.php" -> throwIO $ NotLoggedInException
