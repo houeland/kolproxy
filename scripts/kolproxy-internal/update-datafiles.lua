@@ -23,10 +23,6 @@ local blacklist = {
 	["buff: Kung Fu Fighting"] = true,
 	["buff: Fast as Lightning"] = true,
 	["buff: Expert Timing"] = true,
-	["buff: Gaze of the Trickster God"] = true,
-	["buff: Overconfident"] = true,
-	["buff: Iron Palms"] = true,
-	["buff: Missing Kidney"] = true,
 
 	["buff: A Little Bit Evil (Seal Clubber)"] = true,
 	["buff: A Little Bit Evil (Turtle Tamer)"] = true,

@@ -121,7 +121,7 @@ function get_motorbike_display()
 		table.insert(lovehate, tostring(petelove()) .. " love")
 	end
 	if petehate() > 1 then
-		table.insert(lovehate, tostring(petelove()) .. " hate")
+		table.insert(lovehate, tostring(petehate()) .. " hate")
 	end
 	return [[<a target=mainpane href=main.php?action=motorcycle><img src=http://images.kingdomofloathing.com/itemimages/motorbike.gif width=30 height=30 border=0 alt="Your Motorcycle" title="Your Motorcycle"></a><br>]] .. table.concat(lovehate, ", ") .. "<br>"
 end

@@ -18,9 +18,5 @@ function estimate_current_intrinsic_bonuses()
 		end
 	end
 
-	if have_intrinsic("Overconfident") then
-		add_modifier_bonuses(bonuses, { ["Monster Level"] = 30 })
-	end
-
 	return bonuses
 end

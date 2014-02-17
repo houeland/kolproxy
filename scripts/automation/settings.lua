@@ -171,6 +171,7 @@ function get_ascension_automation_settings(want_bonus)
 				"Grateful Undead T-shirt",
 				"punk rock jacket",
 				"souvenir ski t-shirt",
+				"harem girl t-shirt",
 				"ASCII shirt",
 				"Knob Goblin elite shirt",
 				"eXtreme Bi-Polar Fleece Vest",
