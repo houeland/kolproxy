@@ -91,6 +91,8 @@ add_charpane_line(function()
 	local adjusted_init = initial_init - ml_init_penalty
 	local meat = bonuses["Meat from Monsters"]
 
+	local plusmainstat = bonuses[mainstat_type() .. " Stats Per Fight"] + bonuses["Stats Per Fight"] / 2 + bonuses["Monster Level"] / 8
+
 	local itemextras = {
 		{ bonus = "Food Drops from Monsters", suffix = "food" },
 		{ bonus = "Item Drops from Monsters (Dreadsylvania only)", suffix = "dread" },
@@ -130,6 +132,7 @@ add_charpane_line(function()
 		{ normalname = "ML", compactname = "ML", value = string.format("%+d", ml) .. uncertaintystr("Monster Level"), link = modifier_maximizer_href { pwd = session.pwd, whichbonus = "Monster Level" }, link_name_only = true },
 		{ normalname = "Initiative", compactname = "Init", value = string.format("%+d%%", adjusted_init) .. uncertaintystr("Combat Initiative") .. initbonusstr, tooltip = string.format("%+d%% initiative - %d%% ML penalty = %+d%% combined", initial_init, ml_init_penalty, adjusted_init), link = modifier_maximizer_href { pwd = session.pwd, whichbonus = "Combat Initiative" }, link_name_only = true },
 		{ normalname = "Meat drops", compactname = "Meat", value = string.format("%+.1f%%", floor_to_places(meat, 1)) .. uncertaintystr("Meat from Monsters"), link = modifier_maximizer_href { pwd = session.pwd, whichbonus = "Meat from Monsters" }, link_name_only = true },
+		{ normalname = "+" .. mainstat_type() .. "/fight", compactname = "+" .. mainstat_type(), value = floor_to_places(plusmainstat, 1) .. uncertaintystr(mainstat_type() .. " Stats Per Fight") },
 	}
 end)
 
