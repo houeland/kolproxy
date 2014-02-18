@@ -226,7 +226,14 @@ end
 noodles_action = maybe_stun_monster
 
 function conditional_salve_action(extra)
-	return [[
+	if not have_skill("Saucy Salve") then
+		return [[
+
+
+
+]]
+	else
+		return [[
 
 if hppercentbelow 75
   cast Saucy Salve
@@ -235,6 +242,7 @@ if hppercentbelow 75
 
 endif
 ]]
+	end
 end
 
 function stasis_action()

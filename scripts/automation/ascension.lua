@@ -454,14 +454,6 @@ endif
 			end
 		end
 	end
-	if not have_skill("Saucy Salve") then
-		conditional_salve_action = function() return [[
-
-
-
-]]
-		end
-	end
 
 	if not cached_stuff.gotten_guild_challenge then
 		async_get_page("/guild.php", { place = "challenge" })
@@ -1343,6 +1335,111 @@ endif
 						did_action = true
 					else
 						critical "Tried to learn Jarlsberg skills"
+					end
+				end
+			end
+		}
+	}
+
+	add_task {
+		when = ascensionpath("Avatar of Sneaky Pete") and cached_stuff.trained_sneaky_pete_skills_level ~= level(),
+		task = {
+			message = "train sneaky pete skill",
+			nobuffing = true,
+			action = function()
+				local function get_available_points()
+					local petept = get_page("/da.php", { place = "gate3" })
+					return tonumber(petept:match("<b>([0-9]*)</b> skill point")) or 0
+				end
+				local points = get_available_points()
+				if points <= 0 then
+					cached_stuff.trained_sneaky_pete_skills_level = level()
+					did_action = true
+				else
+					if ascension_script_option("train skills manually") then
+						stop "STOPPED: Ascension script option set to train skills manually"
+					end
+					local sneaky_pete_learn_order_softcore = {
+						{ "Rev Engine", 2 },
+						{ "Born Showman", 2 },
+						{ "Pop Wheelie", 2 },
+						{ "Rowdy Drinker", 2 },
+						{ "Peel Out", 2 },
+						{ "Easy Riding", 2 },
+						{ "Insult", 3 },
+						{ "Live Fast", 3 },
+						{ "Incite Riot", 3 },
+						{ "Jump Shark", 3 },
+						{ "Animal Magnetism", 3 },
+						{ "Smoke Break", 3 },
+						{ "Hard Drinker", 3 },
+						{ "Unrepentant Thief", 3 },
+						{ "Brood", 3 },
+						{ "Catchphrase", 1 },
+						{ "Mixologist", 1 },
+						{ "Throw Party", 1 },
+						{ "Fix Jukebox", 1 },
+						{ "Snap Fingers", 1 },
+						{ "Shake It Off", 1 },
+						{ "Check Hair", 1 },
+						{ "Cocktail Magic", 1 },
+						{ "Make Friends", 1 },
+						{ "Natural Dancer", 1 },
+						{ "Check Mirror", 2 },
+						{ "Riding Tall", 2 },
+						{ "Biker Swagger", 2 },
+						{ "Flash Headlight", 2 },
+						{ "Walk Away From Explosion", 3 },
+					}
+					local sneaky_pete_learn_order_hardcore = {
+						{ "Rev Engine", 2 },
+						{ "Catchphrase", 1 },
+						{ "Mixologist", 1 },
+						{ "Throw Party", 1 },
+						{ "Fix Jukebox", 1 },
+						{ "Born Showman", 2 },
+						{ "Pop Wheelie", 2 },
+						{ "Rowdy Drinker", 2 },
+						{ "Peel Out", 2 },
+						{ "Easy Riding", 2 },
+						{ "Snap Fingers", 1 },
+						{ "Shake It Off", 1 },
+						{ "Check Hair", 1 },
+						{ "Cocktail Magic", 1 },
+						{ "Make Friends", 1 },
+						{ "Natural Dancer", 1 },
+						{ "Insult", 3 },
+						{ "Live Fast", 3 },
+						{ "Incite Riot", 3 },
+						{ "Jump Shark", 3 },
+						{ "Animal Magnetism", 3 },
+						{ "Smoke Break", 3 },
+						{ "Hard Drinker", 3 },
+						{ "Unrepentant Thief", 3 },
+						{ "Brood", 3 },
+						{ "Check Mirror", 2 },
+						{ "Riding Tall", 2 },
+						{ "Biker Swagger", 2 },
+						{ "Flash Headlight", 2 },
+						{ "Walk Away From Explosion", 3 },
+					}
+					for _, x in ipairs(ascensionstatus("Hardcore") and sneaky_pete_learn_order_hardcore or sneaky_pete_learn_order_softcore) do
+						if not have_skill(x[1]) then
+							softcore_stoppable_action("Training Sneaky Pete skill: " .. tostring(x[1]))
+							print("  training " .. x[1])
+							post_page("/choice.php", { option = x[2], whichchoice = 867, pwd = session.pwd })
+							if have_skill(x[1]) then
+								did_action = true
+								break
+							else
+								critical("Failed to train Sneaky Pete skill: " .. x[1])
+							end
+						end
+					end
+					if get_available_points() < points then
+						did_action = true
+					else
+						critical "Tried to learn Sneaky Pete skills"
 					end
 				end
 			end
@@ -4882,7 +4979,7 @@ local ascension_script_options_tbl = {
 	["manual castle quest"] = { yes = "stop and do manually", no = "automate" },
 	["eat manually"] = { yes = "eat manually", no = "automate consumption" },
 	["ignore automatic pulls"] = { yes = "only pull softcore items manually", no = "automate some pulls", when = function() return not ascensionstatus("Hardcore") end },
-	["train skills manually"] = { yes = "train manually", no = "automate training", when = function() return ascensionpath("Avatar of Jarlsberg") end },
+	["train skills manually"] = { yes = "train manually", no = "automate training", when = function() return ascensionpath("Avatar of Jarlsberg") or ascensionpath("Avatar of Sneaky Pete") end },
 	["100% familiar run"] = { yes = "don't change familiar", no = "automate familiar choice" },
 	["overdrink with nightcap"] = { yes = "overdrink automatically", no = "don't automate" },
 }
