@@ -4562,3 +4562,8 @@ end
 function can_change_familiar()
 	return not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete")
 end
+
+function check_buying_from_knob_dispensary()
+	local pt = get_page("/submitnewchat.php", { graf = "/buy Knob Goblin seltzer", pwd = session.pwd })
+	return pt:contains("whichstore=k")
+end

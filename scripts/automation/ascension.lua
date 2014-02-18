@@ -2465,8 +2465,8 @@ endif
 			can_wear_weapons() and
 			(can_disguise_as_guard() or (not quest("The Goblin Who Wouldn't Be King") and not challenge)),
 		task = function()
-			local pt = get_page("/cobbsknob.php", { action = "dispensary" })
-			if pt:contains("FARQUAR") then
+			local can_buy = check_buying_from_knob_dispensary()
+			if can_buy then
 				cached_stuff.learned_lab_password = true
 				return {
 					message = "already learned knob lab password",
