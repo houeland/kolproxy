@@ -460,6 +460,10 @@ endif
 		cached_stuff.gotten_guild_challenge = true
 	end
 
+	if cached_stuff.kgs_available == nil then
+		cached_stuff.kgs_available = check_buying_from_knob_dispensary()
+	end
+
 	local script = get_automation_scripts(cached_stuff)
 	local tasks = get_automation_tasks(script, cached_stuff)
 
@@ -567,7 +571,6 @@ endif
 		DD_keys = 100
 	end
 
-	kgs_available = cached_stuff.learned_lab_password and have_item("Cobb's Knob lab key")
 	mmj_available = cached_stuff.mox_guild_is_open and (classid() == 3 or classid() == 4 or (classid() == 6 and level() >= 9)) -- TODO: fix
 
 	script.bonus_target {}
@@ -1396,13 +1399,13 @@ endif
 						{ "Catchphrase", 1 },
 						{ "Mixologist", 1 },
 						{ "Throw Party", 1 },
-						{ "Fix Jukebox", 1 },
 						{ "Born Showman", 2 },
 						{ "Pop Wheelie", 2 },
 						{ "Rowdy Drinker", 2 },
 						{ "Peel Out", 2 },
-						{ "Easy Riding", 2 },
+						{ "Fix Jukebox", 1 },
 						{ "Snap Fingers", 1 },
+						{ "Easy Riding", 2 },
 						{ "Shake It Off", 1 },
 						{ "Check Hair", 1 },
 						{ "Cocktail Magic", 1 },
@@ -2556,35 +2559,18 @@ endif
 	}
 
 	add_task {
-		when = not cached_stuff.learned_lab_password and
-			(can_disguise_as_guard() or not cached_stuff.failed_to_learn_lab_password) and
-			have_item("Cobb's Knob lab key") and
-			can_wear_weapons() and
-			(can_disguise_as_guard() or (not quest("The Goblin Who Wouldn't Be King") and not challenge)),
-		task = function()
-			local can_buy = check_buying_from_knob_dispensary()
-			if can_buy then
-				cached_stuff.learned_lab_password = true
-				return {
-					message = "already learned knob lab password",
-					nobuffing = true,
-					action = function() did_action = true end,
-				}
-			elseif can_disguise_as_guard() then
-				return {
-					message = "learn knob lab password",
-					action = adventure { zoneid = 257 },
-					equipment = { hat = "Knob Goblin elite helm", weapon = "Knob Goblin elite polearm", pants = "Knob Goblin elite pants" },
-				}
-			else
-				cached_stuff.failed_to_learn_lab_password = true
-				return {
-					message = "cannot learn knob lab password",
-					nobuffing = true,
-					action = function() did_action = true end,
-				}
+		when = have_item("Cobb's Knob lab key") and
+			not cached_stuff.kgs_available and
+			can_disguise_as_guard(),
+		task = {
+			message = "learn knob lab password",
+			action = adventure { zoneid = 257 },
+			equipment = { hat = "Knob Goblin elite helm", weapon = "Knob Goblin elite polearm", pants = "Knob Goblin elite pants" },
+			after_action = function()
+				cached_stuff.kgs_available = nil
+				did_action = get_result():contains("FARQUAR")
 			end
-		end
+		}
 	}
 
 	add_task {
@@ -2974,7 +2960,7 @@ endwhile
 
 	add_task {
 		when = (playerclass("Seal Clubber") or playerclass("Turtle Tamer")) and
-			not kgs_available and
+			cached_stuff.kgs_available == false and
 			not have_guard_outfit() and
 			can_wear_weapons(),
 		task = {
@@ -3073,46 +3059,6 @@ endwhile
 			ensure_yellow_ray() end,
 		f = function()
 			script.go("yellow raying harem girl", 259, make_yellowray_macro("harem girl"), {}, {}, "He-Boulder", 15)
-		end,
-	}
-
-	-- TODO: find a better way to check this? redo it
-	add_task {
-		prereq = not have_item("Knob Goblin seltzer") and
-			not have_item("Knob Goblin pet-buffing spray") and
-			can_disguise_as_guard(),
-		f = function()
-			if not have_item("Knob Goblin pet-buffing spray") then
-				inform "buying pet-buffing spray"
-				if meat() < 250 then
-					stop "Can't afford pet-buffing spray"
-				end
-				buy_item("Knob Goblin pet-buffing spray", "k", 1)
-				if have_item("Knob Goblin pet-buffing spray") then
-					inform "bought pet-buffing spray"
-					did_action = true
-					return
-				end
-			end
-			if not have_item("Knob Goblin seltzer") then
-				inform "buying seltzer"
-				if meat() < 80 then
-					stop "Can't afford seltzer"
-				end
-				result, resulturl = buy_item("Knob Goblin seltzer", "k", 1)()
-				if have_item("Knob Goblin seltzer") then
-					inform "bought seltzer"
-					did_action = true
-				elseif get_result():contains("You don't belong in this store.") then
-					script.go("get dispensary password", 257, nil, {}, {}, "Slimeling", 0, { equipment = { hat = "Knob Goblin elite helm", weapon = "Knob Goblin elite polearm", pants = "Knob Goblin elite pants" } })
-					if get_result():match("FARQUAR") then
-						did_action = true
-					end
-					if did_action then
-						script.wear {}
-					end
-				end
-			end
 		end,
 	}
 

@@ -646,7 +646,7 @@ function get_automation_scripts(cached_stuff)
 					end
 				end
 				stop "Out of MP in challenge path"
-			elseif level() >= 8 then
+			elseif level() >= 8 and not (ascensionpath("Avatar of Sneaky Pete") and meat() >= 7500) then
 				stop "Trying to use galaktik to restore mp at level 8+"
 			elseif need > 50 then
 				stop "Trying to use galaktik to restore more than 50 MP"

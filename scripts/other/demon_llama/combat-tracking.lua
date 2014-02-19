@@ -62,13 +62,14 @@ local whiteList = {
 	mainPattern..[[points of automatic, systematic, hydromatic damage]], -- grease gun
 	mainPattern..[[points of frozen, sharp damage]], -- ice sickle
 	mainPattern..[[to the foul demon]], -- sing against AT nemesis
+	[[missing]]..mainPattern..[[hit points]], -- headbutt
 }
 
 local function getCombatDamage(fightBodyText)
 	filteredText = stripOutBlackList(fightBodyText)
-		
+
 	local total = 0
-	
+
 	for item in table.values(whiteList) do
 		for number in filteredText:gmatch(item) do
 			for num in number:gmatch([[%d+]]) do
@@ -77,13 +78,13 @@ local function getCombatDamage(fightBodyText)
 		end
 		filteredText = filteredText:gsub(item, "", 1)
 	end
-	
+
 	--adding machine
 	if fightBodyText:match([[a wisp of smoke rises from the top of it as it spits a different scroll back out of the slot]]) then
 		total = total + 30
 	end
 
-	return total	
+	return total
 end
 
 add_processor("/fight.php", function()

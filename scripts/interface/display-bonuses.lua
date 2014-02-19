@@ -53,6 +53,7 @@ function estimate_modifier_bonuses()
 	bonuses = bonuses + estimate_current_companion_bonuses()
 	bonuses = bonuses + estimate_current_pastathrall_bonuses()
 --	bonuses = bonuses + estimate_current_moonsign_bonuses()
+	bonuses = bonuses + estimate_current_sneaky_pete_motorcycle_bonuses()
 	bonuses = bonuses + estimate_current_other_bonuses()
 
 	bonuses["Monsters will be more attracted to you (base)"] = bonuses["Monsters will be more attracted to you"]
@@ -61,7 +62,7 @@ function estimate_modifier_bonuses()
 	-- TODO: Separate between combat and underwater combat?
 	bonuses = bonuses + make_bonuses_table { ["Monsters will be more attracted to you"] = estimate_underwater_combat() }
 
-	-- TODO: Estimate as part of item bonuses?
+	-- TODO: Estimate as part of each item's bonuses?
 	if have_equipped_item("Sheila Take a Crossbow") then
 		bonuses = bonuses + make_bonuses_table { ["Combat Initiative"] = bonuses["Smithsness"] * 1 }
 	end

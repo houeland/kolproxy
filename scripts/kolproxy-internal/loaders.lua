@@ -56,6 +56,7 @@ load_file("familiar", "familiars/happy-medium.lua")
 load_file("familiar", "familiars/drops.lua")
 load_file("familiar", "familiars/steam-powered-cheerleader.lua")
 load_file("familiar", "familiars/familiar-bonuses.lua")
+load_file("familiar", "familiars/angry-jung-man.lua")
 
 load_file("zone", "zones/vip-lounge.lua")
 load_file("zone", "zones/dod.lua")
@@ -172,8 +173,9 @@ load_file("chat", "interface/add-log-notes.lua")
 
 load_file("interface", "interface/lua-console.lua")
 
-load_file("other", "paths/jarlsberg.lua")
 load_file("other", "paths/moonsigns.lua")
+load_file("other", "paths/jarlsberg.lua")
+load_file("other", "paths/sneaky-pete.lua")
 
 load_file("zone", "zones/wandering-monsters.lua")
 

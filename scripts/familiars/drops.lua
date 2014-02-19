@@ -15,11 +15,6 @@ local drop_familiars = {
 		short_item_name = "grease",
 		plural = true,
 	},
-	jungman = {
-		message = "Take this, and try to pick up some of the slack, would you?",
-		short_item_name = "jar",
-		max = 1,
-	},
 	kloop = {
 		message = "drops at your feet a small leatherbound book",
 		short_item_name = "folio",
@@ -66,8 +61,7 @@ add_printer("/charpane.php", function()
 	end
 	local item = get_daily_counter(counter_name(familiar, info))
 
-	local max = info.max or 5
-	local compact = item .. " / " .. max
+	local compact = item .. " / " .. 5
 	local normal = compact .. " " .. info.short_item_name
 	if not info.plural then
 		normal = normal .. "s"

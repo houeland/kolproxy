@@ -775,7 +775,7 @@ function parse_recipes()
 			table.remove(tbl, 1)
 			table.sort(tbl)
 			add_recipe(itemname, { type = "cooking", ingredients = tbl })
-		elseif crafttype == "BSTILL" or crafttype == "MSTILL" then
+		elseif crafttype and crafttype:contains("STILL") then
 			add_recipe(itemname, { type = "still", base = tbl[3] })
 		end
 	end
@@ -787,6 +787,7 @@ function verify_recipes(data)
 	local correct_data = {
 		["potion of X-ray vision"] = { { type = "cliparts", clips = { 4, 6, 8 } } },
 		["margarita"] = { { type = "cocktailcrafting", ingredients = { "bottle of tequila", "lemon" } } },
+		["tonic water"] = { { type = "still", base = "soda water" } },
 	}
 	return verify_data_fits(correct_data, data)
 end

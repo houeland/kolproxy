@@ -123,7 +123,8 @@ function get_motorbike_display()
 	if petehate() > 1 then
 		table.insert(lovehate, tostring(petehate()) .. " hate")
 	end
-	return [[<a target=mainpane href=main.php?action=motorcycle><img src=http://images.kingdomofloathing.com/itemimages/motorbike.gif width=30 height=30 border=0 alt="Your Motorcycle" title="Your Motorcycle"></a><br>]] .. table.concat(lovehate, ", ") .. "<br>"
+	local pic = can_upgrade_sneaky_pete_motorcycle() and "motorbike_anim.gif" or "motorbike.gif"
+	return [[<a target=mainpane href=main.php?action=motorcycle><img src=http://images.kingdomofloathing.com/itemimages/]] .. pic .. [[ width=30 height=30 border=0 alt="Your Motorcycle" title="Your Motorcycle"></a><br>]] .. table.concat(lovehate, ", ") .. "<br>"
 end
 
 local function kolproxy_custom_charpane_mode()
