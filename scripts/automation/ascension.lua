@@ -2960,6 +2960,8 @@ endwhile
 
 	add_task {
 		when = (playerclass("Seal Clubber") or playerclass("Turtle Tamer")) and
+			level() < 11 and
+			have_item("Cobb's Knob lab key") and
 			cached_stuff.kgs_available == false and
 			not have_guard_outfit() and
 			can_wear_weapons(),

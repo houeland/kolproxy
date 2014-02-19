@@ -30,7 +30,6 @@ local blacklist = {
 	["buff: A Little Bit Evil (Sauceror)"] = true,
 	["buff: A Little Bit Evil (Disco Bandit)"] = true,
 	["buff: A Little Bit Evil (Accordion Thief)"] = true,
-	["buff: Buy! Sell! Buy! Sell!"] = true,
 
 	[""] = true,
 	["especially homoerotic frat-paddle"] = true,
@@ -219,6 +218,9 @@ local function parse_mafia_bonuslist(bonuslist)
 	for x, y in (", "..bonuslist):gmatch(", ([^,:]+): ([^,]+)") do
 		-- TODO: Do more complicated parsing for expressions
 		if checks[x] then
+			if not tonumber(y) and y:contains("Accordion Appreciation") then
+				y = y:match("%[([0-9]+)%*%(1%+skill%(Accordion Appreciation%)%)]")
+			end
 			bonuses[checks[x]] = tonumber(y)
 		end
 	end
@@ -229,11 +231,7 @@ end
 function parse_buffs()
 	local buffs = {}
 	buffs["A Little Bit Evil"] = {}
-	buffs["Buy!  Sell!  Buy!  Sell!"] = {}
 	buffs["Bored With Explosions"] = {}
-	buffs["Everything Looks Yellow"] = {} -- TODO: remove, no longer needed
-	buffs["Everything Looks Red"] = {}
-	buffs["Everything Looks Blue"] = {}
 
 	local section = nil
 	for l in io.lines("cache/files/modifiers.txt") do
@@ -550,6 +548,8 @@ function verify_items(data)
 		["pygmy concertinette"] = { song_duration = 17 },
 		["ring of conflict"] = { equip_bonuses = { ["Monsters will be more attracted to you"] = -5 }, equip_requirements = { ["You may not equip more than one of these at a time"] = true } },
 		["Juju Mojo Mask"] = { equip_bonuses = { ["Stats Per Fight"] = 2 } },
+		["Shakespeare's Sister's Accordion"] = { equip_bonuses = { ["Smithsness"] = 5 } },
+		["Rock and Roll Legend"] = { equip_bonuses = { ["Moxie"] = 7 } },
 	}
 	return verify_data_fits(correct_data, data)
 end

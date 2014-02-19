@@ -607,7 +607,7 @@ function get_automation_scripts(cached_stuff)
 				else
 					critical "Failed to buy MMJ as lvl 9+ AT"
 				end
-			elseif kgs_available and not have_item("Knob Goblin seltzer") then
+			elseif cached_stuff.kgs_available and not have_item("Knob Goblin seltzer") then
 				buy_item("Knob Goblin seltzer", "k", 5)
 				if have_item("Knob Goblin seltzer") then
 					return f.ensure_mp(amount, true)
@@ -651,6 +651,9 @@ function get_automation_scripts(cached_stuff)
 			elseif need > 50 then
 				stop "Trying to use galaktik to restore more than 50 MP"
 			else
+				if show_spammy_automation_events then
+					print("  restoring " .. tostring(need) .. " MP with galaktik")
+				end
 				post_page("/galaktik.php", { action = "curemp", pwd = get_pwd(), quantity = need })
 				if mp() < amount then
 					stop("Failed to reach " .. amount .. " MP using galaktik")
@@ -981,7 +984,7 @@ function get_automation_scripts(cached_stuff)
 				table.insert(xs, "Salamanderenity")
 			end
 		end
-		if not cached_stuff.learned_lab_password or not have_item("Cobb's Knob lab key") or meat() < 2000 then
+		if not cached_stuff.kgs_available or meat() < 2000 then
 			local function tabledel(t)
 				for x, y in pairs(t) do
 					-- TODO: do more generally?

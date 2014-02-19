@@ -196,10 +196,17 @@ local function estimate_item_equip_bonuses_uncached(item)
 		return make_bonuses_table(get_cached_item_bonuses(name) or unknown_table)
 	elseif itemarray[name] then
 		return make_bonuses_table(itemarray[name])
-	elseif datafile("items")[name] then
-		return make_bonuses_table(datafile("items")[name].equip_bonuses or {})
 	else
-		return make_bonuses_table {}
+		local itemdata = maybe_get_itemdata(name)
+		if itemdata then
+			local bonuses = make_bonuses_table(itemdata.equip_bonuses or {})
+			if itemdata.song_duration and have_skill("Accordion Appreciation") then
+				bonuses = bonuses + bonuses
+			end
+			return bonuses
+		else
+			return make_bonuses_table {}
+		end
 	end
 end
 

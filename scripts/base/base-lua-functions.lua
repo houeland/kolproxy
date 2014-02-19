@@ -250,7 +250,7 @@ function make_plural(v, singular, plural)
 	end
 end
 
-function display_number(n)
+function display_number_8k_2M(n)
 	if n <= 8000 then
 		return tostring(n)
 	elseif n <= 2000000 then
@@ -259,6 +259,36 @@ function display_number(n)
 		return string.format("%.1fM", n / 1000000)
 	end
 end
+
+function display_number_10k_10M(n)
+	if n < 10000 then
+		return tostring(n)
+	elseif n < 10000000 then
+		return string.format("%dk", n / 1000)
+	else
+		return string.format("%dM", n / 1000000)
+	end
+end
+
+function display_number_3figs(n)
+	if n < 1000 then
+		return tostring(n)
+	elseif n < 9995 then
+		return string.format("%.2fk", n / 1000)
+	elseif n < 99950 then
+		return string.format("%.1fk", n / 1000)
+	elseif n < 999500 then
+		return string.format("%.0fk", n / 1000)
+	elseif n < 9995000 then
+		return string.format("%.2fM", n / 1000000)
+	elseif n < 99950000 then
+		return string.format("%.1fM", n / 1000000)
+	else
+		return string.format("%.0fM", n / 1000000)
+	end
+end
+
+display_number = display_number_8k_2M
 
 function display_signed_integer(n)
 	if n < 0 then
