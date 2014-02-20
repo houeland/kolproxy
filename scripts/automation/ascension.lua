@@ -2052,7 +2052,7 @@ endif
 		when = use_new_faxing and not cached_stuff.handled_icy_peak and can_photocopy(),
 		task = function()
 			local mc = get_page("/mclargehuge.php")
-			if mc:contains("cloudypeak.gif") and not have_item("ninja rope") and not have_item("ninja crampons") and not have_item("ninja carabiner") then
+			if not mc:contains("/peak.gif") and not have_item("ninja rope") and not have_item("ninja crampons") and not have_item("ninja carabiner") then
 				if script.get_photocopied_monster() ~= "ninja snowman assassin" then
 					return {
 						message = "get assassin from faxbot",

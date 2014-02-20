@@ -615,7 +615,7 @@ function get_automation_scripts(cached_stuff)
 					critical "Failed to buy knob goblin seltzer (should already be available)"
 				end
 			elseif have_item("your father's MacGuffin diary") and not have_item("black cherry soda") then
-				buy_item("black cherry soda", "l", 5)
+				shop_buyitem({ ["black cherry soda"] = 5 }, "blackmarket")
 				if have_item("black cherry soda") then
 					return f.ensure_mp(amount, true)
 				else
@@ -845,7 +845,7 @@ function get_automation_scripts(cached_stuff)
 		end,
 		["Red Door Syndrome"] = function()
 			if not have_item("can of black paint") then
-				buy_item("can of black paint", "l")
+				shop_buyitem("can of black paint", "blackmarket")
 			end
 			return use_item("can of black paint")
 		end,
@@ -4090,7 +4090,7 @@ endif
 					stop "TODO: Get identification documents in fist"
 				end
 			else
-				buy_item("forged identification documents", "l")
+				shop_buyitem("forged identification documents", "blackmarket")
 				if not have_item("forged identification documents") then
 					critical "Failed to buy identification documents"
 				end
@@ -4162,7 +4162,7 @@ endif
 		if need_black_paint then
 			inform "giving gnasir black paint"
 			if not have_item("can of black paint") then
-				buy_item("can of black paint", "l")
+				shop_buyitem("can of black paint", "blackmarket")
 			end
 			if not have_item("can of black paint") then
 				critical "Failed to buy can of black paint"
