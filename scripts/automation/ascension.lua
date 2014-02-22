@@ -4197,9 +4197,9 @@ endif
 	}
 
 	add_task {
-		prereq = quest("Make War, Not... Oh, Wait") and not have_frat_war_outfit() and challenge == "boris",
+		prereq = quest("Make War, Not... Oh, Wait") and not have_frat_war_outfit() and (challenge == "boris" or ascensionpath("Avatar of Sneaky Pete")),
 		f = function()
-			stop "TODO: Get frat war outfit in boris"
+			stop "TODO: Get frat war outfit"
 		end,
 	}
 

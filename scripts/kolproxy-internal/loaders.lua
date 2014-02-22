@@ -23,6 +23,7 @@ load_file("interface", "interface/compute-net-worth.lua")
 load_file("interface", "interface/outfit-slots.lua")
 load_file("interface", "interface/elemental-resistance.lua")
 load_file("interface", "interface/inventory-diff.lua")
+load_file("interface", "interface/view-ascension-logs.lua")
 
 load_file("item", "items/scary-copying.lua")
 load_file("item", "items/fly-away.lua")

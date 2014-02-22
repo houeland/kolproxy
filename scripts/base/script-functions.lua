@@ -135,6 +135,11 @@ do
 		__raw_add_warning("/cellar.php", function()
 			return f("cellar")
 		end)
+		__raw_add_warning("/place.php", function()
+			if params.action then
+				return f(params.whichplace or "place")
+			end
+		end)
 	end
 
 	local function add_raw_extra_adventure_warning(f)
@@ -147,6 +152,11 @@ do
 		end)
 		__raw_add_extra_warning("/cellar.php", function()
 			return f("cellar")
+		end)
+		__raw_add_extra_warning("/place.php", function()
+			if params.action then
+				return f(params.whichplace or "place")
+			end
 		end)
 	end
 

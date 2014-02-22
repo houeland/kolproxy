@@ -231,7 +231,6 @@ end
 function parse_buffs()
 	local buffs = {}
 	buffs["A Little Bit Evil"] = {}
-	buffs["Bored With Explosions"] = {}
 
 	local section = nil
 	for l in io.lines("cache/files/modifiers.txt") do
@@ -267,6 +266,7 @@ function verify_buffs(data)
 		["Aloysius' Antiphon of Aptitude"] = { bonuses = { ["Muscle Stats Per Fight"] = 1, ["Mysticality Stats Per Fight"] = 1, ["Moxie Stats Per Fight"] = 1 } },
 		["Everything Looks Yellow"] = {},
 		["Buy!  Sell!  Buy!  Sell!"] = {},
+		["Bored With Explosions"] = {},
 	}
 	return verify_data_fits(correct_data, data)
 end

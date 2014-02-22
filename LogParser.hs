@@ -87,7 +87,8 @@ showLogs fn pwd = do
 				(achar, _, _):_ -> "<tr><td>" ++ achar ++ "</td><td>" ++ (intercalate ", " (map desc_asc_link x)) ++ "</td></tr>\n"
 			let grouped = groupBy (\(achar, _, _) (bchar, _, _) -> achar == bchar) ascs
 			let rowtexts = map group_to_row grouped
-			let pt = "<html><body>Click on a log to parse it. Parsing a log takes several minutes, and the format and features are still being developed.<table>\n" ++ (concat rowtexts) ++ "</table></body></html>"
+			let list_parsed_link = "<a href=\"/kolproxy-automation-script?automation-script=view-ascension-logs&pwd=" ++ pwd ++ "\">View uploaded logs</a>"
+			let pt = "<html><body>Click on a log to parse it. Parsing a log takes several minutes, and the format and features are still being developed.<br>" ++ list_parsed_link ++ "<table border=1>\n" ++ (concat rowtexts) ++ "</table></body></html>"
 			return pt
 
 compressFile path = do

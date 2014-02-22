@@ -299,6 +299,7 @@ function get_ascension_automation_settings(want_bonus)
 			"A Light that Never Goes Out",
 			"Ouija Board, Ouija Board",
 			"left bear arm",
+			{ name = "Victor, the Insult Comic Hellhound Puppet", check = function() return want_bonus.monster_level end },
 			"giant clay ashtray",
 			"hot plate",
 			"magical ice cubes",

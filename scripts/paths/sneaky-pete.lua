@@ -15,8 +15,11 @@ add_processor("/choice.php", function()
 	if text:contains(">Upping Your Grade") then
 		in_sneaky_pete_choice = true
 	end
-	if in_sneaky_pete_choice and text:contains(">Go back to the Main Map<") then
+	if in_sneaky_pete_choice and text:contains(">Results:") then
 		in_sneaky_pete_choice = false
+		session["sneaky pete motorcycle check"] = nil
+	end
+	if text:contains("Carry on then.") and session["sneaky pete motorcycle can_upgrade"] then
 		session["sneaky pete motorcycle check"] = nil
 	end
 end)

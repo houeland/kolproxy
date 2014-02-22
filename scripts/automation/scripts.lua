@@ -673,6 +673,9 @@ function get_automation_scripts(cached_stuff)
 			if maxhp() - hp() >= 70 and have_skill("Cannelloni Cocoon") then
 				ensure_mp(20)
 				cast_skillid(3012)
+			elseif maxhp() - hp() >= 70 and have_skill("Shake It Off") then
+				ensure_mp(30)
+				cast_skill("Shake It Off")
 			elseif have_skill("Tongue of the Walrus") then
 				ensure_mp(10)
 				cast_skillid(1010)
@@ -947,6 +950,7 @@ function get_automation_scripts(cached_stuff)
 				table.insert(xs, "Leash of Linguini")
 				table.insert(xs, "Empathy")
 				table.insert(xs, "Singer's Faithful Ocelot")
+				table.insert(xs, "Of Course It Looks Great")
 				if want_bonus.extraplusitems then
 					table.insert(xs, "Heavy Petting")
 					table.insert(xs, "Peeled Eyeballs")
@@ -4041,7 +4045,7 @@ endif
 	function f.find_black_market()
 		use_dancecard()
 		local have_blackbird_parts = (have_item("broken wings") and have_item("sunken eyes")) or have_item("reassembled blackbird")
-		if have_item("black market map") and ((challenge ~= "boris" and challenge ~= "jarlsberg") or have_blackbird_parts) then
+		if have_item("black market map") and (can_change_familiar() or have_blackbird_parts) then
 			inform "locate black market"
 			meatpaste_items("broken wings", "sunken eyes")
 			fam "Reassembled Blackbird"
@@ -4566,7 +4570,17 @@ function can_change_familiar()
 	return not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete")
 end
 
+function have_gelatinous_cubeling_items()
+	return have_item("eleven-foot pole") and have_item("ring of Detect Boring Doors") and have_item("Pick-O-Matic lockpicks")
+end
+
 function check_buying_from_knob_dispensary()
 	local pt = get_page("/submitnewchat.php", { graf = "/buy Knob Goblin seltzer", pwd = session.pwd })
 	return pt:contains("whichstore=k")
 end
+
+function buy_shore_inc_item(item)
+	autoadventure { zoneid = get_zoneid("The Shore, Inc. Travel Agency"), noncombatchoices = { ["Welcome to The Shore, Inc."] = "Check out the gift shop" } }
+	return shop_buyitem(item, "shore")
+end
+

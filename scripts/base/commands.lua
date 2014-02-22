@@ -26,6 +26,10 @@ function buy_item(name, whichstore, amount)
 	return async_get_page("/store.php", { phash = session.pwd, buying = 1, whichitem = get_itemid(name), howmany = amount or 1, whichstore = whichstore, ajax = 1, action = "buyitem" })
 end
 
+function buy_hermit_item(item, quantity)
+	return async_post_page("/hermit.php", { action = "trade", whichitem = get_itemid(item), quantity = quantity or 1 })
+end
+
 function equip_item(name, slot)
 	local itemid = get_itemid(name)
 	print_debug("  equipping", slot, maybe_get_itemname(itemid) or itemid)

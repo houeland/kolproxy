@@ -629,19 +629,6 @@ mark m_done
 	return t
 end
 
-function have_gelatinous_cubeling_items()
-	return have_item("eleven-foot pole") and have_item("ring of Detect Boring Doors") and have_item("Pick-O-Matic lockpicks")
-end
-
-function buy_shore_inc_item(item)
-	autoadventure { zoneid = get_zoneid("The Shore, Inc. Travel Agency"), noncombatchoices = { ["Welcome to The Shore, Inc."] = "Check out the gift shop" } }
-	return shop_buyitem(item, "shore")
-end
-
-function buy_hermit_item(item, quantity)
-	return async_post_page("/hermit.php", { action = "trade", whichitem = get_itemid(item), quantity = quantity or 1 })
-end
-
 function maketask_use_item(item)
 	return {
 		message = "use item: " .. tostring(item),

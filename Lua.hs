@@ -533,6 +533,17 @@ setup_lua_instance level filename setupref = do
 
 		register_function "kolproxycore_decode_uri_query" $ \_ref l -> decode_uri_query l
 
+		register_function "kolproxy_md5" $ \_ref l -> do
+			str <- peekJustString l 1
+			Lua.pushstring l $ get_md5 str
+			return 1
+
+		register_function "kolproxy_list_ascension_logs" $ \_ref l -> do
+			playerid <- peekJustInteger l 1
+			secretkey <- peekJustString l 2
+			Lua.pushstring l =<< postHTTPFileData "http://www.houeland.com/kolproxy/ascension-log" [("action", "list"), ("playerid", show playerid), ("secretkey", secretkey)]
+			return 1
+
 		register_function "simplexmldata_to_table" $ \_ref l -> do
 			xmlstr <- peekJustString l 1
 			let Just xmldoc = parseXMLDoc xmlstr
