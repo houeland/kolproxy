@@ -1,10 +1,41 @@
 -- spooky forest
 
+add_interceptor("/adventure.php", function()
+	if tonumber(params.snarfblat) == get_zoneid("The Spooky Forest") then
+		if session["unlocked hidden temple"] then return end
+		local pt = get_page("/woods.php")
+		session["unlocked hidden temple"] = pt:contains("The Hidden Temple")
+	end
+end)
+
+add_warning {
+	message = "You already have the required items to locate The Hidden Temple. You might want to use your Spooky Temple map instead.",
+	type = "warning",
+	zone = "The Spooky Forest",
+	check = function()
+		return have_item("Spooky Temple map") and have_item("spooky sapling") and have_item("Spooky-Gro fertilizer")
+	end,
+}
+
+add_processor("/choice.php", function()
+	if text:contains("Arboreal Respite") then
+		session["want mosquito larva"] = text:contains("look for that mosquito larva")
+	end
+end)
+
 local function want_spooky_item()
-	if text:contains("look for that mosquito larva") then
+	if session["want mosquito larva"] then
 		return "mosquito larva"
-	-- TODO: How do we know if we've completed the quest, or just haven't done anything? Just print progress instead?
--- 	elseif not have_item("tree-holed coin") and not have_item("Spooky Temple map") then
+	elseif session["unlocked hidden temple"] ~= false then
+		return "?"
+	elseif not have_item("tree-holed coin") and not have_item("Spooky Temple map") then
+		return "tree-holed coin"
+	elseif not have_item("Spooky Temple map") then
+		return "Spooky Temple map"
+	elseif not have_item("Spooky-Gro fertilizer") then
+		return "Spooky-Gro fertilizer"
+	elseif not have_item("spooky sapling") then
+		return "spooky sapling"
 	end
 	return "?"
 end
@@ -18,11 +49,14 @@ add_choice_text("Arboreal Respite", function() -- choice adventure number: 502
 	}
 end)
 
-add_choice_text("Consciousness of a Stream", { -- choice adventure number: 505
-	["March to the marsh"] = "Get mosquito larva or 3 spooky mushrooms",
-	["Squeeze into the cave"] = "Get tree-holed coin and gain 300 meat (first time only)",
-	["Go further upstream"] = "Go to An Interesting Choice (meet a vampire)",
-})
+add_choice_text("Consciousness of a Stream", function() -- choice adventure number: 505
+	local want_item = want_spooky_item()
+	return {
+		["March to the marsh"] = session["want mosquito larva"] and { text = "Get mosquito larva", good_choice = true } or "Get 3 spooky mushrooms",
+		["Squeeze into the cave"] = { text = "Get tree-holed coin and gain 300 meat (first time only)", good_choice = (want_item == "tree-holed coin") },
+		["Go further upstream"] = "Go to An Interesting Choice (meet a vampire)",
+	}
+end)
 
 add_choice_text("The Road Less Traveled", { -- choice adventure number: 503
 	["Follow the ruts"] = "Gain some meat",
@@ -30,11 +64,14 @@ add_choice_text("The Road Less Traveled", { -- choice adventure number: 503
 	["Talk to the hunter"] = { text = "Buy spooky saplings and sell bar skins", good_choice = true },
 })
 
-add_choice_text("Through Thicket and Thinnet", { -- choice adventure number: 506
-	["Follow the even darker path"] = "Get starting items",
-	["Investigate the dense foliage"] = { getitem = "Spooky-Gro fertilizer" },
-	["Follow the coin"] = { getitem = "Spooky Temple map" },
-})
+add_choice_text("Through Thicket and Thinnet", function() -- choice adventure number: 506
+	local want_item = want_spooky_item()
+	return {
+		["Follow the even darker path"] = "Get starting items",
+		["Investigate the dense foliage"] = { getitem = "Spooky-Gro fertilizer", good_choice = (want_item == "Spooky-Gro fertilizer") },
+		["Follow the coin"] = { getitem = "Spooky Temple map", good_choice = true },
+	}
+end)
 
 add_choice_text("O Lith, Mon", { -- choice adventure number: 507
 	["Insert coin to continue"] = { getitem = "Spooky Temple map", good_choice = true },

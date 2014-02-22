@@ -134,6 +134,14 @@ local function automate_hcnp_day(whichday)
 		return ascensionstatus("Aftercore") or have_skill("The Ode to Booze")
 	end
 
+	local function max_petelove()
+		return 30
+	end
+
+	local function max_petehate()
+		return 30
+	end
+
 	challenge = nil
 	if ascensionpath("Way of the Surprising Fist") then
 		challenge = "fist"
@@ -902,6 +910,12 @@ endif
 		stop "Beaten up..."
 	end
 
+	if locked() then
+		stop "Already busy doing something else"
+	end
+
+	sneaky_pete_maybe_update_motorcycle_status()
+
 	arrowed_possible = nil
 	do
 		local remaining = tonumber(day["obtuse angel romantic arrow monsters remaining"])
@@ -1450,6 +1464,34 @@ endif
 	}
 
 	add_task {
+		when = not cached_stuff.used_sneaky_pete_throw_party and
+			ascensionpath("Avatar of Sneaky Pete") and
+			have_skill("Throw Party") and
+			petelove() >= max_petelove(),
+		task = {
+			message = "cast Throw Party",
+			nobuffing = true,
+			action = function()
+				cast_skill("Throw Party")
+				cached_stuff.used_sneaky_pete_throw_party = true
+				did_action = true
+			end
+		}
+	}
+
+	add_task {
+		when = ascensionpath("Avatar of Sneaky Pete") and
+			can_upgrade_sneaky_pete_motorcycle(),
+		task = {
+			message = "upgrade motorcycle",
+			nobuffing = true,
+			action = function()
+				stop "Upgrade your motorcycle!"
+			end
+		}
+	}
+
+	add_task {
 		when = challenge == "boris" and ascensionstatus() ~= "Hardcore" and meat() >= 3000 and buffturns("Go Get 'Em, Tiger!") < 10,
 		task = {
 			message = "use ben-gal",
@@ -1704,7 +1746,7 @@ endif
 	if can_wear_weapons() and not have_item("Jarlsberg's pan (Cosmic portal mode)") and not have_item("Jarlsberg's pan") then
 		want_softcore_item("Operation Patriot Shield")
 	end
-	if ascensionpath("Avatar of Jarlsberg") then
+	if ascensionpath("Avatar of Jarlsberg") or ascensionpath("Avatar of Sneaky Pete") then
 		want_softcore_item("ring of conflict")
 	end
 
@@ -1966,8 +2008,8 @@ endif
 		when = level() >= 6 and
 			(level() < 13 or quest("Make War, Not... Oh, Wait") or quest("The Rain on the Plains is Mainly Garbage") or quest_text("Quest for the Holy MacGuffin")) and
 			advs() <= 20 and
-			fullness() == estimate_max_fullness() and
-			drunkenness() == estimate_max_safe_drunkenness(),
+			fullness() >= estimate_max_fullness() and
+			drunkenness() >= estimate_max_safe_drunkenness(),
 		task = {
 			message = "end of day",
 			nobuffing = true,
@@ -2006,6 +2048,26 @@ endif
 	else
 		want_advs = 10
 	end
+
+	add_task {
+		when = advs() < want_advs and
+			ascensionpath("Avatar of Sneaky Pete") and
+			not ascensionstatus("Hardcore") and
+			ascension_script_option("pull consumables") and
+			estimate_max_safe_drunkenness() - drunkenness() >= 5 and
+			have_skill("Rowdy Drinker") and
+			level() >= 5,
+		task = {
+			message = "pull and drink wrecked generator ('pull consumables' option is enabled)",
+			nobuffing = true,
+			action = function()
+				pull_in_softcore("Wrecked Generator")
+				local d = drunkenness()
+				set_result(drink_item("Wrecked Generator")())
+				did_action = drunkenness() == d + 5
+			end
+		}
+	}
 
 	add_task {
 		when = advs() < want_advs,
@@ -4930,6 +4992,7 @@ local ascension_script_options_tbl = {
 	["train skills manually"] = { yes = "train manually", no = "automate training", when = function() return ascensionpath("Avatar of Jarlsberg") or ascensionpath("Avatar of Sneaky Pete") end },
 	["100% familiar run"] = { yes = "don't change familiar", no = "automate familiar choice" },
 	["overdrink with nightcap"] = { yes = "overdrink automatically", no = "don't automate" },
+	["pull consumables"] = { yes = "pull and consume", no = "don't automate", when = function() return ascensionpath("Avatar of Sneaky Pete") end },
 }
 
 function ascension_script_option(name)

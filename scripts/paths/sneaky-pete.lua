@@ -24,7 +24,7 @@ add_processor("/choice.php", function()
 	end
 end)
 
-add_automator("all pages", function()
+function sneaky_pete_maybe_update_motorcycle_status()
 	if not ascensionpath("Avatar of Sneaky Pete") then return end
 	if not locked() and level() ~= session["sneaky pete motorcycle check"] then
 		local can_upgrade, upgrades = retrieve_motorcycle_status()
@@ -34,11 +34,17 @@ add_automator("all pages", function()
 		end
 		session["sneaky pete motorcycle check"] = level()
 	end
-end)
+end
+
+add_automator("all pages", sneaky_pete_maybe_update_motorcycle_status)
+
+function can_upgrade_sneaky_pete_motorcycle()
+	return session["sneaky pete motorcycle can_upgrade"]
+end
 
 function estimate_current_sneaky_pete_motorcycle_bonuses()
 	local bonuses = make_bonuses_table {}
-	local upgrades = session["sneaky pete motorcycle upgrades"] or {}
+	local upgrades = sneaky_pete_motorcycle_upgrades()
 	if upgrades["Gas Tank"] == "Nitro-Burnin' Funny Tank" then
 		bonuses = bonuses + make_bonuses_table { ["Combat Initiative"] = 50 }
 	end
@@ -49,8 +55,4 @@ function estimate_current_sneaky_pete_motorcycle_bonuses()
 		bonuses = bonuses + make_bonuses_table { ["Monster Level"] = -30 }
 	end
 	return bonuses
-end
-
-function can_upgrade_sneaky_pete_motorcycle()
-	return session["sneaky pete motorcycle can_upgrade"]
 end

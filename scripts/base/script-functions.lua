@@ -671,12 +671,19 @@ function can_drink_normal_booze()
 	return not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("KOLHS")
 end
 
+-- TODO: make this work with being in scope when loaded in paths/sneaky pete file
+function sneaky_pete_motorcycle_upgrades()
+	return session["sneaky pete motorcycle upgrades"] or {}
+end
+
 function have_unlocked_beach()
+	if ascensionpath("Avatar of Sneaky Pete") and sneaky_pete_motorcycle_upgrades()["Gas Tank"] == "Large Capacity Tank" then return true end
 	return have_item("bitchin' meatcar") or have_item("Desert Bus pass") or have_item("pumpkin carriage") or have_item("tin lizzie")
 end
 unlocked_beach = have_unlocked_beach
 
 function have_unlocked_island()
+	if ascensionpath("Avatar of Sneaky Pete") and sneaky_pete_motorcycle_upgrades()["Gas Tank"] == "Extra-Buoyant Tank" then return true end
 	return have_item("dingy dinghy") or have_item("skeletal skiff") or have_item("junk junk")
 end
 unlocked_island = have_unlocked_island
