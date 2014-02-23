@@ -526,8 +526,11 @@ endif
 			inform "summoning unbearable light (no he-boulder)"
 			script.ensure_mp(5)
 			async_post_page("/campground.php", { preaction = "summoncliparts" })
-			async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "06", clip2 = "06", clip3 = "06" })
+			post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "06", clip2 = "06", clip3 = "06" })
 			cached_stuff.tried_to_summon_unbearable_light = true
+			if not have_item("unbearable light") and not ascensionstatus("Hardcore") then
+				ascension_automation_pull_item("unbearable light")
+			end
 		end
 		return have_item("unbearable light")
 	end
@@ -1463,6 +1466,20 @@ endif
 		}
 	}
 
+	function automation_sneaky_pete_want_hate()
+		if have_skill("Throw Party") and not cached_stuff.used_sneaky_pete_throw_party then
+		elseif have_skill("Incite Riot") and not cached_stuff.used_sneaky_pete_incite_riot then
+			return true
+		end
+		return false
+	end
+
+	if (have_skill("Throw Party") and cached_stuff.used_sneaky_pete_throw_party == nil) or (have_skill("Incite Riot") and cached_stuff.used_sneaky_pete_incite_riot == nil) then
+		local pt = get_page("/skills.php")
+		cached_stuff.used_sneaky_pete_throw_party = pt:match("<option disabled[^>]->Throw Party")
+		cached_stuff.used_sneaky_pete_incite_riot = pt:match("<option disabled[^>]->Incite Riot")
+	end
+
 	add_task {
 		when = not cached_stuff.used_sneaky_pete_throw_party and
 			ascensionpath("Avatar of Sneaky Pete") and
@@ -1480,13 +1497,66 @@ endif
 	}
 
 	add_task {
+		when = not cached_stuff.used_sneaky_pete_incite_riot and
+			ascensionpath("Avatar of Sneaky Pete") and
+			have_skill("Incite Riot") and
+			petehate() >= max_petehate(),
+		task = {
+			message = "cast Incite Riot",
+			nobuffing = true,
+			action = function()
+				cast_skill("Incite Riot")
+				cached_stuff.used_sneaky_pete_incite_riot = true
+				did_action = true
+			end
+		}
+	}
+
+	add_task {
 		when = ascensionpath("Avatar of Sneaky Pete") and
 			can_upgrade_sneaky_pete_motorcycle(),
 		task = {
 			message = "upgrade motorcycle",
 			nobuffing = true,
 			action = function()
-				stop "Upgrade your motorcycle!"
+				if ascension_script_option("train skills manually") then
+					stop "STOPPED: Upgrade your motorcycle! (Ascension script option set to train skills manually)"
+				end
+				local upgrades = sneaky_pete_motorcycle_upgrades()
+				local options = nil
+				if not upgrades["Seat"] and ascensionstatus("Hardcore") then
+					options = { ["Upping Your Grade"] = "Upgrade the Seat, Heh Heh", ["Ayy, Sit on It"] = "Massage Seat" }
+				elseif not upgrades["Headlight"] and have_skill("Flash Headlight") and false_DEBUG_CHANGE_WHEN_WORKING then
+					options = { ["Upping Your Grade"] = "Upgrade the One Headlight, Nothing is Forever", ["Me and Cinderella Put It All Together"] = "Ultrabright Yellow Bulb" }
+				elseif not upgrades["Cowling"] and not have_skill("Easy Riding") then
+					options = { ["Upping Your Grade"] = "Upgrade the Cowling, While Cowering", ["Endowing the Cowling"] = "Sweepy Red Light" }
+				elseif not upgrades["Muffler"] and not have_skill("Brood") then
+					options = { ["Upping Your Grade"] = "Upgrade the Muffler, Shhh", ["Diving into the Mufflers"] = "Extra-Quiet Muffler" }
+				elseif not upgrades["Muffler"] then
+					options = { ["Upping Your Grade"] = "Upgrade the Muffler, Shhh", ["Diving into the Mufflers"] = "Extra-Loud Muffler" }
+				elseif not upgrades["Tires"] and level() >= 8 then
+					options = { ["Upping Your Grade"] = "Upgrade the Tires, Because Your Bike is Two-Tired", ["Another Tired Retread"] = "Snow Tires" }
+				elseif not upgrades["Headlight"] and level() >= 10 then
+					options = { ["Upping Your Grade"] = "Upgrade the One Headlight, Nothing is Forever", ["Me and Cinderella Put It All Together"] = "Blacklight Bulb" }
+				elseif not upgrades["Gas Tank"] and not have_unlocked_island() then
+					options = { ["Upping Your Grade"] = "Upgrade the Gas Tank, It's a Gas", ["Station of the Gas"] = "Extra-Buoyant Tank" }
+				elseif not upgrades["Tires"] then
+					options = { ["Upping Your Grade"] = "Upgrade the Tires, Because Your Bike is Two-Tired", ["Another Tired Retread"] = "Racing Slicks" }
+				elseif not upgrades["Seat"] then
+					options = { ["Upping Your Grade"] = "Upgrade the Seat, Heh Heh", ["Ayy, Sit on It"] = "Deep Seat Cushions" }
+				elseif not upgrades["Cowling"]  then
+					options = { ["Upping Your Grade"] = "Upgrade the Cowling, While Cowering", ["Endowing the Cowling"] = "Rocket Launcher" }
+				end
+
+				if not options then
+					stop "TODO: Upgrade motorcycle"
+				end
+
+				local pt, url = get_page("/main.php", { action = "motorcycle" })
+				local pt, url = handle_adventure_result(pt, url, "?", nil, options)
+
+				sneaky_pete_maybe_update_motorcycle_status()
+				did_action = not can_upgrade_sneaky_pete_motorcycle()
 			end
 		}
 	}
@@ -3775,7 +3845,7 @@ endif
 			level() >= 9,
 		f = function()
 			script.bonus_target { "noncombat" }
-			script.go("yellow raying hippy", 26, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "He-Boulder", 15, { choice_function = function(advtitle, choicenum)
+			script.go("getting hippy outfit", 26, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "He-Boulder", 15, { choice_function = function(advtitle, choicenum)
 				if advtitle == "Peace Wants Love" then
 					if not have_item("filthy corduroys") then
 						return "Agree to take his clothes"

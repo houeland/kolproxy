@@ -29,7 +29,7 @@ text, url = log_time_interval("run intercepts", function()
 for _, x in ipairs(interceptors[requestpath] or {}) do
 	local t, u = x.f()
 	if t then
-		return t, u
+		return t, u or requestpath
 	end
 end
 
@@ -39,13 +39,13 @@ if requestpath == "/inv_use.php" then
 		for _, x in ipairs(interceptors["use item"] or {}) do
 			local t, u = x.f()
 			if t then
-				return t, u
+				return t, u or requestpath
 			end
 		end
 		for _, x in ipairs(interceptors["use item: " .. n] or {}) do
 			local t, u = x.f()
 			if t then
-				return t, u
+				return t, u or requestpath
 			end
 		end
 	end

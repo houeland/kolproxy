@@ -502,7 +502,6 @@ mark m_done
 			end
 		elseif quest_text("need to solve the mystery of Twin Peak") then
 -- 			-- TODO: boost item drops & noncombats, sniff either topiary
-
 			return {
 				message = "solve twin peak mystery",
 				fam = "Slimeling",
@@ -521,6 +520,11 @@ mark m_done
 							stop "Need 4+ stench resistance"
 						end
 					elseif cached_stuff.previous_twin_peak_noncombat_option == "Investigate Room 237" then
+						if estimate_twin_peak_effective_plusitem() < 50 then
+							script.set_bonus_target { "extraitem", "item", "noncombat" }
+							script.ensure_buffs {}
+							script.wear {}
+						end
 						if estimate_twin_peak_effective_plusitem() < 50 then
 							stop "Need 50%+ item drops from monsters"
 						end
@@ -543,6 +547,7 @@ mark m_done
 							stop "Need 40%+ combat initiative"
 						end
 					end
+
 					local force_advagain = false
 					local function ncfunc(advtitle, choicenum, pagetext)
 						if advtitle == "Welcome to the Great Overlook Lodge" then

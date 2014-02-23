@@ -68,7 +68,7 @@ __peekJust l idx = do
 	x <- Lua.peek l idx
 	case x of
 		Just v -> return v
-		_ -> failLua $ "Wrong paramater " ++ show idx
+		_ -> failLua $ "Wrong parameter " ++ show idx
 
 peekJustString l idx = (__peekJust l idx) :: IO String
 peekJustInteger l idx = (__peekJust l idx) :: IO Integer

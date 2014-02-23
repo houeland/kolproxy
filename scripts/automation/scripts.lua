@@ -959,6 +959,17 @@ function get_automation_scripts(cached_stuff)
 				table.insert(xs, "The Moxious Madrigal")
 				table.insert(xs, "The Magical Mojomuscular Melody")
 			end
+			if want_bonus.noncombat then
+				table.insert(xs, "Brooding")
+				if sneaky_pete_motorcycle_upgrades()["Muffler"] == "Extra-Quiet Muffler" then
+					table.insert(xs, "Muffled")
+				end
+			end
+			if want_bonus.combat then
+				if sneaky_pete_motorcycle_upgrades()["Muffler"] == "Extra-Loud Muffler" then
+					table.insert(xs, "Unmuffled")
+				end
+			end
 			if mainstat_type("Mysticality") and level() >= 6 then
 				table.insert(xs, "A Few Extra Pounds")
 			end
@@ -2833,6 +2844,34 @@ endif
 			async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
 			refresh_quest()
 			did_action = not quest_text("go talk to the Trapper")
+		elseif quest_text("ready to ascend to the Icy Peak") or quest_text("close to figuring out what's going on at the Icy Peak") or quest_text("have slain Groar") then
+			async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
+			refresh_quest()
+			if not quest_text("ready to ascend to the Icy Peak") and not quest_text("close to figuring out what's going on at the Icy Peak") then
+				did_action = true
+			else
+				if have_item("eXtreme mittens") and have_item("eXtreme scarf") and have_item("snowboarder pants") then
+					wear { hat = "eXtreme scarf", pants = "snowboarder pants", acc3 = "eXtreme mittens" }
+				else
+					wear {}
+					script.ensure_buffs { "Elemental Saucesphere", "Astral Shell" }
+				end
+				fam "Frumious Bandersnatch"
+				ensure_buffs { "Springy Fusilli", "Spirit of Cayenne" }
+				ensure_mp(40)
+				if get_resistance_level("Cold") <= 0 and not have_buff("Super Structure") and have_item("Greatest American Pants") then
+					wear { pants = "Greatest American Pants" }
+					script.get_gap_buff("Super Structure")
+				end
+				inform "exploring the icy peak"
+				local pt, url = get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak2" })
+				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodlecannon)
+				did_action = advagain
+			end
+		elseif ascensionpath("Avatar of Sneaky Pete") and sneaky_pete_motorcycle_upgrades()["Tires"] == "Snow Tires" then
+			get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak" })
+			refresh_quest()
+			did_action = quest_text("close to figuring out what's going on at the Icy Peak")
 		elseif quest_text("gather up some cheese and ore for him") then
 			local trappercabin = get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
 			refresh_quest()
@@ -2951,26 +2990,6 @@ endif
 				if get_result():contains("red glow surrounding you") then
 					did_action = true
 				end
-			end
-		elseif quest_text("ready to ascend to the Icy Peak") or quest_text("close to figuring out what's going on at the Icy Peak") or quest_text("have slain Groar") then
-			async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
-			refresh_quest()
-			if not quest_text("ready to ascend to the Icy Peak") and not quest_text("close to figuring out what's going on at the Icy Peak") then
-				did_action = true
-			else
-				if have_item("eXtreme mittens") and have_item("eXtreme scarf") and have_item("snowboarder pants") then
-					wear { hat = "eXtreme scarf", pants = "snowboarder pants", acc3 = "eXtreme mittens" }
-				else
-					wear {}
-					script.ensure_buffs { "Elemental Saucesphere", "Astral Shell" }
-				end
-				fam "Frumious Bandersnatch"
-				ensure_buffs { "Springy Fusilli", "Spirit of Cayenne" }
-				ensure_mp(40)
-				inform "exploring the icy peak"
-				local pt, url = get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak2" })
-				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodlecannon)
-				did_action = advagain
 			end
 		else
 			critical "Failed to finish trapper quest"

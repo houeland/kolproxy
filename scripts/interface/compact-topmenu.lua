@@ -24,41 +24,80 @@ local museum_href = add_automation_script("latest-leaderboard", function()
 	return get_page("/museum.php", { place = "leaderboards", whichboard = highest })
 end)
 
-add_printer("/topmenu.php", function()
-	if setting_enabled("enable super-compact menupane") then
-		lairlink = [[<a target='mainpane' href='lair.php'>lair</a>]]
-		if ascensionpathid() == 9 then
-			lairlink = [[<a target='mainpane' href='place.php?whichplace=bugbearship'>ship</a>]]
+add_processor("/storage.php", function()
+	if params.action then
+		session["topmenu storage pulls display"] = nil
+	end
+end)
+
+add_printer("all pages", function()
+	if not setting_enabled("enable super-compact menupane") then return end
+	if locked() then return end
+	if session["topmenu storage pulls display"] == tostring(ascensionstatus()) .. ":" .. tostring(ascensionpathname()) then return end
+	if text:contains("</head>") then
+		text = text:gsub("</head>", [[<script type="text/javascript">top.menupane.location = "topmenu.php"</script>
+</head>]])
+	end
+end)
+
+add_interceptor("/topmenu.php", function()
+	if not setting_enabled("enable super-compact menupane") then return end
+	local hagnk_pulls = ""
+	if ascensionstatus("Softcore") then
+		hagnk_pulls = " (?)"
+		if not locked() then
+			local pt = get_page("/storage.php", { which = 5 })
+			local pulls = tonumber(pt:match([[<span class="pullsleft">(.-)</span>]]))
+			if pt:contains("You may not take any more") then
+				hagnk_pulls = " (0)"
+			elseif pulls and pulls >= 1 then
+				hagnk_pulls = " (" .. pulls .. ")"
+			end
+			session["topmenu storage pulls display"] = tostring(ascensionstatus()) .. ":" .. tostring(ascensionpathname())
 		end
-		text = [[
+	else
+		session["topmenu storage pulls display"] = tostring(ascensionstatus()) .. ":" .. tostring(ascensionpathname())
+	end
+	local lairlink = [[<a target='mainpane' href='lair.php'>lair</a>]]
+	if ascensionpathid() == 9 then
+		lairlink = [[<a target='mainpane' href='place.php?whichplace=bugbearship'>ship</a>]]
+	end
+	return [[
 <!DOCTYPE html>
 <html>
 <head>
-<style type='text/css'>.sep{font-size:6px;font-family:arial;margin:0;padding:0;line-height:100%;} .sep:after{content:"/"} a{color:#000;font-size:11px;font-family:arial;margin:0;padding:0;} .a{background-color:#eeeeee;} .abc{display:inline-block;text-align:center;padding:3px 7px;line-height:13px;vertical-align:top;height:100%;} .title a{font-size:13px;font-weight:bold;}</style>
+<style type='text/css'>
+.sep { font-size: 6px; font-family: arial; margin:0; padding:0; line-height:100%; }
+.sep:after { content: "/" }
+a { color: #000; font-size: 11px; font-family: arial; margin: 0; padding:0; }
+.a { background-color: #eeeeee; }
+.abc { display: inline-block; text-align: center; padding: 3px 7px; line-height: 13px; vertical-align: top; height: 100%; }
+.title a { font-size: 13px; font-weight: bold; }
+</style>
 <style>
-html, body{
+html, body {
 	height:100%;
 }
-.centerBox{
+.centerBox {
 	text-align:left;
 	height: 100%;
 }
 
-.centerBox.outerContainer{
-	position:relative;
-	left:50%;
-	float:left;
-	clear:both;
-	margin:10px 0;
-	margin:0px;
+.centerBox.outerContainer {
+	position: relative;
+	left: 50%;
+	float: left;
+	clear: both;
+	margin: 10px 0;
+	margin: 0px;
 }
-.centerBox.innerContainer{
-	position:relative;
-	left:-50%;
+.centerBox.innerContainer {
+	position: relative;
+	left: -50%;
 }
 </style>
 </head>
-<body style='margin:0px;'>
+<body style='margin: 0px;'>
 	<div class='centerBox outerContainer'>
 		<div class='centerBox innerContainer'>
 			<div class='abc a'><span class='title'><a target='mainpane' href='inventory.php?which=1'>inv</a><span class="sep"></span><a target='mainpane' href='inventory.php?which=2'>ent</a><span class="sep"></span><a target='mainpane' href='inventory.php?which=3'>ory</a></span><br><a target='mainpane' href='inventory.php?which=f0'>fav</a> <a target='mainpane' href='craft.php'>craft</a><br><a target='mainpane' href='sellstuff.php'>sell</a></div>
@@ -69,7 +108,7 @@ html, body{
 
 			<div class='abc'><span class='title'><a target='mainpane' href='town.php'>town</a> <a target='mainpane' href='town_wrong.php'>tra</a><span class="sep"></span><a target='mainpane' href='town_right.php'>cks</a></span><br><a target='mainpane' href=']]..museum_href { pwd = session.pwd }..[['>board</a> <a target='mainpane' href='typeii.php'>t2</a> <a target='mainpane' href='guild.php'>guild</a> <br><a target='mainpane' href='manor.php'>ma</a><span class="sep"></span><a target='mainpane' href='manor2.php'>no</a><span class="sep"></span><a target='mainpane' href='manor3.php'>r</a> <a target='mainpane' href='galaktik.php'>doc</a></div>
 
-			<div class='abc a'><span class='title'><a target='mainpane' href='council.php'>council</a> </span><br><a target='mainpane' href='mrstore.php'>mr</a> <a target='mainpane' href='store.php?whichstore=m'>store</a><br><a target='mainpane' href='storage.php?which=5'>hagnk</a></div>
+			<div class='abc a'><span class='title'><a target='mainpane' href='council.php'>council</a> </span><br><a target='mainpane' href='mrstore.php'>mr</a> <a target='mainpane' href='store.php?whichstore=m'>store</a><br><a target='mainpane' href='storage.php?which=5'>hagnk]] .. hagnk_pulls .. [[</a></div>
 
 			<div class='abc'><span class='title'><a target='mainpane' href='place.php?whichplace=plains'>plains</a> </span><br><a target='mainpane' href='cobbsknob.php'>kn</a><span class="sep"></span><a target='mainpane' href='cobbsknob.php?action=tolabs'>ob</a> <a target='mainpane' href='bathole.php'>bat</a><br><a target='mainpane' href='crypt.php'>cyr</a> <a target='mainpane' href='place.php?whichplace=beanstalk'>sta</a><span class="sep"></span><a target='mainpane' href='place.php?whichplace=giantcastle'>lk</a></div>
 
@@ -87,5 +126,4 @@ html, body{
 </body>
 </html>
 ]]
-	end
 end)

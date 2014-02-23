@@ -15,13 +15,23 @@ endif
 	end
 	local petemug = ""
 	if ascensionpath("Avatar of Sneaky Pete") then
-		petemug = [[
+		local mname = fight["currently fighting"] and fight["currently fighting"].name or "?"
+		if mname:match("^oil ") or mname:contains("nightstand") then
+		elseif automation_sneaky_pete_want_hate() then
+			petemug = [[
+
+pickpocket
+
+]]
+		else
+			petemug = [[
 
 if hasskill Mug for the Audience
   cast Mug for the Audience
 endif
 
 ]]
+		end
 	end
 	return [[
 
@@ -131,14 +141,15 @@ end
 
 function maybe_stun_monster(is_dangerous)
 	local want_stun = true
-	if is_dangerous == false and not have_item("rock band flyers") then
+	if ascensionpath("Avatar of Sneaky Pete") and automation_sneaky_pete_want_hate() then
+	elseif is_dangerous == false and not have_item("rock band flyers") then
 		want_stun = false
 	end
 	local can_stun = true
 	local can_stagger = true
-	local mname = fight["currently fighting"] and fight["currently fighting"].name
+	local mname = fight["currently fighting"] and fight["currently fighting"].name or "?"
 	local cfm = getCurrentFightMonster()
-	if mname == "oil tycoon" then
+	if mname:match("^oil ") then
 		can_stun = false
 	end
 	local macrolines = {}
@@ -163,6 +174,17 @@ function maybe_stun_monster(is_dangerous)
 				if hasskill Snap Fingers
 					cast Snap Fingers
 				endif]])
+		end
+		if ascensionpath("Avatar of Sneaky Pete") and automation_sneaky_pete_want_hate() and have_skill("Jump Shark") then
+			if have_item("Rain-Doh blue balls") or have_skill("Snap Fingers") or is_dangerous == false then
+				table.insert(macrolines, [[
+					if hasskill Snap Fingers
+						cast Snap Fingers
+					endif
+					if hasskill Jump Shark
+						cast Jump Shark
+					endif]])
+			end
 		end
 		if playerclass("Turtle Tamer") then
 			table.insert(macrolines, [[

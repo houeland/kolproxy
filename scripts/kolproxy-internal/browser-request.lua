@@ -37,15 +37,15 @@ local function descit(what, pt, url)
 end
 
 local function add_raw_message_to_page(pagetext, msg)
-        local pre_, dv_, mid_, end_, post_ = pagetext:match("^(.+)(<div style='overflow: auto'><center><table)(.+)(</body></html>)(.*)$")
-        if pre_ and dv_ and mid_ and end_ and post_ then
-                local wrappedmsg = [[<center><table width=95%><tr><td>]] .. msg .. [[</td></tr></table></center>]]
-                return pre_ .. wrappedmsg .. "<br>" .. dv_ .. mid_ .. end_ .. post_
-        elseif pagetext:match("<body>") then
-                return pagetext:gsub("<body>", function(a) return a .. msg end)
-        else
-                return msg .. pagetext
-        end
+	local pre_, dv_, mid_, end_, post_ = pagetext:match("^(.+)(<div style='overflow: auto'><center><table)(.+)(</body></html>)(.*)$")
+	if pre_ and dv_ and mid_ and end_ and post_ then
+		local wrappedmsg = [[<center><table width=95%><tr><td>]] .. msg .. [[</td></tr></table></center>]]
+		return pre_ .. wrappedmsg .. "<br>" .. dv_ .. mid_ .. end_ .. post_
+	elseif pagetext:match("<body>") then
+		return pagetext:gsub("<body>", function(a) return a .. msg end)
+	else
+		return msg .. pagetext
+	end
 end
 
 local function show_error(basepage, errortbl)
