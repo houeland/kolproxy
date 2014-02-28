@@ -40,6 +40,22 @@ add_printer("all pages", function()
 	end
 end)
 
+add_printer("/storage.php", function()
+	if not setting_enabled("enable super-compact menupane") then return end
+	if locked() then return end
+	if session["topmenu storage pulls display"] == tostring(ascensionstatus()) .. ":" .. tostring(ascensionpathname()) then return end
+	text = text:gsub("<script", [[<script type="text/javascript">top.menupane.location = "topmenu.php"</script><script]], 1)
+end)
+
+function pullsleft()
+	local pt = get_page("/storage.php", { which = 5 })
+	if pt:contains("You may not take any more") then
+		return 0
+	else
+		return tonumber(pt:match([[<span class="pullsleft">(.-)</span>]]))
+	end
+end
+
 add_interceptor("/topmenu.php", function()
 	if not setting_enabled("enable super-compact menupane") then return end
 	local hagnk_pulls = ""
@@ -47,10 +63,8 @@ add_interceptor("/topmenu.php", function()
 		hagnk_pulls = " (?)"
 		if not locked() then
 			local pt = get_page("/storage.php", { which = 5 })
-			local pulls = tonumber(pt:match([[<span class="pullsleft">(.-)</span>]]))
-			if pt:contains("You may not take any more") then
-				hagnk_pulls = " (0)"
-			elseif pulls and pulls >= 1 then
+			local pulls = pullsleft()
+			if pulls and pulls >= 0 then
 				hagnk_pulls = " (" .. pulls .. ")"
 			end
 			session["topmenu storage pulls display"] = tostring(ascensionstatus()) .. ":" .. tostring(ascensionpathname())

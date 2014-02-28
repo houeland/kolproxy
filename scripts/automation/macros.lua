@@ -130,6 +130,14 @@ end
 
 function geyser_action()
 	if ascensionpath("Avatar of Sneaky Pete") then
+		local mname = fight["currently fighting"] and fight["currently fighting"].name or "?"
+		if mname:contains("nightstand") and have_skill("Peel Out") and ascensionstatus("Hardcore") then
+			return [[
+
+cast Peel Out
+
+]]
+		end
 		return attack_action()
 	end
 	return macro_cast_skill { "Saucegeyser", "Weapon of the Pastalord" }
@@ -234,6 +242,18 @@ function maybe_stun_monster(is_dangerous)
 		if hascombatitem rock band flyers
 			use rock band flyers
 		endif]])
+
+	local _tbl, unknown_potions, unknown_effects = get_dod_potion_status()
+	for _, x in ipairs(unknown_effects) do
+		if x == "booze" then
+			for _, y in ipairs(unknown_potions) do
+				if have_item(y) then
+					table.insert(macrolines, "use " .. y)
+					break
+				end
+			end
+		end
+	end
 
 	table.insert(macrolines, "")
 
@@ -1172,7 +1192,8 @@ endwhile
 end
 
 function macro_noodlegeyser(maxtimes)
-	return [[
+	return function()
+		return [[
 ]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
 
 ]] .. maybe_stun_monster(true) .. [[
@@ -1186,6 +1207,7 @@ while !times ]] .. maxtimes .. [[
 endwhile
 
 ]]
+	end
 end
 
 function macro_barrr()

@@ -950,7 +950,7 @@ function get_automation_scripts(cached_stuff)
 				table.insert(xs, "Leash of Linguini")
 				table.insert(xs, "Empathy")
 				table.insert(xs, "Singer's Faithful Ocelot")
-				table.insert(xs, "Of Course It Looks Great")
+				if maxmp() >= 30 then table.insert(xs, "Of Course It Looks Great") end
 				if want_bonus.extraplusitems then
 					table.insert(xs, "Heavy Petting")
 					table.insert(xs, "Peeled Eyeballs")
@@ -1406,7 +1406,7 @@ endif
 				error("Unhandled go() parameter: " .. unhandled)
 			end
 		end
-		if mcd() < 10 and level() < 13 and have_item("detuned radio") then
+		if mcd() < 10 and level() < 13 and have_item("detuned radio") and not want_bonus.easy_combat then
 			set_mcd(10)
 		elseif mcd() ~= 0 and level() == 13 and have_item("detuned radio") then
 			set_mcd(0)
@@ -1625,27 +1625,58 @@ endif
 			end
 			return
 		end
-		if highskill_at_run then return end
-		if ascensionstatus() ~= "Hardcore" then return end
-
-		if not can_eat_normal_food() then return end
 
 		local function space()
 			return estimate_max_fullness() - fullness()
 		end
+
+		if highskill_at_run then return end
+
+		local function eat_fortune_cookie()
+			local f = fullness()
+			inform "eat fortune cookie"
+			buy_item("fortune cookie", "m")
+			set_result(eat_item("fortune cookie")())
+			if not (fullness() == f + 1 and script.get_turns_until_sr() ~= nil) then
+				print("WARNING fortune cookie result:", script.get_turns_until_sr())
+				critical "Error getting fortune cookie numbers"
+			end
+			did_action = (fullness() == f + 1 and script.get_turns_until_sr() ~= nil)
+			return result, resulturl, did_action
+		end
+
+		local function pull_and_eat_key_lime_pie(which)
+			local f = fullness()
+			local keyname = which .. "'s key"
+			local piename = which .. "'s key lime pie"
+			inform("pull and eat " .. piename)
+			pull_in_softcore(piename)
+			set_result(eat_item(piename)())
+			did_action = (fullness() == f + 4 and have_item(keyname))
+			return result, resulturl, did_action
+		end
+
+		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Softcore") then
+			if (space() % 4) > 0 and script.get_turns_until_sr() == nil and meat() >= 40 then
+				return eat_fortune_cookie()
+			elseif space() >= 4 and level() >= 6 then
+				if not have_item("Jarlsberg's key") then
+					return pull_and_eat_key_lime_pie("Jarlsberg")
+				elseif not have_item("Boris's key") then
+					return pull_and_eat_key_lime_pie("Boris")
+				end
+			end
+		end
+
+		if ascensionstatus() ~= "Hardcore" then return end
+
+		if not can_eat_normal_food() then return end
+
 		if space() > 0 then
 			if (space() % 6) > 0 then
 				local f = fullness()
 				if script.get_turns_until_sr() == nil and meat() >= 40 then
-					inform "eat fortune cookie"
-					buy_item("fortune cookie", "m")
-					eat_item("fortune cookie")()
-					if not (fullness() == f + 1 and script.get_turns_until_sr() ~= nil) then
-						print("WARNING fortune cookie result:", script.get_turns_until_sr())
-						critical "Error getting fortune cookie numbers"
-					end
-					did_action = (fullness() == f + 1 and script.get_turns_until_sr() ~= nil)
-					return result, resulturl, did_action
+					return eat_fortune_cookie()
 				elseif have_item("Ur-Donut") and level() < 4 then
 					inform "eat ur-donut"
 					eat_item("Ur-Donut")
@@ -1676,10 +1707,7 @@ endif
 						did_action = (fullness() == f + 1)
 						return result, resulturl, did_action
 					elseif meat() >= 40 then
-						inform "eat fortune cookie"
-						buy_item("fortune cookie", "m")
-						eat_item("fortune cookie")()
-						did_action = (fullness() == f + 1 and script.get_turns_until_sr() ~= nil)
+						return eat_fortune_cookie()
 					end
 				end
 			end
@@ -2300,7 +2328,7 @@ mark m_done
 				minmp = 70,
 				action = adventure {
 					zone = "A Massive Ziggurat",
-					macro_function = function() return macro_noodlegeyser(5) end,
+					macro_function = macro_noodlegeyser(5),
 					noncombats = { ["Legend of the Temple in the Hidden City"] = "Open the door" },
 				}
 			}
@@ -2867,6 +2895,10 @@ endif
 				local pt, url = get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak2" })
 				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodlecannon)
 				did_action = advagain
+				if not did_action and pt:contains("get back into your warm clothes") then
+					cached_stuff.missing_cold_resistance_for_icy_peak = true
+					did_action = true
+				end
 			end
 		elseif ascensionpath("Avatar of Sneaky Pete") and sneaky_pete_motorcycle_upgrades()["Tires"] == "Snow Tires" then
 			get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak" })
@@ -3889,8 +3921,11 @@ endif
 				if have_item("pool cue") and have_item("handful of hand chalk") and not have_buff("Chalky Hand") then
 					use_item("handful of hand chalk") -- TODO: ensure_buffs
 				end
--- 					TODO: act differently if you can't easily win with just autoattack?
 				script.bonus_target { "noncombat" }
+				if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") and not have_skill("Smoke Break") and not have_skill("Flash Headlight") then
+					-- TODO: do this better
+					script.bonus_target { "noncombat", "easy combat" }
+				end
 				go("unlock library", 105, macro_stasis, {
 					["Minnesota Incorporeals"] = "Let the ghost break",
 					["Broken"] = "Go for a solid",

@@ -43,7 +43,15 @@ add_choice_text("Wheel in the Clouds in the Sky, Keep On Turning", function()
 end)
 
 add_itemdrop_counter("star chart", function(c)
-	return "{ " .. make_plural(c, "star chart", "star charts") .. " in inventory. }"
+	return "{ " .. make_plural(count_item("star"), "star", "stars") .. ", " .. make_plural(count_item("line"), "line", "lines") .. ", and " .. make_plural(count_item("star chart"), "star chart", "star charts") .. " in inventory. }"
+end)
+
+add_itemdrop_counter("star", function(c)
+	return "{ " .. make_plural(count_item("star"), "star", "stars") .. ", " .. make_plural(count_item("line"), "line", "lines") .. ", and " .. make_plural(count_item("star chart"), "star chart", "star charts") .. " in inventory. }"
+end)
+
+add_itemdrop_counter("line", function(c)
+	return "{ " .. make_plural(count_item("star"), "star", "stars") .. ", " .. make_plural(count_item("line"), "line", "lines") .. ", and " .. make_plural(count_item("star chart"), "star chart", "star charts") .. " in inventory. }"
 end)
 
 add_printer("/beanstalk.php", function()

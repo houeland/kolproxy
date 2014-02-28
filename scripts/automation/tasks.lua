@@ -274,7 +274,7 @@ mark m_done
 			minmp = 70,
 			action = adventure {
 				zoneid = 166,
-				macro_function = function() return macro_noodlegeyser(3) end,
+				macro_function = macro_noodlegeyser(3),
 				noncombats = {
 					["Disgustin' Junction"] = "Swim back toward the entrance",
 					["The Former or the Ladder"] = "Play in the water",
@@ -521,9 +521,12 @@ mark m_done
 						end
 					elseif cached_stuff.previous_twin_peak_noncombat_option == "Investigate Room 237" then
 						if estimate_twin_peak_effective_plusitem() < 50 then
-							script.set_bonus_target { "extraitem", "item", "noncombat" }
+							script.bonus_target { "extraitem", "item", "noncombat" }
 							script.ensure_buffs {}
 							script.wear {}
+						end
+						if estimate_twin_peak_effective_plusitem() < 50 then
+							script.maybe_ensure_buffs { "Brother Flying Burrito's Blessing" }
 						end
 						if estimate_twin_peak_effective_plusitem() < 50 then
 							stop "Need 50%+ item drops from monsters"
@@ -594,13 +597,19 @@ mark m_done
 		equipment = { acc1 = first_wearable { "ring of Detect Boring Doors" } },
 		minmp = 20,
 		action = function()
+			local door_action = "Sneak past it"
+			if have_item("Pick-O-Matic lockpicks") then
+				door_action = "Use your lockpicks"
+			elseif have_item("skeleton key") then
+				door_action = "Use a skeleton key"
+			end
 			local advf = adventure {
 				zone = "The Daily Dungeon",
 				macro_function = macro_noodlecannon,
 				noncombats = {
 					["It's Almost Certainly a Trap"] = have_item("eleven-foot pole") and "Use your eleven-foot pole" or "Proceed forward cautiously",
 					["The First Chest Isn't the Deepest."] = have_equipped_item("ring of Detect Boring Doors") and "Go through the boring door" or "Ignore the chest",
-					["I Wanna Be a Door"] = have_item("Pick-O-Matic lockpicks") and "Use your lockpicks" or "Use a skeleton key",
+					["I Wanna Be a Door"] = door_action,
 					["Second Chest"] = have_equipped_item("ring of Detect Boring Doors") and "Go through the boring door" or "Ignore the chest",
 					["The Final Reward"] = "Open it!",
 				},

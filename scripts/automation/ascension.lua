@@ -63,6 +63,9 @@ local function automate_hcnp_day(whichday)
 		if challenge == "zombie" then
 			mpstr = string.format("%s horde", horde_size())
 		end
+		if ascensionpath("Avatar of Sneaky Pete") then
+			mpstr = mpstr .. ", " .. petelove() - petehate() .. " love"
+		end
 		local formatted = string.format("[%s] %s (level %s.%02d, %s turns remaining, %s full, %s drunk, %s spleen, %s meat, %s / %s HP, %s)", turnsthisrun(), tostring(msg), level(), level_progress() * 100, advs(), fullness(), drunkenness(), spleen(), meat(), hp(), maxhp(), mpstr)
 		print(formatted)
 		write_log_line(formatted)
@@ -578,6 +581,7 @@ endif
 	questlog_page = questlog_page_async()
 
 	local DD_keys = countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") + count_item("fat loot token")
+	local real_DD_keys = DD_keys
 	if ascensionstatus() ~= "Hardcore" or cached_stuff.completed_daily_dungeon then
 		DD_keys = 100
 	end
@@ -1362,7 +1366,8 @@ endif
 	}
 
 	add_task {
-		when = ascensionpath("Avatar of Sneaky Pete") and cached_stuff.trained_sneaky_pete_skills_level ~= level(),
+		when = ascensionpath("Avatar of Sneaky Pete") and
+			cached_stuff.trained_sneaky_pete_skills_level ~= level(),
 		task = {
 			message = "train sneaky pete skill",
 			nobuffing = true,
@@ -1395,6 +1400,7 @@ endif
 						{ "Hard Drinker", 3 },
 						{ "Unrepentant Thief", 3 },
 						{ "Brood", 3 },
+						{ "Walk Away From Explosion", 3 },
 						{ "Catchphrase", 1 },
 						{ "Mixologist", 1 },
 						{ "Throw Party", 1 },
@@ -1409,7 +1415,6 @@ endif
 						{ "Riding Tall", 2 },
 						{ "Biker Swagger", 2 },
 						{ "Flash Headlight", 2 },
-						{ "Walk Away From Explosion", 3 },
 					}
 					local sneaky_pete_learn_order_hardcore = {
 						{ "Rev Engine", 2 },
@@ -1437,12 +1442,13 @@ endif
 						{ "Hard Drinker", 3 },
 						{ "Unrepentant Thief", 3 },
 						{ "Brood", 3 },
+						{ "Walk Away From Explosion", 3 },
 						{ "Check Mirror", 2 },
 						{ "Riding Tall", 2 },
 						{ "Biker Swagger", 2 },
 						{ "Flash Headlight", 2 },
-						{ "Walk Away From Explosion", 3 },
 					}
+					did_action = false
 					for _, x in ipairs(ascensionstatus("Hardcore") and sneaky_pete_learn_order_hardcore or sneaky_pete_learn_order_softcore) do
 						if not have_skill(x[1]) then
 							softcore_stoppable_action("Training Sneaky Pete skill: " .. tostring(x[1]))
@@ -1456,11 +1462,17 @@ endif
 							end
 						end
 					end
-					if get_available_points() < points then
+					if not did_action then
+						-- WORKAROUND: Server game bug makes it list available points even when you have all the skills
+						print("WORKAROUND: Couldn't train skill, going to skip skill training. (Because of a game bug when you already have all skills.)")
+						cached_stuff.trained_sneaky_pete_skills_level = level()
 						did_action = true
-					else
-						critical "Tried to learn Sneaky Pete skills"
 					end
+--					if get_available_points() < points then
+--						did_action = true
+--					else
+--						critical "Tried to learn Sneaky Pete skills"
+--					end
 				end
 			end
 		}
@@ -1541,7 +1553,8 @@ endif
 				elseif not upgrades["Gas Tank"] and not have_unlocked_island() then
 					options = { ["Upping Your Grade"] = "Upgrade the Gas Tank, It's a Gas", ["Station of the Gas"] = "Extra-Buoyant Tank" }
 				elseif not upgrades["Tires"] then
-					options = { ["Upping Your Grade"] = "Upgrade the Tires, Because Your Bike is Two-Tired", ["Another Tired Retread"] = "Racing Slicks" }
+					--options = { ["Upping Your Grade"] = "Upgrade the Tires, Because Your Bike is Two-Tired", ["Another Tired Retread"] = "Racing Slicks" }
+					options = { ["Upping Your Grade"] = "Upgrade the Tires, Because Your Bike is Two-Tired", ["Another Tired Retread"] = "Snow Tires" }
 				elseif not upgrades["Seat"] then
 					options = { ["Upping Your Grade"] = "Upgrade the Seat, Heh Heh", ["Ayy, Sit on It"] = "Deep Seat Cushions" }
 				elseif not upgrades["Cowling"]  then
@@ -3387,7 +3400,9 @@ endwhile
 	}
 
 	add_task {
-		when = not have_item("sugar shield") and not cached_stuff.summoned_sugar_shield,
+		when = not have_item("sugar shield") and
+			can_change_familiar() and
+			not cached_stuff.summoned_sugar_shield,
 		task = {
 			message = "summon sugar shield",
 			nobuffing = true,
@@ -3512,8 +3527,8 @@ endwhile
 			--print("DEBUG banished:", table_to_json(banished))
 			if not banished[4] then
 				return {
-                                        message = "fight and banish non-bloopers",
-                                        equipment = { weapon = "Staff of the Standalone Cheese", acc3 = "continuum transfunctioner" },
+					message = "fight and banish non-bloopers",
+					equipment = { weapon = "Staff of the Standalone Cheese", acc3 = "continuum transfunctioner" },
 					action = adventure {
 						zoneid = 73,
 						macro_function = function()
@@ -3535,11 +3550,11 @@ mark done
 ]]
 							end,
 					},
-                                }
+				}
 			elseif have_item("Staff of the Cream of the Cream") and can_equip_item("Staff of the Cream of the Cream") and retrieve_cream_olfacted_monster() ~= "Blooper" then
 				return {
-                                        message = "sniff blooper",
-                                        equipment = { weapon = "Staff of the Cream of the Cream", acc3 = "continuum transfunctioner" },
+					message = "sniff blooper",
+					equipment = { weapon = "Staff of the Cream of the Cream", acc3 = "continuum transfunctioner" },
 					action = adventure {
 						zoneid = 73,
 						macro_function = function()
@@ -3554,16 +3569,16 @@ endif
 ]]
 							end,
 					},
-                                }
+				}
 			else
 				return {
-                                        message = "fight in 8-bit realm",
-                                        equipment = { acc3 = "continuum transfunctioner" },
+					message = "fight in 8-bit realm",
+					equipment = { acc3 = "continuum transfunctioner" },
 					action = adventure {
 						zoneid = 73,
 						macro_function = macro_8bit_realm,
 					},
-                                }
+				}
 			end
 		end,
 	}
@@ -3726,7 +3741,9 @@ endif
 	}
 
 	add_task {
-		prereq = not have_item("Spookyraven ballroom key") and ((challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg") or level() >= 7),
+		prereq = not have_item("Spookyraven ballroom key") and
+			((challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg") or level() >= 7) and
+			maxmp() >= 50,
 		f = script.get_ballroom_key,
 		message = "ballroom key",
 	}
@@ -3887,7 +3904,10 @@ endif
 	}
 
 	add_task {
-		prereq = quest("Am I My Trapper's Keeper?") and (not trailed or trailed == "dairy goat") and challenge ~= "boris",
+		prereq = quest("Am I My Trapper's Keeper?")
+			and (not trailed or trailed == "dairy goat")
+			and challenge ~= "boris" and
+			not cached_stuff.missing_cold_resistance_for_icy_peak,
 		f = function()
 			ignore_buffing_and_outfit = false
 			script.do_trapper_quest()
@@ -4260,6 +4280,72 @@ endif
 	}
 
 	add_task {
+		when = not have_item("digital key") and
+			ascensionstatus("Softcore") and
+			not cached_stuff.tried_pulling_mystic_jar and
+			cached_stuff.campground_psychoses == "not mystic" and
+			turnsthisrun() >= 100 and
+			not have_item("psychoanalytic jar") and
+			not have_item("jar of psychoses (The Crackpot Mystic)") and
+			advs() >= 40,
+		task = {
+			message = "considering pulling mystic jar",
+			nobuffing = true,
+			action = function()
+				cached_stuff.tried_pulling_mystic_jar = true
+				if (pullsleft() or 0) >= 5 then
+					pull_in_softcore("jar of psychoses (The Crackpot Mystic)")
+					did_action = have_item("jar of psychoses (The Crackpot Mystic)")
+				else
+					did_action = tue
+				end
+			end
+		}
+	}
+
+	add_task {
+		when = ascensionstatus("Softcore") and
+			not ascensionpath("Bees Hate You") and
+			not cached_stuff.tried_pulling_large_box and
+			level() >= 10 and
+			turnsthisrun() >= 300 and
+			real_DD_keys >= 3,
+		task = {
+			message = "considering pulling large box",
+			nobuffing = true,
+			action = function()
+				cached_stuff.tried_pulling_large_box = true
+				local want = true
+				local dodstatus = get_dod_potion_status()
+				if next(dodstatus) then
+					want = false
+				end
+				for _, x in ipairs(dod_potion_types) do
+					if have_item(x) then
+						want = false
+					end
+				end
+				if have_item("small box") or have_item("large box") or have_item("blessed large box") then
+					want = false
+				end
+				if want and ensure_clover() and (pullsleft() or 0) >= 5 then
+					pull_in_softcore("large box")
+					meatpaste_items("large box", "ten-leaf clover")
+					use_item("blessed large box")
+					for _, x in ipairs(dod_potion_types) do
+						if have_item(x) then
+							did_action = true
+						end
+					end
+				else
+					print("  skipping attempt")
+					did_action = true
+				end
+			end
+		}
+	}
+
+	add_task {
 		prereq = level() < 11,
 		f = function()
 			use_dancecard()
@@ -4582,8 +4668,8 @@ endif
 				})
 			else
 				inform "do lair entrance"
-				set_result(get_page("/lair1.php", { action = "gates" }))
-				if get_result():contains([[value="mirror"]]) then
+				local pt, pturl = get_page("/lair1.php", { action = "gates" })
+				if pt:contains([[value="mirror"]]) then
 					inform "break mirror"
 					set_equipment {}
 					result, resulturl = get_page("/lair1.php", { action = "mirror" })
@@ -4591,38 +4677,93 @@ endif
 					did_action = result:contains("huge mirror shard")
 					return
 				end
-				local dod_tbl = get_dod_potion_status()
+				local dod_tbl, unknown_potions, unknown_effects = get_dod_potion_status()
 				local dod_reverse = {}
 				for a, b in pairs(dod_tbl) do
 					dod_reverse[b] = a
 				end
-				local got_items = true
+				local got_dod_part = true
+				local got_other_parts = true
+				local know_dod_potion = false
+				local touse_items = {}
 				for a, b in pairs(lair_gateitems) do
-					if get_result():contains(a) then
+					if pt:contains(a) then
 						local needitem = b.item or dod_reverse[b.potion]
+						if b.potion and dod_reverse[b.potion] then
+							know_dod_potion = true
+						end
 						local got = false
-						if needitem and moonsign_area() == "Gnomish Gnomad Camp" and not have_item(needitem) then
-							buy_item(needitem, "n")
-						end
-						if needitem and have_item(needitem) then
+						if have_buff(b.effect) then
 							got = true
-						else
-							got_items = false
+						elseif needitem and moonsign_area() == "Gnomish Gnomad Camp" and not have_item(needitem) then
+							buy_item(needitem, "n")
+						elseif needitem and not have_item(needitem) and ascensionstatus("Softcore") and (pullsleft() or 0) >= 5 then
+							pull_in_softcore(needitem)
 						end
-						print("Need", b.effect, needitem, got)
+						if not got and needitem and have_item(needitem) then
+							touse_items[needitem] = tostring(b.effect)
+							got = true
+						end
+						if not got then
+							if b.potion then
+								got_dod_part = false
+							else
+								got_other_parts = false
+							end
+						end
+						print("Need", b.effect, needitem, got, b.potion)
 					end
 				end
-				if got_items then
-					print("woo got them!")
+				if got_other_parts and got_dod_part then
+					local safe = true
+					for _, y in pairs(touse_items) do
+						if y == "Teleportitis" then
+							safe = false
+						end
+					end
+					if safe then
+						for x, y in pairs(touse_items) do
+							use_item(x)()
+							did_action = have_buff(y)
+							break
+						end
+					end
+				elseif got_other_parts and not got_dod_part and not know_dod_potion and dod_reverse["booze"] then
+					if dod_reverse["teleportation"] or have_item("soft green echo eyedrop antidote") then
+						for _, x in ipairs(unknown_potions) do
+							if have_item(x) then
+								use_item(x)()
+								did_action = get_dod_potion_status()[x] ~= nil
+								break
+							end
+						end
+					end
 				end
-				result = add_message_to_page(get_result(), "TODO: do lair gates, then run script again", nil, "darkorange")
-				finished = true
+				result = add_message_to_page(pt, "TODO: do lair gates, then run script again", nil, "darkorange")
+				resulturl = pturl
+				finished = not did_action
 			end
 		else
 			-- TODO: Make it so we can do one level at a time, not all 3 at once?
 			local pt, pturl = get_page("/lair3.php")
+			if not have_item("hair spray") then
+				buy_item("hair spray", "m")
+			end
 			if pt:contains("lair4.php") then
 				local itemsneeded = session["zone.lair.itemsneeded"] or {}
+				local maximum_tower_items_missing = 6
+				for i = 2, 7 do
+					if itemsneeded[i] and have_item(itemsneeded[i]) then
+						maximum_tower_items_missing = maximum_tower_items_missing - 1
+					end
+				end
+				if ascensionstatus("Softcore") and (pullsleft() or 0) >= maximum_tower_items_missing + 2 then
+					for i = 2, 7 do
+						if itemsneeded[i] and not have_item(itemsneeded[i]) then
+							pull_in_softcore(itemsneeded[i])
+						end
+					end
+				end
 				local function check_levels(lvls)
 					local allok = true
 					for _, level in ipairs(lvls) do
@@ -5053,16 +5194,16 @@ ascension_automation_script_href = add_automation_script("automate-ascension", f
 end)
 
 local ascension_script_options_tbl = {
-	["stop on imported beer"] = { yes = "stop", no = "drink as fallback booze" },
+	["stop on imported beer"] = { yes = "stop", no = "drink as fallback booze", default_yes = true },
 	["skip azazel quest"] = { yes = "skip quest", no = "get steel organ" },
 	["manual lvl 9 quest"] = { yes = "stop and do manually", no = "automate" },
 	["manual castle quest"] = { yes = "stop and do manually", no = "automate" },
 	["eat manually"] = { yes = "eat manually", no = "automate consumption" },
 	["ignore automatic pulls"] = { yes = "only pull softcore items manually", no = "automate some pulls", when = function() return not ascensionstatus("Hardcore") end },
 	["train skills manually"] = { yes = "train manually", no = "automate training", when = function() return ascensionpath("Avatar of Jarlsberg") or ascensionpath("Avatar of Sneaky Pete") end },
-	["100% familiar run"] = { yes = "don't change familiar", no = "automate familiar choice" },
+	["100% familiar run"] = { yes = "don't change familiar", no = "automate familiar choice", when = function() return can_change_familiar() end },
 	["overdrink with nightcap"] = { yes = "overdrink automatically", no = "don't automate" },
-	["pull consumables"] = { yes = "pull and consume", no = "don't automate", when = function() return ascensionpath("Avatar of Sneaky Pete") end },
+	["pull consumables"] = { yes = "pull and consume", no = "don't automate", when = function() return not ascensionstatus("Hardcore") and ascensionpath("Avatar of Sneaky Pete") end, default_yes = true },
 }
 
 function ascension_script_option(name)
@@ -5084,7 +5225,7 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 		return get_page("/main.php")
 	end
 
-	local ok_paths = { [0] = true, ["Avatar of Boris"] = true, [10] = true, ["Avatar of Jarlsberg"] = true, ["BIG!"] = true }
+	local ok_paths = { [0] = true, ["Avatar of Boris"] = true, [10] = true, ["Avatar of Jarlsberg"] = true, ["BIG!"] = true, ["Avatar of Sneaky Pete"] = true }
 -- ["Way of the Surprising Fist"] = true -- needs updates
 	local path_support_text = ""
 	local pathdesc = string.format([[%s %s]], ascensionstatus(), ascensionpathname())
@@ -5105,8 +5246,13 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 	local setting_buttons = {}
 	for x, y in pairs(ascension_script_options_tbl) do
 		if not y.when or y.when() then
-			table.insert(setting_buttons, string.format([[%s: <input type="radio" name="%s" value="no" checked>%s]], x, x, y.no))
-			table.insert(setting_buttons, string.format([[| %s<input type="radio" name="%s" value="yes"><br>]], y.yes, x))
+			if y.default_yes then
+				table.insert(setting_buttons, string.format([[%s: <input type="radio" name="%s" value="yes" checked>%s]], x, x, y.yes))
+				table.insert(setting_buttons, string.format([[| %s<input type="radio" name="%s" value="no"><br>]], y.no, x))
+			else
+				table.insert(setting_buttons, string.format([[%s: <input type="radio" name="%s" value="no" checked>%s]], x, x, y.no))
+				table.insert(setting_buttons, string.format([[| %s<input type="radio" name="%s" value="yes"><br>]], y.yes, x))
+			end
 		end
 	end
 	text = [[

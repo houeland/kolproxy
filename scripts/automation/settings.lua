@@ -346,5 +346,5 @@ function get_ascension_automation_settings(want_bonus)
 		end
 	end
 
-	return tbl, maybe_ignore_skills
+	return tbl
 end
