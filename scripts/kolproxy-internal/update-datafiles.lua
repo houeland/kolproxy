@@ -400,7 +400,7 @@ function parse_items()
 	for l in io.lines("cache/files/items.txt") do
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
-		local itemid, name, picturestr, itemusestr, plural = tonumber(tbl[1]), tbl[2], tbl[4], tbl[5], tbl[8]
+		local itemid, name, picturestr, itemusestr, accessstr, plural = tonumber(tbl[1]), tbl[2], tbl[4], tbl[5], tbl[6], tbl[8]
 		local picture = (picturestr or ""):match("^(.-)%.gif$")
 		if itemid and name and not blacklist[name] then
 			items[name] = { id = itemid, picture = picture }
@@ -408,6 +408,11 @@ function parse_items()
 			for _, u in ipairs(split_commaseparated(itemusestr or "")) do
 				if itemslots[u] then
 					items[name].equipment_slot = itemslots[u]
+				end
+			end
+			for _, a in ipairs(split_commaseparated(accessstr or "")) do
+				if a == "t" then
+					items[name].cantransfer = true
 				end
 			end
 		end

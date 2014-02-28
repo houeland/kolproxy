@@ -14,7 +14,14 @@ register_setting {
 
 register_setting {
 	name = "automate daily visits/summon clip art",
-	description = "Summon clip art as part of daily visits",
+	description = "Summon clip art as part of aftercore tasks",
+	group = "automation",
+	default_level = "enthusiast",
+}
+
+register_setting {
+	name = "automate daily visits/use still",
+	description = "Use moxie guild still as part of aftercore tasks",
 	group = "automation",
 	default_level = "enthusiast",
 }
@@ -232,7 +239,42 @@ function do_daily_visits()
 		queue_page_result(cast_skill("Request Sandwich"))
 		queue_page_result(cast_skill("Request Sandwich"))
 
-		-- TODO: use still
+		if mainstat_type("Moxie") and setting_enabled("automate daily visits/use still") then
+			local options = {}
+			for x, y in pairs(get_recipes_by_type("still")) do
+				local value = nil
+				local profit = estimate_mallsell_profit(x)
+				local cost = estimate_mallsell_profit(y.base)
+				if profit and cost then
+					value = profit - cost
+				end
+				if count_item(y.base) >= 2 then
+					table.insert(options, { name = x, base = y.base, value = value })
+				end
+			end
+
+			table.sort(options, function(a, b) return a.value > b.value end)
+
+			local sodas = 0
+			while #options < 10 do
+				table.insert(options, { name = "tonic water" })
+				sodas = sodas + 1
+				if count_item("soda water") < sodas then
+					buy_item("soda water", "m", 1)
+				end
+			end
+
+			local tobuy_tbl = {}
+			for i = 1, 10 do
+				tobuy_tbl[options[i].name] = (tobuy_tbl[options[i].name] or 0) + 1
+			end
+
+			for _, ptf in ipairs(shop_buyitem(tobuy_tbl, "still")) do
+				queue_page_result(ptf)
+			end
+		else
+			add_result("Skipped using still (can be enabled in settings).")
+		end
 	end
 
 	for _, x in ipairs(daily_items) do
@@ -272,9 +314,6 @@ add_automator("/main.php", function()
 	local want_tbl = {}
 	table.insert(want_tbl, "visit")
 
-	if setting_enabled("automate daily visits/summon clip art") then
-		table.insert(want_tbl, "clipart")
-	end
 	if setting_enabled("automate daily visits/harvest garden") then
 		table.insert(want_tbl, "garden")
 	end
@@ -286,6 +325,12 @@ add_automator("/main.php", function()
 	end
 	if ascensionstatus("Aftercore") and setting_enabled("automate daily visits/do lazy aftercore daily tasks") then
 		table.insert(want_tbl, "lazy")
+	end
+	if ascensionstatus("Aftercore") and setting_enabled("automate daily visits/summon clip art") then
+		table.insert(want_tbl, "clipart")
+	end
+	if ascensionstatus("Aftercore") and mainstat_type("Moxie") and setting_enabled("automate daily visits/use still") then
+		table.insert(want_tbl, "still")
 	end
 	local want_string = table.concat(want_tbl, "+")
 

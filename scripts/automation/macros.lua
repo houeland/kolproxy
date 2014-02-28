@@ -114,8 +114,12 @@ function cannon_action()
 	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Bawdy Refrain", fury() >= 1 and "Furious Wallop" or "???", "Kneebutt", "Toss", "Clobber" }
 end
 
+function estimate_elemental_weapon_damage_sum()
+	return estimate_bonus("Cold Damage") + estimate_bonus("Hot Damage") + estimate_bonus("Sleaze Damage") + estimate_bonus("Spooky Damage") + estimate_bonus("Stench Damage")
+end
+
 function elemental_damage_action()
-	if ascensionpath("Avatar of Sneaky Pete") and have_intrinsic("Gaze of the Trickster God") then -- TODO: elemental damage in general
+	if ascensionpath("Avatar of Sneaky Pete") and estimate_elemental_weapon_damage_sum() >= 10 then
 		return attack_action()
 	end
 	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Bawdy Refrain" }

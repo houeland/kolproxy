@@ -22,12 +22,14 @@ function shop_buyitem(items, whichshop)
 
 	local itemrows = shop_scan_item_rows(whichshop)
 
+	local ptfs = {}
 	for x, y in pairs(items) do
 		if not itemrows[x] then
 			print("WARNING: couldn't find row for item", x)
 			print("  itemrows:", itemrows)
 			print("WARNING: couldn't find row for item", x)
 		end
-		async_post_page("/shop.php", { pwd = session.pwd, whichshop = whichshop, action = "buyitem", whichrow = itemrows[x], quantity = y })
+		table.insert(ptfs, async_post_page("/shop.php", { pwd = session.pwd, whichshop = whichshop, action = "buyitem", whichrow = itemrows[x], quantity = y }))
 	end
+	return ptfs
 end

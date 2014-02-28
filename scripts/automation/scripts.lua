@@ -348,6 +348,8 @@ function get_automation_scripts(cached_stuff)
 				want_bonus.plusinitiative = true
 			elseif t == "monster level" then
 				want_bonus.monster_level = true
+			elseif t == "elemental weapon damage" then
+				want_bonus.elemental_weapon_damage = true
 			else
 				error("Unknown bonus target: " .. t)
 			end
@@ -2322,6 +2324,9 @@ mark m_done
 			{ zone = "An Overgrown Shrine (Northeast)", choice = "Air Apparent", option = "Place your head in the impression", fallback = "Leave the altar", sphere = "crackling" },
 		}
 		local citypt = get_page("/place.php", { whichplace = "hiddencity" })
+		if ascensionpath("Avatar of Sneaky Pete") and not have_skill("Smoke Break") and ascensionstatus("Hardcore") then
+			script.bonus_target { "elemental weapon damage" }
+		end
 		if count_item("stone triangle") >= 4 then
 			return run_task {
 				message = "kill hidden city boss",

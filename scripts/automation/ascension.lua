@@ -93,7 +93,7 @@ local function automate_hcnp_day(whichday)
 	end
 
 	local function want_shore()
-		return not unlocked_island() and not have_item("skeleton")
+		return not unlocked_island() and not have_item("skeleton") and not ascensionpath("Avatar of Sneaky Pete")
 	end
 
 	local function unlocked_knob()
@@ -4412,6 +4412,22 @@ endif
 				["One Less Room Than In That Movie"] = "Officers' Lounge",
 			}, {}, "He-Boulder", 20, { equipment = { hat = "filthy knitted dread sack", pants = "filthy corduroys" } })
 		end,
+	}
+
+	add_task {
+		when = quest("Make War, Not... Oh, Wait") and
+			ascensionpath("Avatar of Sneaky Pete") and
+			not have_frat_war_outfit() and
+			have_hippy_outfit(),
+		task = {
+			message = "get frat war outfit",
+			bonus_target = { "item" },
+			equipment = { hat = "filthy knitted dread sack", pants = "filthy corduroys" },
+			action = adventure {
+				zoneid = 134,
+				macro_function = macro_noodleserpent,
+			}
+		}
 	}
 
 	add_task {

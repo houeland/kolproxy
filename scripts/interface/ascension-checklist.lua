@@ -466,14 +466,21 @@ local href = add_automation_script("custom-ascension-checklist", function()
 			i = 0
 			c = 0
 			s = 0
+			local cantransfer = false
 			for _, n in ipairs(names) do
-				get_itemid(n) -- spellcheck for valid name
+				-- also spellchecks for valid name
+				if get_itemdata(n).cantransfer then
+					cantransfer = true
+				end
 				i = i + (inventory[n] or 0)
 				c = c + (closet[n] or 0)
 				s = s + (storage[n] or 0)
 			end
 			total = i + c + s
 			sortclass, style = classify(total, want, importance)
+			if cantransfer then
+				style = [[ class="cantransfer"]] .. style
+			end
 			local extrainfo = ""
 			if importance > 0 then
 				extrainfo = [[ <span style="font-size: smaller; color: gray;">(cheap and important pull!)</span>]]
@@ -570,6 +577,7 @@ td {
 	padding: 2px 5px;
 }
 .extralocation { display: none }
+.cantransfer { display: none }
 </style>
 <script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
 <script type="text/javascript">
@@ -595,12 +603,17 @@ function show_extraitems() {
 	$("#extraitems").show()
 	$("#show_extraitems_link").hide()
 }
+function show_cantransfer() {
+	$(".cantransfer").show()
+	$("#show_cantransfer_link").hide()
+}
 function show_item_locations() {
 	$(".extralocation").show()
 	$("#show_item_locations_link").hide()
 }
 </script>
 <span id="show_extraitems_link">(<a href="javascript:show_extraitems()">Show well-stocked items</a>)<br></span>
+<span id="show_cantransfer_link">(<a href="javascript:show_cantransfer()">Show tradable items</a>)<br></span>
 <span id="show_item_locations_link">(<a href="javascript:show_item_locations()">Show item locations</a>)<br></span>
 (<a href="ascend.php">Back to ascending</a>)
 
