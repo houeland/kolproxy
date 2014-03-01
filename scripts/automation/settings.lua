@@ -162,6 +162,8 @@ function get_ascension_automation_settings(want_bonus)
 			},
 			shirt = {
 				{ name = "flaming pink shirt", check = function() return want_bonus.plusitems end },
+				"Sneaky Pete's leather jacket (collar popped)",
+				"Sneaky Pete's leather jacket",
 				{ name = "cane-mail shirt", check = function() return (level() < 13) end },
 				"astral shirt",
 				"flaming pink shirt",

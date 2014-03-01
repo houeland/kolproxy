@@ -73,6 +73,10 @@ if hasskill Transcendent Olfaction
   cast Transcendent Olfaction
 endif
 
+if hasskill Make Friends
+  cast Make Friends
+endif
+
 ]]
 end
 
@@ -1058,6 +1062,18 @@ endif
 end
 
 function macro_8bit_realm()
+	local stasispart = [[
+
+while !times 20
+
+]] .. stasis_action() .. [[
+
+endwhile
+
+]]
+	if not can_change_familiar() then
+		stasispart = ""
+	end
 	return [[
 ]] .. COMMON_MACROSTUFF_START(25, 30) .. [[
 
@@ -1075,11 +1091,9 @@ endif
 
 ]] .. macro_killing_begins() .. [[
 
-while !times 20
 
-]] .. stasis_action() .. [[
+]] .. stasispart .. [[
 
-endwhile
 
 while !times 3
 ]] .. cannon_action() .. [[

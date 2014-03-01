@@ -4358,82 +4358,70 @@ endif
 				end
 			end
 		else
+			-- WORKAROUND: doesn't appear until plains is loaded
+			if not have_equipped_item("Talisman o' Nam") then
+				wear { acc3 = "Talisman o' Nam" }
+				async_get_page("/plains.php")
+			end
 			if have_item("Mega Gem") then
-				go("fight dr awkward", 119, macro_noodleserpent, { ["Dr. Awkward"] = "War, sir, is raw!" }, { "A Few Extra Pounds", "Spirit of Garlic" }, "Knob Goblin Organ Grinder", 60, { equipment = { acc3 = "Mega Gem", acc2 = "Talisman o' Nam" } })
+				inform "fighting Dr. Awkward"
+				fam "Knob Goblin Organ Grinder"
+				script.ensure_buffs { "A Few Extra Pounds", "Spirit of Garlic" }
+				script.wear { acc3 = "Mega Gem", acc2 = "Talisman o' Nam" }
+				script.ensure_mp(60)
+				script.heal_up()
+				result, resulturl = get_page("/place.php", { whichplace = "palindome", action = "pal_droffice" })
+				result, resulturl = handle_adventure_result(get_result(), resulturl, "?", macro_noodleserpent, { ["Dr. Awkward"] = "War, sir, is raw!" })
+				did_action = have_item("Staff of Fats")
 			elseif quest_text("wants some wet stew in return") then
 				if have_item("wet stunt nut stew") then
 					inform "getting mega gem"
-					result, resulturl, advagain = autoadventure { zoneid = 50 }
+					get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" })
 					did_action = have_item("Mega Gem")
-				elseif have_item("wet stew") then
-					inform "cooking wet stunt nut stew"
-					cook_items("wet stew", "stunt nuts")
-					did_action = have_item("wet stunt nut stew")
-				elseif not have_item("wet stew") and ascensionstatus() ~= "Hardcore" then
-					pull_in_softcore("wet stew")
-					did_action = true
-				elseif have_item("bird rib") and have_item("lion oil") then
-					inform "cooking wet stew"
-					cook_items("bird rib", "lion oil")
-					did_action = have_item("wet stew")
 				else
-					maybe_ensure_buffs { "Brother Flying Burrito's Blessing" }
-					script.bonus_target { "item" }
-					go("get wet stew ingredients", 100, macro_autoattack, {
-						["The Only Thing About Him is the Way That He Walks"] = "Show him some moves",
-						["Rapido!"] = "Steer for the cave",
-						["Don't Fence Me In"] = "Jump the fence",
-					}, { "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog", 20, { equipment = { familiarequip = "sugar shield" } })
-					if get_result():contains("It's A Sign!") then
-						did_action = true
+					script.bonus_target { "combat" }
+					go("find wet stew", 386, macro_noodleserpent, {
+						["No sir, away!  A papaya war is on!"] = "Give the men a pep talk",
+						["Sun at Noon, Tan Us"] = "A little while",
+						["Rod Nevada, Vendor"] = "Accept (500 Meat)",
+						["Do Geese See God?"] = "Buy the photograph (500 meat)",
+						["A Pre-War Dresser Drawer, Pa!"] = "Ignawer the drawer",
+					}, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 40, { equipment = { acc3 = "Talisman o' Nam" } })
+				end
+			elseif quest_text("track down this Mr. Alarm guy") then
+				if have_item("&quot;2 Love Me, Vol. 2&quot;") then
+					use_item("&quot;2 Love Me, Vol. 2&quot;")
+				end
+				inform "talking to Mr. Alarm"
+				set_result(get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" }))
+				refresh_quest()
+				did_action = quest_text("wants some wet stew in return")
+			else
+				if have_item("&quot;I Love Me, Vol. I&quot;") then
+					use_item("&quot;I Love Me, Vol. I&quot;")
+				end
+				if have_item("photograph of God") and have_item("photograph of a dog") and have_item("photograph of a red nugget") and have_item("photograph of an ostrich egg") then
+					local pt = get_page("/place.php", { whichplace = "palindome" })
+					if pt:contains("Dr. Awkward's Office") then
+						inform "placing palindome photos"
+						get_page("/place.php", { whichplace = "palindome", action = "pal_droffice" })
+						result, resulturl = post_page("/choice.php", { pwd = session.pwd, whichchoice = 872, option = 1, photo1 = get_itemid("photograph of God"), photo2 = get_itemid("photograph of a red nugget"), photo3 = get_itemid("photograph of a dog"), photo4 = get_itemid("photograph of an ostrich egg") })
+						use_hottub()
+						did_action = have_item("&quot;2 Love Me, Vol. 2&quot;")
+						return
 					end
 				end
-			elseif quest_text("track down this Mr. Alarm guy") and not have_item("stunt nuts") and not have_item("wet stunt nut stew") and ascensionstatus() ~= "Hardcore" then
-				pull_in_softcore("stunt nuts")
-				did_action = have_item("stunt nuts")
-			elseif quest_text("track down this Mr. Alarm guy") and not have_item("wet stew") and not have_item("wet stunt nut stew") and ascensionstatus() ~= "Hardcore" then
-				pull_in_softcore("wet stew")
-				did_action = have_item("wet stew")
-			elseif quest_text("track down this Mr. Alarm guy") and have_item("stunt nuts") then
-				if have_item("wet stew") then
-					inform "cooking wet stunt nut stew"
-					cook_items("wet stew", "stunt nuts")
-					did_action = have_item("wet stunt nut stew")
-				else
-					script.bonus_target { "noncombat" }
-					go("track down mr. alarm", 50, macro_stasis, {
-						["Mr. Alarm, I Presarm"] = "Talk to him",
-					}, { "Smooth Movements", "The Sonata of Sneakiness" }, "Mini-Hipster", 15)
-				end
-			else
-				-- WORKAROUND: doesn't appear until plains is loaded
-				if not have_equipped_item("Talisman o' Nam") then
-					print("must equip talisman")
-					wear { acc3 = "Talisman o' Nam" }
-					async_get_page("/plains.php")
-				end
--- 				use_dancecard()
-				if meat() < 500 and not (have_item("photograph of God") and have_item("hard rock candy")) and not have_item("&quot;I Love Me, Vol. I&quot;") then
+				if meat() < 500 then
 					stop "Not enough meat for palindome"
 				end
-				script.bonus_target { "item" }
-				if ascensionstatus() ~= "Hardcore" and have_item("photograph of God") and have_item("hard rock candy") and have_item("hard-boiled ostrich egg") and not have_item("ketchup hound") then
-					pull_in_softcore("ketchup hound")
-				end
-				go("do palindome", 119, macro_noodleserpent, {
+				script.bonus_target { "noncombat" }
+				go("find photographs", 386, macro_noodleserpent, {
 					["No sir, away!  A papaya war is on!"] = "Give the men a pep talk",
 					["Sun at Noon, Tan Us"] = "A little while",
 					["Rod Nevada, Vendor"] = "Accept (500 Meat)",
 					["Do Geese See God?"] = "Buy the photograph (500 meat)",
 					["A Pre-War Dresser Drawer, Pa!"] = "Ignawer the drawer",
 				}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 40, { equipment = { acc3 = "Talisman o' Nam" } })
-				if get_result():contains("Drawn Onward") and resulturl:contains("palinshelves") then
-					set_result(async_post_page("/palinshelves.php", { action = "placeitems", whichitem1 = get_itemid("photograph of God"), whichitem2 = get_itemid("hard rock candy"), whichitem3 = get_itemid("ketchup hound"), whichitem4 = get_itemid("hard-boiled ostrich egg") }))
-					if have_item("&quot;I Love Me, Vol. I&quot;") then
-						use_hottub()
-						did_action = true
-					end
-				end
 			end
 		end
 	end

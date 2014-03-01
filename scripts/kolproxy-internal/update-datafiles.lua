@@ -38,6 +38,7 @@ local blacklist = {
 	["bonuses: frosty halo"] = true,
 
 	["effect: Loaded Forwarbear"] = true,
+	["effect: Grape Expectations"] = true, -- TODO: remove when fixed
 }
 
 local processed_datafiles = {}

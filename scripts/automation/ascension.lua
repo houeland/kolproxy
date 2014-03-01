@@ -138,12 +138,14 @@ local function automate_hcnp_day(whichday)
 	end
 
 	local function max_petelove()
-		return 30
+		if have_item("Sneaky Pete's leather jacket (collar popped)") or have_item("Sneaky Pete's leather jacket") then
+			return 50
+		else
+			return 30
+		end
 	end
 
-	local function max_petehate()
-		return 30
-	end
+	local max_petehate = max_petelove
 
 	challenge = nil
 	if ascensionpath("Way of the Surprising Fist") then
@@ -1624,6 +1626,36 @@ endif
 				end
 				set_result(use_item("Boris's Helm (askew)"))
 				did_action = have_item("Boris's Helm")
+			end
+		}
+	}
+
+	add_task {
+		when = have_item("Sneaky Pete's leather jacket") and not have_item("Sneaky Pete's leather jacket (collar popped)") and level() >= 3 and level() < 13,
+		task = {
+			message = "pop collar on Sneaky Pete's leather jacket",
+			nobuffing = true,
+			action = function()
+				if have_equipped_item("Sneaky Pete's leather jacket") then
+					unequip_slot("shirt")
+				end
+				set_result(use_item("Sneaky Pete's leather jacket"))
+				did_action = have_item("Sneaky Pete's leather jacket (collar popped)")
+			end
+		}
+	}
+
+	add_task {
+		when = have_item("Sneaky Pete's leather jacket (collar popped)") and not have_item("Sneaky Pete's leather jacket") and level() >= 13,
+		task = {
+			message = "unpop collar on Sneaky Pete's leather jacket",
+			nobuffing = true,
+			action = function()
+				if have_equipped_item("Sneaky Pete's leather jacket (collar popped)") then
+					unequip_slot("shirt")
+				end
+				set_result(use_item("Sneaky Pete's leather jacket (collar popped)"))
+				did_action = have_item("Sneaky Pete's leather jacket")
 			end
 		}
 	}
@@ -3306,7 +3338,7 @@ endwhile
 
 	add_task {
 		prereq = challenge == "fist" and not have_buff("Assaulted with Pepper") and have_item("pail") and have_item("&quot;DRINK ME&quot; potion"),
-		message = "getting assulted with pepper",
+		message = "getting assaulted with pepper",
 		action = function()
 			script.wear { hat = "pail" }
 			use_item("&quot;DRINK ME&quot; potion")
@@ -4174,6 +4206,14 @@ endif
 	add_task {
 		when = DD_keys < 3 and not cached_stuff.done_daily_dungeon,
 		task = tasks.do_daily_dungeon,
+	}
+
+	add_task {
+		when = not have_item("digital key") and
+			ascensionstatus("Hardcore") and
+			not script.have_familiar("Angry Jung Man") and
+			not trailed,
+		task = tasks.do_8bit_realm,
 	}
 
 	add_task {
