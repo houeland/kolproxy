@@ -14,33 +14,27 @@ add_choice_text("Hammering the Armory", { -- choice adventure number: 178
 
 -- castle in the clouds in the sky
 
-add_choice_text("Wheel in the Clouds in the Sky, Keep On Turning", function()
-	if choice_adventure_number == 9 then
-		return {
-			["Turn the wheel clockwise"] = "Turn to mysticality",
-			["Turn the wheel counterclockwise"] = "Turn to moxie",
-			["Leave the wheel alone"] = "Leave at muscle (does not cost an adventure)",
-		}
-	elseif choice_adventure_number == 10 then
-		return {
-			["Turn the wheel clockwise"] = "Turn to back door (quest)",
-			["Turn the wheel counterclockwise"] = "Turn to muscle",
-			["Leave the wheel alone"] = "Leave at mysticality (does not cost an adventure)",
-		}
-	elseif choice_adventure_number == 11 then
-		return {
-			["Turn the wheel clockwise"] = "Turn to moxie",
-			["Turn the wheel counterclockwise"] = "Turn to mysticality",
-			["Leave the wheel alone"] = "Leave at back door (does not cost an adventure)",
-		}
-	elseif choice_adventure_number == 12 then
-		return {
-			["Turn the wheel clockwise"] = "Turn to muscle",
-			["Turn the wheel counterclockwise"] = "Turn to back door (quest)",
-			["Leave the wheel alone"] = "Leave at moxie (does not cost an adventure)",
-		}
+local completed_castle_quest = nil
+function check_castle_quest_completed()
+	if not completed_castle_quest and level() >= 10 then
+		completed_castle_quest = not get_page("/questlog.php", { which = 1 }):contains("The Rain on the Plains is Mainly Garbage")
 	end
-end)
+	return completed_castle_quest
+end
+
+add_warning {
+	message = "You might want to wear your Mohawk wig to finish the castle quest faster.",
+	type = "warning",
+	when = "ascension",
+	zone = "The Castle in the Clouds in the Sky (Top Floor)",
+	check = function()
+		if have_equipped_item("Mohawk wig") then return end
+		if not have_item("Mohawk wig") then return end
+		return not check_castle_quest_completed()
+	end
+}
+
+-- hole in the sky
 
 add_itemdrop_counter("star chart", function(c)
 	return "{ " .. make_plural(count_item("star"), "star", "stars") .. ", " .. make_plural(count_item("line"), "line", "lines") .. ", and " .. make_plural(count_item("star chart"), "star chart", "star charts") .. " in inventory. }"
@@ -55,12 +49,10 @@ add_itemdrop_counter("line", function(c)
 end)
 
 add_printer("/beanstalk.php", function()
-	local castle = text:match([[title="The Castle in the Clouds in the Sky %(1%)"]])
-	local hits = text:match([[title="The Hole in the Sky %(1%)"]])
-	if not castle then
+	if not have_item("S.O.C.K.") then
 		local want = { "Tissue Paper Immateria", "Tin Foil Immateria", "Gauze Immateria", "Plastic Wrap Immateria" }
 		local got = 0
-		for item in table.values(want) do
+		for _, item in ipairs(want) do
 			if have_item(item) then
 				got = got + 1
 			end
@@ -73,24 +65,5 @@ add_printer("/beanstalk.php", function()
 		end
 		status = status .. "Need S.O.C.K.<br>"
 		text = text:gsub([[(</table></centeR>)(</body>)]], [[%1<center>]] .. status .. [[</center>%2]])
-	elseif castle and not hits then
-		local want = { "awful poetry journal", "giant needle", "furry fur" }
-		local status = "<b>Required items</b><br>"
-		for _, item in ipairs(want) do
-			local itemtext = "?"
-			if have_item(item) then
-				itemtext = [[<span style="color: green;">]] .. item .. [[</span>]]
-			else
-				itemtext = [[<span style="color: darkorange;">]] .. item .. [[</span>]]
-			end
-			status = status .. itemtext .. "<br>"
-		end
-		text = text:gsub([[(</table></centeR>)(</body>)]], [[%1<center>]] .. status .. [[</center>%2]])
-	elseif hits then
 	end
-end)
-
-add_automator("item drop: quantum egg", function()
-	if not setting_enabled("automate simple tasks") then return end
-	meatpaste_items("S.O.C.K.", "quantum egg")
 end)
