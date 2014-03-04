@@ -235,3 +235,10 @@ add_always_warning("/cafe.php", function()
 		end
 	end
 end)
+
+add_processor("use item: distention pill", function()
+	if text:contains("stomach feels rather stretched out") or text:contains("can't take any more abuse") then
+		day["item.distention pill.used today"] = true
+	end
+end)
+
