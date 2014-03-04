@@ -2253,6 +2253,7 @@ endif
 				if not checker() then
 					return {
 						message = "skipping " .. target .. " fax",
+						nobuffing = true,
 						action = function()
 							cached_stuff["checked fax:" .. target] = true
 							did_action = true

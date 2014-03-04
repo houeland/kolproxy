@@ -131,6 +131,18 @@ add_warning {
 	check = function() return have_item("worm-riding hooks") and have_item("drum machine") end,
 }
 
+add_warning {
+	message = "You might want to turn in your worm-riding manual pages first.",
+	type = "warning",
+	when = "ascension",
+	zone = "The Arid, Extra-Dry Desert",
+	check = function() return count_item("worm-riding manual page") >= 15 end,
+}
+
+add_itemdrop_counter("worm-riding manual page", function(c)
+	return "{ " .. c .. " of 15 found. }"
+end)
+
 -- pyramid
 add_itemdrop_counter("tomb ratchet", function(c)
 	return "{ " .. make_plural(c, "ratchet", "ratchets") .. " in inventory. }"
