@@ -2217,7 +2217,7 @@ endif
 		turns_to_next_sr = 1000000
 	end
 
-	local use_new_faxing = ascensionpath("BIG!") and script.have_familiar("Obtuse Angel")
+	local use_new_faxing = ascensionpath("BIG!") and (script.have_familiar("Obtuse Angel") or script.have_familiar("Reanimated Reanimator"))
 
 	add_task {
 		when = tonumber(ascension["dance card turn"]) == turnsthisrun(),
@@ -2246,7 +2246,21 @@ endif
 		task = tasks.extend_tmm_and_mojo,
 	}
 
-	local function add_faxing_task(target, checker)
+	local function add_faxing_task(target, checker, want_reanimator)
+		if not script.have_familiar("Obtuse Angel") then
+			want_reanimator = true
+		end
+		if not script.have_familiar("Reanimated Reanimator") then
+			want_reanimator = false
+		end
+		local use_familiar = "Obtuse Angel"
+		local use_macro = macro_romanticarrow
+		local use_mp = 30
+		if want_reanimator then
+			use_familiar = "Reanimated Reanimator"
+			use_macro = macro_reanimatorwink
+			use_mp = 50
+		end
 		add_task {
 			when = use_new_faxing and not cached_stuff["checked fax:" .. target] and can_photocopy(),
 			task = function()
@@ -2263,9 +2277,9 @@ endif
 					return {
 						message = "fax and arrow " .. target,
 						action = function()
-							script.want_familiar "Obtuse Angel"
+							script.want_familiar(use_familiar)
 							script.heal_up()
-							script.ensure_mp(30)
+							script.ensure_mp(use_mp)
 							if not playername():match("^Devster[0-9]+$") then
 								script.get_faxbot_fax(target)
 								set_result(use_item("photocopied monster"))
@@ -2284,7 +2298,7 @@ endif
 								end
 							end
 							local pt, url = get_page("/fight.php")
-							result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_romanticarrow)
+							result, resulturl, advagain = handle_adventure_result(pt, url, "?", use_macro)
 							if resulturl:contains("fight.php") then
 								cached_stuff.have_faxed_today = true
 							end
@@ -2302,16 +2316,16 @@ endif
 	add_faxing_task("ninja snowman assassin", function()
 		local mc = get_page("/place.php", { whichplace = "mclargehuge" })
 		return not mc:contains("/peak.gif") and not have_item("ninja rope") and not have_item("ninja crampons") and not have_item("ninja carabiner")
-	end)
+	end, false)
 
 	add_faxing_task("smut orc pervert", function()
 		local oc = get_page("/place.php", { whichplace = "orc_chasm" })
 		return oc:contains("nobridge.gif") and not have_item("smut orc keepsake box") and false
-	end)
+	end, true)
 
 	add_faxing_task("lobsterfrogman", function()
 		return not completed_sonofa_beach() and not have_item("barrel of gunpowder")
-	end)
+	end, true)
 
 	add_task {
 		when = challenge == "zombie" and

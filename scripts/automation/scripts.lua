@@ -161,6 +161,7 @@ function get_automation_scripts(cached_stuff)
 		["Tickle-Me Emilio"] = { mpregen = true, attack = true, fallback = "Rogue Program" },
 		["Bloovian Groose"] = { fallback = "Midget Clownfish" },
 		["Obtuse Angel"] = { fallback = "Slimeling" },
+		["Reanimated Reanimator"] = { fallback = "Obtuse Angel" },
 		["Reagnimated Gnome"] = { familiarequip = "gnomish housemaid's kgnee", fallback = "Hovering Sombrero" },
 		["Hovering Sombrero"] = { fallback = "(ignore familiar)" },
 		["Angry Jung Man"] = { fallback = "Slimeling" },
@@ -2686,6 +2687,9 @@ mark m_done
 				ensure_buffs { "Spirit of Garlic", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
 				maybe_ensure_buffs { "Mental A-cue-ity" }
 				ensure_mp(100)
+				if maxmp() >= 200 then
+					ensure_mp(150)
+				end
 				result, resulturl = get_page("/pyramid.php", { action = "lower" })
 				result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
 				while get_result():contains([[<!--WINWINWIN-->]]) and get_result():contains([[fight.php]]) do

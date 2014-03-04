@@ -1068,6 +1068,27 @@ endif
 ]]
 end
 
+function macro_reanimatorwink()
+	return [[
+]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
+
+cast wink at
+
+if (match "begins calculating how much")
+
+]] .. maybe_stun_monster(true) .. [[
+
+]] .. macro_killing_begins() .. [[
+
+while !times 5
+]] .. serpent_action() .. [[
+endwhile
+
+endif
+
+]]
+end
+
 function macro_8bit_realm()
 	local stasispart = [[
 
