@@ -756,7 +756,7 @@ endif
 	}
 
 	add_task {
-		when = council_text:contains("visit the Toot Oriole"),
+		when = council_text:contains("Toot Oriole"),
 		task = {
 			message = "visit the toot oriole",
 			nobuffing = true,
@@ -1490,8 +1490,8 @@ endif
 
 	if (have_skill("Throw Party") and cached_stuff.used_sneaky_pete_throw_party == nil) or (have_skill("Incite Riot") and cached_stuff.used_sneaky_pete_incite_riot == nil) then
 		local pt = get_page("/skills.php")
-		cached_stuff.used_sneaky_pete_throw_party = pt:match("<option disabled[^>]->Throw Party")
-		cached_stuff.used_sneaky_pete_incite_riot = pt:match("<option disabled[^>]->Incite Riot")
+		cached_stuff.used_sneaky_pete_throw_party = pt:match("<option disabled[^>]->Throw Party") or not pt:contains("Throw Party")
+		cached_stuff.used_sneaky_pete_incite_riot = pt:match("<option disabled[^>]->Incite Riot") or not pt:contains("Incite Riot")
 	end
 
 	add_task {
@@ -2299,7 +2299,7 @@ endif
 	end
 
 	add_faxing_task("ninja snowman assassin", function()
-		local mc = get_page("/mclargehuge.php")
+		local mc = get_page("/place.php", { whichplace = "mclargehuge" })
 		return not mc:contains("/peak.gif") and not have_item("ninja rope") and not have_item("ninja crampons") and not have_item("ninja carabiner")
 	end)
 

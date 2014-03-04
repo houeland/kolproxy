@@ -10,6 +10,9 @@ if monstername lobsterfrogman
   abort LFM
 endif
 
+if monstername ninja snowman assassin
+  abort assassin
+endif
 
 ]]
 	end
@@ -824,6 +827,10 @@ endif
 
 if (monstername modern zmobie) || (monstername conjoined zmombie)
   call kill_cannon
+endif
+
+if (monstername ninja snowman assassin) || (monstername lobsterfrogman)
+  call kill_serpent
 endif
 
 pickpocket

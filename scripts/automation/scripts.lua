@@ -1060,7 +1060,7 @@ function get_automation_scripts(cached_stuff)
 			shrug_buff("Ur-Kel's Aria of Annoyance")
 			set_mcd(0) -- HACK: don't want this to be done here!
 		end
-		if have_item("Flaskfull of Hollow") and buffturns("Merry Smithsness") < 10 then
+		if have_item("Flaskfull of Hollow") and buffturns("Merry Smithsness") < 10 and not ascensionstatus("Aftercore") then
 			use_item("Flaskfull of Hollow")
 		end
 		local function try_casting_buff(buffname, try_shrugging)
@@ -1220,7 +1220,7 @@ function get_automation_scripts(cached_stuff)
 			f.fold_item("Loathing Legion rollerblades")
 		elseif want_bonus.rollover_adventures then
 			f.fold_item("Loathing Legion moondial")
-		else
+		elseif level() < 13 then
 			f.fold_item("Loathing Legion necktie")
 		end
 
@@ -1232,13 +1232,13 @@ function get_automation_scripts(cached_stuff)
 
 		if want_bonus.easy_combat then
 			f.fold_item("Boris's Helm")
-		else
+		elseif want_bonus.monster_level then
 			f.fold_item("Boris's Helm (askew)")
 		end
 
 		if want_bonus.rollover_adventures or want_bonus.easy_combat then
 			f.fold_item("Sneaky Pete's leather jacket")
-		else
+		elseif want_bonus.monster_level then
 			f.fold_item("Sneaky Pete's leather jacket (collar popped)")
 		end
 
