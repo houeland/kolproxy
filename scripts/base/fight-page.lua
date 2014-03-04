@@ -102,34 +102,6 @@ add_printer("/fight.php", function()
 		extra = extra .. [[<br><center style="font-size: 75%%; color: green">]] .. #tbl .." / 8 insults</center>"
 	end
 
-	-- TODO-future: this should be in lair.lua
-	local tower_monster_items = {
-		["Beer Batter"] = "baseball",
-		["best-selling novelist"] = "plot hole",
-		["Big Meat Golem"] = "meat vortex",
-		["Bowling Cricket"] = "sonar-in-a-biscuit",
-		["Bronze Chef"] = "leftovers of indeterminate origin",
-		["concert pianist"] = "Knob Goblin firecracker",
-		["darkness"] = "inkwell",
-		["El Diablo"] = "mariachi G-string",
-		["Electron Submarine"] = "photoprotoneutron torpedo",
-		["endangered inflatable white tiger"] = "pygmy blowgun",
-		["fancy bath slug"] = "fancy bath salts",
-		["Fickle Finger of F8"] = "razor-sharp can lid",
-		["Flaming Samurai"] = "frigid ninja stars",
-		["giant fried egg"] = "black pepper",
-		["Giant Desktop Globe"] = "NG",
-		["Ice Cube"] = "hair spray",
-		["malevolent crop circle"] = "bronzed locust",
-		["possessed pipe-organ"] = "powdered organs",
-		["Pretty Fly"] = "spider web",
-		["Tyrannosaurus Tex"] = "chaos butterfly",
-		["Vicious Easel"] = "disease",
-
-		["collapsed mineshaft golem"] = "stick of dynamite",
-		["Enraged Cow"] = "barbed-wire fence",
-		["giant bee"] = "tropical orchid",
-	}
 	if tower_monster_items[monstername()] then
 		local item_name = tower_monster_items[monstername()]
 		local item_id = get_itemid(item_name)

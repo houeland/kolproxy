@@ -1,3 +1,31 @@
+tower_monster_items = {
+	["Beer Batter"] = "baseball",
+	["best-selling novelist"] = "plot hole",
+	["Big Meat Golem"] = "meat vortex",
+	["Bowling Cricket"] = "sonar-in-a-biscuit",
+	["Bronze Chef"] = "leftovers of indeterminate origin",
+	["concert pianist"] = "Knob Goblin firecracker",
+	["darkness"] = "inkwell",
+	["El Diablo"] = "mariachi G-string",
+	["Electron Submarine"] = "photoprotoneutron torpedo",
+	["endangered inflatable white tiger"] = "pygmy blowgun",
+	["fancy bath slug"] = "fancy bath salts",
+	["Fickle Finger of F8"] = "razor-sharp can lid",
+	["Flaming Samurai"] = "frigid ninja stars",
+	["giant fried egg"] = "black pepper",
+	["Giant Desktop Globe"] = "NG",
+	["Ice Cube"] = "hair spray",
+	["malevolent crop circle"] = "bronzed locust",
+	["possessed pipe-organ"] = "powdered organs",
+	["Pretty Fly"] = "spider web",
+	["Tyrannosaurus Tex"] = "chaos butterfly",
+	["Vicious Easel"] = "disease",
+
+	["collapsed mineshaft golem"] = "stick of dynamite",
+	["Enraged Cow"] = "barbed-wire fence",
+	["giant bee"] = "tropical orchid",
+}
+
 local scopes = {
 	["see a wooden gate with an elaborate carving of an armchair on it."] = "pygmy pygment",
 	["see a wooden gate with an elaborate carving of a cowardly%-looking man on it."] = "wussiness potion",
@@ -104,6 +132,41 @@ add_processor("/campground.php", function()
 	end
 end)
 
+function get_lair_gate_items()
+	local gatestatus = session["zone.lair.gates"] or {}
+	local scopeitems = session["zone.lair.itemsneeded"] or {}
+
+	local gate_items = {}
+	gate_items[1] = gatestatus[1] or scopeitems[1]
+	gate_items[2] = gatestatus[2]
+	gate_items[3] = gatestatus[3]
+
+	return gate_items
+end
+
+function get_lair_tower_monster_items()
+	local scopeitems = session["zone.lair.itemsneeded"] or {}
+	local tower_monsters = ascension["zone.lair.tower monsters"] or {}
+
+	local function lookup(level)
+		local scoped = scopeitems[level + 1]
+		if scoped then return scoped end
+		local monster = tower_monsters["level" .. level]
+		if monster then return tower_monster_items[monster] end
+	end
+
+	local tower_items = {}
+	for i = 1, 6 do
+		tower_items[i] = lookup(i)
+	end
+
+	return tower_items
+end
+
+function requires_wand_of_nagamar()
+	return not ascensionpath("Bees Hate You") and not ascensionpath("Avatar of Boris") and not ascensionpath("Bugbear Invasion") and not ascensionpath("Zombie Slayer") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("KOLHS") and not ascensionpath("Avatar of Sneaky Pete")
+end
+
 add_automator("/campground.php", function()
 	if session["zone.lair.gates"] then return end
 	if text:contains("peer into the eyepiece of the telescope") or (text:contains("Nope.") and params.action == "telescopelow") then
@@ -113,19 +176,11 @@ add_automator("/campground.php", function()
 	end
 end)
 
-function requires_wand_of_nagamar()
-	return not ascensionpath("Bees Hate You") and not ascensionpath("Avatar of Boris") and not ascensionpath("Bugbear Invasion") and not ascensionpath("Zombie Slayer") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("KOLHS") and not ascensionpath("Avatar of Sneaky Pete")
-end
-
 add_printer("/campground.php", function()
 	if text:contains("peer into the eyepiece of the telescope") or (text:contains("Nope.") and params.action == "telescopelow") then
 		-- telescope lair info
 
 		local function get_gates_display_lines()
-			local gate_lines = {}
-			local gatestatus = session["zone.lair.gates"] or {}
-			local scopeitems = session["zone.lair.itemsneeded"] or {}
-
 			local function mkline(gate_input)
 				if not gate_input then
 					return [[<span style="color: darkorange">(Unknown)</span>]]
@@ -146,10 +201,11 @@ add_printer("/campground.php", function()
 				end
 			end
 
-			table.insert(gate_lines, mkline(gatestatus[1] or scopeitems[1]))
-			table.insert(gate_lines, mkline(gatestatus[2]))
-			table.insert(gate_lines, mkline(gatestatus[3]))
-
+			local gate_items = get_lair_gate_items()
+			local gate_lines = {}
+			table.insert(gate_lines, mkline(gate_items[1]))
+			table.insert(gate_lines, mkline(gate_items[2]))
+			table.insert(gate_lines, mkline(gate_items[3]))
 			return gate_lines
 		end
 
@@ -180,7 +236,7 @@ add_printer("/campground.php", function()
 				return [[<span style="color: ]] .. (overridecolor or color) .. [[">]] .. string.format("%s = ?", eff) .. [[</span>]]
 			end
 			local want_type = nil
-			local gatestatus = session["zone.lair.gates"] or {}
+			local gatestatus = get_lair_gate_items()
 			if gatestatus[3] and lair_gateitems[gatestatus[3]] then
 				want_type = lair_gateitems[gatestatus[3]].potion
 			end
@@ -459,7 +515,6 @@ end
 
 add_printer("/lair1.php", function()
 	local need = {}
-	local pwd = session.pwd -- Inserting pwd, boo!
 	text = text:gsub([[</head>]], [[<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
 <script type="text/javascript">
 	function use_item_result(link, pagetext, effectname) {
@@ -471,7 +526,7 @@ add_printer("/lair1.php", function()
 		}
 	}
 	function use_item(link, itemid, effectname) {
-		$.ajax({ type:'GET', url:'/inv_use.php', cache:false, data:{ pwd:"]] .. pwd .. [[", whichitem:itemid, ajax:1 }, global:false, success: function(retdata) { use_item_result(link, retdata, effectname); } });
+		$.ajax({ type:'GET', url:'/inv_use.php', cache:false, data:{ pwd:"]] .. session.pwd .. [[", whichitem:itemid, ajax:1 }, global:false, success: function(retdata) { use_item_result(link, retdata, effectname); } });
 	}
 </script>%0]])
 	for from, to in pairs(lair_gateitems) do
@@ -505,7 +560,7 @@ add_printer("/lair2.php", function()
 		text = text:gsub([[(<input type=hidden name=prepreaction value="sorcriddle3">What am I%? <input name=answer class=text type=text size=10)(>)]], [[%1 value="fsh"%2]])
 	end
 	if text:contains([[<input type=hidden name=prepreaction value="sequence">First:]]) then
-		choices = { seq1="Up", seq2="Up", seq3="Down", seq4="Down", seq5="Left", seq6="Right", seq7="Left", seq8="Right", seq9="B", seq10="A" }
+		local choices = { seq1 = "Up", seq2 = "Up", seq3 = "Down", seq4 = "Down", seq5 = "Left", seq6 = "Right", seq7 = "Left", seq8 = "Right", seq9 = "B", seq10 = "A" }
 		for a, b in pairs(choices) do
 			text = text:gsub([[(<select name=]]..a..[[>.-<option value=".-")(>]]..b..[[</option>.-</select>)]], [[%1 selected="selected"%2]])
 		end
@@ -920,9 +975,9 @@ add_printer("/lair3.php", function()
 end)
 
 local function show_tower_items(levelidxs)
-	local itemsneeded = session["zone.lair.itemsneeded"] or {}
+	local tower_items = get_lair_tower_monster_items()
 	for _, level in ipairs(levelidxs) do
-		local needitem = itemsneeded[level + 1]
+		local needitem = tower_items[level]
 		if needitem then
 			local color = have_item(needitem) and "green" or "orange"
 			local leveltext = [[<span style="color: ]] .. color .. [[">{ ]] .. needitem .. [[ }</span>]]
@@ -941,6 +996,22 @@ add_printer("/lair5.php", function()
 	show_tower_items { 4, 5, 6 }
 end)
 
+add_processor("/fight.php", function()
+	if not monstername() then return end
+
+	local page_offset = ({ ["/lair4.php"] = 0, ["/lair5.php"] = 3 })[requestpath]
+	local level_offset = ({ level1 = 1, level2 = 2, level3 = 3 })[params.action]
+
+	if page_offset and level_offset then
+		local level = page_offset + level_offset
+		if not get_lair_tower_monster_items()[level] then
+			local tbl = ascension["zone.lair.tower monsters"] or {}
+			tbl["level" .. level] = monstername()
+			ascension["zone.lair.tower monsters"] = tbl
+		end
+	end
+end)
+
 local function missing_tower_item()
 	local where1, where2
 	if requestpath == "/lair4.php" then
@@ -951,9 +1022,9 @@ local function missing_tower_item()
 	where2 = tonumber((params.action or ""):match("^level([0-9]+)$"))
 	if where1 and where2 then
 		local level = where1 + where2
-		local itemsneeded = session["zone.lair.itemsneeded"] or {}
-		if itemsneeded[level + 1] then
-			return not have_item(itemsneeded[level + 1])
+		local tower_items = get_lair_tower_monster_items()
+		if tower_items[level] then
+			return not have_item(tower_items[level])
 		end
 	end
 end
@@ -974,14 +1045,14 @@ add_warning {
 	type = "extra",
 	when = "ascension",
 	check = function()
-		return params.action and missing_tower_item() and not have_buff("Elron's Explosive Etude") and classid() == 6 and level() >= 15 and have_skill("Elron's Explosive Etude")
+		return params.action and missing_tower_item() and not have_buff("Elron's Explosive Etude") and playerclass("Accordion Thief") and level() >= 15 and have_skill("Elron's Explosive Etude")
 	end,
 }
 
 add_automator("/fight.php", function()
 	local function known_win(level)
-		local itemsneeded = session["zone.lair.itemsneeded"] or {}
-		local needitem = itemsneeded[level + 1]
+		local tower_items = get_lair_tower_monster_items()
+		local needitem = tower_items[level]
 		return needitem and have_item(needitem)
 	end
 	if text:contains([[<a href="lair4.php">Go back to the Sorceress' Tower</a>]]) and text:contains("WINWINWIN") then
@@ -1160,7 +1231,7 @@ add_printer("/lair6.php", function()
 		"Defeat your own shadow (use healing items)",
 		"Beat the first familiar (requires 20+ lbs. familiar)",
 		"Beat the second familiar (requires 20+ lbs. familiar)",
-		"Defeat The Naughty Sorceress",
+		"Defeat The Naughty Sorceress (requires Wand of Nagamar)",
 		"Free the king",
 	}
 	if session["NS lair familiar needed for place 3"] then
@@ -1170,7 +1241,7 @@ add_printer("/lair6.php", function()
 		placedescs[5] = "Beat the first familiar (need 20+ lbs. " .. session["NS lair familiar needed for place 4"] .. ")"
 	end
 	if ascensionpath("Bees Hate You") then
-		placedescs[6] = "Defeat The Naughty Sorceress and The Guy Made Of Bees"
+		placedescs[6] = "Defeat The Naughty Sorceress and The Guy Made Of Bees (requires antique hand mirror)"
 	elseif ascensionpath("Avatar of Boris") then
 		placedescs[4] = "Beat the first familiar (requires nothing)"
 		placedescs[5] = "Beat the second familiar (requires nothing)"

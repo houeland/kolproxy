@@ -39,6 +39,28 @@ add_warning {
 	end,
 }
 
+add_printer("/shop.php", function()
+	if not text:contains(">The Shore, Inc. Gift Shop<") then return end
+	local tower_items = get_lair_tower_monster_items()
+	local crates = {
+		["barbed-wire fence"] = "ski resort souvenir crate",
+		["stick of dynamite"] = "dude ranch souvenir crate",
+		["tropical orchid"] = "tropical island souvenir crate",
+	}
+	if tower_items[6] and not have_item(tower_items[6]) then
+		local crate = crates[tower_items[6]]
+		if crate and not have_item(crate) then
+			text = text:gsub("<tr>.-</tr>", function(tr)
+				if not tr:contains(crate) then return end
+				return tr:gsub("<td.-</td>", function(td)
+					if not td:contains(crate) then return end
+					return td:gsub("<td", [[<td style="background-color: lightgreen"]])
+				end)
+			end)
+		end
+	end
+end)
+
 add_automator("/beach.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 	if params.action == "woodencity" then
