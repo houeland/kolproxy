@@ -1,13 +1,11 @@
 function get_ascension_automation_settings(want_bonus)
 	local tbl = {
-		should_wear_weapons = challenge ~= "fist" and (
-				playerclass("Accordion Thief") or
-				have_item("Jarlsberg's pan (Cosmic portal mode)") or
-				have_item("Operation Patriot Shield") or
-				have_item("Trusty") or
-				have_item("Sneaky Pete's basket") or
+		should_wear_weapons = playerclass("Accordion Thief") or
 				challenge == "zombie" or
 				challenge == "jarlsberg" or
+				have_item("Jarlsberg's pan (Cosmic portal mode)") or
+				have_item("Operation Patriot Shield") or
+				have_item("Sneaky Pete's basket") or
 				have_item("Brimstone Bludgeon") or
 				have_item("Brimstone Bunker") or
 				have_item("astral shield") or
@@ -17,9 +15,7 @@ function get_ascension_automation_settings(want_bonus)
 				have_item("A Light that Never Goes Out") or
 				have_item("Staff of the Headmaster's Victuals") or
 				have_item("Saucepanic") or
-				have_item("Frankly Mr. Shank") or
-				session["__script.no halos"]
-			),
+				have_item("Frankly Mr. Shank"),
 		ignore_buffs = {},
 		slimeling_feed_items = {
 			"snapdragon pistil", "elephant stinger",
@@ -253,7 +249,7 @@ function get_ascension_automation_settings(want_bonus)
 			}
 		}
 	}
-	if tbl.should_wear_weapons then
+	if tbl.should_wear_weapons or not can_wear_weapons() then
 		tbl.default_equipment.weapon = {
 			"Trusty",
 			"Staff of Simmering Hatred",

@@ -1,3 +1,5 @@
+-- update-datafiles.lua --
+
 dofile("scripts/base/base-lua-functions.lua")
 
 local faxbot_most_popular = {
@@ -764,23 +766,28 @@ function parse_recipes()
 		end
 		table.insert(recipes[item], tbl)
 	end
+
 	for l in io.lines("cache/files/concoctions.txt") do
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
 		local itemname, crafttype = tbl[1], tbl[2]
 		if crafttype == "CLIPART" then
 			add_recipe(itemname, { type = "cliparts", clips = { tonumber(tbl[3]), tonumber(tbl[4]), tonumber(tbl[5]) } })
-		elseif crafttype == "SMITH" then
+		elseif crafttype == "SMITH" or crafttype == "WSMITH" or crafttype == "ASMITH" then
+			table.remove(tbl, 1)
+			table.remove(tbl, 1)
+			table.sort(tbl)
+			add_recipe(itemname, { type = "smith", ingredients = tbl })
 		elseif crafttype == "MIX" or crafttype == "ACOCK" or crafttype == "SCOCK" or crafttype == "SACOCK" then
 			table.remove(tbl, 1)
 			table.remove(tbl, 1)
 			table.sort(tbl)
-			add_recipe(itemname, { type = "cocktailcrafting", ingredients = tbl })
-		elseif crafttype == "COOK" then
+			add_recipe(itemname, { type = "cocktail", ingredients = tbl })
+		elseif crafttype == "COOK" or crafttype == "PASTA" or crafttype == "TEMPURA" or crafttype == "SAUCE" or crafttype == "SSAUCE" or crafttype == "DSAUCE" then
 			table.remove(tbl, 1)
 			table.remove(tbl, 1)
 			table.sort(tbl)
-			add_recipe(itemname, { type = "cooking", ingredients = tbl })
+			add_recipe(itemname, { type = "cook", ingredients = tbl })
 		elseif crafttype and crafttype:contains("STILL") then
 			add_recipe(itemname, { type = "still", base = tbl[3] })
 		end
@@ -792,8 +799,10 @@ end
 function verify_recipes(data)
 	local correct_data = {
 		["potion of X-ray vision"] = { { type = "cliparts", clips = { 4, 6, 8 } } },
-		["margarita"] = { { type = "cocktailcrafting", ingredients = { "bottle of tequila", "lemon" } } },
+		["margarita"] = { { type = "cocktail", ingredients = { "bottle of tequila", "lemon" } } },
 		["tonic water"] = { { type = "still", base = "soda water" } },
+		["Hell ramen"] = { { type = "cook", ingredients = { "Hell broth", "dry noodles" } } },
+		["Hairpiece On Fire"] = { { type = "smith", ingredients = { "lump of Brituminous coal", "maiden wig" } } },
 	}
 	return verify_data_fits(correct_data, data)
 end

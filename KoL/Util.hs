@@ -122,7 +122,7 @@ forkIO_ name x = void $ forkIO $ x `catch` (\e -> do
 
 get_custom_autoload_script_files = do
 	filenames <- getDirectoryContents "scripts/custom-autoload"
-	return $ filter (=~ "\\.lua$") filenames
+	return $ map ("custom-autoload/" ++) $ filter (=~ "\\.lua$") filenames
 
 debug_do msg x = (x) `catch` (\e -> do
 	putDebugStrLn $ msg ++ " exception: " ++ show (e :: SomeException)

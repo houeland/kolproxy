@@ -272,7 +272,7 @@ function do_daily_visits()
 			for _, ptf in ipairs(shop_buyitem(tobuy_tbl, "still")) do
 				queue_page_result(ptf)
 			end
-		else
+		elseif mainstat_type("Moxie") then
 			add_result("Skipped using still (can be enabled in settings).")
 		end
 	end

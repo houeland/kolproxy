@@ -76,6 +76,9 @@ add_interceptor("/topmenu.php", function()
 	if ascensionpathid() == 9 then
 		lairlink = [[<a target='mainpane' href='place.php?whichplace=bugbearship'>ship</a>]]
 	end
+	if playername():match("^Devster[0-9]+$") then
+		lairlink = lairlink .. [[ <span class='title'><a target='mainpane' href='devster.php'>dev</a></span>]]
+	end
 	return [[
 <!DOCTYPE html>
 <html>

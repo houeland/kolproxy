@@ -641,7 +641,7 @@ function can_equip_item(item)
 	elseif (itemdata.equipment_slot == "weapon" or itemdata.equipment_slot == "offhand") and not can_wear_weapons() then
 		return false
 	end
-	if itemdata.equipment_slot == "shirt" and not have_skill("Torso Awaregness") and not have_skill("Best Dressed") then
+	if itemdata.equipment_slot == "shirt" and not have_skill("Torso Awaregness") then
 		return false
 	end
 	return true

@@ -4,47 +4,63 @@ function get_automation_tasks(script, cached_stuff)
 	local t = {}
 	local task = t
 
-	t.summon_clip_art = {
+	t.summon_tomes = {
+		message = "summon tomes",
 		nobuffing = true,
 		action = function()
-			inform "using clip art tome summons"
+			cached_stuff.summoned_tomes = true
+			local want_smith_weapons = {
+				["Seal Clubber"] = "Meat Tenderizer is Murder",
+				["Turtle Tamer"] = "Work is a Four Letter Sword",
+				["Pastamancer"] = "Hand that Rocks the Ladle",
+				["Sauceror"] = "Saucepanic",
+				["Disco Bandit"] = "Frankly Mr. Shank",
+				["Accordion Thief"] = "Shakespeare's Sister's Accordion",
+			}
+			if moonsign_area("Degrassi Knoll") and want_smith_weapons[playerclassname()] then
+				local want_items = { want_smith_weapons[playerclassname()], "A Light that Never Goes Out", "Hairpiece On Fire" }
+				if ascensionstatus("Hardcore") then table.insert(want_items, "Vicar's Tutu") end
+				for _, x in ipairs(want_items) do
+					if not have_item(x) then
+						if not have_item("lump of Brituminous coal") then
+							script.ensure_mp(2)
+							cast_skill("Summon Smithsness")()
+						end
+						if have_item("lump of Brituminous coal") then
+							if x == "Work is a Four Letter Sword" and not have_item("sword hilt") then
+								buy_item("sword hilt", "s")()
+							elseif x == "A Light that Never Goes Out" and not have_item("third-hand lantern") then
+								buy_item("third-hand lantern", "m")()
+							elseif x == "Hairpiece On Fire" and not have_item("maiden wig") then
+								buy_item("maiden wig", "4")()
+							elseif x == "Vicar's Tutu" and not have_item("frilly skirt") then
+								buy_item("frilly skirt", "4")()
+							else
+								unequip_slot("weapon")()
+							end
+							craft_item(x)()
+						end
+					end
+					if not have_item(x) then
+						break
+					end
+				end
+			end
 
-			if not have_item("shining halo") then
+			if not have_item("shining halo") and level() == 1 and not get_ascension_automation_settings().should_wear_weapons then
 				script.ensure_mp(2)
-				async_post_page("/campground.php", { preaction = "summoncliparts" })
-				async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "01", clip2 = "06", clip3 = "06" })
+				summon_clipart("shining halo")
 			end
-			if not have_item("Ur-Donut") then
+
+			if not have_item("Ur-Donut") and level() == 1 then
 				script.ensure_mp(2)
-				async_post_page("/campground.php", { preaction = "summoncliparts" })
-				async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "01", clip2 = "01", clip3 = "01" })
+				summon_clipart("Ur-Donut")
+				eat_item("Ur-Donut")
 			end
-			if not have_item("bucket of wine") then
-				script.ensure_mp(2)
-				async_post_page("/campground.php", { preaction = "summoncliparts" })
-				async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "04", clip2 = "04", clip3 = "04" })
-			end
-
-			if not have_item("shining halo") then
-				print("SCRIPT WARNING: failed to summon clip art items")
-				session["__script.no halos"] = true
-				did_action = true
-				return
-			end
-
-			if not have_item("shining halo") or not have_item("Ur-Donut") or not have_item("bucket of wine") then
-				print(have_item("shining halo"), have_item("Ur-Donut"), have_item("bucket of wine"))
-				critical "Error getting clip art items"
-			end
-
-			eat_item("Ur-Donut")
-			if level() >= 2 then
-				did_action = true
-			end
+			did_action = true
 		end
 	}
 
-	-- TODO: split into 3 tasks
 	t.get_starting_items = {
 		message = "get starting items",
 		nobuffing = true,
@@ -111,17 +127,20 @@ function get_automation_tasks(script, cached_stuff)
 				set_result(buy_item("toy accordion", "z"))
 				did_action = have_item("toy accordion")
 			end
+		end
+	}
 
-			if not have_item("seal tooth") and challenge ~= "fist" and challenge ~= "zombie" then
-				inform "pick up seal tooth"
-				script.ensure_worthless_item()
-				if not have_item("hermit permit") then
-					buy_item("hermit permit", "m")
-				end
-				async_post_page("/hermit.php", { action = "trade", whichitem = get_itemid("seal tooth"), quantity = 1 })
-				did_action = have_item("seal tooth")
-				return result, resulturl, did_action
+	t.get_seal_tooth = {
+		message = "get seal tooth",
+		nobuffing = true,
+		action = function()
+			inform "pick up seal tooth"
+			script.ensure_worthless_item()
+			if not have_item("hermit permit") then
+				buy_item("hermit permit", "m")
 			end
+			set_result(post_page("/hermit.php", { action = "trade", whichitem = get_itemid("seal tooth"), quantity = 1 }))
+			did_action = have_item("seal tooth")
 		end
 	}
 
@@ -226,7 +245,7 @@ function get_automation_tasks(script, cached_stuff)
 		fam = "He-Boulder",
 		minmp = 10,
 		action = function()
-			script.get_faxbot_fax("sleepy mariachi", "sleepy_mariachi")
+			script.get_faxbot_fax("sleepy mariachi")
 			use_item("photocopied monster")
 			local pt, url = get_page("/fight.php")
 			local mariachi_macro = [[

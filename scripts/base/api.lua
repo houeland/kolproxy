@@ -56,27 +56,31 @@ function setup_functions()
 			return tbl
 		end
 
+		local player_classid_names = {
+			"Seal Clubber",
+			"Turtle Tamer",
+			"Pastamancer",
+			"Sauceror",
+			"Disco Bandit",
+			"Accordion Thief",
+			nil, nil, nil, nil,
+			"Avatar of Boris",
+			"Zombie Master",
+			nil,
+			"Avatar of Jarlsberg",
+			"Avatar of Sneaky Pete",
+		}
 		function classid() return tonumber(status().class) end
 		function playerclassname()
-			local classnames = {
-				"Seal Clubber",
-				"Turtle Tamer",
-				"Pastamancer",
-				"Sauceror",
-				"Disco Bandit",
-				"Accordion Thief",
-				nil, nil, nil, nil,
-				"Avatar of Boris",
-				"Zombie Master",
-				nil,
-				"Avatar of Jarlsberg",
-				"Avatar of Sneaky Pete",
-			}
-			return classnames[classid()] or ("{classid:" .. classid() .. "}")
+			return player_classid_names[classid()] or ("{classid:" .. classid() .. "}")
 		end
 		function playerclass(check)
-			-- TODO: validate
-			return check == playerclassname()
+			for i = 1, 100 do
+				if check == player_classid_names[i] then
+					return classid() == i
+				end
+			end
+			error("Unknown playerclass: " .. tostring(check))
 		end
 
 		function playerid() return tonumber(status().playerid) end
@@ -90,7 +94,7 @@ function setup_functions()
 				return "Muscle"
 			elseif cid == 3 or cid == 4 or cid == 14 then
 				return "Mysticality"
-			elseif cid == 5 or cid == 6 then
+			elseif cid == 5 or cid == 6 or cid == 15 then
 				return "Moxie"
 			else
 				local tbl = {
@@ -461,9 +465,15 @@ function setup_functions()
 				error("Invalid name for have_skill: " .. tostring(name))
 			end
 			local skills = get_player_skills()
+			local result
 			if skills then
-				return skills[name] ~= nil
+				result = skills[name] ~= nil
+				if name == "Torso Awaregness" and not result then
+					-- Hack to implement Best Dressed to count as Torso the way the game does
+					result = skills["Best Dressed"] ~= nil
+				end
 			end
+			return result
 		end
 
 		function retrieve_trailed_monster()

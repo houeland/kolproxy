@@ -56,7 +56,7 @@ function solve_knapsack(size, datalist)
 	return array, arrayitems
 end
 
-function get_available_drinks(min_quality)
+function get_available_drinks()
 	local drinks = {}
 	for id, amount in pairs(inventory()) do
 		if id == get_itemid("astral pilsner") then
@@ -67,13 +67,34 @@ function get_available_drinks(min_quality)
 			local d = maybe_get_itemdata(id)
 			if d and d.drunkenness and d.drunkenness >= 1 and level() >= (d.levelreq or 1) then
 				local value = (d.advmin + d.advmax) / 2
-				if not min_quality or value / d.drunkenness >= min_quality then
-					table.insert(drinks, { name = get_itemname(id), amount = amount, size = d.drunkenness, value = value })
-				end
+				table.insert(drinks, { name = get_itemname(id), amount = amount, size = d.drunkenness, value = value })
 			end
 		end
 	end
 	return drinks
+end
+
+function determine_drink_option(min_space, max_space, available_drinks)
+	local array, arrayitems = solve_knapsack(max_space, available_drinks)
+	local best_space = nil
+	for space = min_space, max_space do
+		if array[space] then
+			if not best_space or array[space] / space > array[best_space] / best_space then
+				best_space = space
+			end
+		end
+	end
+	if not best_space then return end
+	local drinks = {}
+	local function recur(x)
+		if not x then return end
+		for i = 1, x.amount do
+			table.insert(drinks, x.name)
+		end
+		recur(x.previous)
+	end
+	recur(arrayitems[best_space])
+	return drinks, best_space, array[best_space]
 end
 
 __allow_global_writes = true
@@ -350,6 +371,8 @@ function get_automation_scripts(cached_stuff)
 				want_bonus.monster_level = true
 			elseif t == "elemental weapon damage" then
 				want_bonus.elemental_weapon_damage = true
+			elseif t == "rollover adventures" then
+				want_bonus.rollover_adventures = true
 			else
 				error("Unknown bonus target: " .. t)
 			end
@@ -675,7 +698,7 @@ function get_automation_scripts(cached_stuff)
 			if maxhp() - hp() >= 70 and have_skill("Cannelloni Cocoon") then
 				ensure_mp(20)
 				cast_skillid(3012)
-			elseif maxhp() - hp() >= 70 and have_skill("Shake It Off") then
+			elseif maxhp() - hp() >= 40 and have_skill("Shake It Off") then
 				ensure_mp(30)
 				cast_skill("Shake It Off")
 			elseif have_skill("Tongue of the Walrus") then
@@ -1037,19 +1060,22 @@ function get_automation_scripts(cached_stuff)
 			shrug_buff("Ur-Kel's Aria of Annoyance")
 			set_mcd(0) -- HACK: don't want this to be done here!
 		end
+		if have_item("Flaskfull of Hollow") and buffturns("Merry Smithsness") < 10 then
+			use_item("Flaskfull of Hollow")
+		end
 		local function try_casting_buff(buffname, try_shrugging)
 			if buffs[buffname] then
 				local ptf = f.cast_buff(buffname)
 				if not ptf then
-					print("DEBUG: castbuff returned nil:", buffname)
+					print("DEBUG: castbuff1 returned nil:", buffname)
 				end
 				if type(ptf) == "string" then
-					print("DEBUG: castbuff non-function:", buffname)
+					print("DEBUG: castbuff2 non-function:", buffname)
 				else
 					ptf = ptf()
 				end
 				if not ptf then
-					print("DEBUG: castbuff returned nil:", buffname)
+					print("DEBUG: castbuff3 returned nil:", buffname)
 				end
 				if not have_buff(buffname) and not have_intrinsic(buffname) then
 					if ptf:contains("can't fit") and ptf:contains("songs in your head") and try_shrugging then
@@ -1157,11 +1183,43 @@ function get_automation_scripts(cached_stuff)
 				end
 			end
 		end
+
+		local fold_twisthorns = { "Boris's Helm", "Boris's Helm (askew)" }
+		for _, x in ipairs(fold_twisthorns) do
+			if x == itemname then
+				for _, y in ipairs(fold_twisthorns) do
+					if have_equipped_item(y) then
+						get_page("/inventory.php", { action = "twisthorns", slot = "hat", pwd = session.pwd })
+						if have_item(itemname) then return end
+					elseif have_item(y) then
+						use_item(y)
+						if have_item(itemname) then return end
+					end
+				end
+			end
+		end
+
+		local fold_popcollar = { "Sneaky Pete's leather jacket", "Sneaky Pete's leather jacket (collar popped)" }
+		for _, x in ipairs(fold_popcollar) do
+			if x == itemname then
+				for _, y in ipairs(fold_popcollar) do
+					if have_equipped_item(y) then
+						get_page("/inventory.php", { action = "popcollar", slot = "shirt", pwd = session.pwd })
+						if have_item(itemname) then return end
+					elseif have_item(y) then
+						use_item(y)
+						if have_item(itemname) then return end
+					end
+				end
+			end
+		end
 	end
 
 	function f.wear(tbl)
 		if want_bonus.plusinitiative then
 			f.fold_item("Loathing Legion rollerblades")
+		elseif want_bonus.rollover_adventures then
+			f.fold_item("Loathing Legion moondial")
 		else
 			f.fold_item("Loathing Legion necktie")
 		end
@@ -1170,6 +1228,18 @@ function get_automation_scripts(cached_stuff)
 			f.fold_item("stinky cheese eye")
 		elseif not tbl.pants then
 			f.fold_item("stinky cheese diaper")
+		end
+
+		if want_bonus.easy_combat then
+			f.fold_item("Boris's Helm")
+		else
+			f.fold_item("Boris's Helm (askew)")
+		end
+
+		if want_bonus.rollover_adventures or want_bonus.easy_combat then
+			f.fold_item("Sneaky Pete's leather jacket")
+		else
+			f.fold_item("Sneaky Pete's leather jacket (collar popped)")
 		end
 
 		if not tbl.pants and want_bonus.runawayfrom and have_item("Greatest American Pants") and get_daily_counter("item.fly away.free runaways") < 9 then
@@ -1766,13 +1836,6 @@ endif
 		end
 	end
 
-	local function warn_imported_beer()
-		if not ascension_script_option("stop on imported beer") then return end
-		if cached_stuff.warned_imported_beer == turnsthisrun() then return end
-		cached_stuff.warned_imported_beer = turnsthisrun()
-		stop "Script would drink imported beer. Drink something else manually instead, or run again to proceed."
-	end
-
 	function f.drink_booze()
 		if ascension_script_option("eat manually") then return end
 		if challenge == "fist" then return end
@@ -1910,51 +1973,55 @@ endif
 			end
 --]]--
 
+		local function warn_imported_beer()
+			if not ascension_script_option("stop on imported beer") then return end
+			if cached_stuff.warned_imported_beer == turnsthisrun() then return end
+			cached_stuff.warned_imported_beer = turnsthisrun()
+			stop "Script would drink imported beer. Drink something else manually instead, or run again to proceed."
+		end
+
 		local max_space = estimate_max_safe_drunkenness() - drunkenness()
+		local min_space = math.min(max_space, 5)
+		local available_drinks = get_available_drinks()
+		local todrink, space, turngen = determine_drink_option(min_space, max_space, available_drinks)
 
-		local function determine_drinks()
-			if max_space < 5 then
-				for i = 1, 6 do
-					local array, arrayitems = solve_knapsack(max_space, get_available_drinks(2))
-					if array[max_space] then return max_space, arrayitems[max_space] end
-					warn_imported_beer()
-					buy_item("overpriced &quot;imported&quot; beer", "v", 1)
-				end
-			else
-				for q = 10, 2, -1 do
-					local array, arrayitems = solve_knapsack(max_space, get_available_drinks(q))
-					local best_space = nil
-					for space = 5, max_space do
-						if array[space] then
-							if not best_space or array[space] / space > array[best_space] / best_space then
-								best_space = space
-							end
-						end
+		local have_crafted = false
+		local function try_craft(when, name, penalty, craftf)
+			local d = maybe_get_itemdata(name)
+			if not have_crafted and when and d and d.drunkenness and d.drunkenness >= 1 and level() >= (d.levelreq or 1) then
+				local value = (d.advmin + d.advmax) / 2
+				table.insert(available_drinks, { ["value"] = value - penalty, ["size"] = d.drunkenness, ["name"] = name, ["amount"] = 1 })
+				local newtodrink, newspace, newturngen = determine_drink_option(min_space, max_space, available_drinks)
+				table.remove(available_drinks)
+				local old_goodness = space and (turngen / space) or -2
+				local new_goodness = newspace and (newturngen / newspace) or -1
+				if new_goodness > old_goodness then
+					result, resulturl = craftf()()
+					have_crafted = true
+					available_drinks = get_available_drinks()
+					todrink, space, turngen = determine_drink_option(min_space, max_space, available_drinks)
+					if turngen ~= newturngen then
+						critical "Error crafting drinks"
 					end
-					if best_space then return best_space, arrayitems[best_space] end
-				end
-				for i = 1, 6 do
-					local array, arrayitems = solve_knapsack(5, get_available_drinks(2))
-					if array[5] then return 5, arrayitems[5] end
-					warn_imported_beer()
-					buy_item("overpriced &quot;imported&quot; beer", "v", 1)
 				end
 			end
 		end
 
-		local space, drinks = determine_drinks()
-
-		local function recur(x)
-			if not x then return end
-			for i = 1, x.amount do
-				drink_item(x.name)
-			end
-			recur(x.previous)
+		local function try_crafting_improvements()
+			have_crafted = false
+			try_craft(have_item("handful of Smithereens"), "Paint A Vulgar Pitcher", 0, function() buy_item("plain old beer", "v") return craft_item("Paint A Vulgar Pitcher") end)
+			try_craft(true, "overpriced &quot;imported&quot; beer", 0, function() warn_imported_beer() return buy_item("overpriced &quot;imported&quot; beer", "v") end)
+			if have_crafted then return try_crafting_improvements() end
 		end
+
+		try_crafting_improvements()
+
 		if space then
 			print("drink_booze():", space)
 			script.ensure_buff_turns("Ode to Booze", space)
-			recur(drinks)
+			for _, x in ipairs(todrink) do
+				drink_item(x)
+			end
 		end
 	end
 
@@ -3127,7 +3194,7 @@ endif
 	end
 
 	function f.do_moxie_use_dancecard()
-		if have_item("dance card") then
+		if have_item("dance card") and level() < 13 then
 			local dance_card_turn = tonumber(ascension["dance card turn"]) or -1000
 			if dance_card_turn < turnsthisrun() then
 				return use_item("dance card")
@@ -4456,18 +4523,18 @@ endif
 		end
 	end
 
-	function f.get_faxbot_fax(target, code)
-		if playername():contains("Devster") then
-			stop("Devster faxbot:" .. target)
+	function f.get_faxbot_fax(target)
+		if playername():match("^Devster[0-9]+$") then
+			stop("Get fax for devster: " .. target)
 		end
-		code = code or get_faxbot_command(target)
-		print("  photocopied:", f.get_photocopied_monster(), "getting", target, code)
-		try_getting_faxbot_monster(target, code)
-		try_getting_faxbot_monster(target, code)
-		try_getting_faxbot_monster(target, code)
-		if f.get_photocopied_monster() == target then
-			did_action = true
-		else
+		if f.get_photocopied_monster() ~= target then
+			local code = get_faxbot_command(target)
+			print("  photocopied:", f.get_photocopied_monster(), "getting", target, code)
+			try_getting_faxbot_monster(target, code)
+			try_getting_faxbot_monster(target, code)
+			try_getting_faxbot_monster(target, code)
+		end
+		if f.get_photocopied_monster() ~= target then
 			stop("Didn't get "..target.." from faxbot")
 		end
 	end

@@ -1631,7 +1631,11 @@ endif
 	}
 
 	add_task {
-		when = have_item("Sneaky Pete's leather jacket") and not have_item("Sneaky Pete's leather jacket (collar popped)") and level() >= 3 and level() < 13,
+		when = have_item("Sneaky Pete's leather jacket") and
+			not have_item("Sneaky Pete's leather jacket (collar popped)")
+			and level() >= 3 and
+			level() < 13 and
+			(have_skill("Shake It Off") or level() >= 7),
 		task = {
 			message = "pop collar on Sneaky Pete's leather jacket",
 			nobuffing = true,
@@ -2137,7 +2141,9 @@ endif
 					script.ensure_mp(2)
 					summon_clipart("time halo")
 				end
-				script.wear { hat = first_wearable { "Hairpiece On Fire" }, acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" }, acc3 = first_wearable { "gold wedding ring" } }
+				script.bonus_target { "rollover adventures" }
+				script.wear { hat = first_wearable { "leather aviator's cap", "Hairpiece On Fire" }, shirt = first_wearable { "Sneaky Pete's leather jacket" }, offhand = first_wearable { "Loathing Legion moondial" }, pants = first_wearable { "stinky cheese diaper" }, acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" }, acc3 = first_wearable { "gold wedding ring" } }
+				script.wear { hat = first_wearable { "leather aviator's cap", "Hairpiece On Fire" }, shirt = first_wearable { "Sneaky Pete's leather jacket" }, offhand = first_wearable { "Loathing Legion moondial" }, pants = first_wearable { "stinky cheese diaper" }, acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" }, acc3 = first_wearable { "gold wedding ring" } } -- WORKAROUND: first_wearable is resolving before script.wear can fold items
 				if ascension_script_option("overdrink with nightcap") and can_drink_normal_booze() then
 					script.maybe_ensure_buffs { "Ode to Booze" }
 					if have_buff("Ode to Booze") then
@@ -2218,137 +2224,63 @@ endif
 		task = tasks.rotting_matilda,
 	}
 
-	local want_starting_items = classid() < 10 and (AT_song_duration() == 0 or not have_item("turtle totem") or not have_item("saucepan") or (not have_item("seal tooth") and challenge ~= "fist" and challenge ~= "zombie"))
-
 	add_task {
-		when = want_starting_items and meat() >= 200,
+		when = classid() < 10 and
+			(AT_song_duration() == 0 or not have_item("turtle totem") or not have_item("saucepan")) and
+			meat() >= 500,
 		task = tasks.get_starting_items,
 	}
 
 	add_task {
-		when = use_new_faxing and not cached_stuff.handled_icy_peak and can_photocopy(),
-		task = function()
-			local mc = get_page("/mclargehuge.php")
-			if not mc:contains("/peak.gif") and not have_item("ninja rope") and not have_item("ninja crampons") and not have_item("ninja carabiner") then
-				if script.get_photocopied_monster() ~= "ninja snowman assassin" then
-					return {
-						message = "get assassin from faxbot",
-						action = function()
-							script.get_faxbot_fax("ninja snowman assassin")
-							did_action = true
-						end
-					}
-				else
-					return {
-						message = "fight and arrow assassin",
-						action = function()
-							script.heal_up()
-							script.ensure_mp(30)
-							script.want_familiar "Obtuse Angel"
-							set_result(use_item("photocopied monster"))
-							if get_result():contains("You don't think you can handle another one of these things today") then
-								cached_stuff.have_faxed_today = true
-								did_action = true
-								return
-							end
-							local pt, url = get_page("/fight.php")
-							result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_romanticarrow)
-							if resulturl:contains("fight.php") then
-								cached_stuff.have_faxed_today = true
-							end
-							if advagain then
-								did_action = true
-								cached_stuff.handled_icy_peak = true
-							end
-						end
-					}
-				end
-			else
-				return {
-					message = "icy peak is already handled",
-					action = function()
-						cached_stuff.handled_icy_peak = true
-						did_action = true
-					end
-				}
-			end
-		end,
+		when = not have_item("seal tooth") and challenge ~= "fist" and challenge ~= "zombie" and meat() >= 200 and can_change_familiar(),
+		task = tasks.get_seal_tooth,
 	}
 
 	add_task {
-		when = use_new_faxing and not cached_stuff.handled_smut_orcs and can_photocopy() and false,
-		task = function()
-			local oc = get_page("/place.php", { whichplace = "orc_chasm" })
-			if oc:contains("nobridge.gif") and not have_item("smut orc keepsake box") then
-				if script.get_photocopied_monster() ~= "smut orc pervert" then
-					return {
-						message = "get pervert from faxbot",
-						action = function()
-							script.get_faxbot_fax("smut orc pervert")
-							did_action = true
-						end
-					}
-				else
-					return {
-						message = "fight and arrow pervert",
-						action = function()
-							script.heal_up()
-							script.ensure_mp(30)
-							script.want_familiar "Obtuse Angel"
-							set_result(use_item("photocopied monster"))
-							if get_result():contains("You don't think you can handle another one of these things today") then
-								cached_stuff.have_faxed_today = true
-								did_action = true
-								return
-							end
-							local pt, url = get_page("/fight.php")
-							result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_romanticarrow)
-							if resulturl:contains("fight.php") then
-								cached_stuff.have_faxed_today = true
-							end
-							if advagain then
-								did_action = true
-								cached_stuff.handled_smut_orcs = true
-							end
-						end
-					}
-				end
-			else
-				return {
-					message = "smut orcs are already handled",
-					action = function()
-						cached_stuff.handled_smut_orcs = true
-						did_action = true
-					end
-				}
-			end
-		end,
+		when = not cached_stuff.summoned_tomes,
+		task = tasks.summon_tomes,
 	}
 
 	add_task {
-		when = use_new_faxing and not cached_stuff.handled_lfms and can_photocopy(),
-		task = function()
-			if not completed_sonofa_beach() and not have_item("barrel of gunpowder") then
-				if script.get_photocopied_monster() ~= "lobsterfrogman" then
+		when = AT_song_duration() > 0 and level() < 5 and (buffturns("The Moxious Madrigal") < 10 or buffturns("The Magical Mojomuscular Melody") < 10) and have_skill("The Moxious Madrigal") and have_skill("The Magical Mojomuscular Melody"),
+		task = tasks.extend_tmm_and_mojo,
+	}
+
+	local function add_faxing_task(target, checker)
+		add_task {
+			when = use_new_faxing and not cached_stuff["checked fax:" .. target] and can_photocopy(),
+			task = function()
+				if not checker() then
 					return {
-						message = "get lfm from faxbot",
+						message = "skipping " .. target .. " fax",
 						action = function()
-							script.get_faxbot_fax("lobsterfrogman")
+							cached_stuff["checked fax:" .. target] = true
 							did_action = true
 						end
 					}
 				else
 					return {
-						message = "fight and arrow lfm",
+						message = "fax and arrow " .. target,
 						action = function()
+							script.want_familiar "Obtuse Angel"
 							script.heal_up()
 							script.ensure_mp(30)
-							script.want_familiar "Obtuse Angel"
-							set_result(use_item("photocopied monster"))
-							if get_result():contains("You don't think you can handle another one of these things today") then
-								cached_stuff.have_faxed_today = true
-								did_action = true
-								return
+							if not playername():match("^Devster[0-9]+$") then
+								script.get_faxbot_fax(target)
+								set_result(use_item("photocopied monster"))
+								if get_result():contains("You don't think you can handle another one of these things today") then
+									print("  already faxed today")
+									cached_stuff.have_faxed_today = true
+									did_action = true
+									return
+								end
+							else
+								if not get_devster_fax(target) then
+									print("  already faxed today")
+									cached_stuff.have_faxed_today = true
+									did_action = true
+									return
+								end
 							end
 							local pt, url = get_page("/fight.php")
 							result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_romanticarrow)
@@ -2356,23 +2288,29 @@ endif
 								cached_stuff.have_faxed_today = true
 							end
 							if advagain then
+								cached_stuff["checked fax:" .. target] = true
 								did_action = true
-								cached_stuff.handled_lfms = true
 							end
 						end
 					}
 				end
-			else
-				return {
-					message = "lfms are already handled",
-					action = function()
-						cached_stuff.handled_lfms = true
-						did_action = true
-					end
-				}
 			end
-		end,
-	}
+		}
+	end
+
+	add_faxing_task("ninja snowman assassin", function()
+		local mc = get_page("/mclargehuge.php")
+		return not mc:contains("/peak.gif") and not have_item("ninja rope") and not have_item("ninja crampons") and not have_item("ninja carabiner")
+	end)
+
+	add_faxing_task("smut orc pervert", function()
+		local oc = get_page("/place.php", { whichplace = "orc_chasm" })
+		return oc:contains("nobridge.gif") and not have_item("smut orc keepsake box") and false
+	end)
+
+	add_faxing_task("lobsterfrogman", function()
+		return not completed_sonofa_beach() and not have_item("barrel of gunpowder")
+	end)
 
 	add_task {
 		when = challenge == "zombie" and
@@ -2577,11 +2515,6 @@ endif
 		}
 	}
 
-	add_task {
-		when = not have_item("digital key") and trailed == "Blooper",
-		task = tasks.do_8bit_realm,
-	}
-
 	if challenge == "fist" and have_item("Game Grid token") and not have_item("finger cuffs") and not (have_item("spangly sombrero") and have_item("spangly mariachi pants")) then
 		return script.finger_cuffs()
 	end
@@ -2678,13 +2611,8 @@ endif
 	end
 
 	add_task {
-		when = not have_item("shining halo") and level() == 1 and not get_ascension_automation_settings().should_wear_weapons,
-		task = tasks.summon_clip_art,
-	}
-
-	add_task {
-		when = AT_song_duration() > 0 and level() < 5 and (buffturns("The Moxious Madrigal") < 10 or buffturns("The Magical Mojomuscular Melody") < 10) and have_skill("The Moxious Madrigal") and have_skill("The Magical Mojomuscular Melody"),
-		task = tasks.extend_tmm_and_mojo,
+		when = not have_item("digital key") and trailed == "Blooper",
+		task = tasks.do_8bit_realm,
 	}
 
 	local function have_guard_outfit()
@@ -3183,7 +3111,7 @@ endwhile
 		f = function()
 			if script.get_photocopied_monster() ~= "Knob Goblin Elite Guard Captain" then
 				inform "get KGE captain from faxbot"
-				script.get_faxbot_fax("Knob Goblin Elite Guard Captain", "kge")
+				script.get_faxbot_fax("Knob Goblin Elite Guard Captain")
 			else
 				inform "fight KGE captain"
 				script.heal_up()
@@ -3519,7 +3447,7 @@ endwhile
 					if script.get_photocopied_monster() ~= "Blooper" then
 						print("photocopied:", script.get_photocopied_monster())
 						inform "get blooper from faxbot"
-						script.get_faxbot_fax("Blooper", "blooper")
+						script.get_faxbot_fax("Blooper")
 					else
 						if not have_item("continuum transfunctioner") then
 							inform "pick up continuum transfunctioner (for faxed blooper)"
@@ -3688,7 +3616,7 @@ endif
 			action = function()
 				if script.get_photocopied_monster() ~= "lobsterfrogman" then
 					inform "get LFM from faxbot"
-					script.get_faxbot_fax("lobsterfrogman", "lobsterfrogman")
+					script.get_faxbot_fax("lobsterfrogman")
 				else
 					script.heal_up()
 					script.want_familiar "Obtuse Angel"

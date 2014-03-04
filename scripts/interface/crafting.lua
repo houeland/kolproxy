@@ -1,6 +1,6 @@
 local href = add_automation_script("custom-mix-drinks", function()
 	local cocktailcrafting_recipes = {}
-	for a, b in pairs(get_recipes_by_type("cocktailcrafting")) do
+	for a, b in pairs(get_recipes_by_type("cocktail")) do
 		cocktailcrafting_recipes[a] = b.ingredients
 	end
 	local still_recipes = {}

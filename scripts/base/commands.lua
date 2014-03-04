@@ -21,6 +21,15 @@ function smith_items(a, b, qty)
 	return async_post_page("/craft.php", { mode = "smith", pwd = session.pwd, action = "craft", a = get_itemid(a), b = get_itemid(b), qty = qty or 1, ajax = 1 })
 end
 
+function craft_item(item)
+	print_debug("  crafting", item)
+	local recipe = get_recipe(item) or {}
+	if (recipe.type == "cook" or recipe.type == "cocktail" or recipe.type == "smith") and recipe.ingredients and #recipe.ingredients == 2 then
+		return async_post_page("/craft.php", { mode = recipe.type, pwd = session.pwd, action = "craft", a = get_itemid(recipe.ingredients[1]), b = get_itemid(recipe.ingredients[2]), qty = 1, ajax = 1 })
+	end
+	error "Unknown item for craft_item()"
+end
+
 function buy_item(name, whichstore, amount)
 	print_debug("  buying", name, amount or "")
 	return async_get_page("/store.php", { phash = session.pwd, buying = 1, whichitem = get_itemid(name), howmany = amount or 1, whichstore = whichstore, ajax = 1, action = "buyitem" })

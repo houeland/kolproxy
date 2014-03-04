@@ -183,5 +183,5 @@ load_file("zone", "zones/wandering-monsters.lua")
 load_file("interface", "interface/charpane.lua")
 
 for _, f in ipairs(list_custom_autoload_script_files()) do
-	load_file("custom autoload", "custom-autoload/" .. f)
+	load_file("custom autoload", f)
 end
