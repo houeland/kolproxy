@@ -548,6 +548,11 @@ add_ascension_assistance(function() return have_item("hermit script") end, funct
 	use_item("hermit script")
 end)
 
+add_ascension_assistance(function() return have_item("&quot;2 Love Me, Vol. 2&quot;") end, function()
+	use_item("&quot;2 Love Me, Vol. 2&quot;")
+	async_get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" })
+end)
+
 local hermit_items_href = add_automation_script("get-hermit-items", function()
 	local function get_trinket()
 		if not have_item("worthless trinket") and not have_item("worthless gewgaw") and not have_item("worthless knick-knack") then

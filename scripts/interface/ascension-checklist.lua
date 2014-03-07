@@ -46,7 +46,6 @@ consumable_items_high_impact = {
 	{ 1, { "dusty bottle of Port" } },
 	{ 1, { "dusty bottle of Zinfandel" } },
 
-	{ 1, { "ketchup hound" } },
 	{ 1, { "stunt nuts" } },
 	{ 1, { "drum machine" } },
 	{ 1, { "wet stew" } },

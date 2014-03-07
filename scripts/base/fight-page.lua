@@ -29,8 +29,6 @@ add_printer("/fight.php", function()
 	end
 
 	awesome_monsters = {
-		["Bob Racecar"] = "ketchup hound",
-		["Racecar Bob"] = "ketchup hound",
 		["gaudy pirate"] = "gaudy key",
 		["zombie waltzers"] = "dance card",
 		["blur"] = "drum machine",

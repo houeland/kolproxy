@@ -54,12 +54,12 @@ add_choice_text("No sir, away!  A papaya war is on!", {
 })
 
 add_choice_text("Do Geese See God?", { -- choice adventure number: 129
-	["Buy the photograph (500 meat)"] = { text = "Get photograph of God", good_choice = true },
+	["Buy the photograph (500 meat)"] = { get_item = "photograph of God", good_choice = true },
 	["Politely decline"] = { leave_noturn = true },
 })
 
 add_choice_text("Rod Nevada, Vendor", { -- choice adventure number: 130
-	["Accept (500 Meat)"] = { text = "Get hard rock candy", good_choice = true },
+	["Accept (500 Meat)"] = { get_item = "photograph of a red nugget", good_choice = true },
 	["Decline"] =  { leave_noturn = true },
 })
 
@@ -77,38 +77,65 @@ add_choice_text("A Pre-War Dresser Drawer, Pa!", function()
 	end
 end)
 
-add_printer("/palinshelves.php", function()
-	set_shelf = function(text, shelf, choose)
-		text = text:gsub("(<select name="..shelf..">.-<option value=[0-9]*)(>"..choose.."</option>)", [[%1 selected="selected"%2]]) -- TODO-future: redo for faster regex?
-		return text
-	end
-	text = set_shelf(text, "whichitem1", "photograph of God")
-	text = set_shelf(text, "whichitem2", "hard rock candy")
-	text = set_shelf(text, "whichitem3", "ketchup hound")
-	text = set_shelf(text, "whichitem4", "hard%-boiled ostrich egg")
+add_printer("/choice.php", function()
+	if not text:contains("Drawn Onward") or not text:contains("a column of four empty photo frames") then return end
+
+	local checks = {
+		photo1 = "photograph of God",
+		photo2 = "photograph of a red nugget",
+		photo3 = "photograph of a dog",
+		photo4 = "photograph of an ostrich egg",
+	}
+
+	text = text:gsub("<select.-</select", function(selecttag)
+		for name, item in pairs(checks) do
+			if selecttag:contains([[name="]]..name..[["]]) then
+				return selecttag:gsub([[(<option value="[0-9]*")(>]]..item..[[</option>)]], [[%1 selected="selected"%2]])
+			end
+		end
+	end)
 end)
 
-add_automator("/palinshelves.php", function()
+add_automator("/choice.php", function()
 	if not setting_enabled("automate simple tasks") then return end
-	if text:contains("It looks as though you could put some things on the shelves") then
-		-- Currently always true if you find the adventure
-		if have_item("photograph of God") and have_item("hard rock candy") and have_item("ketchup hound") and have_item("hard-boiled ostrich egg") then
-			text, url = post_page("/palinshelves.php", { action = "placeitems", whichitem1 = get_itemid("photograph of God"), whichitem2 = get_itemid("hard rock candy"), whichitem3 = get_itemid("ketchup hound"), whichitem4 = get_itemid("hard-boiled ostrich egg") })
+	if text:contains("Drawn Onward") and text:contains("a column of four empty photo frames") then
+		if have_item("photograph of God") and have_item("photograph of a dog") and have_item("photograph of a red nugget") and have_item("photograph of an ostrich egg") then
+			text, url = post_page("/choice.php", { pwd = session.pwd, whichchoice = 872, option = 1, photo1 = get_itemid("photograph of God"), photo2 = get_itemid("photograph of a red nugget"), photo3 = get_itemid("photograph of a dog"), photo4 = get_itemid("photograph of an ostrich egg") })
 		end
 	end
 end)
 
-add_ascension_zone_check(119, function()
-	if meat() < 500 and not have_item("&quot;I Love Me, Vol. I&quot;") and not (have_item("photograph of God") and have_item("hard rock candy")) then
+add_ascension_adventure_warning(function(zoneid)
+	if zoneid == "palindome" and requestpath == "/place.php" and params.action == "pal_droffice" then return end
+	if have_equipped_item("Mega Gem") then
+		return "You might want to unequip the Mega Gem when you're not fighting Dr. Awkward.", "wearing mega gem in adventure"
+	end
+end)
+
+local office_access = nil
+local function check_dr_awkwards_office_access()
+	if have_item("&quot;I Love Me, Vol. I&quot;") then return true end
+	local pt = get_page("/place.php", { whichplace = "palindome" })
+	if not pt:contains("The Palindome") then return nil end
+	return pt:contains("Dr. Awkward's Office")
+end
+
+function have_dr_awkwards_office_access()
+	if not office_access then
+		office_access = check_dr_awkwards_office_access()
+	end
+	return office_access
+end
+
+add_ascension_zone_check(386, function()
+	if meat() < 500 and not (have_item("photograph of God") and have_item("photograph of a red nugget")) and have_dr_awkwards_office_access() ~= true then
 		return "Palindome items cost 500 meat."
 	end
 end)
 
 add_ascension_adventure_warning(function(zoneid)
-	if zoneid == 119 and not have_equipped_item("Mega Gem") and have_item("Mega Gem") then
-		return "You might want to equip the Mega Gem when adventuring in the Palindome.", "not wearing mega gem in palindome"
-	end
-	if zoneid ~= 119 and have_equipped_item("Mega Gem") then
-		return "You might want to unequip the Mega Gem when you're not adventuring in the Palindome.", "wearing mega gem outside palindome"
+	if zoneid == "palindome" and requestpath == "/place.php" and params.action == "pal_droffice" then return end
+	if have_item("photograph of God") and have_item("photograph of a dog") and have_item("photograph of a red nugget") and have_item("photograph of an ostrich egg") and have_dr_awkwards_office_access() ~= false then
+		return "You might want to place the photographs in Dr. Awkwards office.", "place palindome photographs"
 	end
 end)

@@ -389,8 +389,9 @@ function get_automation_scripts(cached_stuff)
 
 	function f.set_runawayfrom(runawayfrom)
 		if not runawayfrom then
-			macro_runawayfrom_monsters = "none"
+			set_macro_runawayfrom_monsters(nil)
 		end
+		set_macro_runawayfrom_monsters(runawayfrom)
 		want_bonus.runawayfrom = runawayfrom
 	end
 
@@ -1279,9 +1280,6 @@ function get_automation_scripts(cached_stuff)
 
 		if not tbl.pants and want_bonus.runawayfrom and have_item("Greatest American Pants") and get_daily_counter("item.fly away.free runaways") < 9 then
 			tbl.pants = "Greatest American Pants"
-			macro_runawayfrom_monsters = want_bonus.runawayfrom
-		else
-			macro_runawayfrom_monsters = "none"
 		end
 
 		local settingstbl = get_ascension_automation_settings(want_bonus)
@@ -2837,7 +2835,11 @@ endif
 			local copied = retrieve_raindoh_monster()
 			if copied:contains("lobsterfrogman") then
 				inform "fight copied LFM"
+				script.heal_up()
 				script.ensure_mp(40)
+				if hp() < maxhp() * 0.8 then
+					stop "Heal up before using Rain-Doh box full of monster"
+				end
 				use_item("Rain-Doh box full of monster")
 				local pt, url = get_page("/fight.php")
 				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro)

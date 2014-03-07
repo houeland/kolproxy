@@ -51,6 +51,7 @@ local function automate_hcnp_day(whichday)
 	result = "??? No action found ???"
 	resulturl = "/automate-ascension-hcnp-day" .. whichday
 	did_action = false
+	set_macro_runawayfrom_monsters(nil)
 
 	function hidden_inform(msg)
 		add_error_trace_step(msg)
@@ -1041,7 +1042,7 @@ endif
 	}
 
 	add_task {
-		when = challenge and not ascensionstatus("Hardcore") and estimate_max_spleen() - spleen() == 7 and have_item("astral energy drink") and level() >= 11 and not have_item("mojo filter") and not cached_stuff["ignore pull: mojo filter"],
+		when = not ascensionstatus("Hardcore") and estimate_max_spleen() - spleen() == 7 and have_item("astral energy drink") and level() >= 11 and not have_item("mojo filter") and not cached_stuff["ignore pull: mojo filter"],
 		task = {
 			message = "pull mojo filter",
 			action = function()
@@ -1633,7 +1634,7 @@ endif
 			not have_item("Sneaky Pete's leather jacket (collar popped)")
 			and level() >= 3 and
 			level() < 13 and
-			(have_skill("Shake It Off") or level() >= 7),
+			((not ascensionstatus("Hardcore") and have_skill("Shake It Off")) or level() >= 7),
 		task = {
 			message = "pop collar on Sneaky Pete's leather jacket",
 			nobuffing = true,
@@ -2313,8 +2314,11 @@ endif
 			message = "drink up remaining liver",
 			nobuffing = true,
 			action = function()
-				script.craft_and_drink_quality_booze(15)
+				script.craft_and_drink_quality_booze(4)
 				did_action = estimate_max_safe_drunkenness() == drunkenness()
+				if not did_action then
+					stop "Fill up remaining liver manually"
+				end
 			end
 		}
 	}
@@ -2354,6 +2358,11 @@ endif
 	}
 
 	add_task {
+		when = not cached_stuff.summoned_tomes,
+		task = tasks.summon_tomes,
+	}
+
+	add_task {
 		when = classid() < 10 and
 			(AT_song_duration() == 0 or not have_item("turtle totem") or not have_item("saucepan") or (can_equip_item("Rock and Roll Legend") and AT_song_duration() < 10)) and
 			meat() >= 500,
@@ -2363,11 +2372,6 @@ endif
 	add_task {
 		when = not have_item("seal tooth") and challenge ~= "fist" and challenge ~= "zombie" and meat() >= 200 and can_change_familiar(),
 		task = tasks.get_seal_tooth,
-	}
-
-	add_task {
-		when = not cached_stuff.summoned_tomes,
-		task = tasks.summon_tomes,
 	}
 
 	add_task {

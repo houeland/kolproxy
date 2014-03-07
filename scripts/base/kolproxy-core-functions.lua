@@ -1,9 +1,12 @@
 function raw_async_submit_page(rqtype, rqpath, rqparams)
-	local a, b, c = kolproxycore_async_submit_page(rqtype, rqpath, rqparams)
-	if a then
-		return a, b
-	else
-		error("Error downloading page " .. tostring(rqpath) .. ":<br><br>" .. tostring(b))
+	local f = kolproxycore_async_submit_page(rqtype, rqpath, rqparams)
+	return function()
+		local a, b, c = f()
+		if a then
+			return a, b
+		else
+			error("Error downloading page " .. tostring(rqpath) .. ":<br><br>" .. tostring(b))
+		end
 	end
 end
 

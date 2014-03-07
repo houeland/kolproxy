@@ -309,12 +309,14 @@ add_choice_text("One Nightstand", function()
 				["Open the top drawer"] = "Gain meat",
 				["Open the bottom drawer"] = "Gain mysticality",
 				["Look behind the nightstand"] = { getitem = "Lord Spookyraven's spectacles", disabled = true },
+				["Look under the nightstand"] = { getitem = "disposable instant camera", good_choice = not have_item("disposable instant camera") },
 			}
 		else
 			return {
 				["Open the top drawer"] = "Gain meat",
 				["Open the bottom drawer"] = "Gain mysticality",
 				["Look behind the nightstand"] = { getitem = "Lord Spookyraven's spectacles", good_choice = true },
+				["Look under the nightstand"] = { getitem = "disposable instant camera" },
 			}
 		end
 	elseif text:contains("simple white nightstand") then

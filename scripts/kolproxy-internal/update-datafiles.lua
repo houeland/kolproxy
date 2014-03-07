@@ -514,7 +514,9 @@ function parse_items()
 				hardwarn("modifiers:useitem effect does not exist", name, effect)
 			elseif blacklist["effect: " .. effect] then
 			elseif items[name] then
-				items[name].use_effect = effect
+				if items[name].fullness == nil and items[name].drunkenness == nil and items[name].spleen == nil then
+					items[name].use_effect = effect
+				end
 			elseif not name:match("^# ") then
 				hardwarn("modifiers:useitem does not exist", name, effect)
 			end

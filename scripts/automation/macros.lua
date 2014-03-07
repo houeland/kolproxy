@@ -471,8 +471,13 @@ endwhile
 ]]
 end
 
+local macro_runawayfrom_monsters = nil
+function set_macro_runawayfrom_monsters(tbl)
+	macro_runawayfrom_monsters = tbl
+end
+
 function macro_maybe_runaway()
-	if macro_runawayfrom_monsters and macro_runawayfrom_monsters ~= "none" then
+	if macro_runawayfrom_monsters then
 		if have_equipped_item("Greatest American Pants") and get_daily_counter("item.fly away.free runaways") < 3 then
 			return [[
 
