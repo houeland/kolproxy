@@ -48,6 +48,7 @@ add_printer("/storage.php", function()
 end)
 
 function pullsleft()
+	if ascensionstatus("Hardcore") then return 0 end
 	local pt = get_page("/storage.php", { which = 5 })
 	if pt:contains("You may not take any more") then
 		return 0
@@ -119,7 +120,7 @@ html, body {
 		<div class='centerBox innerContainer'>
 			<div class='abc a'><span class='title'><a target='mainpane' href='inventory.php?which=1'>inv</a><span class="sep"></span><a target='mainpane' href='inventory.php?which=2'>ent</a><span class="sep"></span><a target='mainpane' href='inventory.php?which=3'>ory</a></span><br><a target='mainpane' href='inventory.php?which=f0'>fav</a> <a target='mainpane' href='craft.php'>craft</a><br><a target='mainpane' href='sellstuff.php'>sell</a></div>
 
-			<div class='abc'><span class='title'><a target='mainpane' href='main.php'>main</a> <a target='mainpane' href='messages.php'>mess</a></span><br><a target='mainpane' href='campground.php'>ca</a><span class="sep"></span><a target='mainpane' href='campground.php?action=telescopelow'>mp</a> <a target='mainpane' href='account.php'>opt</a> <a target='mainpane' href='custom-settings?pwd=]] .. session.pwd .. [['>kp</a><br><a target='mainpane' href='questlog.php?which=1'>qu</a><span class="sep"></span><a target='mainpane' href='questlog.php?which=4'>est</a> <a target='mainpane' href='skills.php'>skills</a> </div>
+			<div class='abc'><span class='title'><a target='mainpane' href='main.php'>main</a> <a target='mainpane' href='messages.php'>inbox</a></span><br><a target='mainpane' href='campground.php'>ca</a><span class="sep"></span><a target='mainpane' href='campground.php?action=telescopelow'>mp</a> <a target='mainpane' href='account.php'>opt</a> <a target='mainpane' href='custom-settings?pwd=]] .. session.pwd .. [['>kp</a><br><a target='mainpane' href='questlog.php?which=1'>qu</a><span class="sep"></span><a target='mainpane' href='questlog.php?which=4'>est</a> <a target='mainpane' href='skills.php'>skills</a> </div>
 
 			<div class='abc a'><span class='title'><a target='mainpane' href='town_clan.php'>cl</a><span class="sep"></span><a target='mainpane' href='clan_office.php'>an</a> <a target='mainpane' href='clan_log.php?classic=true'>log</a></span><br><a target='mainpane' href='clan_raidlogs.php'>raid</a> <a target='mainpane' href='clan_slimetube.php'>sl</a> <a target='mainpane' href='clan_hobopolis.php'>sew</a><br><a target='mainpane' href='clan_viplounge.php'>VIP</a> <a target='mainpane' href='clan_stash.php'>stash</a> <a target='mainpane' href='clan_whitelist.php'>wl</a></div>
 

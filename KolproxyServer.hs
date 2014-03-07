@@ -329,14 +329,14 @@ runProxyServer r rchat portnum = do
 					return (Data.Map.insert filename x m, x)
 		writeChan chan action
 
+	sock <- mklistensocket (listen_public _log_fakeref) portnum
+
 	forkIO_ "kps:updatedatafiles" $ do
 		update_data_files
 	forkIO_ "kps:launchkolproxy" $ do
 		envlaunch <- getEnvironmentSetting "KOLPROXY_LAUNCH_BROWSER"
 		when (envlaunch /= Just "0") $ do
 			platform_launch portnum
-
-	sock <- mklistensocket (listen_public _log_fakeref) portnum
 
 	let do_loop = do
 		doSERVER_DEBUG "listening on socket"

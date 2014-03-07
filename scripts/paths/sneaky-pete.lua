@@ -56,3 +56,9 @@ function estimate_current_sneaky_pete_motorcycle_bonuses()
 	end
 	return bonuses
 end
+
+function get_remaining_peel_outs()
+	local pt = get_page("/desc_skill.php", { whichskill = get_skillid("Peel Out"), self = "true" })
+	local peelouts = tonumber(pt:match("You can peel out ([0-9]+) more time"))
+	return peelouts
+end

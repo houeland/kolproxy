@@ -470,6 +470,11 @@ function parse_items()
 				if req ~= "none" and not next(reqtbl) then
 					hardwarn("unknown equip requirement for", name, req)
 				end
+				if reqtbl.Muscle then
+					items[name].attack_stat = "Muscle"
+				elseif reqtbl.Moxie then
+					items[name].attack_stat = "Moxie"
+				end
 				-- Mafia data files frequently show no equipment requirements as e.g. "Mus: 0" instead of "none"
 				for a, b in pairs(reqtbl) do
 					if b == 0 then
@@ -558,6 +563,7 @@ function verify_items(data)
 		["Juju Mojo Mask"] = { equip_bonuses = { ["Stats Per Fight"] = 2 } },
 		["Shakespeare's Sister's Accordion"] = { equip_bonuses = { ["Smithsness"] = 5 } },
 		["Rock and Roll Legend"] = { equip_bonuses = { ["Moxie"] = 7 } },
+		["Sneaky Pete's basket"] = { attack_stat = "Moxie" },
 	}
 	return verify_data_fits(correct_data, data)
 end

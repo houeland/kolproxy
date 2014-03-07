@@ -56,7 +56,7 @@ function solve_knapsack(size, datalist)
 	return array, arrayitems
 end
 
-function get_available_drinks()
+function get_available_drinks(minquality)
 	local drinks = {}
 	for id, amount in pairs(inventory()) do
 		if id == get_itemid("astral pilsner") then
@@ -67,7 +67,9 @@ function get_available_drinks()
 			local d = maybe_get_itemdata(id)
 			if d and d.drunkenness and d.drunkenness >= 1 and level() >= (d.levelreq or 1) then
 				local value = (d.advmin + d.advmax) / 2
-				table.insert(drinks, { name = get_itemname(id), amount = amount, size = d.drunkenness, value = value })
+				if value / d.drunkenness >= minquality then
+					table.insert(drinks, { name = get_itemname(id), amount = amount, size = d.drunkenness, value = value })
+				end
 			end
 		end
 	end
@@ -237,7 +239,9 @@ function get_automation_scripts(cached_stuff)
 				if equipment().familiarequip then
 					unequip_slot("familiarequip")
 				end
-				switch_familiarid(d.id)
+				if not script_ignore_familiars_without_fallback or not d.fallback then
+					switch_familiarid(d.id)
+				end
 				if d.id ~= familiarid() then
 					if not d.fallback then
 						critical("No fallback familiar for " .. famname)
@@ -342,7 +346,10 @@ function get_automation_scripts(cached_stuff)
 			elseif t == "extraitem" then
 				want_bonus.extraplusitems = true
 			elseif t == "minoritem" then
+				want_bonus.minoritem = true
 				want_bonus.clancy_item = "Clancy's lute"
+			elseif t == "extranoncombat" then
+				want_bonus.extranoncombat = true
 			elseif t == "noncombat" then
 				want_bonus.noncombat = true
 				if have_skill("Song of Solitude") then
@@ -814,8 +821,17 @@ function get_automation_scripts(cached_stuff)
 		["Simply Invisible"] = function()
 			return use_item("invisibility potion")
 		end,
+		["Ashen"] = function()
+			return use_item("pile of ashes")
+		end,
 		["Standard Issue Bravery"] = function()
 			return use_item("CSA bravery badge")
+		end,
+		["Oiled-Up"] = function()
+			return use_item("pec oil")
+		end,
+		["Starry-Eyed"] = function()
+			return async_post_page("/campground.php", { action = "telescopehigh" })
 		end,
 		["Brother Flying Burrito's Blessing"] = function()
 			return async_post_page("/friars.php", { pwd = get_pwd(), action = "buffs", bro = 1 })
@@ -957,6 +973,7 @@ function get_automation_scripts(cached_stuff)
 		local ignore_failure = {
 			["Heavy Petting"] = true,
 			["Peeled Eyeballs"] = true,
+			["Silent Running"] = true,
 		}
 		if ascensionpath("Avatar of Boris") and not ignore_buffing_and_outfit then
 			if want_bonus.boris_song then
@@ -976,19 +993,32 @@ function get_automation_scripts(cached_stuff)
 				table.insert(xs, "Leash of Linguini")
 				table.insert(xs, "Empathy")
 				table.insert(xs, "Singer's Faithful Ocelot")
-				if maxmp() >= 30 then table.insert(xs, "Of Course It Looks Great") end
 				if want_bonus.extraplusitems then
-					table.insert(xs, "Heavy Petting")
+					if can_change_familiar() then
+						table.insert(xs, "Heavy Petting")
+					end
 					table.insert(xs, "Peeled Eyeballs")
 				end
 			elseif level() <= 4 then
 				table.insert(xs, "The Moxious Madrigal")
 				table.insert(xs, "The Magical Mojomuscular Melody")
 			end
+			if maxmp() >= 30 and (want_bonus.plusitems or want_bonus.minoritem) then
+				table.insert(xs, "Of Course It Looks Great")
+			end
+			if want_bonus.plusinitiative then
+				table.insert(xs, "Living Fast")
+			end
 			if want_bonus.noncombat then
 				table.insert(xs, "Brooding")
 				if sneaky_pete_motorcycle_upgrades()["Muffler"] == "Extra-Quiet Muffler" then
 					table.insert(xs, "Muffled")
+				end
+			end
+			if want_bonus.extranoncombat then
+				table.insert(xs, "Silent Running")
+				if have_item("pile of ashes") then
+					table.insert(xs, "Ashen")
 				end
 			end
 			if want_bonus.combat then
@@ -1063,6 +1093,10 @@ function get_automation_scripts(cached_stuff)
 		end
 		if have_item("Flaskfull of Hollow") and buffturns("Merry Smithsness") < 10 and not ascensionstatus("Aftercore") then
 			use_item("Flaskfull of Hollow")
+		end
+		if playerclass("Pastamancer") and maxmp() >= 12 and pastathrallid() == 0 and have_skill("Bind Vampieroghi") then
+			script.ensure_mp(12)
+			cast_skill("Bind Vampieroghi")
 		end
 		local function try_casting_buff(buffname, try_shrugging)
 			if buffs[buffname] then
@@ -1934,6 +1968,10 @@ endif
 		ensure_mp(5)
 		cast_skill("Summon Alice's Army Cards")
 
+		return script.craft_and_drink_quality_booze(2)
+	end
+
+	function f.craft_and_drink_quality_booze(minquality)
 --[[--
 			if not have_item("coconut shell") and not have_item("little paper umbrella") and not have_item("magical ice cubes") then
 				ensure_mp(10)
@@ -1983,7 +2021,7 @@ endif
 
 		local max_space = estimate_max_safe_drunkenness() - drunkenness()
 		local min_space = math.min(max_space, 5)
-		local available_drinks = get_available_drinks()
+		local available_drinks = get_available_drinks(minquality)
 		local todrink, space, turngen = determine_drink_option(min_space, max_space, available_drinks)
 
 		local have_crafted = false
@@ -1991,6 +2029,8 @@ endif
 			local d = maybe_get_itemdata(name)
 			if not have_crafted and when and d and d.drunkenness and d.drunkenness >= 1 and level() >= (d.levelreq or 1) then
 				local value = (d.advmin + d.advmax) / 2
+				local drink_quality = (value - penalty) / d.drunkenness
+				if drink_quality < minquality then return end
 				table.insert(available_drinks, { ["value"] = value - penalty, ["size"] = d.drunkenness, ["name"] = name, ["amount"] = 1 })
 				local newtodrink, newspace, newturngen = determine_drink_option(min_space, max_space, available_drinks)
 				table.remove(available_drinks)
@@ -1999,7 +2039,7 @@ endif
 				if new_goodness > old_goodness then
 					result, resulturl = craftf()()
 					have_crafted = true
-					available_drinks = get_available_drinks()
+					available_drinks = get_available_drinks(minquality)
 					todrink, space, turngen = determine_drink_option(min_space, max_space, available_drinks)
 					if turngen ~= newturngen then
 						critical "Error crafting drinks"
@@ -2011,7 +2051,7 @@ endif
 		local function try_crafting_improvements()
 			have_crafted = false
 			try_craft(have_item("handful of Smithereens"), "Paint A Vulgar Pitcher", 0, function() buy_item("plain old beer", "v") return craft_item("Paint A Vulgar Pitcher") end)
-			try_craft(true, "overpriced &quot;imported&quot; beer", 0, function() warn_imported_beer() return buy_item("overpriced &quot;imported&quot; beer", "v") end)
+			try_craft(meat() >= 100, "overpriced &quot;imported&quot; beer", 0, function() warn_imported_beer() return buy_item("overpriced &quot;imported&quot; beer", "v") end)
 			if have_crafted then return try_crafting_improvements() end
 		end
 
@@ -2044,6 +2084,7 @@ endif
 				did_action = true
 			end
 		else
+			script.set_runawayfrom { "Knob Goblin Barbecue Team", "sleeping Knob Goblin Guard" }
 			go("get encryption key", 114, macro_stasis, {
 				["Up In Their Grill"] = "Grab the sausage, so to speak.  I mean... literally.",
 				["Knob Goblin BBQ"] = "Kick the chef",
@@ -2668,7 +2709,8 @@ mark m_done
 				script.bonus_target { "item" }
 				go("find carved wheel", 124, macro_noodleserpent, nil, { "Spirit of Bacon Grease" }, "Mini-Hipster", 45)
 			else
-				script.bonus_target { "noncombat" }
+				script.bonus_target { "extranoncombat", "noncombat" }
+				script.set_runawayfrom { "Iiti Kitty", "tomb bat" }
 				go("place wheel in middle chamber", 125, macro_noodleserpent, {
 					["Wheel in the Pyramid, Keep on Turning"] = "Turn the wheel",
 				}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "Rogue Program", 45)
@@ -2716,7 +2758,8 @@ mark m_done
 					use_item("tomb ratchet")
 					did_action = count_item("tomb ratchet") < c
 				else
-					script.bonus_target { "noncombat" }
+					script.bonus_target { "extranoncombat", "noncombat" }
+					script.set_runawayfrom { "Iiti Kitty", "tomb bat" }
 					go("turn middle chamber wheel", 125, macro_noodleserpent, {
 						["Wheel in the Pyramid, Keep on Turning"] = "Turn the wheel",
 					}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "Rogue Program", 45)
@@ -2755,7 +2798,7 @@ mark m_done
 			if daysthisrun() >= 3 then
 				pull_in_softcore("peppermint crook")
 			end
-			go("fight drone", 128, (challenge == "boris" and count_item("peppermint crook") >= 2 and macro_softcore_boris_crook) or macro_ppnoodlecannon, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 30, { equipment = { familiarequip = "sugar shield", pants = (challenge == "boris" and have_item("Greatest American Pants")) and "Greatest American Pants" or nil } })
+			go("fight drone", 128, (challenge == "boris" and count_item("peppermint crook") >= 2 and macro_softcore_boris_crook) or macro_ppnoodlecannon, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }, "Slimeling", 30, { equipment = { familiarequip = "sugar shield", pants = (challenge == "boris" and have_item("Greatest American Pants")) and "Greatest American Pants" or nil } })
 		elseif have_item("filthworm hatchling scent gland") then
 			inform "using hatchling stench"
 			set_result(use_item("filthworm hatchling scent gland"))
@@ -2763,7 +2806,7 @@ mark m_done
 		else
 			-- TODO: use GAP +item% buff if available, GAP structure buff
 			softcore_stoppable_action("fight hatchling")
-			go("fight hatchling", 127, (challenge == "boris" and count_item("peppermint crook") >= 3 and macro_softcore_boris_crook) or macro_ppnoodlecannon, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 30, { equipment = { familiarequip = "sugar shield", pants = (challenge == "boris" and have_item("Greatest American Pants")) and "Greatest American Pants" or nil } })
+			go("fight hatchling", 127, (challenge == "boris" and count_item("peppermint crook") >= 3 and macro_softcore_boris_crook) or macro_ppnoodlecannon, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }, "Slimeling", 30, { equipment = { familiarequip = "sugar shield", pants = (challenge == "boris" and have_item("Greatest American Pants")) and "Greatest American Pants" or nil } })
 		end
 	end
 
@@ -2805,6 +2848,7 @@ endif
 				stop("Fight unexpected rain-doh copied monster (not a lobsterfrogman)")
 			end
 		else
+			script.bonus_target { "combat" }
 			if not have_buff("Hippy Stench") and have_item("reodorant") then
 				-- TODO: use maybe_ensure_buffs
 				use_item("reodorant")
@@ -2827,7 +2871,6 @@ endif
 						stop("TODO: fight rain-doh copied monster")
 					end
 				else
-					script.bonus_target { "combat" }
 					script.ensure_buffs {}
 					if have_buff("Song of Battle") and ascensionstatus() == "Hardcore" then
 						go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro_hardcore_boris, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
@@ -3470,16 +3513,30 @@ endif
 					shop_buyitem("star sword", "starchart")
 				end
 			end
-			if have_item("Richard's star key") and have_item("star hat") and (have_item("star crossbow") or have_item("star staff") or have_item("star sword") or challenge == "fist" or challenge == "boris") then
+			if have_item("Richard's star key") and have_item("star hat") and (have_item("star crossbow") or have_item("star staff") or have_item("star sword") or not can_wear_weapons()) then
 				did_action = true
 			end
 		else
 			if trailed and trailed == "Astronomer" then
 				stop("Trailing " .. trailed .. " when finishing hits")
 			end
-			script.bonus_target { "item" }
-			go("finish hits", 83, macro_noodlecannon, {}, { "Spirit of Peppermint", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 40)
+			script.bonus_target { "item", "extraitem" }
+			go("finish hits", 83, macro_noodlecannon, {}, { "Spirit of Peppermint", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }, "Slimeling", 40)
 		end
+		return result, resulturl, did_action
+	end
+
+	function f.make_star_key_only()
+		if count_item("star") >= 8 and count_item("line") >= 7 then
+			if not have_item("star chart") then
+				pull_in_softcore("star chart")
+			end
+			shop_buyitem("Richard's star key", "starchart")
+			did_action = have_item("Richard's star key")
+			return
+		end
+		script.bonus_target { "item", "extraitem" }
+		go("collect stars and lines", 83, macro_noodlecannon, {}, { "Spirit of Peppermint", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }, "Slimeling", 40)
 		return result, resulturl, did_action
 	end
 
@@ -3593,9 +3650,9 @@ mark m_done
 					macro_laughfloor = macro_fist
 				end
 				if count_item("imp air") < 5 then
+					script.bonus_target { "item", "combat" }
 					go("mourn, imp air: " .. count_item("imp air"), 242, macro_laughfloor, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
 				else
-					-- TODO: buff for finding faster?
 					script.bonus_target { "combat" }
 					go("mourn, getting bosses", 242, macro_laughfloor, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)
 				end
@@ -3622,9 +3679,10 @@ mark m_done
 
 ]] .. macro_ppnoodlecannon()
 				end
+					script.bonus_target { "item", "noncombat" }
 					go("sven golly, bus passes: " .. count_item("bus pass"), 243, macro_backstage, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
 				else
-					-- TODO: buff for finding faster?
+					script.bonus_target { "noncombat" }
 					go("sven golly, getting items", 243, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)
 				end
 			end
@@ -3830,12 +3888,12 @@ endif
 		elseif cyrpt:match("Defiled Niche") and (not trailed or trailed == "dirty old lihc") then
 			go("do crypt niche", 263, make_cannonsniff_macro("dirty old lihc"), noncombattbl, { "Spirit of Garlic", "Butt-Rock Hair", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Rogue Program", 25, { olfact = "dirty old lihc" })
 		elseif cyrpt:match("Defiled Nook") then
-			script.bonus_target { "item" }
+			script.bonus_target { "item", "extraitem" }
 			if challenge == "boris" and not have_buff("Super Vision") and have_item("Greatest American Pants") then
 				wear { pants = "Greatest American Pants" }
 				script.get_gap_buff("Super Vision")
 			end
-			go("do crypt nook", 264, macro_noodlecannon, noncombattbl, { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 25)
+			go("do crypt nook", 264, macro_noodlecannon, noncombattbl, { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Leash of Linguini", "Empathy" }, "Slimeling", 25)
 		else
 			inform "kill bonerdagon"
 			if challenge == "boris" then
@@ -3934,7 +3992,7 @@ endif
 	function f.do_friars()
 -- 		TODO: more buffs?
 		local zone_stasis_macro = macro_stasis
-		script.bonus_target { "noncombat", "item" }
+		script.bonus_target { "noncombat", "extranoncombat", "item" }
 		if challenge == "fist" then
 			maybe_ensure_buffs { "Mental A-cue-ity" }
 			zone_stasis_macro = macro_fist
@@ -3942,7 +4000,6 @@ endif
 			maybe_ensure_buffs { "Mental A-cue-ity" }
 			zone_stasis_macro = macro_noodlecannon
 		end
-		script.maybe_ensure_buffs { "Silent Running" }
 		if fullness() + count_item("hellion cube") * 6 + 6 <= estimate_max_fullness() and script_want_reagent_pasta() then
 			go("getting hellion cubes", 239, make_cannonsniff_macro("Hellion"), nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
 		elseif not have_item("box of birthday candles") then
@@ -3971,6 +4028,7 @@ endif
 	function f.unlock_manor()
 		local townright = get_page("/town_right.php")
 		if townright:match("The Haunted Pantry") then
+			script.set_runawayfrom { "flame-broiled meat blob", "overdone flame-broiled meat blob", "undead elbow macaroni" }
 			go("unlock manor", 113, macro_stasis, {
 				["Oh No, Hobo"] = "Give him a beating",
 				["Trespasser"] = "Tackle him",
@@ -4316,12 +4374,13 @@ endif
 				did_action = need_count < original_count
 				return
 			else
-				script.bonus_target { "item" }
 				return run_task {
 					message = "get stone rose",
 					minmp = 60,
 					buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" },
 					familiar = "Slimeling",
+					bonus_target = { "item" },
+					runawayfrom = { "oasis monster", "rolling stone" },
 					action = adventure {
 						zone = "The Oasis",
 						macro_function = macro_noodleserpent,
@@ -4335,7 +4394,7 @@ endif
 				did_action = need_count < original_count
 				return
 			end
-			if have_item("worm-riding hooks") and not have_item("drum machine") and ascensionstatus() ~= "Hardcore" then
+			if have_item("worm-riding hooks") and not have_item("drum machine") and not ascensionstatus("Hardcore") then
 				pull_in_softcore("drum machine")
 			end
 			if have_item("worm-riding hooks") and have_item("drum machine") then
@@ -4388,7 +4447,7 @@ endif
 				wear { acc3 = "pirate fledges" }
 				local covept = get_page("/cove.php")
 				if not covept:match("Belowdecks") then
-					-- TODO: set sail in HCNP? OK to be low on meat if we've done it already
+					-- TODO: set sail! OK to be low on meat if we've done it already
 					-- choice	O Cap'm, My Cap'm	189
 					-- opt	1	Front the meat and take the wheel
 					-- opt	2	Step away from the helm
@@ -4397,6 +4456,7 @@ endif
 					-- posting page /ocean.php params: Just [("lon","22"),("lat","62")]
 					-- got uri: /ocean.php |  (from /ocean.php), size 2741
 					script.bonus_target { "noncombat" }
+					script.set_runawayfrom { "wacky pirate", "warty pirate", "wealthy pirate", "whiny pirate", "witty pirate" }
 					go("do poop deck", 159, macro_noodlecannon, { ["O Cap'm, My Cap'm"] = "Step away from the helm" }, { "Butt-Rock Hair", "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "Rogue Program", 35, { equipment = { acc3 = "pirate fledges" } })
 					if get_result():contains("It's Always Swordfish") then
 						did_action = true
@@ -4451,7 +4511,7 @@ endif
 					did_action = have_item("Mega Gem")
 				else
 					script.bonus_target { "combat" }
-					go("find wet stew", 386, macro_noodleserpent, {
+					go("find wet stunt nut stew", 386, macro_noodleserpent, {
 						["No sir, away!  A papaya war is on!"] = "Give the men a pep talk",
 						["Sun at Noon, Tan Us"] = "A little while",
 						["Rod Nevada, Vendor"] = "Accept (500 Meat)",

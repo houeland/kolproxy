@@ -102,9 +102,11 @@ consumable_items_normal_impact = {
 	{ 2, { "divine champagne popper" } },
 	{ 2, { "crystal skull" } },
 
-	{ 3, { "fudge bunny" } },
 	{ 10, { "Moon Pie" } },
 	{ 10, { "Wrecked Generator" } },
+	{ 1, { "small golem" } },
+
+	{ 3, { "fudge bunny" } },
 	{ 5, { "Frosty's frosty mug" } },
 	{ 5, { "Ol' Scratch's salad fork" } },
 	{ 5, { "huge pumpkin" } },

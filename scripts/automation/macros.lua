@@ -1,6 +1,9 @@
 function COMMON_MACROSTUFF_START(rounds, hplevel)
+	local mname = fight["currently fighting"] and fight["currently fighting"].name or "?"
 	if session["__script.cannot restore HP"] then
 		hplevel = 0
+	elseif mname == "Green Ops Soldier" then
+		hplevel = 10
 	end
 	local lobsterwarning = ""
 	if level() < 10 then
@@ -18,7 +21,6 @@ endif
 	end
 	local petemug = ""
 	if ascensionpath("Avatar of Sneaky Pete") then
-		local mname = fight["currently fighting"] and fight["currently fighting"].name or "?"
 		if mname:match("^oil ") or mname:contains("nightstand") then
 		elseif automation_sneaky_pete_want_hate() then
 			petemug = [[
@@ -45,16 +47,10 @@ abort hppercentbelow ]] .. hplevel .. [[
 
 scrollwhendone
 
-if monstername rampaging adding machine
-  abort Adding machine
-endif
-
 ]] .. lobsterwarning .. [[
 
-if monstername clingy pirate
-  if hascombatitem cocktail napkin
-    use cocktail napkin
-  endif
+if (monstername clingy pirate) && (hascombatitem cocktail napkin)
+  use cocktail napkin
 endif
 
 ]] .. petemug
@@ -64,7 +60,7 @@ end
 function attack_action()
 	return [[
 
-    attack
+attack
 
 ]]
 end
@@ -112,13 +108,46 @@ abort No useful skill found.
 ]]
 end
 
+local function using_accordion()
+	if not equipment().weapon then return false end
+	local itemdata = maybe_get_itemdata(equipment().weapon)
+	if not itemdata then return false end
+	return itemdata.song_duration ~= nil
+end
+
+function macro_sneaky_pete_action()
+	local weapondata = equipment().weapon and maybe_get_itemdata(equipment().weapon)
+	if weapondata and weapondata.attack_stat == "Muscle" then
+		return [[
+
+if (hasskill Smoke Break)
+  cast Smoke Break
+endif
+
+if (hasskill Pop Wheelie)
+  cast Pop Wheelie
+endif
+
+if (hasskill Flash Headlight)
+  cast Flash Headlight
+endif
+
+if (!hasskill Pop Wheelie) && (!hasskill Flash Headlight)
+  attack
+endif
+
+]]
+	end
+	return attack_action()
+end
+
 function cannon_action()
-	if have_skill("Crab Claw Technique") and have_equipped_item("Rock and Roll Legend") and not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } then
+	if have_skill("Crab Claw Technique") and using_accordion() and not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } then
 		return attack_action()
 	elseif ascensionpath("Avatar of Sneaky Pete") then
-		return attack_action()
+		return macro_sneaky_pete_action()
 	end
-	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Bawdy Refrain", fury() >= 1 and "Furious Wallop" or "???", "Kneebutt", "Toss", "Clobber" }
+	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Bawdy Refrain", fury() >= 1 and "Furious Wallop" or "???", "Kneebutt", "Toss", "Clobber", "Ravioli Shurikens" }
 end
 
 function estimate_elemental_weapon_damage_sum()
@@ -126,7 +155,15 @@ function estimate_elemental_weapon_damage_sum()
 end
 
 function elemental_damage_action()
-	if ascensionpath("Avatar of Sneaky Pete") and estimate_elemental_weapon_damage_sum() >= 10 then
+	if have_skill("Smoke Break") then
+		return [[
+
+if (hasskill Smoke Break)
+  cast Smoke Break
+endif
+
+]] .. attack_action()
+	elseif ascensionpath("Avatar of Sneaky Pete") and estimate_elemental_weapon_damage_sum() >= 10 then
 		return attack_action()
 	end
 	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Bawdy Refrain" }
@@ -134,7 +171,7 @@ end
 
 function serpent_action()
 	if ascensionpath("Avatar of Sneaky Pete") then
-		return attack_action()
+		return macro_sneaky_pete_action()
 	end
 	return macro_cast_skill { "Stringozzi Serpent", "Saucegeyser", "Weapon of the Pastalord", "Saucestorm", "Cannelloni Cannon", "Cone of Zydeco", fury() >= 1 and "Furious Wallop" or "???", "Kneebutt" }
 end
@@ -172,6 +209,13 @@ function maybe_stun_monster(is_dangerous)
 		can_stun = false
 	end
 	local macrolines = {}
+	local function cast_if_haveskill(x)
+		if have_skill(x) then
+			table.insert(macrolines, "if (hasskill " .. x .. ")")
+			table.insert(macrolines, "  cast " .. x)
+			table.insert(macrolines, "endif")
+		end
+	end
 	table.insert(macrolines, "")
 	if want_stun and can_stun then
 		if have_item("Rain-Doh blue balls") then
@@ -183,39 +227,21 @@ function maybe_stun_monster(is_dangerous)
 					use Rain-Doh indigo cup]])
 			end
 		else
-			table.insert(macrolines, [[
-				if hasskill Broadside
-					cast Broadside
-				endif
-				if hasskill Blend
-					cast Blend
-				endif
-				if hasskill Snap Fingers
-					cast Snap Fingers
-				endif]])
+			for _, x in ipairs { "Broadside", "Blend", "Snap Fingers" } do
+				cast_if_haveskill(x)
+			end
 		end
 		if ascensionpath("Avatar of Sneaky Pete") and automation_sneaky_pete_want_hate() and have_skill("Jump Shark") then
 			if have_item("Rain-Doh blue balls") or have_skill("Snap Fingers") or is_dangerous == false then
-				table.insert(macrolines, [[
-					if hasskill Snap Fingers
-						cast Snap Fingers
-					endif
-					if hasskill Jump Shark
-						cast Jump Shark
-					endif]])
+				cast_if_haveskill("Snap Fingers")
+				cast_if_haveskill("Jump Shark")
 			end
 		end
 		if playerclass("Turtle Tamer") then
-			table.insert(macrolines, [[
-				if hasskill Shell Up
-					cast Shell Up
-				endif]])
+			cast_if_haveskill("Shell Up")
 		end
 		if playerclass("Pastamancer") then
-			table.insert(macrolines, [[
-				if hasskill Entangling Noodles
-					cast Entangling Noodles
-				endif]])
+			cast_if_haveskill("Entangling Noodles")
 		end
 		if playerclass("Sauceror") and (is_dangerous or level() >= 10) then
 			table.insert(macrolines, [[
@@ -224,35 +250,32 @@ function maybe_stun_monster(is_dangerous)
 				endif]])
 		end
 		if playerclass("Accordion Thief") then
-			table.insert(macrolines, [[
-				if hasskill Accordion Bash
-					cast Accordion Bash
-				endif]])
+			cast_if_haveskill("Accordion Bash")
 			if have_equipped_item("Rock and Roll Legend") or have_equipped_item("peace accordion") then
-				table.insert(macrolines, [[
-					if hasskill Cadenza
-						cast Cadenza
-					endif]])
+				cast_if_haveskill("Cadenza")
 			end
 		end
 	end
 
 	if can_stagger then
 		if playerclass("Sauceror") and have_skill("Itchy Curse Finger") then
-			table.insert(macrolines, [[
-				if hasskill Curse of Weaksauce
-					cast Curse of Weaksauce
-				endif]])
+			cast_if_haveskill("Curse of Weaksauce")
 		end
 	end
 
-	table.insert(macrolines, [[
-		if hasskill Steal Accordion
-			cast Steal Accordion
-		endif
-		if hascombatitem rock band flyers
-			use rock band flyers
-		endif]])
+	if playerclass("Accordion Thief") then
+		table.insert(macrolines, [[
+			if hasskill Steal Accordion
+				cast Steal Accordion
+			endif]])
+	end
+
+	if have_item("rock band flyers") then
+		table.insert(macrolines, [[
+			if hascombatitem rock band flyers
+				use rock band flyers
+			endif]])
+	end
 
 	local _tbl, unknown_potions, unknown_effects = get_dod_potion_status()
 	for _, x in ipairs(unknown_effects) do
@@ -266,9 +289,11 @@ function maybe_stun_monster(is_dangerous)
 		end
 	end
 
+	table.insert(macrolines, macro_maybe_runaway())
+
 	table.insert(macrolines, "")
 
-	return table.concat(macrolines, "\n\n")
+	return table.concat(macrolines, "\n")
 end
 
 function macro_killing_begins()
@@ -322,35 +347,34 @@ end
 
 -- TODO: hacked in suckerpunch/sing, fix
 function stall_action()
-	return conditional_salve_action("goto stall_do_return") .. [[
-  if hasskill Static Shock
-    cast Static Shock
-    goto stall_do_return
-  endif
-  if hascombatitem seal tooth
-    use seal tooth
-    goto stall_do_return
-  endif
-  if hascombatitem spices
-    use spices
-    goto stall_do_return
-  endif
-  if hasskill suckerpunch
-    cast suckerpunch
-    goto stall_do_return
-  endif
-  if hasskill sing
-    cast sing
-    goto stall_do_return
-  endif
-  if hascombatitem spectre scepter
-    use spectre scepter
-    goto stall_do_return
-  endif
-  abort Need stalling skill or item
-  mark stall_do_return
-
-]]
+	local macrolines = {}
+	table.insert(macrolines, conditional_salve_action("goto stall_do_return"))
+	if have_item("seal tooth") then
+		table.insert(macrolines, "use seal tooth")
+		table.insert(macrolines, "goto stall_do_return")
+	elseif have_item("spices") then
+		table.insert(macrolines, "use seal tooth")
+		table.insert(macrolines, "goto stall_do_return")
+	end
+	if have_skill("Suckerpunch") then
+		table.insert(macrolines, "if (hasskill Suckerpunch)")
+		table.insert(macrolines, "  cast Suckerpunch")
+		table.insert(macrolines, "  goto stall_do_return")
+		table.insert(macrolines, "endif")
+	end
+	if have_skill("Sing") then
+		table.insert(macrolines, "if (hasskill Sing)")
+		table.insert(macrolines, "  cast Sing")
+		table.insert(macrolines, "  goto stall_do_return")
+		table.insert(macrolines, "endif")
+	end
+	if have_item("spectre scepter") then
+		table.insert(macrolines, "use spectre scepter")
+		table.insert(macrolines, "goto stall_do_return")
+	end
+	table.insert(macrolines, "abort Need stalling skill or item")
+	table.insert(macrolines, "mark stall_do_return")
+	return table.concat(macrolines, "\n")
 end
 
 function fist_action()
@@ -447,31 +471,49 @@ endwhile
 ]]
 end
 
-function macro_softcore(extrastuff)
-  -- TODO: set correct gaze
-  local maybe_runaway = [[
-
-]]
-  if have_equipped_item("Greatest American Pants") and macro_runawayfrom_monsters and macro_runawayfrom_monsters ~= "none" and get_daily_counter("item.fly away.free runaways") < 9 then
-	maybe_runaway = [[
-
-]] .. maybe_stun_monster() .. [[
+function macro_maybe_runaway()
+	if macro_runawayfrom_monsters and macro_runawayfrom_monsters ~= "none" then
+		if have_equipped_item("Greatest American Pants") and get_daily_counter("item.fly away.free runaways") < 3 then
+			return [[
 
 if ]] .. "(monstername " .. table.concat(macro_runawayfrom_monsters, ") || (monstername ") .. ")" .. [[
 
   runaway
 endif
 
-abort Expected to run away!
+]]
+		elseif have_skill("Peel Out") and (get_remaining_peel_outs() or 0) >= 1 and mp() >= 15 then
+			return [[
+
+if ]] .. "(monstername " .. table.concat(macro_runawayfrom_monsters, ") || (monstername ") .. ")" .. [[
+
+  if (hasskill Peel Out)
+    cast Peel Out
+  endif
+endif
 
 ]]
-  end
+		elseif have_equipped_item("Greatest American Pants") and get_daily_counter("item.fly away.free runaways") < 9 then
+			return [[
 
+if ]] .. "(monstername " .. table.concat(macro_runawayfrom_monsters, ") || (monstername ") .. ")" .. [[
+
+  runaway
+endif
+
+]]
+		end
+	end
+	return [[
+
+]]
+end
+
+function macro_softcore(extrastuff)
+  -- TODO: set correct gaze
   return [[
 
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
-
-]] .. maybe_runaway .. [[
 
 ]] .. maybe_stun_monster() .. [[
 
@@ -548,31 +590,11 @@ endif
 ]]
   end
 
-  local maybe_runaway = [[
-
-]]
-  if have_equipped_item("Greatest American Pants") and macro_runawayfrom_monsters and macro_runawayfrom_monsters ~= "none" and get_daily_counter("item.fly away.free runaways") < 9 then
-	maybe_runaway = [[
-
-]] .. maybe_stun_monster() .. [[
-
-if ]] .. "(monstername " .. table.concat(macro_runawayfrom_monsters, ") || (monstername ") .. ")" .. [[
-
-  runaway
-endif
-
-abort Expected to run away!
-
-]]
-  end
-
   return [[
 
 ]] .. set_gaze .. [[
 
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
-
-]] .. maybe_runaway .. [[
 
 ]] .. maybe_stun_monster() .. [[
 
@@ -797,7 +819,7 @@ sub kill_cannon
 
 ]]..conditional_salve_action()..[[
 
-  while !times 5
+  while !times 10
 ]] .. cannon_action() .. [[
   endwhile
   abort Should be dead!
@@ -1130,20 +1152,29 @@ endwhile
 ]]
 end
 
+local function use_if_have_item(x)
+	if have_item(x) then
+		return [[use ]] .. x
+	else
+		return ""
+	end
+end
+
 function make_yellowray_macro(name)
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
 sub stall
+
 ]] .. stall_action() .. [[
+
 endsub
 
 sub do_yellowray
-  if hascombatitem Golden Light
-    use Golden Light
-  endif
-  if hascombatitem unbearable light
-    use unbearable light
-  endif
+
+]] .. use_if_have_item("Golden Light") .. [[
+
+]] .. use_if_have_item("unbearable light") .. [[
+
   while !times 15
 	if match "yellow eye"
 	  cast Point at your opponent

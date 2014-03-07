@@ -196,7 +196,7 @@ end)
 
 add_automator("/choice.php", function()
 	if not setting_enabled("automate simple tasks") then return end
-	if text:match("That plus sign.*It's actually a book") then
+	if text:match("That plus sign.*It's actually a book") and have_item("plus sign") then
 		text, url = use_item_noajax("plus sign")()
 	end
 end)

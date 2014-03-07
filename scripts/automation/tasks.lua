@@ -114,6 +114,7 @@ function get_automation_tasks(script, cached_stuff)
 					end
 				end
 				set_result(smith_items("hot buttered roll", "big rock"))
+				script.unequip_if_worn("stolen accordion")
 				set_result(smith_items("heart of rock and roll", "stolen accordion"))
 				if not have_item("Rock and Roll Legend") then
 					critical "Couldn't smith RnR"
@@ -463,12 +464,22 @@ mark m_done
 				script.force_heal_up()
 				if predict_aboo_peak_banish() < 30 then
 					local gear = {}
-					if have_item("eXtreme mittens") and have_item("eXtreme scarf") and have_item("snowboarder pants") then
+					if not have_buff("Super Structure") and have_item("eXtreme mittens") and have_item("eXtreme scarf") and have_item("snowboarder pants") then
 						gear = { hat = "eXtreme scarf", pants = "snowboarder pants", acc3 = "eXtreme mittens" }
 					end
-					gear.acc1 = first_wearable { "glowing red eye" }
+					gear.hat = first_wearable { "lihc face" }
+					gear.weapon = first_wearable { "titanium assault umbrella" }
+					gear.acc1 = first_wearable { "plastic vampire fangs" }
+					gear.acc2 = first_wearable { "glowing red eye" }
+					if count_item("glowing red eye") >= 2 then
+						gear.acc3 = first_wearable { "glowing red eye" }
+					end
 					script.wear(gear)
 					script.ensure_buffs { "Reptilian Fortitude", "Power Ballad of the Arrowsmith" }
+					script.force_heal_up()
+				end
+				if predict_aboo_peak_banish() < 30 then
+					script.maybe_ensure_buffs { "Oiled-Up", "Standard Issue Bravery", "Starry-Eyed" }
 					script.force_heal_up()
 				end
 				if predict_aboo_peak_banish() < 30 then
@@ -494,9 +505,8 @@ mark m_done
 				-- TODO: heal up fully
 				return {
 					message = string.format("follow a-boo clue (%d%% haunted)", hauntedness),
-					fam = "Exotic Parrot",
-					buffs = { "Astral Shell", "Elemental Saucesphere", "Scarysauce", "A Few Extra Pounds", "Go Get 'Em, Tiger!" },
 					minmp = 5,
+					nobuffing = true,
 					action = adventure {
 						zoneid = 296,
 						choice_function = function(advtitle, choicenum)
@@ -512,6 +522,7 @@ mark m_done
 					message = string.format("do a-boo peak (%d%% haunted)", hauntedness),
 					fam = "Slimeling",
 					buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+					bonus_target = { "item", "extraitem" },
 					minmp = 50,
 					action = adventure {
 						zoneid = 296,
@@ -540,7 +551,7 @@ mark m_done
 						end
 					elseif cached_stuff.previous_twin_peak_noncombat_option == "Investigate Room 237" then
 						if estimate_twin_peak_effective_plusitem() < 50 then
-							script.bonus_target { "extraitem", "item", "noncombat" }
+							script.bonus_target { "item", "extraitem", "noncombat" }
 							script.ensure_buffs {}
 							script.wear {}
 						end
