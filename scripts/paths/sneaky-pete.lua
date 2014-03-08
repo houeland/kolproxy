@@ -62,3 +62,15 @@ function get_remaining_peel_outs()
 	local peelouts = tonumber(pt:match("You can peel out ([0-9]+) more time"))
 	return peelouts
 end
+
+add_warning {
+	message = "Shake It Off will remove the Thrice-Cursed, Twice-Cursed, and Once-Cursed buffs.",
+	path = "/skills.php",
+	type = "extra",
+	check = function()
+		if tonumber(params.whichskill) == get_skillid("Shake It Off") then
+			return have_buff("Thrice-Cursed") or have_buff("Twice-Cursed") or have_buff("Once-Cursed")
+		end
+	end,
+}
+

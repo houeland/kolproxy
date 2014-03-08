@@ -247,6 +247,30 @@ simple_https_direct rq = do
 mkCode resp = case rspCode resp of
 	(a, b, c) -> fromIntegral $ a * 100 + b * 10 + c
 
+check_for_http10 = do
+	use_proxy <- getEnvironmentSetting "KOLPROXY_USE_PROXY_SERVER"
+	use_server <- getEnvironmentSetting "KOLPROXY_SERVER"
+	let autodetect = do
+		c <- kolproxy_openTCPConnection "http://www.kingdomofloathing.com/"
+		let request = "GET /radio.php HTTP/1.1\r\nUser-Agent: " ++ kolproxy_version_string ++ "\r\nHost: www.kingdomofloathing.com\r\nAccept: */*\r\n\r\n"
+		connPut c request
+		connFlush c
+		lines <- read_till_empty c
+		hClose c
+		case lines of
+			("HTTP/1.1 200 OK\r\n":_rest) -> putInfoStrLn "Detected fast server connection" >> return False
+			_ -> putWarningStrLn "Detected slow server connection, using compatibility mode" >> return True
+	case (use_proxy, use_server) of
+		(Nothing, Nothing) -> do
+			try_ad <- try autodetect
+			case try_ad of
+				(Right False) -> return False
+				(Left err) -> do
+					putDebugStrLn $ "check_for_http10 exception: " ++ show (err :: SomeException)
+					return True
+				_ -> return True
+		_ -> return True
+
 doHTTPreq (absuri, rq) = do
 --	putDebugStrLn $ "doHTTPreq: " ++ show absuri
 	use_proxy <- getEnvironmentSetting "KOLPROXY_USE_PROXY_SERVER"
@@ -357,8 +381,9 @@ kolproxy_openTCPConnection server = do
 -- 			putDebugStrLn $ "opentcp connecting to " ++ show auth ++ " | " ++ show hostname ++ " -> " ++ show hostA
 			let a = Network.Socket.SockAddrInet (toEnum portnum) hostA
 			Network.Socket.connect s a
---			r <- randomRIO (1, 100 :: Integer)
---			when (r < 10) $ throwIO $ NetworkError $ "faked random connection error!"
+--			do
+--				r <- randomRIO (1, 100 :: Integer)
+--				when (r < 5) $ throwIO $ NetworkError $ "faked random connection error!"
 			h <- Network.Socket.socketToHandle s ReadWriteMode
 			return h
 	where
@@ -392,6 +417,9 @@ fast_mkconnthing server = do
 					(what, was_last_request) <- case isok of
 						Right (_requesting_it, req_nr) -> log_time_interval_http ref ("HTTP reading: " ++ (show $ rqURI rq)) $ do
 							what <- try $ ((do
+--								do
+--									r <- randomRIO (1, 100 :: Integer)
+--									when (r < 2) $ throwIO $ NetworkError $ "faked random request error!"
 								rsp <- log_time_interval_http ref "HTTP head" $ getResponseHead c -- fails to read from mafia because mafia terminates with LF instead of CRLF. Is this still true?
 								Right resp <- log_time_interval_http ref "HTTP body" $ switchResponse c True False rsp rq
 								return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)) `catch` (\e -> do

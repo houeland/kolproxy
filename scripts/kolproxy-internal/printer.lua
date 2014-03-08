@@ -1,6 +1,6 @@
 -- printer.lua
 
-local script_files_kolproxy_version = "3.30-beta"
+local script_files_kolproxy_version = "3.31-dev"
 
 -- io = nil
 os = nil
@@ -79,9 +79,9 @@ function kolproxy_use_slow_http() {
 </script>
 %0]]
 	if get_slow_http_setting() then
-		http_setting = [[<span style="color: orange; font-size: smaller">{ Using slow connections for compatibility with broken HTTP/1.0 systems. }</span>]]
+		http_setting = [[<span style="color: orange; font-size: smaller">{ Using slower compatibility mode connections. }</span>]]
 	else
-		http_setting = [[<span style="color: green; font-size: smaller">{ Using fast HTTP/1.1 connections. <a href="javascript:kolproxy_use_slow_http()" style="color: green">Change</a> }</span>]]
+		http_setting = [[<span style="color: green; font-size: smaller">{ Using fast server connections. <a href="javascript:kolproxy_use_slow_http()" style="color: green">(disable)</a> }</span>]]
 	end
 	mods["/login.php"]["An Adventurer is You!<br>"] = [[An Adventurer is You!<br>]] .. version_link .. "<br>" .. http_setting
 end

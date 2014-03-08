@@ -41,7 +41,7 @@ add_warning {
 }
 
 add_warning {
-	message = "The prententious artist quest is in the starting zones. Make sure to pick it up first if you want to complete it.",
+	message = "The pretentious artist quest is in the starting zones. Make sure to pick it up first if you want to complete it.",
 	type = "notice",
 	when = "ascension",
 	check = function(zoneid)

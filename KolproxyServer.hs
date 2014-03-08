@@ -175,9 +175,9 @@ handle_connection globalref recvdata sessionmastermv = do
 					let maybeparams = decodeUrlParams $ rqURI $ req
 					if (lookup "secretkey" =<< maybeparams) == Just (shutdown_secret_ $ globalref)
 						then do
-							writeIORef (use_slow_http_ref_ globalref) True
+							writeIORef (use_slow_http_ref_ globalref) ((lookup "enable" =<< maybeparams) /= Just "yes")
 							modifyMVar sessionmastermv $ \_m -> return (Data.Map.empty, "Modified.")
-							send_html "<html><body>Switched to slow HTTP/1.0.<br><br><a href=\"/\">Back to login</a>.</body></html>"
+							send_html "<html><body>Switched to slower HTTP/1.0 compatibility mode.<br><br><a href=\"/\">Back to login</a>.</body></html>"
 						else send_html "<html><body><p style=\"color: darkorange\">Denied.</p></body></html>"
 				"/kolproxy-troubleshooting" -> do
 					let line1 = "Badly behaving network equipment, firewalls, or anti-virus are frequent sources of kolproxy problems.<br>"
@@ -230,7 +230,12 @@ make_globalref = do
 		chanaction <- readChan chatlogchan
 		chanaction chatopendb
 
-	use_slow_http_ref <- newIORef False
+	use_slow_http_ref <- newIORef =<< do
+		envhttp10 <- getEnvironmentSetting "KOLPROXY_USE_HTTP10"
+		case envhttp10 of
+			Just "1" -> return True
+			Just "0" -> return False
+			_ -> check_for_http10
 	have_logged_in_ref <- newIORef False
 	tnow <- getCurrentTime
 	last_datafile_update_ref <- newIORef $ addUTCTime (fromInteger (-60000)) tnow
