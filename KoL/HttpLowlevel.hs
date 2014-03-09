@@ -34,8 +34,6 @@ import qualified Network.HTTP.HandleStream
 
 -- TODO: Split into a ModdedHttp part for the modified Network.HTTP stuff and another kolproxy part
 
---import System.Random
-
 doHTTPLOWLEVEL_DEBUG _ = return ()
 -- doHTTPLOWLEVEL_DEBUG x = putStrLn $ "HTTPlow DEBUG: " ++ x
 doHTTPLOWLEVEL_DEBUGexception _ = return ()
@@ -381,9 +379,6 @@ kolproxy_openTCPConnection server = do
 -- 			putDebugStrLn $ "opentcp connecting to " ++ show auth ++ " | " ++ show hostname ++ " -> " ++ show hostA
 			let a = Network.Socket.SockAddrInet (toEnum portnum) hostA
 			Network.Socket.connect s a
---			do
---				r <- randomRIO (1, 100 :: Integer)
---				when (r < 5) $ throwIO $ NetworkError $ "faked random connection error!"
 			h <- Network.Socket.socketToHandle s ReadWriteMode
 			return h
 	where
@@ -407,7 +402,16 @@ fast_mkconnthing server = do
 	connmv <- newEmptyMVar
 	let open_conn = do
 		tnow <- getCurrentTime
-		c <- kolproxy_openTCPConnection server -- TODO: Handle connection errors, timeout
+		let ensure_connection = do
+			conn <- try $ kolproxy_openTCPConnection server
+			case conn of
+				Right c -> return c
+				Left err -> do
+					putWarningStrLn $ "Connection exception: " ++ show (err :: SomeException)
+					threadDelay 500000
+					putInfoStrLn $ "Trying again..."
+					ensure_connection
+		c <- ensure_connection
 		rchan <- newChan
 		req_counter <- newIORef 0
 		let run = do
@@ -417,9 +421,6 @@ fast_mkconnthing server = do
 					(what, was_last_request) <- case isok of
 						Right (_requesting_it, req_nr) -> log_time_interval_http ref ("HTTP reading: " ++ (show $ rqURI rq)) $ do
 							what <- try $ ((do
---								do
---									r <- randomRIO (1, 100 :: Integer)
---									when (r < 2) $ throwIO $ NetworkError $ "faked random request error!"
 								rsp <- log_time_interval_http ref "HTTP head" $ getResponseHead c -- fails to read from mafia because mafia terminates with LF instead of CRLF. Is this still true?
 								Right resp <- log_time_interval_http ref "HTTP body" $ switchResponse c True False rsp rq
 								return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)) `catch` (\e -> do
