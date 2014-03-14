@@ -1221,6 +1221,15 @@ add_always_warning("/lair6.php", function()
 	end
 end)
 
+add_always_warning("/lair6.php", function()
+	if tonumber(params.place) == 6 and ascensionpath("Avatar of Boris") and fullness() < estimate_max_fullness() then
+		return "You might want to eat up to fill your remaining stomach space before freeing the king and losing the extra capacity.", "break prism in aob with spare stomach"
+	end
+	if tonumber(params.place) == 6 and ascensionpath("Avatar of Sneaky Pete") and drunkenness() < estimate_max_safe_drunkenness() then
+		return "You might want to drink up to fill your remaining liver space before freeing the king and losing the extra capacity.", "break prism in aosp with spare liver"
+	end
+end)
+
 add_printer("/lair6.php", function()
 	local nextplace = tonumber(text:match([[<a href="lair6.php%?place=([0-9])">]]))
 	if nextplace == nil then return end
