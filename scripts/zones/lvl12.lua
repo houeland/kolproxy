@@ -248,6 +248,10 @@ function increase_battlefield_kill_counter(side, amount, minamount)
 	if amount > 1 then -- Got a message, so the kill definitely counts
 		min_add = amount
 	end
+	if ascensionpath("Avatar of Sneaky Pete") and sneaky_pete_motorcycle_upgrades()["Cowling"] == "Rocket Launcher" then
+		min_add = min_add + 3
+		max_add = max_add + 3
+	end
 	killrange.min = math.min(1000, killrange.min + min_add)
 	killrange.max = math.min(1000, killrange.max + max_add)
 	ascension["battlefield.kills." .. side] = killrange

@@ -1,5 +1,5 @@
 add_warning {
-	message = "Make sure you use the correct skill to trigger the Juju Mojo Mask.",
+	message = "Remember to use a class-appropriate skill to trigger the Juju Mojo Mask gaze +stat/fight intrinsic you want.",
 	type = "notice",
 	check = function()
 		if have_equipped_item("Juju Mojo Mask") and not have_intrinsic("Gaze of the Volcano God") and not have_intrinsic("Gaze of the Lightning God") and not have_intrinsic("Gaze of the Trickster God") then
@@ -9,7 +9,7 @@ add_warning {
 }
 
 add_warning {
-	message = "Your Juju Mojo Mask gaze does not correspond to your primary stat.",
+	message = "Your Juju Mojo Mask gaze +stat/fight intrinsic does not correspond to your primary stat.",
 	type = "extra",
 	check = function()
 		if level() >= 13 then return false end
@@ -39,7 +39,7 @@ add_processor("/fight.php", function()
 end)
 
 add_warning {
-	message = "Your Everything Looks Yellow buff ran out.",
+	message = "Your Everything Looks Yellow buff has run out.",
 	type = "notice",
 	idgenerator = function()
 		return session["had everything looks yellow buff on turn"]

@@ -1398,6 +1398,7 @@ endif
 						{ "Rowdy Drinker", 2 },
 						{ "Peel Out", 2 },
 						{ "Easy Riding", 2 },
+						{ "Check Mirror", 2 },
 						{ "Insult", 3 },
 						{ "Live Fast", 3 },
 						{ "Incite Riot", 3 },
@@ -1418,7 +1419,6 @@ endif
 						{ "Cocktail Magic", 1 },
 						{ "Make Friends", 1 },
 						{ "Natural Dancer", 1 },
-						{ "Check Mirror", 2 },
 						{ "Riding Tall", 2 },
 						{ "Biker Swagger", 2 },
 						{ "Flash Headlight", 2 },
@@ -1435,6 +1435,8 @@ endif
 						{ "Fix Jukebox", 1 },
 						{ "Snap Fingers", 1 },
 						{ "Easy Riding", 2 },
+						{ "Check Mirror", 2 },
+						{ "Riding Tall", 2 },
 						{ "Shake It Off", 1 },
 						{ "Check Hair", 1 },
 						{ "Cocktail Magic", 1 },
@@ -1450,8 +1452,6 @@ endif
 						{ "Unrepentant Thief", 3 },
 						{ "Brood", 3 },
 						{ "Walk Away From Explosion", 3 },
-						{ "Check Mirror", 2 },
-						{ "Riding Tall", 2 },
 						{ "Biker Swagger", 2 },
 						{ "Flash Headlight", 2 },
 					}
@@ -1493,9 +1493,12 @@ endif
 		return false
 	end
 
-	if (have_skill("Throw Party") and cached_stuff.used_sneaky_pete_throw_party == nil) or (have_skill("Incite Riot") and cached_stuff.used_sneaky_pete_incite_riot == nil) then
+	if have_skill("Throw Party") and cached_stuff.used_sneaky_pete_throw_party == nil then
 		local pt = get_page("/skills.php")
 		cached_stuff.used_sneaky_pete_throw_party = pt:match("<option disabled[^>]->Throw Party") or not pt:contains("Throw Party")
+	end
+	if have_skill("Incite Riot") and cached_stuff.used_sneaky_pete_incite_riot == nil then
+		local pt = get_page("/skills.php")
 		cached_stuff.used_sneaky_pete_incite_riot = pt:match("<option disabled[^>]->Incite Riot") or not pt:contains("Incite Riot")
 	end
 
@@ -1572,6 +1575,7 @@ endif
 					stop "TODO: Upgrade motorcycle"
 				end
 
+				print("  " .. tojson(options))
 				local pt, url = get_page("/main.php", { action = "motorcycle" })
 				local pt, url = handle_adventure_result(pt, url, "?", nil, options)
 
@@ -2265,6 +2269,20 @@ endif
 						finished = true
 						return
 					end
+					if ascensionpath("Avatar of Sneaky Pete") and level() >= 8 and turnsthisrun() < 400 and have_skill("Rowdy Drinker") and estimate_max_spleen() - spleen() < 3 and not have_item("Wrecked Generator") then
+						local pulls = pullsleft() or 0
+						if pulls >= 1 and pulls <= 5 then
+							for i = 1, pulls do
+								ascension_automation_pull_item("Wrecked Generator")
+							end
+						end
+						if have_item("Wrecked Generator") then
+							set_result(drink_item("Wrecked Generator"))
+							result = add_message_to_page(get_result(), "<p>Overdrunk, finished day. (Do PvP?)</p>", "Ascension script:")
+							finished = true
+							return
+						end
+					end
 				end
 				result, resulturl = get_page("/inventory.php", { which = 1 })
 				result = add_message_to_page(get_result(), "<p>End of day.</p><p>(PvP?,) cast ode and overdrink, then done.</p>", "Ascension script:")
@@ -2379,6 +2397,26 @@ endif
 		task = tasks.extend_tmm_and_mojo,
 	}
 
+	local function have_check_mirror_intrinsic()
+		for _, i in ipairs { "Slicked-Back Do", "Pompadour", "Cowlick", "Fauxhawk" } do
+			if have_intrinsic(i) then return true end
+		end
+		return false
+	end
+	add_task {
+		when = ascensionpath("Avatar of Sneaky Pete") and
+			level() <= 7 and
+			have_skill("Check Mirror") and
+			not have_check_mirror_intrinsic(),
+		task = {
+			message = "cast Check Mirror, get Pompadour",
+			nobuffing = true,
+			action = function()
+				cast_check_mirror_for_intrinsic("Pompadour")
+				did_action = have_check_mirror_intrinsic()
+			end
+		}
+	}
 	local function add_faxing_task(target, checker, want_reanimator)
 		if not script.have_familiar("Obtuse Angel") then
 			want_reanimator = true
@@ -4763,7 +4801,7 @@ endif
 --	}
 
 	add_task {
-		prereq = not have_item("Richard's star key") and have_item("steam-powered model rocketship") and (pullsleft() or 0) < 10,
+		prereq = not have_item("Richard's star key") and have_item("steam-powered model rocketship") and ascensionstatus("Softcore"),
 		f = script.make_star_key_only,
 	}
 
@@ -4787,6 +4825,7 @@ endif
 				if have_item("plus sign") and meat() < 1000 then
 					stop "Need 1k meat for oracle"
 				end
+				script.bonus_target { "noncombat" }
 				script.go("do > sign", 226, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic" }, "Slimeling", 25, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Typographical Clutter" then
 						if not have_item("plus sign") then
@@ -4896,6 +4935,7 @@ endif
 						maximum_tower_items_missing = maximum_tower_items_missing - 1
 					end
 				end
+				-- TODO: don't pull for levels you've already passed
 				if ascensionstatus("Softcore") and (pullsleft() or 0) >= maximum_tower_items_missing + 1 then
 					for i = 1, 6 do
 						local item = get_lair_tower_monster_items()[i]
@@ -5333,8 +5373,12 @@ use gauze garter
 	return result, resulturl, did_action
 end
 
+function set_autoattack_id(value)
+	return async_get_page("/account.php", { action = "autoattack", value = value, ajax = 1, pwd = session.pwd })
+end
+
 function disable_autoattack()
-	async_get_page("/account.php", { action = "autoattack", value = 0, ajax = 1, pwd = session.pwd })
+	return set_autoattack_id(0)
 end
 
 local function do_loop(whichday)

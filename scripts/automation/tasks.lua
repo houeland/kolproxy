@@ -518,6 +518,7 @@ mark m_done
 				}
 			else
 				-- TODO: use a clover?
+				script.prepare_physically_resistant()
 				return {
 					message = string.format("do a-boo peak (%d%% haunted)", hauntedness),
 					fam = "Slimeling",

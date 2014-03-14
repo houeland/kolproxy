@@ -156,7 +156,7 @@ automation_script_details_list["display-tracked-variables"] = { simple = true, d
 automation_script_details_list["custom-mix-drinks"] = { simple = true, description = "List advanced cocktails you can craft (preview)" }
 automation_script_details_list["custom-ascension-checklist"] = { simple = true, description = "Pre-ascension checklist" }
 
-custom_aftercore_automation_href = add_automation_script("custom-aftercore-automation", function()
+function list_automation_scripts()
 	local questlogcompleted_page = get_page("/questlog.php", { which = 2 })
 	local accomplishments_page = get_page("/questlog.php", { which = 3 })
 	function quest_completed(name)
@@ -166,22 +166,31 @@ custom_aftercore_automation_href = add_automation_script("custom-aftercore-autom
 		return accomplishments_page:contains(text)
 	end
 
-	local links = {}
-	for x in pairs(get_automation_script_links()) do
+	local script_list = {}
+	for x, f in pairs(get_automation_script_links()) do
 		local tbl = automation_script_details_list[x]
 		if tbl and tbl.description then
 			if tbl.simple_link then
-				table.insert(links, { priority = 2, title = "Automation", link = tbl.simple_link, description = tbl.description })
+				script_list[x] = { category = "Automation", link = tbl.simple_link, description = tbl.description, details = tbl, f = f }
 			elseif tbl.simple then
-				table.insert(links, { priority = 3, title = "Information", link = [[kolproxy-automation-script?automation-script=]]..(tbl.name or x)..[[&pwd=]]..session.pwd, description = tbl.description })
+				script_list[x] = { category = "Information", link = [[kolproxy-automation-script?automation-script=]]..(tbl.name or x)..[[&pwd=]]..session.pwd, description = tbl.description, details = tbl, f = f }
 			elseif (ascensionstatus("Aftercore") or tbl.can_automate_inrun) and tbl.when and tbl.when() then
-				table.insert(links, { priority = 1, title = "Quests", link = [[kolproxy-automation-script?automation-script=]]..(tbl.name or x)..[[&pwd=]]..session.pwd, description = tbl.description })
+				script_list[x] = { category = "Quests", link = [[kolproxy-automation-script?automation-script=]]..(tbl.name or x)..[[&pwd=]]..session.pwd, description = tbl.description, details = tbl, f = f }
 			else
-				table.insert(links, { priority = 1, title = "Quests", link = nil, description = tbl.description })
+				script_list[x] = { category = "Quests", link = nil, description = tbl.description, details = tbl, f = f }
 			end
 		end
 	end
+	return script_list
+end
 
+custom_aftercore_automation_href = add_automation_script("custom-aftercore-automation", function()
+	local category_priorities = { Quests = 1, Automation = 2, Information = 3 }
+	local links = {}
+	for x, y in pairs(list_automation_scripts()) do
+		y.priority = category_priorities[y.category] or 1000
+		table.insert(links, y)
+	end
 	table.sort(links, function(a, b)
 		if a.priority ~= b.priority then
 			return a.priority < b.priority
@@ -191,9 +200,9 @@ custom_aftercore_automation_href = add_automation_script("custom-aftercore-autom
 	local lines = {}
 	local header = nil
 	for _, x in ipairs(links) do
-		if header ~= x.title then
-			table.insert(lines, string.format([[<h4>%s</h4>]], x.title))
-			header = x.title
+		if header ~= x.category then
+			table.insert(lines, string.format([[<h4>%s</h4>]], x.category))
+			header = x.category
 		end
 		if x.link then
 			table.insert(lines, string.format([[<a href="%s" style="color: green">%s</a><br>]], x.link, x.description))
@@ -201,8 +210,7 @@ custom_aftercore_automation_href = add_automation_script("custom-aftercore-autom
 			table.insert(lines, string.format([[<span style="color: gray">%s</span><br>]], x.description))
 		end
 	end
-
-	return make_kol_html_frame(table.concat(lines, "\n"), "Setup/run scripts"), requestpath
+	return make_kol_html_frame(table.concat(lines, "\n"), "Setup/run scripts")
 end)
 
 function maybe_pull_item(name, input_amount)

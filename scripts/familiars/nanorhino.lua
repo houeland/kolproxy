@@ -7,7 +7,7 @@ add_processor("/fight.php", function()
 end)
 
 add_warning {
-	message = "Make sure you use the correct skill to trigger the nanorhino.",
+	message = "Remember to begin fighting with a class-appropriate skill to trigger the nanorhino effect you want.",
 	type = "notice",
 	check = function()
 		return familiar("Nanorhino")
@@ -15,7 +15,7 @@ add_warning {
 }
 
 add_warning {
-	message = "You have autoattack enabled while using the nanorhino.",
+	message = "You have autoattack enabled while using the nanorhino. You might want to do the fight manually to make sure you trigger the effect you want.",
 	type = "extra",
 	check = function()
 		return familiar("Nanorhino") and autoattack_is_set()

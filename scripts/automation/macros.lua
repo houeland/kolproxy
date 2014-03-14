@@ -1583,7 +1583,7 @@ endif
   end
   return [[
 
-]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
+]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
 
 ]] .. maybe_stun_monster() .. [[
 

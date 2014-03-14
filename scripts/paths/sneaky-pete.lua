@@ -74,3 +74,14 @@ add_warning {
 	end,
 }
 
+function cast_check_mirror_for_intrinsic(intrinsic)
+	local options = {
+		["Slicked-Back Do"] = "Slick it back",
+		["Pompadour"] = "Comb it up",
+		["Cowlick"] = "Leave it curly",
+		["Fauxhawk"] = "Be a douchebag",
+	}
+	cast_skill("Check Mirror")
+	local pt, pturl = get_page("/choice.php", { forceoption = 0 })
+	return handle_adventure_result(pt, pturl, "?", nil, { ["Hair Today"] = options[intrinsic] })
+end

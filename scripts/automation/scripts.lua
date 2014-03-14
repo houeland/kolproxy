@@ -104,6 +104,9 @@ __allow_global_writes = true
 local script_cached_stuff = {}
 
 function get_automation_scripts(cached_stuff)
+	if not get_pwd then
+		function get_pwd() return session.pwd end
+	end
 	local f = {}
 	local script = f
 	cached_stuff = cached_stuff or script_cached_stuff
@@ -711,7 +714,7 @@ function get_automation_scripts(cached_stuff)
 			if maxhp() - hp() >= 70 and have_skill("Cannelloni Cocoon") then
 				ensure_mp(20)
 				cast_skillid(3012)
-			elseif maxhp() - hp() >= 40 and have_skill("Shake It Off") and not is_cursed() then
+			elseif have_skill("Shake It Off") and not is_cursed() and maxmp() >= 40 then
 				ensure_mp(30)
 				cast_skill("Shake It Off")
 			elseif have_skill("Tongue of the Walrus") then
@@ -728,6 +731,26 @@ function get_automation_scripts(cached_stuff)
 			elseif have_skill("Lasagna Bandages") then
 				ensure_mp(6)
 				cast_skillid(3009)
+			elseif maxhp() - hp() <= 20 and have_item("cast") then
+				use_item("cast")
+			elseif maxhp() < 50 then
+				-- Do nothing
+			elseif have_item("Camp Scout pup tent") then
+				use_item("Camp Scout pup tent")
+			elseif have_item("scroll of drastic healing") then
+				use_item("scroll of drastic healing")
+			elseif have_item("bag of pygmy blood") and not ascensionpath("Bees Hate You") then
+				use_item("bag of pygmy blood")
+			elseif have_item("phonics down") then
+				use_item("phonics down")
+			elseif have_item("honey-dipped locust") then
+				use_item("honey-dipped locust")
+			elseif have_item("tiny house") then
+				use_item("tiny house")
+			elseif have_item("cast") then
+				use_item("cast")
+			elseif meat() >= 5000 and challenge ~= "zombie" then
+				post_page("/galaktik.php", { action = "curehp", pwd = get_pwd(), quantity = 10 })
 			end
 			if hp() > oldhp then
 				if show_spammy_automation_events then
@@ -2427,6 +2450,12 @@ mark m_done
 		end
 	end
 
+	function f.prepare_physically_resistant()
+		if ascensionpath("Avatar of Sneaky Pete") and not have_skill("Smoke Break") and ascensionstatus("Hardcore") then
+			script.bonus_target { "elemental weapon damage" }
+		end
+	end
+
 	function f.do_hidden_city()
 		-- TODO: Remove redundant information, put in zones/hiddencity.lua
 		local places = {
@@ -2437,9 +2466,7 @@ mark m_done
 			{ zone = "An Overgrown Shrine (Northeast)", choice = "Air Apparent", option = "Place your head in the impression", fallback = "Leave the altar", sphere = "crackling" },
 		}
 		local citypt = get_page("/place.php", { whichplace = "hiddencity" })
-		if ascensionpath("Avatar of Sneaky Pete") and not have_skill("Smoke Break") and ascensionstatus("Hardcore") then
-			script.bonus_target { "elemental weapon damage" }
-		end
+		script.prepare_physically_resistant()
 		if count_item("stone triangle") >= 4 then
 			return run_task {
 				message = "kill hidden city boss",
@@ -2866,27 +2893,13 @@ endif
 			end
 			-- TODO: Split into hardcore / softcore-copy, and do buffing per-path
 			if challenge == "boris" then
-				if have_item("Rain-Doh box full of monster") then
-					local copied = retrieve_raindoh_monster()
-					if copied:contains("lobsterfrogman") then
-						use_item("Rain-Doh box full of monster")
-						local pt, url = get_page("/fight.php")
-						result, resulturl, advagain = handle_adventure_result(pt, url, "?", m)
-						if advagain then
-							did_action = true
-						end
-					else
-						stop("TODO: fight rain-doh copied monster")
-					end
+				script.ensure_buffs {}
+				if have_buff("Song of Battle") and ascensionstatus() == "Hardcore" then
+					go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro_hardcore_boris, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
+				elseif have_buff("Song of Battle") and have_item("Rain-Doh black box") then
+					go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro_copy_lfm, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
 				else
-					script.ensure_buffs {}
-					if have_buff("Song of Battle") and ascensionstatus() == "Hardcore" then
-						go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro_hardcore_boris, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
-					elseif have_buff("Song of Battle") and have_item("Rain-Doh black box") then
-						go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro_copy_lfm, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
-					else
-						stop "TODO: Do sonofa in Boris"
-					end
+					stop "TODO: Do sonofa in Boris"
 				end
 			elseif challenge == "zombie" and not have_buff("Waking the Dead") then
 				if have_skill("Summon Horde") then
@@ -3023,6 +3036,7 @@ endif
 				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodlecannon)
 				did_action = advagain
 				if not did_action and pt:contains("get back into your warm clothes") then
+					print("   need more cold resistance, postponing until later")
 					cached_stuff.missing_cold_resistance_for_icy_peak = true
 					did_action = true
 				end
@@ -4762,6 +4776,7 @@ end
 
 function check_buying_from_knob_dispensary()
 	local pt = get_page("/submitnewchat.php", { graf = "/buy Knob Goblin seltzer", pwd = session.pwd })
+	-- TODO: elseif pt:contains not sure then return false else error
 	return pt:contains("whichstore=k")
 end
 
