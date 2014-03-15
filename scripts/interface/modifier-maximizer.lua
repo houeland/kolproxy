@@ -78,6 +78,10 @@ function maximize_skill_bonuses(scoref)
 		if playerclass("Pastamancer") and castname:match("^Bind ") then
 			-- TODO: Add line to switch pasta thrall
 			can_cast = false
+		elseif buffname == "Muffled" then
+			can_cast = (sneaky_pete_motorcycle_upgrades()["Muffler"] == "Extra-Quiet Muffler")
+		elseif buffname == "Unmuffled" then
+			can_cast = (sneaky_pete_motorcycle_upgrades()["Muffler"] == "Extra-Loud Muffler")
 		end
 		if can_cast then
 			local score = scoref(estimate_buff_bonuses(buffname))
