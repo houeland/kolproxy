@@ -297,6 +297,7 @@ function setup_functions()
 		function pastathralllevel() return tonumber(status().pastathralllevel) or 0 end
 		function fury() return tonumber(status().fury) or 0 end
 		function soulsauce() return tonumber(status().soulsauce) or 0 end
+		function pvpfights() return tonumber(status().pvpfights) or 0 end
 
 		function substats_for_level(x)
 			if x == 1 then

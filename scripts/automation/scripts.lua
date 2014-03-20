@@ -335,6 +335,9 @@ function get_automation_scripts(cached_stuff)
 				want_bonus.boris_song = "Song of Cockiness"
 			end
 		end
+		if ascensionpath("Avatar of Boris") or ascensionpath("Zombie Slayer") or ascensionpath("Avatar of Sneaky Pete") then
+			want_bonus.not_casting_spells = true
+		end
 		 -- Checked in reverse order, to let first item have highest priority by overriding previous choices
 		for t_i = #targets, 1, -1 do
 			local t = targets[t_i]
@@ -1438,7 +1441,7 @@ endif
 					end
 					print("pick up SR, last semi", lastsemi, lastturn)
 					wear {}
-					if (not lastsemi and not lastturn and turnsthisrun() < 85) or (lastsemi == "Lunchboxing") then
+					if (not lastsemi and not lastturn and turnsthisrun() < 85) or (lastsemi ~= "In the Still of the Alley") then
 						inform "Pick up SR, make it wines"
 						result, resulturl, advagain = autoadventure { zoneid = 112, ignorewarnings = true }
 						if get_result():contains("In the Still of the Alley") then
@@ -1454,7 +1457,7 @@ endif
 							result = add_message_to_page(get_result(), "Tried to pick up wine semirare", nil, "darkorange")
 						end
 						return result, resulturl, did_action
-					elseif lastsemi == "In the Still of the Alley" then
+					else
 						inform "Pick up SR, make it lunchbox"
 						result, resulturl, advagain = autoadventure { zoneid = 114, ignorewarnings = true }
 						if get_result():contains("Lunchboxing") then
@@ -1470,8 +1473,6 @@ endif
 							result = add_message_to_page(get_result(), "Tried to pick up lunchbox semirare", nil, "darkorange")
 						end
 						return result, resulturl, did_action
-					else
-						critical "Unexpected last SR when picking up SR (not wine nor lunchbox)"
 					end
 				end
 			elseif tonumber(b) >= turnsthisrun() then
@@ -4425,10 +4426,10 @@ endif
 				return
 			end
 			if not have_buff("Ultrahydrated") then
-				set_result(run_task {
+				run_task {
 					message = "getting ultrahydrated",
 					action = adventure { zone = "The Oasis" }
-				})
+				}
 				did_action = have_buff("Ultrahydrated")
 				return
 			end

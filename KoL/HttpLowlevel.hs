@@ -466,6 +466,7 @@ fast_mkconnthing server = do
 				let requesting_it = (req_nr <= 80) -- Do a maximum of 80 requests per connection
 				if requesting_it
 					then do
+						putDebugStrLn $ "Request: " ++ show absuri
 						connPut c (show rq)
 						connPut c (Data.ByteString.Char8.unpack $ rqBody rq)
 						connFlush c -- Maybe TODO???: only flush when done requesting???

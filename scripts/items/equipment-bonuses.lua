@@ -93,6 +93,7 @@ add_processor("/fight.php", function()
 end)
 
 add_processor("/inv_equip.php", function()
+	-- TODO: on non-ajax equipping too
 	clear_cached_item_bonuses("stinky cheese eye")
 	clear_cached_item_bonuses("stinky cheese diaper")
 end)

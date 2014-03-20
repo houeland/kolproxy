@@ -25,7 +25,7 @@ local museum_href = add_automation_script("latest-leaderboard", function()
 end)
 
 add_processor("/storage.php", function()
-	if params.action then
+	if params.action and ascensionstatus("Softcore") then
 		session["topmenu storage pulls display"] = nil
 	end
 end)

@@ -61,7 +61,7 @@ loadState ref = do
 							putStrLn $ "  DB: Creating session data..."
 							ai <- getApiInfo ref
 							putStrLn $ "    API: Retrieved name = " ++ (charName ai)
-							return $ Data.Map.fromList [("character", charName ai), ("pwd", pwd ai), ("ascension number", show $ ascension ai), ("day", show $ daysthisrun ai)]
+							return $ Data.Map.fromList [("character", show $ charName ai), ("pwd", show $ pwd ai), ("ascension number", show $ ascension ai), ("day", show $ daysthisrun ai)]
 
 					requestmap <- return Data.Map.empty
 					charmap <- readMapFromDB "character"
@@ -110,6 +110,8 @@ get_state_tablename ref stateset = do
 registerUpdatedState ref stateset var = do
 -- 	putStrLn $ "DEBUG: updstate " ++ stateset ++ "." ++ var
 
+	putDebugStrLn $ "Updated state: " ++ stateset ++ "/" ++ var
+
 	when (stateset `elem` ["character", "ascension", "day"]) $ do
 		storeSettingsOnServer ref ("wrote " ++ stateset ++ "/" ++ var)
 
@@ -127,7 +129,7 @@ remap_stateset input_stateset input_var = if input_stateset == "fight"
 	then ("day", "fight." ++ input_var)
 	else (input_stateset, input_var)
 
-raw_unsetState ref input_stateset input_var = do
+unsetState ref input_stateset input_var = do
 	let (stateset, var) = remap_stateset input_stateset input_var
 	Just (stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
 	let newstate = case stateset of
@@ -145,7 +147,7 @@ raw_unsetState ref input_stateset input_var = do
 		do_db_query_ db ("DELETE FROM " ++ tablename ++ " WHERE name = ?;") [Just $ Data.ByteString.Char8.pack $ var]
 	registerUpdatedState ref stateset var
 
-raw_setState ref input_stateset input_var value = do
+setState ref input_stateset input_var value = do
 	let (stateset, var) = remap_stateset input_stateset input_var
 	Just (stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef $ state ref
 	let newstate = case stateset of
@@ -163,11 +165,6 @@ raw_setState ref input_stateset input_var value = do
 		do_db_query_ db ("INSERT OR REPLACE INTO " ++ tablename ++ "(name, value) VALUES(?, ?);") [Just $ Data.ByteString.Char8.pack $ var, Just $ Data.ByteString.Char8.pack $ value]
 	registerUpdatedState ref stateset var
 
-setState ref input_stateset input_var value = do
-	if value == ""
-		then raw_unsetState ref input_stateset input_var
-		else raw_setState ref input_stateset input_var value
-
 getState ref input_stateset input_var = do
 	let (stateset, var) = remap_stateset input_stateset input_var
 	Just (_stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
@@ -183,26 +180,11 @@ getState ref input_stateset input_var = do
 uglyhack_resetFightState ref = do
 	Just (_stid, (_requestmap, _sessionmap, _charmap, _ascmap, daymap)) <- readIORef (state ref)
 	let fight_keys = Data.Map.toList $ Data.Map.filterWithKey (\x _y -> isPrefixOf "fight." x) daymap
-	mapM_ (\(x, _y) -> raw_unsetState ref "day" x) fight_keys
+	mapM_ (\(x, _y) -> unsetState ref "day" x) fight_keys
 
 uglyhack_enumerateState ref = do
 	Just (_stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
 	return [("request", Data.Map.keys requestmap), ("session", Data.Map.keys sessionmap), ("character", Data.Map.keys charmap), ("ascension", Data.Map.keys ascmap), ("day", Data.Map.keys daymap)]
-
-makeStateJSON_old ref = do
-	ai <- getApiInfo ref
-
-	Just (_stid, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
-	let daymap = Data.Map.filterWithKey (\x _y -> not $ isPrefixOf "fight." x) extra_daymap
-
-	let char = [("name", charName ai), ("state", show charmap)]
-	let asc = [("ascension", show $ ascension ai), ("state", show ascmap)]
-	let day = [("ascension-day", (show $ ascension ai) ++ "-" ++ (show $ daysthisrun ai)), ("state", show daymap)]
-	let timestamp = [("turnsplayed", show $ turnsplayed ai)]
--- 	putStrLn $ "new server settings timestamp: " ++ show timestamp
-
-	let makeobj strmap = JSObject $ toJSObject $ map (\(a, b) -> (a, JSString $ toJSString $ b)) strmap
-	return $ toJSObject [("character", makeobj char), ("ascension", makeobj asc), ("day", makeobj day), ("timestamp", makeobj timestamp)]
 
 makeStateJSON_new ref newstateid = do
 	ai <- getApiInfo ref
@@ -233,55 +215,6 @@ makeStateJSON_new ref newstateid = do
 --		throwIO $ InternalError "Error converting JSON"
 
 	return $ toJSObject [("character", JSObject char), ("ascension", JSObject asc), ("day", JSObject day), ("timestamp", JSObject timestamp)]
-
-loadStateJSON_old ref jsobj = do
-	lstp <- getState ref "character" "turnsplayed last state change"
-	ai <- getApiInfo ref
-	Just (stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
-	let Ok stuff = fromJSObject <$> readJSON jsobj
-
-	case lookup "timestamp" stuff of
-		Just tstampobj -> do
-			let turnsplayedstr = fromJSString $ fromJust $ lookup "turnsplayed" $ fromJSObject tstampobj :: String
-			let Just tserver = read_as $ turnsplayedstr :: Maybe Integer
-			let should_use_server_data = case read_as =<< lstp :: Maybe Integer of
-				Just tlocal -> (tserver >= tlocal)
-				Nothing -> True
-			if should_use_server_data
-				then do
-					putStrLn $ "INFO: server settings are recent " ++ show (turnsplayedstr, lstp)
-					putStrLn $ "  loading character state"
-					let charlist = fromJSObject $ fromJust $ lookup "character" stuff
-					(what, newstate) <- if (fromJSString $ fromJust $ lookup "name" charlist) == (charName ai)
-						then do
-							let storedcharstatestr = fromJSString $ fromJust $ lookup "state" charlist
-							let Just storedcharmap = read_as storedcharstatestr :: Maybe (Data.Map.Map String String)
-
-							putStrLn $ "  loading ascension state"
-							let asclist = fromJSObject $ fromJust $ lookup "ascension" stuff
-							if (Just (ascension ai)) == (read_as (fromJSString $ fromJust $ lookup "ascension" asclist) :: Maybe Integer)
-								then do
-									let storedascstatestr = fromJSString $ fromJust $ lookup "state" asclist
-									let Just storedascmap = read_as storedascstatestr :: Maybe (Data.Map.Map String String)
-
-									putStrLn $ "  loading day state"
-									let daylist = fromJSObject $ fromJust $ lookup "day" stuff
-									if (fromJSString $ fromJust $ lookup "ascension-day" daylist) == ((show (ascension ai)) ++ "-" ++ (show (daysthisrun ai)))
-										then do
-											let storeddaystatestr = fromJSString $ fromJust $ lookup "state" daylist
-											let Just storeddaymap = read_as storeddaystatestr :: Maybe (Data.Map.Map String String)
-											return (["character", "ascension", "day"], (requestmap, sessionmap, storedcharmap, storedascmap, storeddaymap))
-										else return (["character", "ascension"], (requestmap, sessionmap, storedcharmap, storedascmap, daymap))
-								else return (["character"], (requestmap, sessionmap, storedcharmap, ascmap, daymap))
-						else return (["Nothing"], (requestmap, sessionmap, charmap, ascmap, daymap))
-					writeIORef (state ref) $ Just (stid, newstate)
-					return what
-				else do
-					putStrLn $ "WARNING: server settings are old " ++ show (turnsplayedstr, lstp)
-					return ["Nothing"]
-		Nothing -> do
-			putStrLn $ "INFO: no turnsplayed timestamp for server settings"
-			return ["Nothing"]
 
 loadStateJSON_new ref jsobj = do
 	ai <- getApiInfo ref
@@ -387,7 +320,6 @@ storeSettingsOnServer ref store_reason = when (store_state_in_actionbar ref) $ d
 			Just x -> return x
 			_ -> download_actionbar ref
 		let Ok storedjslist = fromJSObject <$> decodeStrict json
-		--stateobj_old <- makeStateJSON_old ref
 		stateobj_new <- makeStateJSON_new ref newstateid
 		let newjson = encodeStrict $ toJSObject $ filter (\(x, _) -> x /= "kolproxy state" && x /= "kolproxy json state") storedjslist ++ [("kolproxy json state", JSObject stateobj_new)]
 		void $ postPageRawNoScripts "/actionbar.php" [("action", "set"), ("for", "kolproxy " ++ kolproxy_version_number ++ " by Eleron"), ("format", "json"), ("bar", newjson), ("pwd", pwd ai)] ref
@@ -399,15 +331,11 @@ storeSettingsOnServer ref store_reason = when (store_state_in_actionbar ref) $ d
 loadSettingsFromServer ref = do
 	json <- download_actionbar ref
 	case fromJSObject <$> decodeStrict json of
-		Ok list -> case (lookup "kolproxy json state" list :: Maybe JSValue, lookup "kolproxy state" list :: Maybe JSValue) of
-			(Just (JSObject x), _) -> do
+		Ok list -> case (lookup "kolproxy json state" list :: Maybe JSValue) of
+			Just (JSObject x) -> do
 				what_list <- loadStateJSON_new ref x
 				mirrorStateIntoDatabase ref
 				return $ Just $ show what_list ++ " (JSON format)"
-			(_, Just x) -> do
-				what_list <- loadStateJSON_old ref x
-				mirrorStateIntoDatabase ref
-				return $ Just $ show what_list ++ " (WARNING: old state format)"
 			_ -> return Nothing
 		Error err -> do
 			putStrLn $ "ERROR: Invalid actionbar data: " ++ err

@@ -521,6 +521,16 @@ endif
 		return unpack(ret)
 	end
 
+	local function have_wand_or_parts()
+		if have_item("Wand of Nagamar") then
+			return true
+		else
+			local wa = have_item("WA") or (have_item("ruby W") and have_item("metallic A"))
+			local nd = have_item("ND") or (have_item("lowercase N") and have_item("heavy D"))
+			return wa and nd
+		end
+	end
+
 	local function ensure_yellow_ray()
 		if not can_yellow_ray() then
 			return false
@@ -2004,6 +2014,11 @@ endif
 			end
 			result, resulturl = get_page("/lair2.php", { action = "statues" })
 			local missing_stuff = automate_lair_statues(result)
+			if missing_stuff and table.concat(missing_stuff, ", "):contains("smith a stone banjo") then
+				automate_smithing_stone_banjo()
+				result, resulturl = get_page("/lair2.php", { action = "statues" })
+				missing_stuff = automate_lair_statues(result)
+			end
 			if missing_stuff then
 				result, resulturl = get_page("/lair2.php")
 				result = add_message_to_page(get_result(), "TODO: finish lair<br><br>" .. table.concat(missing_stuff, ", "), nil, "darkorange")
@@ -4389,16 +4404,6 @@ endif
 		message = "get steam-powered model rocketship",
 	}
 
-	local function have_wand_or_parts()
-		if have_item("Wand of Nagamar") then
-			return true
-		else
-			local wa = have_item("WA") or (have_item("ruby W") and have_item("metallic A"))
-			local nd = have_item("ND") or (have_item("lowercase N") and have_item("heavy D"))
-			return wa and nd
-		end
-	end
-
 	add_task {
 		when = function() return not ascensionstatus("Aftercore") and
 			level() >= 10 and
@@ -4866,12 +4871,16 @@ endif
 						if b.potion and dod_reverse[b.potion] then
 							know_dod_potion = true
 						end
+						if b.effect == "Sugar Rush" then
+							needitem = get_sugar_rush_item()
+						end
 						local got = false
 						if have_buff(b.effect) then
 							got = true
 						elseif needitem and moonsign_area() == "Gnomish Gnomad Camp" and not have_item(needitem) then
 							buy_item(needitem, "n")
 						elseif needitem and not have_item(needitem) and ascensionstatus("Softcore") and (pullsleft() or 0) >= 5 then
+							-- TODO: clover for gum instead of pulling
 							pull_in_softcore(needitem)
 						end
 						if not got and needitem and have_item(needitem) then
@@ -4892,6 +4901,7 @@ endif
 					local safe = true
 					for _, y in pairs(touse_items) do
 						if y == "Teleportitis" and count_item("soft green echo eyedrop antidote") < 2 then
+							inform "(not automating Teleportitis)"
 							safe = false
 						end
 					end
@@ -4913,7 +4923,7 @@ endif
 						end
 					end
 				end
-				result = add_message_to_page(pt, "TODO: do lair gates, then run script again", nil, "darkorange")
+				result = add_message_to_page(pt, "Do lair gates, then run script again", nil, "darkorange")
 				resulturl = pturl
 				finished = not did_action
 			end
@@ -4973,6 +4983,31 @@ use ]] .. get_lair_tower_monster_items()[level] .. [[
 				local pt, pturl = get_page("/lair4.php")
 				if pt:contains("lair5.php") then
 					local pt, pturl = get_page("/lair5.php")
+					local function prepare_for_killing_ns()
+						script.bonus_target { "easy combat" }
+						script.want_familiar "Frumious Bandersnatch"
+						script.wear {}
+						script.heal_up()
+						if estimate_bonus("Monster Level") == 0 and buffedmoxie() >= 300 and maxhp() >= 200 then
+							local weapondata = equipment().weapon and maybe_get_itemdata(equipment().weapon)
+							if weapondata and weapondata.attack_stat == "Moxie" then
+								local form3ok = false
+								if requires_wand_of_nagamar() and have_item("Wand of Nagamar") then
+									form3ok = true
+								elseif ascensionpath("Avatar of Sneaky Pete") then
+									form3ok = true
+								end
+								if form3ok then
+									script.force_heal_up()
+									script.ensure_mp(100)
+									if hp() == maxhp() and mp() >= 100 then
+										return true
+									end
+								end
+							end
+						end
+						return false
+					end
 					if pt:contains("lair6.php") then
 						result, resulturl = get_page("/lair6.php")
 						if result:contains("place=0") then
@@ -5012,6 +5047,7 @@ use gauze garter, gauze garter
 							did_action = get_result():contains("<!--WINWINWIN-->")
 						elseif result:contains("place=2") and count_item("gauze garter") >= 8 and have_item("Rain-Doh indigo cup") then
 							inform "defeat shadow"
+							script.bonus_target { "easy combat" }
 							script.want_familiar "Frumious Bandersnatch"
 							script.ensure_buffs { "Go Get 'Em, Tiger!" }
 							script.wear {}
@@ -5022,7 +5058,7 @@ use gauze garter, gauze garter
 							if maxhp() < 300 then
 								script.maybe_ensure_buffs { "Standard Issue Bravery", "Starry-Eyed" }
 							end
-							script.heal_up()
+							script.force_heal_up()
 							if hp() < 300 then
 								stop "Kill your shadow"
 							end
@@ -5055,12 +5091,22 @@ use gauze garter
 							automate_lair6_place(4, result)
 							pt, pturl = get_page("/lair6.php")
 							did_action = pt:contains("place=5")
+						elseif result:contains("place=5") and prepare_for_killing_ns() then
+							inform "kill NS"
+							result, resulturl = get_page("/lair6.php", { place = 5 })
+							result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_kill_ns)
+							while get_result():contains([[<!--WINWINWIN-->]]) and get_result():contains([[fight.php]]) and locked() do
+								result, resulturl = get_page("/fight.php")
+								result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_kill_ns)
+							end
+							finished = true
 						else
-							inform "TODO: finish lair (6)"
+							inform "finish lair (6)"
+							script.bonus_target { "easy combat" }
 							script.wear {}
 							script.heal_up()
 							result, resulturl = get_page("/lair6.php")
-							result = add_message_to_page(get_result(), "TODO: Finish top of tower", nil, "darkorange")
+							result = add_message_to_page(get_result(), "Finish top of tower", nil, "darkorange")
 							finished = true
 						end
 					else

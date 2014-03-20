@@ -22,7 +22,6 @@ import System.IO.Error (isUserError, ioeGetErrorString)
 import Text.JSON
 import Text.XML.Light
 import qualified Data.ByteString.Char8
-import qualified Data.ByteString.UTF8
 import qualified Data.Map
 import qualified Database.SQLite3Modded
 import qualified Scripting.LuaModded as Lua
@@ -45,11 +44,6 @@ instance Lua.StackValue Data.ByteString.Char8.ByteString where
 	push l x = Lua.pushbytestring l x
 	peek l1 n1 = local_maybepeek l1 n1 Lua.isstring (\l2 n2 -> Lua.tobytestring l2 n2)
 	valuetype _ = Lua.TSTRING
-
---instance Lua.StackValue String where
---	push l x = Lua.pushbytestring l $ Data.ByteString.UTF8.fromString x
---	peek l1 n1 = local_maybepeek l1 n1 Lua.isstring (\l2 n2 -> Data.ByteStrying.UTF8.toString <$> Lua.tobytestring l2 n2)
---	valuetype _ = Lua.TSTRING
 
 instance Lua.StackValue JSValue where
 	push l x = push_jsvalue l x
@@ -85,25 +79,30 @@ get_latest_kolproxy_version = do
 set_state ref l = do
 	stateset <- peekJustString l 1
 	var <- peekJustString l 2
-	value <- peekJustString l 3
 	canread <- canReadState ref
 	unless canread $ failLua $ "Error: Trying to set state \"" ++ var ++ "\" before state is available."
-	if stateset `elem` ["character", "ascension", "day", "fight", "session"]
-		then setState ref stateset var value >> return 0
-		else failLua $ "cannot write to stateset " ++ (show $ stateset)
+	unless (stateset `elem` ["character", "ascension", "day", "fight", "session"]) $ failLua $ "cannot write to stateset " ++ (show $ stateset)
+	oldvalue <- getState ref stateset var
+	newvalue <- do
+		isempty <- Lua.isnoneornil l 3
+		if isempty
+			then return Nothing
+			else Just <$> peekJustString l 3
+	when (oldvalue /= newvalue) $ case newvalue of
+		Just value -> setState ref stateset var value
+		Nothing -> unsetState ref stateset var
+	return 0
 
 get_state ref l = do
 	stateset <- peekJustString l 1
 	var <- peekJustString l 2
 	canread <- canReadState ref
 	unless canread $ failLua $ "Error: Trying to get state \"" ++ var ++ "\" before state is available."
-	if stateset `elem` ["character", "ascension", "day", "fight", "session"]
-		then do
-			maybevalue <- getState ref stateset var
-			case maybevalue of
-				Just value -> Lua.pushbytestring l (Data.ByteString.Char8.pack value) >> return 1
-				_ -> return 0
-		else failLua $ "cannot read stateset " ++ (show $ stateset)
+	unless (stateset `elem` ["character", "ascension", "day", "fight", "session"]) $ failLua $ "cannot read stateset " ++ (show $ stateset)
+	maybevalue <- getState ref stateset var
+	case maybevalue of
+		Just value -> Lua.pushbytestring l (Data.ByteString.Char8.pack value) >> return 1
+		_ -> return 0
 
 -- TODO: Check if this is really OK. It's not in valhalla!
 get_ref_playername ref = KoL.Api.charName <$> KoL.Api.getApiInfo ref
@@ -618,17 +617,6 @@ setup_lua_instance level filename setupref = do
 				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)
 				register_function "get_api_itemid_info" get_api_itemid_info
 			BROWSERREQUEST -> do
-				Lua.registerhsfunction lstate "__test_ret1" (return "helloø" :: IO String) -- OK
-				register_function "__test_ret2" $ \_ref l -> do
-					Lua.pushstring l "helloø" -- OK
-					return 1
-				register_function "__test_ret3" $ \_ref l -> do
-					Lua.pushbytestring l $ Data.ByteString.Char8.pack "helloø" -- Bad
-					return 1
-				register_function "__test_ret4" $ \_ref l -> do
-					Lua.pushbytestring l $ Data.ByteString.UTF8.fromString "helloø" -- OK
-					return 1
-
 				register_function "set_state" set_state
 				register_function "get_state" get_state
 				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)

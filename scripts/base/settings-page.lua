@@ -321,7 +321,9 @@ add_interceptor("/custom-settings", function()
 
 	if params.action == "set state" then
 		if params.stateset and params.name and params.value then
-			set_state(params.stateset, params.name, params.value)
+			local value = params.value
+			if value == "" then value = nil end
+			set_state(params.stateset, params.name, value)
 			return "Done.", requestpath
 		end
 	end

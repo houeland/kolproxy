@@ -138,6 +138,20 @@ endif
 
 ]]
 	end
+	local cfm = getCurrentFightMonster()
+	if cfm and cfm.Stats and cfm.Stats.Phys and tonumber(cfm.Stats.Phys) and tonumber(cfm.Stats.Phys) > 0 then
+		return [[
+
+if (hasskill Smoke Break)
+  cast Smoke Break
+endif
+
+if (hasskill Flash Headlight)
+  cast Flash Headlight
+endif
+
+]] .. attack_action()
+	end
 	return attack_action()
 end
 
@@ -1593,6 +1607,35 @@ endif
 
 while !times 5
 ]] .. serpent_action() .. [[
+endwhile
+
+]]
+end
+
+function macro_kill_ns()
+	return [[
+]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
+
+if monstername Avatar of Jarlsberg
+  if hasskill Smoke Break
+    cast Smoke Break
+  endif
+  if hasskill Throw Shield
+    cast Throw Shield
+  endif
+  if hasskill Pop Wheelie
+    cast Pop Wheelie
+    if hasskill Pop Wheelie
+      cast Pop Wheelie
+      if hasskill Pop Wheelie
+        cast Pop Wheelie
+      endif
+    endif
+  endif
+endif
+
+while !times 15
+  attack
 endwhile
 
 ]]

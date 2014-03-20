@@ -192,12 +192,13 @@ handle_connection globalref recvdata sessionmastermv = do
 
 make_globalref = do
 	environment_settings <- do
-	        listenpublic <- getEnvironmentSetting "KOLPROXY_LISTEN_PUBLIC"
-	        envfullfsync <- getEnvironmentSetting "KOLPROXY_SQLITE_FULLFSYNC"
-	        actionbarstate <- getEnvironmentSetting "KOLPROXY_STORE_STATE_IN_ACTIONBAR"
+		listenpublic <- getEnvironmentSetting "KOLPROXY_LISTEN_PUBLIC"
+		envfullfsync <- getEnvironmentSetting "KOLPROXY_SQLITE_FULLFSYNC"
+		actionbarstate <- getEnvironmentSetting "KOLPROXY_STORE_STATE_IN_ACTIONBAR"
+		localstate <- getEnvironmentSetting "KOLPROXY_STORE_STATE_LOCALLY"
 		return $ EnvironmentSettings {
 			store_state_in_actionbar_ = (actionbarstate /= Just "0"),
-			store_state_locally_ = True,
+			store_state_locally_ = (localstate /= Just "0"),
 			store_ascension_logs_ = True,
 			store_chat_logs_ = True,
 			store_info_logs_ = True,
