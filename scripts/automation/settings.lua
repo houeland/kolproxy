@@ -305,6 +305,7 @@ function get_ascension_automation_settings(want_bonus)
 			"left bear arm",
 			{ name = "hot plate", check = function() return want_bonus.elemental_weapon_damage end },
 			{ name = "Victor, the Insult Comic Hellhound Puppet", check = function() return want_bonus.monster_level end },
+			"wicker shield",
 			"giant clay ashtray",
 			"hot plate",
 			"magical ice cubes",

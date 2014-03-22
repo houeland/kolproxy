@@ -77,4 +77,7 @@ for familiar, info in pairs(drop_familiars) do
 			increase_daily_counter(counter_name)
 		end
 	end)
+	add_tracked_variables_display("day", function()
+		return { title = "Familiar drops (" .. familiar .. ")", value = get_daily_counter(counter_name) .. " / 5 " .. info.short_item_name }
+	end)
 end

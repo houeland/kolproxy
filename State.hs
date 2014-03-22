@@ -17,7 +17,7 @@ import Control.Monad
 import Data.IORef
 import Data.List
 import Data.Maybe
-import Data.Time.Clock.POSIX
+--import Data.Time.Clock.POSIX
 import System.IO.Error (isDoesNotExistError)
 import Text.JSON
 import Text.Printf
@@ -108,9 +108,7 @@ get_state_tablename ref stateset = do
 		_ -> throwIO $ InternalError $ "Invalid state table type: " ++ stateset
 
 registerUpdatedState ref stateset var = do
--- 	putStrLn $ "DEBUG: updstate " ++ stateset ++ "." ++ var
-
-	putDebugStrLn $ "Updated state: " ++ stateset ++ "/" ++ var
+--	putDebugStrLn $ "Updated state: " ++ stateset ++ "/" ++ var
 
 	when (stateset `elem` ["character", "ascension", "day"]) $ do
 		storeSettingsOnServer ref ("wrote " ++ stateset ++ "/" ++ var)
@@ -300,8 +298,8 @@ mirrorStateIntoDatabase ref = do
 
 download_actionbar ref = do
 	json <- nochangeGetPageRawNoScripts ("/actionbar.php?action=fetch&for=kolproxy+" ++ kolproxy_version_number ++ "+by+Eleron&format=json") ref
-	t <- getPOSIXTime
-	writeFile ("logs/api/actionbar-data-" ++ show t ++ ".json") json
+--	t <- getPOSIXTime
+--	writeFile ("logs/api/actionbar-data-" ++ show t ++ ".json") json
 	return json
 
 storeSettingsOnServer ref store_reason = when (store_state_in_actionbar ref) $ do

@@ -16,14 +16,6 @@ register_setting {
 	update_charpane = true,
 }
 
---register_setting {
---	name = "use custom kolproxy charpane/use compact mode",
---	description = "Use compact mode for custom kolproxy charpane",
---	group = "charpane",
---	default_level = "detailed",
---	update_charpane = true,
---}
-
 register_setting {
 	server_name = "compactchar",
 	description = "Use compact character pane",
@@ -31,14 +23,6 @@ register_setting {
 	parent = "use custom kolproxy charpane",
 	update_charpane = true,
 }
-
---register_setting {
---	name = "show buff extension arrows",
---	description = "Show up-arrows for extending buffs (currently only on custom charpane)",
---	group = "charpane",
---	default_level = "standard",
---	parent = "use custom kolproxy charpane",
---}
 
 register_setting {
 	name = "show multiple previous-adventure links",
@@ -62,6 +46,15 @@ register_setting {
 	server_name = "swapfam",
 	description = "Display familiar below effects",
 	group = "charpane",
+	parent = "use custom kolproxy charpane",
+	update_charpane = true,
+}
+
+register_setting {
+	name = "use custom bleary charpane",
+	description = "Use bleary version",
+	group = "charpane",
+	default_level = "enthusiast",
 	parent = "use custom kolproxy charpane",
 	update_charpane = true,
 }
@@ -1068,3 +1061,247 @@ a:active { color: black; }
 </html>]]
 	return text, "/kolproxy-quick-charpane-normal"
 end)
+
+
+local function blue_progressbar(c, m)
+	local pct = math.min(100, c * 100 / m)
+	return string.format([[<div class="progressbox" title="%i / %i"><div class="progressbar" style="background-color: %s; width: %i%%"></div></div>]], c, m, "blue", pct)
+end
+
+
+local function color_progressbar(c, m, color, full)
+	local pct = math.min(100, c * 100 / m)
+	if pct == 100  then
+		color = full
+	elseif pct < 25 then
+		color = "red"
+	elseif pct < 75 then
+		color = "orange"
+	end
+	return string.format([[<div class="progressbox" title="%i / %i"><div class="progressbar" style="background-color: %s; width: %i%%"></div></div>]], c, m, color, pct)
+end
+
+function bl_charpane_level_lines(lines)
+	local _, have_level, need_level = level_progress()
+
+	table.insert(lines, [[<table id='chit_character' class="chit_brick nospace"><tr><th colspan='3'>]])
+	table.insert(lines, string.format([[<a class=nounder target=mainpane href="charsheet.php"><b>%s</b></a></th></tr>]], playername()))
+	table.insert(lines, [[<tr><td class='avatar' rowspan='4'><img src="]] .. (session['cached avatar image'] or "http://images.kingdomofloathing.com/itemimages/blank.gif") .. [["></td>]])
+	table.insert(lines, string.format([[<td class="label"><a target="mainpane" href="da.php?place=gate3" title="Visit your guild">%s</a></td>]], classdesc()))
+
+	table.insert(lines, string.format([[<td class="level" rowspan="2" style="width:30px;"><a target="mainpane" href="council.php" title="Visit the Council">%d</a></td></tr>]], level()))
+
+	table.insert(lines, string.format([[
+<tr>
+	<td class="info">%s</td>
+</tr>
+<tr>
+	<td class="info">%s</td>
+	<td class="turns" align="top" title="Turns played (this run)">%d/%s</td>
+</tr>
+]],  ascensionpathname(), ascensionstatus(), daysthisrun(), turnsthisrun()))
+
+	table.insert(lines, string.format([[
+<tr>
+	<td colspan="2">
+		<div class="chit_resource">
+			<div title="Meat" style="float:left">
+				<span>%s</span><img src="http://images.kingdomofloathing.com/itemimages/meat.gif">
+			</div>
+			<div title="%s Adventures remaining" style="float:right">
+				<span>%s</span><img src="http://images.kingdomofloathing.com/itemimages/slimhourglass.gif">
+			</div>
+		</div>
+		<div style="clear:both"></div>
+	</td>
+</tr>
+]], format_integer(meat()), format_integer(advs()), format_integer(advs())))
+
+	table.insert(lines, string.format([[
+<tr>
+	<td class="progress" colspan="3" title="TODO moxie until level TODO (TODO substats needed)">
+		<div class="progressbar" style="width:%f%%"></div>
+	</td>
+</tr>
+</table>
+]], (have_level * 100 / need_level)))
+
+
+	table.insert(lines, [[<table id="chit_stats" class="chit_brick nospace">
+<thead>
+<tr>
+	<th colspan="3">My Stats</th>
+</tr>
+</thead>
+<tbody>]])
+
+	local function add_stat_line(statname, buffed, base, raw_substat)
+		local substat_level = math.floor(math.sqrt(raw_substat))
+		local substat_base = substat_level * substat_level
+		local have = raw_substat - substat_base
+		local for_next = (substat_level + 1) * (substat_level + 1)
+		local need = for_next - substat_base
+		local p_of_the_way = have / need
+		table.insert(lines, string.format([[
+<tr>
+	<td class="label">%s</td>
+	<td class="info"><span style="color:blue">%s</span>&nbsp;&nbsp;(%s)</td>
+	<td class="progress">%s</td>
+</tr>]], statname, format_integer(buffed), format_integer(base), blue_progressbar(have, need)))
+	end
+	add_stat_line("Muscle", buffedmuscle(), basemuscle(), rawmuscle())
+	add_stat_line("Myst", buffedmysticality(), basemysticality(), rawmysticality())
+	add_stat_line("Moxie", buffedmoxie(), basemoxie(), rawmoxie())
+	table.insert(lines, "</tbody><tbody>")
+
+	local function add_organ_line(desc, full, fullmax)
+		table.insert(lines, string.format([[
+<tr>
+<td class="label">%s</td>
+<td class="info">%i / %i</td>
+<td class="progress">%s</td>
+</tr>]], desc, full, fullmax, color_progressbar(full, fullmax, "blue", "#bbb")))
+	end
+	if playerclass("Seal Clubber") then
+		add_organ_line("Fury", fury(), 5)
+	end
+	if playerclass("Sauceror") then
+		add_organ_line("Soulsauce", soulsauce(), 100)
+	end
+
+	add_organ_line("Stomach", fullness(), estimate_max_fullness())
+	add_organ_line("Liver", drunkenness(), estimate_max_safe_drunkenness())
+	add_organ_line("Spleen", spleen(), estimate_max_spleen())
+
+	if ascensionstatus() == "Aftercore" then
+		table.insert(lines, [[<tr><td colspan='3'><font size="2"><a href="]] .. make_optimize_diet_href() .. [[" target="mainpane" style="color: green">{ Optimize diet }</a></font></td></tr>]])
+	end
+	table.insert(lines, "</tbody>")
+end
+
+function bl_charpane_hpmp_lines(lines)
+	table.insert(lines, [[<tbody>]])
+	table.insert(lines, string.format([[
+<tr>
+	<td class="label">HP</td>
+	<td class="info">%i&nbsp;/&nbsp;%i</td>
+	<td class="progress">
+		<div class="progressbox" title="%i / %i">
+			<div class="progressbar" style="width:%d%%;background-color:green"></div>
+		</div>
+	</td>
+</tr>]], hp(), maxhp(), hp(), maxhp(), hp() * 100 / maxhp()))
+
+	table.insert(lines, string.format([[
+<tr>
+	<td class="label">MP</td>
+	<td class="info">%i&nbsp;/&nbsp;%i</td>
+	<td class="progress">
+		<div class="progressbox" title="%i / %i">
+			<div class="progressbar" style="width:%d%%;background-color:green"></div>
+		</div>
+	</td>
+</tr>]], mp(), maxmp(), mp(), maxmp(), mp()*100/maxmp()))
+	table.insert(lines, [[</tbody>]])
+end
+
+function bl_charpane_zone_lines(lines)
+	table.insert(lines, [[<table id="chit_trail" class="chit_brick nospace">]])
+	table.insert(lines, string.format([[<tr><th><a class="visit" target="mainpane" href="%s">Last Adventure</a></th></tr>]], work_around_broken_status_lastadv(lastadventuredata()).container or ""))
+	table.insert(lines, string.format([[<tr><td><a target=mainpane href="%s">%s</a></td></tr>]], lastadventuredata().link, lastadventuredata().name))
+	if setting_enabled("show multiple previous-adventure links") then
+		local links = update_and_get_previous_adventure_links()
+		for i = 2, 5 do
+			if links[i] then
+				table.insert(lines, string.format([[<tr><td><a target=mainpane href="%s">%s</a></td></tr>]], links[i].link, links[i].name))
+			end
+		end
+	end
+	table.insert(lines, [[</table>]])
+end
+
+function blpane_familiar_weight()
+	if familiar("Reanimated Reanimator") then
+		return string.format([[<a href="main.php?talktoreanimator=1" target="mainpane">%s</a>]], buffedfamiliarweight())
+	else
+		return buffedfamiliarweight()
+	end
+end
+
+function bl_charpane_familiar(lines)
+	table.insert(lines, [[<table id="chit_familiar" class="chit_brick nospace">]])
+	if familiarid() ~= 0 then
+		local fam_equip = maybe_get_itemdata(tonumber(status().equipment.familiarequip) or 0)
+		table.insert(lines, string.format([[
+<tr>
+	<th width='40' id='weight'>%s</th>
+	<th><a target=mainpane href="familiar.php" class="familiarpick" title="Visit your terrarium">%s</a></th>
+	<th width="30">&nbsp;</th>
+</tr>]], blpane_familiar_weight(), get_familiarname(familiarid())))
+
+		table.insert(lines, string.format([[<tr><td><a href="familiar.php" target="mainpane"><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" width="30" height="30" class="chit_launcher" rel="chit_pickerfam"></td><td><!-- kolproxy charpane familiar text area --></td>]], familiarpicture()))
+		if fam_equip then
+			table.insert(lines, string.format([[<td><img class="chit_launcher" rel="chit_pickerfamequip" src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td></tr>]], fam_equip.picture))
+		else
+			table.insert(lines,[[<td><img class="chit_launcher" rel="chit_pickerfequip" src="http://images.kingdomofloathing.com/itemimages/blank.gif"></td></tr>]] )
+		end
+	elseif ascensionpath("Avatar of Boris") then
+		table.insert(lines, [[<tr><th>Clancy</th></tr>]] .. get_clancy_display() .. [[</center>]])
+	elseif ascensionpath("Avatar of Jarlsberg") then
+		table.insert(lines, [[<center>]] .. get_companion_display() .. [[</center>]])
+	elseif ascensionpath("Avatar of Sneaky Pete") then
+		table.insert(lines, get_motorbike_display())
+	else
+		table.insert(lines, [[<center><a href="familiar.php" target="mainpane">No familiar</a></center>]])
+	end
+	table.insert(lines, [[</table>]])
+end
+
+local function fam_equip_list()
+	local fam_equips = {}
+	for x, y in pairs(datafile("items")) do
+		if y.equipment_slot == "familiarequip" and have_item(x) then
+			local style = ""
+			if have_equipped_item(x) then style = [[style="border: solid thin gray"]] end
+			table.insert(fam_equips, string.format([[<a href="/inv_equip.php?pwd=%s&which=2&action=equip&whichitem=%i"><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" %s title="%s" alt="%s"></a>]], session.pwd, y.id, y.picture, style, x,x))
+		end
+	end
+	return fam_equips
+end
+
+local function bl_charpane_fam_picker(fams)
+	local curfampic = familiarpicture()
+	local current_is_a_fave = false
+	for a, b in pairs(fams) do
+		if familiarid() == b.id then
+			curfampic = b.pic
+			current_is_a_fave = true
+		end
+	end
+
+	local famnames = {}
+	for a, b in pairs(fams) do
+		table.insert(famnames, a)
+	end
+	table.sort(famnames)
+	if not current_is_a_fave then
+		table.insert(famnames, curfampic)
+	end
+
+	fams[curfampic] = { link = string.format([[<a href="familiar.php" target="mainpane"><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" width="30" height="30" style="border: solid thin gray"></a>]], familiarpicture()) }
+
+	local famchoosertext = ""
+	local spacetimer = 1
+	for _, b in ipairs(famnames) do
+		famchoosertext = famchoosertext .. fams[b].link
+		if spacetimer >= fams_per_line then
+			famchoosertext = famchoosertext .. "<br>"
+			spacetimer = 1
+		else
+			spacetimer = spacetimer + 1
+		end
+	end
+
+	local famequiptext = table.concat(fam_equip_list())
+	return [[<div id="chit_pickerfam" class="chit_skeleton" style="display:none"><table class="chit_picker"><tr><th>Favorites</th></tr><tr><td>]] .. famchoosertext .. [[</td></tr></table></div>]] .. [[<div id="chit_pickerfamequip" class="chit_skeleton" style="display:none"><table class="chit_picker"><tr><th>Equip!</th></tr><tr><td>]] .. famequiptext .. [[</td></tr></table></div>]]
+end

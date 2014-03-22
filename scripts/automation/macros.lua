@@ -194,13 +194,26 @@ function geyser_action()
 	if ascensionpath("Avatar of Sneaky Pete") then
 		local mname = fight["currently fighting"] and fight["currently fighting"].name or "?"
 		if mname:contains("nightstand") and have_skill("Peel Out") and ascensionstatus("Hardcore") then
-			return [[
+			if petelove() >= 30 and buffedmoxie() >= 100 and have_skill("Pop Wheelie") and have_skill("Snap Fingers") then
+				return [[
+
+cast Pop Wheelie
+cast Pop Wheelie
+cast Pop Wheelie
+attack
+attack
+attack
+
+]]
+			else
+				return [[
 
 cast Peel Out
 
 ]]
+			end
 		end
-		return attack_action()
+		return macro_sneaky_pete_action()
 	end
 	return macro_cast_skill { "Saucegeyser", "Weapon of the Pastalord" }
 end

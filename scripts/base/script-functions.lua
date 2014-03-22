@@ -389,7 +389,6 @@ function autoadventure(tbl)
 	end
 	session["adventure.lastzone"] = tbl.zoneid
 	local pt, url = post_page("/adventure.php", { snarfblat = tbl.zoneid })
-	if not pt then print("DEBUG: autoadventure() -> handle_adventure_result(nil)") end
 	return handle_adventure_result(pt, url, tbl.zoneid, tbl.macro, tbl.noncombatchoices or {}, tbl.specialnoncombatfunction)
 end
 

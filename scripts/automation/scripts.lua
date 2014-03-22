@@ -338,7 +338,7 @@ function get_automation_scripts(cached_stuff)
 		if ascensionpath("Avatar of Boris") or ascensionpath("Zombie Slayer") or ascensionpath("Avatar of Sneaky Pete") then
 			want_bonus.not_casting_spells = true
 		end
-		 -- Checked in reverse order, to let first item have highest priority by overriding previous choices
+		-- Checked in reverse order, to let first item have highest priority by overriding previous choices
 		for t_i = #targets, 1, -1 do
 			local t = targets[t_i]
 			if t == "item" then
@@ -848,21 +848,6 @@ function get_automation_scripts(cached_stuff)
 		["Fresh Scent"] = function()
 			return use_item("chunk of rock salt")
 		end,
-		["Simply Irresistible"] = function()
-			return use_item("irresistibility potion")
-		end,
-		["Simply Invisible"] = function()
-			return use_item("invisibility potion")
-		end,
-		["Ashen"] = function()
-			return use_item("pile of ashes")
-		end,
-		["Standard Issue Bravery"] = function()
-			return use_item("CSA bravery badge")
-		end,
-		["Oiled-Up"] = function()
-			return use_item("pec oil")
-		end,
 		["Starry-Eyed"] = function()
 			return async_post_page("/campground.php", { action = "telescopehigh" })
 		end,
@@ -927,9 +912,6 @@ function get_automation_scripts(cached_stuff)
 			end
 			return use_item("can of black paint")
 		end,
-		["Got Milk"] = function()
-			return use_item("milk of magnesium")
-		end,
 	}
 	local spells = {
 		["Ghostly Shell"] = { item = "totem" },
@@ -976,6 +958,27 @@ function get_automation_scripts(cached_stuff)
 			end
 			ensure_mp(data.mpcost)
 			return cast_skillid(data.skillid)
+		end
+	end
+
+	do
+		local duplicates = {}
+		local effect_items = {}
+		for name, d in pairs(datafile("items")) do
+			if d.use_effect then
+				duplicates[d.use_effect] = effect_items[d.use_effect]
+				effect_items[d.use_effect] = name
+			end
+		end
+		for x, _ in pairs(duplicates) do
+			effect_items[x] = nil
+		end
+		for effect, item in pairs(effect_items) do
+			if not buffs[effect] then
+				buffs[effect] = function()
+					return use_item(item)
+				end
+			end
 		end
 	end
 
@@ -1791,7 +1794,7 @@ endif
 			return result, resulturl, did_action
 		end
 
-		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Softcore") then
+		if ascensionpath("Avatar of Sneaky Pete") and not ascensionstatus("Hardcore") then
 			if (space() % 4) > 0 and script.get_turns_until_sr() == nil and meat() >= 40 then
 				return eat_fortune_cookie()
 			elseif space() >= 4 and level() >= 6 then
@@ -1801,6 +1804,13 @@ endif
 					return pull_and_eat_key_lime_pie("Boris")
 				end
 			end
+		end
+
+		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
+			if space() > 0 and script.get_turns_until_sr() == nil and meat() >= 40 then
+				return eat_fortune_cookie()
+			end
+			return
 		end
 
 		if ascensionstatus() ~= "Hardcore" then return end
@@ -1948,6 +1958,8 @@ endif
 				drink_item("can of the cheapest beer")
 			end
 		end
+
+		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then return end
 
 		if ascensionstatus() ~= "Hardcore" then return end
 
@@ -2962,7 +2974,7 @@ endif
 					stop "TODO: Do gremlins in challenge path without Super Structure"
 				end
 			end
-			if challenge and not have_skill("Tao of the Terrapin") then
+			if ascensionpathid() ~= 0 and not have_skill("Tao of the Terrapin") then
 				script.bonus_target { "easy combat" }
 				script.maybe_ensure_buffs { "Standard Issue Bravery" }
 				script.ensure_buffs { "Go Get 'Em, Tiger!", "Butt-Rock Hair" }
@@ -2972,7 +2984,7 @@ endif
 			fam "Frumious Bandersnatch"
 			wear {}
 			script.heal_up()
-			if challenge and (not have_buff("Super Structure") or not have_skill("Tao of the Terrapin")) then
+			if ascensionpathid() ~= 0 and (not have_buff("Super Structure") or not have_skill("Tao of the Terrapin")) then
 				script.force_heal_up()
 			end
 			ensure_mp(60)
@@ -3966,7 +3978,7 @@ endif
 				end
 			})
 		else
-			script.bonus_target { "noncombat" }
+			script.bonus_target { "extranoncombat", "noncombat" }
 			maybe_ensure_buffs { "Mental A-cue-ity" }
 			local macro = macro_noodlegeyser(4)
 			if challenge == "fist" then

@@ -583,7 +583,7 @@ endif
 
 	function adventure(t)
 		return function()
-			local pt, pturl, advagain = autoadventure { zoneid = get_zoneid(t.zone or t.zoneid), macro = t.macro_function and t.macro_function(), noncombatchoices = t.noncombats, specialnoncombatfunction = t.choice_function, ignorewarnings = true }
+			local pt, pturl, advagain = autoadventure { zoneid = get_zoneid(t.zone or t.zoneid), macro = t.macro_function, noncombatchoices = t.noncombats, specialnoncombatfunction = t.choice_function, ignorewarnings = true }
 			t.zone = nil
 			t.zoneid = nil
 			t.macro_function = nil
@@ -1562,7 +1562,7 @@ endif
 					options = { ["Upping Your Grade"] = "Upgrade the Seat, Heh Heh", ["Ayy, Sit on It"] = "Massage Seat" }
 				elseif not upgrades["Headlight"] and have_skill("Flash Headlight") and false_DEBUG_CHANGE_WHEN_WORKING then
 					options = { ["Upping Your Grade"] = "Upgrade the One Headlight, Nothing is Forever", ["Me and Cinderella Put It All Together"] = "Ultrabright Yellow Bulb" }
-				elseif not upgrades["Muffler"] and not have_skill("Brood") then
+				elseif not upgrades["Muffler"] and not have_skill("Brood") and not have_skill("Incite Riot") then
 					options = { ["Upping Your Grade"] = "Upgrade the Muffler, Shhh", ["Diving into the Mufflers"] = "Extra-Quiet Muffler" }
 				elseif not upgrades["Muffler"] then
 					options = { ["Upping Your Grade"] = "Upgrade the Muffler, Shhh", ["Diving into the Mufflers"] = "Extra-Loud Muffler" }
@@ -3991,8 +3991,8 @@ endif
 	add_task {
 		prereq = function() return not have_hippy_outfit() and
 			unlocked_island() and
-			ensure_yellow_ray() and
-			not have_frat_war_outfit() end,
+			not have_frat_war_outfit() and
+			ensure_yellow_ray() end,
 		f = function()
 			-- TODO: Should do this before level 9 to avoid noncombats!
 			script.bonus_target { "combat" }
@@ -4527,48 +4527,48 @@ endif
 		end
 	end }
 
-	add_task {
-		when = ascensionstatus() ~= "Hardcore" and quest("Make War, Not... Oh, Wait") and not have_frat_war_outfit(),
-		task = {
-			message = "pull frat war outfit",
-			action = function()
-				if daysthisrun() >= 3 then
-					pull_in_softcore("beer helmet")
-					pull_in_softcore("distressed denim pants")
-					pull_in_softcore("bejeweled pledge pin")
-					did_action = have_frat_war_outfit()
-				else
-					if not have_item("pumpkin") and not have_item("pumpkin bomb") then
-						script.bonus_target { "combat" }
-						local macro = make_yellowray_macro("War")
-						if not script.have_familiar("He-Boulder") then
-							pull_in_softcore("unbearable light")
-							macro = "use unbearable light"
-						end
-						script.go("yellow raying frat house", 134, macro, {
-							["Catching Some Zetas"] = "Wake up the pledge and throw down",
-							["Fratacombs"] = "Wander this way",
-							["One Less Room Than In That Movie"] = "Officers' Lounge",
-						}, {}, "He-Boulder", 20, { equipment = { hat = "filthy knitted dread sack", pants = "filthy corduroys" } })
-						did_action = have_frat_war_outfit()
-					else
-						stop "TODO: Get frat war outfit [not automated when it's day 2]"
-					end
-				end
-			end
-		}
-	}
+--	add_task {
+--		when = ascensionstatus() ~= "Hardcore" and quest("Make War, Not... Oh, Wait") and not have_frat_war_outfit(),
+--		task = {
+--			message = "pull frat war outfit",
+--			action = function()
+--				if daysthisrun() >= 3 then
+--					pull_in_softcore("beer helmet")
+--					pull_in_softcore("distressed denim pants")
+--					pull_in_softcore("bejeweled pledge pin")
+--					did_action = have_frat_war_outfit()
+--				else
+--					if not have_item("pumpkin") and not have_item("pumpkin bomb") then
+--						local macro = make_yellowray_macro("War")
+--						if not script.have_familiar("He-Boulder") then
+--							pull_in_softcore("unbearable light")
+--							macro = "use unbearable light"
+--						end
+--						script.go("yellow raying frat house", 134, macro, {
+--							["Catching Some Zetas"] = "Wake up the pledge and throw down",
+--							["Fratacombs"] = "Wander this way",
+--							["One Less Room Than In That Movie"] = "Officers' Lounge",
+--						}, {}, "He-Boulder", 20, { equipment = { hat = "filthy knitted dread sack", pants = "filthy corduroys" } })
+--					else
+--						stop "TODO: Get frat war outfit [not automated when it's day 2]"
+--					end
+--				end
+--			end
+--		}
+--	}
 
 	add_task {
 		prereq = function() return quest("Make War, Not... Oh, Wait") and
 			not have_frat_war_outfit() and
 			ensure_yellow_ray() end,
 		f = function()
+			script.bonus_target { "combat" }
 			script.go("yellow raying frat house", 134, make_yellowray_macro("War"), {
 				["Catching Some Zetas"] = "Wake up the pledge and throw down",
 				["Fratacombs"] = "Wander this way",
 				["One Less Room Than In That Movie"] = "Officers' Lounge",
 			}, {}, "He-Boulder", 20, { equipment = { hat = "filthy knitted dread sack", pants = "filthy corduroys" } })
+			did_action = have_frat_war_outfit()
 		end,
 	}
 
@@ -4584,6 +4584,11 @@ endif
 			action = adventure {
 				zoneid = 134,
 				macro_function = macro_noodleserpent,
+				noncombats = {
+					["Catching Some Zetas"] = "Wake up the pledge and throw down",
+					["Fratacombs"] = "Wander this way",
+					["One Less Room Than In That Movie"] = "Officers' Lounge",
+				},
 			}
 		}
 	}

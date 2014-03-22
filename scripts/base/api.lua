@@ -243,6 +243,7 @@ function setup_functions()
 			return areas[moonsign()]
 		end
 		function equipment()
+			-- TODO: Whitelist equipment slots? CDM occasionally adds non-items here.
 			local eq = {}
 			for a, b in pairs(status().equipment) do
 				eq[a] = tonumber(b)
@@ -253,10 +254,6 @@ function setup_functions()
 			eq.fakehands = nil -- Work around API misfeatures - these are not itemids
 			eq.cardsleeve = nil
 			return eq
-		end
-		function get_equipment()
-			print("WARNING: get_equipment() is deprecated, use equipment()")
-			return equipment()
 		end
 		function fullness() return tonumber(status().full) end
 		function drunkenness() return tonumber(status().drunk) end
@@ -280,9 +277,6 @@ function setup_functions()
 				return "Aftercore"
 			end
 		end
---		function in_aftercore()
---			return ascensionstatus() == "Aftercore"
---		end
 		function mcd() return tonumber(status().mcd) end
 		function applied_scratchnsniff_stickers()
 			local tbl = {}
@@ -384,24 +378,6 @@ function setup_functions()
 			return count_item(...)
 		end
 
-		function get_wand_data()
-			local wands = { "aluminum wand", "ebony wand", "hexagonal wand", "marble wand", "pine wand" }
-			for _, x in ipairs(wands) do
-				if have_item(x) then
-					local itemid = get_itemid(x)
-					local pt = get_page("/wand.php", { whichwand = itemid })
-					if pt:contains("Zap an item") then
-						if pt:contains(x) or pt:contains("Your wand ") or pt:contains("feels warm") or pt:contains("be careful") then
-							return { name = x, itemid = itemid, heat = 1 }
-						else
-							return { name = x, itemid = itemid, heat = 0 }
-						end
-					end
-				end
-			end
-			return nil
-		end
-
 		function clancy_level() return tonumber(status().clancy_level) end
 		function clancy_instrumentid() return tonumber(status().clancy_instrument) end -- TODO: check
 		function clancy_wantsattention() return status().clancy_wantsattention end
@@ -476,19 +452,6 @@ function setup_functions()
 			end
 			return result
 		end
-
-		function retrieve_trailed_monster()
-			local effectpt = get_page("/desc_effect.php", { whicheffect = "91635be2834f8a07c8ff9e3b47d2e43a" })
-			local trailed = effectpt:match([[And by "wabbit" I mean "(.-)%."]])
-			return trailed
-		end
-
-		function retrieve_raindoh_monster()
-			local itempt = get_page("/desc_item.php", { whichitem = "965400716" })
-			local copied = itempt:match([[with the soul of (.-) in it]])
-			return copied
-		end
-
 	end
 
 	local s_f_env = {}
