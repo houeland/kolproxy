@@ -15,20 +15,19 @@ function update_reanimated_reanimator_bonuses_cache()
 	local parts = pt:match("including:<br><b>.-</b>") or ""
 	local legs = tonumber(parts:match(">([0-9]*) leg")) or 0
 	local skulls = tonumber(parts:match(">([0-9]*) skull")) or 0
+	session["familiar.reanimator cached bonuses up-to-date"] = true
 	session["familiar.reanimator cached bonuses"] = { legs = legs, skulls = skulls }
 end
 
 function reset_reanimated_reanimator_bonuses_cache()
-	session["familiar.reanimator cached bonuses"] = nil
+	session["familiar.reanimator cached bonuses up-to-date"] = nil
 end
 
 function estimate_reanimated_reanimator_bonuses()
-	local bonuses = make_bonuses_table {}
 	local cached = session["familiar.reanimator cached bonuses"] or {}
-	local legs = cached.legs or 0
-	local skulls = cached.skulls or 0
-	if legs then bonuses = bonuses + { ["Item Drops from Monsters"] = fairy_bonus(legs) } end
-	if skulls then bonuses = bonuses + { ["Meat from Monsters"] = leprechaun_bonus(skulls) } end
+	local bonuses = make_bonuses_table {}
+	if (cached.legs or 0) > 0 then bonuses = bonuses + { ["Item Drops from Monsters"] = fairy_bonus(cached.legs) } end
+	if (cached.skulls or 0) > 0 then bonuses = bonuses + { ["Meat from Monsters"] = leprechaun_bonus(cached.skulls) } end
 	return bonuses
 end
 
@@ -43,7 +42,7 @@ add_processor("/fight.php", function()
 end)
 
 add_automator("all pages", function()
-	if familiar("Reanimated Reanimator") and not locked() and not session["familiar.reanimator cached bonuses"] then
+	if familiar("Reanimated Reanimator") and not locked() and not session["familiar.reanimator cached bonuses up-to-date"] then
 		update_reanimated_reanimator_bonuses_cache()
 	end
 end)
