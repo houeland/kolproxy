@@ -4765,10 +4765,10 @@ endif
 				end
 				-- TODO: increase priority with stench buffs up
 				script.do_filthworms()
-			elseif not completed_sonofa_beach() then
-				script.do_sonofa()
 			elseif not completed_gremlins() then
 				script.do_junkyard()
+			elseif not completed_sonofa_beach() then
+				script.do_sonofa()
 			elseif not completed_arena() then
 				inform "turn in rock band flyers"
 				script.wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
@@ -4797,18 +4797,6 @@ endif
 -- 		) and meat() >= 5000 and challenge ~= "fist",
 -- 		f = script.get_dod_wand,
 -- 	}
-
---	add_task {
---		when = quest("A Quest, LOL") and have_item("64735 scroll"),
---		task = {
---			message = "using 64735 scroll",
---			nobuffing = true,
---			action = function()
---				set_result(use_item("64735 scroll"))
---				did_action = have_item("facsimile dictionary")
---			end
---		}
---	}
 
 	add_task {
 		prereq = not have_item("Richard's star key") and have_item("steam-powered model rocketship") and ascensionstatus("Softcore"),
