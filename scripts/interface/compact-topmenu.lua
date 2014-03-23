@@ -8,11 +8,12 @@ register_setting {
 
 register_setting {
 	name = "enable bleary menupane",
-	description = "Use bleary's super-compact menupane version",
+	description = "Use bleary's version",
 	group = nil,
 	default_level = "enthusiast",
 	parent = "enable super-compact menupane",
 	update_menupane = true,
+	beta_version = true,
 }
 
 register_setting {
@@ -22,6 +23,7 @@ register_setting {
 	default_level = "detailed",
 	parent = "enable bleary menupane",
 	update_menupane = true,
+	beta_version = true,
 }
 
 add_printer("/game.php", function()

@@ -73,6 +73,8 @@ register_setting {
 	description = "Enable (beta) features that are still in development (<b>Not always accurate</b>)",
 	group = "other",
 	default_level = "enthusiast",
+	update_charpane = true,
+	update_menupane = true,
 }
 
 register_setting {
@@ -107,17 +109,13 @@ local setting_groups = {
 
 function setting_enabled(name)
 	if not can_read_state() then return false end
+	local stbl = settings[name]
+	if stbl.parent and not setting_enabled(stbl.parent) then return false end
+	if stbl.beta_version and not setting_enabled("enable experimental implementations") then return false end
 	local s = character["setting: " .. name]
 	if s then
 		return (s == "on")
 	else
-		if not settings[name] then
-			print("ERROR!!! SETTING NOT DEFINED!", name)
--- 			for a, b in pairs(settings) do
--- 				print("DEBUG, settings:", a, b)
--- 			end
-			return false
-		end
 		local level = character["setting group: " .. (settings[name].group or "?")] or character["settings base level"] or "limited"
 		local enabled = setting_levels[settings[name].default_level or "enthusiast"] <= setting_levels[level]
 -- 		print("DEBUG setting defaulted", name, enabled)
@@ -131,6 +129,8 @@ local function get_customize_features_page()
 		grouped[x.name] = {}
 	end
 	local children = {}
+	local js_children_visibility = {}
+	local js_top_level_features = {}
 	for _, x in pairs(settings) do
 		local g = x.group
 		if not grouped[g] then g = "other" end
@@ -138,16 +138,18 @@ local function get_customize_features_page()
 		if parent then
 			if not children[parent] then
 				children[parent] = {}
+				js_children_visibility[parent] = {}
 			end
 			table.insert(children[parent], x)
+			table.insert(js_children_visibility[parent], x.name)
 		else
+			table.insert(js_top_level_features, x.name)
 			table.insert(grouped[g], x)
 		end
 	end
 	local featurerows = {}
 	local radio_ctr = 0
 	local feature_radio_names = {}
-	local all_radio_names = {}
 	local all_default_values = {}
 	local charpane_updaters = {}
 	local menupane_updaters = {}
@@ -160,7 +162,6 @@ local function get_customize_features_page()
 			radio_ctr = radio_ctr + 1
 			local radio_name = "radio_" .. radio_ctr
 			feature_radio_names[y.name] = radio_name
-			table.insert(all_radio_names, radio_name)
 			if y.server_name then
 				local featuredesc = y.description .. [[<span style="color: gray"> (built-in KoL option)</span>]]
 				local trstyle = ""
@@ -186,7 +187,11 @@ local function get_customize_features_page()
 				local defaultchecked = (character["setting: " .. y.name] == nil) and [[ checked="checked"]] or ""
 				local baselevel = character["settings base level"] or "limited"
 				local defaultvalue = (setting_levels[y.default_level or "enthusiast"] <= setting_levels[baselevel]) and "on" or "off"
-				local featuredesc = y.description and ([[<span title="Lua scripting syntax: setting_enabled(&quot;]] .. y.name .. [[&quot)">]] .. y.description .. [[</span>]]) or ([[<span style="color: red">No description (<tt>]] .. y.name .. [[</tt>)</span>]])
+				local desc_beta = ""
+				if y.beta_version then
+					desc_beta = " (<b>experimental beta version</b>)"
+				end
+				local featuredesc = [[<span title="Lua scripting syntax: setting_enabled(&quot;]] .. y.name .. [[&quot)">]] .. y.description .. desc_beta .. [[</span>]]
 				local trstyle = ""
 				if parentname then
 					trstyle = string.format([[ class="childof_%s"]], feature_radio_names[parentname])
@@ -244,32 +249,38 @@ local function get_customize_features_page()
 			<script type="text/javascript">
 var all_default_values = ]] .. table_to_json(all_default_values) .. [[
 
-var all_radio_names = ]] .. table_to_json(all_radio_names) .. [[
-
 var charpane_updaters = ]] .. table_to_json(charpane_updaters) .. [[
 
 var menupane_updaters = ]] .. table_to_json(menupane_updaters) .. [[
 
-function refresh_visibility() {
-	var hidden = {}
-	for (var i_ = 0; i_ < all_radio_names.length; i_ += 1) {
-		for (var whichradio = 0; whichradio <= 2; whichradio += 1) {
-			var radio = $("[name=" + all_radio_names[i_] + "]")[whichradio]
-			if ($(radio).attr("checked")) {
-				var fname = $($(radio).parents("tr")[0]).attr("data-feature-name")
-				var c = $(radio).parent("td").attr("class")
-				var isenabled = false
-				if (c == "tdon") isenabled = true
-				else if (c == "tdserveron") isenabled = true
-				else if (c == "tddefault" && all_default_values[fname] == "on") isenabled = true
-				if (isenabled && !hidden[fname]) {
-					$(".childof_" + all_radio_names[i_]).show()
-				} else {
-					$(".childof_" + all_radio_names[i_]).hide()
-					$(".childof_" + all_radio_names[i_]).each(function(x, y) { hidden[$(y).attr("data-feature-name")] = true })
-				}
-			}
+var js_children_visibility = ]] .. tojson(js_children_visibility) .. [[
+
+var js_top_level_features = ]] .. tojson(js_top_level_features) .. [[
+
+var js_settings = ]] .. tojson(settings) .. [[
+
+function is_enabled(feature) {
+	var c = $("[data-feature-name='" + feature + "'] input").filter(function() { return this.checked }).parent().attr("class")
+	if (c == "tdon") return true
+	else if (c == "tdserveron") return true
+	else if (c == "tddefault" && all_default_values[feature] == "on") return true
+	return false
+}
+
+function update_feature_visibility(feature, parentvisible) {
+	if (js_settings[feature].beta_version && !is_enabled("enable experimental implementations")) parentvisible = false
+	$("[data-feature-name='" + feature + "']").toggle(parentvisible)
+	var isenabled = parentvisible && is_enabled(feature)
+	if (feature in js_children_visibility) {
+		for (var i = 0; i < js_children_visibility[feature].length; i += 1) {
+			update_feature_visibility(js_children_visibility[feature][i], isenabled)
 		}
+	}
+}
+
+function refresh_visibility() {
+	for (var i_ = 0; i_ < js_top_level_features.length; i_ += 1) {
+		update_feature_visibility(js_top_level_features[i_], true)
 	}
 }
 

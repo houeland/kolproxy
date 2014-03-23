@@ -540,9 +540,8 @@ endif
 		end
 		if not have_item("unbearable light") and not cached_stuff.tried_to_summon_unbearable_light then
 			inform "summoning unbearable light (no he-boulder)"
-			script.ensure_mp(5)
-			async_post_page("/campground.php", { preaction = "summoncliparts" })
-			post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "06", clip2 = "06", clip3 = "06" })
+			script.ensure_mp(2)
+			summon_clipart("unbearable light")
 			cached_stuff.tried_to_summon_unbearable_light = true
 			if not have_item("unbearable light") and not ascensionstatus("Hardcore") then
 				ascension_automation_pull_item("unbearable light")

@@ -201,6 +201,7 @@ function cast_skill(skill, quantity, targetid)
 	targetid = targetid or playerid()
 	assert(targetid and targetid ~= "")
 	local tbl = { whichskill = skillid, ajax = 1, action = "Skillz", pwd = session.pwd, targetplayer = targetid, quantity = quantity }
+	print_debug("  casting", skill)
 	return async_get_page("/skills.php", tbl)
 end
 cast_skillid = cast_skill

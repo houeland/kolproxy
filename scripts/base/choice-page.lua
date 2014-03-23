@@ -66,8 +66,6 @@ local function build_spoiler(pre, value, to)
 				newtext = newtext .. ", gain " .. tostring(to.getmeatmin) .. "-" .. tostring(to.getmeatmax) .. " meat"
 			end
 		end
---~ 					newtext = "item[" .. tostring(to.getitem) .. "] meat[" .. tostring(to.getmeat) .. "]"
-
 		if to.disabled then
 			disable = true
 		end

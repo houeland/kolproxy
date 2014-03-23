@@ -1,9 +1,9 @@
 register_setting {
 	name = "track monster queues",
-	description = "Track adventure zone monster queues (experimental)",
+	description = "Track adventure zone monster queues",
 	group = "other",
 	default_level = "enthusiast",
-	parent = "enable experimental implementations",
+	beta_version = true,
 }
 
 add_processor("/fight.php", function()

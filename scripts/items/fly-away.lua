@@ -35,6 +35,15 @@ add_printer("/fight.php", function()
 	end
 end)
 
+add_choice_text("Pants-Gazing", { -- choice adventure number: 508
+	["Super Skill"] = { text = "Combat Skills/Spells cost 0 MP" },
+	["Super Structure"] = { text = "Damage Absorption +500<br>Superhuman Resistance (+5) to all elements" },
+	["Super Vision"] = { text = "+25% Item Drops from Monsters" },
+	["Super Speed"] = { text = "Moxie +100%" },
+	["Super Accuracy"] = { text = "+30% chance of Critical Hit" },
+	["Ignore the pants"] = { text = "" },
+})
+
 -- peppermint parasol
 
 add_processor("/fight.php", function()
