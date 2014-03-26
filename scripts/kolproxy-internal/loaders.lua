@@ -96,6 +96,7 @@ load_file("interface", "interface/counters.lua")
 load_file("interface", "interface/chatpane.lua")
 load_file("interface", "interface/inventory-collapse.lua")
 load_file("interface", "interface/custom-charpane.lua")
+load_file("interface", "interface/custom-charpane-chit.lua")
 load_file("interface", "interface/preview-chat-commands.lua")
 load_file("interface", "interface/improve-typography.lua")
 

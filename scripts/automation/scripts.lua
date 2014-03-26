@@ -716,13 +716,13 @@ function get_automation_scripts(cached_stuff)
 			local oldhp = hp()
 			if maxhp() - hp() >= 70 and have_skill("Cannelloni Cocoon") then
 				ensure_mp(20)
-				cast_skillid(3012)
+				cast_skill("Cannelloni Cocoon")
 			elseif have_skill("Shake It Off") and not is_cursed() and maxmp() >= 40 then
 				ensure_mp(30)
 				cast_skill("Shake It Off")
 			elseif have_skill("Tongue of the Walrus") then
 				ensure_mp(10)
-				cast_skillid(1010)
+				cast_skill("Tongue of the Walrus")
 			elseif challenge == "boris" and have_item("your father's MacGuffin diary") and (hp() < 200 or hp() / maxhp() < 0.5 or ascensionstatus() == "Hardcore") then
 				ensure_mp(10)
 				cast_skillid(11031, 10)
@@ -730,10 +730,10 @@ function get_automation_scripts(cached_stuff)
 				cast_skillid(12001)
 			elseif have_skill("Disco Power Nap") then
 				ensure_mp(12)
-				cast_skillid(5011)
+				cast_skillid("Disco Power Nap")
 			elseif have_skill("Lasagna Bandages") then
 				ensure_mp(6)
-				cast_skillid(3009)
+				cast_skillid("Lasagna Bandages")
 			elseif maxhp() - hp() <= 20 and have_item("cast") then
 				use_item("cast")
 			elseif maxhp() < 50 then
@@ -833,6 +833,7 @@ function get_automation_scripts(cached_stuff)
 			return use_item("Knob Goblin eyedrops")
 		end,
 		["Sugar Rush"] = function()
+			-- TODO: only try summoning once per day
 			local f = cast_skillid(53) -- summon crimbo candy
 			local candies = { "Angry Farmer candy", "Crimbo fudge", "Crimbo peppermint bark", "Crimbo candied pecan" }
 			for _, x in ipairs(candies) do
@@ -957,7 +958,7 @@ function get_automation_scripts(cached_stuff)
 				shrug_buff(spells[name].shrug_first)
 			end
 			ensure_mp(data.mpcost)
-			return cast_skillid(data.skillid)
+			return cast_skill(skillname)
 		end
 	end
 
@@ -1136,20 +1137,9 @@ function get_automation_scripts(cached_stuff)
 		end
 		local function try_casting_buff(buffname, try_shrugging)
 			if buffs[buffname] then
-				local ptf = f.cast_buff(buffname)
-				if not ptf then
-					print("DEBUG: castbuff1 returned nil:", buffname)
-				end
-				if type(ptf) == "string" then
-					print("DEBUG: castbuff2 non-function:", buffname)
-				else
-					ptf = ptf()
-				end
-				if not ptf then
-					print("DEBUG: castbuff3 returned nil:", buffname)
-				end
+				local pt = f.cast_buff(buffname)()
 				if not have_buff(buffname) and not have_intrinsic(buffname) then
-					if ptf:contains("can't fit") and ptf:contains("songs in your head") and try_shrugging then
+					if pt:contains("can't fit") and pt:contains("songs in your head") and try_shrugging then
 						for _, atname in ipairs(at_shruggable) do
 							if have_buff(atname) and not want_buffs[atname] then
 								shrug_buff(atname)
@@ -1157,7 +1147,7 @@ function get_automation_scripts(cached_stuff)
 							end
 						end
 						critical("Too many AT songs to cast buff: " .. buffname)
-					elseif ptf:contains("can't use that skill") and ascensionpath("Way of the Surprising Fist") and AT_song_duration() == 0 then
+					elseif pt:contains("can't use that skill") and ascensionpath("Way of the Surprising Fist") and AT_song_duration() == 0 then
 						return
 					elseif not ok_to_fail and not ignore_failure[buffname] then
 						critical("Failed to ensure buff: " .. buffname)
@@ -1959,13 +1949,23 @@ endif
 			end
 		end
 
-		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then return end
-
 		if ascensionstatus() ~= "Hardcore" then return end
 
 		if not can_drink_normal_booze() then return end
 
 		if advs() >= 20 then return end
+
+		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
+			if not have_item("Ice Island Long Tea") and estimate_max_safe_drunkenness() - drunkenness() >= 4 and level() < 6 and count_item("snow berries") >= 1 and count_item("ice harvest") >= 3 then
+				shop_buyitem("Ice Island Long Tea", "snowgarden")
+			elseif level() >= 6 then
+				--stop("TODO: craft SHCs")
+			end
+			if have_item("Ice Island Long Tea") then
+				drink_item("Ice Island Long Tea")
+			end
+			return
+		end
 
 		for i = 1, 5 do
 			if have_item("peppermint sprout") or have_item("peppermint twist") then
@@ -2308,7 +2308,7 @@ mark m_done
 				maybe_ensure_buffs { "Mental A-cue-ity" }
 				async_get_page("/bigisland.php", { place = "camp", whichcamp = 1 })
 				result, resulturl = async_get_page("/bigisland.php", { action = "bossfight", pwd = get_pwd() })()
-				result, resulturl, did_action = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(15))
+				result, resulturl, did_action = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(20))
 			else
 				if count_item("gauze garter") < 10 then
 					inform "buying gauze garters"
@@ -4052,7 +4052,6 @@ endif
 		else
 			inform "do ritual"
 			async_post_page("/friars.php", { pwd = get_pwd(), action = "ritual" })
-			async_post_page("/friars.php", { pwd = get_pwd(), action = "buffs", bro = "1" })
 			async_get_page("/pandamonium.php")
 			refresh_quest()
 			did_action = not quest("Trial By Friar") and quest_text("this is Azazel in Hell")

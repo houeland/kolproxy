@@ -816,16 +816,33 @@ function verify_recipes(data)
 end
 
 function parse_familiars()
+	local itemid_lookup = {}
+	for n, d in pairs(processed_datafiles["items"]) do
+		itemid_lookup[d.id] = n
+	end
+
 	local familiars = {}
 	for l in io.lines("cache/files/familiars.txt") do
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
-		local famid, name, pic, equip = tonumber(tbl[1]), tbl[2], tbl[3], tbl[6]
+		local famid, name, pic, famtype, larvaitemid, equip = tonumber(tbl[1]), tbl[2], tbl[3], tbl[4], tonumber(tbl[5]), tbl[6]
 		if pic then
 			pic = pic:gsub("%.gif$", "")
 		end
 		if famid and name then
 			familiars[name] = { famid = famid, familiarpic = pic, familiarequip = equip }
+			if famtype:contains("stat0") then
+				familiars[name].volleyballtype = true
+			end
+			if famtype:contains("item0") then
+				familiars[name].fairytype = true
+			end
+			if famtype:contains("meat0") then
+				familiars[name].leprechauntype = true
+			end
+			if (larvaitemid or 0) > 0 then
+				familiars[name].larvaitem = itemid_lookup[larvaitemid]
+			end
 		end
 	end
 	return familiars
@@ -834,11 +851,14 @@ end
 function verify_familiars(data)
 	local correct_data = {
 		["Frumious Bandersnatch"] = { famid = 105 },
-		["Oily Woim"] = { famid = 168 },
+		["Oily Woim"] = { famid = 168, larvaitem = "woim" },
+		["Bloovian Groose"] = { volleyballtype = true, leprechauntype = true, larvaitem = "The Groose in the Hoose", familiarequip = "spruce juice" },
+		["Slimeling"] = { fairytype = true, familiarequip = "undissolvable contact lenses" },
 	}
 	return verify_data_fits(correct_data, data)
 end
 
+-- TODO: merge with parse_familiars
 function parse_enthroned_familiars()
 	local enthroned_familiars = {}
 	local section = nil
@@ -1140,9 +1160,6 @@ end
 
 process("choice spoilers")
 
-process("familiars")
-process("enthroned familiars")
-
 process("buffs")
 process("passives")
 
@@ -1150,6 +1167,9 @@ process("items")
 process("outfits")
 process("hatrack")
 process("recipes")
+
+process("familiars")
+process("enthroned familiars")
 
 process("skills")
 process("buff recast skills")

@@ -1,63 +1,26 @@
-local vanilla_fairy = {
-	slimeling = true,
-	stompboots = true,
-	obtuseangel = true,
-	familiar15 = true,
-	familiar22 = true,
-	familiar26 = true,
-	familiar34 = true,
-	familiar35 = true,
-	familiar36 = true,
-	familiar39 = true,
-	familiar41 = true,
-	sgfairy = true,
-	slgfairy = true,
-	jitterbug = true,
-	dandylion = true,
-	cassagnome = true,
-	dancebear = true,
-	sugarfairy = true,
-	pictsie = true,
-	turtle = true,
-	grouper2 = true,
-	dancfrog = true,
-	hippofam = true,
-	pianocat = true,
-	kloop = true,
-	pep_rhino = true,
-	frankengnome = true,
-	jungman = true,
-}
+local vanilla_fairies = {}
+local vanilla_leprechauns = {}
+local vanilla_volleyballs = {}
+
+for name, d in pairs(datafile("familiars")) do
+	if d.fairytype then
+		vanilla_fairies[d.famid] = true
+	end
+	if d.leprechauntype then
+		vanilla_leprechauns[d.famid] = true
+	end
+	if d.volleyballtype then
+		vanilla_volleyballs[d.famid] = true
+	end
+end
 
 function leprechaun_bonus(weight)
 	return 2 * fairy_bonus(weight)
 end
-local vanilla_lep = {
-	familiar2 = true,
-	familiar22 = true,
-	familiar23 = true,
-	familiar25 = true,
-	familiar41 = true,
-	familiar42 = true,
-	jitterbug = true,
-	tick = true,
-	cassagnome = true,
-	hunchback = true,
-	uniclops = true,
-	dancebear = true,
-	heboulder = true,
-	urchin = true,
-	dancfrog = true,
-	chauvpig = true,
-	hippofam = true,
-	organgoblin = true,
-	pianocat = true,
-	dramahog = true,
-	groose = true,
-	kloop = true,
-	uc = true,
-	jungman = true,
-}
+
+function volleyball_bonus(weight)
+	return math.sqrt(weight)
+end
 
 function estimate_current_familiar_bonuses()
 	if ascensionpath("Avatar of Boris") then
@@ -69,10 +32,9 @@ function estimate_current_familiar_bonuses()
 		end
 	end
 
-	if not familiarid() then return make_bonuses_table {} end
-
-	-- TODO: Use data files for vanilla fams + purse rat, hound dog, medium, woim, hobo monkey
-	if familiar("Steam-Powered Cheerleader") then
+	if not familiarid() then
+		return make_bonuses_table {}
+	elseif familiar("Steam-Powered Cheerleader") then
 		return make_bonuses_table { ["Item Drops from Monsters"] = fairy_bonus(math.floor(buffedfamiliarweight() * get_steampowered_cheerleader_bonus_multiplier())) }
 	elseif familiar("Fancypants Scarecrow") or familiar("Mad Hatrack") then
 		local famequip = equipment().familiarequip
@@ -105,11 +67,28 @@ function estimate_current_familiar_bonuses()
 		return make_bonuses_table { ["Meat from Monsters"] = leprechaun_bonus(buffedfamiliarweight() * 1.25), }
 	elseif familiar("Reanimated Reanimator") then
 		return estimate_reanimated_reanimator_bonuses()
+	elseif familiar("Baby Bugged Bugbear") then
+		if have_equipped_item("bugged balaclava") then
+			return make_bonuses_table { ["Stats Per Fight"] = volleyball_bonus(buffedfamiliarweight()) }
+		else
+			-- TODO
+			return make_bonuses_table { ["Stats Per Fight"] = "?" }
+		end
+	elseif familiar("Llama Lama") then
+		-- SPADE: Is this floored?
+		return make_bonuses_table { ["Stats Per Fight"] = volleyball_bonus(math.floor(buffedfamiliarweight() / 2)) }
+	elseif familiar("Wizard Action Figure") then
+		-- TODO
+		return make_bonuses_table { ["Item Drops from Monsters"] = "?", ["Stats Per Fight"] = "?" }
+	elseif familiar("Jack-in-the-Box") then
+		-- TODO
+		return make_bonuses_table { ["Item Drops from Monsters"] = "?", ["Stats Per Fight"] = "?" }
 	else
-		-- TODO: Use familiar IDs/names instead
+		-- TODO: grimacite-dependent familiars
 		local bonuses = make_bonuses_table {}
-		if vanilla_fairy[familiarpicture()] then bonuses = bonuses + { ["Item Drops from Monsters"] = fairy_bonus(buffedfamiliarweight()) } end
-		if vanilla_lep[familiarpicture()] then bonuses = bonuses + { ["Meat from Monsters"] = leprechaun_bonus(buffedfamiliarweight()) } end
+		if vanilla_fairies[familiarid()] then bonuses = bonuses + { ["Item Drops from Monsters"] = fairy_bonus(buffedfamiliarweight()) } end
+		if vanilla_leprechauns[familiarid()] then bonuses = bonuses + { ["Meat from Monsters"] = leprechaun_bonus(buffedfamiliarweight()) } end
+		if vanilla_volleyballs[familiarid()] then bonuses = bonuses + { ["Stats Per Fight"] = volleyball_bonus(buffedfamiliarweight()) } end
 		return bonuses
 	end
 end

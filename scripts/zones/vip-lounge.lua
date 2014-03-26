@@ -27,11 +27,14 @@ end)
 
 add_printer("/clan_viplounge.php", function()
 	local messages = {}
-	function add_message(c, maxcounter, msg)
-		local color = (c < maxcounter) and "green" or "gray"
-		table.insert(messages, string.format([[<span style="color: %s">{ %s used: %d / %d times today. }</span>]], color, msg, c, maxcounter))
+	if text:contains([[title="A Pool Table"]]) then
+		local uses_left = 3 - get_daily_counter("zone.vip lounge.pool table")
+		if uses_left <= 0 then
+			table.insert(messages, string.format([[<span style="color: gray">{ A Pool Table (no uses left today) }</span>]]))
+		else
+			table.insert(messages, string.format([[<span style="color: green">{ A Pool Table (%s left today) }</span>]], make_plural(uses_left, "use", "uses")))
+		end
 	end
-	add_message(get_daily_counter("zone.vip lounge.pool table"), 3, "A Pool Table")
 	local hot_tub_text = text:match([[title="(A Relaxing Hot Tub.-)"]])
 	if hot_tub_text:contains("no uses left") then
 		table.insert(messages, string.format([[<span style="color: gray">{ %s }</span>]], hot_tub_text))
@@ -60,7 +63,7 @@ add_processor("/clan_viplounge.php", function()
 end)
 
 add_processor("/clan_viplounge.php", function()
-	if params.preaction == "eathotdog" and tonumber(params.whichdog) and tonumber(params.whichdog) ~= -92 then
+	if params.preaction == "eathotdog" and tonumber(params.whichdog) and tonumber(params.whichdog) ~= -92 and not text:contains("too full to eat that") then
 		day["zone.vip lounge.fancy hot dog eaten"] = true
 	end
 end)
@@ -105,7 +108,7 @@ add_printer("/clan_viplounge.php", function()
 	if day["zone.vip lounge.checked looking glass"] then
 		text = text:gsub([[title="A Looking Glass"]], [[%0 style="opacity: 0.3"]])
 	end
-	if day["item.photocopied monster.used today"] then
+	if not can_use_vip_fax_machine() then
 		text = text:gsub([[title="A Fax Machine"]], [[%0 style="opacity: 0.3"]])
 	end
 end)
@@ -192,4 +195,8 @@ function get_remaining_hottub_uses()
 	local vippt = get_page("/clan_viplounge.php")
 	local uses = vippt:match([[title="A Relaxing Hot Tub %(([0-9]+) uses left today%)"]])
 	return tonumber(uses) or 0
+end
+
+function can_use_vip_fax_machine()
+	return not day["item.photocopied monster.used today"] and have_item("Clan VIP Lounge key") and not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete")
 end

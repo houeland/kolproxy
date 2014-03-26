@@ -1,4 +1,5 @@
-local href = add_automation_script("custom-mix-drinks", function()
+local href
+href = add_automation_script("custom-mix-drinks", function()
 	local cocktailcrafting_recipes = {}
 	for a, b in pairs(get_recipes_by_type("cocktail")) do
 		cocktailcrafting_recipes[a] = b.ingredients
@@ -7,7 +8,6 @@ local href = add_automation_script("custom-mix-drinks", function()
 	for a, b in pairs(get_recipes_by_type("still")) do
 		still_recipes[a] = b.base
 	end
-
 	local cached_ids = {}
 	local garnishes = {
 		["coconut shell"] = true,
@@ -33,13 +33,8 @@ local href = add_automation_script("custom-mix-drinks", function()
 		for a, b in pairs(hippy_store) do store_price[a] = b end
 	end
 	local SHC = { "Neuromancer", "vodka stratocaster", "Mon Tiki", "teqiwila slammer", "Divine", "Gordon Bennett", "gimlet", "yellow brick road", "mandarina colada", "tangarita", "Mae West", "prussian cathouse" }
-	local resptext = ""
-	for x, name in pairs(SHC) do
-		resptext = resptext .. name .. ": " .. table.concat(cocktailcrafting_recipes[name], " + ") .. "<br>"
-	end
-	local resptext = ""
 	local advcock = { "pink pony", "fuzzbump", "slip 'n' slide", "ocean motion", "ducha de oro", "horizontal tango", "roll in the hay", "a little sump'm sump'm", "slap and tickle", "perpendicular hula", "rockin' wagon", "calle de miel", "tropical swill", "fruity girl swill", "blended frozen swill", "bungle in the jungle" }
-	function can_make(name)
+	local function can_make(name)
 		local available = count_item(name)
 		local craftable = 0
 		local craft_steps = {}
@@ -77,7 +72,7 @@ local href = add_automation_script("custom-mix-drinks", function()
 		end
 		return available + craftable + stillable + buyable, steps
 	end
-	function handle_recipe(name)
+	local function handle_recipe(name)
 		local txt = ""
 		for _, x in pairs(cocktailcrafting_recipes[name]) do
 			txt = txt .. x .. " (" .. count_item(x) ..  ")  "
@@ -88,26 +83,42 @@ local href = add_automation_script("custom-mix-drinks", function()
 			for _, x in ipairs(steps) do
 				stepstext = stepstext .. "<br><small>&nbsp;&nbsp;" .. x .. "</small>"
 			end
-			return name .. " { " .. amount .. " }: " .. txt .. stepstext
+			local makelink = string.format([[<a href="%s">[make]</a>]], href { pwd = session.pwd, makeitem = name })
+			return name .. " { " .. amount .. " }: " .. txt .. makelink .. stepstext
 		else
 			return [[<span style="color: gray;">]] .. name .. " { " .. amount .. " }: " .. txt .. [[</span>]]
 		end
 	end
-	for x, name in pairs(advcock) do
-		resptext = resptext .. handle_recipe(name) .. "<br>"
-	end
-	if classid() == 5 or classid() == 6 or ascensionpath("Avatar of Sneaky Pete") then
-		resptext = resptext .. "<br><br>"
-		for x, name in pairs(SHC) do
-			resptext = resptext .. handle_recipe(name) .. "<br>"
+	local crafted_item_text = {}
+	local function do_craft_item(name)
+		if cocktailcrafting_recipes[name] then
+			for _, x in pairs(cocktailcrafting_recipes[name]) do
+				if not have_item(x) then
+					do_craft_item(x)
+				end
+			end
+			local pt = mix_items(cocktailcrafting_recipes[name][1], cocktailcrafting_recipes[name][2])()
+			table.insert(crafted_item_text, pt)
+		elseif still_recipes[name] then
+			local pt = shop_buyitem(name, "still")()
+--			table.insert(crafted_item_text, pt)
 		end
 	end
-	return "Note: Work in progress, currently missing an interface<br><br>" .. resptext, requestpath
+	if params.makeitem then
+		do_craft_item(params.makeitem)
+	end
+	local resptexts = {}
+	if classid() == 5 or classid() == 6 or ascensionpath("Avatar of Sneaky Pete") then
+		for x, name in pairs(SHC) do
+			table.insert(resptexts, handle_recipe(name))
+		end
+		table.insert(resptexts, "<br>")
+	end
+	for x, name in pairs(advcock) do
+		table.insert(resptexts, handle_recipe(name))
+	end
+	return "Note: Work in progress, currently missing a better interface<br><br>" .. table.concat(crafted_item_text, "<br>\n") .. table.concat(resptexts, "<br>\n"), requestpath
 end)
-
---add_printer("/craft.php", function()
---	text = text:gsub("%[.-discoveries.-%]", [[%0&nbsp;<a href="]]..href { pwd = session.pwd }..[[" style="color:green;">{ mix drinks }</a>]], 1)
---end)
 
 add_automation_script("buy-and-cook-fancy", function()
 	local kitchen = get_page("/campground.php", { action = "inspectkitchen" })
