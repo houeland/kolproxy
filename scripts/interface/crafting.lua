@@ -39,17 +39,21 @@ local href = add_automation_script("custom-mix-drinks", function()
 	end
 	local resptext = ""
 	local advcock = { "pink pony", "fuzzbump", "slip 'n' slide", "ocean motion", "ducha de oro", "horizontal tango", "roll in the hay", "a little sump'm sump'm", "slap and tickle", "perpendicular hula", "rockin' wagon", "calle de miel", "tropical swill", "fruity girl swill", "blended frozen swill", "bungle in the jungle" }
+
 	function can_make(name)
 		local available = count_item(name)
 		local craftable = 0
 		local craft_steps = {}
+		local mix_steps = {}
 		if cocktailcrafting_recipes[name] then
 			craftable = 100
-			for _, x in pairs(cocktailcrafting_recipes[name]) do
-				local num, partsteps = can_make(x)
+			for _, component in pairs(cocktailcrafting_recipes[name]) do
+				local num, partsteps, mixpairs = can_make(component)
 				for _, y in ipairs(partsteps) do table.insert(craft_steps, y) end
+				for _, y in ipairs(mixpairs) do table.insert(mix_steps, y) end
 				craftable = math.min(craftable, num)
 			end
+			table.insert(mix_steps, cocktailcrafting_recipes[name])
 		end
 		local stillable = 0
 		local still_steps = nil
@@ -75,20 +79,28 @@ local href = add_automation_script("custom-mix-drinks", function()
 			for _, y in ipairs(still_steps) do table.insert(steps, y) end
 			table.insert(steps, "still " .. still_recipes[name] .. " -> " .. name)
 		end
-		return available + craftable + stillable + buyable, steps
+		return available + craftable + stillable + buyable, steps, mix_steps
 	end
+
 	function handle_recipe(name)
 		local txt = ""
 		for _, x in pairs(cocktailcrafting_recipes[name]) do
 			txt = txt .. x .. " (" .. count_item(x) ..  ")  "
 		end
-		local amount, steps = can_make(name)
+		local amount, steps, mix_steps = can_make(name)
 		if amount > 0 then
 			local stepstext = ""
 			for _, x in ipairs(steps) do
 				stepstext = stepstext .. "<br><small>&nbsp;&nbsp;" .. x .. "</small>"
 			end
-			return name .. " { " .. amount .. " }: " .. txt .. stepstext
+
+			local mixurl = [[/craft.php?mode=cocktail]]
+			for _, mixpair in ipairs(mix_steps) do
+			   mixurl = mixurl .. "&steps[]="
+			   mixurl = mixurl .. tostring(maybe_get_itemid(mixpair[1])) .. ',' .. tostring(maybe_get_itemid(mixpair[2]))
+			end
+			local mixlink = [[<a href="]] .. mixurl .. [[">[mix]</a>]]
+			return name .. " { " .. amount .. " }: " .. txt .. mixlink .. stepstext
 		else
 			return [[<span style="color: gray;">]] .. name .. " { " .. amount .. " }: " .. txt .. [[</span>]]
 		end
