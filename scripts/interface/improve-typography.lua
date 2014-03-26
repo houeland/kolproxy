@@ -1,12 +1,13 @@
 register_setting {
-	name = "enable experimental implementations/improve typography",
-	description = "Improve formatting and typography (experimental)",
+	name = "improve typography",
+	description = "Improve formatting and typography",
 	group = "other",
 	default_level = "enthusiast",
+	beta_version = true,
 }
 
 add_printer("all pages", function()
-	if not setting_enabled("enable experimental implementations/improve typography") then return end
+	if not setting_enabled("improve typography") then return end
 	if text:contains("<html") then
 --		text = text:gsub(" %-%- ", "<wbr>&mdash;<wbr>")
 		text = text:gsub("</head>", [[

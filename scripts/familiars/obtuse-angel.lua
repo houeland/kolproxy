@@ -1,20 +1,6 @@
 -- TODO: This should make sure to set the counter based on the correct base value
 -- TODO: want a way to refer to the API before the pageload?
 
-add_processor("/main.php", function()
-	-- TEMPORARY WORKAROUND
-	if day["obtuse angel romantic arrow target"] and not day["wandering copied monster"] then
-		day["wandering copied monster"] = {
-			["monster name"] = day["obtuse angel romantic arrow target"],
-			["display name"] = day["obtuse angel romantic arrow target"],
-			["next monster start"] = tonumber(day["obtuse angel romantic arrow next monster start"]),
-			["monsters remaining"] = tonumber(day["obtuse angel romantic arrow monsters remaining"]),
-		}
-		day["obtuse angel romantic arrow target"] = nil
-	end
-	-- TEMPORARY WORKAROUND
-end)
-
 -- wandering copied monsters
 
 local function set_wandering_copied_monster()

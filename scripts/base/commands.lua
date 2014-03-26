@@ -201,6 +201,7 @@ function cast_skill(skill, quantity, targetid)
 	targetid = targetid or playerid()
 	assert(targetid and targetid ~= "")
 	local tbl = { whichskill = skillid, ajax = 1, action = "Skillz", pwd = session.pwd, targetplayer = targetid, quantity = quantity }
+	print_debug("  casting", skill)
 	return async_get_page("/skills.php", tbl)
 end
 cast_skillid = cast_skill
@@ -214,17 +215,6 @@ function switch_familiarid(id)
 end
 
 function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
-	if not pt then
-		local function desc(what)
-			what = tostring(what)
-			if what:len() > 100 then
-				what = what:sub(1, 90) .. "...len" .. what:len()
-			end
-			return what
-		end
-		print("WARNING: handle_adventure_result has no page text.", desc(pt), desc(url), desc(zoneid), macro ~= nil, noncombatchoices ~= nil, specialnoncombatfunction ~= nil)
-		error("handle_adventure_result has no page text. This should not happen! Network error?")
-	end
 	if url:contains("/fight.php") then
 		local advagain = nil
 		if pt:contains([[>You win the fight!<!--WINWINWIN--><]]) then

@@ -16,14 +16,6 @@ register_setting {
 	update_charpane = true,
 }
 
---register_setting {
---	name = "use custom kolproxy charpane/use compact mode",
---	description = "Use compact mode for custom kolproxy charpane",
---	group = "charpane",
---	default_level = "detailed",
---	update_charpane = true,
---}
-
 register_setting {
 	server_name = "compactchar",
 	description = "Use compact character pane",
@@ -31,14 +23,6 @@ register_setting {
 	parent = "use custom kolproxy charpane",
 	update_charpane = true,
 }
-
---register_setting {
---	name = "show buff extension arrows",
---	description = "Show up-arrows for extending buffs (currently only on custom charpane)",
---	group = "charpane",
---	default_level = "standard",
---	parent = "use custom kolproxy charpane",
---}
 
 register_setting {
 	name = "show multiple previous-adventure links",
@@ -71,7 +55,7 @@ add_printer("/game.php", function()
 	text = text:gsub([[(<frameset id=mainset cols=)"120,%*"(>)]], [[%1"200, *"%2]])
 end)
 
-local function display_duration(x)
+function display_duration(x)
 	local desc = "(" .. display_value(x) .. ")"
 	if desc:len() >= 6 then
 		desc = [[<span style="font-size: 80%">]] .. desc .. [[</span>]]
@@ -79,7 +63,7 @@ local function display_duration(x)
 	return desc
 end
 
-local function get_clancy_display()
+function get_clancy_display()
 	local instruments = {
 		"whelp",
 		"volley",
@@ -127,8 +111,10 @@ function get_motorbike_display()
 	return [[<a target=mainpane href=main.php?action=motorcycle><img src=http://images.kingdomofloathing.com/itemimages/]] .. pic .. [[ width=30 height=30 border=0 alt="Your Motorcycle" title="Your Motorcycle"></a><br>]] .. table.concat(lovehate, ", ") .. "<br>"
 end
 
-local function kolproxy_custom_charpane_mode()
-	if tonumber(api_flag_config().compactchar) ~= 0 then
+function kolproxy_custom_charpane_mode()
+	if setting_enabled("use custom bleary charpane") then
+		return "bleary"
+	elseif tonumber(api_flag_config().compactchar) ~= 0 then
 		return "compact"
 	else
 		return "normal"
@@ -148,7 +134,7 @@ local function buff_sort_func(a, b)
 	return a.descid < b.descid
 end
 
-local function get_sorted_buff_array()
+function get_sorted_buff_array()
 	local sorting = {}
 	for descid, x in pairs(status().effects) do
 		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid, upeffect = x[4] }) -- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly
@@ -160,7 +146,7 @@ local function get_sorted_buff_array()
 	return sorting
 end
 
-local function make_strarrow(upeffect)
+function make_strarrow(upeffect)
 	if upeffect then
 		local skillid = tonumber(upeffect:match("skill:([0-9]+)"))
 		local itemid = tonumber(upeffect:match("item:([0-9]+)"))
@@ -184,7 +170,7 @@ add_processor("/familiar.php", function()
 	end
 end)
 
-local function get_familiar_grid()
+function get_familiar_grid()
 	fams_per_line = 1000
 
 	local faveid = ascensionpathid() .. "/" .. ascensionstatus()
@@ -258,7 +244,8 @@ function get_initials(str)
 	return compacted
 end
 
-local function pathdesc()
+-- TODO: charpane-specific names, or move to a more generic file
+function pathdesc()
 	local prefix = ""
 	if ascensionstatus() == "Hardcore" then
 		prefix = "HC"
@@ -279,7 +266,7 @@ local function pathdesc()
 	end
 end
 
-local function classdesc()
+function classdesc()
 	if kolproxy_custom_charpane_mode() ~= "compact" then
 		return playerclassname() or "?"
 	else
@@ -287,7 +274,7 @@ local function classdesc()
 	end
 end
 
-local function classpathdesc()
+function classpathdesc()
 	local p = pathdesc()
 	if p ~= "" then
 		return string.format("%s %s", p, classdesc())
@@ -296,7 +283,7 @@ local function classpathdesc()
 	end
 end
 
-local function format_hpmp(c, m)
+function format_hpmp(c, m)
 	if c == m then
 		return string.format([[<span style="color: green">%s</span>]], format_integer(c))
 	elseif c < m * 0.25 then
@@ -306,7 +293,7 @@ local function format_hpmp(c, m)
 	end
 end
 
-local function make_optimize_diet_href()
+function make_optimize_diet_href()
 	local myitems = {}
 	if have_item("tiny plastic sword") then table.insert(myitems, "tps") end
 	if have_item("tuxedo shirt") then table.insert(myitems, "tuxedo") end
@@ -325,7 +312,7 @@ local function make_optimize_diet_href()
 	}), pwd = session.pwd })
 end
 
-local function make_get_buffs_href()
+function make_get_buffs_href()
 	return make_href("/kolproxy-frame-page", { url = "http://kol.obeliks.de" .. make_href("/buffbot/buff", { style = "kol", target = playername() }), pwd = session.pwd })
 end
 
@@ -363,7 +350,7 @@ local shrug_buff_href = add_automation_script("custom-shrug-buff", function()
 	return tojson { error_message = "Nothing to shrug." }, "json"
 end)
 
-local function get_common_js()
+function get_common_js()
 	return [[
 
 	<script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/charpane.4.js"></script>
@@ -570,7 +557,7 @@ function URLEncode(x)
 end
 
 local cached_workarounds = {}
-local function work_around_broken_status_lastadv(advdata)
+function work_around_broken_status_lastadv(advdata)
 	if advdata.container == "place.php" then
 		print("ERROR: Status API place.php bug should be fixed already, this should not happen!")
 		if not cached_workarounds[advdata.name] then
@@ -592,7 +579,7 @@ local function work_around_broken_status_lastadv(advdata)
 end
 
 local previous_adventures_tbl = {}
-local function update_and_get_previous_adventure_links()
+function update_and_get_previous_adventure_links()
 	if not previous_adventures_tbl[1] or previous_adventures_tbl[1].name ~= lastadventuredata().name then
 		local newtbl = {}
 		table.insert(newtbl, work_around_broken_status_lastadv(lastadventuredata()))
@@ -990,8 +977,6 @@ a:active { color: black; }
 	return text, "/kolproxy-quick-charpane-compact"
 end)
 
-
-
 add_interceptor("/charpane.php", function()
 	if not setting_enabled("use custom kolproxy charpane") then return end
 	if not pcall(turnsthisrun) then return end -- in afterlife
@@ -1068,3 +1053,15 @@ a:active { color: black; }
 </html>]]
 	return text, "/kolproxy-quick-charpane-normal"
 end)
+
+function charpane_familiarequip_list()
+	local fam_equips = {}
+	for x, y in pairs(datafile("items")) do
+		if y.equipment_slot == "familiarequip" and have_item(x) then
+			local style = ""
+			if have_equipped_item(x) then style = [[style="border: solid thin gray"]] end
+			table.insert(fam_equips, string.format([[<a href="/inv_equip.php?pwd=%s&which=2&action=equip&whichitem=%i"><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" %s title="%s" alt="%s"></a>]], session.pwd, y.id, y.picture, style, x,x))
+		end
+	end
+	return fam_equips
+end

@@ -337,18 +337,12 @@ function ascension_checklist_get_questitem_text()
 	end
 end
 
--- TODO: move to another file
-function get_remaining_pvp_fights()
-	return tonumber(get_page("/peevpee.php", { place = "fight" }):match(">You have ([0-9]+) fights remaining today.<"))
-end
-
 function ascension_checklist_get_other_tasks_text()
-	local pvpfights = get_remaining_pvp_fights()
 	local todo = {}
-	if pvpfights and pvpfights > 0 then
+	if pvpfights() > 0 then
 		table.insert(todo, [[
 <h2>PvP fights</h2>
-You have ]]..pvpfights..[[ fights remaining today.
+You have ]]..pvpfights()..[[ fights remaining today.
 ]])
 	end
 	local campgroundpt = get_page("/campground.php")

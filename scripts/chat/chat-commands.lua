@@ -99,12 +99,16 @@ add_chat_trigger("/stop", function()
 end)
 
 add_raw_chat_script_redirect("/mcd", "Setting MCD.", function(mcdparam)
-        local amount = tonumber(mcdparam)
+	local amount = tonumber(mcdparam)
 	if amount and amount >= 0 then
 		return set_mcd(amount)()
 	else
 		return make_kol_html_frame("Example usage: /mcd 10", "Results:", "darkorange"), requestpath
 	end
+end)
+
+add_raw_chat_script_redirect("/inv", "Searching inventory.", function(query_string)
+	return get_page("/inventory.php", { ftext = query_string })
 end)
 
 add_chat_redirect("/activate", "Activating Greatest American Pants.", "/inventory.php", { action = "activatesuperpants" })

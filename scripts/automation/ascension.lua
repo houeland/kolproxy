@@ -521,6 +521,16 @@ endif
 		return unpack(ret)
 	end
 
+	local function have_wand_or_parts()
+		if have_item("Wand of Nagamar") then
+			return true
+		else
+			local wa = have_item("WA") or (have_item("ruby W") and have_item("metallic A"))
+			local nd = have_item("ND") or (have_item("lowercase N") and have_item("heavy D"))
+			return wa and nd
+		end
+	end
+
 	local function ensure_yellow_ray()
 		if not can_yellow_ray() then
 			return false
@@ -530,9 +540,8 @@ endif
 		end
 		if not have_item("unbearable light") and not cached_stuff.tried_to_summon_unbearable_light then
 			inform "summoning unbearable light (no he-boulder)"
-			script.ensure_mp(5)
-			async_post_page("/campground.php", { preaction = "summoncliparts" })
-			post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "06", clip2 = "06", clip3 = "06" })
+			script.ensure_mp(2)
+			summon_clipart("unbearable light")
 			cached_stuff.tried_to_summon_unbearable_light = true
 			if not have_item("unbearable light") and not ascensionstatus("Hardcore") then
 				ascension_automation_pull_item("unbearable light")
@@ -573,7 +582,7 @@ endif
 
 	function adventure(t)
 		return function()
-			local pt, pturl, advagain = autoadventure { zoneid = get_zoneid(t.zone or t.zoneid), macro = t.macro_function and t.macro_function(), noncombatchoices = t.noncombats, specialnoncombatfunction = t.choice_function, ignorewarnings = true }
+			local pt, pturl, advagain = autoadventure { zoneid = get_zoneid(t.zone or t.zoneid), macro = t.macro_function, noncombatchoices = t.noncombats, specialnoncombatfunction = t.choice_function, ignorewarnings = true }
 			t.zone = nil
 			t.zoneid = nil
 			t.macro_function = nil
@@ -1528,6 +1537,7 @@ endif
 			nobuffing = true,
 			action = function()
 				cast_skill("Incite Riot")
+				use_item("crate of firebombs")
 				cached_stuff.used_sneaky_pete_incite_riot = true
 				did_action = true
 			end
@@ -1552,7 +1562,7 @@ endif
 					options = { ["Upping Your Grade"] = "Upgrade the Seat, Heh Heh", ["Ayy, Sit on It"] = "Massage Seat" }
 				elseif not upgrades["Headlight"] and have_skill("Flash Headlight") and false_DEBUG_CHANGE_WHEN_WORKING then
 					options = { ["Upping Your Grade"] = "Upgrade the One Headlight, Nothing is Forever", ["Me and Cinderella Put It All Together"] = "Ultrabright Yellow Bulb" }
-				elseif not upgrades["Muffler"] and not have_skill("Brood") then
+				elseif not upgrades["Muffler"] and not have_skill("Brood") and not have_skill("Incite Riot") then
 					options = { ["Upping Your Grade"] = "Upgrade the Muffler, Shhh", ["Diving into the Mufflers"] = "Extra-Quiet Muffler" }
 				elseif not upgrades["Muffler"] then
 					options = { ["Upping Your Grade"] = "Upgrade the Muffler, Shhh", ["Diving into the Mufflers"] = "Extra-Loud Muffler" }
@@ -2004,6 +2014,11 @@ endif
 			end
 			result, resulturl = get_page("/lair2.php", { action = "statues" })
 			local missing_stuff = automate_lair_statues(result)
+			if missing_stuff and table.concat(missing_stuff, ", "):contains("smith a stone banjo") then
+				automate_smithing_stone_banjo()
+				result, resulturl = get_page("/lair2.php", { action = "statues" })
+				missing_stuff = automate_lair_statues(result)
+			end
 			if missing_stuff then
 				result, resulturl = get_page("/lair2.php")
 				result = add_message_to_page(get_result(), "TODO: finish lair<br><br>" .. table.concat(missing_stuff, ", "), nil, "darkorange")
@@ -3976,8 +3991,8 @@ endif
 	add_task {
 		prereq = function() return not have_hippy_outfit() and
 			unlocked_island() and
-			ensure_yellow_ray() and
-			not have_frat_war_outfit() end,
+			not have_frat_war_outfit() and
+			ensure_yellow_ray() end,
 		f = function()
 			-- TODO: Should do this before level 9 to avoid noncombats!
 			script.bonus_target { "combat" }
@@ -4389,16 +4404,6 @@ endif
 		message = "get steam-powered model rocketship",
 	}
 
-	local function have_wand_or_parts()
-		if have_item("Wand of Nagamar") then
-			return true
-		else
-			local wa = have_item("WA") or (have_item("ruby W") and have_item("metallic A"))
-			local nd = have_item("ND") or (have_item("lowercase N") and have_item("heavy D"))
-			return wa and nd
-		end
-	end
-
 	add_task {
 		when = function() return not ascensionstatus("Aftercore") and
 			level() >= 10 and
@@ -4522,48 +4527,48 @@ endif
 		end
 	end }
 
-	add_task {
-		when = ascensionstatus() ~= "Hardcore" and quest("Make War, Not... Oh, Wait") and not have_frat_war_outfit(),
-		task = {
-			message = "pull frat war outfit",
-			action = function()
-				if daysthisrun() >= 3 then
-					pull_in_softcore("beer helmet")
-					pull_in_softcore("distressed denim pants")
-					pull_in_softcore("bejeweled pledge pin")
-					did_action = have_frat_war_outfit()
-				else
-					if not have_item("pumpkin") and not have_item("pumpkin bomb") then
-						script.bonus_target { "combat" }
-						local macro = make_yellowray_macro("War")
-						if not script.have_familiar("He-Boulder") then
-							pull_in_softcore("unbearable light")
-							macro = "use unbearable light"
-						end
-						script.go("yellow raying frat house", 134, macro, {
-							["Catching Some Zetas"] = "Wake up the pledge and throw down",
-							["Fratacombs"] = "Wander this way",
-							["One Less Room Than In That Movie"] = "Officers' Lounge",
-						}, {}, "He-Boulder", 20, { equipment = { hat = "filthy knitted dread sack", pants = "filthy corduroys" } })
-						did_action = have_frat_war_outfit()
-					else
-						stop "TODO: Get frat war outfit [not automated when it's day 2]"
-					end
-				end
-			end
-		}
-	}
+--	add_task {
+--		when = ascensionstatus() ~= "Hardcore" and quest("Make War, Not... Oh, Wait") and not have_frat_war_outfit(),
+--		task = {
+--			message = "pull frat war outfit",
+--			action = function()
+--				if daysthisrun() >= 3 then
+--					pull_in_softcore("beer helmet")
+--					pull_in_softcore("distressed denim pants")
+--					pull_in_softcore("bejeweled pledge pin")
+--					did_action = have_frat_war_outfit()
+--				else
+--					if not have_item("pumpkin") and not have_item("pumpkin bomb") then
+--						local macro = make_yellowray_macro("War")
+--						if not script.have_familiar("He-Boulder") then
+--							pull_in_softcore("unbearable light")
+--							macro = "use unbearable light"
+--						end
+--						script.go("yellow raying frat house", 134, macro, {
+--							["Catching Some Zetas"] = "Wake up the pledge and throw down",
+--							["Fratacombs"] = "Wander this way",
+--							["One Less Room Than In That Movie"] = "Officers' Lounge",
+--						}, {}, "He-Boulder", 20, { equipment = { hat = "filthy knitted dread sack", pants = "filthy corduroys" } })
+--					else
+--						stop "TODO: Get frat war outfit [not automated when it's day 2]"
+--					end
+--				end
+--			end
+--		}
+--	}
 
 	add_task {
 		prereq = function() return quest("Make War, Not... Oh, Wait") and
 			not have_frat_war_outfit() and
 			ensure_yellow_ray() end,
 		f = function()
+			script.bonus_target { "combat" }
 			script.go("yellow raying frat house", 134, make_yellowray_macro("War"), {
 				["Catching Some Zetas"] = "Wake up the pledge and throw down",
 				["Fratacombs"] = "Wander this way",
 				["One Less Room Than In That Movie"] = "Officers' Lounge",
 			}, {}, "He-Boulder", 20, { equipment = { hat = "filthy knitted dread sack", pants = "filthy corduroys" } })
+			did_action = have_frat_war_outfit()
 		end,
 	}
 
@@ -4579,6 +4584,11 @@ endif
 			action = adventure {
 				zoneid = 134,
 				macro_function = macro_noodleserpent,
+				noncombats = {
+					["Catching Some Zetas"] = "Wake up the pledge and throw down",
+					["Fratacombs"] = "Wander this way",
+					["One Less Room Than In That Movie"] = "Officers' Lounge",
+				},
 			}
 		}
 	}
@@ -4755,10 +4765,10 @@ endif
 				end
 				-- TODO: increase priority with stench buffs up
 				script.do_filthworms()
-			elseif not completed_sonofa_beach() then
-				script.do_sonofa()
 			elseif not completed_gremlins() then
 				script.do_junkyard()
+			elseif not completed_sonofa_beach() then
+				script.do_sonofa()
 			elseif not completed_arena() then
 				inform "turn in rock band flyers"
 				script.wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
@@ -4787,18 +4797,6 @@ endif
 -- 		) and meat() >= 5000 and challenge ~= "fist",
 -- 		f = script.get_dod_wand,
 -- 	}
-
---	add_task {
---		when = quest("A Quest, LOL") and have_item("64735 scroll"),
---		task = {
---			message = "using 64735 scroll",
---			nobuffing = true,
---			action = function()
---				set_result(use_item("64735 scroll"))
---				did_action = have_item("facsimile dictionary")
---			end
---		}
---	}
 
 	add_task {
 		prereq = not have_item("Richard's star key") and have_item("steam-powered model rocketship") and ascensionstatus("Softcore"),
@@ -4866,12 +4864,16 @@ endif
 						if b.potion and dod_reverse[b.potion] then
 							know_dod_potion = true
 						end
+						if b.effect == "Sugar Rush" then
+							needitem = get_sugar_rush_item()
+						end
 						local got = false
 						if have_buff(b.effect) then
 							got = true
 						elseif needitem and moonsign_area() == "Gnomish Gnomad Camp" and not have_item(needitem) then
 							buy_item(needitem, "n")
 						elseif needitem and not have_item(needitem) and ascensionstatus("Softcore") and (pullsleft() or 0) >= 5 then
+							-- TODO: clover for gum instead of pulling
 							pull_in_softcore(needitem)
 						end
 						if not got and needitem and have_item(needitem) then
@@ -4892,6 +4894,7 @@ endif
 					local safe = true
 					for _, y in pairs(touse_items) do
 						if y == "Teleportitis" and count_item("soft green echo eyedrop antidote") < 2 then
+							inform "(not automating Teleportitis)"
 							safe = false
 						end
 					end
@@ -4913,7 +4916,7 @@ endif
 						end
 					end
 				end
-				result = add_message_to_page(pt, "TODO: do lair gates, then run script again", nil, "darkorange")
+				result = add_message_to_page(pt, "Do lair gates, then run script again", nil, "darkorange")
 				resulturl = pturl
 				finished = not did_action
 			end
@@ -4973,6 +4976,31 @@ use ]] .. get_lair_tower_monster_items()[level] .. [[
 				local pt, pturl = get_page("/lair4.php")
 				if pt:contains("lair5.php") then
 					local pt, pturl = get_page("/lair5.php")
+					local function prepare_for_killing_ns()
+						script.bonus_target { "easy combat" }
+						script.want_familiar "Frumious Bandersnatch"
+						script.wear {}
+						script.heal_up()
+						if estimate_bonus("Monster Level") == 0 and buffedmoxie() >= 300 and maxhp() >= 200 then
+							local weapondata = equipment().weapon and maybe_get_itemdata(equipment().weapon)
+							if weapondata and weapondata.attack_stat == "Moxie" then
+								local form3ok = false
+								if requires_wand_of_nagamar() and have_item("Wand of Nagamar") then
+									form3ok = true
+								elseif ascensionpath("Avatar of Sneaky Pete") then
+									form3ok = true
+								end
+								if form3ok then
+									script.force_heal_up()
+									script.ensure_mp(100)
+									if hp() == maxhp() and mp() >= 100 then
+										return true
+									end
+								end
+							end
+						end
+						return false
+					end
 					if pt:contains("lair6.php") then
 						result, resulturl = get_page("/lair6.php")
 						if result:contains("place=0") then
@@ -5012,6 +5040,7 @@ use gauze garter, gauze garter
 							did_action = get_result():contains("<!--WINWINWIN-->")
 						elseif result:contains("place=2") and count_item("gauze garter") >= 8 and have_item("Rain-Doh indigo cup") then
 							inform "defeat shadow"
+							script.bonus_target { "easy combat" }
 							script.want_familiar "Frumious Bandersnatch"
 							script.ensure_buffs { "Go Get 'Em, Tiger!" }
 							script.wear {}
@@ -5022,7 +5051,7 @@ use gauze garter, gauze garter
 							if maxhp() < 300 then
 								script.maybe_ensure_buffs { "Standard Issue Bravery", "Starry-Eyed" }
 							end
-							script.heal_up()
+							script.force_heal_up()
 							if hp() < 300 then
 								stop "Kill your shadow"
 							end
@@ -5055,12 +5084,22 @@ use gauze garter
 							automate_lair6_place(4, result)
 							pt, pturl = get_page("/lair6.php")
 							did_action = pt:contains("place=5")
+						elseif result:contains("place=5") and prepare_for_killing_ns() then
+							inform "kill NS"
+							result, resulturl = get_page("/lair6.php", { place = 5 })
+							result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_kill_ns)
+							while get_result():contains([[<!--WINWINWIN-->]]) and get_result():contains([[fight.php]]) and locked() do
+								result, resulturl = get_page("/fight.php")
+								result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_kill_ns)
+							end
+							finished = true
 						else
-							inform "TODO: finish lair (6)"
+							inform "finish lair (6)"
+							script.bonus_target { "easy combat" }
 							script.wear {}
 							script.heal_up()
 							result, resulturl = get_page("/lair6.php")
-							result = add_message_to_page(get_result(), "TODO: Finish top of tower", nil, "darkorange")
+							result = add_message_to_page(get_result(), "Finish top of tower", nil, "darkorange")
 							finished = true
 						end
 					else

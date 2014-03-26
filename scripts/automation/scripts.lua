@@ -335,7 +335,10 @@ function get_automation_scripts(cached_stuff)
 				want_bonus.boris_song = "Song of Cockiness"
 			end
 		end
-		 -- Checked in reverse order, to let first item have highest priority by overriding previous choices
+		if ascensionpath("Avatar of Boris") or ascensionpath("Zombie Slayer") or ascensionpath("Avatar of Sneaky Pete") then
+			want_bonus.not_casting_spells = true
+		end
+		-- Checked in reverse order, to let first item have highest priority by overriding previous choices
 		for t_i = #targets, 1, -1 do
 			local t = targets[t_i]
 			if t == "item" then
@@ -713,13 +716,13 @@ function get_automation_scripts(cached_stuff)
 			local oldhp = hp()
 			if maxhp() - hp() >= 70 and have_skill("Cannelloni Cocoon") then
 				ensure_mp(20)
-				cast_skillid(3012)
+				cast_skill("Cannelloni Cocoon")
 			elseif have_skill("Shake It Off") and not is_cursed() and maxmp() >= 40 then
 				ensure_mp(30)
 				cast_skill("Shake It Off")
 			elseif have_skill("Tongue of the Walrus") then
 				ensure_mp(10)
-				cast_skillid(1010)
+				cast_skill("Tongue of the Walrus")
 			elseif challenge == "boris" and have_item("your father's MacGuffin diary") and (hp() < 200 or hp() / maxhp() < 0.5 or ascensionstatus() == "Hardcore") then
 				ensure_mp(10)
 				cast_skillid(11031, 10)
@@ -727,10 +730,10 @@ function get_automation_scripts(cached_stuff)
 				cast_skillid(12001)
 			elseif have_skill("Disco Power Nap") then
 				ensure_mp(12)
-				cast_skillid(5011)
+				cast_skillid("Disco Power Nap")
 			elseif have_skill("Lasagna Bandages") then
 				ensure_mp(6)
-				cast_skillid(3009)
+				cast_skillid("Lasagna Bandages")
 			elseif maxhp() - hp() <= 20 and have_item("cast") then
 				use_item("cast")
 			elseif maxhp() < 50 then
@@ -830,6 +833,7 @@ function get_automation_scripts(cached_stuff)
 			return use_item("Knob Goblin eyedrops")
 		end,
 		["Sugar Rush"] = function()
+			-- TODO: only try summoning once per day
 			local f = cast_skillid(53) -- summon crimbo candy
 			local candies = { "Angry Farmer candy", "Crimbo fudge", "Crimbo peppermint bark", "Crimbo candied pecan" }
 			for _, x in ipairs(candies) do
@@ -844,21 +848,6 @@ function get_automation_scripts(cached_stuff)
 		end,
 		["Fresh Scent"] = function()
 			return use_item("chunk of rock salt")
-		end,
-		["Simply Irresistible"] = function()
-			return use_item("irresistibility potion")
-		end,
-		["Simply Invisible"] = function()
-			return use_item("invisibility potion")
-		end,
-		["Ashen"] = function()
-			return use_item("pile of ashes")
-		end,
-		["Standard Issue Bravery"] = function()
-			return use_item("CSA bravery badge")
-		end,
-		["Oiled-Up"] = function()
-			return use_item("pec oil")
 		end,
 		["Starry-Eyed"] = function()
 			return async_post_page("/campground.php", { action = "telescopehigh" })
@@ -924,9 +913,6 @@ function get_automation_scripts(cached_stuff)
 			end
 			return use_item("can of black paint")
 		end,
-		["Got Milk"] = function()
-			return use_item("milk of magnesium")
-		end,
 	}
 	local spells = {
 		["Ghostly Shell"] = { item = "totem" },
@@ -972,7 +958,28 @@ function get_automation_scripts(cached_stuff)
 				shrug_buff(spells[name].shrug_first)
 			end
 			ensure_mp(data.mpcost)
-			return cast_skillid(data.skillid)
+			return cast_skill(skillname)
+		end
+	end
+
+	do
+		local duplicates = {}
+		local effect_items = {}
+		for name, d in pairs(datafile("items")) do
+			if d.use_effect then
+				duplicates[d.use_effect] = effect_items[d.use_effect]
+				effect_items[d.use_effect] = name
+			end
+		end
+		for x, _ in pairs(duplicates) do
+			effect_items[x] = nil
+		end
+		for effect, item in pairs(effect_items) do
+			if not buffs[effect] then
+				buffs[effect] = function()
+					return use_item(item)
+				end
+			end
 		end
 	end
 
@@ -1130,20 +1137,9 @@ function get_automation_scripts(cached_stuff)
 		end
 		local function try_casting_buff(buffname, try_shrugging)
 			if buffs[buffname] then
-				local ptf = f.cast_buff(buffname)
-				if not ptf then
-					print("DEBUG: castbuff1 returned nil:", buffname)
-				end
-				if type(ptf) == "string" then
-					print("DEBUG: castbuff2 non-function:", buffname)
-				else
-					ptf = ptf()
-				end
-				if not ptf then
-					print("DEBUG: castbuff3 returned nil:", buffname)
-				end
+				local pt = f.cast_buff(buffname)()
 				if not have_buff(buffname) and not have_intrinsic(buffname) then
-					if ptf:contains("can't fit") and ptf:contains("songs in your head") and try_shrugging then
+					if pt:contains("can't fit") and pt:contains("songs in your head") and try_shrugging then
 						for _, atname in ipairs(at_shruggable) do
 							if have_buff(atname) and not want_buffs[atname] then
 								shrug_buff(atname)
@@ -1151,7 +1147,7 @@ function get_automation_scripts(cached_stuff)
 							end
 						end
 						critical("Too many AT songs to cast buff: " .. buffname)
-					elseif ptf:contains("can't use that skill") and ascensionpath("Way of the Surprising Fist") and AT_song_duration() == 0 then
+					elseif pt:contains("can't use that skill") and ascensionpath("Way of the Surprising Fist") and AT_song_duration() == 0 then
 						return
 					elseif not ok_to_fail and not ignore_failure[buffname] then
 						critical("Failed to ensure buff: " .. buffname)
@@ -1438,7 +1434,7 @@ endif
 					end
 					print("pick up SR, last semi", lastsemi, lastturn)
 					wear {}
-					if (not lastsemi and not lastturn and turnsthisrun() < 85) or (lastsemi == "Lunchboxing") then
+					if (not lastsemi and not lastturn and turnsthisrun() < 85) or (lastsemi ~= "In the Still of the Alley") then
 						inform "Pick up SR, make it wines"
 						result, resulturl, advagain = autoadventure { zoneid = 112, ignorewarnings = true }
 						if get_result():contains("In the Still of the Alley") then
@@ -1454,7 +1450,7 @@ endif
 							result = add_message_to_page(get_result(), "Tried to pick up wine semirare", nil, "darkorange")
 						end
 						return result, resulturl, did_action
-					elseif lastsemi == "In the Still of the Alley" then
+					else
 						inform "Pick up SR, make it lunchbox"
 						result, resulturl, advagain = autoadventure { zoneid = 114, ignorewarnings = true }
 						if get_result():contains("Lunchboxing") then
@@ -1470,8 +1466,6 @@ endif
 							result = add_message_to_page(get_result(), "Tried to pick up lunchbox semirare", nil, "darkorange")
 						end
 						return result, resulturl, did_action
-					else
-						critical "Unexpected last SR when picking up SR (not wine nor lunchbox)"
 					end
 				end
 			elseif tonumber(b) >= turnsthisrun() then
@@ -1790,7 +1784,7 @@ endif
 			return result, resulturl, did_action
 		end
 
-		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Softcore") then
+		if ascensionpath("Avatar of Sneaky Pete") and not ascensionstatus("Hardcore") then
 			if (space() % 4) > 0 and script.get_turns_until_sr() == nil and meat() >= 40 then
 				return eat_fortune_cookie()
 			elseif space() >= 4 and level() >= 6 then
@@ -1800,6 +1794,13 @@ endif
 					return pull_and_eat_key_lime_pie("Boris")
 				end
 			end
+		end
+
+		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
+			if space() > 0 and script.get_turns_until_sr() == nil and meat() >= 40 then
+				return eat_fortune_cookie()
+			end
+			return
 		end
 
 		if ascensionstatus() ~= "Hardcore" then return end
@@ -1953,6 +1954,18 @@ endif
 		if not can_drink_normal_booze() then return end
 
 		if advs() >= 20 then return end
+
+		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
+			if not have_item("Ice Island Long Tea") and estimate_max_safe_drunkenness() - drunkenness() >= 4 and level() < 6 and count_item("snow berries") >= 1 and count_item("ice harvest") >= 3 then
+				shop_buyitem("Ice Island Long Tea", "snowgarden")
+			elseif level() >= 6 then
+				--stop("TODO: craft SHCs")
+			end
+			if have_item("Ice Island Long Tea") then
+				drink_item("Ice Island Long Tea")
+			end
+			return
+		end
 
 		for i = 1, 5 do
 			if have_item("peppermint sprout") or have_item("peppermint twist") then
@@ -2295,7 +2308,7 @@ mark m_done
 				maybe_ensure_buffs { "Mental A-cue-ity" }
 				async_get_page("/bigisland.php", { place = "camp", whichcamp = 1 })
 				result, resulturl = async_get_page("/bigisland.php", { action = "bossfight", pwd = get_pwd() })()
-				result, resulturl, did_action = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(15))
+				result, resulturl, did_action = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(20))
 			else
 				if count_item("gauze garter") < 10 then
 					inform "buying gauze garters"
@@ -2961,7 +2974,7 @@ endif
 					stop "TODO: Do gremlins in challenge path without Super Structure"
 				end
 			end
-			if challenge and not have_skill("Tao of the Terrapin") then
+			if ascensionpathid() ~= 0 and not have_skill("Tao of the Terrapin") then
 				script.bonus_target { "easy combat" }
 				script.maybe_ensure_buffs { "Standard Issue Bravery" }
 				script.ensure_buffs { "Go Get 'Em, Tiger!", "Butt-Rock Hair" }
@@ -2971,7 +2984,7 @@ endif
 			fam "Frumious Bandersnatch"
 			wear {}
 			script.heal_up()
-			if challenge and (not have_buff("Super Structure") or not have_skill("Tao of the Terrapin")) then
+			if ascensionpathid() ~= 0 and (not have_buff("Super Structure") or not have_skill("Tao of the Terrapin")) then
 				script.force_heal_up()
 			end
 			ensure_mp(60)
@@ -3965,7 +3978,7 @@ endif
 				end
 			})
 		else
-			script.bonus_target { "noncombat" }
+			script.bonus_target { "extranoncombat", "noncombat" }
 			maybe_ensure_buffs { "Mental A-cue-ity" }
 			local macro = macro_noodlegeyser(4)
 			if challenge == "fist" then
@@ -4039,7 +4052,6 @@ endif
 		else
 			inform "do ritual"
 			async_post_page("/friars.php", { pwd = get_pwd(), action = "ritual" })
-			async_post_page("/friars.php", { pwd = get_pwd(), action = "buffs", bro = "1" })
 			async_get_page("/pandamonium.php")
 			refresh_quest()
 			did_action = not quest("Trial By Friar") and quest_text("this is Azazel in Hell")
@@ -4425,10 +4437,10 @@ endif
 				return
 			end
 			if not have_buff("Ultrahydrated") then
-				set_result(run_task {
+				run_task {
 					message = "getting ultrahydrated",
 					action = adventure { zone = "The Oasis" }
-				})
+				}
 				did_action = have_buff("Ultrahydrated")
 				return
 			end

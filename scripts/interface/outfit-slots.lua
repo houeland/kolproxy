@@ -4,12 +4,6 @@ local function load_slots()
 	slots.familiars = slots.familiars or { 0, 0, 0, 0, 0 }
 	slots.famequiplocked = slots.famequiplocked or { false, false, false, false, false }
 	slots.selected = slots.selected or 1
-	-- >>> TODO: TEMPORARY WORKAROUND >>> --
-	for i = 1, 5 do
-		slots.familiars[i] = slots.familiars[i] or 0
-	end
-	ascension["interface.outfit slots"] = slots
-	-- <<< TODO: TEMPORARY WORKAROUND <<< --
 	return slots
 end
 

@@ -64,6 +64,7 @@ local scopes = {
 	["see a pair of horns."] = "barbed-wire fence",
 }
 
+-- TODO: List automatically from data files(?)
 local sugar_rush_items = {
 	{ name = "Tasty Fun Good rice candy", usable = true },
 	{ name = "Angry Farmer candy", usable = true },
@@ -83,8 +84,22 @@ local sugar_rush_items = {
 	{ name = "Okee-Dokee soda", usable = true },
 }
 
+function get_sugar_rush_item()
+	local have_any = nil
+	for _, x in ipairs(sugar_rush_items) do
+		if have_item(x.name) then
+			if x.usable then
+				return x.name, x.name
+			elseif not have_any then
+				have_any = x.name
+			end
+		end
+	end
+	return nil, have_any
+end
+
 add_printer("/campground.php", function() -- this is also called when using mystical bookshelf skills etc.
-	have_item = function(name)
+	local have_scope_item = function(name)
 		have_amount = 0
 		local names = {}
 		if name == "(Sugar Rush)" then
@@ -100,7 +115,7 @@ add_printer("/campground.php", function() -- this is also called when using myst
 
 	for from, to in pairs(scopes) do
 		if text:match(from) then
-			if have_item(to) then
+			if have_scope_item(to) then
 				text = text:gsub(from, [[%0 (<span style="color: green">]]..to..[[</span>)]])
 			else
 				text = text:gsub(from, [[%0 <b>(<span style="color: darkorange">]]..to..[[</span>)</b>]])
@@ -479,20 +494,11 @@ function gate_status_display(from, to)
 			effect_status = [[(wear ring for <span style="color: green;">(]]..to.effect..[[)</span>)]]
 		end
 	elseif to.effect == "Sugar Rush" then
-		local have_any = false
-		local have_usable = nil
-		for _, item in ipairs(sugar_rush_items) do
-			if have_item(item.name) then
-				have_any = true
-				if item.usable and not have_usable then
-					have_usable = item.name
-				end
-			end
-		end
+		local have_usable, have_any = get_sugar_rush_item()
 		if have_usable then
 			effect_status = [[(<span style="color: green">use ]]..have_usable.." ("..to.effect..")".. [[</span>)]]
 			effect_link = [[(<span class="kolproxy_gate_item_spoiler">use <a href="#" onclick="use_item(this, ]]..get_itemid(have_usable)..[[, &quot;]] .. to.effect .. [[&quot;); return false;" style="color: green;">]]..have_usable..[[</a>]] .." ("..to.effect..")".. [[</span>)]]
-		elseif have_it then
+		elseif have_any then
 			effect_status = [[(get <span style="color: green;">(]]..to.effect..[[)</span>)]]
 		else
 			effect_status = [[<b>(need <span style="color: darkorange;">(]]..to.effect..[[)</span>)</b>]]
@@ -567,7 +573,7 @@ add_printer("/lair2.php", function()
 	end
 end)
 
-local smith_stone_banjo_href = add_automation_script("smith-stone-banjo", function()
+function automate_smithing_stone_banjo()
 	if have_item("stone banjo") then
 		return make_kol_html_frame("Error: Already have stone banjo.", "Automation results:", "darkorange"), requestpath
 	end
@@ -597,7 +603,9 @@ local smith_stone_banjo_href = add_automation_script("smith-stone-banjo", functi
 	end
 
 	return smith_items("banjo strings", "big rock")()
-end)
+end
+
+local smith_stone_banjo_href = add_automation_script("smith-stone-banjo", automate_smithing_stone_banjo)
 
 function automate_lair_statues(text)
 	local missing_stuff = {}

@@ -1,8 +1,9 @@
 register_setting {
-        name = "enable experimental implementations/automatically tune flavour of magic",
-        description = "Automatically tune flavour of magic before adventuring (experimental)",
-        group = "other",
-        default_level = "enthusiast",
+	name = "automatically tune flavour of magic",
+	description = "Automatically tune flavour of magic before adventuring",
+	group = "automation",
+	default_level = "enthusiast",
+	beta_version = true,
 }
 
 local flavour_of_magic_intrinsics = {
@@ -41,7 +42,7 @@ function determine_best_flavour_vs_monsterlist(monsterlist, default)
 end
 
 add_interceptor("/adventure.php", function()
-	if not setting_enabled("enable experimental implementations/automatically tune flavour of magic") then return end
+	if not setting_enabled("automatically tune flavour of magic") then return end
 	if not have_skill("Flavour of Magic") then return end
 	local zoneid = tonumber(params.snarfblat)
 	if not zoneid then return end

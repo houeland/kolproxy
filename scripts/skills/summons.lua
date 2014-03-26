@@ -32,5 +32,6 @@ end)
 
 function summon_clipart(item)
 	local recipe = get_recipe(item)
+	print_debug("  summoning", item)
 	return async_post_page("/campground.php", { pwd = session.pwd, action = "bookshelf", preaction = "combinecliparts", clip1 = recipe.clips[1], clip2 = recipe.clips[2], clip3 = recipe.clips[3] })
 end

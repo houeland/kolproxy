@@ -347,7 +347,7 @@ multiuse -> multiuse
   POST multiuse.php [action=useitem pwd=PWD quantity=N whichitem=ITEMID] -> multiuse.php
 --]]
 
-	if (p == "/inv_use.php") or (p == "/inventory.php" and params.action == "message") or (p == "/multiuse.php" and params.action == "useitem") then
+	if (requestpath == "/inv_use.php") or (p == "/multiuse.php" and params.action == "useitem") then
 		item_image = nil
 		item_name = maybe_get_itemname(tonumber(params.whichitem))
 		if item_name then

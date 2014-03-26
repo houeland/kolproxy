@@ -479,8 +479,11 @@ mark m_done
 					script.force_heal_up()
 				end
 				if predict_aboo_peak_banish() < 30 then
-					script.maybe_ensure_buffs { "Oiled-Up", "Standard Issue Bravery", "Starry-Eyed" }
+					script.maybe_ensure_buffs { "Oiled-Up", "Standard Issue Bravery", "Starry-Eyed", "Puddingskin", "Protection from Bad Stuff" }
 					script.force_heal_up()
+				end
+				if predict_aboo_peak_banish() < 30 and have_skill("Check Mirror") and not have_intrinsic("Slicked-Back Do") then
+					cast_check_mirror_for_intrinsic("Slicked-Back Do")
 				end
 				if predict_aboo_peak_banish() < 30 then
 					stop "TODO: Buff up and finish A-Boo Peak clues (couldn't banish 30%)"

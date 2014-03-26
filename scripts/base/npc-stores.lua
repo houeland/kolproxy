@@ -15,15 +15,10 @@ function shop_scan_item_rows(whichshop)
 	return scanned_itemrows
 end
 
-function shop_buyitem(items, whichshop)
-	if type(items) == "string" then
-		items = { [items] = 1 }
-	end
-
+local function shop_buy_many_items(itemlist, whichshop)
 	local itemrows = shop_scan_item_rows(whichshop)
-
 	local ptfs = {}
-	for x, y in pairs(items) do
+	for x, y in pairs(itemlist) do
 		if not itemrows[x] then
 			print("WARNING: couldn't find row for item", x)
 			print("  itemrows:", itemrows)
@@ -32,4 +27,12 @@ function shop_buyitem(items, whichshop)
 		table.insert(ptfs, async_post_page("/shop.php", { pwd = session.pwd, whichshop = whichshop, action = "buyitem", whichrow = itemrows[x], quantity = y }))
 	end
 	return ptfs
+end
+
+function shop_buyitem(items, whichshop)
+	if type(items) == "string" then
+		return shop_buy_many_items({ [items] = 1 }, whichshop)[1]
+	else
+		return shop_buy_many_items(items, whichshop)
+	end
 end

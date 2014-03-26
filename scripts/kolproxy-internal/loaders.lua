@@ -1,9 +1,11 @@
 load_file("base", "base/settings-page.lua")
 load_file("base", "base/fight-page.lua")
+load_file("base", "base/info.lua")
 load_file("base", "base/other.lua")
 load_file("base", "base/mafiaexpression-evaluator.lua")
 load_file("base", "base/npc-stores.lua")
 load_file("base", "mechanics/game-mechanics.lua")
+load_file("interface", "interface/tracked-variables.lua")
 
 load_file("data", "data/mine-aggregate-prediction.lua")
 
@@ -94,8 +96,8 @@ load_file("interface", "interface/counters.lua")
 load_file("interface", "interface/chatpane.lua")
 load_file("interface", "interface/inventory-collapse.lua")
 load_file("interface", "interface/custom-charpane.lua")
+load_file("interface", "interface/custom-charpane-chit.lua")
 load_file("interface", "interface/preview-chat-commands.lua")
-load_file("interface", "interface/tracked-variables.lua")
 load_file("interface", "interface/improve-typography.lua")
 
 load_file("spading", "spading/encounter-simulator.lua")
