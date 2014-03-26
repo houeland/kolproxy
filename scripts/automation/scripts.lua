@@ -1711,10 +1711,9 @@ endif
 					end
 				elseif have_skill("Food Coma") then
 					if maxmp() < 30 then
-						if not have_item("Bright Water") then
+						if not have_item("Bright Water") and not ascension_script_option("summon tomes manually") then
 							script.ensure_mp(2)
-							async_post_page("/campground.php", { preaction = "summoncliparts" })
-							async_post_page("/campground.php", { pwd = get_pwd(), action = "bookshelf", preaction = "combinecliparts", clip1 = "06", clip2 = "06", clip3 = "04" })
+							summon_clipart("Bright Water")
 						end
 						use_item("Bright Water")
 					end

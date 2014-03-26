@@ -538,7 +538,7 @@ endif
 		if script.have_familiar("He-Boulder") then
 			return true
 		end
-		if not have_item("unbearable light") and not cached_stuff.tried_to_summon_unbearable_light then
+		if not have_item("unbearable light") and not cached_stuff.tried_to_summon_unbearable_light and not ascension_script_option("summon tomes manually") then
 			inform "summoning unbearable light (no he-boulder)"
 			script.ensure_mp(2)
 			summon_clipart("unbearable light")
@@ -2262,13 +2262,15 @@ endif
 			message = "end of day",
 			nobuffing = true,
 			action = function()
-				if can_drink_normal_booze() and not have_item("bucket of wine") then
-					script.ensure_mp(2)
-					summon_clipart("bucket of wine")
-				end
-				if not have_item("time halo") then
-					script.ensure_mp(2)
-					summon_clipart("time halo")
+				if not ascension_script_option("summon tomes manually") then
+					if can_drink_normal_booze() and not have_item("bucket of wine") then
+						script.ensure_mp(2)
+						summon_clipart("bucket of wine")
+					end
+					if not have_item("time halo") then
+						script.ensure_mp(2)
+						summon_clipart("time halo")
+					end
 				end
 				script.bonus_target { "rollover adventures" }
 				script.wear { hat = first_wearable { "leather aviator's cap", "Hairpiece On Fire" }, shirt = first_wearable { "Sneaky Pete's leather jacket" }, offhand = first_wearable { "Loathing Legion moondial" }, pants = first_wearable { "stinky cheese diaper" }, acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" }, acc3 = first_wearable { "gold wedding ring" } }
@@ -2391,7 +2393,7 @@ endif
 	}
 
 	add_task {
-		when = not cached_stuff.summoned_tomes,
+		when = not cached_stuff.summoned_tomes and not ascension_script_option("summon tomes manually"),
 		task = tasks.summon_tomes,
 	}
 
@@ -3563,7 +3565,8 @@ endwhile
 	add_task {
 		when = not have_item("sugar shield") and
 			can_change_familiar() and
-			not cached_stuff.summoned_sugar_shield,
+			not cached_stuff.summoned_sugar_shield and
+			not ascension_script_option("summon tomes manually"),
 		task = {
 			message = "summon sugar shield",
 			nobuffing = true,
@@ -5455,6 +5458,7 @@ local ascension_script_options_tbl = {
 	["manual lvl 9 quest"] = { yes = "stop and do manually", no = "automate" },
 	["manual castle quest"] = { yes = "stop and do manually", no = "automate" },
 	["eat manually"] = { yes = "eat manually", no = "automate consumption" },
+	["summon tomes manually"] = { yes = "summon manually", no = "automate summoning" },
 	["ignore automatic pulls"] = { yes = "only pull softcore items manually", no = "automate some pulls", when = function() return not ascensionstatus("Hardcore") end },
 	["train skills manually"] = { yes = "train manually", no = "automate training", when = function() return ascensionpath("Avatar of Jarlsberg") or ascensionpath("Avatar of Sneaky Pete") end },
 	["100% familiar run"] = { yes = "don't change familiar", no = "automate familiar choice", when = function() return can_change_familiar() end },
