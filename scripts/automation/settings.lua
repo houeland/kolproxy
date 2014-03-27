@@ -177,6 +177,7 @@ function get_ascension_automation_settings(want_bonus)
 				"eXtreme Bi-Polar Fleece Vest",
 			},
 			pants = {
+				"Pantsgiving",
 				{ name = "stinky cheese diaper", check = function() return not want_bonus.easy_combat end },
 				"Brimstone Boxers",
 				"spangly mariachi pants",

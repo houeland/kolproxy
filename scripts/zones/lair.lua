@@ -363,6 +363,8 @@ add_printer("/campground.php", function()
 				"Rock and Roll Legend",
 				"Squeezebox of the Ages",
 				"The Trickster's Trikitixa",
+				"toy accordion",
+				"antique accordion",
 			}
 			local drum_items = {
 				"big bass drum",
