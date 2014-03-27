@@ -39,7 +39,7 @@ function bl_charpane_level_lines(lines)
 
 	table.insert(lines, [[<table id='chit_character' class="chit_brick nospace"><tr><th colspan='3'>]])
 	table.insert(lines, string.format([[<a class=nounder target=mainpane href="charsheet.php"><b>%s</b></a></th></tr>]], playername()))
-	table.insert(lines, [[<tr><td class='avatar' rowspan='4'><img src="]] .. (session['cached avatar image'] or "http://images.kingdomofloathing.com/itemimages/blank.gif") .. [["></td>]])
+	table.insert(lines, [[<tr><td class='avatar' rowspan='4'><img src="]] .. (avatar_image() or "http://images.kingdomofloathing.com/itemimages/blank.gif") .. [["></td>]])
 	table.insert(lines, string.format([[<td class="label"><a target="mainpane" href="da.php?place=gate3" title="Visit your guild">%s</a></td>]], classdesc()))
 
 	table.insert(lines, string.format([[<td class="level" rowspan="2" style="width:30px;"><a target="mainpane" href="council.php" title="Visit the Council">%d</a></td></tr>]], level()))
@@ -692,7 +692,7 @@ tr.florist :first-line {
 }
 #chit_character tr td.avatar img {
 	height:75px;
-	width:auto;
+	width: 45px;
 }
 #chit_character tr td.label {
 	font-weight:bold;
