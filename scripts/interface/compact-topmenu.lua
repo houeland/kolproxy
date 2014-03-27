@@ -442,7 +442,7 @@ $("#mrulist").change(function() {
 
     <div class='child'>
       <a target='mainpane' href='tavern.php' class="l3">tavern</a> <a target='mainpane' href='place.php?whichplace=forestvillage&action=fv_untinker'>unt</a><br />
-      <a href="place.php?whichplace=hiddencity" class="l11">city</a>
+      <a target='mainpane' href="place.php?whichplace=hiddencity" class="l11">city</a>
 
       <a target='mainpane' href='friars.php' class="l6">friars</a>
     </div>
