@@ -22,6 +22,7 @@ function datafile(name)
 end
 
 local itemid_name_lookup = {}
+local skillid_name_lookup = {}
 local monster_image_lookup = {}
 local monster_name_lookup = {}
 local familiarid_name_lookup = {}
@@ -38,6 +39,7 @@ function reset_datafile_cache()
 	end
 	datafile_cache = {}
 	itemid_name_lookup = make_name_lookup("items", "id")
+	skillid_name_lookup = make_name_lookup("skills", "skillid")
 	familiarid_name_lookup = make_name_lookup("familiars", "famid")
 	zoneid_name_lookup = make_name_lookup("zones", "zoneid")
 	datafile("outfits")
@@ -111,6 +113,10 @@ end
 function maybe_get_itemname(item)
 	local id = maybe_get_itemid(item)
 	return itemid_name_lookup[id]
+end
+
+function maybe_get_skillname(skill_id)
+	return skillid_name_lookup[skill_id]
 end
 
 function get_itemname(item)
