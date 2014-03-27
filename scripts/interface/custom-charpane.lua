@@ -50,6 +50,15 @@ register_setting {
 	update_charpane = true,
 }
 
+register_setting {
+        name = "display songs above other effects",
+	description = "Display AT songs above other effects",
+	group = "charpane",
+	default_level = "enthusiast",
+	parent = "use custom kolproxy charpane",
+	update_charpane = true,
+}
+
 add_printer("/game.php", function()
 	if not setting_enabled("use custom kolproxy charpane") then return end
 	text = text:gsub([[(<frameset id=mainset cols=)"120,%*"(>)]], [[%1"200, *"%2]])
@@ -122,6 +131,11 @@ function kolproxy_custom_charpane_mode()
 end
 
 local function buff_sort_func(a, b)
+        if setting_enabled("display songs above other effects") then
+	   if (a.is_song or b.is_song) and not (a.is_song and b.is_song) then
+	      return a.is_song
+	   end
+	end
 	if a.duration ~= b.duration then
 		if type(a.duration) == type(b.duration) then
 			return a.duration < b.duration
@@ -137,7 +151,9 @@ end
 function get_sorted_buff_array()
 	local sorting = {}
 	for descid, x in pairs(status().effects) do
-		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid, upeffect = x[4] }) -- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly
+    	        local skill_id = tonumber((x[4] or ""):match("skill:([0-9]+)")) or 0
+	        local song_yes = 6000 <= skill_id and skill_id <= 6999
+	        table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid, upeffect = x[4], is_song = song_yes }) -- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly
 	end
 	for descid, x in pairs(status().intrinsics) do
 		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid })
