@@ -150,7 +150,6 @@ add_interceptor("/topmenu.php", function()
 			if mru_params.whichstore then
 				explan_txt = string.format([[buy %s %s]], maybe_get_itemname(tonumber(mru_params.whichitem)), count )
 			elseif mru_params.whichskill then
-				local maybe_get_skillname = function(x) return x end
 				explan_txt = string.format([[cast %s %s]], maybe_get_skillname(tonumber(mru_params.whichskill)), count )
 			elseif mru_params.whichitem then
 				explan_txt = string.format([[use %s %s]], maybe_get_itemname(tonumber(mru_params.whichitem)), count )
@@ -443,7 +442,7 @@ $("#mrulist").change(function() {
 
     <div class='child'>
       <a target='mainpane' href='tavern.php' class="l3">tavern</a> <a target='mainpane' href='place.php?whichplace=forestvillage&action=fv_untinker'>unt</a><br />
-      <a href="place.php?whichplace=hiddencity" class="l11">city</a>
+      <a target='mainpane' href="place.php?whichplace=hiddencity" class="l11">city</a>
 
       <a target='mainpane' href='friars.php' class="l6">friars</a>
     </div>
