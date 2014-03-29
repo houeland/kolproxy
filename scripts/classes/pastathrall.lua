@@ -1,28 +1,31 @@
 local thralls = {
-	[1] = { name = "Vampieroghi", effect = "+HP" },
-	[2] = { name = "Vermincelli", effect = "+MP" },
-	[3] = { name = "Angel Hair Wisp", effect = "+init%" },
-	[4] = { name = "Elbow Macaroni", effect = "mus=mys" },
-	[5] = { name = "Penne Dreadful", effect = "mox=mys" },
-	[6] = { name = "Lasagmbie", effect = "+meat%" },
-	[7] = { name = "Spice Ghost", effect = "+item%" },
-	[8] = { name = "Spaghetti Elemental", effect = "+stat" },
+	{ name = "Vampieroghi", effect = "+HP" , desc = { "attack/heal", "dispels negative effects", "+60 HP" }, img = "t_vampieroghi" },
+	{ name = "Vermincelli", effect = "+MP", desc = { "restores MP", "attack + poison", "+30 MP" }, img = "t_vermincelli" },
+	{ name = "Angel Hair Wisp", effect = "+init%", desc = { "+init", "prevents enemy crits", "blocks" }, img = "t_wisp" },
+	{ name = "Elbow Macaroni", effect = "mus=mys", desc = { "mus >= myst", "+weapon damage", "+10% crit chance" }, img = "t_elbowmac" },
+	{ name = "Penne Dreadful", effect = "mox=mys", desc = { "mox >= myst", "delevel", "DR +10" }, img = "t_dreadful" },
+	{ name = "Lasagmbie", effect = "+meat%", desc = { "+meat", "spooky attack", "+10 spooky spell dam" }, img = "t_lasagmbie" },
+	{ name = "Spice Ghost", effect = "+item%", desc = { "+item", "spices", "better entangling" }, img = "t_spiceghost" },
+	{ name = "Spaghetti Elemental", effect = "+stat", desc = { "+stat", "prevents 1st attack", "+5 spell dam" }, img = "t_spagdemon" },
 }
 
-function maybe_get_pastathrall_name(thrallid)
-	return (thralls[thrallid] or {}).name
-end
-
-function maybe_get_pastathrall_effect(thrallid)
-	return (thralls[thrallid] or {}).effect
-end
-
-function describe_pastathrall(thrallid)
-	if thralls[thrallid] then
-		return string.format([[Lvl. %d %s <span style="white-space: nowrap">(%s)</span>]], pastathralllevel(), maybe_get_pastathrall_name(thrallid) or "?", maybe_get_pastathrall_effect(thrallid) or "?")
-	else
-		return string.format("Lvl. %d {thrallid:%d???}", pastathralllevel(), thrallid)
+function get_current_pastathrall_info()
+	assert(pastathrallid() ~= 0)
+	local data = thralls[pastathrallid()] or {}
+	local tbl = {}
+	tbl.id = pastathrallid()
+	tbl.level = pastathralllevel()
+	tbl.name = data.name or string.format("{?thrallid:%d?}", tbl.id)
+	tbl.effect = data.effect or "?"
+	tbl.abilities = {}
+	local desc = data.desc or {}
+	for idx, lvl in ipairs { 1, 5, 10 } do
+		if pastathralllevel() >= lvl and desc[idx] then
+			table.insert(abilities, desc[idx])
+		end
 	end
+	tbl.picture = data.img or "?"
+	return tbl
 end
 
 local thrall_name_lookup = {}
