@@ -269,82 +269,38 @@ function bl_charpane_fam_picker(fams)
 end
 
 local function bl_charpane_thrall(lines)
-   local thrall_format = [[<table id="chit_thrall" class="chit_brick nospace">
+	local thrall_format = [[<table id="chit_thrall" class="chit_brick nospace">
 <tr><th title="Thrall Level">%i</th>
 <th colspan="2" title="Pasta Thrall"><a class="hand" onClick='javascript:window.open("desc_guardian.php","","height=200,width=300")'>%s</a></th></tr>
 <tr><td class="icon" title="Thrall"><a class="chit_launcher" rel="chit_pickerthrall" href="#">
 <img title="Bind thy Thrall" src="http://images.kingdomofloathing.com/itemimages/%s.gif"></a></td><td>%s</td></tr></table>]]
-   local thrall_desc = maybe_get_pastathrall_desc(pastathrallid())
-   local thrall_lines = {}
-   if thrall_desc ~= nil then
-      for i=1,3 do
-	 if math.floor(pastathralllevel() / 5) + 1 >= i then
-	    -- thralls gain powers at lvls 1, 5, and 10
-	    table.insert(thrall_lines, thrall_desc[i])
-	 end
-      end
-   end
-   
-   table.insert(lines, string.format(thrall_format, 
-				     pastathralllevel(), 
-				     maybe_get_pastathrall_name(pastathrallid()), 
-				     maybe_get_pastathrall_img(pastathrallid()),
-				     table.concat(thrall_lines, ", ")
-   ))
-end
-
-
---[[--
-local function buff_sort_func(a, b)
-   if (a.is_song or b.is_song) and not (a.is_song and b.is_song) then
-      return a.is_song
-   elseif a.duration ~= b.duration then
-      if type(a.duration) == type(b.duration) then
-	 return a.duration < b.duration
-      else
-	 return (b.duration == "&infin;")
-      end
-      -- this causes sort to fail sometimes. no idea why.
-   elseif a.title ~= b.title then 
-     return a.title < b.title 
-   elseif a.imgname ~= b.imgname then 
-     return a.imgname < b.imgname
-   else
-      return a.descid < b.descid
-   end
-end
---]]--
-
---[[--
-local function get_sorted_buff_array()
-	local sorting = {}
-	for descid, x in pairs(status().effects) do
-	   local skill_id = tonumber((x[4] or ""):match("skill:([0-9]+)")) or 0
-	   local song_yes = 6000 <= skill_id and skill_id <= 6999
-	   table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid, upeffect = (x[4] or ""), is_song = song_yes }) -- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly
+	local thrall_desc = maybe_get_pastathrall_desc(pastathrallid())
+	local thrall_lines = {}
+	if thrall_desc ~= nil then
+		for i = 1, 3 do
+			if math.floor(pastathralllevel() / 5) + 1 >= i then
+				-- thralls gain powers at lvls 1, 5, and 10
+				table.insert(thrall_lines, thrall_desc[i])
+			end
+		end
 	end
-	for descid, x in pairs(status().intrinsics) do
-		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid, upeffect = "", is_song = false })
-	end
-	table.sort(sorting, buff_sort_func)
-	return sorting
-end
---]]--
 
+	table.insert(lines, string.format(thrall_format, pastathralllevel(), maybe_get_pastathrall_name(pastathrallid()), maybe_get_pastathrall_img(pastathrallid()), table.concat(thrall_lines, ", ")))
+end
 
 local function make_compact_arrow(duration, upeffect)
-   if upeffect then
-      local skillid = tonumber(upeffect:match("skill:([0-9]+)"))
-      local itemid = tonumber(upeffect:match("item:([0-9]+)"))
-      local arrowclass = "blup"
-      if duration <= 2 then arrowclass = "blrup" end
-      if skillid then
-	 return string.format([[<div style="cursor: pointer;" class="%s" onclick="kolproxy_cast_skillid(%d, event.shiftKey)" data-skillid="%d"></div>]],  arrowclass, skillid, skillid)
-      elseif itemid then
-	 return string.format([[<div style="cursor: pointer;%s" class="%s" onclick="kolproxy_use_itemid(%d, event.shiftKey)" data-itemid="%d"></div>]],  have_item(itemid) and "" or "opacity: 0.5;", arrowclass, itemid, itemid)
-      end
-   end
-   return ""
+	if upeffect then
+		local skillid = tonumber(upeffect:match("skill:([0-9]+)"))
+		local itemid = tonumber(upeffect:match("item:([0-9]+)"))
+		local arrowclass = "blup"
+		if duration <= 2 then arrowclass = "blrup" end
+		if skillid then
+			return string.format([[<div style="cursor: pointer;" class="%s" onclick="kolproxy_cast_skillid(%d, event.shiftKey)" data-skillid="%d"></div>]], arrowclass, skillid, skillid)
+		elseif itemid then
+			return string.format([[<div style="cursor: pointer;%s" class="%s" onclick="kolproxy_use_itemid(%d, event.shiftKey)" data-itemid="%d"></div>]], have_item(itemid) and "" or "opacity: 0.5;", arrowclass, itemid, itemid)
+		end
+	end
+	return ""
 end
 
 function bl_charpane_buff_lines(lines)
@@ -360,7 +316,7 @@ function bl_charpane_buff_lines(lines)
 	local compact_class = ""
 
 	if tonumber(api_flag_config().compacteffects) == 1 then
-	   compact_class = "compact" 
+		compact_class = "compact"
 	end
 
 	for _, x in ipairs(get_sorted_buff_array()) do
@@ -385,12 +341,12 @@ function bl_charpane_buff_lines(lines)
 			styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
 			imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
 		end
-		
+
 		local strarrow = ""
 		if tonumber(api_flag_config().compacteffects) == 1 then
-		   strarrow = make_compact_arrow(x.duration, x.upeffect)
+			strarrow = make_compact_arrow(x.duration, x.upeffect)
 		else
-		   strarrow = make_strarrow(x.upeffect)
+			strarrow = make_strarrow(x.upeffect)
 		end
 
 		local str = string.format([[<tr class="%s %s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td class='info'>%s</td><td class='%s'>%s</td><td class='powerup'><span oncontextmenu="return maybe_shrug(&quot;%s&quot;)">%s</span></td></tr>]], buff_type, compact_class, x.imgname, x.descid, x.title, x.title,shrug_class,display_duration(x.duration), x.title, strarrow)
@@ -398,19 +354,14 @@ function bl_charpane_buff_lines(lines)
 	end
 
 	if playerclass("Pastamancer") and setting_enabled("display thrall as intrinsic") then
-	   if last_buff_type ~= "intrinsic" then
-	      if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
-	      table.insert(bufflines, [[<tbody class="intrinsic">]])
-	   end
-	   local str = string.format([[<tr class="intrinsic %s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td><td class='info' colspan='3'>Lvl %d %s</td></tr>]], compact_class, maybe_get_pastathrall_img(pastathrallid()), pastathralllevel(), maybe_get_pastathrall_name(pastathrallid()))
-	   table.insert(bufflines, str)
-	   
+		if last_buff_type ~= "intrinsic" then
+			if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
+				table.insert(bufflines, [[<tbody class="intrinsic">]])
+		end
+		local str = string.format([[<tr class="intrinsic %s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td><td class='info' colspan='3'>Lvl %d %s</td></tr>]], compact_class, maybe_get_pastathrall_img(pastathrallid()), pastathralllevel(), maybe_get_pastathrall_name(pastathrallid()))
+		table.insert(bufflines, str)
 	end
-	
 	if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
-
-
-
 	table.insert(lines, [[
 <table id="chit_effects" class="chit_brick nospace">
 	<thead>
@@ -420,7 +371,6 @@ function bl_charpane_buff_lines(lines)
 	</thead>
 ]] .. table.concat(bufflines) .. [[
 </table>]])
-	
 end
 
 function charpane_bleary_js()
@@ -1043,7 +993,7 @@ font-size: 11px;
 #chit_effects .compact td.icon {
 	text-align:left;
 	width:15px;
-        height: 15px;
+	height: 15px;
 	padding:1px 2px;
 }
 #chit_effects .compact td.icon img {
@@ -1387,7 +1337,7 @@ add_interceptor("/charpane.php", function()
 	bl_charpane_zone_lines(lines)
 	bl_charpane_familiar(lines)
 	if playerclass("Pastamancer") and not setting_enabled("display thrall as intrinsic") then
-	   bl_charpane_thrall(lines)
+		bl_charpane_thrall(lines)
 	end
 	table.insert(lines, [[</div><!-- end roof -->]])
 
@@ -1416,10 +1366,9 @@ add_interceptor("/charpane.php", function()
 					<!--<li><a class="tool_launcher" title="Elements" href="#" rel="elements"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA0JJREFUeNpUU01oXFUU/u59//PmvTd5k8ybmUxttS3ahIYEBCPFVAmFCoLNTgxCV8WFO3GhWFcu3AgiojsRdOOqiy4kWJA2VaiiBRGpRWY6mTRpMtM3/7/v3Xc9KUTaAx/3LM757ne/cy6TUuIwcpvHFG88XitxY32WW/MFzovTnIkMi2o+j/4omtG3Z5ZqP+KxYIcExevnnlHj+qcLdvHCi/5pnPJKCAwXDmdQozbQryFqb0Rqq/O12RAfHF/bCv8nyG1eOubI8Mqq/9ziS4XTsC2JoagiLQeYpqKA2QjUk5D9Hnpbm4grP/3Ay/310ns7TR7cuqxbSuaz1ezq4itHVnFX3cffcQURdFg8QIrPwACHGPwOdKtw3LOwUi+/Gg31ywcKVDD/tXnbff1MfgF/4T5JDjDFskhzwGUmHJk8UqJOdIhmnZ5SheEto9v65e1/3ix8x00jvz7vnoBmeVDgI8OK8HkJHi/S7Tl4Sh6WCMB7PsFDUntIntiwC2et3h57Q9XV3ELBnsWdCLBYAJMppIITCTBFpyMF+KAJ2RmBhS2CjrhThqYFiFvq8yp4vuDpWewkAjY1KFKBRrBJj0tk+mgI0T5oNoCGBuxxSJoKz+cRhziioq0LmdWR9CJEjCNWlEcYUT7kClITC7Lr0ARcggeM6UwmmIyoLnaEGu8r221PzFl9hsFIoqtINMk4LshhynVyOkUESZsaBx7kmLzIaejX9xHFTkUdP9Ru1ax47oUZEz/XxtTAIGMJQfthGgwWESh9DbxhQzZdJB0HylIBzd/ukALzhoqa/OZqpfvW3IqiukOOxo7AJOLgmkRaZzBoUfWhhNNNQbZtaKdOILy3i/qv2w3A+Z7vfPTUjUFl9NW1zSaOewy+whFuC7R3BZr3BVqUhw8EhmSgejJAz9BQuXkPg4n28fn61bJ6sE2yF314faNbiqvjtZWlacytmOhsCcgwQUzjZAWF9pmGUG2ivHEX4Z/h5x6zv3ziM+UXb6eTvdb7KbB3zi377rNPeyh6OtKC3NzvYlxuYHR7b1dL2p9keOuL8/V3kycIDmN25tpCRvYuZCCWPSaPTiVCZJH8m4W8eZRZVy421iqP1/8nwAD8GGnksWlP5wAAAABJRU5ErkJggg=="></a></li>-->
 					<li><a class="tool_launcher" title="Modifiers" href="#" rel="modifiers"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAGxSURBVDjLpVM9a8JQFL0vUUGFfowFpw4dxM2vf9G5newv6OIvEDoVOnUQf0G7CEYQHVzUVZQoaKFugoW20EUaTd5L+u6NSQORdvDC5dyEd+499ySPOY4Dh0TEK8rl8n0mk7lOJBIpVVWBMUaJAzCFEMA5B8MwPpfL5VOlUrklonegWq3qEr+c/2Nbq9VWHs9XkEwm0xLUy/Lzn5KbD1exaDR6FlpBURSq4/E4HJ2c4jMwmYpcw6vf31be2bAHQTPVHYEFyAr7VeEACzfAQKPuSmlCy7LINBcteifSx3ROWutzlCAZ3Z9Op9ButyEWi8F8Poder0drXTQ1SNUeqalt22EFQrgvC4UC5HI5mow1EjA/SjdEjEQiYAd+HV8BF5xwNBpBo9EgBZPJBDqdDimYzWbQ7XapmeA8rIDLiRjFYpEm4zTEfD7v19lslhSgJ2EFXBAOh0Oo1+vk/ng8Bk3TyBtd16HVarkrCRFWYFqmrwAzqMDzBhMVWNaeFSzT5P3BQJXI3G+9P14XC8c0t5tQg/V6/dLv9c+l3ATDFrvL5HZyCBxpv5Rvboxv3eOxQ6/zD+IbEqvBQWgxAAAAAElFTkSuQmCC"></a></li>]])
 	if ascensionstatus() == "Aftercore" then
-	   table.insert(lines, string.format([[<li><a href="%s" target="mainpane" style="color: green">{ Get buffs }</a></li>]], make_get_buffs_href()))
+		table.insert(lines, string.format([[<li><a href="%s" target="mainpane" style="color: green">{ Get buffs }</a></li>]], make_get_buffs_href()))
 	end
 	table.insert(lines,[[</ul></th></tr></table></div><!-- end floor -->]])
-	
 
 	table.insert(lines, [[<div id="chit_closet">]])
 	table.insert(lines, bl_charpane_fam_picker(fams))

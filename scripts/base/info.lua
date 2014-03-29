@@ -7,10 +7,7 @@ add_processor("/account_avatar.php", function()
 end)
 
 add_processor("/inv_equip.php", function()
-	if params.action then
-	   --- should only invalidate cache on actual equip action
-	   session["cached avatar image"] = nil
-	end
+	session["cached avatar image"] = nil
 end)
 
 add_processor("/inventory.php", function()
