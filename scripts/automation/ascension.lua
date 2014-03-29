@@ -2516,6 +2516,26 @@ endif
 	end, true)
 
 	add_task {
+		when = have_item("GameInformPowerDailyPro magazine") and
+			not have_item("scroll of Protection from Bad Stuff"),
+		task = {
+			message = "get gameinform item",
+			action = function()
+				use_item("GameInformPowerDailyPro magazine")
+				post_page("/inv_use.php", { pwd = session.pwd, confirm = "Yep.", whichitem = get_itemid("GameInformPowerDailyPro magazine") })
+				get_page("/choice.php", { forceoption = 0 })
+				post_page("/choice.php", { pwd = session.pwd, whichchoice = 570, option = 1 })
+				get_page("/da.php")
+				get_page("/place.php", { whichplace = "faqdungeon" })
+				result, resulturl, did_action = (adventure { zoneid = 319 })()
+				get_page("/choice.php", { forceoption = 0 })
+				use_item("dungeoneering kit")()
+				did_action = have_item("scroll of Protection from Bad Stuff")
+			end,
+		}
+	}
+
+	add_task {
 		when = challenge == "zombie" and
 			level() < 6 and
 			get_daily_counter("zombie.bear arm Bear Hugs used") < 10 and
@@ -4822,7 +4842,7 @@ endif
 		elseif not have_item("huge mirror shard") then
 			local lairpt = get_page("/lair1.php", { action = "gates" })
 			local dapt = get_page("/da.php")
-			if dapt:contains("The Enormous Greater-Than Sign") and not lairpt:contains("Gate that is Not a Gate") and lairpt:contains("arcane inscription in front of the gates") and ascensionstatus() == "Hardcore" then
+			if dapt:contains("The Enormous Greater-Than Sign") and not lairpt:contains("Gate that is Not a Gate") and lairpt:contains("arcane inscription in front of the gates") and ascensionstatus("Hardcore") then
 				if have_item("plus sign") and meat() < 1000 then
 					stop "Need 1k meat for oracle"
 				end
@@ -4873,7 +4893,7 @@ endif
 						local got = false
 						if have_buff(b.effect) then
 							got = true
-						elseif needitem and moonsign_area() == "Gnomish Gnomad Camp" and not have_item(needitem) then
+						elseif needitem and moonsign_area("Gnomish Gnomad Camp") and not have_item(needitem) then
 							buy_item(needitem, "n")
 						elseif needitem and not have_item(needitem) and ascensionstatus("Softcore") and (pullsleft() or 0) >= 5 then
 							-- TODO: clover for gum instead of pulling
@@ -4882,6 +4902,18 @@ endif
 						if not got and needitem and have_item(needitem) then
 							touse_items[needitem] = tostring(b.effect)
 							got = true
+						end
+						if not got and needitem and needitem:contains("chewing gum") and not moonsign_area("Gnomish Gnomad Camp") and not have_item("pack of chewing gum") and count_item("disassembled clover") >= 2 and ensure_clover() then
+							run_task {
+								message = "clover for gum",
+								nobuffing = true,
+								action = adventure {
+									zone = "South of the Border",
+								}
+							}
+							use_item("pack of chewing gum")()
+							did_action = have_item(needitem)
+							return
 						end
 						if not got then
 							if b.potion then

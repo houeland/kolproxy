@@ -34,7 +34,7 @@ href = add_automation_script("custom-mix-drinks", function()
 	end
 	local SHC = { "Neuromancer", "vodka stratocaster", "Mon Tiki", "teqiwila slammer", "Divine", "Gordon Bennett", "gimlet", "yellow brick road", "mandarina colada", "tangarita", "Mae West", "prussian cathouse" }
 	local advcock = { "pink pony", "fuzzbump", "slip 'n' slide", "ocean motion", "ducha de oro", "horizontal tango", "roll in the hay", "a little sump'm sump'm", "slap and tickle", "perpendicular hula", "rockin' wagon", "calle de miel", "tropical swill", "fruity girl swill", "blended frozen swill", "bungle in the jungle" }
-	local function can_make(name)
+	local function can_make(name, ignore_available)
 		local available = count_item(name)
 		local craftable = 0
 		local craft_steps = {}
@@ -59,7 +59,8 @@ href = add_automation_script("custom-mix-drinks", function()
 			buyable = 100
 		end
 		local steps = {}
-		if available > 0 then
+		local total_possible = available + craftable + stillable + buyable
+		if available > 0 and (not ignore_available or total_possible <= available) then
 			table.insert(steps, "have " .. name .. " (" .. available .. ")")
 		elseif buyable > 0 then
 			table.insert(steps, "buy " .. name .. " (" .. store_price[name] .. " meat)")
@@ -70,20 +71,23 @@ href = add_automation_script("custom-mix-drinks", function()
 			for _, y in ipairs(still_steps) do table.insert(steps, y) end
 			table.insert(steps, "still " .. still_recipes[name] .. " -> " .. name)
 		end
-		return available + craftable + stillable + buyable, steps
+		return total_possible, steps
 	end
 	local function handle_recipe(name)
 		local txt = ""
 		for _, x in pairs(cocktailcrafting_recipes[name]) do
 			txt = txt .. x .. " (" .. count_item(x) ..  ")  "
 		end
-		local amount, steps = can_make(name)
+		local amount, steps = can_make(name, true)
 		if amount > 0 then
 			local stepstext = ""
 			for _, x in ipairs(steps) do
 				stepstext = stepstext .. "<br><small>&nbsp;&nbsp;" .. x .. "</small>"
 			end
-			local makelink = string.format([[<a href="%s">[make]</a>]], href { pwd = session.pwd, makeitem = name })
+			local makelink = ""
+			if amount > count_item(name) then
+				makelink = string.format([[<a href="%s">[make]</a>]], href { pwd = session.pwd, makeitem = name })
+			end
 			return name .. " { " .. amount .. " }: " .. txt .. makelink .. stepstext
 		else
 			return [[<span style="color: gray;">]] .. name .. " { " .. amount .. " }: " .. txt .. [[</span>]]

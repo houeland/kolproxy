@@ -10,7 +10,6 @@ local thralls = {
 }
 
 function get_current_pastathrall_info()
-	assert(pastathrallid() ~= 0)
 	local data = thralls[pastathrallid()] or {}
 	local tbl = {}
 	tbl.id = pastathrallid()
@@ -21,7 +20,7 @@ function get_current_pastathrall_info()
 	local desc = data.desc or {}
 	for idx, lvl in ipairs { 1, 5, 10 } do
 		if pastathralllevel() >= lvl and desc[idx] then
-			table.insert(abilities, desc[idx])
+			table.insert(tbl.abilities, desc[idx])
 		end
 	end
 	tbl.picture = data.img or "?"

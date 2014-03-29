@@ -30,7 +30,7 @@ register_setting {
 
 register_setting {
 	name = "display thrall as intrinsic",
-	description = "Display pasta thrall as if it were an intrinsic",
+	description = "Display pasta thrall as if it were an effect",
 	group = "charpane",
 	default_level = "enthusiast",
 	parent = "use custom bleary charpane",
@@ -320,7 +320,7 @@ function bl_charpane_buff_lines(lines)
 		local imgstyleinfo = ""
 		local buff_type = "effect"
 		local shrug_class = "shrug"
-		if x.is_song then
+		if x.is_song and setting_enabled("display songs above other effects") then
 			buff_type = "song"
 		elseif x.duration == "&infin;" then
 			buff_type = "intrinsic"
@@ -345,17 +345,18 @@ function bl_charpane_buff_lines(lines)
 			strarrow = make_strarrow(x.upeffect)
 		end
 
-		local str = string.format([[<tr class="%s %s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td class='info'>%s</td><td class='%s'>%s</td><td class='powerup'><span oncontextmenu="return maybe_shrug(&quot;%s&quot;)">%s</span></td></tr>]], buff_type, compact_class, x.imgname, x.descid, x.title, x.title,shrug_class,display_duration(x.duration), x.title, strarrow)
+		local str = string.format([[<tr class="%s %s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td class='info'>%s</td><td class='%s'>%s</td><td class='powerup'><span oncontextmenu="return maybe_shrug(&quot;%s&quot;)">%s</span></td></tr>]], buff_type, compact_class, x.imgname, x.descid, x.title, x.title, shrug_class, display_duration(x.duration), x.title, strarrow)
 		table.insert(bufflines, str)
 	end
 
-	if playerclass("Pastamancer") and setting_enabled("display thrall as intrinsic") then
+	if pastathrall() and setting_enabled("display thrall as intrinsic") then
+		-- TODO: do in buff listing, not here
 		if last_buff_type ~= "intrinsic" then
 			if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
-				table.insert(bufflines, [[<tbody class="intrinsic">]])
+			table.insert(bufflines, [[<tbody class="intrinsic">]])
 		end
-		local str = string.format([[<tr class="intrinsic %s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td><td class='info' colspan='3'>Lvl %d %s</td></tr>]], compact_class, maybe_get_pastathrall_img(pastathrallid()), pastathralllevel(), maybe_get_pastathrall_name(pastathrallid()))
-		table.insert(bufflines, str)
+		local thrall = get_current_pastathrall_info()
+		table.insert(bufflines, string.format([[<tr class="intrinsic %s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td><td class='info' colspan='3'>Lvl %d %s</td></tr>]], compact_class, thrall.picture, thrall.level, thrall.name))
 	end
 	if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
 	table.insert(lines, [[
@@ -1332,7 +1333,7 @@ add_interceptor("/charpane.php", function()
 
 	bl_charpane_zone_lines(lines)
 	bl_charpane_familiar(lines)
-	if playerclass("Pastamancer") and not setting_enabled("display thrall as intrinsic") then
+	if pastathrall() and not setting_enabled("display thrall as intrinsic") then
 		bl_charpane_thrall(lines)
 	end
 	table.insert(lines, [[</div><!-- end roof -->]])

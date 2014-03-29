@@ -227,6 +227,7 @@ function setup_functions()
 		function freedralph() return tonumber(status().freedralph) == 1 end
 		function moonsign_area(name)
 			if name then
+				-- TODO: validate
 				return moonsign_area() == name
 			end
 			local areas = {
