@@ -270,22 +270,18 @@ end
 
 local function bl_charpane_thrall(lines)
 	local thrall_format = [[<table id="chit_thrall" class="chit_brick nospace">
-<tr><th title="Thrall Level">%i</th>
-<th colspan="2" title="Pasta Thrall"><a class="hand" onClick='javascript:window.open("desc_guardian.php","","height=200,width=300")'>%s</a></th></tr>
-<tr><td class="icon" title="Thrall"><a class="chit_launcher" rel="chit_pickerthrall" href="#">
-<img title="Bind thy Thrall" src="http://images.kingdomofloathing.com/itemimages/%s.gif"></a></td><td>%s</td></tr></table>]]
-	local thrall_desc = maybe_get_pastathrall_desc(pastathrallid())
-	local thrall_lines = {}
-	if thrall_desc ~= nil then
-		for i = 1, 3 do
-			if math.floor(pastathralllevel() / 5) + 1 >= i then
-				-- thralls gain powers at lvls 1, 5, and 10
-				table.insert(thrall_lines, thrall_desc[i])
-			end
-		end
-	end
-
-	table.insert(lines, string.format(thrall_format, pastathralllevel(), maybe_get_pastathrall_name(pastathrallid()), maybe_get_pastathrall_img(pastathrallid()), table.concat(thrall_lines, ", ")))
+<tr>
+	<th title="Thrall Level">%i</th>
+	<th colspan="2" title="Pasta Thrall"><a class="hand" onClick='javascript:window.open("desc_guardian.php", "", "height=200,width=300")'>%s</a></th>
+</tr>
+<tr>
+	<td class="icon" title="Thrall">
+		<a class="chit_launcher" rel="chit_pickerthrall" href="#"><img title="Bind thy Thrall" src="http://images.kingdomofloathing.com/itemimages/%s.gif"></a>
+	</td>
+	<td>%s</td>
+</tr></table>]]
+	local thrall = get_current_pastathrall_info()
+	table.insert(lines, string.format(thrall_format, thrall.level, thrall.name, thrall.picture, table.concat(thrall.abilities, ", ")))
 end
 
 local function make_compact_arrow(duration, upeffect)

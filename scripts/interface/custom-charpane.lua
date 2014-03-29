@@ -149,9 +149,16 @@ end
 function get_sorted_buff_array()
 	local sorting = {}
 	for descid, x in pairs(status().effects) do
-		local skill_id = tonumber((x[4] or ""):match("skill:([0-9]+)")) or 0
-		local song_yes = 6000 <= skill_id and skill_id <= 6999
-		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid, upeffect = x[4], is_song = song_yes }) -- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly
+		local upeffect = x[4]
+		local is_song = nil
+		if upeffect then
+			local skill_id = tonumber(upeffect:match("skill:([0-9]+)"))
+			if skill_id and 6000 <= skill_id and skill_id <= 6999 then
+				is_song = true
+			end
+		end
+		-- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly. TODO: put workaround in api.lua
+		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid, upeffect = upeffect, is_song = is_song })
 	end
 	for descid, x in pairs(status().intrinsics) do
 		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid })
@@ -161,6 +168,7 @@ function get_sorted_buff_array()
 end
 
 function make_strarrow(upeffect)
+	-- TODO: put skillid and itemid in buff table instead of parsing here
 	if upeffect then
 		local skillid = tonumber(upeffect:match("skill:([0-9]+)"))
 		local itemid = tonumber(upeffect:match("item:([0-9]+)"))
@@ -761,9 +769,14 @@ function charpane_familiar_weight_line()
 	end
 end
 
+local function describe_pastathrall()
+	local thrall = get_current_pastathrall_info()
+	return string.format([[Lvl. %d %s <span style="white-space: nowrap">(%s)</span>]], thrall.level, thrall.name, thrall.effect)
+end
+
 function compact_charpane_familiar_lines(lines, fams)
 	if pastathrallid() ~= 0 then
-		table.insert(lines, string.format("<center>%s</center>", describe_pastathrall(pastathrallid())))
+		table.insert(lines, string.format("<center>%s</center>", describe_pastathrall()))
 	end
 	if familiarid() ~= 0 then
 		table.insert(lines, "<center>" .. get_familiar_grid_line(fams) .. "</center>")
@@ -781,7 +794,7 @@ end
 
 function full_charpane_familiar_lines(lines, fams)
 	if pastathrallid() ~= 0 then
-		table.insert(lines, string.format("<center><font size=2>%s</font></center>", describe_pastathrall(pastathrallid())))
+		table.insert(lines, string.format("<center><font size=2>%s</font></center>", describe_pastathrall()))
 	end
 	if familiarid() ~= 0 then
 		table.insert(lines, "<center>" .. get_familiar_grid_line(fams) .. "</center>")
