@@ -66,6 +66,8 @@ function get_ascension_automation_settings(want_bonus)
 			"astral hot dog dinner", "astral six-pack", "carton of astral energy drinks",
 			"CSA discount card",
 			"Squat-Thrust Magazine",
+			"O'RLY manual",
+			"Ye Olde Bawdy Limerick",
 		},
 		use_except_one = {
 			"large box",
