@@ -28,13 +28,13 @@ function get_automation_tasks(script, cached_stuff)
 						end
 						if have_item("lump of Brituminous coal") then
 							if x == "Work is a Four Letter Sword" and not have_item("sword hilt") then
-								buy_item("sword hilt", "s")()
+								store_buy_item("sword hilt", "s")()
 							elseif x == "A Light that Never Goes Out" and not have_item("third-hand lantern") then
-								buy_item("third-hand lantern", "m")()
+								store_buy_item("third-hand lantern", "m")()
 							elseif x == "Hairpiece On Fire" and not have_item("maiden wig") then
-								buy_item("maiden wig", "4")()
+								store_buy_item("maiden wig", "4")()
 							elseif x == "Vicar's Tutu" and not have_item("frilly skirt") then
-								buy_item("frilly skirt", "4")()
+								store_buy_item("frilly skirt", "4")()
 							else
 								unequip_slot("weapon")()
 							end
@@ -80,7 +80,7 @@ function get_automation_tasks(script, cached_stuff)
 				inform "pick up RnR"
 				script.ensure_worthless_item()
 				if not have_item("hermit permit") then
-					buy_item("hermit permit", "m")
+					store_buy_item("hermit permit", "m")
 				end
 				if not have_item("hot buttered roll") then
 					async_post_page("/hermit.php", { action = "trade", whichitem = get_itemid("hot buttered roll"), quantity = 1 })
@@ -89,7 +89,7 @@ function get_automation_tasks(script, cached_stuff)
 					critical "Failed to buy hot buttered roll."
 				end
 				if not have_item("casino pass") then
-					buy_item("casino pass", "m")
+					store_buy_item("casino pass", "m")
 				end
 				if not have_item("casino pass") then
 					critical "Failed to buy casino pass."
@@ -125,7 +125,7 @@ function get_automation_tasks(script, cached_stuff)
 
 			if not playerclass("Accordion Thief") and AT_song_duration() < 5 then
 				inform "buy toy accordion"
-				set_result(buy_item("toy accordion", "z"))
+				set_result(store_buy_item("toy accordion", "z"))
 				did_action = have_item("toy accordion")
 			end
 		end
@@ -138,7 +138,7 @@ function get_automation_tasks(script, cached_stuff)
 			inform "pick up seal tooth"
 			script.ensure_worthless_item()
 			if not have_item("hermit permit") then
-				buy_item("hermit permit", "m")
+				store_buy_item("hermit permit", "m")
 			end
 			set_result(post_page("/hermit.php", { action = "trade", whichitem = get_itemid("seal tooth"), quantity = 1 }))
 			did_action = have_item("seal tooth")
@@ -195,7 +195,7 @@ function get_automation_tasks(script, cached_stuff)
 				nobuffing = true,
 				action = function()
 					local to_make = 30 - count_item("white pixel")
-					shop_buyitem({ ["white pixel"] = to_make }, "mystic")
+					shop_buy_item({ ["white pixel"] = to_make }, "mystic")
 					did_action = (count_item("white pixel") >= 30)
 				end
 			}
@@ -204,7 +204,7 @@ function get_automation_tasks(script, cached_stuff)
 				message = "make digital key",
 				nobuffing = true,
 				action = function()
-					shop_buyitem("digital key", "mystic")
+					shop_buy_item("digital key", "mystic")
 					did_action = have_item("digital key")
 				end
 			}
@@ -359,7 +359,7 @@ mark m_done
 						message = "buy snow boards",
 						nobuffing = true,
 						action = function()
-							shop_buyitem("snow boards", "snowgarden")
+							shop_buy_item("snow boards", "snowgarden")
 							did_action = have_item("snow boards")
 						end
 					}

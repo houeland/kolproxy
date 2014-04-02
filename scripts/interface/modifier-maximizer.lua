@@ -73,7 +73,7 @@ end
 function maximize_skill_bonuses(scoref)
 	local options = {}
 
-	for buffname, castname in pairs(datafile("buff-recast-skills")) do
+	for buffname, castname in pairs(datafile_buff_recast_skills) do
 		local can_cast = have_skill(castname)
 		if playerclass("Pastamancer") and castname:match("^Bind ") then
 			-- TODO: Add line to switch pasta thrall
@@ -133,6 +133,7 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		"Meat from Monsters",
 		"HP & cold/spooky resistance",
 		"Familiar Weight",
+		"Max HP",
 		"Muscle",
 		"Mysticality",
 		"Moxie",
@@ -156,6 +157,11 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		scoref = function(bonuses)
 			bonuses = make_bonuses_table(bonuses)
 			return estimate_maxhp_increases(bonuses) + bonuses["Spooky Resistance"] * 20 + bonuses["Cold Resistance"] * 20
+		end
+	elseif whichbonus == "Max HP" then
+		scoref = function(bonuses)
+			bonuses = make_bonuses_table(bonuses)
+			return estimate_maxhp_increases(bonuses)
 		end
 	elseif whichbonus == "Monsters will be less attracted to you" then
 		scoref = function(bonuses)

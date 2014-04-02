@@ -7,6 +7,18 @@ register_setting {
 }
 end
 
+local function command_ok(ok_text)
+	return make_kol_html_frame(ok_text)
+end
+
+local function usage_error(warning_text)
+	return make_kol_html_frame(warning_text, nil, "darkorange")
+end
+
+local function command_failed(error_text)
+	return make_kol_html_frame(error_text, nil, "red")
+end
+
 -- TODO: simplify functions
 
 add_chat_redirect("/hottub", "Relaxing in the hot tub.", "/clan_viplounge.php", { action = "hottub" })
@@ -16,19 +28,19 @@ add_chat_alias("/scope", "/telescope")
 add_chat_alias("/lairchecklist", "/telescope")
 
 add_chat_command("/kolproxy_example_test_chat_command", "Testing things.", function()
-	return "Hello, world."
+	return command_ok("Hello, world.")
 end)
 
-add_chat_command("/arrowme", "Kmailing time's arrow to kbay.", function()
-	if not ascensionstatus("Aftercore") then
-		return "Not in aftercore."
-	elseif not have_item("time's arrow") then
-		return "No time's arrows to send."
-	else
-		post_page("/sendmessage.php", { action = "send", pwd = session.pwd, towho = "kbay", whichitem1 = get_itemid("time's arrow"), howmany1 = 1 })
-		return "Sent."
-	end
-end)
+--add_chat_command("/arrowme", "Kmailing time's arrow to kbay.", function()
+--	if not ascensionstatus("Aftercore") then
+--		return usage_error("Not in aftercore.")
+--	elseif not have_item("time's arrow") then
+--		return usage_error("No time's arrows to send.")
+--	else
+--		post_page("/sendmessage.php", { action = "send", pwd = session.pwd, towho = "kbay", whichitem1 = get_itemid("time's arrow"), howmany1 = 1 })
+--		return command_ok("Sent.")
+--	end
+--end)
 
 add_chat_command("/skeleton", "Using skeleton.", function(param)
 	local skeletons = {
@@ -48,23 +60,23 @@ add_chat_command("/skeleton", "Using skeleton.", function(param)
 		return text
 	elseif param == "all" then
 		if count_item("skeleton") < 5 then
-			return "Not enough skeletons."
+			return usage_error("Not enough skeletons.")
 		end
 		for i = 1, 5 do
 			use_item("skeleton")
 			async_get_page("/choice.php", { forceoption = 0 })
 			async_get_page("/choice.php", { pwd = session.pwd, whichchoice = 603, option = i })
 		end
-		return "Done."
+		return command_ok("Done.")
 	else
 		print("DEBUG: /skeleton param was [[" .. tostring(param) .."]]")
-		return [[Unknown skeleton. Use /skeleton x, where "x" is one of "warrior", "cleric", "wizard", "rogue", "buddy", or "all" to use all 5.]]
+		return usage_error([[Unknown skeleton. Use /skeleton x, where "x" is one of "warrior", "cleric", "wizard", "rogue", "buddy", or "all" to use all 5.]])
 	end
 end)
 
 add_chat_command("/pyec", "Using PYEC.", function()
 	if not ascensionstatus("Aftercore") then
-		return "Not in aftercore.", nil, "darkorange"
+		return usage_error("Not in aftercore.")
 	end
 	if have_item("Platinum Yendorian Express Card") then
 		local pt = use_item("Platinum Yendorian Express Card")()
@@ -73,20 +85,20 @@ add_chat_command("/pyec", "Using PYEC.", function()
 	local clanstash = get_page("/clan_stash.php")
 	local pyec_line = clanstash:match([[<option value=1687 descid=298008237>Platinum Yendorian Express Card.-</option>]])
 	if not pyec_line then
-		return "No PYEC in clan stash.", nil, "darkorange"
+		return usage_error("No PYEC in clan stash.")
 	end
 	if not clanstash:contains("You are exempt from your Clan's Karma requirements.") then
-		return "Not Karma exempt.", nil, "darkorange"
+		return usage_error("Not Karma exempt.")
 	end
 	take_stash_item("Platinum Yendorian Express Card")
 	if not have_item("Platinum Yendorian Express Card") then
-		return "Error taking PYEC from clan stash!", nil, "red"
+		return command_failed("Error taking PYEC from clan stash!")
 	else
 		local _, pt = pcall(function() return use_item("Platinum Yendorian Express Card")() end)
 		add_stash_item("Platinum Yendorian Express Card")
 		local newclanstash = get_page("/clan_stash.php")
 		if newclanstash:match([[<option value=1687 descid=298008237>Platinum Yendorian Express Card.-</option>]]) ~= pyec_line then
-			return "Error returning PYEC to clan stash!", nil, "red"
+			return command_failed("Error returning PYEC to clan stash!")
 		else
 			return pt
 		end
@@ -103,7 +115,7 @@ add_raw_chat_script_redirect("/mcd", "Setting MCD.", function(mcdparam)
 	if amount and amount >= 0 then
 		return set_mcd(amount)()
 	else
-		return make_kol_html_frame("Example usage: /mcd 10", "Results:", "darkorange"), requestpath
+		return usage_error("Example usage: /mcd 10")
 	end
 end)
 
@@ -145,34 +157,30 @@ local function match_amount_and_item(line)
 	return tonumber(amount), item
 end
 
-local function command_error(error_text)
-	return make_kol_html_frame(error_text, nil, "darkorange"), requestpath
-end
-
-add_raw_chat_command("/sell", "Selling.", function(line)
+add_chat_command("/sell", "Selling.", function(line)
 	if line:match("^%s*$") then
-		return command_error('What do you want to autosell? "/sell itemname"')
+		return usage_error('What do you want to autosell? "/sell itemname"')
 	end
 	local amount, item = match_amount_and_item(line)
 	if not amount then
-		return command_error(item)
+		return usage_error(item)
 	end
 	if not setting_enabled("enable dangerous chat commands") then
-		return command_error("You need to enable /sell and /stock chat commands in kolproxy settings first.")
+		return usage_error("You need to enable /sell and /stock chat commands in kolproxy settings first.")
 	end
 	return autosell_item(item, amount)()
 end)
 
-add_raw_chat_command("/stock", "Stocking.", function(line)
+add_chat_command("/stock", "Stocking.", function(line)
 	if line:match("^%s*$") then
-		return command_error('What do you want to stock in your store? "/stock itemname"')
+		return usage_error('What do you want to stock in your store? "/stock itemname"')
 	end
 	local amount, item = match_amount_and_item(line)
 	if not amount then
-		return command_error(item)
+		return usage_error(item)
 	end
 	if not setting_enabled("enable dangerous chat commands") then
-		return command_error("You need to enable /sell and /stock chat commands in kolproxy settings first.")
+		return usage_error("You need to enable /sell and /stock chat commands in kolproxy settings first.")
 	end
 	return add_store_item(item, amount)()
 end)

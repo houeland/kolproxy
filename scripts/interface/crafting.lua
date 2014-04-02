@@ -104,7 +104,7 @@ href = add_automation_script("custom-mix-drinks", function()
 			local pt = mix_items(cocktailcrafting_recipes[name][1], cocktailcrafting_recipes[name][2])()
 			table.insert(crafted_item_text, pt)
 		elseif still_recipes[name] then
-			local pt = shop_buyitem(name, "still")()
+			local pt = shop_buy_item(name, "still")()
 --			table.insert(crafted_item_text, pt)
 		end
 	end
@@ -128,7 +128,7 @@ add_automation_script("buy-and-cook-fancy", function()
 	local kitchen = get_page("/campground.php", { action = "inspectkitchen" })
 	if kitchen:contains("E-Z Cook") and not kitchen:contains("Dramatic") then
 		if not have_item("Dramatic&trade; range") then
-			buy_item("Dramatic&trade; range", "m")
+			store_buy_item("Dramatic&trade; range", "m")
 		end
 		use_item("Dramatic&trade; range")
 	end
@@ -156,7 +156,7 @@ add_automation_script("buy-and-mix-fancy", function()
 	local kitchen = get_page("/campground.php", { action = "inspectkitchen" })
 	if kitchen:contains("My First Shaker") and not kitchen:contains("Du Coq cocktailcrafting") then
 		if not have_item("Queue Du Coq cocktailcrafting kit") then
-			buy_item("Queue Du Coq cocktailcrafting kit", "m")
+			store_buy_item("Queue Du Coq cocktailcrafting kit", "m")
 		end
 		use_item("Queue Du Coq cocktailcrafting kit")
 	end

@@ -520,7 +520,7 @@ local hermit_items_href = add_automation_script("get-hermit-items", function()
 		if not have_item("worthless trinket") and not have_item("worthless gewgaw") and not have_item("worthless knick-knack") then
 			print "  getting worthless item"
 			if not have_item("chewing gum on a string") then
-				buy_item("chewing gum on a string", "m")
+				store_buy_item("chewing gum on a string", "m")
 			end
 			local pt, pturl = use_item("chewing gum on a string")()
 			if pt:contains("You acquire") then
@@ -531,7 +531,7 @@ local hermit_items_href = add_automation_script("get-hermit-items", function()
 	get_trinket()
 	text, url = get_page("/hermit.php")
 	if text:contains("out of Permits") and not have_item("hermit permit") then
-		buy_item("hermit permit", "m")
+		store_buy_item("hermit permit", "m")
 		text, url = get_page("/hermit.php")
 	end
 	return text, url
@@ -727,9 +727,9 @@ add_interceptor("use item: black market map", function()
 	-- TODO: add Bee path support?
 	-- TODO: support not having a fam before?
 	local famid = familiarid()
-	switch_familiarid(59) -- blackbird
+	switch_familiar("Reassembled Blackbird")
 	text, url = submit_original_request()
-	switch_familiarid(famid)
+	switch_familiar(famid)
 	return text, url
 end)
 

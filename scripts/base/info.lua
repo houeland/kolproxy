@@ -1,27 +1,29 @@
 add_processor("/charsheet.php", function()
 	session["cached avatar image"] = text:match([[<a href=account_avatar.php><img src="(.-)"]])
+	session["cached avatar image up-to-date"] = true
 end)
 
 add_processor("/account_avatar.php", function()
 	session["cached avatar image"] = text:match([[checked value=%d+></td><td><img src="(.-)"]])
+	session["cached avatar image up-to-date"] = true
 end)
 
 add_processor("/inv_equip.php", function()
-	session["cached avatar image"] = nil
+	session["cached avatar image up-to-date"] = nil
 end)
 
 add_processor("/inventory.php", function()
+	-- these should include any non-ajax equipment switches
 	if requestpath == "/inv_equip.php" or params.action or params.type or params.whichoutfit then
-		-- these should include any non-ajax equipment switches
-		session["cached avatar image"] = nil
+		session["cached avatar image up-to-date"] = nil
 	end
 end)
 
 function avatar_image()
-	if not session["cached avatar image"] then
+	if not session["cached avatar image up-to-date"] and not locked() then
 		get_page("/account_avatar.php")
 	end
-	return session["cached avatar image"]
+	return session["cached avatar image"] or "http://images.kingdomofloathing.com/itemimages/blank.gif"
 end
 
 function get_wand_data()

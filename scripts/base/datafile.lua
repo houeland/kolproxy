@@ -1,6 +1,6 @@
 -- TODO: Workaround hack
 if string then
-        function string.contains(a, b) return not not a:find(b, 1, true) end
+	function string.contains(a, b) return not not a:find(b, 1, true) end
 end
 
 local function load_datafile(datafilename)
@@ -27,6 +27,7 @@ local monster_image_lookup = {}
 local monster_name_lookup = {}
 local familiarid_name_lookup = {}
 local zoneid_name_lookup = {}
+datafile_buff_recast_skills = {}
 function reset_datafile_cache()
 	local function make_name_lookup(datafilename, field)
 		local tbl = {}
@@ -53,6 +54,12 @@ function reset_datafile_cache()
 			monster_image_lookup["ed"..tostring(form)..".gif"] = monstername
 		end
 		monster_name_lookup[monstername:lower()] = monstername
+	end
+	datafile_buff_recast_skills = {}
+	for name, data in pairs(datafile("buffs")) do
+		if data.cast_skill then
+			datafile_buff_recast_skills[name] = data.cast_skill
+		end
 	end
 end
 reset_datafile_cache()
@@ -221,23 +228,23 @@ function get_semirare_encounters()
 	return datafile("semirares")
 end
 
-function load_buff_extension_info()
-	local skills = load_datafile("skills")
-	local buff_recast_skills = load_datafile("buff-recast-skills")
-	local info = {}
-	for x, y in pairs(buff_recast_skills) do
-		info[x] = { skillname = y, skillid = skills[y].skillid, mpcost = skills[y].mpcost }
-		if ascensionpath("Zombie Slayer") then
-			info[x].zombiecost = info[x].mpcost
-			info[x].mpcost = 0
-		end
-	end
-	return info
-end
+--function load_buff_extension_info()
+--	local skills = load_datafile("skills")
+--	local buff_recast_skills = load_datafile("buff recast skills")
+--	local info = {}
+--	for x, y in pairs(buff_recast_skills) do
+--		info[x] = { skillname = y, skillid = skills[y].skillid, mpcost = skills[y].mpcost }
+--		if ascensionpath("Zombie Slayer") then
+--			info[x].zombiecost = info[x].mpcost
+--			info[x].mpcost = 0
+--		end
+--	end
+--	return info
+--end
 
 function get_zoneid(name)
-       	if type(name) == "number" then
-                return name
+	if type(name) == "number" then
+		return name
 	end
 
 	local zoneid = (datafile("zones")[name] or {}).zoneid

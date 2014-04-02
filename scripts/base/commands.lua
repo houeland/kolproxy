@@ -30,7 +30,7 @@ function craft_item(item)
 	error "Unknown item for craft_item()"
 end
 
-function buy_item(name, whichstore, amount)
+function store_buy_item(name, whichstore, amount)
 	print_debug("  buying", name, amount or "")
 	return async_get_page("/store.php", { phash = session.pwd, buying = 1, whichitem = get_itemid(name), howmany = amount or 1, whichstore = whichstore, ajax = 1, action = "buyitem" })
 end
@@ -206,13 +206,14 @@ function cast_skill(skill, quantity, targetid)
 end
 cast_skillid = cast_skill
 
-function switch_familiarid(id)
-	if (id == 0) then
+function switch_familiar(which)
+	if which == 0 then
 		return async_get_page("/familiar.php", { action = "putback", ajax = 1 })
 	else
-		return async_get_page("/familiar.php", { action = "newfam", ajax = 1, newfam = id })
+		return async_get_page("/familiar.php", { action = "newfam", ajax = 1, newfam = get_familiarid(which) })
 	end
 end
+switch_familiarid = switch_familiar
 
 function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
 	if url:contains("/fight.php") then

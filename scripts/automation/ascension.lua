@@ -800,7 +800,7 @@ endif
 			message = "buying detuned radio",
 			nobuffing = true,
 			action = function()
-				set_result(buy_item("detuned radio", "4"))
+				set_result(store_buy_item("detuned radio", "4"))
 				did_action = have_item("detuned radio")
 			end
 		}
@@ -1885,7 +1885,7 @@ endif
 			nobuffing = true,
 			action = function()
 				if meat() >= 5000 then
-					buy_item("Desert Bus pass", "m")
+					store_buy_item("Desert Bus pass", "m")
 					did_action = have_item("Desert Bus pass")
 				elseif have_item("facsimile dictionary") then
 					sell_item("facsimile dictionary")
@@ -1928,7 +1928,7 @@ endif
 			message = "buy crumhorn",
 			nobuffing = true,
 			action = function()
-				buy_item("Clancy's crumhorn", "p")
+				store_buy_item("Clancy's crumhorn", "p")
 				did_action = have_item("Clancy's crumhorn")
 			end
 		}
@@ -1969,7 +1969,7 @@ endif
 			inform "trading for legend keys"
 			for _, x in ipairs { "Boris's key", "Jarlsberg's key", "Sneaky Pete's key" } do
 				if not have_item(x) then
-					shop_buyitem(x, "damachine")
+					shop_buy_item(x, "damachine")
 				end
 			end
 			if countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") >= 3 then
@@ -2046,7 +2046,7 @@ endif
 			nobuffing = true,
 			action = function()
 				if not have_item("fortune cookie") then
-					buy_item("fortune cookie", "m")
+					store_buy_item("fortune cookie", "m")
 				end
 				if not have_item("fortune cookie") then
 					critical "Failed to buy fortune cookie"
@@ -2079,7 +2079,7 @@ endif
 			nobuffing = true,
 			action = function()
 				if not have_item("fortune cookie") then
-					buy_item("fortune cookie", "m")
+					store_buy_item("fortune cookie", "m")
 				end
 				if not have_item("fortune cookie") then
 					critical "Failed to buy fortune cookie"
@@ -2765,7 +2765,7 @@ endif
 			if not ate and get_result():contains("You need a more advanced cooking appliance") and meat() >= 2500 then
 				if not have_item("Dramatic&trade; range") then
 					inform "  buying dramatic range"
-					set_result(buy_item("Dramatic&trade; range", "m"))
+					set_result(store_buy_item("Dramatic&trade; range", "m"))
 					if not have_item("Dramatic&trade; range") then
 						critical "Couldn't buy dramatic range (for advanced cooking)"
 					end
@@ -3027,11 +3027,11 @@ endif
 		action = function()
 			local f = fullness()
 			if not have_item("fortune cookie") then
-				buy_item("fortune cookie", "m")
+				store_buy_item("fortune cookie", "m")
 			end
 			if count_item("pumpkin beer") < 3 then
 				if not have_item("fermenting powder") and have_item("pumpkin") then
-					buy_item("fermenting powder", "m")
+					store_buy_item("fermenting powder", "m")
 				end
 				mix_items("pumpkin", "fermenting powder")
 			end
@@ -3085,7 +3085,7 @@ endif
 					stop "Not enough hellion cubes"
 				end
 				if not have_item("Dramatic&trade; range") then
-					buy_item("Dramatic&trade; range", "m")
+					store_buy_item("Dramatic&trade; range", "m")
 				end
 				inform "using dramatic range"
 				use_item("Dramatic&trade; range")
@@ -3603,7 +3603,7 @@ endwhile
 	local function drink_1_drunk_booze_loop()
 		if have_item("pumpkin") then
 			if not have_item("fermenting powder") then
-				buy_item("fermenting powder", "m")
+				store_buy_item("fermenting powder", "m")
 			end
 			mix_items("pumpkin", "fermenting powder")
 			if not have_item("pumpkin beer") then
@@ -3907,7 +3907,7 @@ endif
 			message = "unlock beach (with bus pass)",
 			nobuffing = true,
 			action = function()
-				buy_item("Desert Bus pass", "m")
+				store_buy_item("Desert Bus pass", "m")
 				did_action = have_item("Desert Bus pass")
 			end
 		}
@@ -3990,7 +3990,7 @@ endif
 						stop "Not enough meat for cocktailcrafting kit"
 					end
 					if not have_item("Queue Du Coq cocktailcrafting kit") then
-						buy_item("Queue Du Coq cocktailcrafting kit", "m")
+						store_buy_item("Queue Du Coq cocktailcrafting kit", "m")
 					end
 					inform "using cocktailcrafting kit"
 					use_item("Queue Du Coq cocktailcrafting kit")
@@ -4153,7 +4153,7 @@ endif
 				elseif have_item("Orcish Frat House blueprints") and quest_text("and asked you to steal his dentures back") then
 					inform "use blueprints"
 					if not have_item("frilly skirt") then
-						buy_item("frilly skirt", "4")
+						store_buy_item("frilly skirt", "4")
 					end
 					if not have_item("frilly skirt") and moonsign_area() ~= "Degrassi Knoll" and not ascensionstatus("Hardcore") then
 						if challenge == "boris" then
@@ -4826,6 +4826,15 @@ endif
 		f = script.make_star_key_only,
 	}
 
+	add_task {
+		prereq = quest("Am I My Trapper's Keeper?"),
+		f = function()
+			ignore_buffing_and_outfit = false
+			script.do_trapper_quest()
+		end,
+		message = "trapper quest",
+	}
+
 	add_task { prereq = true, f = function()
 		if ((advs() < 50 and turnsthisrun() + advs() < 650) or (advs() < 10)) and fullness() >= 12 and drunkenness() >= estimate_max_safe_drunkenness() and not highskill_at_run then
 			stop "TODO: end of day 4. (pvp,) overdrink"
@@ -4894,7 +4903,7 @@ endif
 						if have_buff(b.effect) then
 							got = true
 						elseif needitem and moonsign_area("Gnomish Gnomad Camp") and not have_item(needitem) then
-							buy_item(needitem, "n")
+							store_buy_item(needitem, "n")
 						elseif needitem and not have_item(needitem) and ascensionstatus("Softcore") and (pullsleft() or 0) >= 5 then
 							-- TODO: clover for gum instead of pulling
 							pull_in_softcore(needitem)
@@ -4959,7 +4968,7 @@ endif
 			-- TODO: Make it so we can do one level at a time, not all 3 at once?
 			local pt, pturl = get_page("/lair3.php")
 			if not have_item("hair spray") then
-				buy_item("hair spray", "m")
+				store_buy_item("hair spray", "m")
 			end
 			if pt:contains("lair4.php") then
 				local itemsneeded = session["zone.lair.itemsneeded"] or {}
@@ -5391,7 +5400,7 @@ use gauze garter
 			did_action = not have_item("Dramatic&trade; range")
 		else
 			inform "  buying dramatic range"
-			set_result(buy_item("Dramatic&trade; range", "m"))
+			set_result(store_buy_item("Dramatic&trade; range", "m"))
 			did_action = have_item("Dramatic&trade; range")
 		end
 	end
@@ -5403,7 +5412,7 @@ use gauze garter
 			did_action = not have_item("Queue Du Coq cocktailcrafting kit")
 		else
 			print "  buying cocktailcrafting kit"
-			set_result(buy_item("Queue Du Coq cocktailcrafting kit", "m"))
+			set_result(store_buy_item("Queue Du Coq cocktailcrafting kit", "m"))
 			did_action = have_item("Queue Du Coq cocktailcrafting kit")
 		end
 	end

@@ -5,7 +5,7 @@ function shop_scan_item_rows(whichshop)
 	for row, name in pt:gmatch([[<input type=radio name=whichrow value=([0-9]+)>.-<b>(.-)</b>]]) do
 		scanned_itemrows[name] = tonumber(row)
 	end
-	for tr in pt:gmatch([[<tr>.-</tr>]]) do
+	for tr in pt:gmatch([[<tr.-</tr>]]) do
 		local name, row = tr:match([[<b>(.-)</b>.-whichrow=([0-9]+)]])
 		if name and tonumber(row) and not scanned_itemrows[name] then
 			scanned_itemrows[name] = tonumber(row)
@@ -29,7 +29,7 @@ local function shop_buy_many_items(itemlist, whichshop)
 	return ptfs
 end
 
-function shop_buyitem(items, whichshop)
+function shop_buy_item(items, whichshop)
 	if type(items) == "string" then
 		return shop_buy_many_items({ [items] = 1 }, whichshop)[1]
 	else

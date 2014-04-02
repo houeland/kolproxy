@@ -33,6 +33,8 @@ local blacklist = {
 	["buff: A Little Bit Evil (Disco Bandit)"] = true,
 	["buff: A Little Bit Evil (Accordion Thief)"] = true,
 
+	["buff: Jaba&ntilde;ero Saucesphere"] = true,
+
 	[""] = true,
 	["especially homoerotic frat-paddle"] = true,
 
@@ -252,9 +254,21 @@ function parse_buffs()
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
 		local buffname, usecmd = tbl[2], tbl[5]
+		local castname = (usecmd or ""):match("^cast 1 ([^|]+)")
 		if buffname and not buffs[buffname] and not blacklist["buff: " .. buffname] then
 			softwarn("missing buff", buffname)
 			buffs[buffname] = {}
+		end
+		if buffname and castname and not blacklist["buff: " .. buffname] then
+			-- Datafile is full of capitalization problems
+			if not processed_datafiles["skills"][castname] then
+				for x, y in pairs(processed_datafiles["skills"]) do
+					if x:lower() == castname:lower() then
+						castname = x
+					end
+				end
+			end
+			buffs[buffname].cast_skill = castname
 		end
 	end
 
@@ -262,6 +276,12 @@ function parse_buffs()
 end
 
 function verify_buffs(data)
+	for x, y in pairs(data) do
+		if y.cast_skill and not processed_datafiles["skills"][y.cast_skill] then
+			hardwarn("unknown recast skill", y.cast_skill)
+			data[x] = nil
+		end
+	end
 	local correct_data = {
 		["Peppermint Twisted"] = { bonuses = { ["Combat Initiative"] = 40, ["Monster Level"] = 10 } },
 		["Peeled Eyeballs"] = { bonuses = { ["Stats Per Fight"] = -1, ["Meat from Monsters"] = -20, ["Item Drops from Monsters"] = 15 } },
@@ -270,6 +290,9 @@ function verify_buffs(data)
 		["Everything Looks Yellow"] = {},
 		["Buy!  Sell!  Buy!  Sell!"] = {},
 		["Bored With Explosions"] = {},
+		["Zomg WTF"] = { cast_skill = "Ag-grave-ation" },
+		["Ode to Booze"] = { cast_skill = "The Ode to Booze" },
+		["Leash of Linguini"] = { cast_skill = "Leash of Linguini" },
 	}
 	return verify_data_fits(correct_data, data)
 end
@@ -342,57 +365,29 @@ function parse_skills()
 	for l in io.lines("cache/files/classskills.txt") do
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
-		local skillid, name, mpcost = tonumber(tbl[1]), tbl[2], tonumber(tbl[5])
+		local skillid, name, mafiaskilltypeid, mpcost = tonumber(tbl[1]), tbl[2], tonumber(tbl[4]), tonumber(tbl[5])
 		if skillid and name and mpcost then
-			skills[name] = { skillid = skillid, mpcost = mpcost }
+			local is_TT_shell = (2000 <= skillid and skillid <= 2999 and mafiaskilltypeid == 4)
+			local is_S_sphere = (4000 <= skillid and skillid <= 4999 and mafiaskilltypeid == 4)
+			local is_AT_song = (6000 <= skillid and skillid <= 6999 and mafiaskilltypeid == 4)
+			skills[name] = { skillid = skillid, mpcost = mpcost, turtle_tamer_shell = is_TT_shell, sauceror_sphere = is_S_sphere, accordion_thief_song = is_AT_song }
 		end
 	end
 	return skills
 end
 
 function verify_skills(data)
-	if data["Summon Sugar Sheets"].skillid == 8002 and data["Summon Sugar Sheets"].mpcost == 2 then
-		if data["Leash of Linguini"].skillid == 3010 and data["Leash of Linguini"].mpcost == 12 then
-			return data
-		end
-	end
-
-	local testskills = {}
-	for _, x in ipairs { "Summon Sugar Sheets", "Leash of Linguini" } do
-		testskills[x] = data[x]
-	end
-	hardwarn("verify_skills failure:", testskills)
-end
-
-function parse_buff_recast_skills(skills)
-	local buff_recast_skills = {}
-	for l in io.lines("cache/files/statuseffects.txt") do
-		l = remove_line_junk(l)
-		local tbl = split_tabbed_line(l)
-		local buffname, usecmd = tbl[2], tbl[5]
-		local castname = (usecmd or ""):match("^cast 1 ([^|]+)")
-		if buffname and castname and not blacklist["buff: " .. buffname] then
-			buff_recast_skills[buffname] = castname
-		end
-	end
-	return buff_recast_skills
-end
-
-function verify_buff_recast_skills(data)
-	for x, y in pairs(data) do
-		if not processed_datafiles["buffs"][x] and not blacklist["recast buff warning: "..x] then
-			hardwarn("unknown recast buff", x)
-			data[x] = nil
-		end
-		if not processed_datafiles["skills"][y] then
-			softwarn("unknown recast skill", y)
-			data[x] = nil
-		end
-	end
-
-	if data["Zomg WTF"] == "Ag-grave-ation" and data["Ode to Booze"] == "The Ode to Booze" and data["Leash of Linguini"] == "Leash of Linguini" then
-		return data
-	end
+	local correct_data = {
+		["Summon Sugar Sheets"] = { skillid = 8002, mpcost = 2 },
+		["Leash of Linguini"] = { skillid = 3010, mpcost = 12 },
+		["Patience of the Tortoise"] = { turtle_tamer_shell = false },
+		["Spiky Shell"] = { turtle_tamer_shell = true },
+		["Sauce Contemplation"] = { sauceror_sphere = false },
+		["Antibiotic Saucesphere"] = { sauceror_sphere = true },
+		["Moxie of the Mariachi"] = { accordion_thief_song = false },
+		["The Ode to Booze"] = { accordion_thief_song = true },
+	}
+	return verify_data_fits(correct_data, data)
 end
 
 function parse_items()
@@ -1135,54 +1130,48 @@ function verify_choice_spoilers(data)
 	end
 end
 
-function process(datafile)
-	local filename = datafile:gsub(" ", "-")
-	local loadf = _G["parse_"..datafile:gsub(" ", "_")]
-	local verifyf = _G["verify_"..datafile:gsub(" ", "_")]
-	local dataok, data = pcall(loadf)
-	if dataok then
-		local verifyok, verified = pcall(verifyf, data)
-		if verifyok and verified then
-			local json = tojson(verified)
-			local fobj = io.open("cache/data/" .. filename .. ".json", "w")
-			fobj:write(json)
-			fobj:close()
-			processed_datafiles[datafile] = verified
+function process(datafile_list)
+	for _, datafile in ipairs(datafile_list) do
+		local filename = datafile:gsub(" ", "-")
+		local loadf = _G["parse_"..datafile:gsub(" ", "_")]
+		local verifyf = _G["verify_"..datafile:gsub(" ", "_")]
+		local dataok, data = pcall(loadf)
+		if dataok then
+			local verifyok, verified = pcall(verifyf, data)
+			if verifyok and verified then
+				local json = tojson(verified)
+				local fobj = io.open("cache/data/" .. filename .. ".json", "w")
+				fobj:write(json)
+				fobj:close()
+				processed_datafiles[datafile] = verified
+			else
+				error_count_hard = error_count_hard + 1
+				print("WARNING: verifying " .. tostring(filename) .. " data file failed (" .. tostring(verified) .. ").")
+			end
 		else
-			error_count_hard = error_count_hard + 1
-			print("WARNING: verifying " .. tostring(filename) .. " data file failed (" .. tostring(verified) .. ").")
+			error_count_critical = error_count_critical + 1
+			print("ERROR: parsing " .. tostring(filename) .. " data file failed (" .. tostring(data) .. ").")
 		end
-	else
-		error_count_critical = error_count_critical + 1
-		print("ERROR: parsing " .. tostring(filename) .. " data file failed (" .. tostring(data) .. ").")
 	end
 end
 
-process("choice spoilers")
-
-process("buffs")
-process("passives")
-
-process("items")
-process("outfits")
-process("hatrack")
-process("recipes")
-
-process("familiars")
-process("enthroned familiars")
-
-process("skills")
-process("buff recast skills")
-
-process("monsters")
-
-process("faxbot monsters")
-
-process("semirares")
-
-process("mallprices")
-process("consumables")
-
-process("zones")
+process {
+	"choice spoilers",
+	"skills",
+	"buffs",
+	"passives",
+	"items",
+	"outfits",
+	"hatrack",
+	"recipes",
+	"familiars",
+	"enthroned familiars", -- TODO: merge with familiars
+	"monsters",
+	"faxbot monsters",
+	"semirares",
+	"mallprices",
+	"consumables",
+	"zones",
+}
 
 print(string.format("INFO: %d errors, %d warnings displayed, %d notices ignored (expected with current data files: 0 errors, 0 warnings displayed, and fewer than 1000 notices ignored)", error_count_critical, error_count_hard, error_count_soft))

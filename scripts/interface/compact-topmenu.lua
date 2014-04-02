@@ -268,39 +268,45 @@ make_bleary_topmenu_html = function(lairlink, hagnk_pulls, my_levels, mru_list)
 <html>
 <head>
 <style type='text/css'>
-  a { color: #000; font-size: 11px; font-family: arial,Helvetica,sans-serif; margin: 0; padding:0; }
-  .abc:nth-child(even) { background-color: #f0f0f0; }
-
-  .sep { width: 10px;}
-
-  .centerBox {
-
-  margin-left: auto;
-  margin-right: auto;
-width: 90%;
-  }
-
-  .abc { float: left; text-align: center; padding: 3px 3px 3px 3px; line-height: 13px; vertical-align: top; height: 40px; position: relative; }
-
-  .abc a { font-size: 13px; color: blue; padding: 0px 0px 0px 1px;}
-
-.abc .child a { font-size: 11px; color: #aaa;}
-
-.abc:hover .child a {
- color: black;
+a {
+	color: #000;
+	font-size: 11px;
+	font-family: arial,Helvetica,sans-serif;
+	margin: 0;
+	padding: 0;
 }
 
-.abc:hover {
-background: #ddd;
+.abc:nth-child(even) { background-color: #f0f0f0; }
+
+.sep { width: 10px; }
+
+body { text-align: center; }
+
+.abc {
+	display: inline-block;
+	text-align: center;
+	padding: 3px 3px 3px 3px;
+	line-height: 13px;
+	vertical-align: top;
 }
 
-#vip {
-
+.abc a {
+	font-size: 13px;
+	color: blue;
+	padding: 0px 0px 0px 1px;
 }
+
+.abc .child a {
+	font-size: 11px;
+	color: #aaa;
+}
+
+.abc:hover .child a { color: black; }
+
+.abc:hover { background: #ddd; }
 
 ]] .. table.concat(my_levels, ", ") .. [[ {
-color: black;
-
+	color: black;
 }
 
 </style>
@@ -313,28 +319,26 @@ function dojax(dourl, method, success_msg, params) {
 		global: false,
 async: false,
 		success: function (out) {
-if (out.match(/no\|/)) {
-						var parts = out.split(/\|/)
-						alert("Error doing: " + success_msg + ".")
-						return
-					}
-					var $eff = $(top.mainpane.document).find('#effdiv');
-					if ($eff.length == 0) {
-						var d = top.mainpane.document.createElement('DIV');
-						d.id = 'effdiv';
-						var b = top.mainpane.document.body;
-						if ($('#content_').length > 0) {
-							b = $('#content_ div:first')[0];
-						}
-						b.insertBefore(d, b.firstChild);
-						$eff = $(d);
-					}
-					$eff.find('a[name="effdivtop"]').remove().end()
-						.prepend('<a name="effdivtop"></a><center>' + out + '</center>').css('display','block');
-					if (!window.dontscroll || (window.dontscroll && dontscroll==0)) {
-						top.mainpane.document.location = top.mainpane.document.location + "#effdivtop";
-					}
-
+			if (out.match(/no\|/)) {
+				var parts = out.split(/\|/)
+				alert("Error doing: " + success_msg + ".")
+				return
+			}
+			var eff = $(top.mainpane.document).find('#effdiv');
+			if (eff.length == 0) {
+				var d = top.mainpane.document.createElement('DIV');
+				d.id = 'effdiv';
+				var b = top.mainpane.document.body;
+				if ($('#content_').length > 0) {
+					b = $('#content_ div:first')[0];
+				}
+				b.insertBefore(d, b.firstChild);
+				eff = $(d);
+			}
+			eff.find('a[name="effdivtop"]').remove().end().prepend('<a name="effdivtop"></a><center>' + out + '</center>').css('display','block');
+			if (!window.dontscroll || (window.dontscroll && dontscroll==0)) {
+				top.mainpane.document.location = top.mainpane.document.location + "#effdivtop";
+			}
 }})}
 
 $(document).ready(function() {
@@ -353,9 +357,8 @@ $("#mrulist").change(function() {
 
 </head>
 <body style='margin: 0px;'>
-<div class='centerBox'>
-<div class='abc'>
-  <span class='title'><a target='mainpane' href='inventory.php?which=1'>inv</a><a target='mainpane' href='inventory.php?which=2'>ent</a><a target='mainpane' href='inventory.php?which=3'>ory</a></span>
+  <div class='abc'>
+    <span class='title'><a target='mainpane' href='inventory.php?which=1'>inv</a><a target='mainpane' href='inventory.php?which=2'>ent</a><a target='mainpane' href='inventory.php?which=3'>ory</a></span>
     <div class='child'>
       <a target='mainpane' href='inventory.php?which=f0'>fav</a> <a target='mainpane' href='craft.php'>craft</a><br>
       <a target='mainpane' href='sellstuff.php'>sell</a> <a target='mainpane' href='mall.php'>mall</a> <a target='mainpane' href='storage.php?which=5'>hagnk</a>
@@ -364,7 +367,6 @@ $("#mrulist").change(function() {
 
   <div class='abc'>
     <a target='mainpane' href='main.php'>main</a> <a target='mainpane' href='messages.php'>msgs</a>
-
     <div class='child'>
       <a target='mainpane' href='campground.php'>camp</a> <a target='mainpane' href='account.php'>acct</a><br>
       <a target='mainpane' href='skills.php'>skills</a>
@@ -377,7 +379,6 @@ $("#mrulist").change(function() {
       <a target='mainpane' href='clan_raidlogs.php'>raid</a>
       <a target='mainpane' href='clan_slimetube.php'>slime</a>
       <a target='mainpane' href='clan_hobopolis.php'>swrs</a><br>
-
       <a target='mainpane' href='clan_stash.php'>stash</a>
       <a target='mainpane' href='clan_viplounge.php'>VIP</a>
       <a target='mainpane' href='clan_whitelist.php'>wl</a>
@@ -393,24 +394,19 @@ $("#mrulist").change(function() {
   </div>
 
   <div class='abc'>
-    <span class='title'><a target='mainpane' href='council.php'>council</a>  <a target='mainpane' href='peevpee.php'>pvp</a></span>
+    <span class='title'><a target='mainpane' href='council.php'>council</a> <a target='mainpane' href='peevpee.php'>pvp</a></span>
     <div class='child'>
-      <a target='mainpane' href='mrstore.php'>mr</a> <a target=
-      'mainpane' href='store.php?whichstore=m'>store</a><br>
-      <a target='mainpane' href=
-      'place.php?whichplace=forestvillage&action=fv_friar'>florist</a>
-      <a target=
-      'mainpane' href='bhh.php'>bhh</a>
-       <a target=
-      'mainpane' href='campground.php?action=telescopelow'>scope</a>
+      <a target='mainpane' href='mrstore.php'>mr</a> <a target='mainpane' href='store.php?whichstore=m'>store</a><br>
+      <a target='mainpane' href='place.php?whichplace=forestvillage&action=fv_friar'>florist</a>
+      <a target='mainpane' href='bhh.php'>bhh</a>
+      <a target='mainpane' href='campground.php?action=telescopelow'>scope</a>
     </div>
   </div>
 
   <div class='abc'>
     <span class='title'><a target='mainpane' href='place.php?whichplace=plains'>plains</a></span>
-
     <div class='child'>
-      <a target='mainpane' href='cobbsknob.php'>knob</a> <a target='mainpane' href='cobbsknob.php?action=tolabs'>2</a>
+      <a target='mainpane' href='cobbsknob.php' class="l5">knob</a> <a target='mainpane' href='cobbsknob.php?action=tolabs' class="l5">2</a>
       <a target='mainpane' class="l4" href='bathole.php'>bat</a><br>
       <a target='mainpane' href='crypt.php' class="l7">cyr</a> <a target='mainpane' href='place.php?whichplace=beanstalk' class="l10">stalk</a> <a target='mainpane' href='place.php?whichplace=giantcastle' class="l10">castle</a>
     </div>
@@ -418,7 +414,6 @@ $("#mrulist").change(function() {
 
   <div class='abc'>
     <span class='title'><a target='mainpane' href='mountains.php'>mountains</a></span>
-
     <div class='child'>
       <a target='mainpane' href='place.php?whichplace=mclargehuge' class="l8">mchuge</a> <a target='mainpane' href='place.php?whichplace=highlands' class="l9">hghlnds</a><br>
       <a target='mainpane' href='cave.php'>cave</a>
@@ -428,7 +423,6 @@ $("#mrulist").change(function() {
 
   <div class='abc'>
     <span class='title'><a target='mainpane' href='place.php?whichplace=desertbeach'>beach</a> <a target='mainpane' href='island.php'>islnd</a></span>
-
     <div class='child'>
       <a target='mainpane' href='pyramid.php' class="l11">pyr</a>
        <a target='mainpane' href='bordertown.php'>border</a><br>
@@ -439,44 +433,39 @@ $("#mrulist").change(function() {
 
   <div class='abc'>
     <span class='title'><a target='mainpane' href='woods.php'>woods</a></span>
-
     <div class='child'>
       <a target='mainpane' href='tavern.php' class="l3">tavern</a> <a target='mainpane' href='place.php?whichplace=forestvillage&action=fv_untinker'>unt</a><br />
       <a target='mainpane' href="place.php?whichplace=hiddencity" class="l11">city</a>
-
       <a target='mainpane' href='friars.php' class="l6">friars</a>
     </div>
   </div>
 
   <div class='abc'>
     <span class='title'><a target='_top' href='topmenu.php'>info</a></span>
-
     <div class='child'>
       <a target='kolcalendar' href='http://noblesse-oblige.org/calendar/'>cal</a>
-       <a target='mainpane' href='/kolproxy-automation-script?pwd=]] .. session.pwd .. [[&amp;automation-script=latest-leaderboard'>board</a>
+      <a target='mainpane' href='/kolproxy-automation-script?pwd=]] .. session.pwd .. [[&amp;automation-script=latest-leaderboard'>board</a>
       <a target='mainpane' href='typeii.php'>t2</a><br>
       <a target='mainpane' href='questlog.php?which=1'>qlog</a>
       <a target='mainpane' href='questlog.php?which=4'>note</a>
-      </div>
-      </div>
+    </div>
+  </div>
+
   <div class='abc'>
     <span class='title'><a href='topmenu.php'>misc</a> <a target=
       'mainpane' href=
       'custom-settings?pwd=]] .. session.pwd .. [['>kprox</a>
-</span>
-
+    </span>
     <div class='child'>
       <a target='_top' href='logout.php'>log out</a>
       <a target='mainpane' href='/bl-lua-console'>lua</a>
-     <a target='koldonate' href='donatepopup.php'>donate</a><br>
+      <a target='koldonate' href='donatepopup.php'>donate</a><br>
       <a target='mainpane' href='adminmail.php'>bug</a> <a href='http://radio.kingdomofloathing.com/' target='kolradio'>radio</a>
     </div>
   </div>
 
-</div>
 ]] .. table.concat(mru_list, "\n") .. [[
 
-</div><!-- end centerbox -->
 </body>
 </html>
 ]]

@@ -180,9 +180,8 @@ function get_automation_scripts(cached_stuff)
 	}
 	-- TODO: check when using the id instead
 	for a, b in pairs(familiar_data) do
-		local famid = maybe_get_familiarid(a)
-		if famid then
-			b.id = famid
+		if not b.id then
+			b.id = get_familiarid(a)
 		end
 	end
 
@@ -460,7 +459,7 @@ function get_automation_scripts(cached_stuff)
 		if challenge == "fist" and meat() < 150 then return end
 		if not have_item("hermit permit") then
 			inform "buying hermit permit"
-			buy_item("hermit permit", "m")
+			store_buy_item("hermit permit", "m")
 			if not have_item("hermit permit") then
 				critical "Failed to buy hermit permit"
 			end
@@ -634,28 +633,28 @@ function get_automation_scripts(cached_stuff)
 					return f.ensure_mp(amount, true)
 				end
 			elseif (classid() == 3 or classid() == 4) and (session["__script.opened myst guild store"] == "yes" or level() >= 8) and challenge ~= "fist" and not have_item("magical mystery juice") then
-				buy_item("magical mystery juice", "2")
+				store_buy_item("magical mystery juice", "2")
 				if have_item("magical mystery juice") then
 					return f.ensure_mp(amount, true)
 				else
 					critical "Failed to buy MMJ as myst"
 				end
 			elseif classid() == 6 and level() >= 9 and challenge ~= "fist" and not have_item("magical mystery juice") then
-				buy_item("magical mystery juice", "2")
+				store_buy_item("magical mystery juice", "2")
 				if have_item("magical mystery juice") then
 					return f.ensure_mp(amount, true)
 				else
 					critical "Failed to buy MMJ as lvl 9+ AT"
 				end
 			elseif cached_stuff.kgs_available and not have_item("Knob Goblin seltzer") then
-				buy_item("Knob Goblin seltzer", "k", 5)
+				store_buy_item("Knob Goblin seltzer", "k", 5)
 				if have_item("Knob Goblin seltzer") then
 					return f.ensure_mp(amount, true)
 				else
 					critical "Failed to buy knob goblin seltzer (should already be available)"
 				end
 			elseif have_item("your father's MacGuffin diary") and not have_item("black cherry soda") then
-				shop_buyitem({ ["black cherry soda"] = 5 }, "blackmarket")
+				shop_buy_item({ ["black cherry soda"] = 5 }, "blackmarket")
 				if have_item("black cherry soda") then
 					return f.ensure_mp(amount, true)
 				else
@@ -678,7 +677,7 @@ function get_automation_scripts(cached_stuff)
 					return f.ensure_mp(amount, true)
 				elseif not have_item("tonic water") and not highskill_at_run then
 					if not have_item("soda water") then
-						buy_item("soda water", "m", 1)
+						store_buy_item("soda water", "m", 1)
 					end
 					async_post_page("/guild.php", { action = "stillfruit", whichitem = get_itemid("soda water"), quantity = 1 })
 					if have_item("tonic water") then
@@ -809,26 +808,26 @@ function get_automation_scripts(cached_stuff)
 
 	local buffs = {
 		["Go Get 'Em, Tiger!"] = function()
-			buy_item("Ben-Gal&trade; Balm", "m", 5)
+			store_buy_item("Ben-Gal&trade; Balm", "m", 5)
 			return use_item("Ben-Gal&trade; Balm", 5)
 		end,
 		["Glittering Eyelashes"] = function()
-			buy_item("glittery mascara", "m", 5)
+			store_buy_item("glittery mascara", "m", 5)
 			return use_item("glittery mascara", 5)
 		end,
 		["Butt-Rock Hair"] = function()
-			buy_item("hair spray", "m", 5)
+			store_buy_item("hair spray", "m", 5)
 			return use_item("hair spray", 5)
 		end,
 		["Heavy Petting"] = function()
 			if not have_item("Knob Goblin pet-buffing spray") then
-				buy_item("Knob Goblin pet-buffing spray", "k", 1)
+				store_buy_item("Knob Goblin pet-buffing spray", "k", 1)
 			end
 			return use_item("Knob Goblin pet-buffing spray")
 		end,
 		["Peeled Eyeballs"] = function()
 			if not have_item("Knob Goblin eyedrops") then
-				buy_item("Knob Goblin eyedrops", "k", 1)
+				store_buy_item("Knob Goblin eyedrops", "k", 1)
 			end
 			return use_item("Knob Goblin eyedrops")
 		end,
@@ -896,7 +895,7 @@ function get_automation_scripts(cached_stuff)
 			end
 			local previous_hat = equipment().hat
 			if not have_item("snorkel") then
-				buy_item("snorkel", "z")
+				store_buy_item("snorkel", "z")
 			end
 			equip_item("snorkel")
 			if equipment().hat == get_itemid("snorkel") then
@@ -909,7 +908,7 @@ function get_automation_scripts(cached_stuff)
 		end,
 		["Red Door Syndrome"] = function()
 			if not have_item("can of black paint") then
-				shop_buyitem("can of black paint", "blackmarket")
+				shop_buy_item("can of black paint", "blackmarket")
 			end
 			return use_item("can of black paint")
 		end,
@@ -948,7 +947,7 @@ function get_automation_scripts(cached_stuff)
 
 	local shrug_buff = f.shrug_buff
 
-	for name, skillname in pairs(datafile("buff recast skills")) do
+	for name, skillname in pairs(datafile_buff_recast_skills) do
 		local data = datafile("skills")[skillname]
 		buffs[name] = function()
 			if show_spammy_automation_events then
@@ -1439,7 +1438,7 @@ endif
 						result, resulturl, advagain = autoadventure { zoneid = 112, ignorewarnings = true }
 						if get_result():contains("In the Still of the Alley") then
 							if not highskill_at_run then
-								buy_item("fortune cookie", "m")
+								store_buy_item("fortune cookie", "m")
 								local old_full = fullness()
 								set_result(eat_item("fortune cookie"))
 								did_action = (fullness() == old_full + 1) or (old_full == estimate_max_fullness())
@@ -1455,7 +1454,7 @@ endif
 						result, resulturl, advagain = autoadventure { zoneid = 114, ignorewarnings = true }
 						if get_result():contains("Lunchboxing") then
 							if not highskill_at_run then
-								buy_item("fortune cookie", "m")
+								store_buy_item("fortune cookie", "m")
 								local old_full = fullness()
 								set_result(eat_item("fortune cookie"))
 								did_action = (fullness() == old_full + 1) or (old_full == estimate_max_fullness())
@@ -1485,7 +1484,7 @@ endif
 -- 		end
 -- 		if not have_numbers then
 -- 			if have_item(want_itemname) and not ascension["fortune cookie numbers"] then
--- 				buy_item("fortune cookie", "m")
+-- 				store_buy_item("fortune cookie", "m")
 -- 				if not have_item("fortune cookie") then
 -- 					critical("Failed to buy a fortune cookie")
 -- 				end
@@ -1616,7 +1615,7 @@ endif
 		if not (have_item("worthless trinket") or have_item("worthless gewgaw") or have_item("worthless knick-knack")) then
 			print "  getting worthless item"
 			if not have_item("chewing gum on a string") then
-				buy_item("chewing gum on a string", "m")
+				store_buy_item("chewing gum on a string", "m")
 			end
 			result, resulturl = use_item("chewing gum on a string")()
 			if get_result():match("You acquire") then
@@ -1703,7 +1702,7 @@ endif
 					end
 				elseif count_item("cosmic egg") >= 2 and count_item("cosmic potted meat product") >= 2 and count_item("cosmic cheese") >= 2 and count_item("cosmic dough") >= 2 and count_item("cosmic vegetable") >= 1 and cached_stuff.summoned_jarlsberg_ingredients then
 					craft_cosmic_kitchen { pwd = session.pwd, ["Ultimate Breakfast Sandwich"] = 2, ["consummate sauerkraut"] = 1 }
-					shop_buyitem({ ["Staff of Fruit Salad"] = 1, ["Staff of the Healthy Breakfast"] = 1, ["Staff of the Hearty Dinner"] = 1, ["Staff of the Light Lunch"] = 1, ["Staff of the All-Steak"] = 1, ["Staff of the Cream of the Cream"] = 1, ["Staff of the Staff of Life"] = 1, ["Staff of the Standalone Cheese"] = 1 }, "jarl")
+					shop_buy_item({ ["Staff of Fruit Salad"] = 1, ["Staff of the Healthy Breakfast"] = 1, ["Staff of the Hearty Dinner"] = 1, ["Staff of the Light Lunch"] = 1, ["Staff of the All-Steak"] = 1, ["Staff of the Cream of the Cream"] = 1, ["Staff of the Staff of Life"] = 1, ["Staff of the Standalone Cheese"] = 1 }, "jarl")
 					if count_item("Ultimate Breakfast Sandwich") >= 2 and count_item("consummate sauerkraut") >= 1 then
 						return f.eat_food()
 					else
@@ -1762,7 +1761,7 @@ endif
 		local function eat_fortune_cookie()
 			local f = fullness()
 			inform "eat fortune cookie"
-			buy_item("fortune cookie", "m")
+			store_buy_item("fortune cookie", "m")
 			set_result(eat_item("fortune cookie")())
 			if not (fullness() == f + 1 and script.get_turns_until_sr() ~= nil) then
 				print("WARNING fortune cookie result:", script.get_turns_until_sr())
@@ -1956,7 +1955,7 @@ endif
 
 		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
 			if not have_item("Ice Island Long Tea") and estimate_max_safe_drunkenness() - drunkenness() >= 4 and level() < 6 and count_item("snow berries") >= 1 and count_item("ice harvest") >= 3 then
-				shop_buyitem("Ice Island Long Tea", "snowgarden")
+				shop_buy_item("Ice Island Long Tea", "snowgarden")
 			elseif level() >= 6 then
 				--stop("TODO: craft SHCs")
 			end
@@ -1984,7 +1983,7 @@ endif
 								did_action = not have_item("Queue Du Coq cocktailcrafting kit")
 							else
 								print "  buying cocktailcrafting kit"
-								set_result(buy_item("Queue Du Coq cocktailcrafting kit", "m"))
+								set_result(store_buy_item("Queue Du Coq cocktailcrafting kit", "m"))
 								session["__script.have cocktailcrafting kit"] = "yes"
 								did_action = have_item("Queue Du Coq cocktailcrafting kit")
 							end
@@ -2000,7 +1999,7 @@ endif
 		end
 
 		if not have_item("pumpkin beer") and have_item("pumpkin") then
-			buy_item("fermenting powder", "m")
+			store_buy_item("fermenting powder", "m")
 			mix_items("pumpkin", "fermenting powder")
 		end
 
@@ -2043,7 +2042,7 @@ endif
 						did_action = not have_item("Queue Du Coq cocktailcrafting kit")
 					else
 						print "  buying cocktailcrafting kit"
-						set_result(buy_item("Queue Du Coq cocktailcrafting kit", "m"))
+						set_result(store_buy_item("Queue Du Coq cocktailcrafting kit", "m"))
 						session["__script.have cocktailcrafting kit"] = "yes"
 						did_action = have_item("Queue Du Coq cocktailcrafting kit")
 					end
@@ -2089,8 +2088,8 @@ endif
 
 		local function try_crafting_improvements()
 			have_crafted = false
-			try_craft(have_item("handful of Smithereens"), "Paint A Vulgar Pitcher", 0, function() buy_item("plain old beer", "v") return craft_item("Paint A Vulgar Pitcher") end)
-			try_craft(meat() >= 100, "overpriced &quot;imported&quot; beer", 0, function() warn_imported_beer() return buy_item("overpriced &quot;imported&quot; beer", "v") end)
+			try_craft(have_item("handful of Smithereens"), "Paint A Vulgar Pitcher", 0, function() store_buy_item("plain old beer", "v") return craft_item("Paint A Vulgar Pitcher") end)
+			try_craft(meat() >= 100, "overpriced &quot;imported&quot; beer", 0, function() warn_imported_beer() return store_buy_item("overpriced &quot;imported&quot; beer", "v") end)
 			if have_crafted then return try_crafting_improvements() end
 		end
 
@@ -3047,7 +3046,7 @@ endif
 				local pt, url = get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak2" })
 				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodlecannon)
 				did_action = advagain
-				if not did_action and pt:contains("get back into your warm clothes") then
+				if not did_action and pt:contains("get back into your warm clothes") and not cached_stuff.missing_cold_resistance_for_icy_peak then
 					print("   need more cold resistance, postponing until later")
 					cached_stuff.missing_cold_resistance_for_icy_peak = true
 					did_action = true
@@ -3188,10 +3187,10 @@ endif
 -- 				if have_item("hippopotamus skin") then
 -- 					inform "smith hipposkin poncho stuff"
 -- 					if not have_item("tenderizing hammer") then
--- 						buy_item("tenderizing hammer", "s")
+-- 						store_buy_item("tenderizing hammer", "s")
 -- 					end
 -- 					if not have_item("shirt kit") then
--- 						buy_item("shirt kit", "s")
+-- 						store_buy_item("shirt kit", "s")
 -- 					end
 -- 					smith_items("shirt kit", "hippopotamus skin")
 -- 					did_action = have_item("hipposkin poncho")
@@ -3201,10 +3200,10 @@ endif
 -- 				if have_item("yak skin") then
 -- 					inform "smith and wear yak stuff"
 -- 					if not have_item("tenderizing hammer") then
--- 						buy_item("tenderizing hammer", "s")
+-- 						store_buy_item("tenderizing hammer", "s")
 -- 					end
 -- 					if not have_item("shirt kit") then
--- 						buy_item("shirt kit", "s")
+-- 						store_buy_item("shirt kit", "s")
 -- 					end
 -- 					smith_items("shirt kit", "yak skin")
 -- 					did_action = have_item("yak anorak")
@@ -3297,7 +3296,7 @@ endif
 			end
 		elseif not have_item("dingy planks") then
 			inform "buy dingy planks"
-			set_result(buy_item("dingy planks", "m"))
+			set_result(store_buy_item("dingy planks", "m"))
 			did_action = have_item("dingy planks")
 		else
 			inform "use dinghy plans"
@@ -3311,8 +3310,8 @@ endif
 			if meat() >= 1500 then
 				inform "buy insult book and dictionary"
 				wear { hat = "eyepatch", pants = "swashbuckling pants", acc3 = "stuffed shoulder parrot" }
-				buy_item("The Big Book of Pirate Insults", "r")
-				buy_item("abridged dictionary", "r")
+				store_buy_item("The Big Book of Pirate Insults", "r")
+				store_buy_item("abridged dictionary", "r")
 				did_action = (have_item("The Big Book of Pirate Insults") and have_item("abridged dictionary"))
 			else
 				if challenge == "fist" then
@@ -3356,7 +3355,7 @@ endif
 	function f.buy_use_chewing_gum()
 		inform "use chewing gum"
 		if not have_item("chewing gum on a string") then
-			buy_item("chewing gum on a string", "m")
+			store_buy_item("chewing gum on a string", "m")
 		end
 		result, resulturl = use_item("chewing gum on a string")()
 		did_action = get_result():contains("You acquire")
@@ -3463,7 +3462,7 @@ endif
 		end
 		if not have_item("magical mystery juice") then
 			async_get_page("/guild.php", { place = "challenge" })
-			buy_item("magical mystery juice", "2")
+			store_buy_item("magical mystery juice", "2")
 		end
 		-- TODO: Check *actual* buying, not just having one from somewhere
 		if have_item("magical mystery juice") then
@@ -3491,7 +3490,7 @@ endif
 				inform "get tonic water"
 				if challenge ~= "fist" then
 					if count_item("soda water") < 10 then
-						buy_item("soda water", "m", 10)
+						store_buy_item("soda water", "m", 10)
 					end
 					async_post_page("/guild.php", { action = "stillfruit", whichitem = get_itemid("soda water"), quantity = 10 })
 				end
@@ -3533,18 +3532,18 @@ endif
 		if got_enough then
 			inform "make star stuff"
 			if not have_item("Richard's star key") then
-				shop_buyitem("Richard's star key", "starchart")
+				shop_buy_item("Richard's star key", "starchart")
 			end
 			if not have_item("star hat") then
-				shop_buyitem("star hat", "starchart")
+				shop_buy_item("star hat", "starchart")
 			end
 			if not have_item("star crossbow") and not have_item("star staff") and not have_item("star sword") and can_wear_weapons() then
 				if count_item("star") >= 5 and count_item("line") >= 6 then
-					shop_buyitem("star crossbow", "starchart")
+					shop_buy_item("star crossbow", "starchart")
 				elseif count_item("star") >= 6 and count_item("line") >= 5 then
-					shop_buyitem("star staff", "starchart")
+					shop_buy_item("star staff", "starchart")
 				elseif count_item("star") >= 7 and count_item("line") >= 4 then
-					shop_buyitem("star sword", "starchart")
+					shop_buy_item("star sword", "starchart")
 				end
 			end
 			if have_item("Richard's star key") and have_item("star hat") and (have_item("star crossbow") or have_item("star staff") or have_item("star sword") or not can_wear_weapons()) then
@@ -3562,10 +3561,11 @@ endif
 
 	function f.make_star_key_only()
 		if count_item("star") >= 8 and count_item("line") >= 7 then
+			inform "buying star key"
 			if not have_item("star chart") then
 				pull_in_softcore("star chart")
 			end
-			shop_buyitem("Richard's star key", "starchart")
+			shop_buy_item("Richard's star key", "starchart")
 			did_action = have_item("Richard's star key")
 			return
 		end
@@ -3811,20 +3811,20 @@ mark m_done
 			if not have_item("meat stack") then
 				async_get_page("/inventory.php", { quantity = 1, action = "makestuff", pwd = get_pwd(), whichitem = get_itemid("meat stack"), ajax = 1 })
 			end
-			local function check_buy_item(name, where)
+			local function check_store_buy_item(name, where)
 				if not have_item(name) then
-					buy_item(name, where)
+					store_buy_item(name, where)
 				end
 				if not have_item(name) then
 					stop("Failed to buy item: " .. tostring(name))
 				end
 			end
-			check_buy_item("cog", "4")
-			check_buy_item("empty meat tank", "4")
-			check_buy_item("tires", "4")
-			check_buy_item("spring", "4")
-			check_buy_item("sprocket", "4")
-			check_buy_item("sweet rims", "m")
+			check_store_buy_item("cog", "4")
+			check_store_buy_item("empty meat tank", "4")
+			check_store_buy_item("tires", "4")
+			check_store_buy_item("spring", "4")
+			check_store_buy_item("sprocket", "4")
+			check_store_buy_item("sweet rims", "m")
 			meatpaste_items("empty meat tank", "meat stack")
 			meatpaste_items("spring", "sprocket")
 			meatpaste_items("sprocket assembly", "cog")
@@ -4315,7 +4315,7 @@ endif
 					stop "TODO: Get identification documents in fist"
 				end
 			else
-				shop_buyitem("forged identification documents", "blackmarket")
+				shop_buy_item("forged identification documents", "blackmarket")
 				if not have_item("forged identification documents") then
 					critical "Failed to buy identification documents"
 				end
@@ -4387,7 +4387,7 @@ endif
 		if need_black_paint then
 			inform "giving gnasir black paint"
 			if not have_item("can of black paint") then
-				shop_buyitem("can of black paint", "blackmarket")
+				shop_buy_item("can of black paint", "blackmarket")
 			end
 			if not have_item("can of black paint") then
 				critical "Failed to buy can of black paint"
@@ -4793,6 +4793,6 @@ end
 
 function buy_shore_inc_item(item)
 	autoadventure { zoneid = get_zoneid("The Shore, Inc. Travel Agency"), noncombatchoices = { ["Welcome to The Shore, Inc."] = "Check out the gift shop" } }
-	return shop_buyitem(item, "shore")
+	return shop_buy_item(item, "shore")
 end
 

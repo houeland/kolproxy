@@ -191,7 +191,7 @@ add_interceptor("use item: Orcish Frat House blueprints", function() -- TODO: sp
 			local eq = equipment()
 			for where, want in pairs(opt.equipment) do
 				if not have_item(want) then
-					buy_item(want, "4", 1)
+					store_buy_item(want, "4", 1)
 				end
 				equip_item(want, where)
 			end

@@ -17,7 +17,6 @@ register_setting {
 	beta_version = true,
 }
 
-
 register_setting {
 	server_name = "compacteffects",
 	description = "Use compact effects list",
@@ -38,21 +37,36 @@ register_setting {
 	beta_version = true,
 }
 
-local function blue_progressbar(c, m)
+local function chit_progressbar(c, m, color)
 	local pct = math.min(100, c * 100 / m)
-	return string.format([[<div class="progressbox" title="%i / %i"><div class="progressbar" style="background-color: %s; width: %i%%"></div></div>]], c, m, "blue", pct)
+	return string.format([[<div class="progressbox" title="%i / %i"><div class="progressbar" style="background-color: %s; width: %i%%"></div></div>]], c, m, color, pct)
 end
 
-local function color_progressbar(c, m, color, full)
+local function blue_progressbar(c, m)
+	return chit_progressbar(c, m, "blue")
+end
+
+local function color_progressbar(c, m, color, fullcolor)
 	local pct = math.min(100, c * 100 / m)
 	if pct == 100 then
-		color = full
+		color = fullcolor
 	elseif pct < 25 then
 		color = "red"
 	elseif pct < 75 then
 		color = "orange"
+	else
+		color = "blue"
 	end
-	return string.format([[<div class="progressbox" title="%i / %i"><div class="progressbar" style="background-color: %s; width: %i%%"></div></div>]], c, m, color, pct)
+	return chit_progressbar(c, m, color)
+end
+
+local function chit_progressline(label, info, bar)
+	return string.format([[
+<tr>
+	<td class="label">%s</td>
+	<td class="info">%s</td>
+	<td class="progress">%s</td>
+</tr>]], label, info, bar)
 end
 
 function bl_charpane_level_lines(lines)
@@ -61,7 +75,8 @@ function bl_charpane_level_lines(lines)
 	table.insert(lines, [[<table id='chit_character' class="chit_brick nospace"><tr><th colspan='3'>]])
 	table.insert(lines, string.format([[<a class=nounder target=mainpane href="charsheet.php"><b>%s</b></a></th></tr>]], playername()))
 	table.insert(lines, [[<tr><td class='avatar' rowspan='4'><img src="]] .. (avatar_image() or "http://images.kingdomofloathing.com/itemimages/blank.gif") .. [["></td>]])
-	table.insert(lines, string.format([[<td class="label"><a target="mainpane" href="da.php?place=gate3" title="Visit your guild">%s</a></td>]], classdesc()))
+	local guildlink = "da.php?place=gate3" -- TODO
+	table.insert(lines, string.format([[<td class="label"><a target="mainpane" href="%s" title="Visit your guild">%s</a></td>]], guildlink, classdesc()))
 
 	table.insert(lines, string.format([[<td class="level" rowspan="2" style="width:30px;"><a target="mainpane" href="council.php" title="Visit the Council">%d</a></td></tr>]], level()))
 
@@ -93,14 +108,15 @@ function bl_charpane_level_lines(lines)
 
 	table.insert(lines, string.format([[
 <tr>
-	<td class="progress" colspan="3" title="TODO moxie until level TODO (TODO substats needed)">
+	<td class="progress" colspan="3" title="TODO TODO until level TODO (TODO substats needed)">
 		<div class="progressbar" style="width:%f%%"></div>
 	</td>
 </tr>
 </table>
 ]], (have_level * 100 / need_level)))
+end
 
-
+function bl_charpane_mystats_lines(lines)
 	table.insert(lines, [[<table id="chit_stats" class="chit_brick nospace">
 <thead>
 <tr>
@@ -115,13 +131,7 @@ function bl_charpane_level_lines(lines)
 		local have = raw_substat - substat_base
 		local for_next = (substat_level + 1) * (substat_level + 1)
 		local need = for_next - substat_base
-		local p_of_the_way = have / need
-		table.insert(lines, string.format([[
-<tr>
-	<td class="label">%s</td>
-	<td class="info"><span style="color:blue">%s</span>&nbsp;&nbsp;(%s)</td>
-	<td class="progress">%s</td>
-</tr>]], statname, format_integer(buffed), format_integer(base), blue_progressbar(have, need)))
+		table.insert(lines, chit_progressline(statname, string.format([[<span style="color:blue">%s</span>&nbsp;&nbsp;(%s)]], format_integer(buffed), format_integer(base)), blue_progressbar(have, need)))
 	end
 	add_stat_line("Muscle", buffedmuscle(), basemuscle(), rawmuscle())
 	add_stat_line("Myst", buffedmysticality(), basemysticality(), rawmysticality())
@@ -129,12 +139,7 @@ function bl_charpane_level_lines(lines)
 	table.insert(lines, "</tbody><tbody>")
 
 	local function add_organ_line(desc, full, fullmax)
-		table.insert(lines, string.format([[
-<tr>
-<td class="label">%s</td>
-<td class="info">%i / %i</td>
-<td class="progress">%s</td>
-</tr>]], desc, full, fullmax, color_progressbar(full, fullmax, "blue", "#bbb")))
+		table.insert(lines, chit_progressline(desc, string.format("%i&nbsp;/&nbsp;%i", full, fullmax), color_progressbar(full, fullmax, "blue", "#bbb")))
 	end
 	add_organ_line("Stomach", fullness(), estimate_max_fullness())
 	add_organ_line("Liver", drunkenness(), estimate_max_safe_drunkenness())
@@ -151,32 +156,11 @@ function bl_charpane_level_lines(lines)
 		table.insert(lines, [[<tr><td colspan='3'><font size="2"><a href="]] .. make_optimize_diet_href() .. [[" target="mainpane" style="color: green">{ Optimize diet }</a></font></td></tr>]])
 	end
 	table.insert(lines, "</tbody>")
-end
-
-function bl_charpane_hpmp_lines(lines)
 	table.insert(lines, [[<tbody>]])
-	table.insert(lines, string.format([[
-<tr>
-	<td class="label">HP</td>
-	<td class="info">%i&nbsp;/&nbsp;%i</td>
-	<td class="progress">
-		<div class="progressbox" title="%i / %i">
-			<div class="progressbar" style="width:%d%%;background-color:green"></div>
-		</div>
-	</td>
-</tr>]], hp(), maxhp(), hp(), maxhp(), hp() * 100 / maxhp()))
-
-	table.insert(lines, string.format([[
-<tr>
-	<td class="label">MP</td>
-	<td class="info">%i&nbsp;/&nbsp;%i</td>
-	<td class="progress">
-		<div class="progressbox" title="%i / %i">
-			<div class="progressbar" style="width:%d%%;background-color:green"></div>
-		</div>
-	</td>
-</tr>]], mp(), maxmp(), mp(), maxmp(), mp()*100/maxmp()))
+	table.insert(lines, chit_progressline("HP", string.format("%i&nbsp;/&nbsp;%i", hp(), maxhp()), color_progressbar(hp(), maxhp(), "blue", "green")))
+	table.insert(lines, chit_progressline("MP", string.format("%i&nbsp;/&nbsp;%i", mp(), maxmp()), color_progressbar(mp(), maxmp(), "blue", "green")))
 	table.insert(lines, [[</tbody>]])
+	table.insert(lines, [[</table>]])
 end
 
 function bl_charpane_zone_lines(lines)
@@ -1328,8 +1312,7 @@ add_interceptor("/charpane.php", function()
 
 	table.insert(lines, [[<div id="chit_house"><div id="chit_roof" class="chit_chamber">]])
 	bl_charpane_level_lines(lines)
-	bl_charpane_hpmp_lines(lines)
-	table.insert(lines, [[</table>]])
+	bl_charpane_mystats_lines(lines)
 
 	bl_charpane_zone_lines(lines)
 	bl_charpane_familiar(lines)
@@ -1337,19 +1320,6 @@ add_interceptor("/charpane.php", function()
 		bl_charpane_thrall(lines)
 	end
 	table.insert(lines, [[</div><!-- end roof -->]])
-
-	-- TODO: make bee counter generic and auto-insert
-
-	for _, x in ipairs(ascension["turn counters"] or {}) do
-		local turns = x.turn + x.length - turnsthisrun()
-		if turns >= 0 then
-			if turnsleft == 0 then
-				table.insert(lines, string.format([[%s: <b style="color: green">%s</b>]], x.name, turns))
-			else
-				table.insert(lines, string.format([[%s: <b>%s</b>]], x.name, turns))
-			end
-		end
-	end
 
 	table.insert(lines, [[<div id="chit_walls" class="chit_chamber">]])
 	bl_charpane_buff_lines(lines)

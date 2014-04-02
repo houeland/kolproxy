@@ -260,7 +260,7 @@ function do_daily_visits()
 				table.insert(options, { name = "tonic water" })
 				sodas = sodas + 1
 				if count_item("soda water") < sodas then
-					buy_item("soda water", "m", 1)
+					store_buy_item("soda water", "m", 1)
 				end
 			end
 
@@ -269,7 +269,7 @@ function do_daily_visits()
 				tobuy_tbl[options[i].name] = (tobuy_tbl[options[i].name] or 0) + 1
 			end
 
-			for _, ptf in ipairs(shop_buyitem(tobuy_tbl, "still")) do
+			for _, ptf in ipairs(shop_buy_item(tobuy_tbl, "still")) do
 				queue_page_result(ptf)
 			end
 		elseif mainstat_type("Moxie") then

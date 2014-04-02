@@ -1,7 +1,7 @@
 --v2.5a
 -- Displays information about a monster in combat
--- Includes: 
---    Current and Original HP, Atk, Def, Meat, Element,  HP meter
+-- Includes:
+--    Current and Original HP, Atk, Def, Meat, Element, HP meter
 --    Phylum Treasure when you have a phylum caring familiar out (and phylum on picture tooltip)
 --    Item Drop %s
 
@@ -19,10 +19,9 @@ register_setting {
 	default_level = "standard",
 }
 
-local phlyumFamiliars = {
-	[150] = true, -- stomping boots
-	[159] = true, -- happy medium
-}
+local function have_phylum_familiar()
+	return familiar("Pair of Stomping Boots") or familiar("Happy Medium")
+end
 
 local function formatStat(name, value, color, tooltip)
 	if not value or value == "" then return "" end
@@ -31,7 +30,7 @@ local function formatStat(name, value, color, tooltip)
 	if tooltip then
 		toolTipHTML = "<span class='tooltip'>" .. tooltip .. "</span>"
 	end
-	
+
 	return "<div class='stat' style='color:" .. (color or "black") .. ";'><span style='margin-right:5px;'>" .. name .. ":</span><span>" .. value .. "</span>"..toolTipHTML.."</div>"
 end
 
@@ -42,11 +41,11 @@ local function make_monster_hp_meter(monster, width)
 
 	if not width then width = 100 end
 	local hpFrac = math.max(0, data.ModHP) / data.HP
-	
+
 	local hpColor = string.format("#%02X%02X00", 210 * (1 - math.max(0, hpFrac - 0.5) * 2), 210 * math.min(1, hpFrac * 2))
-	
+
 	tooltip = math.max(0, data.ModHP) .. [[&nbsp;/&nbsp;]] .. data.HP
-	
+
 	return [[<div class='monsterHP meter' style='width:]]..width..[[px;' title=']]..tooltip..[[' ><div style='width: ]]..math.floor(hpFrac * width)..[[px;background-color:]]..hpColor..[[;' class='meter monsterHPColor'><div class='meter shading'></div></div></div>]]
 end
 
@@ -57,35 +56,28 @@ local function formatMonsterItems(monster, bonuses)
 	local plusitem = estimate_bonus("Item Drops from Monsters") + bonuses["Item Drops from Monsters"]
 
 	local itemdatalist = {}
-	for value in table.values(data) do
-		local dropinfo = ""
-		
-		local chance = (value.dropratepercent or 0) * (1 + plusitem/100)
+	for _, value in ipairs(data) do
+		local chance = (value.dropratepercent or 0) * (1 + plusitem / 100)
 		chance = math.max(math.min(chance, 100), 0)
 		chance = tonumber(round_down(chance, 2))
 
+		local dropinfo = ""
 		if chance > 0 then
 			dropinfo = chance .. "%"
 		else
 			dropinfo = "??"
 		end
-		
-		if value["conditional"] then
-			dropinfo = dropinfo .. " (conditional)"
+
+		local extra = {}
+		for _, x in ipairs { "no pickpocket", "conditional", "pickpocket only" } do
+			if value[x] then
+				table.insert(extra, x)
+			end
 		end
-		
-		if value["pickpocket only"] then
-			dropinfo = dropinfo .. " (pickpocket only)"
+		if extra[1] then
+			dropinfo = dropinfo .. " (" .. table.concat(extra, ", ") .. ")"
 		end
-		
-		if value["no pickpocket"] then
-			dropinfo = dropinfo .. " (no pickpocket)"
-		end
-			
-		if value["bounty"] then
-			dropinfo = dropinfo .. " (bounty)"
-		end
-			
+
 		table.insert(itemdatalist, "<div><span style='margin-right:5px;'>" .. value.Name .. ":</span><span>" .. dropinfo .. "</span></div>")
 	end
 	return "<div style='float:left;'><div style='font-size:12px;'>Drops</div>" .. table.concat(itemdatalist) .. "</div>"
@@ -108,10 +100,10 @@ local function formatMonsterStats(monster)
 	statData = statData .. formatStat("Element", data.Element, element_color(data.Element), "Weak against: " .. table.concat({ get_elemental_weaknesses(data.Element) }, ", ") )
 	statData = statData .. formatStat("Init", data.Init)
 
-	if phlyumFamiliars[familiarid()] and data.Phylum then
+	if have_phylum_familiar() and data.Phylum then
 		statData = statData .. [[<div onclick='togglePhylum();' style='cursor:hand;' class='stat'><span style='margin-right:5px;'><span id='phylumToggle'>[+]</span> Phylum:</span><span>]] .. data.Phylum .. [[</span></div>]]
-	end	
-	
+	end
+
 	statData = statData .. formatStat("PhyRes", data.PhyRes)
 	statData = statData .. formatStat("Watch out for", data.WatchOut)
 	statData = statData .. "</div>"
@@ -120,42 +112,33 @@ end
 
 local function formatMonsterPhylumTreasure(monster)
 	local data = monster.Stats
-	local html = ""
-	
-	if not data.Phylum then return "" end
-	
+
+	if not have_phylum_familiar() or not data.Phylum then return "" end
+
 	local treasure = get_phylum_treasure(data.Phylum)
-	
+
 	local function effectTurnsString(name, duration)
 		if name ~= "none" then
-			return "Effect: " .. name .. " (" .. duration .. " turns)"  
+			return "Effect: " .. name .. " (" .. duration .. " turns)"
 		else
 			return ""
 		end
 	end
-	
-	if phlyumFamiliars[familiarid()] then
-		html = [[<div style='display:none;font-size:12px;color:#666;margin:0px auto;text-align:left;' id='phylumData'>]]
-	end
-			
-	if familiarid() == 150 then
+
+	local html = [[<div style='display:none;font-size:12px;color:#666;margin:0px auto;text-align:left;' id='phylumData'>]]
+	if familiar("Pair of Stomping Boots") then
 		local t = treasure.paste
-		
 		html = html .. [[<div style='width:200px;margin:0px auto;'>]]..
 			"Release the Boots will generate:<br/><br/>" ..
 			"<span style='font-weight:bold;'>"..t.name .. "</span><br />" ..
 			"Level required: " .. t.quality["level requirement"].."<br />" ..
 			"Adventures: " .. t.quality["min adventures"] .. "-" .. t.quality["max adventures"] .."<br />" ..
 			effectTurnsString(t.effect["name"], t.quality["effect duration"]) .. "<br />"
-		
 		if t.effect.summary ~= "none" then
 			html = html .. "Summary: " .. t.effect.summary
 		end
-		
 		html = html .. [[</div>]]
-	end
-	
-	if familiarid() == 159 then
+	elseif familiar("Happy Medium") then
 		local function generateSiphonBooze(boozeData)
 			return [[<div style="float:left;margin-right:10px;width:200px;">]]..
 				"<span style='font-weight:bold;'>"..boozeData.name.."</span><br />" ..
@@ -165,19 +148,10 @@ local function formatMonsterPhylumTreasure(monster)
 				effectTurnsString(boozeData.effect["name"], boozeData.quality["effect duration"]) .. "<br />" ..
 				"Summary: " .. boozeData.effect["summary"]..[[</div>]]
 		end
-
 		local t = treasure.siphon
-		html = html..
-			"Siphon Spirits will generate:<br/><br/>"..
-			generateSiphonBooze(t.blue) ..
-			generateSiphonBooze(t.orange) ..
-			generateSiphonBooze(t.red)
+		html = html .. "Siphon Spirits will generate:<br/><br/>" .. generateSiphonBooze(t.blue) .. generateSiphonBooze(t.orange) .. generateSiphonBooze(t.red)
 	end
-	
-	if phlyumFamiliars[familiarid()] then
-		html = html .. [[<p style="clear:both;"></p></div>]]
-	end
-
+	html = html .. [[<p style="clear:both;"></p></div>]]
 	return html
 end
 
@@ -192,8 +166,8 @@ local function adjustStat(originalStat, modifier, maxval, adjust)
 	elseif modifier ~= 0 then
 		returnVal = tostring(returnVal) .. " (" .. -modifier ..")"
 	end
-	
-	return returnVal	
+
+	return returnVal
 end
 
 function getCurrentFightMonster()
@@ -259,7 +233,7 @@ add_printer("/fight.php", function()
 	.stat {
 		position:relative;
 	}
-	
+
 	.stat .tooltip {
 		border:1px solid #666;
 		color:#666;
@@ -268,7 +242,7 @@ add_printer("/fight.php", function()
 		display:none;
 		border-radius:2px;
 	}
-	
+
 	.stat:hover .tooltip {
 		display:block;
 		position: absolute;
@@ -280,15 +254,12 @@ add_printer("/fight.php", function()
 	}
 </style>
 <script type="text/javascript">
-	function togglePhylum(){
+	function togglePhylum() {
 		$('#phylumData').slideToggle();
-		
-		if($('#phylumToggle').html() == '[+]')
-			$('#phylumToggle').html('[-]')
-		else
-			$('#phylumToggle').html('[+]')
+		if ($('#phylumToggle').html() == '[+]') $('#phylumToggle').html('[-]')
+		else $('#phylumToggle').html('[+]')
 	}
-</script>%0]])		
+</script>%0]])
 		local monster = getCurrentFightMonster()
 
 		if monster then
@@ -307,21 +278,21 @@ add_printer("/fight.php", function()
 				text = text:gsub([[img id='monpic']], [[%0 title='Phylum: ]]..monster.Stats.Phylum..[[']])
 				text = text:gsub([[id=['"]monname['"].-</table>]], [[%0]] .. formatMonsterPhylumTreasure(monster))
 			end
-			
+
 			if ascensionpath("Bees Hate You") then
 				local boldedName = monstername():gsub("[bB]", [[<span style="font-weight:bold;color:orange;">%0</span>]])
 				text = text:gsub(monstername(), boldedName)
 			end
 		end
 	end
-		
+
 	if setting_enabled("show monster hp meter") then
 		text = text:gsub([[</head>]], [[
 <style>
 	.meter {
 		height:7px;
 	}
-	
+
 	.monsterHP {
 		border:1px solid #888;
 		margin:0px auto;
@@ -332,11 +303,11 @@ add_printer("/fight.php", function()
 		font-size:10px;
 		background:#f9f9f9;
 	}
-	
+
 	.monsterHPColor {
 		float:left;
 	}
-	
+
 	.shading {
 		-o-background-size: 100%% 100%%;
 		-moz-background-size: 100%% 100%%;
@@ -347,7 +318,7 @@ add_printer("/fight.php", function()
 			linear,
 			left top, left bottom,
 			from(rgba(255,255,255,0.75)),
-			to(rgba(255,255,255,0) 70%%) 
+			to(rgba(255,255,255,0) 70%%)
 		);
 		background: -webkit-linear-gradient(
 			top,
@@ -374,7 +345,6 @@ add_printer("/fight.php", function()
 		local monster = getCurrentFightMonster()
 		if monster then
 			local monpic = text:match([[<img id='monpic'.->]]) or text:match([[sorcblob.gif".->]])
-
 			if monpic then
 				local width = tonumber(monpic:match([[width=(%d+)]]))
 				local hpmeter = make_monster_hp_meter(monster, width)

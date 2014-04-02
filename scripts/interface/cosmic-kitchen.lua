@@ -209,9 +209,9 @@ function craft_cosmic_kitchen(params)
 		end
 	end
 
-	shop_buyitem(need_ingredients, "jarl")
+	shop_buy_item(need_ingredients, "jarl")
 
-	shop_buyitem(want_products, "jarl")
+	shop_buy_item(want_products, "jarl")
 
 	return "Done!", requestpath
 end

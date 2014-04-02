@@ -16,11 +16,11 @@ local function html_encode(str)
 end
 
 add_chat_command("/addlognote", "Adding log line.", function(line)
-	if line == "" then return "You didn't specify any text to log." end
+	if line == "" then return make_kol_html_frame("You didn't specify any text to log.") end
 	local notes = ascension["__log notes"] or {}
 	table.insert(notes, { turn = turnsthisrun(), note = html_encode(line) })
 	ascension["__log notes"] = notes
-	return "Added note: [" .. turnsthisrun() .. "] " .. html_encode(line) .. "."
+	return make_kol_html_frame("Added note: [" .. turnsthisrun() .. "] " .. html_encode(line) .. ".")
 end)
 
 add_chat_alias("/lognote", "/addlognote")

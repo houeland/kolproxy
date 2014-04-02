@@ -150,12 +150,10 @@ end)
 function get_lair_gate_items()
 	local gatestatus = session["zone.lair.gates"] or {}
 	local scopeitems = session["zone.lair.itemsneeded"] or {}
-
 	local gate_items = {}
 	gate_items[1] = gatestatus[1] or scopeitems[1]
 	gate_items[2] = gatestatus[2]
 	gate_items[3] = gatestatus[3]
-
 	return gate_items
 end
 
@@ -536,7 +534,8 @@ add_printer("/lair1.php", function()
 	function use_item(link, itemid, effectname) {
 		$.ajax({ type:'GET', url:'/inv_use.php', cache:false, data:{ pwd:"]] .. session.pwd .. [[", whichitem:itemid, ajax:1 }, global:false, success: function(retdata) { use_item_result(link, retdata, effectname); } });
 	}
-</script>%0]])
+</script>
+%0]])
 	for from, to in pairs(lair_gateitems) do
 		if text:contains("<p>&quot;Through the "..from) then
 			local effect_status, effect_link = gate_status_display(from, to)
@@ -577,25 +576,25 @@ end)
 
 function automate_smithing_stone_banjo()
 	if have_item("stone banjo") then
-		return make_kol_html_frame("Error: Already have stone banjo.", "Automation results:", "darkorange"), requestpath
+		return make_kol_html_frame("Error: Already have stone banjo.", "Automation results:", "darkorange")
 	end
 
 	if not have_item("big rock") then
 		if have_buff("Teleportitis") or have_equipped_item("ring of teleportation") then
-			return make_kol_html_frame("Error: Cannot pick up big rock while under the effect of teleportitis.", "Automation results:", "darkorange"), requestpath
+			return make_kol_html_frame("Error: Cannot pick up big rock while under the effect of teleportitis.", "Automation results:", "darkorange")
 		end
 		if not have_item("ten-leaf clover") then
 			use_item("disassembled clover")
 		end
 		if have_item("ten-leaf clover") then
 			if not have_item("casino pass") then
-				buy_item("casino pass", "m")
+				store_buy_item("casino pass", "m")
 			end
 			get_page("/casino.php", { action = "slot", whichslot = 11 })
 		end
 	end
 	if not have_item("big rock") then
-		return make_kol_html_frame("Error: Failed to pick up big rock.", "Automation results:", "darkorange"), requestpath
+		return make_kol_html_frame("Error: Failed to pick up big rock.", "Automation results:", "darkorange")
 	end
 
 	if not have_item("banjo strings") then
@@ -680,9 +679,9 @@ function automate_lair_statues(text)
 			if count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel")) >= 30 then
 				if count_item("white pixel") < 30 then
 					local to_make = 30 - count_item("white pixel")
-					shop_buyitem({ ["white pixel"] = to_make }, "mystic")
+					shop_buy_item({ ["white pixel"] = to_make }, "mystic")
 				end
-				shop_buyitem("digital key", "mystic")
+				shop_buy_item("digital key", "mystic")
 			end
 		end
 		if have_item("digital key") then
@@ -696,7 +695,7 @@ function automate_lair_statues(text)
 		if have_item("Richard's star key") then
 			local eq = equipment()
 			local fam = familiarid()
-			switch_familiarid(17) -- star starfish
+			switch_familiar("Star Starfish")
 			equip_item("star sword")
 			equip_item("star staff")
 			equip_item("star crossbow")
@@ -930,11 +929,7 @@ function solve_hedge_maze_puzzle()
 			return solve_hedge_maze_puzzle()
 		else
 			if not have_item("hedge maze puzzle") then
-				if best_winner == 1 then
-					session["hedge maze result"] = string.format("Automated, %s tile turn left.", best_winner)
-				else
-					session["hedge maze result"] = string.format("Automated, %s tile turns left.", best_winner)
-				end
+				session["hedge maze result"] = string.format("Automated, %s left.", make_plural(best_winner, "tile turn", "tile turn"))
 			else
 				session["hedge maze result"] = string.format("Automated, next step: %s.", x.what)
 			end
