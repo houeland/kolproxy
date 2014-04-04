@@ -5,9 +5,13 @@ add_processor("/fight.php", function()
 			for _, iname in pairs(x.siphon) do
 				if text:contains(">You acquire an item: <b>"..iname.."</b><") then
 					increase_daily_counter("familiar.happy medium.siphons")
+					reset_ascension_counter("familiar.happy medium.charges")
 				end
 			end
 		end
+	end
+	if text:contains(">You win the fight!<!--WINWINWIN--><") then
+		increase_ascension_counter("familiar.happy medium.charges")
 	end
 end)
 
@@ -18,4 +22,17 @@ add_printer("/charpane.php", function()
 
 		print_familiar_counter(compact, normal)
 	end
+end)
+
+
+track_familiar_info("medium", function()
+	local siphons = get_daily_counter("familiar.happy medium.siphons")
+	local charges = get_ascension_counter("familiar.happy medium.charges")
+	return {count = siphons,
+		max = nil,
+		type = "counter",
+		info = "siphons",
+		extra_info = string.format("%d/%d charges", charges,
+		                           siphons*3 +charges)
+}
 end)

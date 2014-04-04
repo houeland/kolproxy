@@ -17,3 +17,14 @@ add_printer("/charpane.php", function()
 		print_familiar_counter(compact, normal)
 	end
 end)
+
+track_familiar_info("crayongoth", function()
+	local fights = get_daily_counter("familiar.free combat encounters")
+	local chances = { 50, 40, 30, 20, 10, 10, 10, 0 }
+	return {count = get_daily_counter("familiar.free combat encounters"),
+		max = 7,
+		type = "counter",
+		info = "fights",
+		extra_info = string.format("%s%% chance", chances[fights + 1] or "?")
+}
+end)

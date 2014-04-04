@@ -17,6 +17,17 @@ add_printer("/charpane.php", function()
 	end
 end)
 
+track_familiar_info("minihipster", function()
+	local fights = get_daily_counter("familiar.free combat encounters")
+	local chances = { 50, 40, 30, 20, 10, 10, 10, 0 }
+	return {count = get_daily_counter("familiar.free combat encounters"),
+		max = 7,
+		type = "counter",
+		info = "fights",
+		extra_info = string.format("%s%% chance", chances[fights + 1] or "?")
+}
+end)
+
 add_extra_ascension_adventure_warning(function(zoneid)
 	if familiar("Mini-Hipster") and level() < 13 and have_equipped_item("ironic moustache") then
 		return "You might want to pawn the ironic moustache for a fixed-gear bicycle.", "pawn ironic moustache"

@@ -6,6 +6,7 @@ load_file("base", "base/mafiaexpression-evaluator.lua")
 load_file("base", "base/npc-stores.lua")
 load_file("base", "mechanics/game-mechanics.lua")
 load_file("interface", "interface/tracked-variables.lua")
+load_file("interface", "interface/familiar-info.lua")
 
 load_file("data", "data/mine-aggregate-prediction.lua")
 

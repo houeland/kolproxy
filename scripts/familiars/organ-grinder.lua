@@ -29,6 +29,8 @@ add_processor("familiar message: organgoblin", function() -- doesn't work with h
 	end
 end)
 
+-- todo: write track_familiar_info function
+
 add_printer("/charpane.php", function()
 	if familiarpicture() == "organgoblin" then
 		bits = get_daily_counter("familiar.organ grinder.bits")
