@@ -74,6 +74,17 @@ add_warning {
 	end,
 }
 
+add_warning {
+	message = "Unequipping Sneaky Pete's leather jacket will drop your hate/love down to 30.",
+	path = "/inv_equip.php",
+	type = "extra",
+	check = function()
+		if params.type == "shirt" then
+			return (have_equipped_item("Sneaky Pete's leather jacket (collar popped)") or have_equipped_item("Sneaky Pete's leather jacket")) and (petehate() > 30 or petelove() > 30)
+		end
+	end,
+}
+
 function cast_check_mirror_for_intrinsic(intrinsic)
 	local options = {
 		["Slicked-Back Do"] = "Slick it back",
