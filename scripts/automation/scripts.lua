@@ -112,7 +112,7 @@ function get_automation_scripts(cached_stuff)
 	cached_stuff = cached_stuff or script_cached_stuff
 
 	local function feed_slimeling()
-		if ascensionstatus() == "Aftercore" then return end
+		if ascensionstatus("Aftercore") then return end
 		local function feed(name)
 -- 			print("feeding", name)
 			return post_page("/familiarbinger.php", { action = "binge", pwd = get_pwd(), qty = 1, whichitem = get_itemid(name) })
@@ -1071,6 +1071,9 @@ function get_automation_scripts(cached_stuff)
 					table.insert(xs, "Empathy")
 				end
 			end
+			if ascensionpath("Avatar of Sneaky Pete") and meat() >= 5000 and buffedmoxie() < 200 then
+				table.insert(xs, "Butt-Rock Hair")
+			end
 			if ((mainstat_type("Mysticality") and level() >= 9) or (level() >= 11) or (highskill_at_run and mmj_available)) and level() < 13 and challenge ~= "fist" then
 				table.insert(xs, "Ur-Kel's Aria of Annoyance")
 			end
@@ -1897,6 +1900,20 @@ endif
 		end
 	end
 
+	function f.ensure_cocktailcrafting_kit()
+		if not cached_stuff.have_cocktailcrafting_kit then
+			cached_stuff.have_cocktailcrafting_kit = not get_page("/campground.php", { action = "inspectkitchen" }):contains("My First Shaker")
+		end
+		if not cached_stuff.have_cocktailcrafting_kit then
+			if not have_item("Queue Du Coq cocktailcrafting kit") then
+				set_result(store_buy_item("Queue Du Coq cocktailcrafting kit", "m"))
+			end
+			set_result(use_item("Queue Du Coq cocktailcrafting kit"))
+			cached_stuff.have_cocktailcrafting_kit = not get_page("/campground.php", { action = "inspectkitchen" }):contains("My First Shaker")
+		end
+		return cached_stuff.have_cocktailcrafting_kit
+	end
+
 	function f.drink_booze()
 		if ascension_script_option("eat manually") then return end
 		if challenge == "fist" then return end
@@ -1954,15 +1971,20 @@ endif
 		if advs() >= 20 then return end
 
 		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
+			-- TODO: just add as options, don't craft these until where they would actually be consumed
 			if not have_item("Ice Island Long Tea") and estimate_max_safe_drunkenness() - drunkenness() >= 4 and level() < 6 and count_item("snow berries") >= 1 and count_item("ice harvest") >= 3 then
 				shop_buy_item("Ice Island Long Tea", "snowgarden")
 			elseif level() >= 6 then
-				--stop("TODO: craft SHCs")
+				script.ensure_cocktailcrafting_kit()
+				local charges = get_still_charges()
+				local craftableSHCs = get_maximum_craftable_SHCs(charges)
+				if craftableSHCs[1] then
+					automate_crafting_cocktail(craftableSHCs[1])
+--				elseif charges <= 0 then
+--					return script.craft_and_drink_quality_booze(2)
+				end
 			end
-			if have_item("Ice Island Long Tea") then
-				drink_item("Ice Island Long Tea")
-			end
-			return
+			return script.craft_and_drink_quality_booze(4)
 		end
 
 		for i = 1, 5 do
@@ -1973,23 +1995,11 @@ endif
 							use_item("peppermint sprout")
 						end
 						local twists = count_item("peppermint twist")
+						script.ensure_cocktailcrafting_kit()
 						inform "mixing peppermint booze"
 						set_result(mix_items(x, "peppermint twist"))
 
-						if get_result():contains("Your cocktail set is not advanced enough") then
-							if have_item("Queue Du Coq cocktailcrafting kit") then
-								print "  using cocktailcrafting kit"
-								set_result(use_item("Queue Du Coq cocktailcrafting kit"))
-								did_action = not have_item("Queue Du Coq cocktailcrafting kit")
-							else
-								print "  buying cocktailcrafting kit"
-								set_result(store_buy_item("Queue Du Coq cocktailcrafting kit", "m"))
-								session["__script.have cocktailcrafting kit"] = "yes"
-								did_action = have_item("Queue Du Coq cocktailcrafting kit")
-							end
-							local pt, pturl = get_result()
-							return pt, pturl, did_action
-						elseif count_item("peppermint twist") ~= twists - 1 then
+						if count_item("peppermint twist") ~= twists - 1 then
 							critical "Failed to mix peppermint booze"
 						end
 						break
@@ -2026,6 +2036,7 @@ endif
 
 			if not have_item("blended frozen swill") and not have_item("fruity girl swill") and not have_item("tropical swill") then
 				local f = nil
+				script.ensure_cocktailcrafting_kit()
 				if have_item("little paper umbrella") then
 					f = mix_items("Typical Tavern swill", "little paper umbrella")
 				elseif have_item("magical ice cubes") then
@@ -2033,20 +2044,7 @@ endif
 				elseif have_item("coconut shell") then
 					f = mix_items("Typical Tavern swill", "coconut shell")
 				end
-				if have_item("blended frozen swill") or have_item("fruity girl swill") or have_item("tropical swill") then
-					did_action = true
-				elseif f():contains("Your cocktail set is not advanced enough") then
-					if have_item("Queue Du Coq cocktailcrafting kit") then
-						print "  using cocktailcrafting kit"
-						set_result(use_item("Queue Du Coq cocktailcrafting kit"))
-						did_action = not have_item("Queue Du Coq cocktailcrafting kit")
-					else
-						print "  buying cocktailcrafting kit"
-						set_result(store_buy_item("Queue Du Coq cocktailcrafting kit", "m"))
-						session["__script.have cocktailcrafting kit"] = "yes"
-						did_action = have_item("Queue Du Coq cocktailcrafting kit")
-					end
-				end
+				did_action = have_item("blended frozen swill") or have_item("fruity girl swill") or have_item("tropical swill")
 			end
 --]]--
 
@@ -2058,7 +2056,7 @@ endif
 		end
 
 		local max_space = estimate_max_safe_drunkenness() - drunkenness()
-		local min_space = math.min(max_space, 5)
+		local min_space = math.min(max_space, 3)
 		local available_drinks = get_available_drinks(minquality)
 		local todrink, space, turngen = determine_drink_option(min_space, max_space, available_drinks)
 
@@ -4785,14 +4783,130 @@ function have_gelatinous_cubeling_items()
 	return have_item("eleven-foot pole") and have_item("ring of Detect Boring Doors") and have_item("Pick-O-Matic lockpicks")
 end
 
-function check_buying_from_knob_dispensary()
-	local pt = get_page("/submitnewchat.php", { graf = "/buy Knob Goblin seltzer", pwd = session.pwd })
-	-- TODO: elseif pt:contains not sure then return false else error
-	return pt:contains("whichstore=k")
-end
-
 function buy_shore_inc_item(item)
 	autoadventure { zoneid = get_zoneid("The Shore, Inc. Travel Agency"), noncombatchoices = { ["Welcome to The Shore, Inc."] = "Check out the gift shop" } }
 	return shop_buy_item(item, "shore")
 end
 
+function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
+	if url:contains("/fight.php") then
+		local advagain = nil
+		if pt:contains([[>You win the fight!<!--WINWINWIN--><]]) then
+			advagain = true
+		elseif pt:contains([[state['fightover'] = true;]]) or true then -- HACK: doesn't get set with combat bar disabled
+			if pt:contains("You lose.") then
+				advagain = false
+			elseif zoneid and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
+				advagain = true
+			end
+		end
+		if advagain == nil then
+			if macro then
+				local macrotext = macro
+				if type(macrotext) ~= "string" then
+					macrotext = macro()
+				end
+				local pt, url = post_page("/fight.php", { action = "macro", macrotext = macrotext })
+-- 				print("recurse with macro")
+				if not pt then print("DEBUG: recurse with macro -> handle_adventure_result(nil)") end
+				return handle_adventure_result(pt, url, zoneid, nil, noncombatchoices, specialnoncombatfunction)
+			else
+				print("fight.php unhandled url", url)
+			end
+		end
+-- 		print("return1 p u a", pt:len(), url, advagain)
+		return pt, url, advagain
+	elseif url:contains("/choice.php") then
+		local advagain = nil
+		local adventure_title
+		local found_results = false
+		for x in pt:gmatch([[<tr><td style="color: white;" align=center bgcolor=blue.-><b>([^<]*)</b></td></tr>]]) do
+			if x == "Results:" then
+				found_results = true
+			else
+				adventure_title = x
+			end
+		end
+		adventure_title = (adventure_title or ""):gsub(" %(#[0-9]*%)$", "")
+		if found_results and zoneid and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
+			advagain = true
+			return pt, url, advagain
+		end
+		local choice_adventure_number = tonumber(pt:match([[<input type=hidden name=whichchoice value=([0-9]+)>]]))
+--~ 		print("choice", adventure_title, choice_adventure_number)
+		local pickchoice = nil
+		local optname = nil
+		if specialnoncombatfunction then
+			optname, pickchoice = specialnoncombatfunction(adventure_title, choice_adventure_number, pt)
+		else
+			optname = noncombatchoices[adventure_title]
+		end
+		if optname and not pickchoice then
+			for nr, title in pt:gmatch([[<input type=hidden name=option value=([0-9])><input class=button type=submit value="([^>]+)">]]) do
+				if title == optname then
+					pickchoice = tonumber(nr)
+				end
+			end
+		end
+		if optname and not pickchoice then
+			for nr, title in pt:gmatch([[<input type=hidden name=option value=([0-9])><input class=button type=submit value="([^>]-) %[]]) do
+				if title == optname then
+					pickchoice = tonumber(nr)
+				end
+			end
+		end
+		if optname and not pickchoice then
+			print("ERROR: option " .. tostring(optname) .. " not found for " .. tostring(adventure_title) .. ".")
+		end
+		if pickchoice then
+			local pt, url = post_page("/choice.php", { pwd = session.pwd, whichchoice = choice_adventure_number, option = pickchoice })
+-- 			print("choice ->", url)
+			if not pt then print("DEBUG: choice -> handle_adventure_result(nil)") end
+			return handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
+		else
+			print("choice", adventure_title, choice_adventure_number)
+			for nr, title in pt:gmatch([[<input type=hidden name=option value=([0-9])><input class=button type=submit value="([^>]+)">]]) do
+				print("opt", nr, title)
+			end
+-- 			print("return3 p u a", pt:len(), url, advagain)
+			return pt, url, false
+		end
+	else
+		local advagain = false
+		if zoneid and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
+			advagain = true
+-- 		else
+-- 			print("non-fight non-choice unhandled url", url)
+		end
+-- 		print("return4 p u a", pt:len(), url, advagain)
+		return pt, url, advagain
+	end
+end
+
+function autoadventure(tbl)
+	check_supported_table_values(tbl, { "ignorewarnings", "noncombatchoices", "specialnoncombatfunction" }, { "zoneid", "macro" })
+--	if not tbl.ignorewarnings and setting_enabled("enable adventure warnings") then
+	if not tbl.ignorewarnings and character["setting: enable adventure warnings"] ~= "no" then
+		local foo = { log_time_interval("check adventure warnings", function()
+			local warn_tbl = get_raw_adventure_warnings()
+--			print("warn_tbl is", warn_tbl)
+			for f in table.values(warn_tbl) do
+				local message, warningid, custommsg = f(tbl.zoneid)
+				if message then
+					print("advwarn?", f, message, warningid)
+					local x, y = intercept_warning { message = message, id = warningid, customdisablemsg = custommsg, norepeat = true }
+					if x then
+--						print("  warn!", x, y, "...")
+						return x, y, false
+					end
+				end
+			end
+		end) }
+		if foo[1] then
+			return unpack(foo)
+		end
+	end
+	session["adventure.lastzone"] = tbl.zoneid
+	local pt, url = post_page("/adventure.php", { snarfblat = tbl.zoneid })
+	return handle_adventure_result(pt, url, tbl.zoneid, tbl.macro, tbl.noncombatchoices or {}, tbl.specialnoncombatfunction)
+end

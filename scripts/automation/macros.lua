@@ -152,6 +152,17 @@ endif
 
 ]] .. attack_action()
 	end
+	if cfm and cfm.Stats and cfm.Stats.Atk and cfm.Stats.Atk - buffedmoxie() >= 5 then
+		return [[
+if (hasskill Pop Wheelie)
+  cast Pop Wheelie
+
+]] .. attack_action() .. [[
+
+endif
+
+]] .. attack_action()
+	end
 	return attack_action()
 end
 
@@ -194,7 +205,7 @@ function geyser_action()
 	if ascensionpath("Avatar of Sneaky Pete") then
 		local mname = fight["currently fighting"] and fight["currently fighting"].name or "?"
 		if mname:contains("nightstand") and have_skill("Peel Out") and ascensionstatus("Hardcore") then
-			if petelove() >= 30 and buffedmoxie() >= 100 and have_skill("Pop Wheelie") and have_skill("Snap Fingers") then
+			if petelove() >= 20 and buffedmoxie() >= 120 and have_skill("Pop Wheelie") and have_skill("Snap Fingers") then
 				return [[
 
 cast Pop Wheelie

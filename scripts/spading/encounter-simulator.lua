@@ -377,3 +377,49 @@ function test_encounter_statespace()
 
 	return table.keys(matrix)
 end
+
+function test_amc_banish_internal(monsterlist)
+	local zonedata = {
+		monsters = monsterlist,
+		noncombats = {},
+		adventure_chance = 0.0,
+	}
+	local policy = make_policy {}
+	local blank = make_blank_state()
+	local ptbl = {}
+	ptbl[tojson(blank)] = { p = 1.0, state = blank }
+	local finish_in_X = {}
+	for i = 1, 20 do
+		local newptbl = {}
+		for _, s in pairs(ptbl) do
+			for next_state, x in pairs(compute_next_state_probabilities(zonedata, s.state, policy)) do
+				if x.event.name == "quest gremlin" then
+					finish_in_X[i] = (finish_in_X[i] or 0) + x.p * s.p
+				else
+					local desc = tojson(next_state)
+					if not newptbl[desc] then
+						newptbl[desc] = { p = 0.0, state = next_state }
+					end
+					newptbl[desc].p = newptbl[desc].p + x.p * s.p
+				end
+			end
+		end
+		ptbl = newptbl
+	end
+	return finish_in_X
+end
+
+function test_amc_banish()
+	local function get_turns(tbl)
+		local sum = 0.0
+		local prodsum = 0.0
+		for x, y in ipairs(tbl) do
+			prodsum = prodsum + x * y
+			sum = sum + y
+		end
+		return prodsum / sum
+	end
+	local unbanished = test_amc_banish_internal { "AMC", "dummy gremlin", "non-quest gremlin", "quest gremlin" }
+	local banished = test_amc_banish_internal { "dummy gremlin", "non-quest gremlin", "quest gremlin" }
+	return { unbanished = get_turns(unbanished), banished = get_turns(banished) }
+end

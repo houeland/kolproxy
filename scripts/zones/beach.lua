@@ -50,7 +50,7 @@ add_printer("/shop.php", function()
 	if tower_items[6] and not have_item(tower_items[6]) then
 		local crate = crates[tower_items[6]]
 		if crate and not have_item(crate) then
-			text = text:gsub("<tr>.-</tr>", function(tr)
+			text = text:gsub("<tr.-</tr>", function(tr)
 				if not tr:contains(crate) then return end
 				return tr:gsub("<td.-</td>", function(td)
 					if not td:contains(crate) then return end

@@ -42,22 +42,6 @@ end
 setup_variables()
 end)
 
--- if requestpath == "/adventure.php" and zone then
--- 	local encounter = nil
--- 	if monster_name then
--- 		encounter = monster_name
--- 	elseif adventure_result then
--- 		encounter = adventure_result
--- 	else
--- 		encounter = adventure_title
--- 	end
--- 	print("adventure in zone", zone, "got me", encounter, "   $$$$  %%% ", monster_name, adventure_title, adventure_result)
--- 	local tbl = get_ascension_state("zone-"..zone.."-encounters")
--- 	if (tbl == "") then tbl = {} else tbl = str_to_table(tbl) end
--- 	table.insert(tbl, encounter)
--- 	set_ascension_state("zone-"..zone.."-encounters", table_to_str(tbl))
--- end
-
 log_time_interval("process:check semirare and skills", function()
 do
 	-- TODO: Move to separate file

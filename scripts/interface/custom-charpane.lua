@@ -146,19 +146,28 @@ local function buff_sort_func(a, b)
 	return a.descid < b.descid
 end
 
+local AT_songs = nil
+local function is_AT_songname(buffname)
+	if not AT_songs then
+		local AT_skills = {}
+		for x, y in pairs(datafile("skills")) do
+			AT_skills[x] = y.accordion_thief_song
+		end
+		AT_songs = {}
+		for x, y in pairs(datafile("buffs")) do
+			if y.cast_skill and AT_skills[y.cast_skill] then
+				AT_songs[x] = true
+			end
+		end
+	end
+	return AT_songs[buffname]
+end
+
 function get_sorted_buff_array()
 	local sorting = {}
 	for descid, x in pairs(status().effects) do
-		local upeffect = x[4]
-		local is_song = nil
-		if upeffect then
-			local skill_id = tonumber(upeffect:match("skill:([0-9]+)"))
-			if skill_id and 6000 <= skill_id and skill_id <= 6999 then
-				is_song = true
-			end
-		end
 		-- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly. TODO: put workaround in api.lua
-		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid, upeffect = upeffect, is_song = is_song })
+		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid, upeffect = x[4], is_song = is_AT_songname(x[1]) })
 	end
 	for descid, x in pairs(status().intrinsics) do
 		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid })

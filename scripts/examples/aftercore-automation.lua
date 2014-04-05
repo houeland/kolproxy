@@ -2,11 +2,16 @@ local autoattack_macro_id = 9938477
 
 function spend_aftercore_turns()
 	local priorities = {
+		["automate-nemesis"] = 10,
 		["automate-a-quest-lol"] = 50,
+		["automate-nemesis-island"] = 100,
 		["automate-felonia"] = 1000,
 		["automate-suburbandis"] = 1500,
 		["automate-spaaace"] = 2000,
 	}
+	if advs() < 150 then
+		priorities["automate-nemesis"] = nil
+	end
 	local available_scripts = {}
 	local details = {}
 	local fs = {}
@@ -44,7 +49,7 @@ function spend_aftercore_turns()
 
 	disable_autoattack()
 
-	return text, url
+	return text, url, available_scripts
 end
 
 aftercore_automation_href = add_automation_script("aftercore-automation", function()
@@ -117,7 +122,7 @@ aftercore_automation_href = add_automation_script("aftercore-automation", functi
 	set_equipment(eq)
 	text, url = get_page("/main.php")
 	text = add_message_to_page(text, "Done.", "Automation results:")
-	text, url = spend_aftercore_turns()
+	text, url, available_scripts = spend_aftercore_turns()
 	if not locked() then
 		automate_pvp_fights(pvpfights(), 2, "lootwhatever")
 		for _, x in ipairs { "Boris's key", "Jarlsberg's key", "Sneaky Pete's key", "digital key", "Richard's star key" } do
@@ -128,6 +133,8 @@ aftercore_automation_href = add_automation_script("aftercore-automation", functi
 				cook_items(x, "lime")()
 			end
 		end
+	end
+	if not locked() and not available_scripts[1] then
 		if advs() > 0 then
 			set_autoattack_id(autoattack_macro_id)
 			text, url = run_castle_turns(advs(), familiarid())

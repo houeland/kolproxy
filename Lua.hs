@@ -732,6 +732,7 @@ setvars vars text allparams l = do
 	Lua.pushstring l "text"
 	Lua.pushbytestring l text
 	Lua.settable l (-3)
+	-- TODO: store as table
 	Lua.pushstring l "raw_input_params"
 	Lua.pushstring l (show (allparams :: [(String, String)]))
 	Lua.settable l (-3)
@@ -745,14 +746,6 @@ runProcessScript ref uri effuri pagetext allparams = do
 		Right xs -> Left ("Lua process call error, return values = " ++ (show xs), "")
 		Left err -> Left err
 
---runPrinterScript ref uri effuri pagetext allparams = do
---	let vars = [("path", uriPath effuri), ("query", uriQuery effuri), ("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
---	rets <- run_lua_code PRINTER "scripts/kolproxy-internal/printer.lua" ref (setvars vars pagetext allparams)
---	return $ case rets of
---		Right [Just t] -> Right $ t
---		Right xs -> Left ("Lua printer call error, return values = " ++ (show xs), "")
---		Left err -> Left err
-
 runChatScript ref uri effuri pagetext allparams = do
 	let vars = [("path", uriPath effuri), ("query", uriQuery effuri), ("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
 	rets <- run_lua_code CHAT "scripts/kolproxy-internal/chat.lua" ref (setvars vars pagetext allparams)
@@ -761,6 +754,7 @@ runChatScript ref uri effuri pagetext allparams = do
 		Right xs -> Left ("Lua chat call error, return values = " ++ (show xs), "")
 		Left err -> Left err
 
+-- TODO: merge send/sent chat scripts
 runSendChatScript ref uri allparams = do
 	let vars = [("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
 	rets <- run_lua_code CHAT "scripts/kolproxy-internal/sendchat.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)

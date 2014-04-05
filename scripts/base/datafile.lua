@@ -192,16 +192,33 @@ function get_familiarname(id)
 	return name
 end
 
-function get_recipe(item)
+function maybe_get_recipe(item, restricttype)
 	local name = get_itemname(item)
 	local recipes = datafile("recipes")[name]
 	if not recipes then
-		error("No recipe found for: " .. tostring(item))
+		return nil, "No recipe found for: " .. tostring(item)
+	end
+	if restricttype then
+		local newrecipes = {}
+		for _, x in ipairs(recipes) do
+			if x.type == restricttype then
+				table.insert(newrecipes, x)
+			end
+		end
+		recipes = newrecipes
 	end
 	if not recipes[1] or recipes[2] then
-		error("No unique recipe for: " .. tostring(item))
+		return nil, "No unique recipe for: " .. tostring(item)
 	end
 	return recipes[1]
+end
+
+function get_recipe(item, restricttype)
+	local recipe, errormsg = maybe_get_recipe(item, restricttype)
+	if not recipe then
+		error(errormsg)
+	end
+	return recipe
 end
 
 function get_recipes_by_type(typename)

@@ -1,3 +1,54 @@
+function buy_itemname(name, input_amount)
+	assert(type(name) == "string")
+	get_itemid(name)
+	local amount = input_amount or 1
+	local pt = get_page("/submitnewchat.php", { graf = "/buy " .. amount .. " " .. name, pwd = session.pwd })
+	if pt:contains("Purchasing " .. amount .. " ") then
+		local url = pt:match([[dojax%('(.-)'%)]])
+		if url then
+			local urlpath, urlquery = kolproxycore_splituri("/" .. url)
+			local urlparams = kolproxycore_decode_uri_query(urlquery)
+			print_debug("  purchasing", name, input_amount or "")
+			return async_get_page(urlpath, urlparams)
+		end
+	end
+	return function() return [[{ /buy ]] .. amount .. " " .. name .. [[ failed. }]] end
+end
+
+function store_buy_item(name, whichstore, amount)
+	return buy_itemname(name, amount)
+end
+
+function shop_buy_item(items, whichshop)
+	if type(items) == "string" then
+		return buy_itemname(items)
+	else
+		local ptfs = {}
+		for x, y in pairs(items) do
+			table.insert(ptfs, buy_itemname(x, y))
+		end
+		return ptfs
+	end
+end
+
+function raw_store_buy_item(name, whichstore, amount)
+	print_debug("  buying", name, amount or "")
+	return async_get_page("/store.php", { phash = session.pwd, buying = 1, whichitem = get_itemid(name), howmany = amount or 1, whichstore = whichstore, ajax = 1, action = "buyitem" })
+end
+
+function buy_hermit_item(item, quantity)
+	return async_post_page("/hermit.php", { action = "trade", whichitem = get_itemid(item), quantity = quantity or 1 })
+end
+
+function check_buying_from_knob_dispensary()
+	local pt = get_page("/submitnewchat.php", { graf = "/buy Knob Goblin seltzer", pwd = session.pwd })
+	if pt:contains("whichstore=k") then
+		return true
+	elseif pt:contains("not sure") then
+		return false
+	end
+end
+
 function shop_scan_item_rows(whichshop)
 	local scanned_itemrows = {}
 	local pt = get_page("/shop.php", { whichshop = whichshop })
@@ -29,7 +80,7 @@ local function shop_buy_many_items(itemlist, whichshop)
 	return ptfs
 end
 
-function shop_buy_item(items, whichshop)
+function raw_shop_buy_item(items, whichshop)
 	if type(items) == "string" then
 		return shop_buy_many_items({ [items] = 1 }, whichshop)[1]
 	else

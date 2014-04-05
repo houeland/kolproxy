@@ -30,7 +30,7 @@ if table then
 		if type(t) ~= "table" then return t end
 		local mt = getmetatable(t)
 		local res = {}
-		for k,v in pairs(t) do
+		for k, v in pairs(t) do
 			res[k] = deepcopy(v)
 		end
 		setmetatable(res, mt)
@@ -38,6 +38,14 @@ if table then
 	end
 
 	table.copy = deepcopy
+
+	function table.sum(tbl)
+		local sum = 0
+		for _, x in pairs(tbl) do
+			sum = sum + x
+		end
+		return sum
+	end
 end
 
 exported_raw_tostring = tostring
@@ -93,122 +101,18 @@ if pretty_print_tables then
 	tostring = pretty_tostring
 end
 
-function encode_thing(x)
-	if type(x) == "number" then return tostring(x)
-	elseif type(x) == "string" then return string.format("%q", x):gsub("\\\n", "\n")
-	elseif type(x) == "boolean" then
-		if x == true then
-			return "True"
-		else
-			return "False"
-		end
-	elseif type(x) == "table" then
-		return table_to_str(x)
-	else
-		error("Unhandled encode_thing(" .. type(x) .. ")")
-	end
-end
-
-local function decode_string(x) -- TODO-future: can this be done in a better way?
-	local f = loadstring("return " .. x)
-	if f then
-		return f()
-	else
-		return nil
-	end
-end
-
-local function decode_thing(x)
-	local num = tonumber(x)
-	if num then return num end
-	if x == "True" then return true end
-	if x == "False" then return false end
--- 	if x == nil then -- TODO: Hack, it's a bug when this happens
--- 		print("Error decoding string, x = nil")
--- 		return "nil"
--- 	end
-	local str = x:match([[^"(.*)"$]]) -- TODO-future: redo these in some other way?
-	if str then
-		local s = decode_string(x)
-		if s then return s end
-	end
-	local tblstr = x:match([[^(%[.+%])$]]) -- TODO-future: redo these in some other way?
-	if tblstr then return str_to_table(tblstr) end
-	local eff1, eff2, eff3 = x:match([[^%("(.-)", *([0-9]-), *"(.-)"%)$]])
-	if eff1 and eff2 and eff3 then
-		return { eff1, eff2, eff3 }
-	end
-	if x == "[]" then
-		return {}
-	end
-	print("error: can't decode table value", x)
-end
-
-function table_to_str(tbl)
-	local newtbl = {}
-	local keys = {}
-	for from, to in pairs(tbl) do
-		table.insert(keys, from)
-	end
-	table.sort(keys)
-
-	for from in table.values(keys) do
-		local to = tbl[from]
---~ 		print("tbl["..tostring(from).."] -> "..tostring(to))
-		table.insert(newtbl, string.format("(%s, %s)", encode_thing(from), encode_thing(to)))
-	end
-
-	if rawget(tbl, 1) then
-		local keys = {}
-		local keylist = {}
-		for x, _ in pairs(tbl) do
-			keys[x] = true
-			table.insert(keylist, x)
-		end
-		for x, _ in ipairs(tbl) do
-			keys[x] = nil
-		end
-		if next(keys) then
-			print("ERROR: table_to_str on non-JSON table")
-			print("  keys:", table_to_json(keylist))
-			print("   str:", "["..table.concat(newtbl, ", ").."]")
-			print("  json:", table_to_json(tbl))
-			error("table_to_str called for non-JSON table")
-		end
-	end
-
-
-	return "["..table.concat(newtbl, ", ").."]"
-end
-
-function str_to_table(str) -- TODO: redo properly!
-	local tbl = {}
--- 	print("str_to_table("..str..")")
--- 		if type(str) ~= "string" then
--- 			print("str_to_table with", type(str), str)
--- 			print(debug.traceback())
--- 		end
-	for x in str:gmatch("%b()") do
--- 		print(x)
-		local a, b = x:match([[^%(("[^"]*,[^"]*"), *([0-9]+)%)$]]) -- ugly hack for e.g. Go Get 'Em, Tiger!
-		if not b then
-			a, b = x:match([[^%((.-), *(.+)%)$]]) -- TODO-future: redo regex?
-		end
--- 		print("decoding", a, "->", b)
-		tbl[decode_thing(a)] = decode_thing(b)
-	end
--- 	print("returning", tbl)
-	return tbl
-end
-
 -- TODO: remove?
-function parse_params_raw(str)
+local function parse_params_raw(str)
 	local tbl = parse_request_param_string(str)
 	if #tbl == 0 then
 		return nil
 	else
 		return tbl
 	end
+end
+
+function parse_params_raw_input_params()
+	return parse_params_raw(input_params)
 end
 
 -- TODO: remove?
@@ -221,14 +125,17 @@ function parse_params(str)
 	return tbl
 end
 
+-- TODO: put in table.XYZ
 function random_choice(tbl)
 	return tbl[math.random(1, #tbl)]
 end
 
+-- TODO: deprecate, use round_down string version instead for explicit length
 function floor_to_places(value, places)
 	return math.floor(value * math.pow(10, places)) / math.pow(10, places)
 end
 
+-- TODO: combine some of this number formatting?
 function format_integer(i)
 	if i >= 1000 then
 		local upper = math.floor(i / 1000)
@@ -239,6 +146,8 @@ function format_integer(i)
 end
 
 function round_down(value, places)
+	-- TODO: handle places == 0
+	-- TODO: handle places >= 10
 	return string.format("%s.%0" .. places .. "d", math.floor(value), math.floor((value - math.floor(value)) * math.pow(10, places)))
 end
 

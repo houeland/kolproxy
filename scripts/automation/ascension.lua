@@ -41,6 +41,17 @@ local finished = false
 
 local do_debug_infoline = function() end
 
+local ascension_tasks_tbl = {}
+function reset_ascension_task_list()
+	local tbl = ascension_tasks_tbl
+	ascension_tasks_tbl = {}
+	return tbl
+end
+
+function ascension_task(tbl)
+	table.insert(ascension_tasks_tbl, tbl)
+end
+
 local function automate_hcnp_day(whichday)
 	reset_error_trace_steps()
 	finished = false
@@ -52,6 +63,8 @@ local function automate_hcnp_day(whichday)
 	resulturl = "/automate-ascension-hcnp-day" .. whichday
 	did_action = false
 	set_macro_runawayfrom_monsters(nil)
+
+	reset_ascension_task_list()
 
 	function hidden_inform(msg)
 		add_error_trace_step(msg)
@@ -823,11 +836,13 @@ endif
 			local want_brains = estimate_max_fullness() - fullness()
 			local have_brains = count_item("hunter brain") + count_item("boss brain") + count_item("good brain") + count_item("decent brain") + count_item("crappy brain")
 			return have_brains - want_brains
+		else
+			return 0
 		end
 	end
 
 	add_task {
-		when = challenge == "zombie" and horde_size() < 100 and have_skill("Lure Minions") and (count_spare_brains() or 0) > 0,
+		when = challenge == "zombie" and horde_size() < 100 and have_skill("Lure Minions") and count_spare_brains() > 0,
 		task = {
 			message = "lure zombies",
 			hide_message = true,
@@ -1704,12 +1719,6 @@ endif
 		end
 	end
 
-	function pull_in_scboris(item)
-		if challenge == "boris" then
-			pull_in_softcore(item)
-		end
-	end
-
 	add_task {
 		when = not have_item("digital key") and count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel")) >= 30,
 		task = tasks.make_digital_key,
@@ -2578,8 +2587,10 @@ endif
 				if ascensionstatus() == "Hardcore" then
 					stop "TODO: Kill goblin king in HCBoris"
 				end
-				pull_in_scboris("Knob Goblin harem veil")
-				pull_in_scboris("Knob Goblin harem pants")
+				if challenge == "boris" then
+					pull_in_softcore("Knob Goblin harem veil")
+					pull_in_softcore("Knob Goblin harem pants")
+				end
 				script.wear { hat = "Knob Goblin harem veil", pants = "Knob Goblin harem pants" }
 				if have_buff("Knob Goblin Perfume") then
 					inform "fight king in harem girl outfit"
@@ -2809,6 +2820,7 @@ endif
 			vamp_out(mainstat_type())
 			did_action = true
 		else
+			use_dancecard()
 			return do_powerleveling_sub()
 		end
 	end
@@ -3659,48 +3671,46 @@ endwhile
 
 	add_task {
 		when = not have_item("digital key") and
-			ascensionstatus() == "Hardcore" and
+			ascensionstatus("Hardcore") and
 			not script.have_familiar("Angry Jung Man") and
 			have_skill("Transcendent Olfaction") and
 			not trailed and
 			can_photocopy(),
-		task = function()
-			return {
-				message = "find blooper",
-				action = function()
-					if script.get_photocopied_monster() ~= "Blooper" then
-						print("photocopied:", script.get_photocopied_monster())
-						inform "get blooper from faxbot"
-						script.get_faxbot_fax("Blooper")
-					else
-						if not have_item("continuum transfunctioner") then
-							inform "pick up continuum transfunctioner (for faxed blooper)"
-							set_result(pick_up_continuum_transfunctioner())
-						end
-						inform "fight and sniff blooper"
-						script.heal_up()
-						script.ensure_buffs { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric" }
-						script.want_familiar "Frumious Bandersnatch"
-						script.wear { acc3 = "continuum transfunctioner" }
-						script.ensure_mp(60)
-						set_result(use_item("photocopied monster"))
-						cached_stuff.have_faxed_today = true
-						local pt, url = get_page("/fight.php")
-						if url:contains("/fight.php") then
-							result, resulturl, advagain = handle_adventure_result(pt, url, "?", make_cannonsniff_macro("Blooper"))
-							if advagain then
-								did_action = true
-							end
+		task = {
+			message = "find blooper",
+			action = function()
+				if script.get_photocopied_monster() ~= "Blooper" then
+					print("photocopied:", script.get_photocopied_monster())
+					inform "get blooper from faxbot"
+					script.get_faxbot_fax("Blooper")
+				else
+					if not have_item("continuum transfunctioner") then
+						inform "pick up continuum transfunctioner (for faxed blooper)"
+						set_result(pick_up_continuum_transfunctioner())
+					end
+					inform "fight and sniff blooper"
+					script.heal_up()
+					script.ensure_buffs { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric" }
+					script.want_familiar "Frumious Bandersnatch"
+					script.wear { acc3 = "continuum transfunctioner" }
+					script.ensure_mp(60)
+					set_result(use_item("photocopied monster"))
+					cached_stuff.have_faxed_today = true
+					local pt, url = get_page("/fight.php")
+					if url:contains("/fight.php") then
+						result, resulturl, advagain = handle_adventure_result(pt, url, "?", make_cannonsniff_macro("Blooper"))
+						if advagain then
+							did_action = true
 						end
 					end
 				end
-			}
-		end
+			end
+		}
 	}
 
 	add_task {
 		when = not have_item("digital key") and
-			ascensionstatus() == "Hardcore" and
+			ascensionstatus("Hardcore") and
 			not script.have_familiar("Angry Jung Man") and
 			have_item("Staff of the Standalone Cheese") and
 			can_equip_item("Staff of the Standalone Cheese") and
@@ -3768,7 +3778,9 @@ endif
 	}
 
 	add_task {
-		when = not have_item("digital key") and cached_stuff.campground_psychoses == "mystic" and count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel")) < 30,
+		when = not have_item("digital key") and
+			cached_stuff.campground_psychoses == "mystic" and
+			count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel")) < 30,
 		task = {
 			message = "get digital key (mystic's jar)",
 			fam = "Slimeling",
@@ -3819,34 +3831,15 @@ endif
 	}
 
 	add_task {
-		when = quest("Am I My Trapper's Keeper?") and (not trailed or trailed == "dairy goat") and highskill_at_run,
+		when = quest("Am I My Trapper's Keeper?") and
+			(not trailed or trailed == "dairy goat") and
+			highskill_at_run,
 		task = {
 			message = "get milk early in highskill AT",
 			nobuffing = true,
 			action = function()
 				ignore_buffing_and_outfit = false
 				script.do_trapper_quest()
-			end
-		}
-	}
-
-	add_task {
-		when = highskill_at_run and
-			not have_item("barrel of gunpowder") and
-			level() >= 8 and level() < 12 and
-			script.have_familiar("Obtuse Angel") and
-			can_photocopy(),
-		task = {
-			message = "fax and arrow lobsterfrogman",
-			action = function()
-				if script.get_photocopied_monster() ~= "lobsterfrogman" then
-					inform "get LFM from faxbot"
-					script.get_faxbot_fax("lobsterfrogman")
-				else
-					script.heal_up()
-					script.want_familiar "Obtuse Angel"
-					stop "TODO: summon quake, fax and arrow lobsterfrogman"
-				end
 			end
 		}
 	}
@@ -3859,7 +3852,8 @@ endif
 	}
 
 	add_task {
-		prereq = (challenge == "fist") and fist_level == 3,
+		prereq = (challenge == "fist") and
+			fist_level == 3,
 		message = "get conservatory fist scroll",
 		fam = "Mini-Hipster",
 		minmp = 10,
@@ -3895,13 +3889,13 @@ endif
 
 	add_task {
 		prereq = not unlocked_beach() and
-			moonsign_area() == "Degrassi Knoll",
+			moonsign_area("Degrassi Knoll"),
 		f = script.make_meatcar,
 	}
 
 	add_task {
 		when = not unlocked_beach() and
-			moonsign_area() ~= "Degrassi Knoll" and
+			not moonsign_area("Degrassi Knoll") and
 			meat() >= 6000,
 		task = {
 			message = "unlock beach (with bus pass)",
@@ -4072,11 +4066,8 @@ endif
 	}
 
 	add_task {
-		prereq = (trailed == "zombie waltzers" and level() < 13 and (level() + level_progress() < 12.25) and (not highskill_at_run or level() < 12)),
-		f = function()
-			use_dancecard()
-			do_powerleveling()
-		end,
+		prereq = (trailed == "zombie waltzers" and level() < 13 and (level() + level_progress() < 12.25)),
+		f = do_powerleveling,
 		message = "tailed zombie waltzers",
 	}
 
@@ -4371,10 +4362,7 @@ endif
 
 	add_task {
 		prereq = level() < 10,
-		f = function()
-			use_dancecard()
-			do_powerleveling()
-		end,
+		f = do_powerleveling,
 		message = "level to 10",
 	}
 
@@ -4462,6 +4450,7 @@ endif
 	add_task {
 		when = not have_item("digital key") and
 			ascensionstatus("Softcore") and
+			not script.have_familiar("Angry Jung Man") and
 			not cached_stuff.tried_pulling_mystic_jar and
 			cached_stuff.campground_psychoses == "not mystic" and
 			turnsthisrun() >= 100 and
@@ -4528,10 +4517,7 @@ endif
 
 	add_task {
 		prereq = level() < 11,
-		f = function()
-			use_dancecard()
-			do_powerleveling()
-		end,
+		f = do_powerleveling,
 		message = "level to 11",
 	}
 
@@ -4719,10 +4705,7 @@ endif
 
 	add_task {
 		prereq = (level() + level_progress() < 11.75) or (challenge == "boris" and level() < 12),
-		f = function()
-			use_dancecard()
-			do_powerleveling()
-		end,
+		f = do_powerleveling,
 		message = "level to 12",
 	}
 
@@ -4780,7 +4763,9 @@ endif
 	}
 
 	add_task {
-		prereq = quest("Make War, Not... Oh, Wait") and basemoxie() >= 70 and basemysticality() >= 70,
+		prereq = quest("Make War, Not... Oh, Wait") and
+			basemoxie() >= 70 and
+			basemysticality() >= 70,
 		f = function()
 			if not completed_filthworms() then
 				if have_item("Polka Pop") and not have_buff("Polka Face") then
@@ -4804,9 +4789,9 @@ endif
 	}
 
 	add_task {
-		prereq =
-			not have_item("Richard's star key") and
-			trailed ~= "Astronomer" and ascensionstatus() == "Hardcore",
+		prereq = not have_item("Richard's star key") and
+			trailed ~= "Astronomer" and
+			ascensionstatus("Hardcore"),
 		f = script.make_star_key,
 	}
 
@@ -4822,7 +4807,9 @@ endif
 -- 	}
 
 	add_task {
-		prereq = not have_item("Richard's star key") and have_item("steam-powered model rocketship") and ascensionstatus("Softcore"),
+		prereq = not have_item("Richard's star key") and
+			have_item("steam-powered model rocketship") and
+			ascensionstatus("Softcore"),
 		f = script.make_star_key_only,
 	}
 
@@ -4839,14 +4826,13 @@ endif
 		if ((advs() < 50 and turnsthisrun() + advs() < 650) or (advs() < 10)) and fullness() >= 12 and drunkenness() >= estimate_max_safe_drunkenness() and not highskill_at_run then
 			stop "TODO: end of day 4. (pvp,) overdrink"
 		elseif level() < 13 then
-			if ascensionstatus() ~= "Hardcore" then
+			if not ascensionstatus("Hardcore") then
 				stop "Level to 13."
 			end
 			inform "level to 13"
 			if count_item("disassembled clover") >= 3 then -- TODO: uncloset and trade them as well
 				use_item("disassembled clover")
 			end
-			use_dancecard()
 			do_powerleveling()
 		elseif not have_item("huge mirror shard") then
 			local lairpt = get_page("/lair1.php", { action = "gates" })
@@ -5372,12 +5358,14 @@ use gauze garter
 				triggered = x.when
 			end
 			if triggered then
-				if type(x.task) == "function" then
-					run_task(x.task())
-				else
-					run_task(x.task)
+				local task = x.task
+				while type(task) == "function" do
+					task = task()
 				end
-				break
+				if task then
+					run_task(task)
+					break
+				end
 			end
 		elseif x.prereq ~= nil then
 			local triggered = false

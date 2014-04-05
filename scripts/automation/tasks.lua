@@ -328,300 +328,323 @@ mark m_done
 		return result, resulturl, did_action
 	end
 
+	function t.do_orc_chasm()
+		local pt, pturl = get_page("/place.php", { whichplace = "orc_chasm" })
+		local pieces = tonumber(pt:match("action=bridge([0-9]*)"))
+		if not pieces then
+			critical "Couldn't determine bridge status"
+		end
+		if not have_item("dictionary") then
+			if have_item("abridged dictionary") then
+				do_degrassi_untinker_quest()
+				async_post_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker", pwd = get_pwd(), preaction = "untinker", whichitem = get_itemid("abridged dictionary") })
+			end
+			if not have_item("dictionary") then
+				stop "Missing bridge from pirates"
+			end
+		end
+		pt = get_page("/place.php", { whichplace = "orc_chasm", action = "bridge" .. pieces })
+		if pt:contains("have to check out that lumber camp down there") then
+			-- TODO: bees hate you
+			if have_item("snow boards") then
+				return maketask_use_item("snow boards")
+			elseif have_item("smut orc keepsake box") then
+				return maketask_use_item("smut orc keepsake box")
+			elseif count_item("snow berries") >= 2 then
+				return {
+					message = "buy snow boards",
+					nobuffing = true,
+					action = function()
+						shop_buy_item("snow boards", "snowgarden")
+						did_action = have_item("snow boards")
+					end
+				}
+			elseif ascensionstatus("Softcore") then
+				return {
+					message = "pull keepsake box",
+					nobuffing = true,
+					action = function()
+						pull_in_softcore("smut orc keepsake box")
+						did_action = have_item("smut orc keepsake box")
+					end
+				}
+			else
+				return {
+					message = "get bridge parts (" .. pieces .. ")",
+					fam = "Slimeling",
+					buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+					bonus_target = { "item" },
+					minmp = 35,
+					action = adventure {
+						zoneid = 295,
+						macro_function = macro_noodleserpent,
+					}
+				}
+			end
+		else
+			return {
+				message = "check bridge",
+				nobuffing = true,
+				action = function()
+					pt = get_page("/place.php", { whichplace = "orc_chasm" })
+					pieces = tonumber(pt:match("action=bridge([0-9]*)"))
+					if not pieces then
+						did_action = true
+						return
+					end
+					pt, pturl = get_page("/place.php", { whichplace = "orc_chasm", action = "bridge" .. pieces })
+					if pt:contains("have to check out that lumber camp down there") then
+						did_action = true
+					end
+					return pt, pturl
+				end
+			}
+		end
+	end
+
+	function t.visit_highland_lord()
+		return {
+			message = "visit highland lord",
+			action = function()
+				get_page("/place.php", { whichplace = "highlands", action = "highlands_dude" })
+				refresh_quest()
+				did_action = not (quest_text("now you should go talk to Black Angus") or quest_text("Go see Black Angus"))
+			end
+		}
+	end
+
+	function t.do_oil_peak()
+		-- TODO: buff ML to +50 or +100 via:
+			-- bugbear familiar or purse rat + familiar levels
+			-- ur-kel's
+			-- lap dog
+			-- hipposkin poncho or goth kid t-shirt
+			-- buoybottoms
+			-- spiky turtle helmet or crown of thrones w/ el vibrato megadrone
+			-- astral belt, C.A.R.N.I.V.O.R.E. button, grumpy old man charrrm bracelet, ring of aggravate monster
+			-- Boris: Song of Cockiness, Overconfident
+		if have_skill("Gristlesphere") then
+			script.ensure_buffs { "Gristlesphere" }
+		end
+		return {
+			message = "do oil peak",
+			fam = "Baby Bugged Bugbear",
+			buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "A Few Extra Pounds", "Ur-Kel's Aria of Annoyance" },
+			bonus_target = { "monster level" },
+			minmp = 60,
+			action = function()
+				local ml = estimate_bonus("Monster Level")
+				if ml < 50 then
+					script.maybe_ensure_buffs { "Pride of the Puffin" }
+					ml = estimate_bonus("Monster Level")
+				end
+				if ml < 20 then
+					stop "Not enough +ML for Oil Peak (want 20+ for automation)"
+				elseif not ascensionstatus("Hardcore") and ml < 50 and ascensionpathid() == 0 then
+					-- TODO: Trigger this if script options set to go fast
+					stop "Not enough +ML for Oil Peak (want 50+ for SCNP automation)"
+				end
+				return (adventure {
+					zoneid = 298,
+					macro_function = macro_noodleserpent,
+				})()
+			end
+		}
+	end
+
+	function t.do_aboo_peak()
+		local hauntedness = get_aboo_peak_hauntedness()
+		if hauntedness > 0 and hauntedness - count_item("A-Boo clue") * 30 <= 0 then
+			if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") and basemuscle() < 70 then
+				return
+			end
+			if not have_buff("Super Structure") and have_item("Greatest American Pants") then
+				script.wear { pants = "Greatest American Pants" }
+				script.get_gap_buff("Super Structure")
+			end
+			if not have_buff("Well-Oiled") and have_item("Oil of Parrrlay") then
+				use_item("Oil of Parrrlay")
+			end
+			script.ensure_buffs { "Go Get 'Em, Tiger!", "Red Door Syndrome", "Astral Shell", "Elemental Saucesphere", "Scarysauce" }
+			script.force_heal_up()
+			if predict_aboo_peak_banish() < 30 then
+				local gear = {}
+				if not have_buff("Super Structure") and have_item("eXtreme mittens") and have_item("eXtreme scarf") and have_item("snowboarder pants") then
+					gear = { hat = "eXtreme scarf", pants = "snowboarder pants", acc3 = "eXtreme mittens" }
+				end
+				gear.hat = first_wearable { "lihc face" }
+				gear.weapon = first_wearable { "titanium assault umbrella" }
+				gear.acc1 = first_wearable { "plastic vampire fangs" }
+				gear.acc2 = first_wearable { "glowing red eye" }
+				if count_item("glowing red eye") >= 2 then
+					gear.acc3 = first_wearable { "glowing red eye" }
+				end
+				script.wear(gear)
+				script.ensure_buffs { "Reptilian Fortitude", "Power Ballad of the Arrowsmith" }
+				script.force_heal_up()
+			end
+			if predict_aboo_peak_banish() < 30 then
+				script.maybe_ensure_buffs { "Oiled-Up", "Standard Issue Bravery", "Starry-Eyed", "Puddingskin", "Protection from Bad Stuff" }
+				script.force_heal_up()
+			end
+			if predict_aboo_peak_banish() < 30 and have_skill("Check Mirror") and not have_intrinsic("Slicked-Back Do") then
+				cast_check_mirror_for_intrinsic("Slicked-Back Do")
+			end
+			if predict_aboo_peak_banish() < 30 then
+				stop "TODO: Buff up and finish A-Boo Peak clues (couldn't banish 30%)"
+			end
+			use_item("A-Boo clue")
+-- 			-- TODO: handle other towel versions
+
+-- 			-- TODO: buff max hp
+
+-- 			if not have_buff("Spooky Flavor") and have_item("ectoplasmic paste") then
+-- 				use_item("ectoplasmic paste")
+-- 				-- +0/+2
+-- 			end
+-- 			if not have_buff("Spookypants") and have_item("spooky powder") then
+-- 				use_item("spooky powder")
+-- 				-- +0/+1
+-- 			end
+-- 			if not have_buff("Insulated Trousers") and have_item("cold powder") then
+-- 				use_item("cold powder")
+-- 				-- +1/+0
+-- 			end
+			-- TODO: heal up fully
+			return {
+				message = string.format("follow a-boo clue (%d%% haunted)", hauntedness),
+				minmp = 5,
+				nobuffing = true,
+				action = adventure {
+					zoneid = 296,
+					choice_function = function(advtitle, choicenum)
+						if advtitle == "The Horror..." then
+							return "", 1
+						end
+					end
+				}
+			}
+		else
+			-- TODO: use a clover?
+			script.prepare_physically_resistant()
+			return {
+				message = string.format("do a-boo peak (%d%% haunted)", hauntedness),
+				fam = "Slimeling",
+				buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+				bonus_target = { "item", "extraitem" },
+				minmp = 50,
+				action = adventure {
+					zoneid = 296,
+					macro_function = macro_noodlecannon,
+				}
+			}
+		end
+	end
+
+	function t.do_twin_peak()
+-- 		-- TODO: boost item drops & noncombats, sniff either topiary
+		return {
+			message = "solve twin peak mystery",
+			fam = "Slimeling",
+			buffs = { "Fat Leon's Phat Loot Lyric", "Astral Shell", "Elemental Saucesphere" },
+			bonus_target = { "noncombat", "item" },
+			minmp = 50,
+			action = function()
+				if not cached_stuff.previous_twin_peak_noncombat_option then
+					if get_resistance_level("Stench") < 4 and not have_buff("Red Door Syndrome") then
+						script.ensure_buffs { "Red Door Syndrome" }
+					end
+					if get_resistance_level("Stench") < 4 then
+						script.want_familiar "Exotic Parrot"
+					end
+					if get_resistance_level("Stench") < 4 then
+						stop "Need 4+ stench resistance"
+					end
+				elseif cached_stuff.previous_twin_peak_noncombat_option == "Investigate Room 237" then
+					if estimate_twin_peak_effective_plusitem() < 50 then
+						script.bonus_target { "item", "extraitem", "noncombat" }
+						script.ensure_buffs {}
+						script.wear {}
+					end
+					if estimate_twin_peak_effective_plusitem() < 50 then
+						script.maybe_ensure_buffs { "Brother Flying Burrito's Blessing" }
+					end
+					if estimate_twin_peak_effective_plusitem() < 50 then
+						stop "Need 50%+ item drops from monsters"
+					end
+				elseif cached_stuff.previous_twin_peak_noncombat_option == "Search the pantry" then
+					if not have_item("jar of oil") then
+						use_item("bubblin' crude", 12)
+					end
+					if not have_item("jar of oil") then
+						stop "Need jar of oil"
+					end
+				elseif cached_stuff.previous_twin_peak_noncombat_option == "Follow the faint sound of music" or cached_stuff.previous_twin_peak_noncombat_option == "Wait -- who's that?" then
+					if estimate_bonus("Combat Initiative") < 40 then
+						script.bonus_target { "initiative", "noncombat", "item" }
+						script.maybe_ensure_buffs { "Springy Fusilli" }
+					end
+					if estimate_bonus("Combat Initiative") < 40 then
+						script.maybe_ensure_buffs { "Sugar Rush" }
+					end
+					if estimate_bonus("Combat Initiative") < 40 then
+						stop "Need 40%+ combat initiative"
+					end
+				end
+
+				local force_advagain = false
+				local function ncfunc(advtitle, choicenum, pagetext)
+					if advtitle == "Welcome to the Great Overlook Lodge" then
+						force_advagain = true
+						return "", 1
+					elseif advtitle == "Lost in the Great Overlook Lodge" then
+						for _, x in ipairs { "Investigate Room 237", "Search the pantry", "Follow the faint sound of music", "Wait -- who's that?" } do
+							if pagetext:contains(x) then
+								if x == cached_stuff.previous_twin_peak_noncombat_option then
+									stop "Failed to make progress in Twin Peak"
+								end
+								cached_stuff.previous_twin_peak_noncombat_option = x
+								return x
+							end
+						end
+					else
+						return "", 1
+					end
+				end
+
+				if have_item("rusty hedge trimmers") then
+					set_result(use_item("rusty hedge trimmers"))
+					result, resulturl = get_page("/choice.php")
+					result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, nil, ncfunc)
+					if not have_item("rusty hedge trimmers") then
+						advagain = true
+					end
+				else
+					result, resulturl, advagain = autoadventure { zoneid = 297, macro = macro_noodlecannon(), noncombatchoices = nil, specialnoncombatfunction = ncfunc, ignorewarnings = true }
+				end
+				if force_advagain then
+					-- TODO: Why is this necessary? No adventure again at great overlook? Do a test for page result instead?
+					advagain = true
+				end
+				return result, resulturl, advagain
+			end
+		}
+	end
+
 	function t.there_can_be_only_one_topping()
 		if ascension_script_option("manual lvl 9 quest") then
 			stop "STOPPED: Ascension script option set to do lvl 9 quest manually"
 		end
 		if quest_text("should seek him out, in the Highlands beyond the Orc Chasm") then
-			local pt, pturl = get_page("/place.php", { whichplace = "orc_chasm" })
-			local pieces = tonumber(pt:match("action=bridge([0-9]*)"))
-			if not pieces then
-				critical "Couldn't determine bridge status"
-			end
-			if not have_item("dictionary") then
-				if have_item("abridged dictionary") then
-					do_degrassi_untinker_quest()
-					async_post_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker", pwd = get_pwd(), preaction = "untinker", whichitem = get_itemid("abridged dictionary") })
-				end
-				if not have_item("dictionary") then
-					stop "Missing bridge from pirates"
-				end
-			end
-			pt = get_page("/place.php", { whichplace = "orc_chasm", action = "bridge" .. pieces })
-			if pt:contains("have to check out that lumber camp down there") then
-				-- TODO: bees hate you
-				if have_item("snow boards") then
-					return maketask_use_item("snow boards")
-				elseif have_item("smut orc keepsake box") then
-					return maketask_use_item("smut orc keepsake box")
-				elseif count_item("snow berries") >= 2 then
-					return {
-						message = "buy snow boards",
-						nobuffing = true,
-						action = function()
-							shop_buy_item("snow boards", "snowgarden")
-							did_action = have_item("snow boards")
-						end
-					}
-				elseif ascensionstatus("Softcore") then
-					return {
-						message = "pull keepsake box",
-						nobuffing = true,
-						action = function()
-							pull_in_softcore("smut orc keepsake box")
-							did_action = have_item("smut orc keepsake box")
-						end
-					}
-				else
-					return {
-						message = "get bridge parts (" .. pieces .. ")",
-						fam = "Slimeling",
-						buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
-						bonus_target = { "item" },
-						minmp = 35,
-						action = adventure {
-							zoneid = 295,
-							macro_function = macro_noodleserpent,
-						}
-					}
-				end
-			else
-				return {
-					message = "check bridge",
-					nobuffing = true,
-					action = function()
-						pt = get_page("/place.php", { whichplace = "orc_chasm" })
-						pieces = tonumber(pt:match("action=bridge([0-9]*)"))
-						if not pieces then
-							did_action = true
-							return
-						end
-						pt, pturl = get_page("/place.php", { whichplace = "orc_chasm", action = "bridge" .. pieces })
-						if pt:contains("have to check out that lumber camp down there") then
-							did_action = true
-						end
-						return pt, pturl
-					end
-				}
-			end
+			return t.do_orc_chasm()
 		elseif quest_text("now you should go talk to Black Angus") or quest_text("Go see Black Angus") then
-			return {
-				message = "visit highland lord",
-				action = function()
-					get_page("/place.php", { whichplace = "highlands", action = "highlands_dude" })
-					refresh_quest()
-					did_action = not (quest_text("now you should go talk to Black Angus") or quest_text("Go see Black Angus"))
-				end
-			}
+			return t.visit_highland_lord()
 		elseif quest_text("should go to Oil Peak and investigate the signal fire there") or quest_text("should keep killing oil monsters until the pressure on the peak drops") then
-			-- TODO: buff ML to +50 or +100 via:
-				-- bugbear familiar or purse rat + familiar levels
-				-- ur-kel's
-				-- lap dog
-				-- hipposkin poncho or goth kid t-shirt
-				-- buoybottoms
-				-- spiky turtle helmet or crown of thrones w/ el vibrato megadrone
-				-- astral belt, C.A.R.N.I.V.O.R.E. button, grumpy old man charrrm bracelet, ring of aggravate monster
-				-- Boris: Song of Cockiness, Overconfident
-			if have_skill("Gristlesphere") then
-				script.ensure_buffs { "Gristlesphere" }
-			end
-			return {
-				message = "do oil peak",
-				fam = "Baby Bugged Bugbear",
-				buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "A Few Extra Pounds", "Ur-Kel's Aria of Annoyance" },
-				bonus_target = { "monster level" },
-				minmp = 60,
-				action = function()
-					local ml = estimate_bonus("Monster Level")
-					if ml < 50 then
-						script.maybe_ensure_buffs { "Pride of the Puffin" }
-						ml = estimate_bonus("Monster Level")
-					end
-					if ml < 20 then
-						stop "Not enough +ML for Oil Peak (want 20+ for automation)"
-					elseif not ascensionstatus("Hardcore") and ml < 50 and ascensionpathid() == 0 then
-						-- TODO: Trigger this if script options set to go fast
-						stop "Not enough +ML for Oil Peak (want 50+ for SCNP automation)"
-					end
-					return (adventure {
-						zoneid = 298,
-						macro_function = macro_noodleserpent,
-					})()
-				end
-			}
+			return t.do_oil_peak()
 		elseif quest_text("should check out A-Boo Peak and see") or quest_text("should keep clearing the ghosts out of A-Boo Peak") then
-			local hauntedness = get_aboo_peak_hauntedness()
-			if hauntedness > 0 and hauntedness - count_item("A-Boo clue") * 30 <= 0 then
-				if not have_buff("Super Structure") and have_item("Greatest American Pants") then
-					script.wear { pants = "Greatest American Pants" }
-					script.get_gap_buff("Super Structure")
-				end
-				if not have_buff("Well-Oiled") and have_item("Oil of Parrrlay") then
-					use_item("Oil of Parrrlay")
-				end
-				script.ensure_buffs { "Go Get 'Em, Tiger!", "Red Door Syndrome", "Astral Shell", "Elemental Saucesphere", "Scarysauce" }
-				script.force_heal_up()
-				if predict_aboo_peak_banish() < 30 then
-					local gear = {}
-					if not have_buff("Super Structure") and have_item("eXtreme mittens") and have_item("eXtreme scarf") and have_item("snowboarder pants") then
-						gear = { hat = "eXtreme scarf", pants = "snowboarder pants", acc3 = "eXtreme mittens" }
-					end
-					gear.hat = first_wearable { "lihc face" }
-					gear.weapon = first_wearable { "titanium assault umbrella" }
-					gear.acc1 = first_wearable { "plastic vampire fangs" }
-					gear.acc2 = first_wearable { "glowing red eye" }
-					if count_item("glowing red eye") >= 2 then
-						gear.acc3 = first_wearable { "glowing red eye" }
-					end
-					script.wear(gear)
-					script.ensure_buffs { "Reptilian Fortitude", "Power Ballad of the Arrowsmith" }
-					script.force_heal_up()
-				end
-				if predict_aboo_peak_banish() < 30 then
-					script.maybe_ensure_buffs { "Oiled-Up", "Standard Issue Bravery", "Starry-Eyed", "Puddingskin", "Protection from Bad Stuff" }
-					script.force_heal_up()
-				end
-				if predict_aboo_peak_banish() < 30 and have_skill("Check Mirror") and not have_intrinsic("Slicked-Back Do") then
-					cast_check_mirror_for_intrinsic("Slicked-Back Do")
-				end
-				if predict_aboo_peak_banish() < 30 then
-					stop "TODO: Buff up and finish A-Boo Peak clues (couldn't banish 30%)"
-				end
-				use_item("A-Boo clue")
--- 				-- TODO: handle other towel versions
-
--- 				-- TODO: buff max hp
-
--- 				if not have_buff("Spooky Flavor") and have_item("ectoplasmic paste") then
--- 					use_item("ectoplasmic paste")
--- 					-- +0/+2
--- 				end
--- 				if not have_buff("Spookypants") and have_item("spooky powder") then
--- 					use_item("spooky powder")
--- 					-- +0/+1
--- 				end
--- 				if not have_buff("Insulated Trousers") and have_item("cold powder") then
--- 					use_item("cold powder")
--- 					-- +1/+0
--- 				end
-				-- TODO: heal up fully
-				return {
-					message = string.format("follow a-boo clue (%d%% haunted)", hauntedness),
-					minmp = 5,
-					nobuffing = true,
-					action = adventure {
-						zoneid = 296,
-						choice_function = function(advtitle, choicenum)
-							if advtitle == "The Horror..." then
-								return "", 1
-							end
-						end
-					}
-				}
-			else
-				-- TODO: use a clover?
-				script.prepare_physically_resistant()
-				return {
-					message = string.format("do a-boo peak (%d%% haunted)", hauntedness),
-					fam = "Slimeling",
-					buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
-					bonus_target = { "item", "extraitem" },
-					minmp = 50,
-					action = adventure {
-						zoneid = 296,
-						macro_function = macro_noodlecannon,
-					}
-				}
-			end
+			return t.do_aboo_peak()
 		elseif quest_text("need to solve the mystery of Twin Peak") then
--- 			-- TODO: boost item drops & noncombats, sniff either topiary
-			return {
-				message = "solve twin peak mystery",
-				fam = "Slimeling",
-				buffs = { "Fat Leon's Phat Loot Lyric", "Astral Shell", "Elemental Saucesphere" },
-				bonus_target = { "noncombat", "item" },
-				minmp = 50,
-				action = function()
-					if not cached_stuff.previous_twin_peak_noncombat_option then
-						if get_resistance_level("Stench") < 4 and not have_buff("Red Door Syndrome") then
-							script.ensure_buffs { "Red Door Syndrome" }
-						end
-						if get_resistance_level("Stench") < 4 then
-							script.want_familiar "Exotic Parrot"
-						end
-						if get_resistance_level("Stench") < 4 then
-							stop "Need 4+ stench resistance"
-						end
-					elseif cached_stuff.previous_twin_peak_noncombat_option == "Investigate Room 237" then
-						if estimate_twin_peak_effective_plusitem() < 50 then
-							script.bonus_target { "item", "extraitem", "noncombat" }
-							script.ensure_buffs {}
-							script.wear {}
-						end
-						if estimate_twin_peak_effective_plusitem() < 50 then
-							script.maybe_ensure_buffs { "Brother Flying Burrito's Blessing" }
-						end
-						if estimate_twin_peak_effective_plusitem() < 50 then
-							stop "Need 50%+ item drops from monsters"
-						end
-					elseif cached_stuff.previous_twin_peak_noncombat_option == "Search the pantry" then
-						if not have_item("jar of oil") then
-							use_item("bubblin' crude", 12)
-						end
-						if not have_item("jar of oil") then
-							stop "Need jar of oil"
-						end
-					elseif cached_stuff.previous_twin_peak_noncombat_option == "Follow the faint sound of music" or cached_stuff.previous_twin_peak_noncombat_option == "Wait -- who's that?" then
-						if estimate_bonus("Combat Initiative") < 40 then
-							script.bonus_target { "initiative", "noncombat", "item" }
-							script.maybe_ensure_buffs { "Springy Fusilli" }
-						end
-						if estimate_bonus("Combat Initiative") < 40 then
-							script.maybe_ensure_buffs { "Sugar Rush" }
-						end
-						if estimate_bonus("Combat Initiative") < 40 then
-							stop "Need 40%+ combat initiative"
-						end
-					end
-
-					local force_advagain = false
-					local function ncfunc(advtitle, choicenum, pagetext)
-						if advtitle == "Welcome to the Great Overlook Lodge" then
-							force_advagain = true
-							return "", 1
-						elseif advtitle == "Lost in the Great Overlook Lodge" then
-							for _, x in ipairs { "Investigate Room 237", "Search the pantry", "Follow the faint sound of music", "Wait -- who's that?" } do
-								if pagetext:contains(x) then
-									if x == cached_stuff.previous_twin_peak_noncombat_option then
-										stop "Failed to make progress in Twin Peak"
-									end
-									cached_stuff.previous_twin_peak_noncombat_option = x
-									return x
-								end
-							end
-						else
-							return "", 1
-						end
-					end
-
-					if have_item("rusty hedge trimmers") then
-						set_result(use_item("rusty hedge trimmers"))
-						result, resulturl = get_page("/choice.php")
-						result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, nil, ncfunc)
-						if not have_item("rusty hedge trimmers") then
-							advagain = true
-						end
-					else
-						result, resulturl, advagain = autoadventure { zoneid = 297, macro = macro_noodlecannon(), noncombatchoices = nil, specialnoncombatfunction = ncfunc, ignorewarnings = true }
-					end
-					if force_advagain then
-						-- TODO: Why is this necessary? No adventure again at great overlook? Do a test for page result instead?
-						advagain = true
-					end
-					return result, resulturl, advagain
-				end
-			}
+			return t.do_twin_peak()
 		end
 	end
 

@@ -354,34 +354,6 @@ function add_chat_alias(newcmd, realcmd)
 	end)
 end
 
-function autoadventure(tbl)
-	check_supported_table_values(tbl, { "ignorewarnings", "noncombatchoices", "specialnoncombatfunction" }, { "zoneid", "macro" })
---	if not tbl.ignorewarnings and setting_enabled("enable adventure warnings") then
-	if not tbl.ignorewarnings and character["setting: enable adventure warnings"] ~= "no" then
-		local foo = { log_time_interval("check adventure warnings", function()
-			local warn_tbl = get_raw_adventure_warnings()
---			print("warn_tbl is", warn_tbl)
-			for f in table.values(warn_tbl) do
-				local message, warningid, custommsg = f(tbl.zoneid)
-				if message then
-					print("advwarn?", f, message, warningid)
-					local x, y = intercept_warning { message = message, id = warningid, customdisablemsg = custommsg, norepeat = true }
-					if x then
---						print("  warn!", x, y, "...")
-						return x, y, false
-					end
-				end
-			end
-		end) }
-		if foo[1] then
-			return unpack(foo)
-		end
-	end
-	session["adventure.lastzone"] = tbl.zoneid
-	local pt, url = post_page("/adventure.php", { snarfblat = tbl.zoneid })
-	return handle_adventure_result(pt, url, tbl.zoneid, tbl.macro, tbl.noncombatchoices or {}, tbl.specialnoncombatfunction)
-end
-
 function get_element_names()
 	return { "Cold", "Hot", "Sleaze", "Spooky", "Stench" }
 end
