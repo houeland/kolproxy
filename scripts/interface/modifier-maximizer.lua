@@ -110,6 +110,11 @@ local function score_item(scoref, item)
 	return scoref(estimate_item_equip_bonuses(itemid))
 end
 
+local registered_script_links = {}
+function add_modifier_maximizer_script_link_function(f)
+	table.insert(registered_script_links, f)
+end
+
 modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", function()
 	local resultpt = ""
 	if params.equip_itemname and params.equip_slot then
@@ -309,12 +314,20 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		end
 	end
 
+	local script_links = {}
+	for _, f in ipairs(registered_script_links) do
+		local name, href = f()
+		if name and href then
+			table.insert(script_links, string.format([[<a href="%s" style="color: green">{ %s }</a>]], href, name))
+		end
+	end
+
 	local links = {}
 	for _, x in ipairs(bonuses) do
 		table.insert(links, string.format([[<a href="%s">%s</a>]], modifier_maximizer_href { pwd = session.pwd, whichbonus = x }, x))
 	end
 
-	local contents = make_kol_html_frame("<table>" .. table.concat(equipmentlines, "\n") .. "</table><br><table>" .. table.concat(bufflines, "\n") .. "</table><br>" .. table.concat(links, " | "), "Modifier maximizer (preview)")
+	local contents = make_kol_html_frame("<table>" .. table.concat(equipmentlines, "\n") .. "</table><br><table>" .. table.concat(bufflines, "\n") .. "</table><br>" .. table.concat(script_links, "<br>") .. "<br><br>" .. table.concat(links, " | "), "Modifier maximizer (preview)")
 
 	return [[<html style="margin: 0px; padding: 0px;">
 <head>

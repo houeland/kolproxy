@@ -1,6 +1,15 @@
 -- tea party
 
+add_processor("/choice.php", function()
+	if text:contains([[&quot;Perhaps you should call Room Service and order some!&quot;<p>The Hatter squints thoughtfully at you.]]) then
+		day["received Mad Tea Party buff"] = true
+	end
+end)
+
 the_mad_tea_party_hat_buffs = {
+	[1] = nil,
+	[2] = nil,
+	[3] = nil,
 	[4] = "+20 to Monster Level",
 	[5] = nil,
 	[6] = "+3 Familiar Experience Per Combat",
@@ -18,7 +27,7 @@ the_mad_tea_party_hat_buffs = {
 	[18] = "+10 Stench Damage",
 	[19] = "+10 Hot Damage",
 	[20] = "Weapon Damage +30%",
-	[21] = nil,
+	[21] = "Regenerate 5-10 MP per Adventure",
 	[22] = "+40% Meat from Monsters",
 	[23] = "Mysticality +20%",
 	[24] = "+5 to Familiar Weight",
@@ -26,16 +35,31 @@ the_mad_tea_party_hat_buffs = {
 	[26] = "Moxie +20%",
 	[27] = "Muscle +20%",
 	[28] = "+20% Item Drops from Monsters",
+	[29] = nil,
+	[30] = nil,
+	[31] = "+40% Combat Initiative",
 }
 
-local tea_party_href
-tea_party_href = add_automation_script("custom-choose-mad-tea-party-hat", function()
+local mad_tea_party_href
+mad_tea_party_href = add_automation_script("custom-choose-mad-tea-party-hat", function()
 	if params.choosehat then
-		return equip_item(params.choosehat)()
+		local eq = equipment()
+		local pt, pturl = equip_item(params.choosehat)()
+		if equipment().hat == get_itemid(params.choosehat) then
+			if not have_buff("Down the Rabbit Hole") then
+				use_item("&quot;DRINK ME&quot; potion")()
+			end
+			async_get_page("/place.php", { whichplace = "plains" })
+			async_get_page("/place.php", { whichplace = "rabbithole" })
+			get_page("/place.php", { whichplace = "rabbithole", action = "rabbithole_teaparty" })
+			pt, pturl = post_page("/choice.php", { pwd = session.pwd, whichchoice = 441, option = 1 })
+		end
+		set_equipment(eq)
+		return pt, pturl
 	end
 
 	local lenmap = {}
-	for x, y in pairs(inventory()) do
+	for x, _ in pairs(inventory()) do
 		local name = maybe_get_itemname(x)
 		local d = maybe_get_itemdata(x)
 		if name and d and d.equipment_slot == "hat" then
@@ -55,7 +79,7 @@ tea_party_href = add_automation_script("custom-choose-mad-tea-party-hat", functi
 	local hatlines = {}
 	for _, len in ipairs(lens) do
 		if lenmap[len] and lenmap[len].ok then
-			table.insert(hatlines, string.format([[<a href="%s" style="color: green">%s</a><br>]], tea_party_href { pwd = session.pwd, choosehat = lenmap[len].name }, tostring(the_mad_tea_party_hat_buffs[len]) .. ": " .. lenmap[len].name))
+			table.insert(hatlines, string.format([[<a href="%s" style="color: green">%s</a><br>]], mad_tea_party_href { pwd = session.pwd, choosehat = lenmap[len].name }, tostring(the_mad_tea_party_hat_buffs[len]) .. ": " .. lenmap[len].name))
 		elseif lenmap[len] then
 			table.insert(hatlines, [[<span style="color: darkorange">]] .. tostring(the_mad_tea_party_hat_buffs[len]) .. ": " .. lenmap[len].name .. "</span><br>")
 		else
@@ -85,6 +109,12 @@ end)
 
 add_printer("/place.php", function()
 	if params.whichplace == "rabbithole" then
-		text = text:gsub([[</body>]], [[<center><a href="]]..tea_party_href { pwd = session.pwd }..[[" style="color: green">{ Choose hat }</a></center>%0]])
+		text = text:gsub([[</body>]], [[<center><a href="]]..mad_tea_party_href { pwd = session.pwd }..[[" style="color: green">{ Choose hat }</a></center>%0]])
+	end
+end)
+
+add_modifier_maximizer_script_link_function(function()
+	if (have_buff("Down the Rabbit Hole") or have_item("&quot;DRINK ME&quot; potion")) and not day["received Mad Tea Party buff"] then
+		return "Get Mad Tea Party daily buff", mad_tea_party_href { pwd = session.pwd }
 	end
 end)
