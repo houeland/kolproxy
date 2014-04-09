@@ -94,7 +94,7 @@ local function custom_progressbar(c, m, thresholds)
 end
 
 local function bl_compact()
-	return  tonumber(api_flag_config().compactchar) ~= 0
+	return tonumber(api_flag_config().compactchar) ~= 0
 end
 
 local function guild_link()
@@ -207,10 +207,10 @@ function bl_charpane_mystats_lines(lines)
 		add_organ_line("Soulsauce", soulsauce(), 100)
 	end
 
-	if ascensionstatus() == "Aftercore" then
+	if ascensionstatus("Aftercore") then
 		table.insert(lines, [[<tr><td colspan='3'><font size="2"><a href="]] .. make_optimize_diet_href() .. [[" target="mainpane" style="color: green">{ Optimize diet }</a></font></td></tr>]])
 	end
-	table.insert(lines, "</tbody>")
+	table.insert(lines, [[</tbody>]])
 	table.insert(lines, [[<tbody>]])
 	table.insert(lines, chit_progressline("HP", string.format("%i&nbsp;/&nbsp;%i", hp(), maxhp()), color_progressbar(hp(), maxhp(), "blue", "green")))
 	table.insert(lines, chit_progressline("MP", string.format("%i&nbsp;/&nbsp;%i", mp(), maxmp()), color_progressbar(mp(), maxmp(), "blue", "green")))
@@ -219,7 +219,6 @@ function bl_charpane_mystats_lines(lines)
 end
 
 local function bl_compact_stats_panel(lines)
-
 	table.insert(lines, [[<table id="chit_stats" class="chit_brick nospace compact">
 <tbody>]])
 
@@ -236,82 +235,66 @@ local function bl_compact_stats_panel(lines)
 
 	table.insert(lines, "<tr>")
 	table.insert(lines, "<td><table><tr>")
-	table.insert(lines, string.format(stat_cells, maximizer_link("Muscle"), "Mus", 
-					  buffedmuscle(), basemuscle()))
+	table.insert(lines, string.format(stat_cells, maximizer_link("Muscle"), "Mus", buffedmuscle(), basemuscle()))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, "<td class='statbar' colspan='2'>" .. stat_line(rawmuscle()) .. "</td>")
 	table.insert(lines, "</tr><tr>")
-	table.insert(lines, string.format(stat_cells, maximizer_link("Mysticality"),
-					  "Mys", buffedmysticality(), 
-					  basemysticality()))
+	table.insert(lines, string.format(stat_cells, maximizer_link("Mysticality"), "Mys", buffedmysticality(), basemysticality()))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, "<td class='statbar' colspan='2'>" .. stat_line(rawmysticality()) .. "</td>")
 	table.insert(lines, "</tr><tr>")
-	table.insert(lines, string.format(stat_cells, maximizer_link("Moxie"),
-					  "Mox", buffedmoxie(), 
-					  basemoxie()))
+	table.insert(lines, string.format(stat_cells, maximizer_link("Moxie"), "Mox", buffedmoxie(), basemoxie()))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, "<td class='statbar' colspan='2'>" .. stat_line(rawmoxie()) .. "</td>")
 	table.insert(lines, "</tr><tr></table></td><td><table><tr>")
 	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">HP</a></td><td class="info">%s&nbsp/&nbsp;%s</td>]], maximizer_link("Max HP"), hp(), maxhp()))
 	table.insert(lines, "</tr><tr>")
-	table.insert(lines, string.format([[<td  class='statbar' colspan='2'>%s</td>]],
-			custom_progressbar(hp(), maxhp(),
-					      {[0] = "red", [50] = "orange", [75] = "green"})))
+	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(hp(), maxhp(), {[0] = "red", [50] = "orange", [75] = "green"})))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">MP</a></td><td class="info">%s&nbsp;/&nbsp;%s </td>]], maximizer_link("Max MP"), mp(), maxmp()))
 	table.insert(lines, "</tr><tr>")
-	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]],
-			custom_progressbar(mp(), maxmp(),
-					      {[0] = "red", [50] = "orange", [75] = "green"})))
+	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(mp(), maxmp(), {[0] = "red", [50] = "orange", [75] = "green"})))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane" >ML</a></td><td class="info">%+d</td>]], maximizer_link("Monster Level"), estimate_bonus("Monster Level")))
 	table.insert(lines, "</tr><tr>")
-	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]],
-			custom_progressbar(1, 1,
-					 {[0] = "#cbcbcb"})))
+	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(1, 1, { [0] = "#cbcbcb" })))
 	table.insert(lines, "</tr></table></td></tr>")
-	   
+
 	table.insert(lines, "<tr><td colspan='2'><table id='compact_organs'>")
 
 	local function add_organ_cells(full, fullmax)
 		table.insert(lines, string.format([[<td class="info">%i / %i</td>]], full, fullmax))
-
 	end
-	--table.insert(lines, [[<tr><td class="label">F</td><td  class="label">D</td><td class="label">S</td></tr>]])
+	--table.insert(lines, [[<tr><td class="label">F</td><td class="label">D</td><td class="label">S</td></tr>]])
 	table.insert(lines, "<tr>")
 	local organ_fmt = [[<td class="info"><span class="label">%s</span> %i&nbsp;/&nbsp;%i</td>]]
 	table.insert(lines, string.format(organ_fmt, "Stm",fullness(), estimate_max_fullness()))
 	table.insert(lines, string.format(organ_fmt, "Lvr",drunkenness(), estimate_max_safe_drunkenness()))
 	if setting_enabled("show spleen counter") then 
-	   table.insert(lines, string.format(organ_fmt, "Spl",spleen(), estimate_max_spleen()))
+		table.insert(lines, string.format(organ_fmt, "Spl",spleen(), estimate_max_spleen()))
 	end
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, "<td>")
-	table.insert(lines, custom_progressbar(fullness(), estimate_max_fullness(),
-					     {[0] = "green", [50] = "orange", [75] = "red", [100] = "gray"}))
+	table.insert(lines, custom_progressbar(fullness(), estimate_max_fullness(), { [0] = "green", [50] = "orange", [75] = "red", [100] = "gray" }))
 	table.insert(lines, "</td><td>")
-	table.insert(lines, custom_progressbar(drunkenness(), estimate_max_safe_drunkenness(),
-					     {[0] = "green", [50] = "orange", [75] = "red", [100] = "gray"}))
+	table.insert(lines, custom_progressbar(drunkenness(), estimate_max_safe_drunkenness(), { [0] = "green", [50] = "orange", [75] = "red", [100] = "gray" }))
 	table.insert(lines, "</td>")
 	if setting_enabled("show spleen counter") then 
-	   table.insert(lines, "<td>")
-	   table.insert(lines, custom_progressbar(spleen(), estimate_max_spleen(),
-						{[0] = "green", [50] = "orange", [75] = "red", [100] = "gray"}))
-	   table.insert(lines, "</td>")
+		table.insert(lines, "<td>")
+		table.insert(lines, custom_progressbar(spleen(), estimate_max_spleen(), { [0] = "green", [50] = "orange", [75] = "red", [100] = "gray" }))
+		table.insert(lines, "</td>")
 	end
 	table.insert(lines, "</tr>")
-	if ascensionstatus() == "Aftercore" then
+	if ascensionstatus("Aftercore") then
 		table.insert(lines, [[<tr><td colspan='3'><font size="2"><a href="]] .. make_optimize_diet_href() .. [[" target="mainpane" style="color: green">{ Optimize diet }</a></font></td></tr>]])
 	end
 	table.insert(lines, "</table></td></tr>")
 	if playerclass("Seal Clubber") then
-		add_organ_line("Fury", fury(), 5)
+--		add_organ_line("Fury", fury(), 5)
 	end
 	if playerclass("Sauceror") then
-		add_organ_line("Soulsauce", soulsauce(), 100)
+--		add_organ_line("Soulsauce", soulsauce(), 100)
 	end
-
 
 	table.insert(lines, "</tbody>")
 	table.insert(lines, "</tbody>")
@@ -337,9 +320,7 @@ function blpane_familiar_weight()
 	if familiar("Reanimated Reanimator") then
 		return string.format([[<a href="main.php?talktoreanimator=1" target="mainpane">%s</a>]], buffedfamiliarweight())
 	else
-	    return string.format([[<a href="%s" target="mainpane">%s</a>]], 
-				 maximizer_link("Familiar Weight"),
-				 buffedfamiliarweight())
+		return string.format([[<a href="%s" target="mainpane">%s</a>]], maximizer_link("Familiar Weight"), buffedfamiliarweight())
 	end
 end
 
@@ -425,8 +406,8 @@ local function bl_charpane_compact_familiar(lines)
 <td class="equip"><img class="chit_launcher" rel="chit_pickerfamequip" src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td></tr>]],
 					familiarpicture(), get_familiarname(familiarid()),blpane_familiar_weight(),
 					fam_equip.picture or "blank"))
-		local faminfos = maybe_get_tracked_familiar_info(familiarpicture())
-		if faminfos ~= nil then
+		local faminfos = get_tracked_familiar_info(familiarpicture())
+		if faminfos[1] then
 			table.insert(lines, [[<tr><td colspan='4' class='info'>]])
 			for _, faminfo in ipairs(faminfos) do
 				table.insert(lines,"<div class='faminfo'>" .. familiar_info_line(faminfo) .. "</div>")
@@ -1675,47 +1656,45 @@ add_interceptor("/charpane.php", function()
 	table.insert(lines, [[<div id="chit_house"><div id="chit_roof" class="chit_chamber">]])
 	bl_charpane_level_lines(lines)
 	if bl_compact() then
-	    bl_compact_stats_panel(lines)
+		bl_compact_stats_panel(lines)
 	else
-	    bl_charpane_mystats_lines(lines)
+		bl_charpane_mystats_lines(lines)
 	end
 	-- todo: move to new function
 	if setting_enabled("show modifier estimates") then
-	   if bl_compact() then
-	   table.insert(lines, [[<table id="chit_modifiers" class="chit_brick nospace compact">]])
-	   else
-	      table.insert(lines, [[<table id="chit_modifiers" class="chit_brick nospace">]])
-	   end
-	   table.insert(lines, [[<thead><tr><th>Modifiers</th></tr></thead><tbody>]])
-	   for _, mod_info in ipairs(run_charpane_line_functions()) do
-	      if mod_info.compactname ~= "ML" then
-		 -- ML is already in the above panel
-		 local label = ""
-		 if mod_info.link ~= nil then
-		    label = string.format([[<a target="mainpane" href="%s">%%s</a>]], mod_info.link)
-		 else
-		    label = "%s"
-		 end
-		 if bl_compact() then
-		    label = string.format(label, mod_info.compactname or mod_info.normalname or mod_info.name)
-		 else
-		    label = string.format(label, mod_info.normalname)
-		 end
-		 table.insert(lines, string.format([[<tr><td class="label">%s</td><td class="info">%s</td></tr>]],
-						      label, mod_info.value or mod_info.compactvalue or mod_info.normalvalue))
-	      end
-	   end
-	   table.insert(lines, [[</tbody></table>]])
+		if bl_compact() then
+			table.insert(lines, [[<table id="chit_modifiers" class="chit_brick nospace compact">]])
+		else
+			table.insert(lines, [[<table id="chit_modifiers" class="chit_brick nospace">]])
+		end
+		table.insert(lines, [[<thead><tr><th colspan="2">Modifiers</th></tr></thead><tbody>]])
+		for _, mod_info in ipairs(run_charpane_line_functions()) do
+			if mod_info.compactname ~= "ML" then
+				-- ML is already in the above panel
+				local label = ""
+				if mod_info.link ~= nil then
+					label = string.format([[<a target="mainpane" href="%s">%%s</a>]], mod_info.link)
+				else
+					label = "%s"
+				end
+				if bl_compact() then
+					label = string.format(label, mod_info.compactname or mod_info.normalname or mod_info.name)
+				else
+					label = string.format(label, mod_info.normalname)
+				end
+				table.insert(lines, string.format([[<tr><td class="label">%s</td><td class="info">%s</td></tr>]], label, mod_info.value or mod_info.compactvalue or mod_info.normalvalue))
+			end
+		end
+		table.insert(lines, [[</tbody></table>]])
 	end
 	bl_charpane_zone_lines(lines)
 	if not bl_compact() then
-	    
-	    bl_charpane_familiar(lines)
-	    if pastathrall() and not setting_enabled("display thrall as intrinsic") then
-		bl_charpane_thrall(lines)
-	    end
+		bl_charpane_familiar(lines)
+		if pastathrall() and not setting_enabled("display thrall as intrinsic") then
+			bl_charpane_thrall(lines)
+		end
 	else
-	    bl_charpane_compact_familiar(lines)
+		bl_charpane_compact_familiar(lines)
 	end
 	table.insert(lines, [[</div><!-- end roof -->]])
 

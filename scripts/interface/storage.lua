@@ -31,6 +31,11 @@ aftercore_items_list = {
 	"Boris's Helm (askew)",
 	"Jarlsberg's pan",
 	"Jarlsberg's pan (Cosmic portal mode)",
+	"over-the-shoulder Folder Holder",
+	"Pantsgiving",
+	"Buddy Bjorn",
+	"Sneaky Pete's leather jacket",
+	"Sneaky Pete's leather jacket (collar popped)",
 
 	"plexiglass pants",
 	"plexiglass pendant",

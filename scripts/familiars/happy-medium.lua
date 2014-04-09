@@ -23,8 +23,8 @@ add_printer("/charpane.php", function()
 	end
 end)
 
-
-track_familiar_info("medium", function()
+-- TODO: needs to be tracked as "Happy Medium", not familiar picture
+track_familiar_info("medium_0", function()
 	local siphons = get_daily_counter("familiar.happy medium.siphons")
 	local charges = get_ascension_counter("familiar.happy medium.charges")
 	return {

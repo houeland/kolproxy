@@ -85,6 +85,10 @@ function get_maximum_craftable_SHCs(available_still_charges)
 end
 
 function automate_crafting_cocktail(itemname)
+	local still_recipes = {}
+	for a, b in pairs(get_recipes_by_type("still")) do
+		still_recipes[a] = b.base
+	end
 	local hippy_buyable = {}
 	if have_item("filthy knitted dread sack") and have_item("filthy corduroys") then
 		for _, x in ipairs { "herbs", "grapefruit", "grapes", "lemon", "olive", "orange", "strawberry", "tomato" } do
@@ -102,6 +106,9 @@ function automate_crafting_cocktail(itemname)
 			local pt = craft_item(name)()
 			table.insert(crafted_item_text, pt)
 		else
+			if still_recipes[name] and not have_item(still_recipes[name]) then
+				buy_itemname(still_recipes[name])
+			end
 			buy_itemname(name)
 		end
 	end
