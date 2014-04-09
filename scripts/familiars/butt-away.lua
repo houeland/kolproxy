@@ -23,6 +23,7 @@ end)
 add_processor("familiar message: stompboots", function()
 	if text:contains("feet flying, heels stomping, buckles jangling") and text:contains("Thank goodness there wasn't a mudhole nearby.") then
 		increase_daily_counter("familiar.pair of stomping boots.stomps")
+		reset_ascension_counter("familiar.pair of stomping boots.charges")
 	end
 end)
 
@@ -31,6 +32,15 @@ add_printer("familiar message: stompboots", function()
 		add_buttaway_message(">([^<]* kicks you in the butt to speed your escape.-)<", get_daily_counter("familiar.free butt runaways"))
 	end
 end)
+
+
+add_processor("/fight.php", function()
+	if familiar("Pair of Stomping Boots") and text:contains(">You win the fight!<!--WINWINWIN--><") and not text:contains("feet flying, heels stomping, buckles jangling") and not text:contains("Thank goodness there wasn't a mudhole nearby.") then
+		-- only increment counter when boots didn't stomp
+		increase_ascension_counter("familiar.pair of stomping boots.charges")
+	end
+end)
+
 
 add_printer("/charpane.php", function()
 	if familiarpicture() == "bandersnatch" or familiarpicture() == "stompboots" then
@@ -49,4 +59,34 @@ add_printer("/charpane.php", function()
 		end
 		print_familiar_value({ compactvalue = compact, normalvalue = normal, color = color })
 	end
+end)
+
+track_familiar_info("stompboots", function()
+	return {
+		count = get_daily_counter("familiar.free butt runaways"),
+		-- todo: this is only correct when this is the current fam
+		max = math.floor(buffedfamiliarweight() / 5),
+		type = "counter",
+		info = "runaways",
+	}
+end)
+
+track_familiar_info("stompboots", function()
+	return {
+		count = get_daily_counter("familiar.pair of stomping boots.stomps"),
+		max = 7,
+		type = "counter",
+		info = "stomps",
+		extra_info = string.format("%i / %i charges", get_ascension_counter("familiar.pair of stomping boots.charges"), get_daily_counter("familiar.pair of stomping boots.stomps") + 2)
+	}
+end)
+
+track_familiar_info("bandersnatch", function()
+	return {
+		count = get_daily_counter("familiar.free butt runaways"),
+		-- todo: this is only correct when this is the current fam
+		max = math.floor(buffedfamiliarweight() / 5),
+		type = "counter",
+		info = "runaways"
+	}
 end)

@@ -15,6 +15,16 @@ add_printer("/charpane.php", function()
 	print_familiar_counter(compact, normal)
 end)
 
+track_familiar_info("jungman", function()
+	return {
+		count = get_daily_counter("familiar.jungman.jar"),
+		max = 1,
+		info = "jar",
+		type = "counter",
+		extra_info = string.format("%d / 30 fights won", get_ascension_counter("familiar.jungman.fights won"))
+	}
+end)
+
 add_processor("/fight.php", function()
 	if familiar("Angry Jung Man") and text:contains(">You win the fight!<!--WINWINWIN--><") then
 		increase_ascension_counter("familiar.jungman.fights won")

@@ -22,3 +22,13 @@ add_printer("/charpane.php", function()
 		print_charpane_infoline(compact, normal)
 	end
 end)
+
+
+track_familiar_info("llama", function()
+	return {
+		count = get_daily_counter("familiar.llama.violence"),
+		max = nil,
+		type = "counter",
+		info = "violence",
+	}
+end)
