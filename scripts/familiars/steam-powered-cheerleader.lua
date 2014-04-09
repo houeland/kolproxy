@@ -32,8 +32,7 @@ end)
 
 track_familiar_info("cheerleader", function()
 	return {
-	        type = "info",
-	        info = string.format("%1.1fx weight", get_steampowered_cheerleader_bonus_multiplier()),
-	        
-	        }
-	end)
+		type = "info",
+		info = string.format("%1.1fx weight", get_steampowered_cheerleader_bonus_multiplier()),
+	}
+end)

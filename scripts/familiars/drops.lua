@@ -81,9 +81,11 @@ for familiar, info in pairs(drop_familiars) do
 		return { title = "Familiar drops (" .. familiar .. ")", value = get_daily_counter(counter_name) .. " / 5 " .. info.short_item_name }
 	end)
 	track_familiar_info(familiar, function()
-				return {count = get_daily_counter(counter_name),
-					max = 5,
-					info = info.short_item_name,
-					type = "counter"}
+		return {
+			count = get_daily_counter(counter_name),
+			max = 5,
+			info = info.short_item_name,
+			type = "counter"
+		}
 	end)
 end

@@ -18,16 +18,6 @@ register_setting {
 }
 
 register_setting {
-        name = "hide modifiers in pane",
-	description = "Hide modifiers display in rollout pane",
-	group = "charpane",
-	default_level = "enthusiast",
-	parent = "use custom bleary charpane",
-	update_charpane = true,
-	beta_version = true,
-}
-
-register_setting {
 	server_name = "compacteffects",
 	description = "Use compact effects list",
 	group = "charpane",
@@ -93,7 +83,7 @@ local function progresscolor(c, m, thresholds)
 				color = thresholds[lvl] 
 			end
 		end
-    end
+	end
 	return color
 end
 
@@ -176,9 +166,8 @@ function bl_charpane_level_lines(lines)
 end
 
 local function maximizer_link(bonus)
-    return modifier_maximizer_href { whichbonus = bonus, pwd = session.pwd}
+	return modifier_maximizer_href { whichbonus = bonus, pwd = session.pwd }
 end
-
 
 function bl_charpane_mystats_lines(lines)
 	table.insert(lines, [[<table id="chit_stats" class="chit_brick nospace">
@@ -264,26 +253,19 @@ local function bl_compact_stats_panel(lines)
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, "<td class='statbar' colspan='2'>" .. stat_line(rawmoxie()) .. "</td>")
 	table.insert(lines, "</tr><tr></table></td><td><table><tr>")
-	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">HP</a></td>
-                                           <td class="info">%s&nbsp/&nbsp;%s </td>]],
-					      maximizer_link("Max HP"),
-					  hp(), maxhp()))
+	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">HP</a></td><td class="info">%s&nbsp/&nbsp;%s</td>]], maximizer_link("Max HP"), hp(), maxhp()))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, string.format([[<td  class='statbar' colspan='2'>%s</td>]],
 			custom_progressbar(hp(), maxhp(),
 					      {[0] = "red", [50] = "orange", [75] = "green"})))
 	table.insert(lines, "</tr><tr>")
-	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">MP</a></td>
-                                           <td class="info">%s&nbsp;/&nbsp;%s </td>]],
-					      maximizer_link("Max MP"),
-					  mp(), maxmp()))
+	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">MP</a></td><td class="info">%s&nbsp;/&nbsp;%s </td>]], maximizer_link("Max MP"), mp(), maxmp()))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]],
 			custom_progressbar(mp(), maxmp(),
 					      {[0] = "red", [50] = "orange", [75] = "green"})))
 	table.insert(lines, "</tr><tr>")
-	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane" >ML</a></td>
-                                           <td class="info">%+d</td>]], maximizer_link("Monster Level"), estimate_bonus("Monster Level")))
+	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane" >ML</a></td><td class="info">%+d</td>]], maximizer_link("Monster Level"), estimate_bonus("Monster Level")))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]],
 			custom_progressbar(1, 1,
@@ -392,7 +374,7 @@ end
 
 local function familiar_info_line(faminfo)
 	local ret = faminfo.info
-    if faminfo.type == "counter" then
+	if faminfo.type == "counter" then
 		if faminfo.max then
 			ret = string.format("%d&nbsp;/&nbsp;%d %s", faminfo.count, faminfo.max, faminfo.info)
 		else
@@ -401,7 +383,7 @@ local function familiar_info_line(faminfo)
 		if faminfo.extra_info then
 			ret = ret .. string.format(" <span class='extrainfo'>(%s)</span>", faminfo.extra_info)
 		end
-    end
+	end
 	return ret
 end
 
@@ -433,44 +415,40 @@ local function compact_motorbike_display()
 end
 
 local function bl_charpane_compact_familiar(lines)
-    table.insert(lines, [[<table id="chit_familiar" class="chit_brick nospace compact">]])
-    if familiarid() ~= 0 then
-	local fam_equip = maybe_get_itemdata(tonumber(status().equipment.familiarequip) or 0) or {}
-	table.insert(lines, string.format([[
+	table.insert(lines, [[<table id="chit_familiar" class="chit_brick nospace compact">]])
+	if familiarid() ~= 0 then
+		local fam_equip = maybe_get_itemdata(tonumber(status().equipment.familiarequip) or 0) or {}
+		table.insert(lines, string.format([[
 <tr><td class="icon"><a href="familiar.php" target="mainpane"><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" width="20" height="20" class="chit_launcher" rel="chit_pickerfam"></td>
 <td class="famname"><a target=mainpane href="familiar.php" class="familiarpick" title="Visit your terrarium">%s</a></td>
 <td class='weight'>%s</td>
 <td class="equip"><img class="chit_launcher" rel="chit_pickerfamequip" src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td></tr>]],
 					familiarpicture(), get_familiarname(familiarid()),blpane_familiar_weight(),
 					fam_equip.picture or "blank"))
-	local faminfos = maybe_get_tracked_familiar_info(familiarpicture())
-	if faminfos ~= nil then
-	    table.insert(lines, [[<tr><td colspan='4' class='info'>]])
-	    for _, faminfo in ipairs(faminfos) do
-		table.insert(lines,"<div class='faminfo'>" .. familiar_info_line(faminfo) .. "</div>")
-	    end
-	    table.insert(lines, [[</td></tr>]])
-	end
-    elseif ascensionpath("Avatar of Boris") then
+		local faminfos = maybe_get_tracked_familiar_info(familiarpicture())
+		if faminfos ~= nil then
+			table.insert(lines, [[<tr><td colspan='4' class='info'>]])
+			for _, faminfo in ipairs(faminfos) do
+				table.insert(lines,"<div class='faminfo'>" .. familiar_info_line(faminfo) .. "</div>")
+			end
+			table.insert(lines, [[</td></tr>]])
+		end
+	elseif ascensionpath("Avatar of Boris") then
 		table.insert(lines, [[<tr><th>Clancy</th></tr>]] .. get_clancy_display() .. [[</center>]])
-    elseif ascensionpath("Avatar of Jarlsberg") then
+	elseif ascensionpath("Avatar of Jarlsberg") then
 		table.insert(lines, [[<center>]] .. get_companion_display() .. [[</center>]])
-    elseif ascensionpath("Avatar of Sneaky Pete") then
+	elseif ascensionpath("Avatar of Sneaky Pete") then
 		table.insert(lines, compact_motorbike_display())
-    else
-		table.insert(lines, [[<tr><td class="icon"><a href="familiar.php" target="mainpane"><img src="http://images.kingdomofloathing.com/itemimages/blank.gif" width="20" height="20" class="chit_launcher" rel="chit_pickerfam" style="border: 1px solid #f0f0f0;"></td><td><a href="familiar.php" target="mainpane">No familiar</a><td class='weight'>0</td>
-<td class="equip"><img src="http://images.kingdomofloathing.com/itemimages/blank.gif"></td></tr>]])
-    end
-    if pastathrall() and not setting_enabled("display thrall as intrinsic") then
-	local thrall = get_current_pastathrall_info()
-	table.insert(lines, string.format([[<tr><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td><td class='famname'>%s</td><td class='weight'>%s</td></tr>]], thrall.picture, thrall.name, thrall.level))
-	table.insert(lines, string.format([[<tr><td class='info' colspan='4'>%s</td></tr>]], table.concat(thrall.abilities, ", ")))
-    end
+	else
+		table.insert(lines, [[<tr><td class="icon"><a href="familiar.php" target="mainpane"><img src="http://images.kingdomofloathing.com/itemimages/blank.gif" width="20" height="20" class="chit_launcher" rel="chit_pickerfam" style="border: 1px solid #f0f0f0;"></td><td><a href="familiar.php" target="mainpane">No familiar</a><td class='weight'>0</td><td class="equip"><img src="http://images.kingdomofloathing.com/itemimages/blank.gif"></td></tr>]])
+	end
+	if pastathrall() and not setting_enabled("display thrall as intrinsic") then
+		local thrall = get_current_pastathrall_info()
+		table.insert(lines, string.format([[<tr><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td><td class='famname'>%s</td><td class='weight'>%s</td></tr>]], thrall.picture, thrall.name, thrall.level))
+		table.insert(lines, string.format([[<tr><td class='info' colspan='4'>%s</td></tr>]], table.concat(thrall.abilities, ", ")))
+	end
 	table.insert(lines, [[</table>]])
 end
-
-
-
 
 function bl_charpane_fam_picker(fams)
 	local curfampic = familiarpicture()
@@ -1109,7 +1087,7 @@ padding: 0px;
 }
 
 #chit_stats.compact tr td.label {
- width: 40px;
+	width: 40px;
 }
 
 #chit_stats.compact td.statbar, #chit_stats.compact tr td.label, #chit_stats.compact tr td.info {
@@ -1124,7 +1102,7 @@ div.progressbox {
 }
 
 .compact div.progressbox {
-        padding: 0px;
+	padding: 0px;
 	background-color:#F0F0F0;
 	border:1px solid #E0E0E0;
 	height:3px
@@ -1136,8 +1114,8 @@ div.progressbar {
 }
 
 .compact div.progressbar {
-        height: 3px;
-        background-color: blue;
+	height: 3px;
+	background-color: blue;
 }
 
 /* Hide-away Modifiers Panel */
@@ -1159,11 +1137,10 @@ div.progressbar {
 
 /* Main Modifiers Panel */
 
-
 #chit_modifiers tr td.label {
-   text-align: left;
-font-weight:bold;
-		      }
+	text-align: left;
+	font-weight:bold;
+}
 
 #chit_modifiers tr td.info {
 	color:#606060;
@@ -1250,28 +1227,26 @@ padding: 0px;
 }
 
 #chit_familiar.compact img {
-	       width: 20px;
-	       height: 20px;
+	width: 20px;
+	height: 20px;
 }
 
 #chit_familiar.compact tr td.icon {
-	       width: 20px;
-               height: 20px;
-               padding: 0px;
+	width: 20px;
+	height: 20px;
+	padding: 0px;
 }
 
 #chit_familiar.compact tr td.equip {
-	       width: 20px;
-               height: 20px;
-               padding: 0px;
-               border: 1px solid #F0F0F0;
+	width: 20px;
+	height: 20px;
+	padding: 0px;
+	border: 1px solid #F0F0F0;
 }
 
 #chit_familiar.compact tr td.info {
-               padding: 0px;
-
+	padding: 0px;
 }
-
 
 /* Trail (Last Adventure) Panel */
 #chit_trail tr td {
@@ -1705,7 +1680,7 @@ add_interceptor("/charpane.php", function()
 	    bl_charpane_mystats_lines(lines)
 	end
 	-- todo: move to new function
-	if not setting_enabled("hide modifiers in pane") then
+	if setting_enabled("show modifier estimates") then
 	   if bl_compact() then
 	   table.insert(lines, [[<table id="chit_modifiers" class="chit_brick nospace compact">]])
 	   else
@@ -1754,10 +1729,10 @@ add_interceptor("/charpane.php", function()
 				<ul style="float:left">
 					<li><a href="charpane.php" title="Reload"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAI/SURBVDjLjZPbS9NhHMYH+zNidtCSQrqwQtY5y2QtT2QGrTZf13TkoYFlzsWa/tzcoR3cSc2xYUlGJfzAaIRltY0N12H5I+jaOxG8De+evhtdOP1hu3hv3sPzPO/z4SsBIPnfuvG8cbBlWiEVO5OUItA0VS8oxi9EdhXo+6yV3V3UGHRvVXHNfNv6zRfNuBZVoiFcB/3LdnQ8U+Gk+bhPVKB3qUOuf6/muaQR/qwDkZ9BRFdCmMr5EPz6BN7lMYylLGgNNaKqt3K0SKDnQ7us690t3rNsxeyvaUz+8OJpzo/QNzd8WTtcaQ7WlBmPvxhx1V2Pg7oDziIBimwwf3qAGWESkVwQ7owNujk1ztvk+cg4NnAUTT4FrrjqUKHdF9jxBfXr1rgjaSk4OlMcLrnOrJ7latxbL1V2lgvlbG9MtMTrMw1r1PImtfyn1n5q47TlBLf90n5NmalMtUdKZoyQMkLKlIGLjMyYhFpmlz3nGEVmFJlRZNaf7pIaEndM24XIjCOzjX9mm2S2JsqdkMYIqbB1j5C6yWzVk7YRFTsGFu7l+4nveExIA9aMCcOJh6DIoMigyOh+o4UryRWQOtIjaJtoziM1FD0mpE4uZcTc72gBaUyYKEI6khgqINXO3saR7kM8IZUVCRDS0Ucf+xFbCReQhr97MZ51wpWxYnhpCD3zOrT4lTisr+AJqVx0Fiiyr4/vhP4VyyMFIUWNqRrV96vWKXKckBoIqWzXYcoPDrUslDJoopuEVEpIB0sR+AuErIiZ6OqMKAAAAABJRU5ErkJggg=="></a></li>
 					<!--<li><a class="tool_launcher" title="Elements" href="#" rel="elements"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA0JJREFUeNpUU01oXFUU/u59//PmvTd5k8ybmUxttS3ahIYEBCPFVAmFCoLNTgxCV8WFO3GhWFcu3AgiojsRdOOqiy4kWJA2VaiiBRGpRWY6mTRpMtM3/7/v3Xc9KUTaAx/3LM757ne/cy6TUuIwcpvHFG88XitxY32WW/MFzovTnIkMi2o+j/4omtG3Z5ZqP+KxYIcExevnnlHj+qcLdvHCi/5pnPJKCAwXDmdQozbQryFqb0Rqq/O12RAfHF/bCv8nyG1eOubI8Mqq/9ziS4XTsC2JoagiLQeYpqKA2QjUk5D9Hnpbm4grP/3Ay/310ns7TR7cuqxbSuaz1ezq4itHVnFX3cffcQURdFg8QIrPwACHGPwOdKtw3LOwUi+/Gg31ywcKVDD/tXnbff1MfgF/4T5JDjDFskhzwGUmHJk8UqJOdIhmnZ5SheEto9v65e1/3ix8x00jvz7vnoBmeVDgI8OK8HkJHi/S7Tl4Sh6WCMB7PsFDUntIntiwC2et3h57Q9XV3ELBnsWdCLBYAJMppIITCTBFpyMF+KAJ2RmBhS2CjrhThqYFiFvq8yp4vuDpWewkAjY1KFKBRrBJj0tk+mgI0T5oNoCGBuxxSJoKz+cRhziioq0LmdWR9CJEjCNWlEcYUT7kClITC7Lr0ARcggeM6UwmmIyoLnaEGu8r221PzFl9hsFIoqtINMk4LshhynVyOkUESZsaBx7kmLzIaejX9xHFTkUdP9Ru1ax47oUZEz/XxtTAIGMJQfthGgwWESh9DbxhQzZdJB0HylIBzd/ukALzhoqa/OZqpfvW3IqiukOOxo7AJOLgmkRaZzBoUfWhhNNNQbZtaKdOILy3i/qv2w3A+Z7vfPTUjUFl9NW1zSaOewy+whFuC7R3BZr3BVqUhw8EhmSgejJAz9BQuXkPg4n28fn61bJ6sE2yF314faNbiqvjtZWlacytmOhsCcgwQUzjZAWF9pmGUG2ivHEX4Z/h5x6zv3ziM+UXb6eTvdb7KbB3zi377rNPeyh6OtKC3NzvYlxuYHR7b1dL2p9keOuL8/V3kycIDmN25tpCRvYuZCCWPSaPTiVCZJH8m4W8eZRZVy421iqP1/8nwAD8GGnksWlP5wAAAABJRU5ErkJggg=="></a></li>-->]])
-	if setting_enabled("hide modifiers in pane") then
+	if not setting_enabled("show modifier estimates") then
 		table.insert(lines, [[<li><a class="tool_launcher" title="Modifiers" href="#" rel="modifiers"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAGxSURBVDjLpVM9a8JQFL0vUUGFfowFpw4dxM2vf9G5newv6OIvEDoVOnUQf0G7CEYQHVzUVZQoaKFugoW20EUaTd5L+u6NSQORdvDC5dyEd+499ySPOY4Dh0TEK8rl8n0mk7lOJBIpVVWBMUaJAzCFEMA5B8MwPpfL5VOlUrklonegWq3qEr+c/2Nbq9VWHs9XkEwm0xLUy/Lzn5KbD1exaDR6FlpBURSq4/E4HJ2c4jMwmYpcw6vf31be2bAHQTPVHYEFyAr7VeEACzfAQKPuSmlCy7LINBcteifSx3ROWutzlCAZ3Z9Op9ButyEWi8F8Poder0drXTQ1SNUeqalt22EFQrgvC4UC5HI5mow1EjA/SjdEjEQiYAd+HV8BF5xwNBpBo9EgBZPJBDqdDimYzWbQ7XapmeA8rIDLiRjFYpEm4zTEfD7v19lslhSgJ2EFXBAOh0Oo1+vk/ng8Bk3TyBtd16HVarkrCRFWYFqmrwAzqMDzBhMVWNaeFSzT5P3BQJXI3G+9P14XC8c0t5tQg/V6/dLv9c+l3ATDFrvL5HZyCBxpv5Rvboxv3eOxQ6/zD+IbEqvBQWgxAAAAAElFTkSuQmCC"></a></li>]])
 	end
-	if ascensionstatus() == "Aftercore" then
+	if ascensionstatus("Aftercore") then
 		table.insert(lines, string.format([[<li><a href="%s" target="mainpane" style="color: green">{ Get buffs }</a></li>]], make_get_buffs_href()))
 	end
 	table.insert(lines,[[</ul></th></tr></table></div><!-- end floor -->]])

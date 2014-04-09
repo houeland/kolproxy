@@ -62,29 +62,31 @@ add_printer("/charpane.php", function()
 end)
 
 track_familiar_info("stompboots", function()
-	return {count = get_daily_counter("familiar.free butt runaways"),
-	        -- todo: this is only correct when this is the current fam
-	        max = math.floor(buffedfamiliarweight() / 5),
-	        type = "counter",
-	        info = "runaways",
-	        
-	        }
-	end)
+	return {
+		count = get_daily_counter("familiar.free butt runaways"),
+		-- todo: this is only correct when this is the current fam
+		max = math.floor(buffedfamiliarweight() / 5),
+		type = "counter",
+		info = "runaways",
+	}
+end)
 
 track_familiar_info("stompboots", function()
-	return {count = get_daily_counter("familiar.pair of stomping boots.stomps"),
-	        max = 7,
-	        type = "counter",
-	        info = "stomps",
-	        extra_info = string.format("%i / %i charges", 
-	                                   get_ascension_counter("familiar.pair of stomping boots.charges"), 
-	                                   get_daily_counter("familiar.pair of stomping boots.stomps")+2)}
-	end)
+	return {
+		count = get_daily_counter("familiar.pair of stomping boots.stomps"),
+		max = 7,
+		type = "counter",
+		info = "stomps",
+		extra_info = string.format("%i / %i charges", get_ascension_counter("familiar.pair of stomping boots.charges"), get_daily_counter("familiar.pair of stomping boots.stomps") + 2)
+	}
+end)
 
 track_familiar_info("bandersnatch", function()
-	return {count = get_daily_counter("familiar.free butt runaways"),
-	        -- todo: this is only correct when this is the current fam
-	        max = math.floor(buffedfamiliarweight() / 5),
-	        type = "counter",
-	        info = "runaways"}
-	end)
+	return {
+		count = get_daily_counter("familiar.free butt runaways"),
+		-- todo: this is only correct when this is the current fam
+		max = math.floor(buffedfamiliarweight() / 5),
+		type = "counter",
+		info = "runaways"
+	}
+end)

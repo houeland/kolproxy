@@ -19,7 +19,6 @@ add_printer("/charpane.php", function()
 	if familiar("Happy Medium") then
 		local normal = make_plural(get_daily_counter("familiar.happy medium.siphons"), "siphon", "siphons")
 		local compact = normal
-
 		print_familiar_counter(compact, normal)
 	end
 end)
@@ -28,11 +27,11 @@ end)
 track_familiar_info("medium", function()
 	local siphons = get_daily_counter("familiar.happy medium.siphons")
 	local charges = get_ascension_counter("familiar.happy medium.charges")
-	return {count = siphons,
+	return {
+		count = siphons,
 		max = nil,
 		type = "counter",
 		info = "siphons",
-		extra_info = string.format("%d/%d charges", charges,
-		                           siphons*3 +charges)
-}
+		extra_info = string.format("%d / %d charges", charges, 9 + siphons * 3)
+	}
 end)

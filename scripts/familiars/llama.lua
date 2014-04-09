@@ -25,10 +25,10 @@ end)
 
 
 track_familiar_info("llama", function()
-	local violence = get_daily_counter("familiar.llama.violence")
-	return {count = get_daily_counter("familiar.llama.violence"),
+	return {
+		count = get_daily_counter("familiar.llama.violence"),
 		max = nil,
 		type = "counter",
 		info = "violence",
-}
+	}
 end)
