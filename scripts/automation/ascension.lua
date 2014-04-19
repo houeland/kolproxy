@@ -1565,6 +1565,36 @@ endif
 	}
 
 	add_task {
+		when = ascensionpath("Avatar of Sneaky Pete") and automation_sneaky_pete_want_hate() and
+			petelove() > 30,
+		task = {
+			message = "reequip jacket to lower love",
+			nobuffing = true,
+			action = function()
+				local eq = equipment()
+				unequip_slot("shirt")
+				script.wear(eq)
+				did_action = true
+			end
+		}
+	}
+
+	add_task {
+		when = ascensionpath("Avatar of Sneaky Pete") and not automation_sneaky_pete_want_hate() and
+			petehate() > 30,
+		task = {
+			message = "reequip jacket to lower hate",
+			nobuffing = true,
+			action = function()
+				local eq = equipment()
+				unequip_slot("shirt")
+				script.wear(eq)
+				did_action = true
+			end
+		}
+	}
+
+	add_task {
 		when = ascensionpath("Avatar of Sneaky Pete") and
 			can_upgrade_sneaky_pete_motorcycle(),
 		task = {
