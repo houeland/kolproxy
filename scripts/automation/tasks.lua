@@ -697,6 +697,91 @@ mark m_done
 		end
 	end
 
+	function t.get_tower_item_farming_task(item)
+		local towerfarming = {}
+		local function shore_item_crate(cratename)
+			return {
+				f = function()
+					if have_item(cratename) then
+						return {
+							message = "use " .. cratename,
+							action = function()
+								use_item(cratename)
+								did_action = have_item(item)
+							end
+						}
+					elseif have_item("Shore Inc. Ship Trip Scrip") then
+						return {
+							message = "buy " .. cratename,
+							action = function()
+								buy_shore_inc_item(cratename)
+								did_action = have_item(cratename)
+							end
+						}
+					else
+						return {
+							message = "shore for " .. cratename,
+							action = function()
+								local scrip = count_item("Shore Inc. Ship Trip Scrip")
+								result, resulturl = script.take_shore_trip()
+								did_action = count_item("Shore Inc. Ship Trip Scrip") > scrip
+							end
+						}
+					end
+				end
+			}
+		end
+		towerfarming["stick of dynamite"] = shore_item_crate("dude ranch souvenir crate")
+		towerfarming["tropical orchid"] = shore_item_crate("tropical island souvenir crate")
+		towerfarming["barbed-wire fence"] = shore_item_crate("ski resort souvenir crate")
+		towerfarming["frigid ninja stars"] = { zone = "Lair of the Ninja Snowmen" }
+		towerfarming["spider web"] = { zone = "The Sleazy Back Alley" } -- TODO: +combat%, noncombat choices
+		if estimate_bonus("Item Drops from Monsters") >= 200 then
+			towerfarming["sonar-in-a-biscuit"] = { zone = "The Batrat and Ratbat Burrow" }
+		end
+		towerfarming["NG"] = {
+			f = function()
+				if have_item("lowercase N") and have_item("original G") then
+					return {
+						message = "crafting NG",
+						action = function()
+							craft_item("NG")
+							did_action = have_item("NG")
+						end
+					}
+				elseif count_item("ten-leaf clover") + count_item("disassembled clover") >= 2 then
+					if not have_item("ten-leaf clover") and have_item("disassembled clover") then
+						use_item("disassembled clover")
+					end
+					if have_item("ten-leaf clover") then
+						return {
+							message = "clovering for NG",
+							action = adventure { zone = "The Castle in the Clouds in the Sky (Basement)" }
+						}
+					end
+				end
+			end
+		}
+		local farmdata = towerfarming[item]
+		if farmdata then
+			if farmdata.f then
+				return farmdata.f()
+			else
+				return {
+					message = "farm " .. item,
+					fam = "Slimeling",
+					buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+					bonus_target = { "item", "extraitem" },
+					minmp = 50,
+					action = adventure {
+						zone = farmdata.zone,
+						macro_function = macro_noodleserpent,
+					}
+				}
+			end
+		end
+	end
+
 	return t
 end
 

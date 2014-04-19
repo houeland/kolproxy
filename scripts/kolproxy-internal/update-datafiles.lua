@@ -791,6 +791,11 @@ function parse_recipes()
 			table.remove(tbl, 1)
 			table.sort(tbl)
 			add_recipe(itemname, { type = "cook", ingredients = tbl })
+		elseif crafttype == "COMBINE" then
+			table.remove(tbl, 1)
+			table.remove(tbl, 1)
+			table.sort(tbl)
+			add_recipe(itemname, { type = "combine", ingredients = tbl })
 		elseif crafttype and crafttype:contains("STILL") then
 			add_recipe(itemname, { type = "still", base = tbl[3] })
 		end

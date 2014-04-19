@@ -205,7 +205,7 @@ function geyser_action()
 	if ascensionpath("Avatar of Sneaky Pete") then
 		local mname = fight["currently fighting"] and fight["currently fighting"].name or "?"
 		if mname:contains("nightstand") and have_skill("Peel Out") and ascensionstatus("Hardcore") then
-			if petelove() >= 20 and buffedmoxie() >= 120 and have_skill("Pop Wheelie") and have_skill("Snap Fingers") then
+			if petelove() >= 20 and buffedmoxie() >= 100 and have_skill("Pop Wheelie") and have_skill("Snap Fingers") then
 				return [[
 
 cast Pop Wheelie
@@ -1259,7 +1259,7 @@ function macro_noodlecannon()
 
 ]] .. macro_killing_begins() .. [[
 
-while !times 5
+while !times 7
 ]] .. cannon_action() .. [[
 endwhile
 
@@ -1282,7 +1282,7 @@ function macro_noodleserpent()
 
 ]] .. conditional_salve_action() .. [[
 
-while !times 5
+while !times 7
 ]] .. serpent_action() .. [[
 endwhile
 

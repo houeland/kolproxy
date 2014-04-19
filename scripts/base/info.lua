@@ -1,11 +1,18 @@
+local function set_avatar_image(imgsrc)
+	if imgsrc then
+		session["cached avatar image"] = imgsrc
+		session["cached avatar image up-to-date"] = true
+	end
+end
+
 add_processor("/charsheet.php", function()
-	session["cached avatar image"] = text:match([[<a href=account_avatar.php><img src="(.-)"]])
-	session["cached avatar image up-to-date"] = true
+	local imgsrc = text:match([[<a href=account_avatar.php><img src="(.-)"]])
+	set_avatar_image(imgsrc)
 end)
 
 add_processor("/account_avatar.php", function()
-	session["cached avatar image"] = text:match([[checked value=%d+></td><td><img src="(.-)"]])
-	session["cached avatar image up-to-date"] = true
+	local imgsrc = text:match([[checked value=%d+></td><td><img src="(.-)"]])
+	set_avatar_image(imgsrc)
 end)
 
 add_processor("/inv_equip.php", function()
@@ -21,7 +28,7 @@ end)
 
 function avatar_image()
 	if not session["cached avatar image up-to-date"] and not locked() then
-		get_page("/account_avatar.php")
+		get_page("/charsheet.php")
 	end
 	return session["cached avatar image"] or "http://images.kingdomofloathing.com/itemimages/blank.gif"
 end

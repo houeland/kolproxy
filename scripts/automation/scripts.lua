@@ -1798,8 +1798,10 @@ endif
 		end
 
 		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
-			if space() > 0 and script.get_turns_until_sr() == nil and meat() >= 40 then
+			if space() >= 1 and script.get_turns_until_sr() == nil and meat() >= 40 then
 				return eat_fortune_cookie()
+--			elseif space() >= 1 and drunkenness() == estimate_max_safe_drunkenness() and advs() < 15 then
+--				stop "TODO: eat food, but not special ones: winter gardening, hippy fruit, hot wings, ...???"
 			end
 			return
 		end
@@ -1964,25 +1966,15 @@ endif
 			end
 		end
 
-		if ascensionstatus() ~= "Hardcore" then return end
-
 		if not can_drink_normal_booze() then return end
 
 		if advs() >= 20 then return end
 
+		if ascensionstatus() ~= "Hardcore" then return end
+
 		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
-			-- TODO: just add as options, don't craft these until where they would actually be consumed
-			if not have_item("Ice Island Long Tea") and estimate_max_safe_drunkenness() - drunkenness() >= 4 and level() < 6 and count_item("snow berries") >= 1 and count_item("ice harvest") >= 3 then
-				shop_buy_item("Ice Island Long Tea", "snowgarden")
-			elseif level() >= 6 then
-				script.ensure_cocktailcrafting_kit()
-				local charges = get_still_charges()
-				local craftableSHCs = get_maximum_craftable_SHCs(charges)
-				if craftableSHCs[1] then
-					automate_crafting_cocktail(craftableSHCs[1])
---				elseif charges <= 0 then
---					return script.craft_and_drink_quality_booze(2)
-				end
+			if level() >= 6 and get_still_charges() < 2 then
+				return script.craft_and_drink_quality_booze(2)
 			end
 			return script.craft_and_drink_quality_booze(4)
 		end
@@ -2008,11 +2000,6 @@ endif
 			end
 		end
 
-		if not have_item("pumpkin beer") and have_item("pumpkin") then
-			store_buy_item("fermenting powder", "m")
-			mix_items("pumpkin", "fermenting powder")
-		end
-
 		ensure_mp(5)
 		cast_skill("Summon Alice's Army Cards")
 
@@ -2024,29 +2011,20 @@ endif
 			if not have_item("coconut shell") and not have_item("little paper umbrella") and not have_item("magical ice cubes") then
 				ensure_mp(10)
 				cast_skillid(5014, 1) -- advanced cocktailcrafting
-				ensure_mp(10)
-				cast_skillid(5014, 1) -- advanced cocktailcrafting
-				ensure_mp(10)
-				cast_skillid(5014, 1) -- advanced cocktailcrafting
-				ensure_mp(10)
-				cast_skillid(5014, 1) -- advanced cocktailcrafting
-				ensure_mp(10)
-				cast_skillid(5014, 1) -- advanced cocktailcrafting
-			end
-
-			if not have_item("blended frozen swill") and not have_item("fruity girl swill") and not have_item("tropical swill") then
-				local f = nil
-				script.ensure_cocktailcrafting_kit()
-				if have_item("little paper umbrella") then
-					f = mix_items("Typical Tavern swill", "little paper umbrella")
-				elseif have_item("magical ice cubes") then
-					f = mix_items("Typical Tavern swill", "magical ice cubes")
-				elseif have_item("coconut shell") then
-					f = mix_items("Typical Tavern swill", "coconut shell")
-				end
-				did_action = have_item("blended frozen swill") or have_item("fruity girl swill") or have_item("tropical swill")
 			end
 --]]--
+
+		local function get_craftable_swill_drink()
+			local swill_drinks = {
+				["coconut shell"] = "tropical swill",
+				["little paper umbrella"] = "fruity girl swill",
+				["magical ice cubes"] = "blended frozen swill",
+			}
+			local garnish = get_highest_count_item { "coconut shell", "little paper umbrella", "magical ice cubes" }
+			if garnish then
+				return swill_drinks[garnish]
+			end
+		end
 
 		local function warn_imported_beer()
 			if not ascension_script_option("stop on imported beer") then return end
@@ -2061,23 +2039,23 @@ endif
 		local todrink, space, turngen = determine_drink_option(min_space, max_space, available_drinks)
 
 		local have_crafted = false
-		local function try_craft(when, name, penalty, craftf)
+		local function try_craft(when, name, penalty, craftf, amount)
 			local d = maybe_get_itemdata(name)
 			if not have_crafted and when and d and d.drunkenness and d.drunkenness >= 1 and level() >= (d.levelreq or 1) then
 				local value = (d.advmin + d.advmax) / 2
 				local drink_quality = (value - penalty) / d.drunkenness
 				if drink_quality < minquality then return end
-				table.insert(available_drinks, { ["value"] = value - penalty, ["size"] = d.drunkenness, ["name"] = name, ["amount"] = 1 })
+				table.insert(available_drinks, { ["value"] = value - penalty, ["size"] = d.drunkenness, ["name"] = name, ["amount"] = amount or 1 })
 				local newtodrink, newspace, newturngen = determine_drink_option(min_space, max_space, available_drinks)
 				table.remove(available_drinks)
-				local old_goodness = space and (turngen / space) or -2
-				local new_goodness = newspace and (newturngen / newspace) or -1
+				local old_goodness = space and (turngen / space) or -1
+				local new_goodness = newspace and (newturngen / newspace) or -2
 				if new_goodness > old_goodness then
-					result, resulturl = craftf()()
+					result, resulturl = parse_result(craftf)
 					have_crafted = true
 					available_drinks = get_available_drinks(minquality)
 					todrink, space, turngen = determine_drink_option(min_space, max_space, available_drinks)
-					if turngen ~= newturngen then
+					if turngen ~= newturngen or not have_item(name) then
 						critical "Error crafting drinks"
 					end
 				end
@@ -2087,6 +2065,22 @@ endif
 		local function try_crafting_improvements()
 			have_crafted = false
 			try_craft(have_item("handful of Smithereens"), "Paint A Vulgar Pitcher", 0, function() store_buy_item("plain old beer", "v") return craft_item("Paint A Vulgar Pitcher") end)
+			try_craft(have_item("pumpkin"), "pumpkin beer", 0, function() store_buy_item("fermenting powder", "m") return mix_items("pumpkin", "fermenting powder") end, 3)
+			if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
+				if level() < 6 then
+					try_craft(count_item("snow berries") >= 1 and count_item("ice harvest") >= 3, "Ice Island Long Tea", 0, function() return shop_buy_item("Ice Island Long Tea", "snowgarden") end)
+				else
+					local charges = get_still_charges()
+					local craftableSHCs = get_maximum_craftable_SHCs(charges, true)
+					print("debug charges SHCs", charges, tojson(craftableSHCs))
+					if craftableSHCs[1] then
+						try_craft(true, craftableSHCs[1], 0, function() script.ensure_cocktailcrafting_kit() return table.concat(automate_crafting_cocktail(craftableSHCs[1])) end)
+					elseif charges < 2 and count_item("Typical Tavern swill") >= 2 and count_item("Typical Tavern swill") <= 3 then
+						local swill_drink = get_craftable_swill_drink()
+						try_craft(swill_drink, swill_drink, 0, function() script.ensure_cocktailcrafting_kit() return table.concat(automate_crafting_cocktail(swill_drink)) end)
+					end
+				end
+			end
 			try_craft(meat() >= 100, "overpriced &quot;imported&quot; beer", 0, function() warn_imported_beer() return store_buy_item("overpriced &quot;imported&quot; beer", "v") end)
 			if have_crafted then return try_crafting_improvements() end
 		end
@@ -2304,7 +2298,7 @@ mark m_done
 				maybe_ensure_buffs { "Mental A-cue-ity" }
 				async_get_page("/bigisland.php", { place = "camp", whichcamp = 1 })
 				result, resulturl = async_get_page("/bigisland.php", { action = "bossfight", pwd = get_pwd() })()
-				result, resulturl, did_action = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(20))
+				result, resulturl, did_action = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(25))
 			else
 				if count_item("gauze garter") < 10 then
 					inform "buying gauze garters"
@@ -3039,6 +3033,9 @@ endif
 				if get_resistance_level("Cold") <= 0 and not have_buff("Super Structure") and have_item("Greatest American Pants") then
 					wear { pants = "Greatest American Pants" }
 					script.get_gap_buff("Super Structure")
+				end
+				if get_resistance_level("Cold") < 5 and get_resistance_level("Cold") >= 3 then
+					script.maybe_ensure_buffs { "Red Door Syndrome" }
 				end
 				inform "exploring the icy peak"
 				local pt, url = get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak2" })
@@ -4909,4 +4906,29 @@ function autoadventure(tbl)
 	session["adventure.lastzone"] = tbl.zoneid
 	local pt, url = post_page("/adventure.php", { snarfblat = tbl.zoneid })
 	return handle_adventure_result(pt, url, tbl.zoneid, tbl.macro, tbl.noncombatchoices or {}, tbl.specialnoncombatfunction)
+end
+
+function get_highest_count_item(tbl)
+	local highest_item = nil
+	local highest_count = -1
+	for _, x in ipairs(tbl) do
+		if count_item(x) > highest_count then
+			highest_item = x
+			highest_count = count_item(x)
+		end
+	end
+	return highest_item
+end
+
+function parse_result(pt, url)
+	if type(pt) ~= "string" then
+		pt, url = pt()
+	end
+	if type(pt) ~= "string" then
+		pt, url = pt()
+	end
+	if type(pt) ~= "string" then
+		pt, url = pt()
+	end
+	return pt, url
 end

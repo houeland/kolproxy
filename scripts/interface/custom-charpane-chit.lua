@@ -218,10 +218,7 @@ function bl_charpane_mystats_lines(lines)
 	table.insert(lines, [[</table>]])
 end
 
-local function bl_compact_stats_panel(lines)
-	table.insert(lines, [[<table id="chit_stats" class="chit_brick nospace compact">
-<tbody>]])
-
+local function bl_compact_stats_bars(lines)
 	local function stat_line(raw_substat)
 		local substat_level = math.floor(math.sqrt(raw_substat))
 		local substat_base = substat_level * substat_level
@@ -259,7 +256,9 @@ local function bl_compact_stats_panel(lines)
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(1, 1, { [0] = "#cbcbcb" })))
 	table.insert(lines, "</tr></table></td></tr>")
+end
 
+local function bl_compact_organ_bars(lines)
 	table.insert(lines, "<tr><td colspan='2'><table id='compact_organs'>")
 
 	local function add_organ_cells(full, fullmax)
@@ -289,15 +288,24 @@ local function bl_compact_stats_panel(lines)
 		table.insert(lines, [[<tr><td colspan='3'><font size="2"><a href="]] .. make_optimize_diet_href() .. [[" target="mainpane" style="color: green">{ Optimize diet }</a></font></td></tr>]])
 	end
 	table.insert(lines, "</table></td></tr>")
-	if playerclass("Seal Clubber") then
+end
+
+local function bl_compact_stats_panel(lines)
+	table.insert(lines, [[<table id="chit_stats" class="chit_brick nospace compact">
+<tbody>]])
+
+	bl_compact_organ_bars(lines)
+	bl_compact_stats_bars(lines)
+
+--	if playerclass("Seal Clubber") then
 --		add_organ_line("Fury", fury(), 5)
-	end
-	if playerclass("Sauceror") then
+--	end
+--	if playerclass("Sauceror") then
 --		add_organ_line("Soulsauce", soulsauce(), 100)
-	end
+--	end
 
 	table.insert(lines, "</tbody>")
-	table.insert(lines, "</tbody>")
+	table.insert(lines, "</table>")
 end
 
 
@@ -1052,7 +1060,7 @@ width: auto;
 /* compact mode */
 
 table#compact_organs {
-border-top: 1px solid #F0F0F0;
+border-bottom: 1px solid #F0F0F0;
 width: 100%;
 }
 

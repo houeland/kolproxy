@@ -759,8 +759,8 @@ endif
 				async_post_page("/campground.php", { action = "telescopelow" })
 
 		-- 		async_post_page("/campground.php", { smashstone = "Yep.", pwd = get_pwd(), confirm = "on" })
-				did_action = true
 				cached_stuff.done_campground = true
+				did_action = true
 			end
 		}
 	}
@@ -802,7 +802,7 @@ endif
 			action = function()
 				set_result(use_item("Newbiesport&trade; tent"))
 				cached_stuff.tried_using_newbiesport_tent = true
-				did_action = not have_item("Newbiesport&trade; tent")
+				did_action = true
 			end
 		}
 	}
@@ -1066,7 +1066,12 @@ endif
 	}
 
 	add_task {
-		when = not ascensionstatus("Hardcore") and estimate_max_spleen() - spleen() == 7 and have_item("astral energy drink") and level() >= 11 and not have_item("mojo filter") and not cached_stuff["ignore pull: mojo filter"],
+		when = not ascensionstatus("Hardcore") and
+			estimate_max_spleen() - spleen() == 7 and
+			have_item("astral energy drink") and
+			level() >= 11 and
+			not have_item("mojo filter") and
+			not cached_stuff["ignore pull: mojo filter"],
 		task = {
 			message = "pull mojo filter",
 			action = function()
@@ -1546,7 +1551,7 @@ endif
 		when = not cached_stuff.used_sneaky_pete_incite_riot and
 			ascensionpath("Avatar of Sneaky Pete") and
 			have_skill("Incite Riot") and
-			petehate() >= max_petehate(),
+			(petehate() >= max_petehate() or (level() < 6 and petehate() >= 37)),
 		task = {
 			message = "cast Incite Riot",
 			nobuffing = true,
@@ -3995,12 +4000,6 @@ endif
 				end
 				script.wear { hat = "filthy knitted dread sack", pants = "filthy corduroys" }
 				stop "TODO: mix and drink SHCs to max drunk"
-			else
-				inform "drinking at end of day 2"
-				local pt, pturl, drank = script.drink_booze()
-				if pt then
-					return pt, pturl, drank
-				end
 			end
 		end
 	end }
@@ -4526,12 +4525,6 @@ endif
 			if challenge == "fist" then
 				script.wear { hat = "filthy knitted dread sack", pants = "filthy corduroys" }
 				stop "TODO: mix and drink SHCs to max drunk"
-			else
-				inform "drinking at end of day 3"
-				local pt, pturl, drank = script.drink_booze()
-				if pt then
-					return pt, pturl, drank
-				end
 			end
 		end
 	end }
@@ -5170,6 +5163,18 @@ use gauze garter
 							did_action = true
 						end
 					else
+						if pt:contains([[value="level1"]]) then
+							local t = nil
+							for _, x in ipairs(get_lair_tower_monster_items()) do
+								if not have_item(x) then
+									t = tasks.get_tower_item_farming_task(x) or t
+								end
+							end
+							if t then
+								run_task(t)
+								return
+							end
+						end
 						inform "TODO: finish lair (4)"
 						result, resulturl = get_page("/lair4.php")
 						result = add_message_to_page(get_result(), "TODO: Finish lower part of tower", nil, "darkorange")

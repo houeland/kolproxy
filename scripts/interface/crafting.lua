@@ -7,7 +7,7 @@ function get_still_charges()
 	return charges or 0
 end
 
-function get_maximum_craftable_SHCs(available_still_charges)
+function get_maximum_craftable_SHCs(available_still_charges, ignore_hippy_outfit)
 	local cocktailcrafting_recipes = {}
 	for a, b in pairs(get_recipes_by_type("cocktail")) do
 		cocktailcrafting_recipes[a] = b.ingredients
@@ -17,7 +17,7 @@ function get_maximum_craftable_SHCs(available_still_charges)
 		still_recipes[a] = b.base
 	end
 	local hippy_buyable = {}
-	if have_item("filthy knitted dread sack") and have_item("filthy corduroys") then
+	if have_item("filthy knitted dread sack") and have_item("filthy corduroys") and not ignore_hippy_outfit then
 		for _, x in ipairs { "herbs", "grapefruit", "grapes", "lemon", "olive", "orange", "strawberry", "tomato" } do
 			hippy_buyable[x] = true
 		end

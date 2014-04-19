@@ -24,7 +24,10 @@ end
 function craft_item(item)
 	print_debug("  crafting", item)
 	local recipe = get_recipe(item) or {}
-	if (recipe.type == "cook" or recipe.type == "cocktail" or recipe.type == "smith") and recipe.ingredients and #recipe.ingredients == 2 then
+	if (recipe.type == "cook" or recipe.type == "cocktail" or recipe.type == "smith" or recipe.type == "combine") and recipe.ingredients and #recipe.ingredients == 2 then
+		if recipe.type == "combine" and not have_item("meat paste") and not moonsign_area("Degrassi Knoll") then
+			async_post_page("/craft.php", { pwd = session.pwd, action = "makepaste", qty = qty or 1, ajax = 1, whichitem = get_itemid("meat paste") })
+		end
 		return async_post_page("/craft.php", { mode = recipe.type, pwd = session.pwd, action = "craft", a = get_itemid(recipe.ingredients[1]), b = get_itemid(recipe.ingredients[2]), qty = 1, ajax = 1 })
 	end
 	error "Unknown item for craft_item()"
