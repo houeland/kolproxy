@@ -56,10 +56,32 @@ function solve_knapsack(size, datalist)
 	return array, arrayitems
 end
 
+local available_consumable_ignoreids = nil
+function is_ignored_consumable(item)
+	if not available_consumable_ignoreids then
+		available_consumable_ignoreids = {}
+		for _, x in ipairs { "ice harvest", "snow berries", "hot wing", "wet stunt nut stew", "black pudding" } do
+			available_consumable_ignoreids[get_itemid(x)] = true
+		end
+		if not have_skill("Shake It Off") then
+			available_consumable_ignoreids["bag of QWOP"] = true
+		end
+		for _iname, ways in pairs(get_all_recipes()) do
+			for _, source in ipairs(ways) do
+				for _, x in ipairs(source.ingredients or {}) do
+					available_consumable_ignoreids[get_itemid(x)] = true
+				end
+			end
+		end
+	end
+	return available_consumable_ignoreids[get_itemid(item)] == true
+end
+
 function get_available_drinks(minquality)
 	local drinks = {}
 	for id, amount in pairs(inventory()) do
-		if id == get_itemid("astral pilsner") then
+		if is_ignored_consumable(id) then
+		elseif id == get_itemid("astral pilsner") then
 			if level() >= 11 then
 				table.insert(drinks, { name = get_itemname(id), amount = amount, size = 1, value = 11 })
 			end
@@ -76,8 +98,25 @@ function get_available_drinks(minquality)
 	return drinks
 end
 
-function determine_drink_option(min_space, max_space, available_drinks)
-	local array, arrayitems = solve_knapsack(max_space, available_drinks)
+function get_available_foods(minquality)
+	local foods = {}
+	for id, amount in pairs(inventory()) do
+		if is_ignored_consumable(id) then
+		else
+			local d = maybe_get_itemdata(id)
+			if d and d.fullness and d.fullness >= 1 and level() >= (d.levelreq or 1) then
+				local value = (d.advmin + d.advmax) / 2
+				if value / d.fullness >= minquality then
+					table.insert(foods, { name = get_itemname(id), amount = amount, size = d.fullness, value = value })
+				end
+			end
+		end
+	end
+	return foods
+end
+
+function determine_consumable_option(min_space, max_space, available_consumables)
+	local array, arrayitems = solve_knapsack(max_space, available_consumables)
 	local best_space = nil
 	for space = min_space, max_space do
 		if array[space] then
@@ -87,16 +126,16 @@ function determine_drink_option(min_space, max_space, available_drinks)
 		end
 	end
 	if not best_space then return end
-	local drinks = {}
+	local consumables = {}
 	local function recur(x)
 		if not x then return end
 		for i = 1, x.amount do
-			table.insert(drinks, x.name)
+			table.insert(consumables, x.name)
 		end
 		recur(x.previous)
 	end
 	recur(arrayitems[best_space])
-	return drinks, best_space, array[best_space]
+	return consumables, best_space, array[best_space]
 end
 
 __allow_global_writes = true
@@ -1800,8 +1839,20 @@ endif
 		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
 			if space() >= 1 and script.get_turns_until_sr() == nil and meat() >= 40 then
 				return eat_fortune_cookie()
---			elseif space() >= 1 and drunkenness() == estimate_max_safe_drunkenness() and advs() < 15 then
---				stop "TODO: eat food, but not special ones: winter gardening, hippy fruit, hot wings, ...???"
+			elseif space() >= 1 and drunkenness() == estimate_max_safe_drunkenness() and advs() < 15 then
+				local max_space = estimate_max_fullness() - fullness()
+				local min_space = 1
+				local available_foods = get_available_foods(1)
+				local toeat, space, turngen = determine_consumable_option(min_space, max_space, available_foods)
+				if space then
+					print("eat_food():", space)
+					for _, x in ipairs(toeat) do
+						set_result(eat_item(x))
+						did_action = true
+					end
+				end
+				result, resulturl = get_result()
+				return result, resulturl, did_action
 			end
 			return
 		end
@@ -2036,7 +2087,7 @@ endif
 		local max_space = estimate_max_safe_drunkenness() - drunkenness()
 		local min_space = math.min(max_space, 3)
 		local available_drinks = get_available_drinks(minquality)
-		local todrink, space, turngen = determine_drink_option(min_space, max_space, available_drinks)
+		local todrink, space, turngen = determine_consumable_option(min_space, max_space, available_drinks)
 
 		local have_crafted = false
 		local function try_craft(when, name, penalty, craftf, amount)
@@ -2046,7 +2097,7 @@ endif
 				local drink_quality = (value - penalty) / d.drunkenness
 				if drink_quality < minquality then return end
 				table.insert(available_drinks, { ["value"] = value - penalty, ["size"] = d.drunkenness, ["name"] = name, ["amount"] = amount or 1 })
-				local newtodrink, newspace, newturngen = determine_drink_option(min_space, max_space, available_drinks)
+				local newtodrink, newspace, newturngen = determine_consumable_option(min_space, max_space, available_drinks)
 				table.remove(available_drinks)
 				local old_goodness = space and (turngen / space) or -1
 				local new_goodness = newspace and (newturngen / newspace) or -2
@@ -2054,7 +2105,7 @@ endif
 					result, resulturl = parse_result(craftf)
 					have_crafted = true
 					available_drinks = get_available_drinks(minquality)
-					todrink, space, turngen = determine_drink_option(min_space, max_space, available_drinks)
+					todrink, space, turngen = determine_consumable_option(min_space, max_space, available_drinks)
 					if turngen ~= newturngen or not have_item(name) then
 						critical "Error crafting drinks"
 					end
@@ -2966,11 +3017,10 @@ endif
 			end
 			if ascensionpathid() ~= 0 and not have_skill("Tao of the Terrapin") then
 				script.bonus_target { "easy combat" }
-				script.maybe_ensure_buffs { "Standard Issue Bravery" }
-				script.ensure_buffs { "Go Get 'Em, Tiger!", "Butt-Rock Hair" }
+				script.maybe_ensure_buffs { "Standard Issue Bravery", "Starry-Eyed", "Puddingskin" }
 			end
 			inform(i)
-			ensure_buffs { "Spirit of Bacon Grease", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
+			ensure_buffs { "Go Get 'Em, Tiger!", "Butt-Rock Hair", "Spirit of Bacon Grease", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
 			fam "Frumious Bandersnatch"
 			wear {}
 			script.heal_up()

@@ -159,6 +159,10 @@ local function automate_hcnp_day(whichday)
 		end
 	end
 
+	local function is_cursed()
+		return have_buff("Thrice-Cursed") or have_buff("Twice-Cursed") or have_buff("Once-Cursed")
+	end
+
 	local max_petehate = max_petelove
 
 	challenge = nil
@@ -1565,31 +1569,33 @@ endif
 	}
 
 	add_task {
-		when = ascensionpath("Avatar of Sneaky Pete") and automation_sneaky_pete_want_hate() and
+		when = not cached_stuff.failed_lowering_love and
+			ascensionpath("Avatar of Sneaky Pete") and
+			automation_sneaky_pete_want_hate() and
 			petelove() > 30,
 		task = {
 			message = "reequip jacket to lower love",
 			nobuffing = true,
 			action = function()
-				local eq = equipment()
 				unequip_slot("shirt")
-				script.wear(eq)
 				did_action = true
+				cached_stuff.failed_lowering_love = (petelove() > 30)
 			end
 		}
 	}
 
 	add_task {
-		when = ascensionpath("Avatar of Sneaky Pete") and not automation_sneaky_pete_want_hate() and
+		when = not cached_stuff.failed_lowering_hate and
+			ascensionpath("Avatar of Sneaky Pete") and
+			not automation_sneaky_pete_want_hate() and
 			petehate() > 30,
 		task = {
 			message = "reequip jacket to lower hate",
 			nobuffing = true,
 			action = function()
-				local eq = equipment()
 				unequip_slot("shirt")
-				script.wear(eq)
 				did_action = true
+				cached_stuff.failed_lowering_hate = (petehate() > 30)
 			end
 		}
 	}
@@ -1641,6 +1647,22 @@ endif
 
 				sneaky_pete_maybe_update_motorcycle_status()
 				did_action = not can_upgrade_sneaky_pete_motorcycle()
+			end
+		}
+	}
+
+	add_task {
+		when = ascensionpath("Avatar of Sneaky Pete") and
+			have_skill("Shake It Off") and
+			have_buff("QWOPped Up") and
+			not is_cursed(),
+		task = {
+			message = "shake off qwop",
+			nobuffing = true,
+			action = function()
+				script.ensure_mp(30)
+				cast_skill("Shake It Off")
+				did_action = not have_buff("QWOPped Up")
 			end
 		}
 	}
@@ -5034,7 +5056,7 @@ use ]] .. get_lair_tower_monster_items()[level] .. [[
 						script.want_familiar "Frumious Bandersnatch"
 						script.wear {}
 						script.heal_up()
-						if estimate_bonus("Monster Level") == 0 and buffedmoxie() >= 300 and maxhp() >= 200 then
+						if estimate_bonus("Monster Level") == 0 and buffedmoxie() >= 300 and maxhp() >= 150 then
 							local weapondata = equipment().weapon and maybe_get_itemdata(equipment().weapon)
 							if weapondata and weapondata.attack_stat == "Moxie" then
 								local form3ok = false

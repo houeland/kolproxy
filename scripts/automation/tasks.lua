@@ -731,37 +731,47 @@ mark m_done
 				end
 			}
 		end
+		local function clover_adv(zone)
+			if not have_item("ten-leaf clover") and have_item("disassembled clover") then
+				use_item("disassembled clover")
+			end
+			if have_item("ten-leaf clover") then
+				return {
+					message = "clovering " .. zone,
+					action = adventure { zone = zone }
+				}
+			end
+		end
+		local function NG_farming()
+			return {
+				f = function()
+					if have_item("lowercase N") and have_item("original G") then
+						return {
+							message = "crafting NG",
+							action = function()
+								craft_item("NG")
+								did_action = have_item("NG")
+							end
+						}
+					elseif count_item("ten-leaf clover") + count_item("disassembled clover") >= 2 then
+						return clover_adv("The Castle in the Clouds in the Sky (Basement)")
+					end
+				end
+			}
+		end
+
 		towerfarming["stick of dynamite"] = shore_item_crate("dude ranch souvenir crate")
 		towerfarming["tropical orchid"] = shore_item_crate("tropical island souvenir crate")
 		towerfarming["barbed-wire fence"] = shore_item_crate("ski resort souvenir crate")
 		towerfarming["frigid ninja stars"] = { zone = "Lair of the Ninja Snowmen" }
+		towerfarming["meat vortex"] = { zone = "The Valley of Rof L'm Fao" }
 		towerfarming["spider web"] = { zone = "The Sleazy Back Alley" } -- TODO: +combat%, noncombat choices
+		towerfarming["fancy bath salts"] = { zone = "The Haunted Bathroom" } -- TODO: +combat%, noncombat choices
+		towerfarming["NG"] = NG_farming()
 		if estimate_bonus("Item Drops from Monsters") >= 200 then
 			towerfarming["sonar-in-a-biscuit"] = { zone = "The Batrat and Ratbat Burrow" }
 		end
-		towerfarming["NG"] = {
-			f = function()
-				if have_item("lowercase N") and have_item("original G") then
-					return {
-						message = "crafting NG",
-						action = function()
-							craft_item("NG")
-							did_action = have_item("NG")
-						end
-					}
-				elseif count_item("ten-leaf clover") + count_item("disassembled clover") >= 2 then
-					if not have_item("ten-leaf clover") and have_item("disassembled clover") then
-						use_item("disassembled clover")
-					end
-					if have_item("ten-leaf clover") then
-						return {
-							message = "clovering for NG",
-							action = adventure { zone = "The Castle in the Clouds in the Sky (Basement)" }
-						}
-					end
-				end
-			end
-		}
+
 		local farmdata = towerfarming[item]
 		if farmdata then
 			if farmdata.f then

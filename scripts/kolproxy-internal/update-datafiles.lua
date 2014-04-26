@@ -764,6 +764,12 @@ end
 function parse_recipes()
 	local recipes = {}
 	local function add_recipe(item, tbl)
+		if tbl.ingredients then -- WORKAROUND
+			if tbl.ingredients[1] == "[2528]" then tbl.ingredients[1] = "filet of tangy gnat (&quot;fotelif&quot;)" end
+			if tbl.ingredients[1] == "[0]" then table.remove(tbl.ingredients, 1) end
+		end
+		local short_itemname = item:match("^(.+) %([0-9]+%)$")
+		if short_itemname then item = short_itemname end
 		if not recipes[item] then
 			recipes[item] = {}
 		end
@@ -797,7 +803,7 @@ function parse_recipes()
 			table.sort(tbl)
 			add_recipe(itemname, { type = "combine", ingredients = tbl })
 		elseif crafttype and crafttype:contains("STILL") then
-			add_recipe(itemname, { type = "still", base = tbl[3] })
+			add_recipe(itemname, { type = "still", base = tbl[3], ingredients = { tbl[3] } })
 		end
 	end
 
@@ -805,6 +811,20 @@ function parse_recipes()
 end
 
 function verify_recipes(data)
+	for name, ways in pairs(data) do
+		if not processed_datafiles["items"][name] then
+			hardwarn("recipe:item does not exist", name)
+			data[name] = nil
+		end
+		for _, recipe in ipairs(ways) do
+			for _, x in ipairs(recipe.ingredients or {}) do
+				if not processed_datafiles["items"][x] then
+					hardwarn("recipe:item ingredient does not exist", x, "for", name)
+					data[name] = nil
+				end
+			end
+		end
+	end
 	local correct_data = {
 		["potion of X-ray vision"] = { { type = "cliparts", clips = { 4, 6, 8 } } },
 		["margarita"] = { { type = "cocktail", ingredients = { "bottle of tequila", "lemon" } } },

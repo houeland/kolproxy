@@ -192,6 +192,10 @@ function get_familiarname(id)
 	return name
 end
 
+function get_all_recipes()
+	return datafile("recipes")
+end
+
 function maybe_get_recipe(item, restricttype)
 	local name = get_itemname(item)
 	local recipes = datafile("recipes")[name]
