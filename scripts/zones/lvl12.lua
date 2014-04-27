@@ -451,3 +451,49 @@ end)
 add_itemdrop_counter("barrel of gunpowder", function(c)
 	return "{ " .. c .. " of 5 found. }"
 end)
+
+add_warning {
+	message = "You might want to turn in war hippy beads for quarters before ending the war.",
+	path = "/bigisland.php",
+	type = "warning",
+	check = function()
+		if params.action == "bossfight" and have_equipped_item("beer helmet") then
+			return have_item("green clay bead") or have_item("purple clay bead") or have_item("pink clay bead")
+		end
+	end,
+}
+
+add_warning {
+	message = "You might want to turn in frat warrior class rings for dimes before ending the war.",
+	path = "/bigisland.php",
+	type = "warning",
+	check = function()
+		if params.action == "bossfight" and have_equipped_item("reinforced beaded headband") then
+			return have_item("white class ring") or have_item("blue class ring") or have_item("red class ring")
+		end
+	end,
+}
+
+add_warning {
+-- TODO: hippy version
+	message = "You might want to spend your frat house quarters before ending the war.",
+	path = "/bigisland.php",
+	type = "warning",
+	check = function()
+		if params.action == "bossfight" and have_equipped_item("beer helmet") then
+			local camppt = get_page("/bigisland.php", { place = "camp", whichcamp = 2 })
+			return not camppt:contains("You don't have any quarters on file")
+		end
+	end,
+}
+
+add_warning {
+	message = "You might want to get more filthy poultices or gauze garters before ending the war.",
+	path = "/bigisland.php",
+	type = "extra",
+	check = function()
+		if params.action == "bossfight" then
+			return count_item("filthy poultice") + count_item("gauze garter") < 5
+		end
+	end,
+}

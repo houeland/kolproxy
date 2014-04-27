@@ -2030,7 +2030,7 @@ endif
 				did_action = true
 			end
 		else
-			inform "TODO: finish lair"
+			inform "pass lair statues"
 			if challenge == "fist" then
 				script.ensure_buffs { "Earthen Fist" }
 			end
@@ -5000,6 +5000,33 @@ endif
 						end
 					end
 				end
+				if not did_action and got_other_parts and not got_dod_part and ascensionstatus("Hardcore") and ascensionpath("Avatar of Sneaky Pete") then
+					if not know_dod_potion then
+						if dod_reverse["booze"] or drunkenness() + 3 <= estimate_max_safe_drunkenness() then
+							for _, x in ipairs(unknown_potions) do
+								if have_item(x) then
+									use_item(x)()
+									did_action = get_dod_potion_status()[x] ~= nil
+									break
+								end
+							end
+						end
+						if not did_action then
+							if have_item("large box") and ensure_clover() then
+								meatpaste_items("large box", "ten-leaf clover")
+								use_item("blessed large box")
+								did_action = true
+								for _, x in ipairs(dod_potion_types) do
+									if not have_item(x) then
+										did_action = false
+									end
+								end
+							else
+								-- TODO: farm up large box, or manual stop if no clover
+							end
+						end
+					end
+				end
 				result = add_message_to_page(pt, "Do lair gates, then run script again", nil, "darkorange")
 				resulturl = pturl
 				finished = not did_action
@@ -5178,7 +5205,7 @@ use gauze garter
 							end
 							finished = true
 						else
-							inform "finish lair (6)"
+							inform "finish top of tower"
 							script.bonus_target { "easy combat" }
 							script.wear {}
 							script.heal_up()
@@ -5202,9 +5229,9 @@ use gauze garter
 								did_action = true
 							end
 						else
-							inform "TODO: finish lair (5)"
+							inform "finish upper part of tower"
 							result, resulturl = get_page("/lair5.php")
-							result = add_message_to_page(get_result(), "TODO: Finish upper part of tower", nil, "darkorange")
+							result = add_message_to_page(get_result(), "Finish upper part of tower", nil, "darkorange")
 							finished = true
 						end
 					end
@@ -5236,14 +5263,14 @@ use gauze garter
 								return
 							end
 						end
-						inform "TODO: finish lair (4)"
+						inform "finish lower part of tower"
 						result, resulturl = get_page("/lair4.php")
-						result = add_message_to_page(get_result(), "TODO: Finish lower part of tower", nil, "darkorange")
+						result = add_message_to_page(get_result(), "Finish lower part of tower", nil, "darkorange")
 						finished = true
 					end
 				end
 			elseif pturl:contains("/lair3.php") then
-				inform "finish lair (3)"
+				inform "do hedge maze"
 				script.heal_up()
 				script.ensure_mp(100)
 				local pt, url = post_page("/lair3.php", { action = "hedge" })
