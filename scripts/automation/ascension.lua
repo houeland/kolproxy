@@ -139,18 +139,6 @@ local function automate_hcnp_day(whichday)
 		return not have_item("rock band flyers")
 	end
 
-	function script_want_reagent_pasta()
-		return ascensionstatus("Hardcore") and have_skill("Pastamastery") and have_skill("Advanced Saucecrafting")
-	end
-
-	function script_want_milk()
-		return ascensionstatus("Aftercore") or have_skill("Advanced Saucecrafting")
-	end
-
-	function script_want_ode()
-		return ascensionstatus("Aftercore") or have_skill("The Ode to Booze")
-	end
-
 	local function max_petelove()
 		if have_item("Sneaky Pete's leather jacket (collar popped)") or have_item("Sneaky Pete's leather jacket") then
 			return 50
@@ -2366,6 +2354,27 @@ endif
 							return
 						end
 					end
+					if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") and have_skill("Rowdy Drinker") and estimate_max_spleen() - spleen() <= 3 then
+						local drinks = get_available_drinks(2)
+						local swill_drink = get_craftable_swill_drink()
+						if swill_drink then
+							table.insert(drinks, { name = swill_drink, amount = 1, size = 4, value = 12 })
+						end
+						local todrink, value = determine_nightcap(drinks)
+						if value >= 5 then
+							if todrink == swill_drink and not have_item(swill_drink) then
+								script.ensure_cocktailcrafting_kit()
+								unequip_cocktailcrafting_garnish()
+								automate_crafting_cocktail(swill_drink)
+							end
+							if have_item(todrink) then
+								set_result(drink_item(todrink))
+								result = add_message_to_page(get_result(), "<p>Overdrunk, finished day. (Do PvP?)</p>", "Ascension script:")
+								finished = true
+								return
+							end
+						end
+					end
 				end
 				result, resulturl = get_page("/inventory.php", { which = 1 })
 				result = add_message_to_page(get_result(), "<p>End of day.</p><p>(PvP?,) cast ode and overdrink, then done.</p>", "Ascension script:")
@@ -4517,7 +4526,7 @@ endif
 					pull_in_softcore("jar of psychoses (The Crackpot Mystic)")
 					did_action = have_item("jar of psychoses (The Crackpot Mystic)")
 				else
-					did_action = tue
+					did_action = true
 				end
 			end
 		}

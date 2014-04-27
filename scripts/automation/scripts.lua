@@ -115,6 +115,29 @@ function get_available_foods(minquality)
 	return foods
 end
 
+function determine_nightcap(available_drinks)
+	local function get_value(c)
+		local val = c.value
+		if script_want_ode() then
+			val = val + c.size
+		end
+		return val / c.size * (c.size - 1)
+	end
+	table.sort(available_drinks, function(a, b)
+		local aval = get_value(a)
+		local bval = get_value(b)
+		if aval ~= bval then return aval > bval end
+		if a.size ~= b.size then return a.size > b.size end
+		if a.amount ~= b.amount then return a.amount > b.amount end
+		return a.name < b.name
+	end)
+	if available_drinks[1] then
+		return available_drinks[1].name, get_value(available_drinks[1])
+	else
+		return nil, 0
+	end
+end
+
 function determine_consumable_option(min_space, max_space, available_consumables)
 	local array, arrayitems = solve_knapsack(max_space, available_consumables)
 	local best_space = nil
@@ -136,6 +159,43 @@ function determine_consumable_option(min_space, max_space, available_consumables
 	end
 	recur(arrayitems[best_space])
 	return consumables, best_space, array[best_space]
+end
+
+function get_highest_count_item(tbl)
+	local highest_item = nil
+	local highest_count = -1
+	for _, x in ipairs(tbl) do
+		if count_item(x) > highest_count then
+			highest_item = x
+			highest_count = count_item(x)
+		end
+	end
+	return highest_item
+end
+
+local swill_drinks = {
+	["coconut shell"] = "tropical swill",
+	["little paper umbrella"] = "fruity girl swill",
+	["magical ice cubes"] = "blended frozen swill",
+}
+
+function get_craftable_swill_drink()
+	local garnish = get_highest_count_item { "coconut shell", "little paper umbrella", "magical ice cubes" }
+	if garnish then
+		return swill_drinks[garnish]
+	end
+end
+
+function unequip_cocktailcrafting_garnish()
+	local eq = equipment()
+	for x, y in pairs(eq) do
+		for g, _ in pairs(swill_drinks) do
+			if y == get_itemid(g) then
+				eq[x] = nil
+			end
+		end
+	end
+	set_equipment(eq)
 end
 
 __allow_global_writes = true
@@ -2065,18 +2125,6 @@ endif
 			end
 --]]--
 
-		local function get_craftable_swill_drink()
-			local swill_drinks = {
-				["coconut shell"] = "tropical swill",
-				["little paper umbrella"] = "fruity girl swill",
-				["magical ice cubes"] = "blended frozen swill",
-			}
-			local garnish = get_highest_count_item { "coconut shell", "little paper umbrella", "magical ice cubes" }
-			if garnish then
-				return swill_drinks[garnish]
-			end
-		end
-
 		local function warn_imported_beer()
 			if not ascension_script_option("stop on imported beer") then return end
 			if cached_stuff.warned_imported_beer == turnsthisrun() then return end
@@ -2125,8 +2173,10 @@ endif
 					local craftableSHCs = get_maximum_craftable_SHCs(charges, true)
 					print("debug charges SHCs", charges, tojson(craftableSHCs))
 					if craftableSHCs[1] then
+						unequip_cocktailcrafting_garnish()
 						try_craft(true, craftableSHCs[1], 0, function() script.ensure_cocktailcrafting_kit() return table.concat(automate_crafting_cocktail(craftableSHCs[1])) end)
 					elseif charges < 2 and count_item("Typical Tavern swill") >= 2 and count_item("Typical Tavern swill") <= 3 then
+						unequip_cocktailcrafting_garnish()
 						local swill_drink = get_craftable_swill_drink()
 						try_craft(swill_drink, swill_drink, 0, function() script.ensure_cocktailcrafting_kit() return table.concat(automate_crafting_cocktail(swill_drink)) end)
 					end
@@ -4958,18 +5008,6 @@ function autoadventure(tbl)
 	return handle_adventure_result(pt, url, tbl.zoneid, tbl.macro, tbl.noncombatchoices or {}, tbl.specialnoncombatfunction)
 end
 
-function get_highest_count_item(tbl)
-	local highest_item = nil
-	local highest_count = -1
-	for _, x in ipairs(tbl) do
-		if count_item(x) > highest_count then
-			highest_item = x
-			highest_count = count_item(x)
-		end
-	end
-	return highest_item
-end
-
 function parse_result(pt, url)
 	if type(pt) ~= "string" then
 		pt, url = pt()
@@ -4981,4 +5019,16 @@ function parse_result(pt, url)
 		pt, url = pt()
 	end
 	return pt, url
+end
+
+function script_want_reagent_pasta()
+	return ascensionstatus("Hardcore") and have_skill("Pastamastery") and have_skill("Advanced Saucecrafting")
+end
+
+function script_want_milk()
+	return ascensionstatus("Aftercore") or have_skill("Advanced Saucecrafting")
+end
+
+function script_want_ode()
+	return ascensionstatus("Aftercore") or have_skill("The Ode to Booze")
 end
