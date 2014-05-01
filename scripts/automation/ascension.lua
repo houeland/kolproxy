@@ -767,7 +767,7 @@ endif
 			message = "taking april shower",
 			nobuffing = true,
 			action = function()
-				post_page("/clan_viplounde.php", { preaction = "takeshower", temperature = 1 })
+				post_page("/clan_viplounge.php", { preaction = "takeshower", temperature = 1 })
 				cached_stuff.taken_april_shower = true
 				did_action = true
 			end
@@ -2211,6 +2211,7 @@ endif
 		task = {
 			message = "handle Teleportitis",
 			action = function()
+				-- TODO: do NS lair gate if we're there!
 				local runaway_fam = nil
 				if ascensionpath("BIG!") then
 				elseif script.have_familiar("Pair of Stomping Boots") then
@@ -2228,7 +2229,12 @@ endif
 				if meat() < 1000 then
 					stop "Need 1,000 Meat for major consulation with oracle"
 				end
-				if have_item("plus sign") and runaway_fam then
+				if not get_lair_gate_items()[3] then
+					get_page("/lair1.php", { action = "gates" })
+				end
+				if get_lair_gate_items()[3] == "Gate that is Not a Gate" then
+					stop "TODO: Pass lair gates"
+				elseif have_item("plus sign") and runaway_fam then
 					script.want_familiar(use_fam)
 					stop "Use runaways to find oracle"
 				elseif have_item("plus sign") and not runaway_fam then
@@ -4962,6 +4968,7 @@ endif
 				local got_other_parts = true
 				local know_dod_potion = false
 				local touse_items = {}
+				local need_teleportitis = false
 				for a, b in pairs(lair_gateitems) do
 					if pt:contains(a) then
 						local needitem = b.item or dod_reverse[b.potion]
@@ -4970,6 +4977,9 @@ endif
 						end
 						if b.effect == "Sugar Rush" then
 							needitem = get_sugar_rush_item()
+						end
+						if b.effect == "Teleportitis" then
+							need_teleportitis = true
 						end
 						local got = false
 						if have_buff(b.effect) then
@@ -5007,14 +5017,7 @@ endif
 					end
 				end
 				if got_other_parts and got_dod_part then
-					local safe = true
-					for _, y in pairs(touse_items) do
-						if y == "Teleportitis" and count_item("soft green echo eyedrop antidote") < 2 then
-							inform "(not automating Teleportitis)"
-							safe = false
-						end
-					end
-					if safe then
+					if not need_teleportitis or count_item("soft green echo eyedrop antidote") >= 2 then
 						for x, y in pairs(touse_items) do
 							use_item(x)()
 							did_action = have_buff(y)
@@ -5032,8 +5035,20 @@ endif
 						end
 					end
 				end
-				if not did_action and got_other_parts and not got_dod_part and ascensionstatus("Hardcore") and ascensionpath("Avatar of Sneaky Pete") then
-					if not know_dod_potion then
+				if not did_action and got_other_parts and not got_dod_part then
+					if need_teleportitis then
+						run_task {
+							message = "get teleportitis",
+							bonus_target = { "noncombat" },
+							action = adventure {
+								zone = "The Enormous Greater-Than Sign",
+								macro_function = macro_noodlecannon,
+								noncombats = {
+									["Typographical Clutter"] = "The upper-case Q",
+								},
+							}
+						}
+					elseif not know_dod_potion and ascensionstatus("Hardcore") and ascensionpath("Avatar of Sneaky Pete") then
 						if dod_reverse["booze"] or drunkenness() + 3 <= estimate_max_safe_drunkenness() then
 							for _, x in ipairs(unknown_potions) do
 								if have_item(x) then

@@ -36,7 +36,7 @@ local_maybepeek l n test peek = do
 		else return Nothing
 
 instance Lua.StackValue Integer where
-	push l x = Lua.pushinteger l (fromIntegral x)
+	push l x = Lua.pushinteger l x
 	peek l1 n = local_maybepeek l1 n Lua.isnumber (\l2 n2 -> liftM fromIntegral (Lua.tointeger l2 n2))
 	valuetype _ = Lua.TNUMBER
 
@@ -132,7 +132,7 @@ parse_request_param_string _ref l = do
 	case read_as str :: Maybe [(String, String)] of
 		Just xs -> do
 			let pushkeyvalue (idx, (x, y)) = do
-				Lua.pushinteger l (fromIntegral idx)
+				Lua.pushinteger l idx
 				Lua.newtable l
 				Lua.pushstring l "key"
 				Lua.pushstring l x
@@ -186,20 +186,20 @@ async_submit_page ref method inputuristr params = do
 	xf <- (processPage ref) ref (mkuri final_url) final_params
 	return xf
 
--- TODO: Remove
-__add_table_contents l tbl = do
+__push_table_contents_with l tbl f1 f2 = do
+	Lua.newtable l
 	mapM_ (\(x, y) -> do
-		Lua.push l x
-		Lua.push l y
+		f1 l x
+		f2 l y
 		Lua.settable l (-3)) tbl
 
-add_table_contents_integer_integer l tbl = __add_table_contents l (tbl :: [(Integer, Integer)])
-add_table_contents_integer_string l tbl = __add_table_contents l (tbl :: [(Integer, String)])
-add_table_contents_string_string l tbl = __add_table_contents l (tbl :: [(String, String)])
-add_table_contents_integer_json l tbl = __add_table_contents l (tbl :: [(Integer, JSValue)])
-add_table_contents_string_json l tbl = __add_table_contents l (tbl :: [(String, JSValue)])
-add_table_contents_integer_boolean l tbl = __add_table_contents l (tbl :: [(Integer, Bool)])
-add_table_contents_integer_xml l tbl = __add_table_contents l (tbl :: [(Integer, Element)])
+push_table_contents_integer_integer l tbl = __push_table_contents_with l tbl Lua.pushinteger Lua.pushinteger
+push_table_contents_integer_boolean l tbl = __push_table_contents_with l tbl Lua.pushinteger Lua.pushboolean
+push_table_contents_string_string l tbl = __push_table_contents_with l tbl Lua.pushstring Lua.pushstring
+push_table_contents_string_json l tbl = __push_table_contents_with l tbl Lua.pushstring push_jsvalue
+push_table_contents_stringlist l tbl = __push_table_contents_with l (zip [1..] tbl) Lua.pushinteger Lua.pushstring
+push_table_contents_jsonlist l tbl = __push_table_contents_with l (zip [1..] tbl) Lua.pushinteger push_jsvalue
+push_table_contents_xmllist l tbl = __push_table_contents_with l (zip [1..] tbl) Lua.pushinteger push_simplexmldata
 
 push_jsvalue l jsval = do
 	case jsval of
@@ -207,13 +207,8 @@ push_jsvalue l jsval = do
 		JSBool b -> Lua.pushboolean l b
 		JSRational _ r -> Lua.pushnumber l (fromRational r)
 		JSString jss -> Lua.pushbytestring l $ Data.ByteString.Char8.pack $ fromJSString $ jss
-		JSArray jsarr -> do
-			Lua.newtable l
-			add_table_contents_integer_json l (zip [1..] jsarr)
-		JSObject jsobj -> do
-			let m = fromJSObject jsobj :: [(String, JSValue)]
-			Lua.newtable l
-			add_table_contents_string_json l m
+		JSArray jsarr -> push_table_contents_jsonlist l jsarr
+		JSObject jsobj -> push_table_contents_string_json l $ fromJSObject jsobj
 
 array_tbl_to_jsvalue l = do
 	let get_more n initlist = do
@@ -291,8 +286,7 @@ push_simplexmldata l xmlval = do
 	Lua.settable l (-3)
 
 	Lua.pushstring l "children"
-	Lua.newtable l
-	add_table_contents_integer_xml l (zip [1..] (elChildren xmlval))
+	push_table_contents_xmllist l $ elChildren xmlval
 	Lua.settable l (-3)
 
 push_function l1 f identifier = do
@@ -328,6 +322,7 @@ luatbl_to_stringmap l idx = do
 	Lua.pushnil l
 	get_more
 
+-- TODO: redo parameters in simpler way?
 parse_keyvalue_luatbl l idx = do
 	let get_more n = do
 		Lua.pushinteger l n
@@ -425,9 +420,8 @@ get_fallback_choicespoilers _ref l = do
 			(Just choicenumstr, Just spoilersstr) -> do
 				case (read_as choicenumstr, read_as spoilersstr) of
 					(Just choicenum, Just spoilers) -> do
-						Lua.pushinteger l (fromIntegral (choicenum :: Integer))
-						Lua.newtable l
-						add_table_contents_integer_string l (zip [1..] spoilers)
+						Lua.pushinteger l choicenum
+						push_table_contents_stringlist l spoilers
 						Lua.settable l topidx
 					_ -> throwIO $ InternalError $ "Invalid choice spoiler, id: " ++ show xs
 			_ -> throwIO $ InternalError $ "Invalid choice spoiler, id: " ++ show xs
@@ -449,8 +443,7 @@ get_pulverize_groups _ref l = do
 		Lua.settable l gidx
 
 		Lua.pushstring l "items"
-		Lua.newtable l
-		add_table_contents_integer_boolean l $ zip (items :: [Integer]) (repeat True)
+		push_table_contents_integer_boolean l $ zip items (repeat True)
 		Lua.settable l gidx
 
 		Lua.settable l topidx
@@ -474,8 +467,7 @@ kolproxycore_enumerate_state ref l = do
 	Lua.newtable l
 	mapM_ (\(statename, keylist) -> do
 		Lua.pushstring l statename
-		Lua.newtable l
-		add_table_contents_integer_string l $ zip [1..] keylist
+		push_table_contents_stringlist l keylist
 		Lua.settable l (-3)) statekeys
 	return 1
 
@@ -497,12 +489,9 @@ tojson l = do
 decode_uri_query l = do
 	querystr <- peekJustString l 1
 	let Just uri = parseURIReference querystr
-	let maybe_vars = decodeUrlParams uri
-	Lua.newtable l
-	case maybe_vars of
-		Just vars -> add_table_contents_string_string l vars
-		_ -> return ()
-	return 1
+	case decodeUrlParams uri of
+		Just vars -> push_table_contents_string_string l vars >> return 1
+		_ -> return 0
 
 setup_lua_instance level filename setupref = do
 	(l, c) <- log_time_interval setupref ("setup lua: " ++ filename) $ do
@@ -519,8 +508,7 @@ setup_lua_instance level filename setupref = do
 		register_function "raw_make_href" $ make_href
 
 		register_function "get_inventory_counts" $ \ref l -> do
-			Lua.newtable l
-			add_table_contents_integer_integer l =<< KoL.Api.getInventoryCounts ref
+			push_table_contents_integer_integer l =<< KoL.Api.getInventoryCounts ref
 			return 1
 
 		register_function "get_status_info" $ \ref l -> do
@@ -593,8 +581,7 @@ setup_lua_instance level filename setupref = do
 
 		register_function "list_custom_autoload_script_files" $ \_ref l -> do
 			filenames <- get_custom_autoload_script_files
-			Lua.newtable l
-			add_table_contents_integer_string l (zip [1..] filenames)
+			push_table_contents_stringlist l filenames
 			return 1
 
 		register_function "block_lua_scripting" $ \ref _l -> do
@@ -727,8 +714,7 @@ run_lua_code level filename ref dosetvars = do
 				return $ Left $ ("error running code (" ++ filename ++ "):\n" ++ err, traceback)
 
 setvars vars text allparams l = do
-	Lua.newtable l
-	add_table_contents_string_string l (vars :: [(String, String)])
+	push_table_contents_string_string l vars
 	Lua.pushstring l "text"
 	Lua.pushbytestring l text
 	Lua.settable l (-3)
@@ -764,7 +750,7 @@ runSendChatScript ref uri allparams = do
 		Left err -> Left err
 
 runSentChatScript ref msg = do
-	void $ run_lua_code CHAT "scripts/kolproxy-internal/sentchat.lua" ref (setvars [] msg [])
+	run_lua_code CHAT "scripts/kolproxy-internal/sentchat.lua" ref (setvars [] msg [])
 	return ()
 
 runBrowserRequestScript ref uri allparams reqtype = do
@@ -846,8 +832,7 @@ runLogScript log_db code = do
 					_ -> Nothing
 				let allparams = concat $ catMaybes $ [decodeUrlParams uri, decodeUrlParams effuri, params]
 -- 				putStrLn $ "allparams: " ++ show allparams
-				Lua.newtable l
-				add_table_contents_string_string l allparams
+				push_table_contents_string_string l allparams
 				return 1
 			Database.SQLite3Modded.Done -> return 0
 		Database.SQLite3Modded.finalize s

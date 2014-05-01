@@ -96,7 +96,7 @@ local function run_wrapped_function_internal(f_env)
 	f_env.text = intercept_pt
 	f_env.path = intercept_path
 	f_env.query = intercept_query
-	f_env.effuri_params = kolproxycore_decode_uri_query(intercept_url)
+	f_env.effuri_params = kolproxycore_decode_uri_query(intercept_url) or {}
 
 	local automate_pt = automate_wrapped(f_env)
 

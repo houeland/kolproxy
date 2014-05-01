@@ -8,7 +8,7 @@ function buy_itemname(name, input_amount)
 		local url = pt:match([[dojax%('(.-)'%)]])
 		if url then
 			local urlpath, urlquery = kolproxycore_splituri("/" .. url)
-			local urlparams = kolproxycore_decode_uri_query(urlquery)
+			local urlparams = kolproxycore_decode_uri_query(urlquery) or {}
 			print_debug("  purchasing", name, input_amount or "")
 			return async_get_page(urlpath, urlparams)
 		end

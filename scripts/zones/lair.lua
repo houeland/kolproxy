@@ -26,6 +26,33 @@ tower_monster_items = {
 	["giant bee"] = "tropical orchid",
 }
 
+lair_gateitems = {
+	["Gate of Hilarity"] = { effect = "Comic Violence", item = "gremlin juice" },
+	["Gate of Humility"] = { effect = "Wussiness", item = "wussiness potion" },
+	["Gate of Morose Morbidity and Moping"] = { effect = "Rainy Soul Miasma", item = "thin black candle" },
+	["Gate of Slack"] = { effect = "Extreme Muscle Relaxation", item = "Mick's IcyVapoHotness Rub" },
+	["Gate of Spirit"] = { effect = "Woad Warrior", item = "pygmy pygment" },
+	["Gate of the Porcupine"] = { effect = "Spiky Hair", item = "super-spiky hair gel" },
+	["Twitching Gates of The Suc Rose"] = { effect = "Sugar Rush" },
+	["Gate of the Viper"] = { effect = "Deadly Flashing Blade", item = "adder bladder" },
+	["Locked Gate"] = { effect = "Locks Like the Raven", item = "Black No. 2" },
+
+	["Gate of Flame"] = { effect = "Spicy Mouth", item = "jaba&ntilde;ero-flavored chewing gum", gnomish_buyable = true },
+	["Gate of Intrigue"] = { effect = "Mysteriously Handsome", item = "handsomeness potion", gnomish_buyable = true },
+	["Gate of Machismo"] = { effect = "Engorged Weapon", item = "Meleegra&trade; pills", gnomish_buyable = true },
+	["Gate of Mystery"] = { effect = "Mystic Pickleness", item = "pickle-flavored chewing gum", gnomish_buyable = true },
+	["Gate of the Dead"] = { effect = "Hombre Muerto Caminando", item = "marzipan skull", gnomish_buyable = true },
+	["Gate of Torment"] = { effect = "Tamarind Torment", item = "tamarind-flavored chewing gum", gnomish_buyable = true },
+	["Gate of Zest"] = { effect = "Spicy Limeness", item = "lime-and-chile-flavored chewing gum", gnomish_buyable = true },
+
+	["Gate of Light"] = { effect = "Izchak's Blessing", potion = "blessing" },
+	["Gate of That Which is Hidden"] = { effect = "Object Detection", potion = "detection" },
+	["Gate of the Mind"] = { effect = "Strange Mental Acuity", potion = "acuity" },
+	["Gate of the Ogre"] = { effect = "Strength of Ten Ettins", potion = "strength" },
+	["Gate that is Not a Gate"] = { effect = "Teleportitis", potion = "teleportation" },
+}
+
+-- TODO: resolve to gate/monster instead of item
 local scopes = {
 	["see a wooden gate with an elaborate carving of an armchair on it."] = "pygmy pygment",
 	["see a wooden gate with an elaborate carving of a cowardly%-looking man on it."] = "wussiness potion",
@@ -147,6 +174,14 @@ add_processor("/campground.php", function()
 	end
 end)
 
+--				if not lair_gateitems[gate_input] then
+--					for a, b in pairs(lair_gateitems) do
+--						if b.item == gate_input then
+--							gate = a
+--						end
+--					end
+--				end
+
 function get_lair_gate_items()
 	local gatestatus = session["zone.lair.gates"] or {}
 	local scopeitems = session["zone.lair.itemsneeded"] or {}
@@ -194,17 +229,9 @@ add_printer("/campground.php", function()
 		-- telescope lair info
 
 		local function get_gates_display_lines()
-			local function mkline(gate_input)
-				if not gate_input then
+			local function mkline(gate)
+				if not gate then
 					return [[<span style="color: darkorange">(Unknown)</span>]]
-				end
-				local gate = gate_input
-				if not lair_gateitems[gate_input] then
-					for a, b in pairs(lair_gateitems) do
-						if b.item == gate_input then
-							gate = a
-						end
-					end
 				end
 				local gatedata = lair_gateitems[gate]
 				if gatedata then
@@ -432,32 +459,6 @@ add_printer("/campground.php", function()
 		text = add_message_to_page(text, table.concat(extratext, "\n"), "Lair Checklist:", color)
 	end
 end)
-
-lair_gateitems = {
-	["Gate of Hilarity"] = { effect = "Comic Violence", item = "gremlin juice" },
-	["Gate of Humility"] = { effect = "Wussiness", item = "wussiness potion" },
-	["Gate of Morose Morbidity and Moping"] = { effect = "Rainy Soul Miasma", item = "thin black candle" },
-	["Gate of Slack"] = { effect = "Extreme Muscle Relaxation", item = "Mick's IcyVapoHotness Rub" },
-	["Gate of Spirit"] = { effect = "Woad Warrior", item = "pygmy pygment" },
-	["Gate of the Porcupine"] = { effect = "Spiky Hair", item = "super-spiky hair gel" },
-	["Twitching Gates of The Suc Rose"] = { effect = "Sugar Rush" },
-	["Gate of the Viper"] = { effect = "Deadly Flashing Blade", item = "adder bladder" },
-	["Locked Gate"] = { effect = "Locks Like the Raven", item = "Black No. 2" },
-
-	["Gate of Flame"] = { effect = "Spicy Mouth", item = "jaba&ntilde;ero-flavored chewing gum", gnomish_buyable = true },
-	["Gate of Intrigue"] = { effect = "Mysteriously Handsome", item = "handsomeness potion", gnomish_buyable = true },
-	["Gate of Machismo"] = { effect = "Engorged Weapon", item = "Meleegra&trade; pills", gnomish_buyable = true },
-	["Gate of Mystery"] = { effect = "Mystic Pickleness", item = "pickle-flavored chewing gum", gnomish_buyable = true },
-	["Gate of the Dead"] = { effect = "Hombre Muerto Caminando", item = "marzipan skull", gnomish_buyable = true },
-	["Gate of Torment"] = { effect = "Tamarind Torment", item = "tamarind-flavored chewing gum", gnomish_buyable = true },
-	["Gate of Zest"] = { effect = "Spicy Limeness", item = "lime-and-chile-flavored chewing gum", gnomish_buyable = true },
-
-	["Gate of Light"] = { effect = "Izchak's Blessing", potion = "blessing" },
-	["Gate of That Which is Hidden"] = { effect = "Object Detection", potion = "detection" },
-	["Gate of the Mind"] = { effect = "Strange Mental Acuity", potion = "acuity" },
-	["Gate of the Ogre"] = { effect = "Strength of Ten Ettins", potion = "strength" },
-	["Gate that is Not a Gate"] = { effect = "Teleportitis", potion = "teleportation" },
-}
 
 add_processor("/lair1.php", function()
 	local whereidx = {}

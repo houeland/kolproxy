@@ -609,8 +609,8 @@ pushboolean :: LuaState -> Bool -> IO ()
 pushboolean l v = c_lua_pushboolean l (fromIntegral (fromEnum v))
 
 -- | See @lua_pushinteger@ in Lua Reference Manual.
-pushinteger :: LuaState -> LuaInteger -> IO ()
-pushinteger = c_lua_pushinteger
+pushinteger :: LuaState -> Integer -> IO ()
+pushinteger l i = c_lua_pushinteger l (fromIntegral i)
 
 -- | See @lua_pushlightuserdata@ in Lua Reference Manual.
 pushlightuserdata :: LuaState -> Ptr a -> IO ()
@@ -701,8 +701,10 @@ tocfunction :: LuaState -> Int -> IO (FunPtr LuaCFunction)
 tocfunction l n = c_lua_tocfunction l (fromIntegral n)
 
 -- | See @lua_tointeger@ in Lua Reference Manual.
-tointeger :: LuaState -> Int -> IO LuaInteger
-tointeger l n = c_lua_tointeger l (fromIntegral n)
+tointeger :: LuaState -> Int -> IO Integer
+tointeger l n = do
+	intval <- c_lua_tointeger l (fromIntegral n)
+	return (fromIntegral intval)
 
 -- | See @lua_tonumber@ in Lua Reference Manual.
 tonumber :: LuaState -> Int -> IO CDouble
@@ -761,20 +763,20 @@ maybepeek l n test peek = do
         then liftM Just (peek l n)
         else return Nothing
 
-instance StackValue LuaInteger where
-    push l x = pushinteger l x
-    peek l n = maybepeek l n isnumber tointeger
-    valuetype _ = TNUMBER
+--instance StackValue LuaInteger where
+--    push l x = pushinteger l x
+--    peek l n = maybepeek l n isnumber tointeger
+--    valuetype _ = TNUMBER
 
-instance StackValue LuaNumber where
-    push l x = pushnumber l x
-    peek l n = maybepeek l n isnumber tonumber
-    valuetype _ = TNUMBER
+--instance StackValue LuaNumber where
+--    push l x = pushnumber l x
+--    peek l n = maybepeek l n isnumber tonumber
+--    valuetype _ = TNUMBER
 
-instance StackValue Int where
-    push l x = pushinteger l (fromIntegral x)
-    peek l n = maybepeek l n isnumber (\l n -> liftM fromIntegral (tointeger l n))
-    valuetype _ = TNUMBER
+--instance StackValue Int where
+--    push l x = pushinteger l (fromIntegral x)
+--    peek l n = maybepeek l n isnumber (\l n -> liftM fromIntegral (tointeger l n))
+--    valuetype _ = TNUMBER
 
 instance StackValue Double where
     push l x = pushnumber l (realToFrac x)
