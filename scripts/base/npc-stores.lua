@@ -1,3 +1,4 @@
+-- TODO: does not handle imported beer because of the &quot; escaping(?)
 function buy_itemname(name, input_amount)
 	assert(type(name) == "string")
 	get_itemid(name)

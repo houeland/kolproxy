@@ -758,6 +758,38 @@ endif
 	}
 
 	add_task {
+		when = ascensionstatus("Hardcore") and
+			not have_skill("Ambidextrous Funkslinging") and
+			not have_item("double-ice cap") and
+			count_item("shard of double-ice") < 5 and
+			not cached_stuff.taken_april_shower,
+		task = {
+			message = "taking april shower",
+			nobuffing = true,
+			action = function()
+				post_page("/clan_viplounde.php", { preaction = "takeshower", temperature = 1 })
+				cached_stuff.taken_april_shower = true
+				did_action = true
+			end
+		}
+	}
+
+	add_task {
+		when = ascensionstatus("Hardcore") and
+			not have_skill("Ambidextrous Funkslinging") and
+			not have_item("double-ice cap") and
+			count_item("shard of double-ice") >= 5,
+		task = {
+			message = "making double-ice cap",
+			nobuffing = true,
+			action = function()
+				use_item("shard of double-ice", 5)
+				did_action = have_item("double-ice cap")
+			end
+		}
+	}
+
+	add_task {
 		when = not cached_stuff.campground_psychoses,
 		task = {
 			message = "checking campground psychoses",
@@ -4369,11 +4401,6 @@ endif
 	}
 
 	add_task {
-		when = quest("There Can Be Only One Topping") and (level() >= 11 and not quest_text("Your first step is to find the Black Market")),
-		task = tasks.there_can_be_only_one_topping,
-	}
-
-	add_task {
 		when = not cached_stuff.unlocked_upstairs and not have_item("Spookyraven ballroom key"),
 		task = function()
 			local manor = get_page("/manor.php")
@@ -4784,6 +4811,11 @@ endif
 	}
 
 	add_task {
+		when = quest("There Can Be Only One Topping") and (level() >= 11 and not quest_text("Your first step is to find the Black Market")),
+		task = tasks.there_can_be_only_one_topping,
+	}
+
+	add_task {
 		prereq = have_item("ancient amulet") and have_item("Eye of Ed") and have_item("Staff of Fats"),
 		f = function()
 			inform "paste staff of ed"
@@ -5021,8 +5053,18 @@ endif
 										did_action = false
 									end
 								end
-							else
-								-- TODO: farm up large box, or manual stop if no clover
+							elseif can_ensure_clover() then
+								run_task {
+									message = "farm large box",
+									bonus_target = { "item", "extraitem", "combat" },
+									action = adventure {
+										zone = "The Dungeons of Doom",
+										macro_function = macro_noodlecannon,
+										noncombats = {
+											["Ouch!  You bump into a door!"] = "Buy what appears to be some sort of cloak (5,000 Meat)",
+										},
+									}
+								}
 							end
 						end
 					end

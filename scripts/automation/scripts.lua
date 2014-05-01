@@ -64,7 +64,7 @@ function is_ignored_consumable(item)
 			available_consumable_ignoreids[get_itemid(x)] = true
 		end
 		if not have_skill("Shake It Off") then
-			available_consumable_ignoreids["bag of QWOP"] = true
+			available_consumable_ignoreids[get_itemid("bag of QWOP")] = true
 		end
 		for _iname, ways in pairs(get_all_recipes()) do
 			for _, source in ipairs(ways) do
@@ -73,6 +73,7 @@ function is_ignored_consumable(item)
 				end
 			end
 		end
+		available_consumable_ignoreids[get_itemid("cream stout")] = false
 	end
 	return available_consumable_ignoreids[get_itemid(item)] == true
 end
@@ -2182,7 +2183,7 @@ endif
 					end
 				end
 			end
-			try_craft(meat() >= 100, "overpriced &quot;imported&quot; beer", 0, function() warn_imported_beer() return store_buy_item("overpriced &quot;imported&quot; beer", "v") end)
+			try_craft(meat() >= 100, "overpriced &quot;imported&quot; beer", 0, function() warn_imported_beer() return raw_store_buy_item("overpriced &quot;imported&quot; beer", "v") end)
 			if have_crafted then return try_crafting_improvements() end
 		end
 
