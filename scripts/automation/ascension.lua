@@ -680,7 +680,9 @@ endif
 	}
 
 	add_task {
-		when = not have_item("gnomish housemaid's kgnee") and not cached_stuff.gotten_kgnee,
+		when = not have_item("gnomish housemaid's kgnee") and
+			script.have_familiar("Reagnimated Gnome") and
+			not cached_stuff.gotten_kgnee,
 		task = {
 			message = "get kgnee",
 			nobuffing = true,
@@ -2392,7 +2394,16 @@ endif
 							return
 						end
 					end
-					if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") and have_skill("Rowdy Drinker") and estimate_max_spleen() - spleen() <= 3 then
+					local function pete_spleen_ok()
+						if estimate_max_spleen() - spleen() <= 3 then
+							return true
+						elseif not have_skill("Incite Riot") then
+							return true
+						else
+							return false
+						end
+					end
+					if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") and have_skill("Rowdy Drinker") and pete_spleen_ok() then
 						local drinks = get_available_drinks(2)
 						local swill_drink = get_craftable_swill_drink()
 						if swill_drink then
@@ -2477,9 +2488,12 @@ endif
 			message = "low on adventures",
 			nobuffing = true,
 			action = function()
-				local final_eating = (estimate_max_fullness() - fullness()) <= 3 and (estimate_max_safe_drunkenness() - drunkenness()) <= 3
-				result, resulturl, ate = script.eat_food(final_eating)
-				if ate then
+				local final_consumption = (estimate_max_fullness() - fullness()) <= 3 and (estimate_max_safe_drunkenness() - drunkenness()) <= 3
+				result, resulturl = script.eat_food(true, final_consumption)
+				if advs() < want_advs then
+					result, resulturl = script.drink_booze(true, final_consumption)
+				end
+				if advs() >= want_advs then
 					did_action = true
 				else
 					stop("Fewer than " .. tostring(want_advs) .. " adventures left")
@@ -5195,45 +5209,45 @@ use ]] .. get_lair_tower_monster_items()[level] .. [[
 							result, resulturl, advagain = handle_adventure_result(pt, url, "?", [[
 ]] .. COMMON_MACROSTUFF_START(20, 5) .. [[
 
-if hasskill Saucy Salve
-  cast Saucy Salve
-endif
-
 use gauze garter, gauze garter
+if hasskill Saucy Salve
+	cast Saucy Salve
+endif
 use gauze garter, gauze garter
 use gauze garter, gauze garter
 use gauze garter, gauze garter
 
 ]])
 							did_action = get_result():contains("<!--WINWINWIN-->")
-						elseif result:contains("place=2") and count_item("gauze garter") >= 8 and have_item("Rain-Doh indigo cup") then
+						elseif result:contains("place=2") and count_item("gauze garter") >= 8 and (have_item("Rain-Doh indigo cup") or have_item("double-ice cap")) then
 							inform "defeat shadow"
 							script.bonus_target { "easy combat" }
 							script.want_familiar "Frumious Bandersnatch"
 							script.ensure_buffs { "Go Get 'Em, Tiger!" }
-							script.wear {}
+							script.wear { hat = first_wearable { "double-ice cap" } }
 							set_mcd(0)
 							if maxhp() < 300 then
-								script.wear { acc1 = first_wearable { "bejeweled pledge pin" }, acc2 = first_wearable { "plastic vampire fangs" } }
+								script.wear { hat = first_wearable { "double-ice cap" }, acc1 = first_wearable { "bejeweled pledge pin" }, acc2 = first_wearable { "plastic vampire fangs" }, acc1 = first_wearable { "sphygmomanometer" } }
 							end
 							if maxhp() < 300 then
-								script.maybe_ensure_buffs { "Standard Issue Bravery", "Starry-Eyed" }
+								script.maybe_ensure_buffs { "Standard Issue Bravery", "Starry-Eyed", "Puddingskin" }
 							end
 							script.force_heal_up()
-							if hp() < 300 then
+							if hp() < 300 and not have_equipped_item("double-ice cap") then
 								stop "Kill your shadow"
 							end
 							local pt, url = get_page("/lair6.php", { place = 2 })
 							result, resulturl, advagain = handle_adventure_result(pt, url, "?", [[
 ]] .. COMMON_MACROSTUFF_START(20, 5) .. [[
 
+use gauze garter
 if hasskill Saucy Salve
-  cast Saucy Salve
+	cast Saucy Salve
 endif
-
 use gauze garter
-use gauze garter
-use Rain-Doh indigo cup
+if hascombatitem Rain-Doh indigo cup
+	use Rain-Doh indigo cup
+endif
 use gauze garter
 use gauze garter
 use gauze garter
@@ -5286,6 +5300,18 @@ use gauze garter
 								did_action = true
 							end
 						else
+							if pt:contains([[value="level1"]]) then
+								local t = nil
+								for l_, x in ipairs(get_lair_tower_monster_items()) do
+									if l_ >= 4 and not have_item(x) then
+										t = tasks.get_tower_item_farming_task(x) or t
+									end
+								end
+								if t then
+									run_task(t)
+									return
+								end
+							end
 							inform "finish upper part of tower"
 							result, resulturl = get_page("/lair5.php")
 							result = add_message_to_page(get_result(), "Finish upper part of tower", nil, "darkorange")

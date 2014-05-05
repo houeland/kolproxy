@@ -474,7 +474,7 @@ mark m_done
 				end
 				gear.hat = first_wearable { "lihc face" }
 				gear.weapon = first_wearable { "titanium assault umbrella" }
-				gear.acc1 = first_wearable { "plastic vampire fangs" }
+				gear.acc1 = first_wearable { "sphygmomanometer", "plastic vampire fangs", "bejeweled pledge pin" }
 				gear.acc2 = first_wearable { "glowing red eye" }
 				if count_item("glowing red eye") >= 2 then
 					gear.acc3 = first_wearable { "glowing red eye" }
@@ -484,7 +484,7 @@ mark m_done
 				script.force_heal_up()
 			end
 			if predict_aboo_peak_banish() < 30 then
-				script.maybe_ensure_buffs { "Oiled-Up", "Standard Issue Bravery", "Starry-Eyed", "Puddingskin", "Protection from Bad Stuff" }
+				script.maybe_ensure_buffs { "Oiled-Up", "Standard Issue Bravery", "Starry-Eyed", "Puddingskin", "Protection from Bad Stuff", "Truly Gritty" }
 				script.force_heal_up()
 			end
 			if predict_aboo_peak_banish() < 30 and have_skill("Check Mirror") and not have_intrinsic("Slicked-Back Do") then
@@ -660,6 +660,9 @@ mark m_done
 			elseif have_item("skeleton key") then
 				door_action = "Use a skeleton key"
 			end
+			if hp() <= maxhp() / 2 then
+				script.force_heal_up()
+			end
 			local advf = adventure {
 				zone = "The Daily Dungeon",
 				macro_function = macro_noodlecannon,
@@ -675,6 +678,9 @@ mark m_done
 			if pt:contains("Daily Done, John.") then
 				cached_stuff.done_daily_dungeon = true
 				advagain = true
+			end
+			if have_buff("Beaten Up") and pt:contains("sneak past the door without it noticing you") and have_skill("Shake It Off") then
+				script.force_heal_up()
 			end
 			return pt, pturl, advagain
 		end

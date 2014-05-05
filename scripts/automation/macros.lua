@@ -115,6 +115,13 @@ local function using_accordion()
 	return itemdata.song_duration ~= nil
 end
 
+local function using_moxie_weapon()
+	if not equipment().weapon then return false end
+	local itemdata = maybe_get_itemdata(equipment().weapon)
+	if not itemdata then return false end
+	return itemdata.attack_state == "Moxie" or have_equipped_item("Frankly Mr. Shank")
+end
+
 function macro_sneaky_pete_action()
 	local weapondata = equipment().weapon and maybe_get_itemdata(equipment().weapon)
 	if weapondata and weapondata.attack_stat == "Muscle" then
@@ -166,8 +173,21 @@ endif
 	return attack_action()
 end
 
+local function can_easily_attack_with_moxie_weapon()
+	local cfm = getCurrentFightMonster()
+	if using_moxie_weapon() and cfm and cfm.Stats and cfm.Stats.Atk and cfm.Stats.Atk - buffedmoxie() >= 25 then
+		if cfm.Stats.Phys and tonumber(cfm.Stats.Phys) and tonumber(cfm.Stats.Phys) > 0 then
+			return false
+		else
+			return true
+		end
+	end
+end
+
 function cannon_action()
 	if have_skill("Crab Claw Technique") and using_accordion() and not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } then
+		return attack_action()
+	elseif not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } and can_easily_attack_with_moxie_weapon() then
 		return attack_action()
 	elseif ascensionpath("Avatar of Sneaky Pete") then
 		return macro_sneaky_pete_action()
@@ -198,7 +218,11 @@ function serpent_action()
 	if ascensionpath("Avatar of Sneaky Pete") then
 		return macro_sneaky_pete_action()
 	end
-	return macro_cast_skill { "Stringozzi Serpent", "Saucegeyser", "Weapon of the Pastalord", "Saucestorm", "Cannelloni Cannon", "Cone of Zydeco", fury() >= 1 and "Furious Wallop" or "???", "Kneebutt" }
+	local skill_list = { "Stringozzi Serpent", "Saucegeyser", "Weapon of the Pastalord", "Saucestorm", "Cannelloni Cannon", "Cone of Zydeco", fury() >= 1 and "Furious Wallop" or "???", "Kneebutt" }
+	if not maybe_macro_cast_skill(skill_list) and can_easily_attack_with_moxie_weapon() then
+		return attack_action()
+	end
+	return macro_cast_skill(skill_list)
 end
 
 function geyser_action()
@@ -1259,7 +1283,7 @@ function macro_noodlecannon()
 
 ]] .. macro_killing_begins() .. [[
 
-while !times 7
+while !times 10
 ]] .. cannon_action() .. [[
 endwhile
 
@@ -1314,7 +1338,7 @@ end
 function macro_noodlegeyser(maxtimes)
 	return function()
 		return [[
-]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
+]] .. COMMON_MACROSTUFF_START(20, 25) .. [[
 
 ]] .. maybe_stun_monster(true) .. [[
 
@@ -1418,7 +1442,7 @@ function make_gremlin_macro(name, wrongmsg)
 		use_magnet = [[use rock band flyers, molybdenum magnet]]
 	end
 	return [[
-]] .. COMMON_MACROSTUFF_START(20, 40) .. [[
+]] .. COMMON_MACROSTUFF_START(20, 20) .. [[
 
 sub stall
 ]]..conditional_salve_action("goto do_return")..[[

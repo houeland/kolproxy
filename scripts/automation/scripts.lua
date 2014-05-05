@@ -808,15 +808,21 @@ function get_automation_scripts(cached_stuff)
 		return have_buff("Thrice-Cursed") or have_buff("Twice-Cursed") or have_buff("Once-Cursed")
 	end
 
-	function f.heal_up(target)
-		target = target or maxhp() * 0.8
+	function f.heal_up(specified_target)
+		local target = specified_target
+		if not target then
+			target = 0
+			if maxhp() - hp() >= 20 or maxhp() < 50 then
+				target = maxhp() * 0.8
+			end
+		end
 		--print("DEBUG: heal_up()", hp(), maxhp())
-		if hp() < target and (maxhp() - hp() >= 20 or maxhp() < 50) then
+		if hp() < target then
 			local oldhp = hp()
 			if maxhp() - hp() >= 70 and have_skill("Cannelloni Cocoon") then
 				ensure_mp(20)
 				cast_skill("Cannelloni Cocoon")
-			elseif have_skill("Shake It Off") and not is_cursed() and maxmp() >= 40 then
+			elseif have_skill("Shake It Off") and not is_cursed() and maxmp() >= 30 then
 				ensure_mp(30)
 				cast_skill("Shake It Off")
 			elseif have_skill("Tongue of the Walrus") then
@@ -835,7 +841,7 @@ function get_automation_scripts(cached_stuff)
 				cast_skillid("Lasagna Bandages")
 			elseif maxhp() - hp() <= 20 and have_item("cast") then
 				use_item("cast")
-			elseif maxhp() < 50 then
+			elseif maxhp() < 50 and not specified_target then
 				-- Do nothing
 			elseif have_item("Camp Scout pup tent") then
 				use_item("Camp Scout pup tent")
@@ -932,8 +938,12 @@ function get_automation_scripts(cached_stuff)
 			return use_item("Knob Goblin eyedrops")
 		end,
 		["Sugar Rush"] = function()
-			-- TODO: only try summoning once per day
-			local f = cast_skillid(53) -- summon crimbo candy
+			local f = nil
+			if not cached_stuff.tried_summoning_crimbo_candy then
+				script.ensure_mp(3)
+				cached_stuff.tried_summoning_crimbo_candy = true
+				f = cast_skill("Summon Crimbo Candy")
+			end
 			local candies = { "Angry Farmer candy", "Crimbo fudge", "Crimbo peppermint bark", "Crimbo candied pecan" }
 			for _, x in ipairs(candies) do
 				if have_item(x) then
@@ -1239,9 +1249,12 @@ function get_automation_scripts(cached_stuff)
 		end
 		local function try_casting_buff(buffname, try_shrugging)
 			if buffs[buffname] then
-				local pt = f.cast_buff(buffname)()
+				local pt = f.cast_buff(buffname)
+				if pt and type(pt) ~= "string" then
+					pt = pt()
+				end
 				if not have_buff(buffname) and not have_intrinsic(buffname) then
-					if pt:contains("can't fit") and pt:contains("songs in your head") and try_shrugging then
+					if pt and pt:contains("can't fit") and pt:contains("songs in your head") and try_shrugging then
 						for _, atname in ipairs(at_shruggable) do
 							if have_buff(atname) and not want_buffs[atname] then
 								shrug_buff(atname)
@@ -1249,7 +1262,7 @@ function get_automation_scripts(cached_stuff)
 							end
 						end
 						critical("Too many AT songs to cast buff: " .. buffname)
-					elseif pt:contains("can't use that skill") and ascensionpath("Way of the Surprising Fist") and AT_song_duration() == 0 then
+					elseif pt and pt:contains("can't use that skill") and ascensionpath("Way of the Surprising Fist") and AT_song_duration() == 0 then
 						return
 					elseif not ok_to_fail and not ignore_failure[buffname] then
 						critical("Failed to ensure buff: " .. buffname)
@@ -1778,7 +1791,7 @@ endif
 		end
 	end
 
-	function f.eat_food(out_of_advs)
+	function f.eat_food(out_of_advs, final_consumption)
 		if ascension_script_option("eat manually") then return end
 		if challenge == "fist" then return end
 		if challenge == "boris" then return end
@@ -1900,7 +1913,7 @@ endif
 		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
 			if space() >= 1 and script.get_turns_until_sr() == nil and meat() >= 40 then
 				return eat_fortune_cookie()
-			elseif space() >= 1 and drunkenness() == estimate_max_safe_drunkenness() and advs() < 15 then
+			elseif space() >= 1 and (drunkenness() == estimate_max_safe_drunkenness() or out_of_advs) and advs() < 15 then
 				local max_space = estimate_max_fullness() - fullness()
 				local min_space = 1
 				local available_foods = get_available_foods(1)
@@ -2028,7 +2041,7 @@ endif
 		return cached_stuff.have_cocktailcrafting_kit
 	end
 
-	function f.drink_booze()
+	function f.drink_booze(out_of_advs, final_consumption)
 		if ascension_script_option("eat manually") then return end
 		if challenge == "fist" then return end
 		if challenge == "boris" then return end
@@ -2087,6 +2100,8 @@ endif
 		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
 			if level() >= 6 and get_still_charges() < 2 then
 				return script.craft_and_drink_quality_booze(2)
+			elseif out_of_advs then
+				return script.craft_and_drink_quality_booze(3)
 			end
 			return script.craft_and_drink_quality_booze(4)
 		end
@@ -3675,7 +3690,7 @@ endif
 		if quest_text("You should head back to Bart") then
 			result, resulturl = get_page("/tavern.php", { place = "barkeep" })
 			did_action = have_item("Typical Tavern swill")
-		elseif quest_text("Bart Ender wants you to head down") then
+		elseif quest_text("Bart Ender wants you to head down") or quest_text("find the source of the rats") then
 			cellarpt = get_page("/cellar.php")
 			local function explore()
 				tiles = { 4, 3, 2, 1, 6, 11, 16, 17, 21, 22 }
@@ -3721,7 +3736,7 @@ endif
 			end
 			result, resulturl = get_page("/tavern.php", { place = "barkeep" })
 			refresh_quest()
-			did_action = quest_text("Bart Ender wants you to head down")
+			did_action = quest_text("Bart Ender wants you to head down") or quest_text("find the source of the rats")
 		end
 		return result, resulturl, did_action
 	end
