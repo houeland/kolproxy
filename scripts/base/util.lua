@@ -64,3 +64,7 @@ function monstername(name)
 		end
 	end
 end
+
+function raw_monstername()
+	return monster_name
+end

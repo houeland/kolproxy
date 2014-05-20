@@ -1614,7 +1614,7 @@ endif
 		return turns_to_next_sr
 	end
 
-	function f.go(info, zoneid, macro, noncombattbl, buffslist, famname, minmp, extra)
+	function f.go(info, zone, macro, noncombattbl, buffslist, famname, minmp, extra)
 		--print("DEBUG: go()", info, famname, minmp)
 		local specialnoncombatfunction = nil
 		local towear = {}
@@ -1688,7 +1688,7 @@ endif
 		if finalcheckfunc then
 			finalcheckfunc()
 		end
-		result, resulturl, advagain = autoadventure { zoneid = zoneid, macro = macro, noncombatchoices = noncombattbl, specialnoncombatfunction = specialnoncombatfunction, ignorewarnings = true }
+		result, resulturl, advagain = autoadventure { zoneid = get_zoneid(zone), macro = macro, noncombatchoices = noncombattbl, specialnoncombatfunction = specialnoncombatfunction, ignorewarnings = true }
 		did_action = advagain
 		return result, resulturl, advagain
 	end
@@ -3127,14 +3127,15 @@ endif
 	end
 
 	function f.do_trapper_quest()
-		if quest_text("go talk to the Trapper") then
+		-- TODO: redo logic
+		if quest_text("Take Groar's fur to") then
 			async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
 			refresh_quest()
-			did_action = not quest_text("go talk to the Trapper")
-		elseif quest_text("ready to ascend to the Icy Peak") or quest_text("close to figuring out what's going on at the Icy Peak") or quest_text("have slain Groar") then
+			did_action = not quest_text("Take Groar's fur to")
+		elseif quest_text("ready to ascend to the Icy Peak") or quest_text("close to figuring out what's going on at the Icy Peak") or quest_text("have slain Groar") or quest_text("for the source of all this chaos") then
 			async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
 			refresh_quest()
-			if not quest_text("ready to ascend to the Icy Peak") and not quest_text("close to figuring out what's going on at the Icy Peak") then
+			if not quest_text("ready to ascend to the Icy Peak") and not quest_text("close to figuring out what's going on at the Icy Peak") and not quest_text("for the source of all this chaos") then
 				did_action = true
 			else
 				if have_item("eXtreme mittens") and have_item("eXtreme scarf") and have_item("snowboarder pants") then
@@ -3378,7 +3379,7 @@ endif
 		script.do_moxie_use_dancecard()
 -- 		print("  mainstat", basemainstat(), "dance cards", count_item("dance card"), "advs", advs(), "trail turns", buffturns("On the Trail"))
 		script.bonus_target { "noncombat", "item" }
-		go("moxie powerleveling", 109, make_cannonsniff_macro("zombie waltzers"), {
+		go("moxie powerleveling", "The Haunted Ballroom", make_cannonsniff_macro("zombie waltzers"), {
 			["Curtains"] = "Watch the dancers",
 			["Strung-Up Quartet"] = "&quot;Play 'Sono Un Amanten Non Un Combattente'&quot;",
 		}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric" }, "Slimeling", 35, { olfact = "zombie waltzers" })

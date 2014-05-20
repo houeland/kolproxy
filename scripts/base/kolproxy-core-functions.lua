@@ -358,6 +358,14 @@ multiuse -> multiuse
 		item_name = nil
 	end
 
+	if p == "/fight.php" and pagetext:contains(">You win the fight!<!--WINWINWIN--><") then
+		local mn = monstername()
+		if mn then
+			pagetext = run("won fight: " .. mn, pagetext)
+		end
+		pagetext = run("won fight", pagetext)
+	end
+
 	pagetext = run(p, pagetext)
 
 	-- TODO: Redo, assistance automation should only run on some pages

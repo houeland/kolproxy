@@ -458,21 +458,23 @@ local aboo_peak_monster = {
 }
 
 local function get_hauntedness()
-	local questlog_page = get_page("/questlog.php", { which = 1 })
-	local hauntedness = questlog_page:match([[It is currently [0-9%%]+ haunted.]])
+	local questlog_page = get_page("/questlog.php", { which = 7 })
+	local hauntedness = questlog_page:match([[currently [0-9%%]+ haunted]])
+	if not hauntedness then print("DEBUG questlog_page", questlog_page) end
 	if not hauntedness and questlog_page:contains("You should keep clearing the ghosts out of A-Boo Peak so you can reach the signal fire.") then
 		hauntedness = "No longer haunted."
 	end
 	if not hauntedness then
 		async_get_page("/place.php", { whichplace = "highlands", action = "highlands_dude" })
-		questlog_page = get_page("/questlog.php", { which = 1 })
-		hauntedness = questlog_page:match([[It is currently [0-9%%]+ haunted.]])
+		questlog_page = get_page("/questlog.php", { which = 7 })
+		hauntedness = questlog_page:match([[currently [0-9%%]+ haunted]])
 	end
 	if not hauntedness and questlog_page:contains("You should keep clearing the ghosts out of A-Boo Peak so you can reach the signal fire.") then
 		hauntedness = "No longer haunted."
 	end
 	return hauntedness
 end
+
 function get_aboo_peak_hauntedness()
 	local hauntedness = get_hauntedness()
 	if hauntedness == "No longer haunted." then
@@ -480,7 +482,7 @@ function get_aboo_peak_hauntedness()
 	elseif not hauntedness then
 		return 100
 	else
-		return tonumber(hauntedness:match([[It is currently ([0-9]+)%% haunted.]]))
+		return tonumber(hauntedness:match([[currently ([0-9]+)%% haunted]]))
 	end
 end
 

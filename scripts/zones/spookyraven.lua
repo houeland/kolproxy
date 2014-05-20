@@ -402,7 +402,7 @@ end)
 
 add_always_adventure_warning(function(zoneid)
 	if tonumber(ascension["dance card turn"]) == turnsthisrun() then
-		if zoneid ~= 109 then
+		if zoneid ~= get_zoneid("The Haunted Ballroom") then
 			return "Next turn is a possible dance in the ballroom", "dance card-wrong zone"
 		elseif have_item("ten-leaf clover") then
 			return "Your ten-leaf clover will override the ballroom dance.", "dance card-clover"

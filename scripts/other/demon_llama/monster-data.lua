@@ -36,12 +36,12 @@ local monster_image_prefixes = {
 	slime5 = "slime5",
 }
 
-function buildCurrentFightMonsterDataCache(monster_name, fight_text)
-	local monster = maybe_get_monsterdata(monster_name)
+function buildCurrentFightMonsterDataCache(for_monster_name, fight_text)
+	local monster = maybe_get_monsterdata(for_monster_name)
 
 	if not monster then
 		local monster_image = fight_text:match([[<img id='monpic' src="http://images.kingdomofloathing.com/adventureimages/([^"]+)"]])
-		monster = maybe_get_monsterdata(monster_name, monster_image)
+		monster = maybe_get_monsterdata(for_monster_name, monster_image)
 		if monster_image and not monster then
 			for prefix, name in pairs(monster_image_prefixes) do
 				if monster_image:match("^" .. prefix) then

@@ -79,10 +79,12 @@ download_data_files = do
 --					else [])) (zip [0..] groupnames)
 --			return regrouped
 
-	let dldatafile x = do
+	let dldatafile x = (do
 		let [[basename]] = matchGroups ".*/([^/]+)$" x
 		filedata <- getHTTPFileData x
-		best_effort_atomic_file_write ("cache/files/" ++ basename) "." filedata
+		best_effort_atomic_file_write ("cache/files/" ++ basename) "." filedata) `catch` (\e -> do
+			putDebugStrLn $ "exception downloading datafile: " ++ x ++ ": " ++ show (e :: SomeException)
+			return ())
 
 	mapM_ (\x -> dldatafile ("http://svn.code.sf.net/p/kolmafia/code/src/data/" ++ x)) ["adventures.txt", "classskills.txt", "concoctions.txt", "combats.txt", "encounters.txt", "equipment.txt", "familiars.txt", "foldgroups.txt", "fullness.txt", "inebriety.txt", "items.txt", "modifiers.txt", "monsters.txt", "npcstores.txt", "outfits.txt", "spleenhit.txt", "statuseffects.txt", "zapgroups.txt"]
 

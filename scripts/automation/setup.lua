@@ -261,7 +261,7 @@ function setup_turnplaying_script(tbl)
 		-- TODO: cache quest per pageload
 		local questlog_page = nil
 		function refresh_quest()
-			questlog_page = get_page("/questlog.php", { which = 1 })
+			questlog_page = get_page("/questlog.php", { which = 7 })
 		end
 		refresh_quest()
 

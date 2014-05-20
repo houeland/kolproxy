@@ -169,7 +169,7 @@ function get_automation_tasks(script, cached_stuff)
 		message = "rotting matilda",
 		nobuffing = true,
 		action = function()
-			local pt, pturl, advagain = autoadventure { zoneid = 109 }
+			local pt, pturl, advagain = autoadventure { zoneid = get_zoneid("The Haunted Ballroom") }
 			if not pt:contains("Rotting Matilda") then
 				set_result(pt, pturl)
 				critical "Didn't find rotting matilda on dance card turn"
@@ -635,16 +635,18 @@ mark m_done
 		if ascension_script_option("manual lvl 9 quest") then
 			stop "STOPPED: Ascension script option set to do lvl 9 quest manually"
 		end
-		if quest_text("should seek him out, in the Highlands beyond the Orc Chasm") then
+		if quest_text("Find a way across") or quest_text("Finish building a bridge across") then
 			return t.do_orc_chasm()
-		elseif quest_text("now you should go talk to Black Angus") or quest_text("Go see Black Angus") then
+		elseif quest_text("Speak to the Highland Lord") then
 			return t.visit_highland_lord()
-		elseif quest_text("should go to Oil Peak and investigate the signal fire there") or quest_text("should keep killing oil monsters until the pressure on the peak drops") then
+		elseif quest_text("* Oil Peak") then
 			return t.do_oil_peak()
-		elseif quest_text("should check out A-Boo Peak and see") or quest_text("should keep clearing the ghosts out of A-Boo Peak") then
+		elseif quest_text("* A-boo Peak") then
 			return t.do_aboo_peak()
-		elseif quest_text("need to solve the mystery of Twin Peak") then
+		elseif quest_text("* Twin Peak") then
 			return t.do_twin_peak()
+		else
+			stop "TODO: handle only one topping quest"
 		end
 	end
 
