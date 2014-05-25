@@ -51,6 +51,8 @@ function get_ascension_automation_settings(want_bonus)
 			{ "mesh cap", },
 		},
 		use_items = {
+			"astral hot dog dinner", "astral six-pack", "carton of astral energy drinks",
+			"telegram from Lady Spookyraven",
 			"pork elf goodies sack",
 			"can of Rain-Doh",
 			"Knob Goblin lunchbox",
@@ -63,7 +65,6 @@ function get_ascension_automation_settings(want_bonus)
 			"fat wallet",
 			"ancient vinyl coin purse",
 			"briefcase",
-			"astral hot dog dinner", "astral six-pack", "carton of astral energy drinks",
 			"CSA discount card",
 			"Squat-Thrust Magazine",
 			"O'RLY manual",

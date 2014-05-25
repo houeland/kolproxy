@@ -41,6 +41,8 @@ local finished = false
 
 local do_debug_infoline = function() end
 
+local skipping_taskids = {}
+
 local ascension_tasks_tbl = {}
 function reset_ascension_task_list()
 	local tbl = ascension_tasks_tbl
@@ -52,7 +54,7 @@ function ascension_task(tbl)
 	table.insert(ascension_tasks_tbl, tbl)
 end
 
-local function automate_hcnp_day(whichday)
+local function automate_day(whichday)
 	reset_error_trace_steps()
 	finished = false
 
@@ -60,7 +62,7 @@ local function automate_hcnp_day(whichday)
 		print()
 	end
 	result = "??? No action found ???"
-	resulturl = "/automate-ascension-hcnp-day" .. whichday
+	resulturl = "/automate-ascension"
 	did_action = false
 	set_macro_runawayfrom_monsters(nil)
 
@@ -490,9 +492,9 @@ endif
 	local council_text_async = async_get_page("/council.php")
 
 	local questlog_page = nil
-	local questlog_page_async = async_get_page("/questlog.php", { which = 1 })
+	local questlog_page_async = async_get_page("/questlog.php", { which = 7 })
 	function refresh_quest()
-		questlog_page = get_page("/questlog.php", { which = 1 })
+		questlog_page = get_page("/questlog.php", { which = 7 })
 	end
 
 	function quest(name)
@@ -575,7 +577,14 @@ endif
 		else
 			error("Error adding task! (" .. tostring(t.message) .. ")")
 		end
-		table.insert(tasks_list, t)
+
+		local dgi = debug.getinfo(2)
+		local taskid = dgi.short_src .. ":" .. dgi.currentline
+
+		if not skipping_taskids[taskid] then
+			t.add_task_taskid = taskid
+			table.insert(tasks_list, t)
+		end
 	end
 
 	local function ensure_empty_config_table(t)
@@ -2801,6 +2810,7 @@ endif
 	add_task {
 		prereq = quest_text("this is Azazel in Hell") and challenge == "boris" and daysthisrun() == 1 and (have_item("Clancy's lute") or clancy_instrumentid() == 3) and estimate_max_fullness() - fullness() >= 5,
 		f = script.do_azazel,
+		message = "azazel in boris",
 	}
 
 	add_task {
@@ -2834,17 +2844,7 @@ endif
 			meat() >= 1000 and
 			(have_item("Clancy's lute") or clancy_instrumentid() == 3),
 		f = script.get_dinghy,
-	}
-
-	add_task {
-		prereq = challenge == "boris" and
-			not have_item("The Big Book of Pirate Insults") and not have_item("pirate fledges") and unlocked_island() and
-			not quest_text("successfully joined Cap'm Caronch's crew") and not ascension["zone.pirates.insults"] and
-			basemysticality() >= 25 and basemoxie() >= 25,
-		f = function()
-			use_dancecard()
-			script.get_big_book_of_pirate_insults()
-		end
+		message = "get dinghy",
 	}
 
 	add_task {
@@ -2985,6 +2985,7 @@ endif
 			not have_item("Knob Goblin encryption key") and
 			not unlocked_knob(),
 		f = script.unlock_cobbs_knob,
+		message = "unlock cobbs knob",
 	}
 
 	add_task {
@@ -3072,11 +3073,13 @@ endif
 			((playerclass("Disco Bandit") and have_skill("Superhuman Cocktailcrafting")) or playerclass("Accordion Thief")) and
 			meat() >= 100,
 		f = script.unlock_guild_and_get_tonic_water,
+		message = "unlock guild and get tonic water",
 	}
 
 	add_task {
 		prereq = (playerclass("Pastamancer") or playerclass("Sauceror")) and session["__script.opened myst guild store"] ~= "yes" and meat() >= 200,
 		f = script.open_myst_guildstore,
+		message = "open myst guildstore",
 	}
 
 	do
@@ -3124,6 +3127,7 @@ endif
 		prereq = quest("Ooh, I Think I Smell a Rat") and
 			challenge ~= "fist",
 		f = script.do_tavern,
+		message = "do tavern",
 	}
 
 	add_task {
@@ -4040,7 +4044,7 @@ endif
 	add_task {
 		prereq = not have_item("Spookyraven ballroom key") and
 			((challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg") or level() >= 7) and
-			maxmp() >= 50,
+			maxmp() >= 50 and false,
 		f = script.get_ballroom_key,
 		message = "ballroom key",
 	}
@@ -4213,14 +4217,21 @@ endif
 		message = "get dinghy",
 	}
 
+	local function can_disguise_as_pirate()
+		return false
+	end
+
+	local function unlocked_fcle()
+		return have_item("pirate fledges") or quest_text("you've been given crappy scutwork")
+	end
+
 	add_task {
 		prereq = not have_item("The Big Book of Pirate Insults") and
-			not have_item("pirate fledges") and
 			unlocked_island() and
-			not quest_text("successfully joined Cap'm Caronch's crew") and
 			not ascension["zone.pirates.insults"] and
 			basemysticality() >= 25 and
-			basemoxie() >= 25,
+			basemoxie() >= 25 and
+			not unlocked_fcle(),
 		f = function()
 			use_dancecard()
 			script.get_big_book_of_pirate_insults()
@@ -4229,11 +4240,10 @@ endif
 	}
 
 	add_task {
-		prereq = not quest_text("you've been given crappy scutwork") and
-			not have_item("pirate fledges") and
-			unlocked_island() and
+		prereq = unlocked_island() and
 			basemysticality() >= 25 and
-			basemoxie() >= 25,
+			basemoxie() >= 25 and
+			not unlocked_fcle(),
 		f = function()
 			script.wear { hat = "eyepatch", pants = "swashbuckling pants", acc3 = "stuffed shoulder parrot" }
 			local covept = get_page("/cove.php")
@@ -4290,7 +4300,7 @@ endif
 				elseif quest_text("wants you to defeat Old Don Rickets") then
 					script.beat_ibp()
 				else
-					critical "Unexpected quest status while trying to find pirate fledges. Didn't find the map?"
+					critical "Unexpected quest status while trying to unlock fcle. Didn't find the map quickly enough?"
 				end
 			end
 		end,
@@ -4397,10 +4407,10 @@ endif
 		}
 	}
 
-	add_task {
-		prereq = mainstat_type("Muscle") and not have_item("Spookyraven gallery key") and level() < 13,
-		f = script.do_muscle_powerleveling,
-	}
+--	add_task {
+--		prereq = mainstat_type("Muscle") and not have_item("Spookyraven gallery key") and level() < 13,
+--		f = script.do_muscle_powerleveling,
+--	}
 
 	add_task {
 		when = level() < 7 and not cached_stuff.unlocked_hidden_temple,
@@ -4465,6 +4475,11 @@ endif
 			not script.have_familiar("Angry Jung Man") and
 			not trailed,
 		task = tasks.do_8bit_realm,
+	}
+
+	add_task {
+		when = quest_text("wants to dance again, but first she needs"),
+		task = tasks.lady_spookyraven_dance,
 	}
 
 	add_task {
@@ -4763,6 +4778,20 @@ endif
 
 	add_task {
 		prereq = quest("Never Odd Or Even") and basemysticality() >= 60,
+		f = script.do_never_odd_or_even_quest,
+	}
+
+	add_task {
+		prereq = quest_text("the Quest for the Holy MacGuffin") and not have_item("Talisman o' Nam") and basemysticality() >= 60,
+		f = script.do_never_odd_or_even_quest,
+	}
+
+	local function need_staff_of_fats()
+		return not have_item("Staff of Fats") and not have_item("Staff of Ed") and not have_item("Staff of Ed, almost")
+	end
+
+	add_task {
+		prereq = quest_text("the Quest for the Holy MacGuffin") and need_staff_of_fats() and basemysticality() >= 60,
 		f = script.do_never_odd_or_even_quest,
 	}
 
@@ -5072,16 +5101,19 @@ endif
 								end
 							end
 						end
-						if not did_action then
+						local function have_all_potions()
+							for _, x in ipairs(dod_potion_types) do
+								if not have_item(x) then
+									return false
+								end
+							end
+							return true
+						end
+						if not did_action and not have_all_potions() then
 							if have_item("large box") and ensure_clover() then
 								meatpaste_items("large box", "ten-leaf clover")
 								use_item("blessed large box")
-								did_action = true
-								for _, x in ipairs(dod_potion_types) do
-									if not have_item(x) then
-										did_action = false
-									end
-								end
+								did_action = have_all_potions()
 							elseif can_ensure_clover() then
 								run_task {
 									message = "farm large box",
@@ -5352,7 +5384,7 @@ use gauze garter
 						finished = true
 					end
 				end
-			elseif pturl:contains("/lair3.php") then
+			elseif pturl:contains("/lair3.php") and pt:contains("hedge") then
 				inform "do hedge maze"
 				script.heal_up()
 				script.ensure_mp(100)
@@ -5524,34 +5556,34 @@ use gauze garter
 		end
 	end
 
+	local running_toplevel_task = nil
 	for _, x in ipairs(tasks_list) do
 		--print("DEBUG taskcheck", pretty_tostring { message = x.message, task = x.task, prereq = x.prereq, when = x.when, when_function = type(x.when) == "function" and x.when() })
+		local triggered = false
+		local task = nil
 		if x.task ~= nil then
-			local triggered = false
+			task = x.task
 			if type(x.when) == "function" then
 				triggered = x.when()
 			else
 				triggered = x.when
 			end
-			if triggered then
-				local task = x.task
-				while type(task) == "function" do
-					task = task()
-				end
-				if task then
-					run_task(task)
-					break
-				end
-			end
 		elseif x.prereq ~= nil then
-			local triggered = false
+			task = x
 			if type(x.prereq) == "function" then
 				triggered = x.prereq()
 			else
 				triggered = x.prereq
 			end
-			if triggered then
-				run_task(x)
+		end
+		if triggered then
+			while type(task) == "function" do
+				task = task()
+			end
+			if task then
+--				print("DEBUG running top-level task", x.add_task_taskid)
+				running_toplevel_task = x
+				run_task(task)
 				break
 			end
 		end
@@ -5614,7 +5646,12 @@ use gauze garter
 	end
 
 	if not did_action and not finished then
-		result = add_message_to_page(get_result(), "Automation stopped while trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt>", "Automation stopped:", "darkorange")
+		local skiplink = ""
+		if running_toplevel_task and running_toplevel_task.add_task_taskid then
+			skiplink = "{ Just skip it: " .. running_toplevel_task.add_task_taskid .. " }"
+			skiplink = [[<a href="]]..ascension_automation_script_href { pwd = session.pwd, skip_taskid = running_toplevel_task.add_task_taskid }..[[">{ Skip it }</a>]]
+		end
+		result = add_message_to_page(get_result(), "Automation stopped while trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt><br>" .. skiplink, "Automation stopped:", "darkorange")
 	end
 
 	return result, resulturl, did_action
@@ -5639,10 +5676,11 @@ local function do_loop(whichday)
 	if autoattack_is_set() then
 		stop "Disable your autoattack. The ascension script will handle (most) combats automatically."
 	end
+	cached_stuff.currently_checked = {}
 	local loop = true
 	while loop do
 		loop = false
-		local result, resulturl, did_action = automate_hcnp_day(whichday)
+		local result, resulturl, did_action = automate_day(whichday)
 		if did_action then
 			loop = true
 		else
@@ -5654,6 +5692,9 @@ local function do_loop(whichday)
 end
 
 ascension_automation_script_href = add_automation_script("automate-ascension", function()
+	if params.skip_taskid then
+		skipping_taskids[params.skip_taskid] = true
+	end
 	return do_loop(tonumber(params.whichday))
 end)
 

@@ -398,10 +398,10 @@ function parse_items()
 	for l in io.lines("cache/files/items.txt") do
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
-		local itemid, name, picturestr, itemusestr, accessstr, plural = tonumber(tbl[1]), tbl[2], tbl[4], tbl[5], tbl[6], tbl[8]
+		local itemid, name, picturestr, itemusestr, accessstr, autosellstr, plural = tonumber(tbl[1]), tbl[2], tbl[4], tbl[5], tbl[6], tbl[7], tbl[8]
 		local picture = (picturestr or ""):match("^(.-)%.gif$")
 		if itemid and name and not blacklist[name] then
-			items[name] = { id = itemid, picture = picture }
+			items[name] = { id = itemid, picture = picture, sellvalue = tonumber(autosellstr) }
 			lowercasemap[name:lower()] = name
 			for _, u in ipairs(split_commaseparated(itemusestr or "")) do
 				if itemslots[u] then

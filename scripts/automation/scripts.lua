@@ -4186,33 +4186,26 @@ endif
 		end
 	end
 
+-- "for the key to the Haunted Billiards Room"
+	function f.unlock_library()
+		-- zone "The Haunted Kitchen"
+	end
+
+-- "for the key to the Haunted Library"
 	function f.get_library_key()
-		local townright = get_page("/town_right.php")
-		if townright:match("The Haunted Pantry") then
-			f.unlock_manor()
-		else
-			local manor = get_page("/manor.php")
-			if manor:match("Stairs Up") then
-				inform "breaking spookyraven stairs"
-				set_result(get_page("/place.php", { whichplace = "spookyraven1", action = "sr1_stairs1" })) -- breaking stairs so they reflect state
-				did_action = not get_page("/manor.php"):match("Stairs Up")
-			else
-				if have_item("pool cue") and have_item("handful of hand chalk") and not have_buff("Chalky Hand") then
-					use_item("handful of hand chalk") -- TODO: ensure_buffs
-				end
-				script.bonus_target { "noncombat" }
-				if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") and not have_skill("Smoke Break") and not have_skill("Flash Headlight") then
-					-- TODO: do this better
-					script.bonus_target { "noncombat", "easy combat" }
-				end
-				go("unlock library", 105, macro_stasis, {
-					["Minnesota Incorporeals"] = "Let the ghost break",
-					["Broken"] = "Go for a solid",
-					["A Hustle Here, a Hustle There"] = "Go for the 8-ball",
-				}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic" }, "Stocking Mimic", 15)
-			end
+		if have_item("pool cue") and have_item("handful of hand chalk") and not have_buff("Chalky Hand") then
+			use_item("handful of hand chalk") -- TODO: ensure_buffs
 		end
-		return result, resulturl, did_action
+		script.bonus_target { "noncombat" }
+		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") and not have_skill("Smoke Break") and not have_skill("Flash Headlight") then
+			-- TODO: do this better
+			script.bonus_target { "noncombat", "easy combat" }
+		end
+		go("unlock library", 105, macro_stasis, {
+			["Minnesota Incorporeals"] = "Let the ghost break",
+			["Broken"] = "Go for a solid",
+			["A Hustle Here, a Hustle There"] = "Go for the 8-ball",
+		}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic" }, "Stocking Mimic", 15)
 	end
 
 	function f.get_dod_wand()
@@ -4581,7 +4574,7 @@ endif
 				end
 				script.bonus_target { "item", "combat", "extraitem" }
 				softcore_stoppable_action("do fcle")
-				go("doing fcle", 158, macro_noodleserpent, {
+				go("doing fcle", "The F'c'le", macro_noodleserpent, {
 					["Chatterboxing"] = "Fight chatty fire with chatty fire",
 				}, { "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog", 40, { equipment = { hat = "eyepatch", pants = "swashbuckling pants", acc3 = "stuffed shoulder parrot" } })
 				if get_result():match("You quickly scribble a random phone number onto the napkin and hand it to the clingy pirate.") then
@@ -4639,6 +4632,12 @@ endif
 				wear { acc3 = "Talisman o' Nam" }
 				async_get_page("/plains.php")
 			end
+			if have_item("&quot;I Love Me, Vol. I&quot;") then
+				use_item("&quot;I Love Me, Vol. I&quot;")
+			end
+			if have_item("&quot;2 Love Me, Vol. 2&quot;") then
+				use_item("&quot;2 Love Me, Vol. 2&quot;")
+			end
 			if have_item("Mega Gem") then
 				inform "fighting Dr. Awkward"
 				fam "Knob Goblin Organ Grinder"
@@ -4649,33 +4648,26 @@ endif
 				result, resulturl = get_page("/place.php", { whichplace = "palindome", action = "pal_droffice" })
 				result, resulturl = handle_adventure_result(get_result(), resulturl, "?", macro_noodleserpent, { ["Dr. Awkward"] = "War, sir, is raw!" })
 				did_action = have_item("Staff of Fats")
-			elseif quest_text("wants some wet stew in return") then
-				if have_item("wet stunt nut stew") then
-					inform "getting mega gem"
-					get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" })
-					did_action = have_item("Mega Gem")
-				else
-					script.bonus_target { "combat" }
-					go("find wet stunt nut stew", 386, macro_noodleserpent, {
-						["No sir, away!  A papaya war is on!"] = "Give the men a pep talk",
-						["Sun at Noon, Tan Us"] = "A little while",
-						["Rod Nevada, Vendor"] = "Accept (500 Meat)",
-						["Do Geese See God?"] = "Buy the photograph (500 meat)",
-						["A Pre-War Dresser Drawer, Pa!"] = "Ignawer the drawer",
-					}, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 40, { equipment = { acc3 = "Talisman o' Nam" } })
-				end
-			elseif quest_text("track down this Mr. Alarm guy") then
-				if have_item("&quot;2 Love Me, Vol. 2&quot;") then
-					use_item("&quot;2 Love Me, Vol. 2&quot;")
-				end
+			elseif have_item("wet stunt nut stew") and quest_text("Mr. Alarm") then
+				inform "getting mega gem"
+				get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" })
+				did_action = have_item("Mega Gem")
+			elseif quest_text("wet stunt nut stew") then
+				script.bonus_target { "combat" }
+				go("find wet stunt nut stew", 386, macro_noodleserpent, {
+					["No sir, away!  A papaya war is on!"] = "Give the men a pep talk",
+					["Sun at Noon, Tan Us"] = "A little while",
+					["Rod Nevada, Vendor"] = "Accept (500 Meat)",
+					["Do Geese See God?"] = "Buy the photograph (500 meat)",
+					["A Pre-War Dresser Drawer, Pa!"] = "Ignawer the drawer",
+				}, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 40, { equipment = { acc3 = "Talisman o' Nam" } })
+			elseif quest_text("Mr. Alarm") then
 				inform "talking to Mr. Alarm"
 				set_result(get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" }))
 				refresh_quest()
-				did_action = quest_text("wants some wet stew in return")
+				did_action = quest_text("wet stunt nut stew")
 			else
-				if have_item("&quot;I Love Me, Vol. I&quot;") then
-					use_item("&quot;I Love Me, Vol. I&quot;")
-				end
+				stop("TODO: check palindome progress")
 				if have_item("photograph of God") and have_item("photograph of a dog") and have_item("photograph of a red nugget") and have_item("photograph of an ostrich egg") then
 					local pt = get_page("/place.php", { whichplace = "palindome" })
 					if pt:contains("Dr. Awkward's Office") then

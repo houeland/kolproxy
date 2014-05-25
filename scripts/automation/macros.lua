@@ -1662,7 +1662,7 @@ end
 
 function macro_kill_ns()
 	return [[
-]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
+]] .. COMMON_MACROSTUFF_START(20, 30) .. [[
 
 if monstername Avatar of Jarlsberg
   if hasskill Smoke Break

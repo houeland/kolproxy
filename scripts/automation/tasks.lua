@@ -402,17 +402,6 @@ mark m_done
 		end
 	end
 
-	function t.visit_highland_lord()
-		return {
-			message = "visit highland lord",
-			action = function()
-				get_page("/place.php", { whichplace = "highlands", action = "highlands_dude" })
-				refresh_quest()
-				did_action = not (quest_text("now you should go talk to Black Angus") or quest_text("Go see Black Angus"))
-			end
-		}
-	end
-
 	function t.do_oil_peak()
 		-- TODO: buff ML to +50 or +100 via:
 			-- bugbear familiar or purse rat + familiar levels
@@ -637,8 +626,15 @@ mark m_done
 		end
 		if quest_text("Find a way across") or quest_text("Finish building a bridge across") then
 			return t.do_orc_chasm()
-		elseif quest_text("Speak to the Highland Lord") then
-			return t.visit_highland_lord()
+		elseif quest_text("Speak to the Highland Lord") or quest_text("Go see the Highland Lord") then
+			return {
+				message = "visit highland lord",
+				action = function()
+					get_page("/place.php", { whichplace = "highlands", action = "highlands_dude" })
+					refresh_quest()
+					did_action = not (quest_text("Speak to the Highland Lord") or quest_text("Go see the Highland Lord"))
+				end
+			}
 		elseif quest_text("* Oil Peak") then
 			return t.do_oil_peak()
 		elseif quest_text("* A-boo Peak") then
@@ -767,6 +763,15 @@ mark m_done
 				end
 			}
 		end
+		local function clover_zone(z) -- TODO: do as .need_clover = true instead?
+			return {
+				f = function()
+					if count_item("ten-leaf clover") + count_item("disassembled clover") >= 2 then
+						return clover_adv(z)
+					end
+				end
+			}
+		end
 
 		towerfarming["stick of dynamite"] = shore_item_crate("dude ranch souvenir crate")
 		towerfarming["tropical orchid"] = shore_item_crate("tropical island souvenir crate")
@@ -776,8 +781,10 @@ mark m_done
 		towerfarming["spider web"] = { zone = "The Sleazy Back Alley" } -- TODO: +combat%, noncombat choices
 		towerfarming["fancy bath salts"] = { zone = "The Haunted Bathroom" } -- TODO: +combat%, noncombat choices
 		towerfarming["NG"] = NG_farming()
+		towerfarming["leftovers of indeterminate origin"] = clover_zone("The Haunted Kitchen")
 		if estimate_bonus("Item Drops from Monsters") >= 200 then
 			towerfarming["sonar-in-a-biscuit"] = { zone = "The Batrat and Ratbat Burrow" }
+			towerfarming["disease"] = { zone = "Cobb's Knob Harem" } -- TODO: YR/banish?
 		end
 
 		local farmdata = towerfarming[item]
@@ -797,6 +804,18 @@ mark m_done
 					}
 				}
 			end
+		end
+	end
+
+	function t.lady_spookyraven_dance()
+		if not have_item("Lady Spookyraven's powder puff") then
+			stop "TODO: The Haunted Bathroom"
+		elseif not have_item("Lady Spookyraven's finest gown") then
+			stop "TODO: The Haunted Bedroom"
+		elseif not have_item("Lady Spookyraven's dancing shoes") then
+			stop "TODO: The Haunted Gallery"
+		else
+			stop "TODO: lady spookyraven dance"
 		end
 	end
 
