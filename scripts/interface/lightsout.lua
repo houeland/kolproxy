@@ -1,31 +1,51 @@
+register_setting {
+	name = "show extra notices/show lightsout warning",
+	description = "Add lights out counter, and show a warning if the counter is up.",
+	group = "warnings",
+	default_level = "detailed",
+	parent = "enable adventure warnings",
+}
+
+local function lightsout_enabled()
+	return (setting_enabled("enable adventure warnings") and setting_enabled("show extra notices") and setting_enabled("show extra notices/show lightsout warning"))
+end
+
+
 local liz_quest = {
 	{
 		marker = "You carefully tiptoe through the room to look out the window.",
 		description = "Store room (window)",
+		zone = 	"398"
 	},
 	{
 		marker = "You approach an overflowing hamper of white sheets and towels with curious red-brown stains on them.",
 		description = "Laundry room (stain)",
+		zone = "400"
 	},
 	{
 		marker = "You peer into the bathtub.",
-		description = "Bath room (tub)",
+		description = "Bathroom (tub)",
+		zone = "392"
 	},
 	{
 		marker = "You fumble your way to the pantry and open the door.",
 		description = "Kitchen (snack)",
+		zone = "388"
 	},
 	{
 		marker = "You try to remember the signs you saw before the lights went out, and feel your way to the children's section.",
 		description = "Library (children's book)",
+		zone = "390"
 	},
 	{
 		marker = "You close your eyes, hold up your hands as if you had an invisible partner, and begin to box-step your way across the dance floor.",
-		description = "Ball room (dance with yourself)",
+		description = "Ballroom (dance with yourself)",
+		zone = "395"
 	},
 	{
 		marker = nil,
 		description = "Gallery (tormented souls), FIGHT",
+		zone = "394"
 	}
 }
 
@@ -33,36 +53,43 @@ local steve_quest = {
 	{
 		marker = "You reach out your left hand and fumble about.",
 		description = "Bedroom (left nightstand)",
+		zone = "393"
 	},
 	{
 		marker = "Surprisingly, the contents of the box are pretty mundane",
 		description = "Nursery (stuffed animals)",
+		zone = "397"
 	},
 	{
 		marker = "You brush away the moss to reveal an engraved portrait of Crumbles",
-		description = "Conservatory (graves, crumbles)",
+		description = "Conservatory (graves, Crumbles)",
+		zone = "389"
 	},
 	{
 		marker = "Why are they here and not in the wine cellar?",
 		description = "Billiards (taxidermy)",
+		zone = "391"
 	},
 	{
 		marker = "It is, of course, Stephen's handwriting, though identifiably more mature than in the child's diary you found earlier.",
 		description = "Wine (pinot noir)",
+		zone = "401"
 	},
 	{
 		marker = "It turns out to be a blackened and slightly melted chain dog-collar.",
 		description = "Boiler (barrel)",
+		zone = "399"
 	},
 	{
 		marker = nil,
-		description = "Laboratory (weird machine), FIGHT"
+		description = "Laboratory (weird machine), FIGHT",
+		zone = "396"
 	}
 }
 
 local function check_lightsout_questlog()
 	---if !session["checked lights out completion"]
-	local ql = get_page("/quest.php", { which = 2 })
+	local ql = get_page("/questlog.php", { which = 2 })
 	if ql:contains("Like Father Like Daughter") then
 		ascension["liz quest"] = 7
 	end
@@ -126,7 +153,7 @@ add_processor("/choice.php", function()
 end)
 
 add_processor("/fight.php", function()
-	if monstername("Ghost of Elizabeth Spookyraven") and text:contains("<!--WINWINWIN-->") then
+	if monstername():contains("Elizabeth Spookyraven") and text:contains("<!--WINWINWIN-->") then
 		ascension["liz quest"] = 7
 	end
 	if monstername("Stephen Spookyraven") and text:contains("<!--WINWINWIN-->") then
@@ -135,60 +162,38 @@ add_processor("/fight.php", function()
 end)
 
 add_charpane_line(function()
+	if not lightsout_enabled() then return end
 	local value, lastencounter, liznumber, stevenumber = get_lightsout_info()
 
-	local tooltip = "L/S progress: " .. liznumber .. "/" .. stevenumber
+	local tooltip = "Liz: " .. liznumber .. "; Steve: " .. stevenumber
 	local color = (value == 0) and "green" or "black"
 	local lines = {}
 	table.insert(lines, { name = "Lights Out", value = value, tooltip = tooltip, color = color })
-	if value == 0 and lastencounter then
+	local function make_zone_link(step)
+		return string.format([[<a target="mainpane" href="adventure.php?snarfblat=%s">%s</a>]], step.zone, step.description)
+	end
+	if value == 0 then
 		if stevenumber < 7 then
-			table.insert(lines, { name = "Steve", value = steve_quest[stevenumber + 1].description })
+			table.insert(lines, { name = "Steve", value = make_zone_link(steve_quest[stevenumber + 1]) })
+
 		end
 		if liznumber < 7 then
-			table.insert(lines, { name = "Liz", value = liz_quest[liznumber + 1].description })
+			table.insert(lines, { name = "Liz", value = make_zone_link(liz_quest[liznumber + 1]) })
 		end
 	end
 	return lines
 end)
 
 add_always_adventure_warning(function()
+	if not lightsout_enabled() then return end
 	local counter, lastencounter, liznumber, stevenumber = get_lightsout_info()
-	if counter == 0 and (not session["checked lights out quest"]) then
+	if not session["checked lights out quest"] and (liznumber<7 or stevenumber<7) then
 		check_lightsout_questlog()
 		session["checked lights out quest"] = true
 	end
 
-	if counter == 0 and (liznumber<7 or stevenumber <7 ) then
+	if counter == 0 and (liznumber<7 or stevenumber<7) then
 		local msg = "Next turn could be Lights Out!"
-		if lastencounter then
-			msg = msg .. "\n<br>(Last one was " .. lastencounter .. ".)"
-		end
-
-		local liz_hints = "\n<br/> &nbsp; &nbsp; <b>Elizabeth: </b>"
-		for ctr, obj in ipairs(liz_quest) do
-			if ctr <= liznumber then
-				liz_hints = liz_hints .. "<i>" .. obj.description .. ";</i> "
-			elseif ctr == liznumber + 1 then
-				liz_hints = liz_hints .. "<span style='color: green'>" .. obj.description .. ";</span> "
-			else
-				liz_hints = liz_hints .. obj.description .. "; "
-			end
-		end
-
-		local steve_hints = "\n<br/> &nbsp; &nbsp; <b>Steven: </b>"
-		for ctr, obj in ipairs(steve_quest) do
-			if ctr <= stevenumber then
-				steve_hints = steve_hints .. "<i>" .. obj.description .. ";</i> "
-			elseif ctr == stevenumber + 1 then
-				steve_hints = steve_hints .. "<span style='color: green'>" .. obj.description .. ";</span> "
-			else
-				steve_hints = steve_hints .. obj.description .. "; "
-			end
-		end
-
-		msg = msg .. "\n<br/><small>" .. steve_hints .. liz_hints .. "</small>"
-
-		return msg, "lightsout-" .. turnsthisrun(), "Disable the warning for turn " .. (turnsthisrun() + 1) .. " and adventure", "teal", "Lights Out warning: "
+		return msg, "Lights Out warning: "
 	end
 end)
