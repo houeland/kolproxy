@@ -1688,7 +1688,7 @@ add_interceptor("/charpane.php", function()
 				if bl_compact() then
 					label = string.format(label, mod_info.compactname or mod_info.normalname or mod_info.name)
 				else
-					label = string.format(label, mod_info.normalname)
+					label = string.format(label, mod_info.normalname or mod_info.name)
 				end
 				table.insert(lines, string.format([[<tr><td class="label">%s</td><td class="info">%s</td></tr>]], label, mod_info.value or mod_info.compactvalue or mod_info.normalvalue))
 			end

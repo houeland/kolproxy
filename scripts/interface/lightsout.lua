@@ -1,21 +1,23 @@
 register_setting {
 	name = "show extra notices/show lightsout warning",
-	description = "Add lights out counter, and show a warning if the counter is up.",
+	description = "Add lights out counter, and show a warning if the counter is up",
 	group = "warnings",
 	default_level = "detailed",
 	parent = "enable adventure warnings",
+	update_charpane = true,
 }
 
+-- TODO: remove
 local function lightsout_enabled()
 	return (setting_enabled("enable adventure warnings") and setting_enabled("show extra notices") and setting_enabled("show extra notices/show lightsout warning"))
 end
 
-
+-- TODO: zone names instead of ids
 local liz_quest = {
 	{
 		marker = "You carefully tiptoe through the room to look out the window.",
 		description = "Store room (window)",
-		zone = 	"398"
+		zone = "398"
 	},
 	{
 		marker = "You approach an overflowing hamper of white sheets and towels with curious red-brown stains on them.",
@@ -127,6 +129,7 @@ local function check_lightsout_progress()
 	end
 end
 
+-- TODO: remove lastencounter
 function get_lightsout_info()
 	local turn = turnsthisrun()
 	local lastturn = tonumber((ascension["last lights out"] or {}).turn)
@@ -172,7 +175,7 @@ add_charpane_line(function()
 	local function make_zone_link(step)
 		return string.format([[<a target="mainpane" href="adventure.php?snarfblat=%s">%s</a>]], step.zone, step.description)
 	end
-	if value == 0 and lastencounter then
+	if value == 0 then
 		if stevenumber < 7 then
 			table.insert(lines, { name = "Steve", value = make_zone_link(steve_quest[stevenumber + 1]) })
 
@@ -187,13 +190,12 @@ end)
 add_always_adventure_warning(function()
 	if not lightsout_enabled() then return end
 	local counter, lastencounter, liznumber, stevenumber = get_lightsout_info()
-	if not session["checked lights out quest"] and (liznumber<7 or stevenumber<7) then
+	if not session["checked lights out quest"] and (liznumber < 7 or stevenumber < 7) then
 		check_lightsout_questlog()
 		session["checked lights out quest"] = true
 	end
 
-	if counter == 0 and (liznumber<7 or stevenumber<7) then
-		local msg = "Next turn could be Lights Out!"
-		return msg, "Lights Out warning: "
+	if counter == 0 and (liznumber < 7 or stevenumber < 7) then
+		return "Next turn could be Lights Out!", "Lights Out warning: "
 	end
 end)
