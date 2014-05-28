@@ -119,6 +119,8 @@ function get_ascension_automation_settings(want_bonus)
 		},
 		default_equipment = {
 			hat = {
+				{ name = "leather aviator's cap", check = function() return want_bonus.rollover_adventures end },
+				{ name = "Hairpiece On Fire", check = function() return want_bonus.rollover_adventures end },
 				{ name = "silent beret", check = function() return want_bonus.noncombat end },
 				"Crown of Thrones",
 				{ name = "spangly sombrero", check = function() return (mainstat_type("Moxie") and level() < 13) end },
@@ -161,6 +163,7 @@ function get_ascension_automation_settings(want_bonus)
 				"giant gym membership card",
 			},
 			shirt = {
+				{ name = "Sneaky Pete's leather jacket", check = function() return want_bonus.rollover_adventures end },
 				{ name = "flaming pink shirt", check = function() return want_bonus.plusitems end },
 				"Sneaky Pete's leather jacket (collar popped)",
 				"Sneaky Pete's leather jacket",
@@ -180,6 +183,7 @@ function get_ascension_automation_settings(want_bonus)
 				"eXtreme Bi-Polar Fleece Vest",
 			},
 			pants = {
+				{ name = "stinky cheese diaper", check = function() return want_bonus.rollover_adventures end },
 				"Pantsgiving",
 				{ name = "stinky cheese diaper", check = function() return not want_bonus.easy_combat end },
 				"Brimstone Boxers",
@@ -206,6 +210,9 @@ function get_ascension_automation_settings(want_bonus)
 				"old sweatpants",
 			},
 			accessories = {
+				{ name = "fudgecycle", check = function() return want_bonus.rollover_adventures end },
+				{ name = "gold wedding ring", check = function() return want_bonus.rollover_adventures end },
+				{ name = "dead guy's watch", check = function() return want_bonus.rollover_adventures end },
 				{ name = "Fuzzy Slippers of Hatred", check = function() return want_bonus.noncombat end },
 				{ name = "Space Trip safety headphones", check = function() return want_bonus.noncombat end },
 				{ name = "ring of conflict", check = function() return want_bonus.noncombat end },

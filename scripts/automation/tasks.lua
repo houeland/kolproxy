@@ -809,7 +809,16 @@ mark m_done
 
 	function t.lady_spookyraven_dance()
 		if not have_item("Lady Spookyraven's powder puff") then
-			stop "TODO: The Haunted Bathroom"
+			return {
+				message = "get Lady Spookyraven's powder puff",
+				minmp = 35,
+				bonus_target = { "noncombat" },
+				action = adventure {
+					zone = "The Haunted Bathoom",
+					noncombats = { ["Never Gonna Make You Up"] = "Open it" },
+					macro_function = macro_noodlecannon,
+				}
+			}
 		elseif not have_item("Lady Spookyraven's finest gown") then
 			stop "TODO: The Haunted Bedroom"
 		elseif not have_item("Lady Spookyraven's dancing shoes") then
@@ -818,6 +827,66 @@ mark m_done
 			stop "TODO: lady spookyraven dance"
 		end
 	end
+
+	t.get_billiards_room_key = {
+		when = not have_item("Spookyraven billiards room key"),
+		task = {
+			message = "get billiards room key",
+			fam = "Exotic Parrot",
+			buffs = { "Astral Shell", "Elemental Saucesphere" },
+			maybe_buffs = { "Protection from Bad Stuff" },
+			minmp = 15,
+			action = adventure {
+				zone = "The Haunted Kitchen",
+				macro_function = macro_noodlecannon,
+			}
+		},
+	}
+
+	t.get_library_key = {
+		when = not have_item("Spookyraven library key") and
+			have_item("Spookyraven billiards room key"),
+		task = {
+			message = "get library key",
+			fam = "Slimeling",
+			minmp = 25,
+			maybe_buffs = { "Chalky Hand" },
+			bonus_target = { "noncombat" },
+			equipment = { weapon = first_wearable { "pool cue" } },
+			action = adventure {
+				zone = "The Haunted Billiards Room",
+				noncombats = { ["Welcome To Our ool Table"] = "Hustle the ghost" },
+				macro_function = macro_noodlecannon,
+			}
+		},
+	}
+
+	t.find_lady_spookyravens_necklace = {
+		when = quest_text("find Lady Spookyraven's necklace") and
+			have_item("Spookyraven library key"),
+		task = {
+			message = "find Lady Spookyraven's necklace",
+			minmp = 35,
+			action = adventure {
+				zone = "The Haunted Library",
+				noncombats = { ["Take a Look, it's in a Book!"] = "Reading is for losers.  I'm outta here." },
+				macro_function = macro_noodlecannon,
+			}
+		}
+	}
+
+	t.take_necklace_to_lady_spookyraven = {
+		when = quest_text("Take the necklace to Lady Spookyraven"),
+		task = {
+			message = "Take the necklace to Lady Spookyraven",
+			nobuffing = true,
+			action = function()
+				get_page("/place.php", { whichplace = "manor1", action = "manor1_ladys" })
+				refresh_quest()
+				did_action = not quest_text("Take the necklace to Lady Spookyraven")
+			end,
+		}
+	}
 
 	return t
 end

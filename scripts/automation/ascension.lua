@@ -42,6 +42,7 @@ local finished = false
 local do_debug_infoline = function() end
 
 local skipping_taskids = {}
+local taskid_lookup = {}
 
 local ascension_tasks_tbl = {}
 function reset_ascension_task_list()
@@ -52,6 +53,12 @@ end
 
 function ascension_task(tbl)
 	table.insert(ascension_tasks_tbl, tbl)
+end
+
+function print_ascensiondebug(...)
+	if ascension_script_option("show debug information") then
+		print("DEBUG", ...)
+	end
 end
 
 local function automate_day(whichday)
@@ -485,14 +492,30 @@ endif
 		cached_stuff.kgs_available = check_buying_from_knob_dispensary()
 	end
 
-	local script = get_automation_scripts(cached_stuff)
-	local tasks = get_automation_tasks(script, cached_stuff)
+	local function ensure_empty_config_table(t)
+		local n = next(t)
+		if n then
+			error("Config table not empty, contains key: " .. tostring(n))
+		end
+	end
+	function adventure(t)
+		return function()
+			local pt, pturl, advagain = autoadventure { zoneid = get_zoneid(t.zone or t.zoneid), macro = t.macro_function, noncombatchoices = t.noncombats, specialnoncombatfunction = t.choice_function, ignorewarnings = true }
+			t.zone = nil
+			t.zoneid = nil
+			t.macro_function = nil
+			t.noncombats = nil
+			t.choice_function = nil
+			ensure_empty_config_table(t)
+			return pt, pturl, advagain
+		end
+	end
 
-	local council_text = nil
-	local council_text_async = async_get_page("/council.php")
+	local council_text = async_get_page("/council.php")
+	local questlog_page = async_get_page("/questlog.php", { which = 7 })
+	council_text = council_text()
+	questlog_page = questlog_page()
 
-	local questlog_page = nil
-	local questlog_page_async = async_get_page("/questlog.php", { which = 7 })
 	function refresh_quest()
 		questlog_page = get_page("/questlog.php", { which = 7 })
 	end
@@ -503,6 +526,12 @@ endif
 	function quest_text(name)
 		return questlog_page:contains(name)
 	end
+	function quest_get_raw_questlog_page()
+		return questlog_page
+	end
+
+	local script = get_automation_scripts(cached_stuff)
+	local tasks = get_automation_tasks(script, cached_stuff)
 
 	local function countif(x)
 		if have_item(x) then
@@ -570,6 +599,7 @@ endif
 
 	local tasks_list = {}
 
+	taskid_lookup = {}
 	local function add_task(t)
 		if t.f then
 		elseif t.action then
@@ -582,33 +612,10 @@ endif
 		local taskid = dgi.short_src .. ":" .. dgi.currentline
 
 		if not skipping_taskids[taskid] then
-			t.add_task_taskid = taskid
+			taskid_lookup[t] = taskid
 			table.insert(tasks_list, t)
 		end
 	end
-
-	local function ensure_empty_config_table(t)
-		local n = next(t)
-		if n then
-			error("Config table not empty, contains key: " .. tostring(n))
-		end
-	end
-
-	function adventure(t)
-		return function()
-			local pt, pturl, advagain = autoadventure { zoneid = get_zoneid(t.zone or t.zoneid), macro = t.macro_function, noncombatchoices = t.noncombats, specialnoncombatfunction = t.choice_function, ignorewarnings = true }
-			t.zone = nil
-			t.zoneid = nil
-			t.macro_function = nil
-			t.noncombats = nil
-			t.choice_function = nil
-			ensure_empty_config_table(t)
-			return pt, pturl, advagain
-		end
-	end
-
-	council_text = council_text_async()
-	questlog_page = questlog_page_async()
 
 	local DD_keys = countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") + count_item("fat loot token")
 	local real_DD_keys = DD_keys
@@ -1438,6 +1445,7 @@ endif
 
 	add_task {
 		when = ascensionpath("Avatar of Sneaky Pete") and
+			not (have_skill("Natural Dancer") and have_skill("Flash Headlight") and have_skill("Walk Away From Explosion")) and
 			cached_stuff.trained_sneaky_pete_skills_level ~= level(),
 		task = {
 			message = "train sneaky pete skill",
@@ -2365,19 +2373,19 @@ endif
 			message = "end of day",
 			nobuffing = true,
 			action = function()
+				script.fold_item("Loathing Legion moondial")
 				if not ascension_script_option("summon tomes manually") then
 					if can_drink_normal_booze() and not have_item("bucket of wine") then
 						script.ensure_mp(2)
 						summon_clipart("bucket of wine")
 					end
-					if not have_item("time halo") then
+					if not have_item("time halo") and not have_item("Loathing Legion moondial") then
 						script.ensure_mp(2)
 						summon_clipart("time halo")
 					end
 				end
 				script.bonus_target { "rollover adventures" }
-				script.wear { hat = first_wearable { "leather aviator's cap", "Hairpiece On Fire" }, shirt = first_wearable { "Sneaky Pete's leather jacket" }, offhand = first_wearable { "Loathing Legion moondial" }, pants = first_wearable { "stinky cheese diaper" }, acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" }, acc3 = first_wearable { "gold wedding ring" } }
-				script.wear { hat = first_wearable { "leather aviator's cap", "Hairpiece On Fire" }, shirt = first_wearable { "Sneaky Pete's leather jacket" }, offhand = first_wearable { "Loathing Legion moondial" }, pants = first_wearable { "stinky cheese diaper" }, acc1 = first_wearable { "time halo" }, acc2 = first_wearable { "dead guy's watch" }, acc3 = first_wearable { "gold wedding ring" } } -- WORKAROUND: first_wearable is resolving before script.wear can fold items
+				script.wear { offhand = first_wearable { "Loathing Legion moondial" }, acc1 = first_wearable { "time halo" } }
 				if ascension_script_option("overdrink with nightcap") and can_drink_normal_booze() then
 					script.maybe_ensure_buffs { "Ode to Booze" }
 					if have_buff("Ode to Booze") then
@@ -2807,11 +2815,11 @@ endif
 		}
 	}
 
-	add_task {
-		prereq = quest_text("this is Azazel in Hell") and challenge == "boris" and daysthisrun() == 1 and (have_item("Clancy's lute") or clancy_instrumentid() == 3) and estimate_max_fullness() - fullness() >= 5,
-		f = script.do_azazel,
-		message = "azazel in boris",
-	}
+--	add_task {
+--		prereq = quest_text("this is Azazel in Hell") and challenge == "boris" and daysthisrun() == 1 and (have_item("Clancy's lute") or clancy_instrumentid() == 3) and estimate_max_fullness() - fullness() >= 5 and not ascension_script_option("skip azazel quest"),
+--		f = script.do_azazel,
+--		message = "azazel in boris",
+--	}
 
 	add_task {
 		when = challenge == "boris" and
@@ -3637,11 +3645,6 @@ endwhile
 
 	if challenge == "fist" and have_buff("Everything Looks Yellow") and not (have_item("Knob Goblin harem veil") and have_item("Knob Goblin harem pants")) and quest("The Goblin Who Wouldn't Be King") then
 		add_task {
-			prereq = not have_item("Spookyraven library key"),
-			f = script.get_library_key,
-		}
-
-		add_task {
 			prereq = (challenge == "fist") and fist_level == 3,
 			message = "get conservatory fist scroll",
 			fam = "Mini-Hipster",
@@ -3966,12 +3969,10 @@ endif
 		}
 	}
 
-	add_task {
-		prereq = not have_item("Spookyraven library key"),
-		f = script.get_library_key,
-		message = "get library key",
-		hide_message = true,
-	}
+	add_task(tasks.get_billiards_room_key)
+	add_task(tasks.get_library_key)
+	add_task(tasks.find_lady_spookyravens_necklace)
+	add_task(tasks.take_necklace_to_lady_spookyraven)
 
 	add_task {
 		prereq = (challenge == "fist") and
@@ -4430,38 +4431,24 @@ endif
 		}
 	}
 
-	add_task {
-		when = not cached_stuff.unlocked_upstairs and not have_item("Spookyraven ballroom key"),
-		task = function()
-			local manor = get_page("/manor.php")
-			if not manor:match("Stairs Up") then
-				return {
-					message = "unlock upstairs",
-					fam = "Rogue Program",
-					buffs = { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic", "A Few Extra Pounds", "The Moxious Madrigal" },
-					bonus_target = { "noncombat" },
-					minmp = 30,
-					action = adventure {
-						zoneid = 104,
-						macro_function = macro_noodlecannon,
-						choice_function = function(advtitle, choicenum)
-							if advtitle == "Take a Look, it's in a Book!" then
-								return "", 99
-							elseif advtitle == "Melvil Dewey Would Be Ashamed" then
-								return "Gaffle the purple-bound book"
-							end
-						end
-					},
-				}
-			else
-				cached_stuff.unlocked_upstairs = true
-				return {
-					message = "already unlocked upstairs",
-					action = function() did_action = true end,
-				}
-			end
-		end
-	}
+--				return {
+--					message = "unlock upstairs",
+--					fam = "Rogue Program",
+--					buffs = { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic", "A Few Extra Pounds", "The Moxious Madrigal" },
+--					bonus_target = { "noncombat" },
+--					minmp = 30,
+--					action = adventure {
+--						zoneid = 104,
+--						macro_function = macro_noodlecannon,
+--						choice_function = function(advtitle, choicenum)
+--							if advtitle == "Take a Look, it's in a Book!" then
+--								return "", 99
+--							elseif advtitle == "Melvil Dewey Would Be Ashamed" then
+--								return "Gaffle the purple-bound book"
+--							end
+--						end
+--					},
+--				}
 
 
 	add_task {
@@ -5556,7 +5543,7 @@ use gauze garter
 		end
 	end
 
-	local running_toplevel_task = nil
+	local skiplink = ""
 	for _, x in ipairs(tasks_list) do
 		--print("DEBUG taskcheck", pretty_tostring { message = x.message, task = x.task, prereq = x.prereq, when = x.when, when_function = type(x.when) == "function" and x.when() })
 		local triggered = false
@@ -5577,12 +5564,13 @@ use gauze garter
 			end
 		end
 		if triggered then
+			print_ascensiondebug("triggering task", taskid_lookup[x])
+			skiplink = [[<a href="]]..ascension_automation_script_href { pwd = session.pwd, skip_taskid = taskid_lookup[x] }..[[">{ Skip it }</a>]]
+			set_automation_skiplink(skiplink)
 			while type(task) == "function" do
 				task = task()
 			end
 			if task then
---				print("DEBUG running top-level task", x.add_task_taskid)
-				running_toplevel_task = x
 				run_task(task)
 				break
 			end
@@ -5646,11 +5634,6 @@ use gauze garter
 	end
 
 	if not did_action and not finished then
-		local skiplink = ""
-		if running_toplevel_task and running_toplevel_task.add_task_taskid then
-			skiplink = "{ Just skip it: " .. running_toplevel_task.add_task_taskid .. " }"
-			skiplink = [[<a href="]]..ascension_automation_script_href { pwd = session.pwd, skip_taskid = running_toplevel_task.add_task_taskid }..[[">{ Skip it }</a>]]
-		end
 		result = add_message_to_page(get_result(), "Automation stopped while trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt><br>" .. skiplink, "Automation stopped:", "darkorange")
 	end
 
@@ -5710,6 +5693,7 @@ local ascension_script_options_tbl = {
 	["100% familiar run"] = { yes = "don't change familiar", no = "automate familiar choice", when = function() return can_change_familiar() end },
 	["overdrink with nightcap"] = { yes = "overdrink automatically", no = "don't automate" },
 	["pull consumables"] = { yes = "pull and consume", no = "don't automate", when = function() return not ascensionstatus("Hardcore") and ascensionpath("Avatar of Sneaky Pete") end, default_yes = true },
+	["show debug information"] = { yes = "show additional console output", no = "skip debug messages" },
 }
 
 function ascension_script_option(name)

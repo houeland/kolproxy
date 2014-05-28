@@ -76,7 +76,7 @@ end)
 
 add_processor("/place.php", function()
 	if params.action == "trappercabin" then
-		local wantore = text:match([[some dagburned ([a-z]-) ore]]) or text:match([[bring me that cheese and ([a-z]-) ore]])
+		local wantore = text:match([[some dagburned ([a-z]-) ore]]) or text:match([[bring me that cheese and ([a-z]-) ore]]) or text:match([[I can't fix the lift until you bring me that cheese and ([a-z]-) ore]])
 		if wantore then
 			session["trapper.ore"] = wantore
 		end

@@ -132,12 +132,6 @@ end)
 
 -- gallery stuff
 
-add_processor("/choice.php", function()
-	if text:contains("one of Stephen's pet alligators swallowed the gallery's key") then
-		ascension["zone.conservatory.gallery key"] = "unlocked"
-	end
-end)
-
 add_printer("/place.php", function()
 	if params.whichplace ~= "spookyraven1" then return end
 	local galtext = [[<span style="color: darkorange">Gallery locked</span>]]
@@ -154,60 +148,6 @@ add_printer("/place.php", function()
 end)
 
 -- billiards room
-
-add_choice_text("Minnesota Incorporeals", function()
-	if have_item("Spookyraven library key") or not have_buff("Chalky Hand") then
-		return {
-			["Break"] = "Gain moxie",
-			["Let the ghost break"] = "Gain muscle or mysticality",
-			["Run away"] = { leave_noturn = true },
-		}
-	else
-		return {
-			["Break"] = "Gain moxie",
-			["Let the ghost break"] = "<b>Get library key</b> or gain muscle or mysticality",
-			["Run away"] = { leave_noturn = true },
-		}
-	end
-end)
-
-add_choice_text("Broken", function()
-	if have_item("Spookyraven library key") or not have_buff("Chalky Hand") then
-		return {
-			["Go for a solid"] = "Gain mysticality",
-			["Go for a stripe"] = "Gain muscle",
-			["Go for a walk"] = { leave_noturn = true },
-		}
-	else
-		return {
-			["Go for a solid"] = "<b>Get library key</b> or gain mysticality",
-			["Go for a stripe"] = "Gain muscle",
-			["Go for a walk"] = { leave_noturn = true },
-		}
-	end
-end)
-
-add_choice_text("A Hustle Here, a Hustle There", function()
-	if have_item("Spookyraven library key") then
-		return {
-			["Go for the 8-ball"] = { text = "Already have library key", disabled = true },
-			["Play defensively"] = "Gain mysticality",
-			["Chicken out"] = { leave_noturn = true },
-		}
-	elseif have_buff("Chalky Hand") then
-		return {
-			["Go for the 8-ball"] = { getitem = "Spookyraven library key", good_choice = true },
-			["Play defensively"] = "Gain mysticality",
-			["Chicken out"] = { leave_noturn = true },
-		}
-	else
-		return {
-			["Go for the 8-ball"] = { text = "Get library key (requires using hand chalk)", disabled = true },
-			["Play defensively"] = "Gain mysticality",
-			["Chicken out"] = { leave_noturn = true },
-		}
-	end
-end)
 
 add_ascension_zone_check(105, function()
 	if have_item("pool cue") and not have_buff("Chalky Hand") and not have_item("Spookyraven library key") and have_item("handful of hand chalk") then
@@ -235,7 +175,7 @@ add_choice_text("Take a Look, it's in a Book!", {
 	["Read &quot;Ancient Forbidden Unspeakable Evil, a Love Story&quot;"] = "Gain myst or mox or myst spookyraven skill...",
 	["Reading is for losers.  I'm outta here."] = { leave_noturn = true },
 
-	["Read &quot;The Fall of the House of Spookyraven&quot;"] = "Unlock tombstone adventure...",
+	["Read &quot;The Fall of the House of Spookyraven&quot;"] = { text = "Read stories...", disabled = true },
 	["Read &quot;To Serve Man... Delicious Cocktails&quot;"] = "Get a random mixing recipe",
 	["Read &quot;Ancient Forbidden Unspeakable Yoga, a Beginner's Guide&quot;"] = "Gain muscle and take damage",
 })
@@ -244,12 +184,6 @@ add_choice_text("Naughty, Naughty...", {
 	["Read Chapter 1:  Tuesdays with Abhorrent Fiends"] = "Gain myst",
 	["Read Chapter 2:  The Nether Planes on 350 Meat a Day"] = "Gain mox",
 	["Read Chapter 3:  Twisted, Curdled, Corrupt Energy and You"] = "Gain myst spookyraven skill or take damage",
-})
-
-add_choice_text("History is Fun!", { -- choice adventure number: 87
-	["Read Chapter 1: Things Get Weirder"] = { disabled = true },
-	["Read Chapter 2: Stephen and Elizabeth"] = { text = "Unlock key adventure in the conservatory" },
-	["Read Chapter 3:  Last Days"] = { disabled = true },
 })
 
 add_choice_text("Melvil Dewey Would Be Ashamed", { -- choice adventure number: 163

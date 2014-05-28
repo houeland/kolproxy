@@ -29,7 +29,17 @@ function first_wearable(tbl)
 	end
 end
 
+local automation_skiplink = ""
+function set_automation_skiplink(l)
+	if l then
+		automation_skiplink = "<br>" .. l
+	else
+		automation_skiplink = ""
+	end
+end
+
 function run_automation_script(f, pwdsrc, scriptname)
+	set_automation_skiplink(nil)
 	result = "??? No automation done ???"
 	resulturl = "/automation-script"
 	function get_pwd() return pwdsrc end
@@ -93,7 +103,9 @@ function run_automation_script(f, pwdsrc, scriptname)
 			end
 			local steptrace = get_error_trace_steps()
 			if next(steptrace) then
-				result = add_message_to_page(get_result(), "While trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt>", "Automation stopped:", "darkorange")
+				result = add_message_to_page(get_result(), "While trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt>" .. automation_skiplink, "Automation stopped:", "darkorange")
+			elseif automation_skiplink ~= "" then
+				result = add_message_to_page(get_result(), automation_skiplink, "Automation stopped:", "darkorange")
 			end
 			return result, requestpath
 		elseif stopped_err then
@@ -108,7 +120,9 @@ function run_automation_script(f, pwdsrc, scriptname)
 				result = [[<script>top.charpane.location = "charpane.php"</script>Manual intervention required: ]] .. errmsg .. [[<br><br>Fix this and run the script again to continue automating.<br><br><a href="]]..runagain_href..[[" style="color: green">{ I have fixed it, run the script again now! }</a>]]
 				local steptrace = get_error_trace_steps()
 				if next(steptrace) then
-					result = add_message_to_page(get_result(), "While trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt>", "Automation stopped:", "darkorange")
+					result = add_message_to_page(get_result(), "While trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt>" .. automation_skiplink, "Automation stopped:", "darkorange")
+				elseif automation_skiplink ~= "" then
+					result = add_message_to_page(get_result(), automation_skiplink, "Automation stopped:", "darkorange")
 				end
 				return result, requestpath
 			end

@@ -3107,11 +3107,11 @@ endif
 		end
 	end
 
-	function f.get_mining_whichid()
+	function f.get_mining_whichid(oretype)
 		result, resulturl = get_page("/mining.php", { mine = 1 })
 		local tbl = ascension["mining.results.1"] or {}
-		local trapper_wants = { asbestos = "2", chrome = "3", linoleum = "1" }
-		local wantore = trapper_wants[session["trapper.ore"]]
+		local trapper_wants = { ["asbestos ore"] = "2", ["chrome ore"] = "3", ["linoleum ore"] = "1" }
+		local wantore = trapper_wants[oretype]
 		local pcond, values = compute_mine_spoiler(result, tbl, wantore)
 		local x = result:match([[<table cellpadding=0 cellspacing=0 border=0 background='http://images.kingdomofloathing.com/otherimages/mine/mine_background.gif'>(.-)</table>]])
 		local best_value = -1000
@@ -3132,10 +3132,10 @@ endif
 			async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
 			refresh_quest()
 			did_action = not quest_text("Take Groar's fur to")
-		elseif quest_text("ready to ascend to the Icy Peak") or quest_text("close to figuring out what's going on at the Icy Peak") or quest_text("have slain Groar") or quest_text("for the source of all this chaos") then
+		elseif quest_text("ready to ascend to the Icy Peak") or quest_text("close to figuring out what's going on at the Icy Peak") or quest_text("have slain Groar") or quest_text("for the source of all this chaos") or quest_text("and see what's up!") then
 			async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
 			refresh_quest()
-			if not quest_text("ready to ascend to the Icy Peak") and not quest_text("close to figuring out what's going on at the Icy Peak") and not quest_text("for the source of all this chaos") then
+			if not quest_text("ready to ascend to the Icy Peak") and not quest_text("close to figuring out what's going on at the Icy Peak") and not quest_text("for the source of all this chaos") and not quest_text("and see what's up!") then
 				did_action = true
 			else
 				if have_item("eXtreme mittens") and have_item("eXtreme scarf") and have_item("snowboarder pants") then
@@ -3168,10 +3168,10 @@ endif
 			get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak" })
 			refresh_quest()
 			did_action = quest_text("close to figuring out what's going on at the Icy Peak")
-		elseif quest_text("gather up some cheese and ore for him") then
-			local trappercabin = get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
+		elseif quest_text("3 wedges of goat cheese") then
+			get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
 			refresh_quest()
-			if not quest_text("gather up some cheese and ore for him") then
+			if not quest_text("3 wedges of goat cheese") then
 				did_action = true
 			elseif count_item("goat cheese") < 3 then
 				ignore_buffing_and_outfit = false
@@ -3189,7 +3189,8 @@ endif
 				else
 					wear { hat = "miner's helmet", weapon = "7-Foot Dwarven mattock", pants = "miner's pants" }
 				end
-				local best_which = script.get_mining_whichid()
+				local want_ore = quest_get_raw_questlog_page():match("3 chunks of ([a-z]- ore)")
+				local best_which = script.get_mining_whichid(want_ore)
 				inform("mine for ore [tile " .. tostring(best_which) .. "]")
 				script.heal_up()
 				set_result(get_page("/mining.php", { mine = 1, which = best_which, pwd = session.pwd }))
@@ -3198,9 +3199,9 @@ endif
 				else
 					wear { hat = "miner's helmet", weapon = "7-Foot Dwarven mattock", pants = "miner's pants" }
 				end
-				did_action = script.get_mining_whichid() ~= best_which
+				did_action = script.get_mining_whichid(want_ore) ~= best_which
 			elseif not ascensionstatus("Hardcore") then
-				local want_ore = trappercabin:match("fix the lift until you bring me that cheese and ([a-z]+ ore)")
+				local want_ore = quest_get_raw_questlog_page():match("3 chunks of ([a-z]- ore)")
 				local got = count_item(want_ore)
 				if got >= 3 then
 					critical "Trapper ore+cheese quest should be finished already."
@@ -3239,7 +3240,7 @@ endif
 					end
 				end })
 			end
-		elseif quest_text("like you to investigate the summit") then
+		elseif quest_text("like you to investigate the summit") or quest_text("Find your way to the Icy Peak") then
 			local slope_outfit = {}
 			if have_item("eXtreme mittens") and have_item("eXtreme scarf") and have_item("snowboarder pants") then
 				slope_outfit = { hat = "eXtreme scarf", pants = "snowboarder pants", acc3 = "eXtreme mittens" }
@@ -4184,28 +4185,6 @@ endif
 				did_action = true
 			end
 		end
-	end
-
--- "for the key to the Haunted Billiards Room"
-	function f.unlock_library()
-		-- zone "The Haunted Kitchen"
-	end
-
--- "for the key to the Haunted Library"
-	function f.get_library_key()
-		if have_item("pool cue") and have_item("handful of hand chalk") and not have_buff("Chalky Hand") then
-			use_item("handful of hand chalk") -- TODO: ensure_buffs
-		end
-		script.bonus_target { "noncombat" }
-		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") and not have_skill("Smoke Break") and not have_skill("Flash Headlight") then
-			-- TODO: do this better
-			script.bonus_target { "noncombat", "easy combat" }
-		end
-		go("unlock library", 105, macro_stasis, {
-			["Minnesota Incorporeals"] = "Let the ghost break",
-			["Broken"] = "Go for a solid",
-			["A Hustle Here, a Hustle There"] = "Go for the 8-ball",
-		}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic" }, "Stocking Mimic", 15)
 	end
 
 	function f.get_dod_wand()
