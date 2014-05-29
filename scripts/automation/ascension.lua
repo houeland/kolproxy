@@ -1920,7 +1920,9 @@ endif
 					end
 					cached_stuff["ignore pull: " .. tostring(item)] = "yes"
 					if turnsthisrun() > 50 and not anytime then
-						stop("Trying to pull " .. item .. " late in the run [run again to ignore]")
+						--stop("Trying to pull " .. item .. " late in the run [run again to ignore]")
+						did_action = true
+						return
 					end
 					ascension_automation_pull_item(pullname or item)
 					if have_item(pullname or item) then
@@ -1948,8 +1950,10 @@ endif
 				nobuffing = true,
 				action = function()
 					cached_stuff["ignore pull: " .. tostring(descitem)] = "yes"
-					if turnsthisrun() > 50 then
-						stop("Trying to pull " .. descitem .. " late in the run [run again to ignore]")
+					if turnsthisrun() >= 50 then
+						--stop("Trying to pull " .. descitem .. " late in the run [run again to ignore]")
+						did_action = true
+						return
 					end
 					for _, x in ipairs(itemnames) do
 						ascension_automation_pull_item(x)
@@ -2689,7 +2693,7 @@ endif
 	}
 
 	add_task {
-		when = challenge == "boris" and quest("The Minstrel Cycle") and quest_text("Clancy would like you to take him to the Typical Tavern"),
+		when = challenge == "boris" and quest("The Minstrel Cycle") and quest_text([[Clancy wants to go to the <a class=nounder target=mainpane href=tavern.php><b>Typical Tavern</b>]]),
 		task = {
 			message = "clancy barroom brawl",
 			bonus_target = { "item" },
@@ -2701,7 +2705,7 @@ endif
 	}
 
 	add_task {
-		when = challenge == "boris" and quest("The Minstrel Cycle") and quest_text("Clancy would like you to take him to the Knob Shaft") and have_item("Cobb's Knob lab key"),
+		when = challenge == "boris" and quest("The Minstrel Cycle") and quest_text([[Clancy wants to go to the <a class=nounder target=mainpane href=cobbsknob.php><b>Knob Shaft</b>]]) and have_item("Cobb's Knob lab key"),
 		task = {
 			message = "clancy knob shaft",
 			action = adventure {
@@ -2714,7 +2718,7 @@ endif
 	add_task {
 		when = challenge == "boris" and
 			quest("The Minstrel Cycle") and
-			quest_text("Clancy would like you to take him to the Knob Shaft") and
+			quest_text([[Clancy wants to go to the <a class=nounder target=mainpane href=cobbsknob.php><b>Knob Shaft</b>]]) and
 			(not have_item("Cobb's Knob lab key") or quest("The Goblin Who Wouldn't Be King")),
 		task = {
 			message = "kill goblin king",
@@ -2783,7 +2787,7 @@ endif
 	}
 
 	add_task {
-		when = challenge == "boris" and quest("The Minstrel Cycle") and quest_text("Clancy would like you to find the grave of The Luter"),
+		when = challenge == "boris" and quest("The Minstrel Cycle") and quest_text([[Clancy wants you to find <a class=nounder target=mainpane href=plains.php><b>The Luter's grave</b></a> and rob it.]]),
 		task = {
 			message = "clancy fight luter",
 			action = function()
@@ -4308,7 +4312,7 @@ endif
 	}
 
 	add_task {
-		when = quest("Am I My Trapper's Keeper?") and challenge == "boris",
+		when = quest("Am I My Trapper's Keeper?") and challenge == "boris" and false,
 		task = {
 			message = "trapper quest in boris",
 			nobuffing = true,

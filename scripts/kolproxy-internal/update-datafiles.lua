@@ -1101,20 +1101,12 @@ function verify_zones(data)
 			end
 		end
 	end
-
-	if data["The Dungeons of Doom"].zoneid == 39 then
-		if data["McMillicancuddy's Farm"].zoneid == 155 then
-			if data["The Spooky Forest"].zoneid == 15 then -- and data["The Spooky Forest"].combat_percent == 85 then
-				return data
-			end
-		end
-	end
-
-	local testzones = {}
-	for _, x in ipairs { "The Dungeons of Doom", "McMillicancuddy's Farm", "The Spooky Forest" } do
-		testzones[x] = data[x]
-	end
-	hardwarn("verify_zones failure:", testzones)
+	local correct_data = {
+		["The Spooky Forest"] = { zoneid == 15 },
+		["The Dungeons of Doom"] = { zoneid == 39 },
+		["McMillicancuddy's Farm"] = { zoneid == 155 },
+	}
+	return verify_data_fits(correct_data, data)
 end
 
 function parse_choice_spoilers()

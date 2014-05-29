@@ -3326,44 +3326,10 @@ endif
 
 	function f.do_muscle_powerleveling()
 -- 		print("  mainstat", basemainstat(), "advs", advs())
-		if have_item("Spookyraven gallery key") then
-			script.bonus_target { "noncombat" }
-			go("muscle powerleveling", 106, macro_noodlecannon, { ["Out in the Garden"] = "None of the above" }, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)
-			if result:contains("Louvre It or Leave It") and not did_action then
-				local found, reached = compute_louvre_paths(91)
-				if found.Muscle then
-					local function golouvre(cid)
-						if reached[cid] ~= -1000 then
-							golouvre(reached[cid].whichchoice)
-							async_post_page("/choice.php", { pwd = get_pwd(), whichchoice = reached[cid].whichchoice, option = reached[cid].option })
-						end
-					end
-					golouvre(found.Muscle.whichchoice)
-					text, url = post_page("/choice.php", { pwd = get_pwd(), whichchoice = found.Muscle.whichchoice, option = found.Muscle.option })
-					did_action = text:contains("You help him push his cart back onto dry land")
-				else
-					result, resulturl = louvre_automate_looking_for_muscle(get_pwd())
-					result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, 106)
-					did_action = advagain
-				end
-			end
-		elseif ascension["zone.conservatory.gallery key"] == "unlocked" then
-			go("pick up gallery key", 103, macro_stasis, {}, {}, "Mini-Hipster", 15)
-		else
-			script.bonus_target { "noncombat" }
-			go("unlock gallery key", 104, macro_stasis, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Butt-Rock Hair", "A Few Extra Pounds" }, "Rogue Program", 5, { choice_function = function(advtitle, choicenum)
-				if advtitle == "Take a Look, it's in a Book!" then
-					if choicenum == 80 then
-						return "Reading is for losers.  I'm outta here."
-					elseif choicenum == 81 then
-						return "Read &quot;The Fall of the House of Spookyraven&quot;"
-					end
-				elseif advtitle == "History is Fun!" then
-					return "Read Chapter 2: Stephen and Elizabeth"
-				elseif advtitle == "Melvil Dewey Would Be Ashamed" then
-					return "Gaffle the purple-bound book"
-				end
-			end })
+		script.bonus_target { "noncombat" }
+		go("muscle powerleveling", "The Haunted Gallery", macro_noodlecannon, { ["Out in the Garden"] = "None of the above" }, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)
+		if result:contains("Louvre It or Leave It") and not did_action then
+			stop "Powerlevel muscle"
 		end
 	end
 
@@ -3689,10 +3655,7 @@ endif
 
 	function f.do_tavern(withfam, minmp, macrofunc)
 		-- TODO: wrap in task
-		if quest_text("You should head back to Bart") then
-			result, resulturl = get_page("/tavern.php", { place = "barkeep" })
-			did_action = have_item("Typical Tavern swill")
-		elseif quest_text("Bart Ender wants you to head down") or quest_text("find the source of the rats") then
+		if quest_text("Bart Ender wants you to head down") or quest_text("find the source of the rats") then
 			cellarpt = get_page("/cellar.php")
 			local function explore()
 				tiles = { 4, 3, 2, 1, 6, 11, 16, 17, 21, 22 }
@@ -3738,7 +3701,7 @@ endif
 			end
 			result, resulturl = get_page("/tavern.php", { place = "barkeep" })
 			refresh_quest()
-			did_action = quest_text("Bart Ender wants you to head down") or quest_text("find the source of the rats")
+			did_action = quest_text("Bart Ender wants you to head down") or quest_text("find the source of the rats") or have_item("Typical Tavern swill")
 		end
 		return result, resulturl, did_action
 	end
@@ -4874,6 +4837,7 @@ function buy_shore_inc_item(item)
 end
 
 function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
+	zoneid = get_zoneid(zoneid)
 	if url:contains("/fight.php") then
 		local advagain = nil
 		if pt:contains([[>You win the fight!<!--WINWINWIN--><]]) then
@@ -4884,6 +4848,10 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 			elseif zoneid and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
 				advagain = true
 			end
+		end
+		if advagain and locked() and pt:contains("choice.php") then
+			local pt, url = post_page("/choice.php", { pwd = session.pwd })
+			return handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
 		end
 		if advagain == nil then
 			if macro then

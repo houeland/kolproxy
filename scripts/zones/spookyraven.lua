@@ -618,7 +618,7 @@ span .fullmap { position: absolute; display: none; }
 .kolproxy_louvremapimage span:hover .fullmap { top: -100px; left: -200px; width: 500px; height: 500px; border: 2px solid; display: inline; }
 </style>
 %0]])
-		text = text:gsub([[<img src="http://images.kingdomofloathing.com/adventureimages/gp[^.]*.gif" width=100 height=100>]], [[<div class="kolproxy_louvremapimage"><span>%0<img src="http://kol.coldfront.net/thekolwiki/images/d/d8/Louvre_Map.png" class="fullmap" width="300" height="300"><br><a href="http://kol.coldfront.net/thekolwiki/index.php/Louvre_Map" target="_blank" style="color: green">{ Show map }</a></span></div>]])
+		text = text:gsub([[<img src="http://images.kingdomofloathing.com/adventureimages/gp[^.]*.gif" width=100 height=100>]], [[<div class="kolproxy_louvremapimage"><span>%0<img src="http://i224.photobucket.com/albums/dd259/abeaS_oyR/kollouvre.jpg" class="fullmap" width="300" height="300"><br><a href="http://kol.coldfront.net/thekolwiki/index.php/Louvre_Map" target="_blank" style="color: green">{ Show map }</a></span></div>]])
 	end
 end)
 

@@ -814,15 +814,40 @@ mark m_done
 				minmp = 35,
 				bonus_target = { "noncombat" },
 				action = adventure {
-					zone = "The Haunted Bathoom",
+					zone = "The Haunted Bathroom",
 					noncombats = { ["Never Gonna Make You Up"] = "Open it" },
 					macro_function = macro_noodlecannon,
 				}
 			}
 		elseif not have_item("Lady Spookyraven's finest gown") then
-			stop "TODO: The Haunted Bedroom"
+			return {
+				message = "get Lady Spookyraven's finest gown",
+				minmp = 35,
+				bonus_target = { "noncombat" },
+				action = adventure {
+					zone = "The Haunted Bedroom",
+					noncombats = {
+						["One Mahogany Nightstand"] = "Check the top drawer",
+						["One Ornate Nightstand"] = "Look under the nightstand",
+						["One Rustic Nightstand"] = "Investigate the jewelry",
+						["One Elegant Nightstand"] = "Open the single drawer",
+						["One Simple Nightstand"] = "Check the bottom drawer",
+						["Lights Out in the Bedroom"] = "Flee",
+					},
+					macro_function = macro_noodlecannon,
+				}
+			}
 		elseif not have_item("Lady Spookyraven's dancing shoes") then
-			stop "TODO: The Haunted Gallery"
+			return {
+				message = "get Lady Spookyraven's dancing shoes",
+				minmp = 35,
+				bonus_target = { "noncombat" },
+				action = adventure {
+					zone = "The Haunted Gallery",
+					noncombats = { ["Out in the Garden"] = "None of the above" },
+					macro_function = macro_noodlecannon,
+				}
+			}
 		else
 			stop "TODO: lady spookyraven dance"
 		end
@@ -838,6 +863,7 @@ mark m_done
 			minmp = 15,
 			action = adventure {
 				zone = "The Haunted Kitchen",
+				noncombats = { ["Lights Out in the Kitchen"] = "Refuse to Take the Heat" },
 				macro_function = macro_noodlecannon,
 			}
 		},
