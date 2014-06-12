@@ -1150,64 +1150,33 @@ endif
 		}
 	}
 
-	add_task {
-		when = estimate_max_spleen() - spleen() >= 4 and have_item("glimmering roc feather") and level() >= 4,
-		task = {
-			message = "use glimmering roc feather",
-			nobuffing = true,
-			action = function()
-				local a = advs()
-				set_result(use_item("glimmering roc feather"))
-				did_action = advs() > a
-			end
+	local function add_spleen_item_task(name, size, minlevel)
+		add_task {
+			when = estimate_max_spleen() - spleen() >= size and have_item(name) and level() >= minlevel,
+			task = {
+				message = "use " .. name,
+				nobuffing = true,
+				action = function()
+					local c = count_item(name)
+					set_result(use_item(name))
+					did_action = count_item(name) < c
+				end
+			}
 		}
-	}
+	end
 
-	add_task {
-		when = estimate_max_spleen() - spleen() >= 4 and have_item("not-a-pipe") and level() >= 4,
-		task = {
-			message = "use not-a-pipe",
-			nobuffing = true,
-			action = function()
-				local a = advs()
-				set_result(use_item("not-a-pipe"))
-				did_action = advs() > a
-			end
-		}
-	}
-
-	add_task {
-		when = estimate_max_spleen() - spleen() >= 4 and have_item("groose grease"),
-		task = {
-			message = "use groose grease",
-			nobuffing = true,
-			action = function()
-				local a = advs()
-				set_result(use_item("groose grease"))
-				did_action = advs() > a
-			end
-		}
-	}
-
-	add_task {
-		when = estimate_max_spleen() - spleen() >= 4 and have_item("agua de vida") and level() >= 4,
-		task = {
-			message = "use agua de vida",
-			nobuffing = true,
-			action = function()
-				local a = advs()
-				set_result(use_item("agua de vida"))
-				did_action = advs() > a
-			end
-		}
-	}
+	add_spleen_item_task("not-a-pipe", 4, 4)
+	add_spleen_item_task("glimmering roc feather", 4, 4)
+	add_spleen_item_task("groose grease", 4, 0)
+	add_spleen_item_task("agua de vida", 4, 4)
+	add_spleen_item_task("coffee pixie stick", 4, 4)
 
 	add_task {
 		when = estimate_max_spleen() - spleen() >= 4 and have_item("Game Grid token") and level() >= 4,
 		task = {
 			message = "use coffee pixie stick",
 			nobuffing = true,
-			action = script.coffee_pixie_stick
+			action = script.coffee_pixie_stick -- TODO: only convert to stick(?)
 		}
 	}
 
@@ -1233,9 +1202,7 @@ endif
 			action = function()
 				set_result(use_item("Cobb's Knob map"))
 				refresh_quest()
-				if not quest_text("haven't figured out how to decrypt it yet") then
-					did_action = true
-				end
+				did_action = not have_item("Cobb's Knob map")
 			end
 		}
 	}
@@ -1459,6 +1426,12 @@ endif
 				if points <= 0 then
 					cached_stuff.trained_sneaky_pete_skills_level = level()
 					did_action = true
+				elseif points >= 30 and not cached_stuff.tried_training_all_pete_skills then
+					cached_stuff.tried_training_all_pete_skills = true
+					async_post_page("/choice.php", { option = 4, whichchoice = 867, pwd = session.pwd })
+					async_post_page("/choice.php", { option = 5, whichchoice = 867, pwd = session.pwd })
+					async_post_page("/choice.php", { option = 6, whichchoice = 867, pwd = session.pwd })
+					did_action = true
 				else
 					if ascension_script_option("train skills manually") then
 						stop "STOPPED: Ascension script option set to train skills manually"
@@ -1547,11 +1520,6 @@ endif
 						cached_stuff.trained_sneaky_pete_skills_level = level()
 						did_action = true
 					end
---					if get_available_points() < points then
---						did_action = true
---					else
---						critical "Tried to learn Sneaky Pete skills"
---					end
 				end
 			end
 		}
@@ -1811,6 +1779,15 @@ endif
 			end
 			if not have_item(item) then
 				critical("Failed to pull " .. tostring(item))
+			end
+		end
+	end
+
+	function maybe_pull_in_softcore(item)
+		if not have_item(item) and not ascensionstatus("Hardcore") then
+			ascension_automation_pull_item(item)
+			if ascension_script_option("ignore automatic pulls") then
+				return
 			end
 		end
 	end
@@ -3906,12 +3883,13 @@ endif
 		end,
 	}
 
+	local pixel_count = count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel"))
 	add_task {
 		when = not have_item("digital key") and
 			cached_stuff.campground_psychoses == "mystic" and
-			count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel")) < 30,
+			pixel_count < 30,
 		task = {
-			message = "get digital key (mystic's jar)",
+			message = "get digital key (mystic's jar): " .. pixel_count,
 			fam = "Slimeling",
 			buffs = { "Glittering Eyelashes", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy", "A Few Extra Pounds", "Reptilian Fortitude", "Astral Shell", "Ghostly Shell" },
 			minmp = 20,
@@ -3977,6 +3955,7 @@ endif
 	add_task(tasks.get_library_key)
 	add_task(tasks.find_lady_spookyravens_necklace)
 	add_task(tasks.take_necklace_to_lady_spookyraven)
+	add_task(tasks.see_lady_spookyraven)
 
 	add_task {
 		prereq = (challenge == "fist") and
@@ -4181,7 +4160,7 @@ endif
 	}
 
 	add_task {
-		prereq = have_buff("Ultrahydrated") and quest("A Pyramid Scheme") and not quest_text("found the little pyramid") and not have_item("Staff of Ed"),
+		prereq = have_buff("Ultrahydrated") and quest("Just Deserts"),
 		f = script.do_oasis_and_desert,
 		message = "ultrahydrated",
 	}
@@ -4719,7 +4698,8 @@ endif
 	-- TODO: started late if the offstats are weak
 	add_task {
 		prereq = quest_text("see if you can't stir up some trouble") and
-			basemoxie() >= 70 and basemysticality() >= 70 and
+			basemoxie() >= 70 and
+			basemysticality() >= 70 and
 			have_frat_war_outfit() and
 			not have_buff("Musk of the Moose"),
 		f = function()
@@ -4792,9 +4772,7 @@ endif
 	}
 
 	add_task {
-		when = quest("A Pyramid Scheme") and
-			not quest_text("found the little pyramid") and
-			not have_item("Staff of Ed") and
+		when = quest("Just Deserts") and
 			can_wear_weapons() and
 			not have_item("UV-resistant compass") and
 			turns_to_next_sr >= 3,
@@ -4802,9 +4780,7 @@ endif
 	}
 
 	add_task {
-		prereq = quest("A Pyramid Scheme") and
-			not quest_text("found the little pyramid") and
-			not have_item("Staff of Ed") and
+		prereq = quest("Just Deserts") and
 			(not can_wear_weapons() or have_item("UV-resistant compass")),
 		f = script.do_oasis_and_desert,
 	}
@@ -4883,15 +4859,13 @@ endif
 		end,
 	}
 
-	add_task {
-		prereq = quest("A Pyramid Scheme") and quest_text("found the hidden buried pyramid") and turns_to_next_sr >= 7,
-		f = script.do_pyramid,
-	}
+	add_task(tasks.a_pyramid_scheme)
 
 	add_task {
 		prereq = quest("Make War, Not... Oh, Wait") and
 			basemoxie() >= 70 and
-			basemysticality() >= 70,
+			basemysticality() >= 70 and
+			have_frat_war_outfit(),
 		f = function()
 			if not completed_filthworms() then
 				if have_item("Polka Pop") and not have_buff("Polka Face") then
@@ -5186,7 +5160,7 @@ use ]] .. get_lair_tower_monster_items()[level] .. [[
 						script.want_familiar "Frumious Bandersnatch"
 						script.wear {}
 						script.heal_up()
-						if estimate_bonus("Monster Level") == 0 and buffedmoxie() >= 300 and maxhp() >= 150 then
+						if estimate_bonus("Monster Level") <= 0 and buffedmoxie() >= 300 and maxhp() >= 150 then
 							local weapondata = equipment().weapon and maybe_get_itemdata(equipment().weapon)
 							if weapondata and weapondata.attack_stat == "Moxie" then
 								local form3ok = false
@@ -5278,9 +5252,11 @@ use gauze garter
 ]])
 							did_action = get_result():contains("<!--WINWINWIN-->")
 						elseif result:contains("place=3") or result:contains("place=4") then
+							-- TODO: check weight
 							inform "pass NS familiars"
-							script.ensure_buffs { "Leash of Linguini", "Empathy", "Billiards Belligerence" }
-							script.maybe_ensure_buffs_in_fist { "Leash of Linguini", "Empathy", "Billiards Belligerence" }
+							script.ensure_buffs { "Leash of Linguini", "Empathy" }
+							script.maybe_ensure_buffs { "Billiards Belligerence" }
+							script.maybe_ensure_buffs_in_fist { "Leash of Linguini", "Empathy" }
 							script.heal_up()
 							result, resulturl = get_page("/lair6.php", { place = 3 })
 							automate_lair6_place(3, result)
@@ -5617,6 +5593,18 @@ use gauze garter
 		end
 	end
 
+	if not did_action and get_result():contains("Lights Out in the ") then
+		result, resulturl = get_page("/choice.php")
+		if resulturl:contains("choice.php") and result:contains("Lights Out in the ") then
+			result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, nil, function(advtitle, choicenum, pt)
+				if advtitle:contains("Lights Out in the ") then
+					return "", 1
+				end
+			end)
+		end
+		did_action = not locked()
+	end
+
 	if have_buff("Beaten Up") then
 		if get_result():contains("That's all the horror you can take.  You flee the scene.") then
 			if have_buff("Beaten Up") then
@@ -5657,9 +5645,9 @@ local function do_loop(whichday)
 		enable_function_debug_output(true, function(...) do_debug_infoline(...) end)
 	end
 	print("Running ascension automation script...")
--- 	if autoattack_is_set() then
--- 		disable_autoattack()
--- 	end
+	if autoattack_is_set() then
+		disable_autoattack()
+	end
 	if autoattack_is_set() then
 		stop "Disable your autoattack. The ascension script will handle (most) combats automatically."
 	end

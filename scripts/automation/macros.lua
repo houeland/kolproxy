@@ -1442,7 +1442,7 @@ function make_gremlin_macro(name, wrongmsg)
 		use_magnet = [[use rock band flyers, molybdenum magnet]]
 	end
 	return [[
-]] .. COMMON_MACROSTUFF_START(20, 20) .. [[
+]] .. COMMON_MACROSTUFF_START(25, 20) .. [[
 
 sub stall
 ]]..conditional_salve_action("goto do_return")..[[

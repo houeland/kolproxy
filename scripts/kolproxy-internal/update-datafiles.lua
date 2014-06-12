@@ -1102,9 +1102,9 @@ function verify_zones(data)
 		end
 	end
 	local correct_data = {
-		["The Spooky Forest"] = { zoneid == 15 },
-		["The Dungeons of Doom"] = { zoneid == 39 },
-		["McMillicancuddy's Farm"] = { zoneid == 155 },
+		["The Spooky Forest"] = { zoneid = 15 },
+		["The Dungeons of Doom"] = { zoneid = 39 },
+		["McMillicancuddy's Farm"] = { zoneid = 155 },
 	}
 	return verify_data_fits(correct_data, data)
 end

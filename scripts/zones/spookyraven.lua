@@ -327,7 +327,7 @@ add_charpane_line(function()
 			link = nil
 			if turnsleft == 0 then
 				color = "green"
-				link = "adventure.php?snarfblat=109"
+				link = "adventure.php?snarfblat=" .. get_zoneid("The Haunted Ballroom")
 			end
 			return { name = "Dance card", value = turnsleft, color = color, link = link }
 		end

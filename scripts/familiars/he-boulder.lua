@@ -1,3 +1,11 @@
+add_warning {
+	message = "You might want to wear quadroculars on your He-Boulder familiar to reduce yellow ray cooldown.",
+	type = "extra",
+	check = function()
+		return familiar("He-Boulder") and not have_equipped_item("quadroculars") and (ascensionstatus("Aftercore") or have_item("quadroculars"))
+	end
+}
+
 add_printer("familiar message: heboulder", function()
 	text = text:gsub([[([a-z]+ eye)]], function(eye)
 		local colors = {

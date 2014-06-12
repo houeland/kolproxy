@@ -270,3 +270,31 @@ add_always_adventure_warning(function(zoneid)
 		return "You have the Stone-Faced buff and might want to adventure in the hidden temple.", "adventure in the hidden temple with stone-faced buff"
 	end
 end)
+
+-- black forest
+
+add_choice_text("All Over the Map", { -- choice adventure number: 923
+	["Head toward the blackberry patch"] = { text = "Fight blackberry bush or craft blackberry equipment" },
+	["Visit the blacksmith's cottage"] = { text = "Craft black armor" },
+	["Go to the black gold mine"] = { text = "Get black gold, Texas tea, or Black Lung" },
+	["Check out the black church"] = { text = "Get black kettle drum or +item% buff" },
+})
+
+add_choice_text("You Found Your Thrill", { -- choice adventure number: 924
+	["Attack the bushes"] = { text = "Fight blackberry bush" },
+	["Visit the cobbler's house"] = { text = "Craft blackberry equipment" },
+})
+
+add_choice_text("Be Mine", { -- choice adventure number: 926
+	["Go left"] = { getitem = "black gold" },
+	["Go right"] = { getitem = "Texas tea" },
+	["Go down"] = { text = "Get Black Lung effect" },
+	["Never mine.  I mean mind."] = { text = "Go back" },
+})
+
+add_choice_text("Sunday Black Sunday", { -- choice adventure number: 927
+	["Attend the mass"] = { text = "Get beaten up, or +item% buff with enough black equipment" },
+	["Dive into the orchestra pit"] = { getitem = "black kettle drum" },
+	["Sneak out the black back, black Jack"] = { text = "Go back" },
+})
+

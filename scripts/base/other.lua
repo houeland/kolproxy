@@ -77,7 +77,7 @@ end)
 add_ascension_adventure_warning(function(zoneid)
 	if level() >= 13 then
 		if mcd() > 0 then
-			return "You might want to turn off the monster-annoyer.", "turn off monster-annoyer"
+			return "You might want to turn off the monster-annoyer since you're already level 13+.", "turn off monster-annoyer"
 		else
 			return
 		end
@@ -116,57 +116,57 @@ end)
 add_ascension_adventure_warning(function(zoneid)
 	if not have_skill("Pep Talk") then return end
 	if level() >= 13 and have_intrinsic("Overconfident") then
-		return "You might want to turn off Overconfident.", "turn off Overconfident"
+		return "You might want to turn off Overconfident since you're already level 13+.", "turn off Overconfident"
 	elseif level() < 13 and not have_intrinsic("Overconfident") then
-		return "You might want to turn on Overconfident.", "turn on Overconfident"
+		return "You might want to turn on Overconfident to gain more stats.", "turn on Overconfident"
+	end
+end)
+
+add_ascension_adventure_warning(function()
+	if level() >= 13 and estimate_bonus("Monster Level") > 0 then
+		return "You might want to remove your +Monster Level modifiers since you're already level 13+.", "remove +ML"
 	end
 end)
 
 add_ascension_adventure_warning(function()
 	if have_item("astral shirt") and not have_equipped_item("astral shirt") and level() < 13 then
-		return "You might want to wear your astral shirt for stats.", "wear astral shirt"
+		return "You might want to wear your astral shirt to gain more stats.", "wear astral shirt"
 	end
 end)
 
 add_ascension_adventure_warning(function()
 	if basemuscle() >= 45 and have_item("hipposkin poncho") and not have_equipped_item("hipposkin poncho") and level() < 13 then
-		return "You might want to wear your hipposkin poncho for stats.", "wear hipposkin poncho"
+		return "You might want to wear your hipposkin poncho to gain more stats.", "wear hipposkin poncho"
 	end
 end)
 
 add_ascension_adventure_warning(function()
 	if basemuscle() >= 40 and have_item("Grimacite gown") and not have_equipped_item("Grimacite gown") and level() < 13 then
-		return "You might want to wear your Grimacite gown for stats.", "wear Grimacite gown"
+		return "You might want to wear your Grimacite gown to gain more stats.", "wear Grimacite gown"
 	end
 end)
 
 add_ascension_adventure_warning(function()
 	if basemuscle() >= 40 and (have_item("Moonthril Cuirass") or have_item("Mint-in-box Moonthril Cuirass")) and not have_equipped_item("Moonthril Cuirass") and level() < 13 then
-		return "You might want to wear your Moonthril Cuirass for stats.", "wear Moonthril Cuirass"
+		return "You might want to wear your Moonthril Cuirass to gain more stats.", "wear Moonthril Cuirass"
 	end
 end)
 
 add_ascension_adventure_warning(function()
 	if basemuscle() >= 40 and have_item("hairshirt") and not have_equipped_item("hairshirt") and level() < 13 then
-		return "You might want to wear your hairshirt for stats.", "wear hairshirt"
+		return "You might want to wear your hairshirt to gain more stats.", "wear hairshirt"
 	end
 end)
 
 add_ascension_adventure_warning(function()
 	if basemysticality() >= 35 and have_inventory_item("hockey stick of furious angry rage") and level() < 13 then
-		return "You might want to wear your hockey stick of furious angry rage for stats.", "wear hockey stick of furious angry rage"
+		return "You might want to wear your hockey stick of furious angry rage to gain more stats.", "wear hockey stick of furious angry rage"
 	end
 end)
 
 add_always_adventure_warning(function()
-	if familiarid() == 113 and (ascensionstatus() == "Aftercore" or have_item("quadroculars")) and not have_equipped_item("quadroculars") then
-		return "You might want to wear quadroculars on your he-boulder.", "wear quadroculars"
-	end
-end)
-
-add_always_adventure_warning(function()
-	if familiarid() == 146 and (ascensionstatus() == "Aftercore" or have_item("quake of arrows")) and not have_equipped_item("quake of arrows") then
-		return "You might want to wear quake of arrows on your obtuse angel.", "wear quake of arrows"
+	if familiar("Obtuse Angel") and (ascensionstatus("Aftercore") or have_item("quake of arrows")) and not have_equipped_item("quake of arrows") then
+		return "You might want to wear quake of arrows on your obtuse angel to get more copies of monsters.", "wear quake of arrows"
 	end
 end)
 
@@ -298,7 +298,7 @@ end)
 
 automate_noncombat_href = add_automation_script("automate-noncombat", function()
 	text, url = "Trying to automate noncombat...", requestpath
-	local function f() return text, url end
+	local f = function() return text, url end
 	for i = 1, 100 do
 		local p = params["choice" .. i]
 		if p then

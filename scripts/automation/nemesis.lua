@@ -647,9 +647,9 @@ function automate_AT_nemesis_island()
 					}
 					local choice_name = nil
 					local choice_list = nil
-					for x in table.values(want) do
-						for y in table.values(x[2]) do
-							for z in table.values(y[2]) do
+					for _, x in ipairs(want) do
+						for _, y in ipairs(x[2]) do
+							for _, z in ipairs(y[2]) do
 								local name = tostring(x[1]) .. ":" .. tostring(y[1]) .. ":" .. tostring(z)
 								if not visited[name] then
 									choice_name = name
@@ -672,16 +672,13 @@ function automate_AT_nemesis_island()
 						else
 							if choice_list[1] then
 								return table.remove(choice_list, 1)
-							else
-								-- TODO handle fights right
-								return "Fight!"
 							end
 						end
 					end)
-					if not advagain and resulturl:contains("fight.php") then
+					if not advagain and result:contains("fight.php") then
 						print("volcano:tuba:fight")
 						pt, url = get_page("/fight.php")
-						result, resulturl, advagain = handle_adventure_result(pt, url, 220, nil)
+						result, resulturl, advagain = handle_adventure_result(pt, url, 220, macro_ppnoodlecannon)
 					end
 					if not advagain then
 						if have_buff("Beaten Up") then

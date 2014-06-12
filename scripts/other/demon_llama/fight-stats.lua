@@ -19,8 +19,8 @@ register_setting {
 	default_level = "standard",
 }
 
-local function have_phylum_familiar()
-	return familiar("Pair of Stomping Boots") or familiar("Happy Medium")
+local function should_show_phylum()
+	return familiar("Pair of Stomping Boots") or familiar("Happy Medium") or have_item("DNA extraction syringe")
 end
 
 local function formatStat(name, value, color, tooltip)
@@ -100,7 +100,7 @@ local function formatMonsterStats(monster)
 	statData = statData .. formatStat("Element", data.Element, element_color(data.Element), "Weak against: " .. table.concat({ get_elemental_weaknesses(data.Element) }, ", ") )
 	statData = statData .. formatStat("Init", data.Init)
 
-	if have_phylum_familiar() and data.Phylum then
+	if should_show_phylum() and data.Phylum then
 		statData = statData .. [[<div onclick='togglePhylum();' style='cursor:hand;' class='stat'><span style='margin-right:5px;'><span id='phylumToggle'>[+]</span> Phylum:</span><span>]] .. data.Phylum .. [[</span></div>]]
 	end
 
@@ -113,7 +113,7 @@ end
 local function formatMonsterPhylumTreasure(monster)
 	local data = monster.Stats
 
-	if not have_phylum_familiar() or not data.Phylum then return "" end
+	if not should_show_phylum() or not data.Phylum then return "" end
 
 	local treasure = get_phylum_treasure(data.Phylum)
 

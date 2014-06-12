@@ -252,7 +252,7 @@ function get_automation_scripts(cached_stuff)
 		["Artistic Goth Kid"] = { fallback = "Rogue Program" },
 		["Rogue Program"] = { mpregen = true, attack = true, fallback = "Midget Clownfish" },
 		["Jumpsuited Hound Dog"] = { fallback = "Slimeling" },
-		["Frumious Bandersnatch"] = { fallback = "Mini-Hipster" },
+		["Frumious Bandersnatch"] = { fallback = "Smiling Rat" },
 		["Rock Lobster"] = { mpregen = true, attack = true, fallback = "Rogue Program" },
 		["Knob Goblin Organ Grinder"] = { attack = true, fallback = "Llama Lama" },
 		["Midget Clownfish"] = { mpregen = true, attack = true, fallback = "Star Starfish" },
@@ -379,6 +379,9 @@ function get_automation_scripts(cached_stuff)
 					end
 				end
 			end
+			if familiar_data[famname].familiarequip and have_item(familiar_data[famname].familiarequip) then
+				equip_item(familiar_data[famname].familiarequip, "familiarequip")
+			end
 			return { mpregen = familiar_data[famname].mpregen, familiarequip = familiar_data[famname].familiarequip and have_item(familiar_data[famname].familiarequip) and familiar_data[famname].familiarequip }
 		else
 			error("Unknown familiar: " .. tostring(famname))
@@ -393,9 +396,7 @@ function get_automation_scripts(cached_stuff)
 		if challenge == "zombie" and famname ~= "Reassembled Blackbird" then
 			famname = "Reagnimated Gnome"
 		end
-		if famname == "Slimeling" and highskill_at_run then
-			famname = "Scarecrow with spangly mariachi pants"
-		elseif have_item("spangly mariachi pants") and (famname == "Slimeling" or famname == "Jumpsuited Hound Dog") then
+		if have_item("spangly mariachi pants") and (famname == "Slimeling" or famname == "Jumpsuited Hound Dog") then
 			famname = "Scarecrow with spangly mariachi pants"
 		elseif have_item("spangly sombrero") and (famname == "Slimeling" or famname == "Jumpsuited Hound Dog") then
 			famname = "Mad Hatrack with spangly sombrero"
@@ -2471,51 +2472,90 @@ mark m_done
 	end
 
 	function f.do_manor_of_spooking()
-		local manorpt = get_page("/manor.php")
-		if not manorpt:match("To The Cellar") then
+		-- TODO: redo using tasks
+		if quest_text("Find your way into the cellar") then
 			script.bonus_target { "noncombat" }
-			go("unlock cellar", 109, macro_noodlecannon, {
+			go("unlock cellar", "The Haunted Ballroom", macro_noodlecannon, {
 				["Curtains"] = "Watch the dancers",
 				["Strung-Up Quartet"] = "&quot;Play nothing, please.&quot;",
+				["We'll All Be Flat"] = "Play the music",
 			}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic" }, "Slimeling", 30)
-		elseif not have_item("Lord Spookyraven's spectacles") then
-			script.bonus_target { "noncombat" }
-			go("get spectacles", 108, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Springy Fusilli", "Spirit of Garlic" }, "Rogue Program", 50, { choice_function = function(advtitle, choicenum)
-				if choicenum == 82 then
-					return "Kick it and see what happens"
-				elseif choicenum == 83 then
-					return "Check the bottom drawer"
-				elseif choicenum == 84 then
-					return "Look behind the nightstand"
-				elseif choicenum == 85 then
-					if mainstat_type("Moxie") then
-						return "Check the top drawer"
-					else
-						return "Investigate the jewelry"
-					end
-				end
-			end })
-		elseif not session["zone.manor.wines needed"] then
-			inform "determine cellar wines"
-			determine_cellar_wines()
-			did_action = (session["zone.manor.wines needed"] ~= nil)
-		else
-			local manor3pt = get_page("/manor3.php")
-			local wines_needed_list = session["zone.manor.wines needed"]
-			local need = 0
-			local got = 0
-			local missing = {}
-			for wine in table.values(wines_needed_list) do
-				need = need + 1
-				if have_item(wine) then
-					got = got + 1
-				else
-					missing[wine] = true
+		elseif quest_text("Investigate the cellar") then
+			inform "investigating spookyraven cellar"
+			get_page("/place.php", { whichplace = "manor4", action = "manor4_chamberwall" })
+			refresh_quest()
+			did_action = not quest_text("Investigate the cellar")
+		elseif quest_text("Read the list of ingredients") then
+			inform "reading list of ingredients"
+			use_item("recipe: mortar-dissolving solution")
+			refresh_quest()
+			did_action = not quest_text("Read the list of ingredients")
+		elseif quest_text("Gather the mortar-dissolving ingredients") then
+			local ingredients = {
+				{ item = "loosening powder", zone = "The Haunted Kitchen" },
+				{ item = "powdered castoreum", zone = "The Haunted Conservatory" },
+				{ item = "drain dissolver", zone = "The Haunted Bathroom", noncombats = { ["Off the Rack"] = "Take the towel" } },
+				{ item = "triple-distilled turpentine", zone = "The Haunted Gallery", noncombats = { ["Out in the Garden"] = "None of the above" } },
+				{ item = "detartrated anhydrous sublicalc", zone = "The Haunted Laboratory" },
+				{ item = "triatomaceous dust", zone = "The Haunted Storage Room" },
+			}
+			for _, x in ipairs(ingredients) do
+				if not have_item(x.item) then
+					return run_task {
+						message = "get " .. x.item .. " in " .. x.zone,
+						minmp = 50,
+						action = adventure {
+							zone = x.zone,
+							macro_function = macro_noodleserpent,
+							noncombats = x.noncombats,
+						}
+					}
 				end
 			end
-			if need ~= 3 then
-				critical "Couldn't identify 3 wines needed for cellar"
-			elseif manor3pt:match("Summoning Chamber") then
+		elseif quest_text("Take the mortar-dissolving ingredients back") then
+			inform "dissolving suspicious masonry"
+			get_page("/place.php", { whichplace = "manor4", action = "manor4_chamberwall_label" })
+			refresh_quest()
+			did_action = not quest_text("Take the mortar-dissolving ingredients back")
+--		elseif not have_item("Lord Spookyraven's spectacles") then
+--			script.bonus_target { "noncombat" }
+--			go("get spectacles", 108, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Springy Fusilli", "Spirit of Garlic" }, "Rogue Program", 50, { choice_function = function(advtitle, choicenum)
+--				if choicenum == 82 then
+--					return "Kick it and see what happens"
+--				elseif choicenum == 83 then
+--					return "Check the bottom drawer"
+--				elseif choicenum == 84 then
+--					return "Look behind the nightstand"
+--				elseif choicenum == 85 then
+--					if mainstat_type("Moxie") then
+--						return "Check the top drawer"
+--					else
+--						return "Investigate the jewelry"
+--					end
+--				end
+--			end })
+--		elseif not session["zone.manor.wines needed"] then
+--			inform "determine cellar wines"
+--			determine_cellar_wines()
+--			did_action = (session["zone.manor.wines needed"] ~= nil)
+		elseif quest_text("confront Lord Spookyraven") then
+--			stop "TODO: Spookyraven cellar"
+--			local manor3pt = get_page("/manor3.php")
+--			local wines_needed_list = session["zone.manor.wines needed"]
+--			local need = 0
+--			local got = 0
+--			local missing = {}
+--			for wine in table.values(wines_needed_list) do
+--				need = need + 1
+--				if have_item(wine) then
+--					got = got + 1
+--				else
+--					missing[wine] = true
+--				end
+--			end
+--			if need ~= 3 then
+--				critical "Couldn't identify 3 wines needed for cellar"
+--			elseif manor3pt:match("Summoning Chamber") then
 				inform "fight spookyraven"
 				ensure_buffs { "Springy Fusilli", "Astral Shell", "Spirit of Bacon Grease" }
 				maybe_ensure_buffs_in_fist { "Astral Shell" }
@@ -2524,7 +2564,7 @@ mark m_done
 				ensure_mp(50)
 				if have_buff("Astral Shell") or challenge == "boris" or have_buff("Red Door Syndrome") then
 					-- TODO: check resistance instead
-					local pt, url = get_page("/manor3.php", { place = "chamber" })
+					local pt, url = get_page("/place.php", { whichplace = "manor4", action = "manor4_chamberboss" })
 					result, resulturl, did_action = handle_adventure_result(pt, url, "?", macro_spookyraven)
 				elseif meat() >= 3000 then
 					script.ensure_buffs { "Red Door Syndrome" }
@@ -2532,41 +2572,41 @@ mark m_done
 				else
 					stop "TODO: Beat Lord Spookyraven"
 				end
-			elseif got >= need then
-				inform "open chamber"
-				for _, wine in ipairs(wines_needed_list) do
-					async_post_page("/manor3.php", { action = "pourwine", whichwine = get_itemid(wine) })
-				end
-				local manor3pt = get_page("/manor3.php")
-				did_action = manor3pt:contains("Summoning Chamber")
-			else
-				script.bonus_target { "item" }
-				-- TODO: get +booze% buff?
-				if ascensionstatus() ~= "Hardcore" then
-					maybe_ensure_buffs { "Brother Smothers's Blessing" }
-				end
-				softcore_stoppable_action("get cellar wines")
-				local wines, _ = get_wine_cellar_data(ascension["zone.manor.wine cellar zone bottles"] or {})
---				print("wines", table_to_str(wines))
-				local best = -1
-				local best_zones = nil
-				for z, ztbl in pairs(wines) do
-					local score = 0
-					for x, xv in pairs(ztbl) do
-						if missing[x] then score = score + xv end
-					end
---					print("zone", z, score)
-					if score > best then
-						best = score
-						best_zones = { z }
-					elseif score == best then
-						table.insert(best_zones, z)
-					end
-				end
-				local next_zone = best_zones[math.random(#best_zones)]
---				print("bestzone", table_to_str(best_zones), best, "going to", next_zone)
-				go("get cellar wines", next_zone, macro_noodleserpent, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 50)
-			end
+--			elseif got >= need then
+--				inform "open chamber"
+--				for _, wine in ipairs(wines_needed_list) do
+--					async_post_page("/manor3.php", { action = "pourwine", whichwine = get_itemid(wine) })
+--				end
+--				local manor3pt = get_page("/manor3.php")
+--				did_action = manor3pt:contains("Summoning Chamber")
+--			else
+--				script.bonus_target { "item" }
+--				-- TODO: get +booze% buff?
+--				if ascensionstatus() ~= "Hardcore" then
+--					maybe_ensure_buffs { "Brother Smothers's Blessing" }
+--				end
+--				softcore_stoppable_action("get cellar wines")
+--				local wines, _ = get_wine_cellar_data(ascension["zone.manor.wine cellar zone bottles"] or {})
+----				print("wines", table_to_str(wines))
+--				local best = -1
+--				local best_zones = nil
+--				for z, ztbl in pairs(wines) do
+--					local score = 0
+--					for x, xv in pairs(ztbl) do
+--						if missing[x] then score = score + xv end
+--					end
+----					print("zone", z, score)
+--					if score > best then
+--						best = score
+--						best_zones = { z }
+--					elseif score == best then
+--						table.insert(best_zones, z)
+--					end
+--				end
+--				local next_zone = best_zones[math.random(#best_zones)]
+----				print("bestzone", table_to_str(best_zones), best, "going to", next_zone)
+--				go("get cellar wines", next_zone, macro_noodleserpent, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 50)
+--			end
 		end
 	end
 
@@ -2853,71 +2893,80 @@ mark m_done
 		end
 	end
 
-	function f.do_pyramid()
-		local pyramidpt = get_page("/pyramid.php")
-		if pyramidpt:match("pyramid3a.gif") then
-			if not have_item("carved wooden wheel") then
-				script.bonus_target { "item" }
-				go("find carved wheel", 124, macro_noodleserpent, nil, { "Spirit of Bacon Grease" }, "Mini-Hipster", 45)
-			else
-				script.bonus_target { "extranoncombat", "noncombat" }
-				script.set_runawayfrom { "Iiti Kitty", "tomb bat" }
-				go("place wheel in middle chamber", 125, macro_noodleserpent, {
-					["Wheel in the Pyramid, Keep on Turning"] = "Turn the wheel",
-				}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "Rogue Program", 45)
-			end
-		else
+--	function f.do_pyramid()
+--		local pyramidpt = get_page("/place.php", { whichplace = "pyramid" })
+--		if not pyramidpt:contains("Middle Chamber") then
+--			script.bonus_target { "noncombat", "extranoncombat" }
+--			go("do upper chamber", "The Upper Chamber", macro_noodleserpent, nil, { "Spirit of Garlic" }, "Slimeling", 45)
+--			if not did_action and get_result():contains("Down Dooby-Doo Down Down") then
+--				did_action = true
+--			end
+--		else
+--			stop "TODO: do pyramid"
+--		end
+--		if pyramidpt:match("pyramid3a.gif") then
+--			if not have_item("carved wooden wheel") then
+--				script.bonus_target { "item" }
+--				go("find carved wheel", 124, macro_noodleserpent, nil, { "Spirit of Bacon Grease" }, "Mini-Hipster", 45)
+--			else
+--				script.bonus_target { "extranoncombat", "noncombat" }
+--				script.set_runawayfrom { "Iiti Kitty", "tomb bat" }
+--				go("place wheel in middle chamber", 125, macro_noodleserpent, {
+--					["Wheel in the Pyramid, Keep on Turning"] = "Turn the wheel",
+--				}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "Rogue Program", 45)
+--			end
+--		else
 -- 			pyramid4_1.gif -> nuke
 -- 			pyramid4_2.gif -> turn
 -- 			pyramid4_3.gif -> bomb
 -- 			pyramid4_4.gif -> token
 -- 			pyramid4_5.gif -> turn
-			if pyramidpt:match("pyramid4_1b.gif") then
-				-- TODO: check if this will overlap with SR
-				inform "fight ed"
-				fam "Frumious Bandersnatch"
-				f.heal_up()
-				ensure_buffs { "Spirit of Garlic", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
-				maybe_ensure_buffs { "Mental A-cue-ity" }
-				ensure_mp(100)
-				if maxmp() >= 200 then
-					ensure_mp(150)
-				end
-				result, resulturl = get_page("/pyramid.php", { action = "lower" })
-				result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
-				while get_result():contains([[<!--WINWINWIN-->]]) and get_result():contains([[fight.php]]) do
-					result, resulturl = get_page("/fight.php")
-					result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
-				end
-				did_action = have_item("Holy MacGuffin")
-			elseif pyramidpt:match("pyramid4_1.gif") and have_item("ancient bomb") then
-				inform "use bomb"
-				async_get_page("/pyramid.php", { action = "lower" })
-				pyramidpt = get_page("/pyramid.php")
-				did_action = pyramidpt:contains("pyramid4_1b.gif")
-			elseif pyramidpt:match("pyramid4_3.gif") and not have_item("ancient bomb") and have_item("ancient bronze token") then
-				inform "buy bomb"
-				async_get_page("/pyramid.php", { action = "lower" })
-				did_action = have_item("ancient bomb")
-			elseif pyramidpt:match("pyramid4_4.gif") and not have_item("ancient bomb") and not have_item("ancient bronze token") then
-				inform "get token"
-				async_get_page("/pyramid.php", { action = "lower" })
-				did_action = have_item("ancient bronze token")
-			elseif pyramidpt:match("pyramid4_[12345].gif") then
-				if have_item("tomb ratchet") then
-					local c = count_item("tomb ratchet")
-					use_item("tomb ratchet")
-					did_action = count_item("tomb ratchet") < c
-				else
-					script.bonus_target { "extranoncombat", "noncombat" }
-					script.set_runawayfrom { "Iiti Kitty", "tomb bat" }
-					go("turn middle chamber wheel", 125, macro_noodleserpent, {
-						["Wheel in the Pyramid, Keep on Turning"] = "Turn the wheel",
-					}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "Rogue Program", 45)
-				end
-			end
-		end
-	end
+--			if pyramidpt:match("pyramid4_1b.gif") then
+--				-- TODO: check if this will overlap with SR
+--				inform "fight ed"
+--				fam "Frumious Bandersnatch"
+--				f.heal_up()
+--				ensure_buffs { "Spirit of Garlic", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
+--				maybe_ensure_buffs { "Mental A-cue-ity" }
+--				ensure_mp(100)
+--				if maxmp() >= 200 then
+--					ensure_mp(150)
+--				end
+--				result, resulturl = get_page("/pyramid.php", { action = "lower" })
+--				result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
+--				while get_result():contains([[<!--WINWINWIN-->]]) and get_result():contains([[fight.php]]) do
+--					result, resulturl = get_page("/fight.php")
+--					result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
+--				end
+--				did_action = have_item("Holy MacGuffin")
+--			elseif pyramidpt:match("pyramid4_1.gif") and have_item("ancient bomb") then
+--				inform "use bomb"
+--				async_get_page("/pyramid.php", { action = "lower" })
+--				pyramidpt = get_page("/pyramid.php")
+--				did_action = pyramidpt:contains("pyramid4_1b.gif")
+--			elseif pyramidpt:match("pyramid4_3.gif") and not have_item("ancient bomb") and have_item("ancient bronze token") then
+--				inform "buy bomb"
+--				async_get_page("/pyramid.php", { action = "lower" })
+--				did_action = have_item("ancient bomb")
+--			elseif pyramidpt:match("pyramid4_4.gif") and not have_item("ancient bomb") and not have_item("ancient bronze token") then
+--				inform "get token"
+--				async_get_page("/pyramid.php", { action = "lower" })
+--				did_action = have_item("ancient bronze token")
+--			elseif pyramidpt:match("pyramid4_[12345].gif") then
+--				if have_item("tomb ratchet") then
+--					local c = count_item("tomb ratchet")
+--					use_item("tomb ratchet")
+--					did_action = count_item("tomb ratchet") < c
+--				else
+--					script.bonus_target { "extranoncombat", "noncombat" }
+--					script.set_runawayfrom { "Iiti Kitty", "tomb bat" }
+--					go("turn middle chamber wheel", 125, macro_noodleserpent, {
+--						["Wheel in the Pyramid, Keep on Turning"] = "Turn the wheel",
+--					}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "Rogue Program", 45)
+--				end
+--			end
+--		end
+--	end
 
 	function f.do_filthworms()
 		script.bonus_target { "item", "extraitem" }
@@ -2938,7 +2987,7 @@ mark m_done
 			did_action = have_buff("Filthworm Guard Stench")
 		elseif have_buff("Filthworm Drone Stench") then
 			if daysthisrun() >= 3 then
-				pull_in_softcore("peppermint crook")
+				maybe_pull_in_softcore("peppermint crook")
 			end
 			go("fight guard", 129, (challenge == "boris" and have_item("peppermint crook") and macro_softcore_boris_crook) or macro_ppnoodlecannon, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 30, { equipment = { familiarequip = "sugar shield", pants = (challenge == "boris" and have_item("Greatest American Pants")) and "Greatest American Pants" or nil } })
 		elseif have_item("filthworm drone scent gland") then
@@ -2947,7 +2996,7 @@ mark m_done
 			did_action = have_buff("Filthworm Drone Stench")
 		elseif have_buff("Filthworm Larva Stench") then
 			if daysthisrun() >= 3 then
-				pull_in_softcore("peppermint crook")
+				maybe_pull_in_softcore("peppermint crook")
 			end
 			go("fight drone", 128, (challenge == "boris" and count_item("peppermint crook") >= 2 and macro_softcore_boris_crook) or macro_ppnoodlecannon, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }, "Slimeling", 30, { equipment = { familiarequip = "sugar shield", pants = (challenge == "boris" and have_item("Greatest American Pants")) and "Greatest American Pants" or nil } })
 		elseif have_item("filthworm hatchling scent gland") then
@@ -2966,6 +3015,18 @@ mark m_done
 		if not ascensionstatus("Hardcore") then
 			macro = macro_softcore_lfm
 		end
+		if challenge == "boris" then
+			macro = macro_softcore_boris([[
+
+if monstername lobsterfrogman
+  use Rain-Doh black box
+endif
+
+]])
+			if count_item("barrel of gunpowder") >= 4 then
+				macro = macro_softcore_boris
+			end
+		end
 		if count_item("barrel of gunpowder") >= 5 then
 			inform "talk to lighthouse guy"
 			wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
@@ -2973,23 +3034,11 @@ mark m_done
 			async_get_page("/bigisland.php", { place = "lighthouse", action = "pyro", pwd = get_pwd() })
 			did_action = (have_item("tequila grenade") and have_item("molotov cocktail cocktail"))
 		elseif have_item("Rain-Doh box full of monster") then
-			if challenge == "boris" then
-				macro = macro_softcore_boris([[
-
-if monstername lobsterfrogman
-  use Rain-Doh black box
-endif
-
-]])
-				if count_item("barrel of gunpowder") >= 4 then
-					macro = macro_softcore_boris
-				end
-			end
 			local copied = retrieve_raindoh_monster()
 			if copied:contains("lobsterfrogman") then
 				inform "fight copied LFM"
 				script.heal_up()
-				script.ensure_mp(40)
+				script.ensure_mp(50)
 				if hp() < maxhp() * 0.8 then
 					stop "Heal up before using Rain-Doh box full of monster"
 				end
@@ -3017,7 +3066,7 @@ endif
 				if have_buff("Song of Battle") and ascensionstatus() == "Hardcore" then
 					go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro_hardcore_boris, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
 				elseif have_buff("Song of Battle") and have_item("Rain-Doh black box") then
-					go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro_copy_lfm, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
+					go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
 				else
 					stop "TODO: Do sonofa in Boris"
 				end
@@ -3129,6 +3178,7 @@ endif
 	function f.do_trapper_quest()
 		-- TODO: redo logic
 		if quest_text("Take Groar's fur to") then
+			inform "taking groar's fur to trapper"
 			async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
 			refresh_quest()
 			did_action = not quest_text("Take Groar's fur to")
@@ -3165,9 +3215,10 @@ endif
 				end
 			end
 		elseif ascensionpath("Avatar of Sneaky Pete") and sneaky_pete_motorcycle_upgrades()["Tires"] == "Snow Tires" then
+			inform "ascending cloudy peak with snow tires"
 			get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak" })
 			refresh_quest()
-			did_action = quest_text("close to figuring out what's going on at the Icy Peak")
+			did_action = quest_text("ready to ascend to the Icy Peak") or quest_text("close to figuring out what's going on at the Icy Peak") or quest_text("have slain Groar") or quest_text("for the source of all this chaos") or quest_text("and see what's up!")
 		elseif quest_text("3 wedges of goat cheese") then
 			get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
 			refresh_quest()
@@ -3206,6 +3257,7 @@ endif
 				if got >= 3 then
 					critical "Trapper ore+cheese quest should be finished already."
 				end
+				inform "pulling ore for trapper"
 				if false and want_ore == "chrome ore" and not have_item("acoustic guitarrr") and not have_item("heavy metal thunderrr guitarrr") then
 					-- TODO: do this when we can untinker
 					pull_in_softcore("heavy metal thunderrr guitarrr")
@@ -3251,7 +3303,7 @@ endif
 			end
 			get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak" })
 			refresh_quest()
-			if not quest_text("like you to investigate the summit") then
+			if not quest_text("like you to investigate the summit") and not quest_text("Find your way to the Icy Peak") then
 				did_action = true
 			elseif have_item("ninja rope") and have_item("ninja crampons") and have_item("ninja carabiner") then
 				stop "TODO: Buff up cold resistance and climb peak."
@@ -3326,17 +3378,29 @@ endif
 
 	function f.do_muscle_powerleveling()
 -- 		print("  mainstat", basemainstat(), "advs", advs())
-		script.bonus_target { "noncombat" }
-		go("muscle powerleveling", "The Haunted Gallery", macro_noodlecannon, { ["Out in the Garden"] = "None of the above" }, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)
-		if result:contains("Louvre It or Leave It") and not did_action then
-			stop "Powerlevel muscle"
-		end
+		run_task {
+			message = "muscle powerleveling",
+			minmp = 35,
+			buffs = { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic", "A Few Extra Pounds" },
+			bonus_target = { "noncombat" },
+			action = adventure {
+				zone = "The Haunted Gallery",
+				macro_function = macro_noodlecannon,
+				choice_function = function(advtitle, choicenum, pagetext)
+					if advtitle == "Out in the Garden" then
+						return "None of the above"
+					elseif pagetext:contains("Louvre It or Leave It") then
+						return navigate_to_louvre_reward("Muscle", advtitle, choicenum, pagetext)
+					end
+				end,
+			}
+		}
 	end
 
 	function f.do_mysticality_powerleveling()
 -- 		print("  mainstat", basemainstat(), "advs", advs())
 		script.bonus_target { "noncombat" }
-		go("mysticality powerleveling", 107, macro_noodlecannon, {
+		script.go("mysticality powerleveling", 107, macro_noodlecannon, {
 			["Don't Hold a Grudge"] = "Declare a thumb war",
 			["Having a Medicine Ball"] = "Gaze deeply into the mirror",
 		}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic" }, "Rogue Program", 35)
@@ -3346,7 +3410,7 @@ endif
 		script.do_moxie_use_dancecard()
 -- 		print("  mainstat", basemainstat(), "dance cards", count_item("dance card"), "advs", advs(), "trail turns", buffturns("On the Trail"))
 		script.bonus_target { "noncombat", "item" }
-		go("moxie powerleveling", "The Haunted Ballroom", make_cannonsniff_macro("zombie waltzers"), {
+		script.go("moxie powerleveling", "The Haunted Ballroom", make_cannonsniff_macro("zombie waltzers"), {
 			["Curtains"] = "Watch the dancers",
 			["Strung-Up Quartet"] = "&quot;Play 'Sono Un Amanten Non Un Combattente'&quot;",
 		}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric" }, "Slimeling", 35, { olfact = "zombie waltzers" })
@@ -4307,26 +4371,18 @@ endif
 					return "Pick a Fight"
 				end
 			end
-		end})
+		end })
 	end
 
 	function f.find_black_market()
 		use_dancecard()
-		local have_blackbird_parts = (have_item("broken wings") and have_item("sunken eyes")) or have_item("reassembled blackbird")
-		if have_item("black market map") and (can_change_familiar() or have_blackbird_parts) then
-			inform "locate black market"
-			meatpaste_items("broken wings", "sunken eyes")
-			fam "Reassembled Blackbird"
-			set_result(use_item("black market map"))
-			did_action = not have_item("black market map")
-		else
-			if have_blackbird_parts then
-				script.bonus_target { "noncombat" }
-			else
-				script.bonus_target { "item" }
-			end
-			go("do black forest", 111, macro_noodleserpent, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 45)
+		if have_item("broken wings") and have_item("sunken eyes") then
+			meatpaste_items("broken wings", "sunken eyes")()
 		end
+		go("do black forest", "The Black Forest", macro_noodleserpent, {
+			["All Over the Map"] = "Head toward the blackberry patch",
+			["You Found Your Thrill"] = "Attack the bushes",
+		}, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Reassembled Blackbird", 45)
 	end
 
 	function f.take_shore_trip()
@@ -4576,9 +4632,11 @@ endif
 			end
 			if have_item("&quot;I Love Me, Vol. I&quot;") then
 				use_item("&quot;I Love Me, Vol. I&quot;")
+				refresh_quest()
 			end
 			if have_item("&quot;2 Love Me, Vol. 2&quot;") then
 				use_item("&quot;2 Love Me, Vol. 2&quot;")
+				refresh_quest()
 			end
 			if have_item("Mega Gem") then
 				inform "fighting Dr. Awkward"
@@ -4590,7 +4648,7 @@ endif
 				result, resulturl = get_page("/place.php", { whichplace = "palindome", action = "pal_droffice" })
 				result, resulturl = handle_adventure_result(get_result(), resulturl, "?", macro_noodleserpent, { ["Dr. Awkward"] = "War, sir, is raw!" })
 				did_action = have_item("Staff of Fats")
-			elseif have_item("wet stunt nut stew") and quest_text("Mr. Alarm") then
+			elseif have_item("wet stunt nut stew") then
 				inform "getting mega gem"
 				get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" })
 				did_action = have_item("Mega Gem")
@@ -4609,7 +4667,10 @@ endif
 				refresh_quest()
 				did_action = quest_text("wet stunt nut stew")
 			else
-				stop("TODO: check palindome progress")
+				local pt = get_page("/place.php", { whichplace = "palindome" })
+				if pt:contains("Mr. Alarm") then
+					stop "TODO: Already found Mr. Alarm"
+				end
 				if have_item("photograph of God") and have_item("photograph of a dog") and have_item("photograph of a red nugget") and have_item("photograph of an ostrich egg") then
 					local pt = get_page("/place.php", { whichplace = "palindome" })
 					if pt:contains("Dr. Awkward's Office") then
@@ -4625,7 +4686,7 @@ endif
 					stop "Not enough meat for palindome"
 				end
 				script.bonus_target { "noncombat" }
-				go("find photographs", 386, macro_noodleserpent, {
+				go("do palindome", 386, macro_noodleserpent, {
 					["No sir, away!  A papaya war is on!"] = "Give the men a pep talk",
 					["Sun at Noon, Tan Us"] = "A little while",
 					["Rod Nevada, Vendor"] = "Accept (500 Meat)",
@@ -4837,7 +4898,9 @@ function buy_shore_inc_item(item)
 end
 
 function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
-	zoneid = get_zoneid(zoneid)
+	if zoneid and zoneid ~= "?" then
+		zoneid = get_zoneid(zoneid)
+	end
 	if url:contains("/fight.php") then
 		local advagain = nil
 		if pt:contains([[>You win the fight!<!--WINWINWIN--><]]) then
@@ -4987,4 +5050,40 @@ end
 
 function script_want_ode()
 	return ascensionstatus("Aftercore") or have_skill("The Ode to Booze")
+end
+
+function navigate_to_louvre_reward(louvre_target, advtitle, choicenum, pagetext)
+	if louvre_target == "Muscle" then
+		if advtitle:contains("Louvre It or Leave It") then
+			local louvre_checks = {
+				["Enter the drawing"] = 1,
+				["Sailboat races"] = 1,
+				["The gridded landscape is swarming"] = 1,
+				["waiting for Venus"] = 3,
+				["conversing with a hovering gentleman with a white beard and robe"] = 2,
+			}
+			for check, choice in pairs(louvre_checks) do
+				if pagetext:contains(check) then
+					return "", choice
+				end
+			end
+			return "", 2
+		end
+	elseif louvre_target == "Lady Spookyraven's dancing shoes" then
+		if advtitle:contains("Louvre It or Leave It") then
+			local louvre_checks = {
+				["Enter the drawing"] = 1,
+				["conversing with a hovering gentleman with a white beard and robe"] = 1,
+				["Sailboat races"] = 1,
+				["The gridded landscape is swarming"] = 1,
+				["another slowly dripping down the side of a perfectly square rock"] = 1,
+			}
+			for check, choice in pairs(louvre_checks) do
+				if pagetext:contains(check) then
+					return "", choice
+				end
+			end
+			return "", 2
+		end
+	end
 end

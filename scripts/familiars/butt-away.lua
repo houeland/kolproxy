@@ -34,8 +34,8 @@ add_printer("familiar message: stompboots", function()
 end)
 
 
-add_processor("/fight.php", function()
-	if familiar("Pair of Stomping Boots") and text:contains(">You win the fight!<!--WINWINWIN--><") and not text:contains("feet flying, heels stomping, buckles jangling") and not text:contains("Thank goodness there wasn't a mudhole nearby.") then
+add_processor("won fight", function()
+	if familiar("Pair of Stomping Boots") and not text:contains("feet flying, heels stomping, buckles jangling") and not text:contains("Thank goodness there wasn't a mudhole nearby.") then
 		-- only increment counter when boots didn't stomp
 		increase_ascension_counter("familiar.pair of stomping boots.charges")
 	end

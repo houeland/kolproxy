@@ -184,14 +184,6 @@ function maybe_get_familiarname(fam)
 	return familiarid_name_lookup[id]
 end
 
-function get_familiarname(id)
-	local name = maybe_get_familiarname(id)
-	if not name then
-		error("No familiarname found for: " .. tostring(id))
-	end
-	return name
-end
-
 function get_all_recipes()
 	return datafile("recipes")
 end

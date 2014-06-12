@@ -341,7 +341,7 @@ function bl_charpane_familiar(lines)
 	<th width='40' id='weight'>%s</th>
 	<th><a target=mainpane href="familiar.php" class="familiarpick" title="Visit your terrarium">%s</a></th>
 	<th width="30">&nbsp;</th>
-</tr>]], blpane_familiar_weight(), get_familiarname(familiarid())))
+</tr>]], blpane_familiar_weight(), maybe_get_familiarname(familiarid()) or "?"))
 
 		table.insert(lines, string.format([[<tr><td><a href="familiar.php" target="mainpane"><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" width="30" height="30" class="chit_launcher" rel="chit_pickerfam"></td><td><!-- kolproxy charpane familiar text area --></td>]], familiarpicture()))
 		if fam_equip then
@@ -377,7 +377,7 @@ local function familiar_info_line(faminfo)
 end
 
 local function compact_motorbike_display()
-	local lovehate = {val=0,type="love",color="blue",posf = function(pct) return 50 end}
+	local lovehate = { val = 0, type="love", color="blue", posf = function(pct) return 50 end }
 	local moto_lines = [[<tr><td class="icon"><a href="main.php?action=motorcycle" target="mainpane"><img src="http://images.kingdomofloathing.com/itemimages/%s" width="20" height="20"></td>
 <td class="famname"><a target=mainpane href="main.php?action=motorcycle">Motorcycle</a></td>
 <td class='weight'>%s</th>
@@ -398,7 +398,7 @@ local function compact_motorbike_display()
 		maxlove = 50
 	end
 	local pct = math.floor(lovehate.val * 50 / maxlove)
-	
+
 	local pic = can_upgrade_sneaky_pete_motorcycle() and "motorbike_anim.gif" or "motorbike.gif"
 	return string.format(moto_lines, pic, lovehate.val, lovehate.type, lovehate.color, pct, lovehate.posf(pct))
 end
@@ -412,7 +412,7 @@ local function bl_charpane_compact_familiar(lines)
 <td class="famname"><a target=mainpane href="familiar.php" class="familiarpick" title="Visit your terrarium">%s</a></td>
 <td class='weight'>%s</td>
 <td class="equip"><img class="chit_launcher" rel="chit_pickerfamequip" src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td></tr>]],
-					familiarpicture(), get_familiarname(familiarid()),blpane_familiar_weight(),
+					familiarpicture(), maybe_get_familiarname(familiarid()) or "?", blpane_familiar_weight(),
 					fam_equip.picture or "blank"))
 		local faminfos = get_tracked_familiar_info(familiarpicture())
 		if faminfos[1] then

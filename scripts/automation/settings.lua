@@ -351,18 +351,14 @@ function get_ascension_automation_settings(want_bonus)
 		table.insert(tbl.sell_items, "meat paste")
 	end
 
-	if have_skill("Flavour of Magic") == false then
-		tbl.ignore_buffs["Spirit of Bacon Grease"] = true
-		tbl.ignore_buffs["Spirit of Garlic"] = true
-		tbl.ignore_buffs["Spirit of Peppermint"] = true
-		tbl.ignore_buffs["Spirit of Cayenne"] = true
-		tbl.ignore_buffs["Spirit of Wormwood"] = true
-	end
-
 	for x, y in pairs(datafile_buff_recast_skills) do
 		if have_skill(y) == false then
 			tbl.ignore_buffs[x] = true
 		end
+	end
+
+	for _, x in ipairs { "Spirit of Bacon Grease", "Spirit of Garlic", "Spirit of Peppermint", "Spirit of Cayenne", "Spirit of Wormwood" } do
+		tbl.ignore_buffs[x] = not have_skill("Flavour of Magic")
 	end
 
 	return tbl

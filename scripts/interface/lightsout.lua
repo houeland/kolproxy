@@ -155,13 +155,12 @@ add_processor("/choice.php", function()
 	end
 end)
 
-add_processor("/fight.php", function()
-	if monstername():contains("Elizabeth Spookyraven") and text:contains("<!--WINWINWIN-->") then
-		ascension["liz quest"] = 7
-	end
-	if monstername("Stephen Spookyraven") and text:contains("<!--WINWINWIN-->") then
-		ascension["steve quest"] = 7
-	end
+add_processor("won fight: ghost of Elizabeth Spookyraven", function()
+	ascension["liz quest"] = 7
+end)
+
+add_processor("won fight: Stephen Spookyraven", function()
+	ascension["steve quest"] = 7
 end)
 
 add_charpane_line(function()

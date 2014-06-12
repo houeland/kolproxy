@@ -52,18 +52,18 @@ lair_gateitems = {
 	["Gate that is Not a Gate"] = { effect = "Teleportitis", potion = "teleportation" },
 }
 
--- TODO: resolve to gate/monster instead of item
 local scopes = {
-	["see a wooden gate with an elaborate carving of an armchair on it."] = "pygmy pygment",
-	["see a wooden gate with an elaborate carving of a cowardly%-looking man on it."] = "wussiness potion",
-	["see a wooden gate with an elaborate carving of a banana peel on it."] = "gremlin juice",
-	["see a wooden gate with an elaborate carving of a coiled viper on it."] = "adder bladder",
-	["see a wooden gate with an elaborate carving of a rose on it."] = "(Sugar Rush)",
-	["see a wooden gate with an elaborate carving of a glum teenager on it."] = "thin black candle",
-	["see a wooden gate with an elaborate carving of a hedgehog on it."] = "super-spiky hair gel",
-	["see a wooden gate with an elaborate carving of a raven on it."] = "Black No. 2",
-	["see a wooden gate with an elaborate carving of a smiling man smoking a pipe on it."] = "Mick's IcyVapoHotness Rub",
+	["see a wooden gate with an elaborate carving of an armchair on it."] = "Gate of Spirit",
+	["see a wooden gate with an elaborate carving of a cowardly%-looking man on it."] = "Gate of Humility",
+	["see a wooden gate with an elaborate carving of a banana peel on it."] = "Gate of Hilarity",
+	["see a wooden gate with an elaborate carving of a coiled viper on it."] = "Gate of the Viper",
+	["see a wooden gate with an elaborate carving of a rose on it."] = "Twitching Gates of The Suc Rose",
+	["see a wooden gate with an elaborate carving of a glum teenager on it."] = "Gate of Morose Morbidity and Moping",
+	["see a wooden gate with an elaborate carving of a hedgehog on it."] = "Gate of the Porcupine",
+	["see a wooden gate with an elaborate carving of a raven on it."] = "Locked Gate",
+	["see a wooden gate with an elaborate carving of a smiling man smoking a pipe on it."] = "Gate of Slack",
 
+-- TODO: resolve to monster instead of item
 	["catch a glimpse of a flaming katana."] = "frigid ninja stars",
 	["catch a glimpse of a translucent wing."] = "spider web",
 	["see a fancy%-looking tophat."] = "sonar-in-a-biscuit",
@@ -127,25 +127,27 @@ end
 
 add_printer("/campground.php", function() -- this is also called when using mystical bookshelf skills etc.
 	local have_scope_item = function(name)
-		have_amount = 0
-		local names = {}
-		if name == "(Sugar Rush)" then
-			names = sugar_rush_items
-		else
-			names = { { name = name, usable = true } }
+		if name == "Twitching Gates of The Suc Rose" then
+			local _, have_any = get_sugar_rush_item()
+			if have_any then
+				return true, have_any
+			else
+				return false, "(Sugar Rush)"
+			end
 		end
-		for _, item in ipairs(names) do
-			have_amount = have_amount + count_item(item.name)
+		if lair_gateitems[name] then
+			name = lair_gateitems[name].item
 		end
-		return (have_amount > 0)
+		return have_item(name), name
 	end
 
 	for from, to in pairs(scopes) do
 		if text:match(from) then
-			if have_scope_item(to) then
-				text = text:gsub(from, [[%0 (<span style="color: green">]]..to..[[</span>)]])
+			local ok, description = have_scope_item(to)
+			if ok then
+				text = text:gsub(from, [[%0 (<span style="color: green">]]..description..[[</span>)]])
 			else
-				text = text:gsub(from, [[%0 <b>(<span style="color: darkorange">]]..to..[[</span>)</b>]])
+				text = text:gsub(from, [[%0 <b>(<span style="color: darkorange">]]..description..[[</span>)</b>]])
 			end
 		end
 	end
@@ -938,7 +940,7 @@ function solve_hedge_maze_puzzle()
 	end
 end
 
--- TODO: decorate key drop
+-- TODO: decorate key drop, redo this functionality
 
 add_automator("/fight.php", function()
 	if not setting_enabled("automate simple tasks") then return end
@@ -1034,6 +1036,16 @@ local function missing_tower_item()
 		end
 	end
 end
+
+add_warning {
+	message = "You might want to remove +Monster Level modifiers before killing tower monsters.",
+	path = { "/lair4.php", "/lair5.php" },
+	type = "extra",
+	when = "ascension",
+	check = function()
+		return params.action and missing_tower_item() and estimate_bonus("Monster Level") > 0
+	end,
+}
 
 add_warning {
 	message = "You might want to buff up with Frigidalmatian before killing tower monsters.",

@@ -58,14 +58,19 @@ end
 
 if text:contains([["last":]]) then
 	local chat_tbl = json_to_table(text)
-	for i, msg in ipairs(chat_tbl.msgs) do
+	local new_msgs = {}
+	for _, msg in ipairs(chat_tbl.msgs) do
 -- 		print("DEBUG msgbefore", msg)
 		log_chat(msg)
 		for _, printer in ipairs(json_chatprinters) do
 			printer.f(msg)
 		end
 -- 		print("DEBUG msgafter", msg)
+		if not msg.kolproxy_hide_message then
+			table.insert(new_msgs, msg)
+		end
 	end
+	chat_tbl.msgs = new_msgs
 	text = table_to_json(chat_tbl)
 elseif text:contains("lastseen:") then
 	text = "<!-- buffer br --><br>" .. text

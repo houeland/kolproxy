@@ -248,7 +248,7 @@ html, body {
 
 			<div class='abc a'><span class='title'><a target='mainpane' href='mountains.php'>mount</a> <a target='mainpane' href='peevpee.php'>pvp</a></span><br><a target='mainpane' href='place.php?whichplace=mclargehuge'>mcl</a> <a target='mainpane' href='place.php?whichplace=highlands'>high</a> <a target='mainpane' href='cave.php'>cave</a><br><a target='mainpane' href='da.php'>da</a> <a target='mainpane' href='hermit.php'>hermit</a></div>
 
-			<div class='abc'><span class='title'><a target='mainpane' href='place.php?whichplace=desertbeach'>beach</a></span><br><a target='mainpane' href='pyramid.php'>pyr</a><br><a target='mainpane' href='mall.php'>mall</a> <a target='mainpane' href='bordertown.php'>border</a></div>
+			<div class='abc'><span class='title'><a target='mainpane' href='place.php?whichplace=desertbeach'>beach</a></span><br><a target='mainpane' href='place.php?whichplace=pyramid'>pyr</a><br><a target='mainpane' href='mall.php'>mall</a> <a target='mainpane' href='bordertown.php'>border</a></div>
 
 			<div class='abc a'><span class='title'><a target='mainpane' href='island.php'>island</a></span><br><a target='mainpane' href='cove.php'>cove</a> <a target='mainpane' href='volcanoisland.php'>vol</a><br><span class='title'>]]..lairlink..[[</span></div>
 
@@ -424,7 +424,7 @@ $("#mrulist").change(function() {
   <div class='abc'>
     <span class='title'><a target='mainpane' href='place.php?whichplace=desertbeach'>beach</a> <a target='mainpane' href='island.php'>islnd</a></span>
     <div class='child'>
-      <a target='mainpane' href='pyramid.php' class="l11">pyr</a>
+      <a target='mainpane' href='place.php?whichplace=pyramid' class="l11">pyr</a>
        <a target='mainpane' href='bordertown.php'>border</a><br>
       <a target='mainpane' href='cove.php'>cove</a> <a target='mainpane' href='volcanoisland.php'>vol</a>
       <a target='mainpane' href='lair.php' class="l13">lair</a>

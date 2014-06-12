@@ -227,7 +227,7 @@ function get_automation_tasks(script, cached_stuff)
 				return {
 					hide_message = true,
 					message = "do_8bit_realm",
-					fam = "Stocking Mimic",
+					familiar = "Stocking Mimic",
 					olfact = "Blooper",
 					equipment = { acc1 = "continuum transfunctioner" },
 					action = function()
@@ -243,7 +243,7 @@ function get_automation_tasks(script, cached_stuff)
 
 	t.yellow_ray_sleepy_mariachi = {
 		message = "yellow ray sleepy mariachi",
-		fam = "He-Boulder",
+		familiar = "He-Boulder",
 		minmp = 10,
 		action = function()
 			script.get_faxbot_fax("sleepy mariachi")
@@ -288,7 +288,7 @@ mark m_done
 		end
 		return {
 			message = "sewerlevel to lvl 6",
-			fam = "Frumious Bandersnatch",
+			familiar = "Frumious Bandersnatch",
 			buffs = { "Springy Fusilli", "Spirit of Garlic", "Pisces in the Skyces" },
 			maybe_buffs = { "Mental A-cue-ity" },
 			minmp = 70,
@@ -371,7 +371,7 @@ mark m_done
 			else
 				return {
 					message = "get bridge parts (" .. pieces .. ")",
-					fam = "Slimeling",
+					familiar = "Slimeling",
 					buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
 					bonus_target = { "item" },
 					minmp = 35,
@@ -417,7 +417,7 @@ mark m_done
 		end
 		return {
 			message = "do oil peak",
-			fam = "Baby Bugged Bugbear",
+			familiar = "Baby Bugged Bugbear",
 			buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "A Few Extra Pounds", "Ur-Kel's Aria of Annoyance" },
 			bonus_target = { "monster level" },
 			minmp = 60,
@@ -518,7 +518,7 @@ mark m_done
 			script.prepare_physically_resistant()
 			return {
 				message = string.format("do a-boo peak (%d%% haunted)", hauntedness),
-				fam = "Slimeling",
+				familiar = "Slimeling",
 				buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
 				bonus_target = { "item", "extraitem" },
 				minmp = 50,
@@ -534,7 +534,7 @@ mark m_done
 -- 		-- TODO: boost item drops & noncombats, sniff either topiary
 		return {
 			message = "solve twin peak mystery",
-			fam = "Slimeling",
+			familiar = "Slimeling",
 			buffs = { "Fat Leon's Phat Loot Lyric", "Astral Shell", "Elemental Saucesphere" },
 			bonus_target = { "noncombat", "item" },
 			minmp = 50,
@@ -778,13 +778,20 @@ mark m_done
 		towerfarming["barbed-wire fence"] = shore_item_crate("ski resort souvenir crate")
 		towerfarming["frigid ninja stars"] = { zone = "Lair of the Ninja Snowmen" }
 		towerfarming["meat vortex"] = { zone = "The Valley of Rof L'm Fao" }
-		towerfarming["spider web"] = { zone = "The Sleazy Back Alley" } -- TODO: +combat%, noncombat choices
-		towerfarming["fancy bath salts"] = { zone = "The Haunted Bathroom" } -- TODO: +combat%, noncombat choices
+		towerfarming["spider web"] = { zone = "The Sleazy Back Alley", want_combat = true } -- TODO: noncombat choices
+		towerfarming["fancy bath salts"] = { zone = "The Haunted Bathroom", want_combat = true } -- TODO: noncombat choices
+		towerfarming["razor-sharp can lid"] = { zone = "The Haunted Pantry", want_combat = true } -- TODO: noncombat choices
 		towerfarming["NG"] = NG_farming()
 		towerfarming["leftovers of indeterminate origin"] = clover_zone("The Haunted Kitchen")
 		if estimate_bonus("Item Drops from Monsters") >= 200 then
 			towerfarming["sonar-in-a-biscuit"] = { zone = "The Batrat and Ratbat Burrow" }
 			towerfarming["disease"] = { zone = "Cobb's Knob Harem" } -- TODO: YR/banish?
+			if not have_item("black picnic basket") then
+				towerfarming["black pepper"] = { zone = "The Black Forest", want_combat = true } -- TODO: noncombat choices
+			end
+		end
+		if have_item("sonar-in-a-biscuit") then
+			towerfarming["baseball"] = clover_zone("Guano Junction")
 		end
 
 		local farmdata = towerfarming[item]
@@ -792,11 +799,15 @@ mark m_done
 			if farmdata.f then
 				return farmdata.f()
 			else
+				local bonus_target = { "item", "extraitem" }
+				if farmdata.want_combat then
+					bonus_target = { "combat", "item", "extraitem" }
+				end
 				return {
 					message = "farm " .. item,
-					fam = "Slimeling",
+					familiar = "Slimeling",
 					buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
-					bonus_target = { "item", "extraitem" },
+					bonus_target = bonus_target,
 					minmp = 50,
 					action = adventure {
 						zone = farmdata.zone,
@@ -829,10 +840,10 @@ mark m_done
 					noncombats = {
 						["One Mahogany Nightstand"] = "Check the top drawer",
 						["One Ornate Nightstand"] = "Look under the nightstand",
-						["One Rustic Nightstand"] = "Investigate the jewelry",
+						--["One Rustic Nightstand"] = "Investigate the jewelry",
+						["One Rustic Nightstand"] = "Check the top drawer",
 						["One Elegant Nightstand"] = "Open the single drawer",
 						["One Simple Nightstand"] = "Check the bottom drawer",
-						["Lights Out in the Bedroom"] = "Flee",
 					},
 					macro_function = macro_noodlecannon,
 				}
@@ -857,13 +868,12 @@ mark m_done
 		when = not have_item("Spookyraven billiards room key"),
 		task = {
 			message = "get billiards room key",
-			fam = "Exotic Parrot",
+			familiar = "Exotic Parrot",
 			buffs = { "Astral Shell", "Elemental Saucesphere" },
 			maybe_buffs = { "Protection from Bad Stuff" },
 			minmp = 15,
 			action = adventure {
 				zone = "The Haunted Kitchen",
-				noncombats = { ["Lights Out in the Kitchen"] = "Refuse to Take the Heat" },
 				macro_function = macro_noodlecannon,
 			}
 		},
@@ -874,7 +884,7 @@ mark m_done
 			have_item("Spookyraven billiards room key"),
 		task = {
 			message = "get library key",
-			fam = "Slimeling",
+			familiar = "Slimeling",
 			minmp = 25,
 			maybe_buffs = { "Chalky Hand" },
 			bonus_target = { "noncombat" },
@@ -895,7 +905,10 @@ mark m_done
 			minmp = 35,
 			action = adventure {
 				zone = "The Haunted Library",
-				noncombats = { ["Take a Look, it's in a Book!"] = "Reading is for losers.  I'm outta here." },
+				noncombats = {
+					["Take a Look, it's in a Book!"] = "Reading is for losers.  I'm outta here.",
+					["Melvil Dewey Would Be Ashamed"] = "Leave without taking anything",
+				},
 				macro_function = macro_noodlecannon,
 			}
 		}
@@ -912,6 +925,118 @@ mark m_done
 				did_action = not quest_text("Take the necklace to Lady Spookyraven")
 			end,
 		}
+	}
+
+	t.see_lady_spookyraven = {
+		when = quest("Lady Spookyraven's Dance") and (quest_text("Go see Lady Spookyraven") or quest_text("Go back to")),
+		task = {
+			message = "Go see Lady Spookyraven",
+			nobuffing = true,
+			action = function()
+				get_page("/place.php", { whichplace = "manor2", action = "manor2_ladys" })
+				refresh_quest()
+				did_action = not quest_text("Go see Lady Spookyraven") and not quest_text("Go back to")
+			end,
+		}
+	}
+
+	t.a_pyramid_scheme = {
+		when = quest("A Pyramid Scheme"),
+		task = function()
+			local pyramidpt = get_page("/place.php", { whichplace = "pyramid" })
+			if not pyramidpt:contains("Middle Chamber") then
+				stop "TODO: check pyramid quest thing"
+				return {
+					message = "unlock middle chamber",
+					bonus_target = { "noncombat", "extranoncombat" },
+					buffs = { "Spirit of Garlic" },
+					minmp = 45,
+					action = adventure {
+						zone = "The Upper Chamber",
+						macro_function = macro_noodleserpent,
+					},
+					after_action = function()
+						if get_result():contains(">Down Dooby-Doo Down Down<") then
+							did_action = true
+						end
+					end,
+				}
+			elseif quest_text("Explore the Middle Chamber") or quest_text("Keep exploring the Middle Chamber") then
+				return {
+					message = "explore middle chamber",
+					bonus_target = { "item", "noncombat" },
+					familiar = "Slimeling",
+					buffs = { "Spirit of Garlic" },
+					minmp = 45,
+					action = adventure {
+						zone = "The Middle Chamber",
+						macro_function = macro_noodleserpent,
+					},
+					after_action = function()
+						if get_result():contains(">Further Down Dooby-Doo Down Down<") or get_result():contains(">Under Control<") then
+							did_action = true
+						end
+					end,
+				}
+			elseif quest_text("Solve the mystery of the Lower Chambers") and pyramidpt:contains("action=pyramid_state1a") then
+				if turns_to_next_sr < 7 then return end
+				local minmp = 100
+				if maxmp() >= 200 then
+					minmp = 150
+				end
+				return {
+					message = "fight ed",
+					buffs = { "Spirit of Garlic", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" },
+					maybe_buffs = { "Mental A-cue-ity" },
+					minmp = minmp,
+					familiar = "Frumious Bandersnatch",
+					action = function()
+						result, resulturl = get_page("/place.php", { whichplace = "pyramid", action = "pyramid_state1a" })
+						result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
+						while get_result():contains([[<!--WINWINWIN-->]]) and get_result():contains([[fight.php]]) do
+							result, resulturl = get_page("/fight.php")
+							result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
+						end
+						did_action = have_item("Holy MacGuffin")
+					end
+				}
+
+
+			elseif quest_text("Solve the mystery of the Lower Chambers") then
+				local turns_required = 0
+				local assumed_position = tonumber(pyramidpt:match("action=pyramid_state([1-5])"))
+				local function move_to(where)
+					while assumed_position ~= where do
+						turns_required = turns_required + 1
+						assumed_position = (assumed_position % 5) + 1
+					end
+				end
+				if not have_item("ancient bomb") then
+					if not have_item("ancient bronze token") then
+						move_to(4)
+					end
+					move_to(3)
+				end
+				move_to(1)
+				if count_item("tomb ratchet") + count_item("crumbling wooden wheel") < turns_required then
+					local need = turns_required - count_item("tomb ratchet") - count_item("crumbling wooden wheel")
+					return {
+						message = "get " .. need .. " crumbling wooden wheels",
+						bonus_target = { "noncombat", "extranoncombat" },
+						buffs = { "Spirit of Garlic" },
+						minmp = 45,
+						action = adventure {
+							zone = "The Upper Chamber",
+							macro_function = macro_noodleserpent,
+						},
+					}
+				else
+					stop "TODO: unlock ed's tomb"
+				end
+			else
+				stop "TODO: do pyramid"
+			end
+		end,
 	}
 
 	return t
