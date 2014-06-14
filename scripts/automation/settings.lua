@@ -69,6 +69,7 @@ function get_ascension_automation_settings(want_bonus)
 			"Squat-Thrust Magazine",
 			"O'RLY manual",
 			"Ye Olde Bawdy Limerick",
+			"crate of firebombs",
 		},
 		use_except_one = {
 			"large box",

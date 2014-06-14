@@ -20,6 +20,7 @@ endif
 ]]
 	end
 	local petemug = ""
+	local banish = ""
 	if ascensionpath("Avatar of Sneaky Pete") then
 		if mname:match("^oil ") or mname:contains("nightstand") then
 		elseif automation_sneaky_pete_want_hate() then
@@ -37,6 +38,7 @@ endif
 
 ]]
 		end
+		banish = pete_banish()
 	end
 	return [[
 
@@ -53,7 +55,7 @@ if (monstername clingy pirate) && (hascombatitem cocktail napkin)
   use cocktail napkin
 endif
 
-]] .. petemug
+]] .. petemug .. banish
 
 end
 
@@ -76,6 +78,22 @@ if hasskill Make Friends
   cast Make Friends
 endif
 
+]]
+end
+
+function pete_banish()
+	return [[
+if (monstername Buzzy Beetle) || (monstername pygmy witch lawyer) || (monstername senile lihc) || (monstername chatty pirate) || (monstername bookbat) || (monstername A.M.C. gremline) || (monstername Box) || (monstername Trouser Snake)
+	if hasskill Walk Away From Explosion
+		cast Walk Away From Explosion
+	endif
+endif 
+
+if (monstername Buzzy Beetle) || (monstername pygmy witch lawyer) || (monstername slick lihc) || (monstername crusty pirate) || (monstername bookbat) || (monstername A.M.C. gremline) || (monstername Box) || (monstername Trouser Snake)
+	if (hascombatitem smoke grenade)
+		use smoke grenade
+	endif
+endif
 ]]
 end
 
