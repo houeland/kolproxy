@@ -888,7 +888,8 @@ mark m_done
 
 	t.get_library_key = {
 		when = not have_item("Spookyraven library key") and
-			have_item("Spookyraven billiards room key"),
+			have_item("Spookyraven billiards room key") and
+			drunkenness() < 15,
 		task = {
 			message = "get library key",
 			familiar = "Slimeling",
