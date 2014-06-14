@@ -3791,7 +3791,36 @@ endif
 			script.ensure_mp(15)
 			cast_skill("Egg Man")
 		end
-		if not have_item("Azazel's lollipop") then
+		if not have_item("Azazel's unicorn") then
+			if count_item("bus pass") >= 5 and (count_item("sponge cake") + count_item("comfy pillow") + count_item("booze-soaked cherry")) >= 2 and (count_item("gin-soaked blotter paper") + count_item("giant marshmallow") + count_item("beer-scented teddy bear")) >= 2 then
+				inform "solve sven golly"
+				local bognort = have_item("giant marshmallow") and "giant marshmallow" or "gin-soaked blotter paper"
+				local stinkface = have_item("beer-scented teddy bear") and "beer-scented teddy bear" or "gin-soaked blotter paper"
+				local flargwurm = have_item("booze-soaked cherry") and "booze-soaked cherry" or "sponge cake"
+				local jim = have_item("comfy pillow") and "comfy pillow" or "sponge cake"
+				async_post_page("/pandamonium.php", { action = "sven", preaction = "help" })
+				async_post_page("/pandamonium.php", { action = "sven", bandmember = "Bognort", togive = get_itemid(bognort), preaction = "try" })
+				async_post_page("/pandamonium.php", { action = "sven", bandmember = "Stinkface", togive = get_itemid(stinkface), preaction = "try" })
+				async_post_page("/pandamonium.php", { action = "sven", bandmember = "Flargwurm", togive = get_itemid(flargwurm), preaction = "try" })
+				result, resulturl = post_page("/pandamonium.php", { action = "sven", bandmember = "Jim", togive = get_itemid(jim), preaction = "try" })
+				did_action = have_item("Azazel's unicorn")
+			else
+				if count_item("bus pass") < 5 then
+				function macro_backstage()
+					return [[
+]] .. macro_smash_and_graagh .. [[
+
+
+]] .. macro_ppnoodlecannon()
+				end
+					script.bonus_target { "item", "noncombat" }
+					go("sven golly, bus passes: " .. count_item("bus pass"), 243, macro_backstage, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
+				else
+					script.bonus_target { "noncombat" }
+					go("sven golly, getting items", 243, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)
+				end
+			end
+		elseif not have_item("Azazel's lollipop") then
 			if count_item("imp air") >= 5 and have_item("observational glasses") then
 				inform "solve mourn"
 				if not challenge then
@@ -3829,35 +3858,6 @@ mark m_done
 				else
 					script.bonus_target { "combat" }
 					go("mourn, getting bosses", 242, macro_laughfloor, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)
-				end
-			end
-		elseif not have_item("Azazel's unicorn") then
-			if count_item("bus pass") >= 5 and (count_item("sponge cake") + count_item("comfy pillow") + count_item("booze-soaked cherry")) >= 2 and (count_item("gin-soaked blotter paper") + count_item("giant marshmallow") + count_item("beer-scented teddy bear")) >= 2 then
-				inform "solve sven golly"
-				local bognort = have_item("giant marshmallow") and "giant marshmallow" or "gin-soaked blotter paper"
-				local stinkface = have_item("beer-scented teddy bear") and "beer-scented teddy bear" or "gin-soaked blotter paper"
-				local flargwurm = have_item("booze-soaked cherry") and "booze-soaked cherry" or "sponge cake"
-				local jim = have_item("comfy pillow") and "comfy pillow" or "sponge cake"
-				async_post_page("/pandamonium.php", { action = "sven", preaction = "help" })
-				async_post_page("/pandamonium.php", { action = "sven", bandmember = "Bognort", togive = get_itemid(bognort), preaction = "try" })
-				async_post_page("/pandamonium.php", { action = "sven", bandmember = "Stinkface", togive = get_itemid(stinkface), preaction = "try" })
-				async_post_page("/pandamonium.php", { action = "sven", bandmember = "Flargwurm", togive = get_itemid(flargwurm), preaction = "try" })
-				result, resulturl = post_page("/pandamonium.php", { action = "sven", bandmember = "Jim", togive = get_itemid(jim), preaction = "try" })
-				did_action = have_item("Azazel's unicorn")
-			else
-				if count_item("bus pass") < 5 then
-				function macro_backstage()
-					return [[
-]] .. macro_smash_and_graagh .. [[
-
-
-]] .. macro_ppnoodlecannon()
-				end
-					script.bonus_target { "item", "noncombat" }
-					go("sven golly, bus passes: " .. count_item("bus pass"), 243, macro_backstage, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
-				else
-					script.bonus_target { "noncombat" }
-					go("sven golly, getting items", 243, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)
 				end
 			end
 		elseif not have_item("Azazel's tutu") then
