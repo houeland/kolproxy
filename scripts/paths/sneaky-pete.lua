@@ -1,3 +1,16 @@
+function retrieve_pete_friend()
+	if session["pete friend"] == nil then
+		local skillpt = get_page("/desc_skill.php", { whichskill = "15009" })
+		local friend = skillpt:match([[You recently made friends with a ([^<]+)]])
+		if friend then
+			session["pete friend"] = friend
+		else
+			session["pete friend"] = ""
+		end
+	end
+	return session["pete friend"]
+end
+
 function retrieve_motorcycle_status()
 	local pt = get_page("/main.php", { action = "motorcycle" })
 	local can_upgrade = not pt:contains("Carry on then.")
@@ -21,6 +34,14 @@ add_processor("/choice.php", function()
 	end
 	if text:contains("Carry on then.") and session["sneaky pete motorcycle can_upgrade"] then
 		session["sneaky pete motorcycle check"] = nil
+	end
+end)
+
+add_processor("/fight.php", function()
+	if not ascensionpath("Avatar of Sneaky Pete") then return end
+	if text:contains("impressed by your charm and panache that you become fast friends") then
+		print( "friendship detected with " .. monstername() )
+		session["pete friend"] = monstername()
 	end
 end)
 
