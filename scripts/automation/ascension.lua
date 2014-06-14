@@ -1574,7 +1574,6 @@ endif
 			nobuffing = true,
 			action = function()
 				cast_skill("Incite Riot")
-				use_item("crate of firebombs")
 				cached_stuff.used_sneaky_pete_incite_riot = true
 				did_action = true
 			end
