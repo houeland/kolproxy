@@ -4379,10 +4379,25 @@ endif
 		if have_item("broken wings") and have_item("sunken eyes") then
 			meatpaste_items("broken wings", "sunken eyes")()
 		end
-		go("do black forest", "The Black Forest", macro_noodleserpent, {
-			["All Over the Map"] = "Head toward the blackberry patch",
-			["You Found Your Thrill"] = "Attack the bushes",
-		}, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Reassembled Blackbird", 45)
+		local usefam = "Reassembled Blackbird"
+		if have_item("reassembled blackbird") or have_item("reconstituted crow") then
+			usefam = nil
+		end
+		return run_task {
+			message = "do black forest",
+			minmp = 45,
+			familiar = usefam,
+			buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" },
+			equipment = { acc1 = first_wearable { "blackberry galoshes" } },
+			action = adventure {
+				zone = "The Black Forest",
+				macro_function = macro_noodleserpent,
+				noncombats = { -- TODO: handle better
+					["All Over the Map"] = "Head toward the blackberry patch",
+					["You Found Your Thrill"] = "Attack the bushes",
+				},
+			}
+		}
 	end
 
 	function f.take_shore_trip()
@@ -4599,7 +4614,7 @@ endif
 					end
 				elseif count_item("snakehead charrrm") >= 2 then
 					inform "pasting talisman"
-					meatpaste_items("snakehead charrrm", "snakehead charrrm")
+					use_item("snakehead charrrm")
 					did_action = have_item("Talisman o' Nam")
 				elseif have_item("gaudy key") then
 					inform "using gaudy key"

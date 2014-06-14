@@ -161,7 +161,11 @@ end
 
 function display_number_8k_2M(n)
 	if n <= 8000 then
-		return tostring(n)
+		if n == math.floor(n) then
+			return string.format("%d", n)
+		else
+			return string.format("%.1f", n)
+		end
 	elseif n <= 2000000 then
 		return string.format("%.1fk", n / 1000)
 	else

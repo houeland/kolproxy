@@ -856,6 +856,13 @@ mark m_done
 				action = adventure {
 					zone = "The Haunted Gallery",
 					noncombats = { ["Out in the Garden"] = "None of the above" },
+					choice_function = function(advtitle, choicenum, pagetext)
+						if advtitle == "Out in the Garden" then
+							return "None of the above"
+						elseif pagetext:contains("Louvre It or Leave It") then
+							return navigate_to_louvre_reward("Lady Spookyraven's dancing shoes", advtitle, choicenum, pagetext)
+						end
+					end,
 					macro_function = macro_noodlecannon,
 				}
 			}
@@ -940,12 +947,23 @@ mark m_done
 		}
 	}
 
+	t.unlock_pyramid = {
+		when = quest_text("the Quest for the Holy MacGuffin") and have_item("Staff of Ed") and not quest("A Pyramid Scheme"),
+		task = {
+			message = "Use Staff of Ed",
+			nobuffing = true,
+			action = function()
+				get_page("/place.php", { whichplace = "desertbeach", action = "db_pyramid1" })
+				refresh_quest()
+				did_action = quest("A Pyramid Scheme")
+			end,
+		}
+	}
+
 	t.a_pyramid_scheme = {
 		when = quest("A Pyramid Scheme"),
 		task = function()
-			local pyramidpt = get_page("/place.php", { whichplace = "pyramid" })
-			if not pyramidpt:contains("Middle Chamber") then
-				stop "TODO: check pyramid quest thing"
+			if quest_text("Make your way into the depths") then
 				return {
 					message = "unlock middle chamber",
 					bonus_target = { "noncombat", "extranoncombat" },
@@ -978,46 +996,58 @@ mark m_done
 						end
 					end,
 				}
-			elseif quest_text("Solve the mystery of the Lower Chambers") and pyramidpt:contains("action=pyramid_state1a") then
-				if turns_to_next_sr < 7 then return end
-				local minmp = 100
-				if maxmp() >= 200 then
-					minmp = 150
-				end
-				return {
-					message = "fight ed",
-					buffs = { "Spirit of Garlic", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" },
-					maybe_buffs = { "Mental A-cue-ity" },
-					minmp = minmp,
-					familiar = "Frumious Bandersnatch",
-					action = function()
-						result, resulturl = get_page("/place.php", { whichplace = "pyramid", action = "pyramid_state1a" })
-						result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
-						while get_result():contains([[<!--WINWINWIN-->]]) and get_result():contains([[fight.php]]) do
-							result, resulturl = get_page("/fight.php")
-							result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
-						end
-						did_action = have_item("Holy MacGuffin")
-					end
-				}
-
-
 			elseif quest_text("Solve the mystery of the Lower Chambers") then
-				local turns_required = 0
-				local assumed_position = tonumber(pyramidpt:match("action=pyramid_state([1-5])"))
-				local function move_to(where)
-					while assumed_position ~= where do
-						turns_required = turns_required + 1
-						assumed_position = (assumed_position % 5) + 1
+				local pyramidpt = get_page("/place.php", { whichplace = "pyramid" })
+				if pyramidpt:contains("action=pyramid_state1a") then
+					if turns_to_next_sr < 7 then return end
+					local minmp = 100
+					if maxmp() >= 200 then
+						minmp = 150
 					end
+					return {
+						message = "fight ed",
+						buffs = { "Spirit of Garlic", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" },
+						maybe_buffs = { "Mental A-cue-ity" },
+						minmp = minmp,
+						familiar = "Frumious Bandersnatch",
+						action = function()
+							result, resulturl = get_page("/place.php", { whichplace = "pyramid", action = "pyramid_state1a" })
+							result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
+							while get_result():contains([[<!--WINWINWIN-->]]) and get_result():contains([[fight.php]]) do
+								result, resulturl = get_page("/fight.php")
+								result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
+							end
+							did_action = have_item("Holy MacGuffin")
+						end
+					}
 				end
-				if not have_item("ancient bomb") then
-					if not have_item("ancient bronze token") then
-						move_to(4)
+				local function pyramidstate(assumed_position)
+					local turns_required = 0
+					local first_action = nil
+					local function turn_to(where)
+						while assumed_position ~= where do
+							first_action = first_action or "turn"
+							turns_required = turns_required + 1
+							assumed_position = (assumed_position % 5) + 1
+						end
 					end
-					move_to(3)
+					local function head_down()
+						first_action = first_action or "head down"
+					end
+					if not have_item("ancient bomb") then
+						if not have_item("ancient bronze token") then
+							turn_to(4)
+							head_down()
+						end
+						turn_to(3)
+						head_down()
+					end
+					turn_to(1)
+					head_down()
+					return turns_required, first_action
 				end
-				move_to(1)
+				local current_position = tonumber(pyramidpt:match("action=pyramid_state([1-5])"))
+				local turns_required, first_action = pyramidstate(current_position)
 				if count_item("tomb ratchet") + count_item("crumbling wooden wheel") < turns_required then
 					local need = turns_required - count_item("tomb ratchet") - count_item("crumbling wooden wheel")
 					return {
@@ -1031,13 +1061,38 @@ mark m_done
 						},
 					}
 				else
-					stop "TODO: unlock ed's tomb"
+					return {
+						message = "using pyramid control room",
+						nobuffing = true,
+						action = function()
+							get_page("/place.php", { whichplace = "pyramid", action = "pyramid_control" })
+							if first_action == "turn" then
+								if have_item("crumbling wooden wheel") then
+									post_page("/choice.php", { pwd = session.pwd, whichchoice = 929, option = 1 }) -- use wheel
+								else
+									post_page("/choice.php", { pwd = session.pwd, whichchoice = 929, option = 2 }) -- use ratchet
+								end
+							elseif first_action == "head down" then
+								post_page("/choice.php", { pwd = session.pwd, whichchoice = 929, option = 5 }) -- head down
+							end
+							local new_pyramidpt = get_page("/place.php", { whichplace = "pyramid" })
+							if new_pyramidpt:contains("action=pyramid_state1a") then
+								did_action = true
+							else
+								local new_assumed_position = tonumber(new_pyramidpt:match("action=pyramid_state([1-5])"))
+								local new_turns_required, new_first_action = pyramidstate(new_assumed_position)
+								did_action = new_turns_required ~= turns_required or new_first_action ~= first_action
+							end
+						end,
+					}
 				end
 			else
-				stop "TODO: do pyramid"
+				critical "Unknown state while doing pyramid"
 			end
 		end,
 	}
+
+	t.tasklist_pyramid_quest = { t.unlock_pyramid, t.a_pyramid_scheme }
 
 	return t
 end

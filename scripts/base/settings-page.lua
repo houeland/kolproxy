@@ -376,9 +376,9 @@ add_interceptor("/custom-settings", function()
 			<link rel="stylesheet" type="text/css" href="http://images.kingdomofloathing.com/styles.css">
 			<style type="text/css">
 				.helpbox {
-				   width: 500px;
-				   border: 1px solid black;
-				   padding: 5px;
+					width: 500px;
+					border: 1px solid black;
+					padding: 5px;
 				}
 				.radiochoice {
 					padding: 10px;

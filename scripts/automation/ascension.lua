@@ -617,6 +617,12 @@ endif
 		end
 	end
 
+	local function add_tasklist(tbl)
+		for _, t in ipairs(tbl) do
+			add_task(t)
+		end
+	end
+
 	local DD_keys = countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") + count_item("fat loot token")
 	local real_DD_keys = DD_keys
 	if ascensionstatus() ~= "Hardcore" or cached_stuff.completed_daily_dungeon then
@@ -4859,7 +4865,7 @@ endif
 		end,
 	}
 
-	add_task(tasks.a_pyramid_scheme)
+	add_tasklist(tasks.tasklist_pyramid_quest)
 
 	add_task {
 		prereq = quest("Make War, Not... Oh, Wait") and

@@ -327,13 +327,13 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		table.insert(links, string.format([[<a href="%s">%s</a>]], modifier_maximizer_href { pwd = session.pwd, whichbonus = x }, x))
 	end
 
-	local contents = make_kol_html_frame("<table>" .. table.concat(equipmentlines, "\n") .. "</table><br><table>" .. table.concat(bufflines, "\n") .. "</table><br>" .. table.concat(script_links, "<br>") .. "<br><br>" .. table.concat(links, " | "), "Modifier maximizer (preview)")
+	local contents = make_kol_html_frame("<table>" .. table.concat(equipmentlines, "\n") .. "</table><br><table>" .. table.concat(bufflines, "\n") .. "</table><br>" .. table.concat(script_links, "<br>") .. "<br><br>" .. table.concat(links, " | "), "Modifier maximizer (" .. whichbonus .. ")")
 
-	return [[<html style="margin: 0px; padding: 0px;">
+	return [[<html>
 <head>
 <script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script>
 <script type="text/javascript" src="http://images.kingdomofloathing.com/scripts/window.20111231.js"></script>
 </head>
-<body style="margin: 0px; padding: 0px;">]] .. resultpt .. contents .. [[</body>
+<body>]] .. resultpt .. contents .. [[</body>
 </html>]], requestpath
 end)

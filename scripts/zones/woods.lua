@@ -272,9 +272,8 @@ add_always_adventure_warning(function(zoneid)
 end)
 
 -- black forest
-
 add_choice_text("All Over the Map", { -- choice adventure number: 923
-	["Head toward the blackberry patch"] = { text = "Fight blackberry bush or craft blackberry equipment" },
+	["Head toward the blackberry patch"] = { text = "Fight blackberry bush or craft blackberry galoshes" },
 	["Visit the blacksmith's cottage"] = { text = "Craft black armor" },
 	["Go to the black gold mine"] = { text = "Get black gold, Texas tea, or Black Lung" },
 	["Check out the black church"] = { text = "Get black kettle drum or +item% buff" },
@@ -282,7 +281,7 @@ add_choice_text("All Over the Map", { -- choice adventure number: 923
 
 add_choice_text("You Found Your Thrill", { -- choice adventure number: 924
 	["Attack the bushes"] = { text = "Fight blackberry bush" },
-	["Visit the cobbler's house"] = { text = "Craft blackberry equipment" },
+	["Visit the cobbler's house"] = { text = "Craft blackberry galoshes to speed up quest or other blackberry items" },
 })
 
 add_choice_text("Be Mine", { -- choice adventure number: 926
@@ -297,4 +296,3 @@ add_choice_text("Sunday Black Sunday", { -- choice adventure number: 927
 	["Dive into the orchestra pit"] = { getitem = "black kettle drum" },
 	["Sneak out the black back, black Jack"] = { text = "Go back" },
 })
-

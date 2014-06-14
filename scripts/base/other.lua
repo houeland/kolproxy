@@ -638,6 +638,7 @@ local automate_brushfire_href = add_automation_script("automate-brushfire", func
 	return text, url
 end)
 
+-- TODO: turn into an automation script?
 add_interceptor("/kolproxy-frame-page", function()
 	if params.pwd ~= session.pwd then return "", requestpath end
 	return [[<html style="margin: 0px; padding: 0px;"><head><script language=Javascript src="http://images.kingdomofloathing.com/scripts/jquery-1.3.1.min.js"></script></head><body style="margin: 0px; padding: 0px;"><iframe src="]] .. params.url .. [[" style="width: 100%; height: 100%; border: none; margin: 0px; padding: 0px;"></iframe></body></html>]], requestpath
