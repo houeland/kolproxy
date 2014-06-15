@@ -69,15 +69,20 @@ attack
 ]]
 end
 
-function cast_olfaction()
+function cast_olfaction(name)
+	if ascensionpath("Avatar of Sneaky Pete") and retrieve_pete_friend() == name then
+		return ""
+	end
 	return [[
 
-if hasskill Transcendent Olfaction
-  cast Transcendent Olfaction
-endif
+if monstername ]] .. name .. [[
+  if hasskill Transcendent Olfaction
+    cast Transcendent Olfaction
+  endif
 
-if hasskill Make Friends
-  cast Make Friends
+  if hasskill Make Friends
+    cast Make Friends
+  endif
 endif
 
 ]]
@@ -1097,11 +1102,7 @@ function make_sniff_macro(name, action)
 
 ]] .. maybe_stun_monster() .. [[
 
-if monstername ]] .. name .. [[
-
-]] .. cast_olfaction() .. [[
-
-endif
+]] .. cast_olfaction(name) .. [[
 
 ]] .. macro_killing_begins() .. [[
 
@@ -1214,15 +1215,9 @@ endwhile
 	return [[
 ]] .. COMMON_MACROSTUFF_START(25, 30) .. [[
 
-if monstername Blooper
+]] .. cast_olfaction("Blooper") .. [[
 
-
-]] .. cast_olfaction() .. [[
-
-
-endif
-
-]]..conditional_salve_action()..[[
+]] .. conditional_salve_action() .. [[
 
 ]] .. maybe_stun_monster(false) .. [[
 
@@ -1604,19 +1599,7 @@ function macro_orc_chasm()
   local maybetrail = ""
 
   if false then
-    maybetrail = [[
-
-if monstername xxx pr0n
-
-
-]] .. cast_olfaction() .. [[
-
-
-endif
-
-
-]]
-
+    maybetrail = cast_olfaction("xxx pr0n") 
   end
 
   return [[
