@@ -55,7 +55,9 @@ if (monstername clingy pirate) && (hascombatitem cocktail napkin)
   use cocktail napkin
 endif
 
-]] .. petemug .. banish
+]] .. petemug .. [[
+
+]] .. banish
 
 end
 

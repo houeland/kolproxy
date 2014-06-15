@@ -594,20 +594,18 @@ function get_automation_scripts(cached_stuff)
 		-- TODO: don't use wallets on fist path
 		for w in table.values(use_items) do
 			if have_item(w) then
-				if count_item(w) >= 100 then
-					stop("Somehow have 100+ of " .. tostring(w) .. " when trying to use items")
+				if count_item(w) < 20 then
+					set_result(use_item(w))
+					did_action = true
 				end
-				set_result(use_item(w))
-				did_action = true
 			end
 		end
 		for w in table.values(use_except_one) do
 			if count_item(w) >= 2 then
-				if count_item(w) >= 100 then
-					stop("Somehow have 100+ of " .. tostring(w) .. " when trying to use items")
+				if count_item(w) < 20 then
+					set_result(use_item(w))
+					did_action = true
 				end
-				set_result(use_item(w))
-				did_action = true
 			end
 		end
 

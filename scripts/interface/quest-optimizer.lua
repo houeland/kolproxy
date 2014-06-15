@@ -240,7 +240,7 @@ quest_optimizer_href = add_automation_script("custom-quest-optimizer", function(
 #lvl12quest { border-collapse: collapse }
 #lvl12quest td { padding: 0px 5px }
 .tr_divider td { border-bottom: thin solid black }
-.tr_edited .td_value { background-color: orchid }
+.tr_edited .td_value { background-color: mediumaquamarine }
 </style>
 </head>
 <body>]] .. contents .. [[</body>
