@@ -203,9 +203,9 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 			end
 		end
 		if equipment()[where] == itemid then
-			table.insert(equipmentlines, string.format([[<tr style="color: gray"><td>%s</td><td>%s (%+d)</td><td>%s</td></tr>]], slot, item.name, item.score, extra))
+			table.insert(equipmentlines, string.format([[<tr style="color: gray"><td>%s</td><td>%s</td><td>%s (%+d)</td><td>%s</td></tr>]], slot, item.name, item.name, item.score, extra))
 		else
-			table.insert(equipmentlines, string.format([[<tr style="color: green"><td>%s</td><td><a href="%s" style="color: green">%s</a> (%+d)</td><td>%s</td></tr>]], slot, modifier_maximizer_href { pwd = session.pwd, whichbonus = params.whichbonus, equip_itemname = item.name, equip_slot = where }, item.name, item.score, extra))
+			table.insert(equipmentlines, string.format([[<tr><td>%s</td><td style="color: gray">%s</td><td><a href="%s" style="color: green">%s</a> (%+d)</td><td>%s</td></tr>]], slot, maybe_get_itemname(equipment()[where]) or "", modifier_maximizer_href { pwd = session.pwd, whichbonus = params.whichbonus, equip_itemname = item.name, equip_slot = where }, item.name, item.score, extra))
 		end
 	end
 
@@ -327,7 +327,7 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		table.insert(links, string.format([[<a href="%s">%s</a>]], modifier_maximizer_href { pwd = session.pwd, whichbonus = x }, x))
 	end
 
-	local contents = make_kol_html_frame("<table>" .. table.concat(equipmentlines, "\n") .. "</table><br><table>" .. table.concat(bufflines, "\n") .. "</table><br>" .. table.concat(script_links, "<br>") .. "<br><br>" .. table.concat(links, " | "), "Modifier maximizer (" .. whichbonus .. ")")
+	local contents = make_kol_html_frame("<table><thead><tr><th>slot</th><th>current</th><th>suggested</th></tr></thead><tbody>" .. table.concat(equipmentlines, "\n") .. "</tbody></table><br><table>" .. table.concat(bufflines, "\n") .. "</table><br>" .. table.concat(script_links, "<br>") .. "<br><br>" .. table.concat(links, " | "), "Modifier maximizer (" .. whichbonus .. ")")
 
 	return [[<html>
 <head>
