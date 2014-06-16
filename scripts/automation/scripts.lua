@@ -4269,7 +4269,7 @@ endif
 	end
 
 	function f.unlock_top_floor()
-		castlego(script.unlock_ground_floor, "unlock top floor", 323, macro_noodleserpent, {}, { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
+		go("unlock top floor", 323, macro_noodleserpent, {}, { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
 			if advtitle == "There's No Ability Like Possibility" then
 				return "Go out the Way You Came In"
 			elseif advtitle == "Putting Off Is Off-Putting" then
@@ -4286,10 +4286,25 @@ endif
 	function f.unlock_ground_floor()
 		-- TODO: Wear amulet/umbrella
 		script.bonus_target { "noncombat", "item" }
-		go("unlock ground floor", 322, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
+		local ground_outfit = {}
+		if session["giant gym ready"] and have_item("amulet of extreme plot significance") then
+			print "getting significant"
+			ground_outfit =  { acc3 = "amulet of extreme plot significance" }
+		end
+		if session["giant furry ready"] and have_item("titanium assault umbrella") then
+			print "copying the penguin"
+			ground_outfit =  { weapon = "titanium assault umbrella" }
+		end
+		go("unlock ground floor", 322, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { equipment = ground_outfit, choice_function = function(advtitle, choicenum)
 			if advtitle == "You Don't Mess Around with Gym" then
+				session["giant gym ready"] = false
 				if have_equipped_item("amulet of extreme plot significance") then
+					print "Checking out mirror"
 					return "Check out the Mirror"
+				elseif have_item("amulet of extreme plot significance") then
+					print "Leaving through window"
+					session["giant gym ready"] = true
+					return "Leave through the Basement Window"
 				elseif not have_item("massive dumbbell") then
 					return "Grab a Dumbbell"
 				else
@@ -4302,7 +4317,15 @@ endif
 					return "Crawl through the Heating Vent"
 				end
 			elseif advtitle == "The Fast and the Furry-ous" then
-				return "Crawl Through the Heating Duct"
+				session["giant furry ready"] = false
+				if have_equipped_item('titanium assault umbrella') then
+					return "Crawl Through the Heating Duct"
+				elseif have_item('titanium assault umbrella') then
+					session["giant furry ready"] = true
+					return "Leave Through a Mousehole"
+				else
+					return "Crawl Through the Heating Duct"
+				end
 			end
 		end})
 	end
@@ -4312,9 +4335,38 @@ endif
 			stop "STOPPED: Ascension script option set to do castle quest manually"
 		end
 
+		refresh_quest()
+		print "Choosing castle quest step:"
+		if quest_text("find the source of the giant garbage") then
+			print "-- chose ground floor"
+			script.unlock_ground_floor()
+			return
+		elseif quest_text("Find some way to get on top of the kitchen counter") and not quest_text("Maybe you can get to it from above?") then
+			print "-- chose middle floor"
+			script.unlock_top_floor()
+			return
+		elseif quest_text("tell them you took care of the garbage problem") and not did_action and not locked() then
+			print "finished garbage quest!"
+			get_page("/council.php")
+			refresh_quest()
+			did_action = not quest("The Rain on the Plains is Mainly Garbage")
+			return
+		end
+		-- Else do the top floor stuff
+		-- Maybe: elseif quest("Maybe you can get to it from above?")
+
+		local top_outfit = {}
+		print "-- chose top floor?"
+		if have_item("Mohawk wig") then
+			print "getting punky"
+			top_outfit =  {hat = "Mohawk wig"}
+		end
+
+
 		script.bonus_target { "noncombat", "item" }
-		castlego(script.unlock_top_floor, "finish castle quest", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 50, { choice_function = function(advtitle, choicenum)
+		go("finish castle quest", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 50, { equipment = ground_outfit, choice_function = function(advtitle, choicenum)
 			if advtitle == "Copper Feel" then
+				print "copper feel"
 				if not have_item("steam-powered model rocketship") then
 					return "Investigate the Whirligigs and Gimcrackery"
 				elseif have_item("model airship") then
@@ -4323,6 +4375,7 @@ endif
 					return "Go through the Crack"
 				end
 			elseif advtitle == "Melon Collie and the Infinite Lameness" then
+				print "melon collie"
 				if have_item("model airship") or not have_item("steam-powered model rocketship") then
 					return "Gimme Steam"
 				elseif have_item("drum 'n' bass 'n' drum 'n' bass record") then
@@ -4331,43 +4384,44 @@ endif
 					return "End His Suffering"
 				end
 			elseif advtitle == "Yeah, You're for Me, Punk Rock Giant" then
-				return "Look Behind the Poster"
+				print "punk rock"
+				if have_equipped_item("Mohawk wig") then
+					return "Get the Punk's Attention"
+				else
+					return "Look Behind the Poster"
+				end
 			elseif advtitle == "Flavor of a Raver" then
-				if not have_item("drum 'n' bass 'n' drum 'n' bass record") then
+				print "raver"
+				if have_equipped_item("Mohawk wig") then
+					return "Check Behind the Poster"
+				elseif not have_item("drum 'n' bass 'n' drum 'n' bass record") then
 					return "Raid the Crate"
 				else
 					return "Pick a Fight"
 				end
 			elseif advtitle == "Keep On Turnin' the Wheel in the Sky" then
+				print "Spin that wheeeeeeeeel!"
 				return "Spin That Wheel, Giants Get Real"
 			end
-		end})
-		if not did_action and not locked() then
-			get_page("/council.php")
-			refresh_quest()
-			did_action = not quest("The Rain on the Plains is Mainly Garbage")
-		end
+		end})		
 	end
 
+	-- Assume this is only called when castle is complete
 	function f.unlock_hits()
 		if ascension_script_option("manual castle quest") then
 			stop "STOPPED: Ascension script option set to do castle quest manually"
 		end
 
 		script.bonus_target { "noncombat", "item" }
-		castlego(script.unlock_top_floor, "unlock hits", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
+		go("unlock hits", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
 			if advtitle == "Copper Feel" then
 				return "Investigate the Whirligigs and Gimcrackery"
 			elseif advtitle == "Melon Collie and the Infinite Lameness" then
 				return "Gimme Steam"
 			elseif advtitle == "Yeah, You're for Me, Punk Rock Giant" then
-				return "Look Behind the Poster"
+				return "Check behind the trash can"
 			elseif advtitle == "Flavor of a Raver" then
-				if not have_item("drum 'n' bass 'n' drum 'n' bass record") then
-					return "Raid the Crate"
-				else
-					return "Pick a Fight"
-				end
+				return "Check Behind the Poster"
 			end
 		end })
 	end

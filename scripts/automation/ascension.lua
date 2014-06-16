@@ -4484,7 +4484,7 @@ endif
 				end
 				return result, resulturl, did_action
 			end
-			script.bonus_target { "noncombat", "extranoncombat" }
+			script.bonus_target { "noncombat", "extranoncombat", "item" }
 
 			if not have_item("S.O.C.K.") then
 				script.go("do airship", 81, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Ur-Kel's Aria of Annoyance", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "Slimeling even in fist", 35, { choice_function = function(advtitle, choicenum)
