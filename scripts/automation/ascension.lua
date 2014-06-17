@@ -3367,6 +3367,11 @@ endwhile
 		}
 	}
 
+
+	-- Prioritize getting library key, due to drunkeness window
+	add_task(tasks.get_billiards_room_key)
+	add_task(tasks.get_library_key)
+
 	add_task {
 		prereq = level() >= 6 and quest("The Goblin Who Wouldn't Be King") and quest_text("haven't figured out how to decrypt it yet"),
 		f = script.unlock_cobbs_knob,
@@ -3956,8 +3961,7 @@ endif
 		}
 	}
 
-	add_task(tasks.get_billiards_room_key)
-	add_task(tasks.get_library_key)
+	-- Getting billiard and library key is a high priority due to liver interaction
 	add_task(tasks.find_lady_spookyravens_necklace)
 	add_task(tasks.take_necklace_to_lady_spookyraven)
 	add_task(tasks.see_lady_spookyraven)
@@ -4806,22 +4810,6 @@ endif
 	}
 
 	add_task {
-		prereq = (level() + level_progress() < 11.75) or (challenge == "boris" and level() < 12),
-		f = do_powerleveling,
-		message = "level to 12",
-	}
-
-	add_task {
-		prereq = (challenge == "fist" or challenge == "boris") and basemysticality() < 70 and level() >= 12,
-		f = script.do_mysticality_powerleveling,
-	}
-
-	add_task {
-		prereq = challenge and basemoxie() < 70 and level() >= 12,
-		f = script.do_moxie_powerleveling,
-	}
-
-	add_task {
 		prereq = quest("In a Manor of Spooking"),
 		f = script.do_manor_of_spooking,
 	}
@@ -4848,6 +4836,23 @@ endif
 			end
 		end,
 	}
+
+	add_task {
+		prereq = (level() + level_progress() < 11.75) or (challenge == "boris" and level() < 12),
+		f = do_powerleveling,
+		message = "level to 12",
+	}
+
+	add_task {
+		prereq = (challenge == "fist" or challenge == "boris") and basemysticality() < 70 and level() >= 12,
+		f = script.do_mysticality_powerleveling,
+	}
+
+	add_task {
+		prereq = challenge and basemoxie() < 70 and level() >= 12,
+		f = script.do_moxie_powerleveling,
+	}
+
 
 	add_task {
 		prereq =
