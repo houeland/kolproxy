@@ -89,15 +89,28 @@ endif
 ]]
 end
 
+
+-- Bottom two lists are for banishing two monsters in a zone
 function pete_banish()
 	return [[
-if (monstername Buzzy Beetle) || (monstername pygmy witch lawyer) || (monstername senile lihc) || (monstername chatty pirate) || (monstername bookbat) || (monstername A.M.C. gremline) || (monstername Box) || (monstername Trouser Snake)
+	
+if (monstername animated mahogany nightstand) || (monstername Bullet Bill) || (monstername pygmy witch lawyer) || (monstername pygmy orderlies) || (monstername bookbat) || (monstername A.M.C. gremline) || (monstername Box) || (monstername Trouser Snake)
 	if hasskill Walk Away From Explosion
 		cast Walk Away From Explosion
 	endif
+
+	if (hascombatitem smoke grenade)
+		use smoke grenade
+	endif
 endif 
 
-if (monstername Buzzy Beetle) || (monstername pygmy witch lawyer) || (monstername slick lihc) || (monstername crusty pirate) || (monstername bookbat) || (monstername A.M.C. gremline) || (monstername Box) || (monstername Trouser Snake)
+if (monstername senile lihc) || (monstername chatty pirate) || (monstername mad wino) || (monstername plaid ghost)
+	if hasskill Walk Away From Explosion
+		cast Walk Away From Explosion
+	endif
+endif
+
+if (monstername slick lihc) || (monstername crusty pirate) || (monstername skeletal sommelier) || (monstername possessed laundry press)
 	if (hascombatitem smoke grenade)
 		use smoke grenade
 	endif
