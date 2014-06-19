@@ -2595,6 +2595,8 @@ mark m_done
 					noncombats = { ["Legend of the Temple in the Hidden City"] = "Open the door" },
 				}
 			}
+		elseif have_item("book of matches") and not citypt:contains("Hidden Tavern") then
+			use_item("book of matches")
 		elseif citypt:contains("Hidden Apartment Building") and citypt:contains("Hidden Hospital") and citypt:contains("Hidden Office Building") and citypt:contains("Hidden Bowling Alley") then
 			local spherecount = count_item("scorched stone sphere") + count_item("moss-covered stone sphere") + count_item("crackling stone sphere") + count_item("dripping stone sphere")
 
@@ -2652,6 +2654,9 @@ mark m_done
 				}
 			elseif not have_item("scorched stone sphere") then
 				-- sniff pygmy bowler?
+				if citypt:contains("Hidden Tavern") and not have_item("Bowl of Scorpions") and meat() > 2000 then
+					shop_buy_item("Bowl of Scorpions", "hiddentavern")
+				end
 				script.bonus_target { "item" }
 				return run_task {
 					message = "do bowling alley",
@@ -2685,6 +2690,14 @@ mark m_done
 				critical "Should have all hidden city spheres"
 			end
 		elseif can_wear_weapons() and not have_item("antique machete") then
+			local function choose() 
+				if ascension["knocked over dumpster"] then
+					return "Dig through the dumpster"
+				else 
+					ascension["knocked over dumpster"] = true
+					return "Knock over the dumpster"
+				end
+			end
 			return run_task {
 				message = "get antique machete",
 				buffs = { "Smooth Movements", "The Sonata of Sneakiness" },
@@ -2694,7 +2707,7 @@ mark m_done
 					zone = "The Hidden Park",
 					macro_function = macro_noodleserpent,
 					noncombats = {
-						["Where Does The Lone Ranger Take His Garbagester?"] = "Knock over the dumpster",
+						["Where Does The Lone Ranger Take His Garbagester?"] = choose(),
 					}
 				}
 			}
