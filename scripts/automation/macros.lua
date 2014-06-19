@@ -1312,8 +1312,9 @@ function macro_noodlecannon()
 
 ]] .. macro_killing_begins() .. [[
 
-while !times 10
+while !times 11
 ]] .. cannon_action() .. [[
+
 endwhile
 
 if monstername mobile armored sweat lodge
