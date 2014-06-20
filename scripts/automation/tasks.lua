@@ -830,7 +830,14 @@ mark m_done
 					macro_function = macro_noodlecannon,
 				}
 			}
-		elseif not have_item("Lady Spookyraven's finest gown") then
+		elseif not have_item("Lady Spookyraven's finest gown") or (not have_item("Lord Spookyraven's spectacles")) or (not have_item("disposable instant camera")) then
+			if not have_item("Lord Spookyraven's spectacles") then
+				ornate_option = "Look behind the nightstand"
+			elseif not have_item("disposable instant camera") then
+				ornate_option = "Look under the nightstand"
+			else
+				ornate_option = "Open the top drawer"
+			end
 			return {
 				message = "get Lady Spookyraven's finest gown",
 				minmp = 35,
@@ -839,7 +846,7 @@ mark m_done
 					zone = "The Haunted Bedroom",
 					noncombats = {
 						["One Mahogany Nightstand"] = "Check the top drawer",
-						["One Ornate Nightstand"] = "Look under the nightstand",
+						["One Ornate Nightstand"] = ornate_option,
 						--["One Rustic Nightstand"] = "Investigate the jewelry",
 						["One Rustic Nightstand"] = "Check the top drawer",
 						["One Elegant Nightstand"] = "Open the single drawer",

@@ -2485,23 +2485,57 @@ mark m_done
 			did_action = not quest_text("Investigate the cellar")
 		elseif quest_text("Read the list of ingredients") then
 			inform "reading list of ingredients"
+			if have_item("Lord Spookyraven's spectacles") then
+				wear {acc1 = "Lord Spookyraven's spectacles"}
+			end
 			use_item("recipe: mortar-dissolving solution")
 			refresh_quest()
 			did_action = not quest_text("Read the list of ingredients")
-		elseif quest_text("Gather the mortar-dissolving ingredients") then
-			local ingredients = {
-				{ item = "loosening powder", zone = "The Haunted Kitchen" },
-				{ item = "powdered castoreum", zone = "The Haunted Conservatory" },
-				{ item = "drain dissolver", zone = "The Haunted Bathroom", noncombats = { ["Off the Rack"] = "Take the towel" } },
-				{ item = "triple-distilled turpentine", zone = "The Haunted Gallery", noncombats = { ["Out in the Garden"] = "None of the above" } },
-				{ item = "detartrated anhydrous sublicalc", zone = "The Haunted Laboratory" },
-				{ item = "triatomaceous dust", zone = "The Haunted Storage Room" },
+		elseif quest_text("Cook up the explosive mixture") then
+			cook_items("blasting soda", "bottle of Chateau de Vinegar")
+			refresh_quest()
+			did_action = quest_text("Heat up the explosive mixture")
+		elseif quest_text("Heat up the explosive mixture") then
+			return run_task {
+				message = "Heating fulminate",
+				minmp = 50,
+				equipment = { offhand = "unstable fulminate" },
+				bonus_target = { "monster level" },
+				action = adventure {
+					zone = "The Haunted Boiler Room",
+					macro_function = macro_noodleserpent,
+				}
 			}
+		elseif quest_text("Use the explosive on the") then
+			inform "exploding suspicious masonry"
+			get_page("/place.php", { whichplace = "manor4", action = "manor4_chamberwall_label" })
+			refresh_quest()
+			did_action = not quest_text("Use the explosive on the")
+		elseif quest_text("Gather the mortar-dissolving ingredients") then
+			local ingredients = {}
+			local target = {}
+			if quest_text("Gather the explosive ingredients") then
+				ingredients = {
+					{ item = "bottle of Chateau de Vinegar", zone = "The Haunted Wine Cellar" },
+					{ item = "blasting soda", zone = "The Haunted Laundry Room" }
+				}
+				target = { "item", "extraitem" }
+			else
+				ingredients = {
+					{ item = "loosening powder", zone = "The Haunted Kitchen" },
+					{ item = "powdered castoreum", zone = "The Haunted Conservatory" },
+					{ item = "drain dissolver", zone = "The Haunted Bathroom", noncombats = { ["Off the Rack"] = "Take the towel" } },
+					{ item = "triple-distilled turpentine", zone = "The Haunted Gallery", noncombats = { ["Out in the Garden"] = "None of the above" } },
+					{ item = "detartrated anhydrous sublicalc", zone = "The Haunted Laboratory" },
+					{ item = "triatomaceous dust", zone = "The Haunted Storage Room" },
+				}
+			end
 			for _, x in ipairs(ingredients) do
 				if not have_item(x.item) then
 					return run_task {
 						message = "get " .. x.item .. " in " .. x.zone,
 						minmp = 50,
+						bonus_target = target,
 						action = adventure {
 							zone = x.zone,
 							macro_function = macro_noodleserpent,
@@ -2515,96 +2549,23 @@ mark m_done
 			get_page("/place.php", { whichplace = "manor4", action = "manor4_chamberwall_label" })
 			refresh_quest()
 			did_action = not quest_text("Take the mortar-dissolving ingredients back")
---		elseif not have_item("Lord Spookyraven's spectacles") then
---			script.bonus_target { "noncombat" }
---			go("get spectacles", 108, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Springy Fusilli", "Spirit of Garlic" }, "Rogue Program", 50, { choice_function = function(advtitle, choicenum)
---				if choicenum == 82 then
---					return "Kick it and see what happens"
---				elseif choicenum == 83 then
---					return "Check the bottom drawer"
---				elseif choicenum == 84 then
---					return "Look behind the nightstand"
---				elseif choicenum == 85 then
---					if mainstat_type("Moxie") then
---						return "Check the top drawer"
---					else
---						return "Investigate the jewelry"
---					end
---				end
---			end })
---		elseif not session["zone.manor.wines needed"] then
---			inform "determine cellar wines"
---			determine_cellar_wines()
---			did_action = (session["zone.manor.wines needed"] ~= nil)
 		elseif quest_text("confront Lord Spookyraven") then
---			stop "TODO: Spookyraven cellar"
---			local manor3pt = get_page("/manor3.php")
---			local wines_needed_list = session["zone.manor.wines needed"]
---			local need = 0
---			local got = 0
---			local missing = {}
---			for wine in table.values(wines_needed_list) do
---				need = need + 1
---				if have_item(wine) then
---					got = got + 1
---				else
---					missing[wine] = true
---				end
---			end
---			if need ~= 3 then
---				critical "Couldn't identify 3 wines needed for cellar"
---			elseif manor3pt:match("Summoning Chamber") then
-				inform "fight spookyraven"
-				ensure_buffs { "Springy Fusilli", "Astral Shell", "Spirit of Bacon Grease" }
-				maybe_ensure_buffs_in_fist { "Astral Shell" }
-				fam "Frumious Bandersnatch"
-				use_hottub()
-				ensure_mp(50)
-				if have_buff("Astral Shell") or challenge == "boris" or have_buff("Red Door Syndrome") then
-					-- TODO: check resistance instead
-					local pt, url = get_page("/place.php", { whichplace = "manor4", action = "manor4_chamberboss" })
-					result, resulturl, did_action = handle_adventure_result(pt, url, "?", macro_spookyraven)
-				elseif meat() >= 3000 then
-					script.ensure_buffs { "Red Door Syndrome" }
-					did_action = have_buff("Red Door Syndrome")
-				else
-					stop "TODO: Beat Lord Spookyraven"
-				end
---			elseif got >= need then
---				inform "open chamber"
---				for _, wine in ipairs(wines_needed_list) do
---					async_post_page("/manor3.php", { action = "pourwine", whichwine = get_itemid(wine) })
---				end
---				local manor3pt = get_page("/manor3.php")
---				did_action = manor3pt:contains("Summoning Chamber")
---			else
---				script.bonus_target { "item" }
---				-- TODO: get +booze% buff?
---				if ascensionstatus() ~= "Hardcore" then
---					maybe_ensure_buffs { "Brother Smothers's Blessing" }
---				end
---				softcore_stoppable_action("get cellar wines")
---				local wines, _ = get_wine_cellar_data(ascension["zone.manor.wine cellar zone bottles"] or {})
-----				print("wines", table_to_str(wines))
---				local best = -1
---				local best_zones = nil
---				for z, ztbl in pairs(wines) do
---					local score = 0
---					for x, xv in pairs(ztbl) do
---						if missing[x] then score = score + xv end
---					end
-----					print("zone", z, score)
---					if score > best then
---						best = score
---						best_zones = { z }
---					elseif score == best then
---						table.insert(best_zones, z)
---					end
---				end
---				local next_zone = best_zones[math.random(#best_zones)]
-----				print("bestzone", table_to_str(best_zones), best, "going to", next_zone)
---				go("get cellar wines", next_zone, macro_noodleserpent, {}, { "Spirit of Bacon Grease", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 50)
---			end
+			inform "fight spookyraven"
+			ensure_buffs { "Springy Fusilli", "Astral Shell", "Spirit of Bacon Grease" }
+			maybe_ensure_buffs_in_fist { "Astral Shell" }
+			fam "Frumious Bandersnatch"
+			use_hottub()
+			ensure_mp(50)
+			if have_buff("Astral Shell") or challenge == "boris" or have_buff("Red Door Syndrome") then
+				-- TODO: check resistance instead
+				local pt, url = get_page("/place.php", { whichplace = "manor4", action = "manor4_chamberboss" })
+				result, resulturl, did_action = handle_adventure_result(pt, url, "?", macro_spookyraven)
+			elseif meat() >= 3000 then
+				script.ensure_buffs { "Red Door Syndrome" }
+				did_action = have_buff("Red Door Syndrome")
+			else
+				stop "TODO: Beat Lord Spookyraven"
+			end
 		end
 	end
 
@@ -4694,15 +4655,25 @@ endif
 				inform "getting mega gem"
 				get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" })
 				did_action = have_item("Mega Gem")
-			elseif quest_text("wet stunt nut stew") then
-				script.bonus_target { "combat" }
-				go("find wet stunt nut stew", 386, macro_noodleserpent, {
+			elseif have_item("stunt nuts") and have_item("bird rib") and have_item("lion oil") then
+				cook_items("bird rib", "lion oil")
+				cook_items("wet stew", "stunt nuts")
+			elseif quest_text("wet stunt nut stew") and not have_item("stunt nuts") then
+				script.bonus_target { "combat", "item" }
+				go("find stunt nuts", 386, macro_noodleserpent, {
 					["No sir, away!  A papaya war is on!"] = "Give the men a pep talk",
 					["Sun at Noon, Tan Us"] = "A little while",
 					["Rod Nevada, Vendor"] = "Accept (500 Meat)",
 					["Do Geese See God?"] = "Buy the photograph (500 meat)",
 					["A Pre-War Dresser Drawer, Pa!"] = "Ignawer the drawer",
 				}, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 40, { equipment = { acc3 = "Talisman o' Nam" } })
+			elseif quest_text("wet stunt nut stew") and have_item("stunt nuts") then
+				script.bonus_target { "combat", "item" }
+				go("find wet stunt nut stew ingredients", 100, macro_noodleserpent, {
+					["Don't Fence Me In"] = "Whitewash the fence",
+					["The Only Thing About Him is the Way That He Walks"] = "Show him some moves",
+					["Rapido!"] = "Steer for the cave",
+				}, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 40)
 			elseif quest_text("Mr. Alarm") then
 				inform "talking to Mr. Alarm"
 				set_result(get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" }))
@@ -4727,7 +4698,7 @@ endif
 				if meat() < 500 then
 					stop "Not enough meat for palindome"
 				end
-				script.bonus_target { "noncombat" }
+				script.bonus_target { "noncombat", "item" }
 				go("do palindome", 386, macro_noodleserpent, {
 					["No sir, away!  A papaya war is on!"] = "Give the men a pep talk",
 					["Sun at Noon, Tan Us"] = "A little while",
