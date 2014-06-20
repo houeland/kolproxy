@@ -89,21 +89,31 @@ endif
 ]]
 end
 
+
+-- Bottom two lists are for banishing two monsters in a zone
 function pete_banish()
 	return [[
-
-if (monstername Buzzy Beetle) || (monstername pygmy witch lawyer) || (monstername senile lihc) || (monstername chatty pirate) || (monstername bookbat) || (monstername A.M.C. gremline) || (monstername Box) || (monstername Trouser Snake)
+if (monstername animated mahogany nightstand) || (monstername Bullet Bill) || (monstername pygmy witch lawyer) || (monstername pygmy orderlies) || (monstername bookbat) || (monstername A.M.C. gremline) || (monstername Box) || (monstername Trouser Snake)
 	if hasskill Walk Away From Explosion
 		cast Walk Away From Explosion
 	endif
-endif
 
-if (monstername Buzzy Beetle) || (monstername pygmy witch lawyer) || (monstername slick lihc) || (monstername crusty pirate) || (monstername bookbat) || (monstername A.M.C. gremline) || (monstername Box) || (monstername Trouser Snake)
 	if (hascombatitem smoke grenade)
 		use smoke grenade
 	endif
 endif
 
+if (monstername senile lihc) || (monstername chatty pirate) || (monstername mad wino) || (monstername plaid ghost)
+	if hasskill Walk Away From Explosion
+		cast Walk Away From Explosion
+	endif
+endif
+
+if (monstername slick lihc) || (monstername crusty pirate) || (monstername skeletal sommelier) || (monstername possessed laundry press)
+	if (hascombatitem smoke grenade)
+		use smoke grenade
+	endif
+endif
 ]]
 end
 
@@ -187,7 +197,7 @@ endif
 
 ]] .. attack_action()
 	end
-	if cfm and cfm.Stats and cfm.Stats.Atk and cfm.Stats.Atk - buffedmoxie() >= 5 then
+	if cfm and cfm.Stats and cfm.Stats.Atk and (cfm.Stats.Atk - buffedmoxie() >= 5 or (cfm.Stats.HP > 50 and cfm.Stats.Def - buffedmoxie() >= -20)) then
 		return [[
 if (hasskill Pop Wheelie)
 	cast Pop Wheelie
@@ -1310,8 +1320,9 @@ function macro_noodlecannon()
 
 ]] .. macro_killing_begins() .. [[
 
-while !times 10
+while !times 11
 ]] .. cannon_action() .. [[
+
 endwhile
 
 if monstername mobile armored sweat lodge
