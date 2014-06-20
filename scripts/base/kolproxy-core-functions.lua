@@ -78,7 +78,7 @@ end
 
 -- TODO: improve async and after_pageload_cache interaction, after_pageload_cache should be cleared after every completed pageload/statuschange!
 function do_async_submit_page(t, url, params)
-	kolproxy_debug_print("> do_async_submit_page()\n" .. debug.traceback(""))
+--	kolproxy_debug_print("> do_async_submit_page()\n" .. debug.traceback(""))
 	after_pageload_cache = {}
 	local pt, pturl, tbl = nil, nil, nil
 	if params then
@@ -93,7 +93,7 @@ function do_async_submit_page(t, url, params)
 			end
 		end
 	end
-	kolproxy_debug_print("< do_async_submit_page()")
+--	kolproxy_debug_print("< do_async_submit_page()")
 	local ptf = raw_async_submit_page(t, url, tbl)
 	for _, lf in ipairs(submit_page_listeners) do
 		pcall(lf, ptf)

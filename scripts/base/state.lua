@@ -16,7 +16,7 @@ local function setup_state_table(statename)
 		end
 --		print("DEBUG setting state", k, " ==> ", p)
 		set_state(statename, k, p)
-	end})
+	end })
 	return tbl
 end
 

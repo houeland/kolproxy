@@ -27,7 +27,6 @@ import qualified Database.SQLite3Modded
 import qualified Scripting.LuaModded as Lua
 
 -- TODO: Remove type-based Lua.peek/Lua.push
--- TODO: Remove Lua.registerhsfunction
 
 local_maybepeek l n test peek = do
 	v <- test l n
@@ -107,24 +106,30 @@ get_state ref l = do
 -- TODO: Check if this is really OK. It's not in valhalla!
 get_ref_playername ref = KoL.Api.charName <$> KoL.Api.getApiInfo ref
 
-set_chat_state ref var value = void $ do
+set_chat_state ref l = do
+	var <- peekJustString l 1
+	value <- peekJustString l 2
 	charname <- get_ref_playername ref
 	chatmap <- Data.Map.insert var value <$> readMapFromFile ("chat-" ++ charname ++ ".state")
 	writeMapToFile ("chat-" ++ charname ++ ".state") chatmap
+	return 0
 
-get_chat_state ref var = do
+get_chat_state ref l = do
+	var <- peekJustString l 1
 	charname <- get_ref_playername ref
 	chatmap <- readMapFromFile ("chat-" ++ charname ++ ".state")
-	return $ fromMaybe "" (Data.Map.lookup var chatmap)
+	Lua.pushstring l $ fromMaybe "" (Data.Map.lookup var chatmap)
+	return 1
 
--- TODO: change to return 0 and not handling it in lua
+-- TODO: handle in Lua
 get_player_id ref l = do
 	name <- peekJustString l 1
 	pid <- KoL.Api.getPlayerId name ref
-	Lua.pushstring l =<< case pid of
-		Just x -> return (show x)
-		Nothing -> return "-1"
-	return 1
+	case pid of
+		Just x -> do
+			Lua.pushinteger l x
+			return 1
+		Nothing -> return 0
 
 -- TODO: remove
 parse_request_param_string _ref l = do
@@ -596,17 +601,21 @@ setup_lua_instance level filename setupref = do
 					Lua.pushstring l =<< get_ref_playername ref
 					return 1
 				register_function "get_player_id" get_player_id
-				Lua.registerhsfunction lstate "set_chat_state" (set_chat_state setupref)
-				Lua.registerhsfunction lstate "get_chat_state" (get_chat_state setupref)
+				register_function "set_chat_state" set_chat_state
+				register_function "get_chat_state" get_chat_state
 			PROCESS -> do
 				register_function "set_state" set_state
 				register_function "get_state" get_state
-				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)
+				register_function "reset_fight_state" $ \ref _l -> do
+					uglyhack_resetFightState ref
+					return 0
 				register_function "get_api_itemid_info" get_api_itemid_info
 			BROWSERREQUEST -> do
 				register_function "set_state" set_state
 				register_function "get_state" get_state
-				Lua.registerhsfunction lstate "reset_fight_state" (uglyhack_resetFightState setupref)
+				register_function "reset_fight_state" $ \ref _l -> do
+					uglyhack_resetFightState ref
+					return 0
 				register_function "get_api_itemid_info" get_api_itemid_info
 				register_function "kolproxycore_enumerate_state" kolproxycore_enumerate_state
 				register_function "kolproxycore_async_submit_page" async_submit_page_func
@@ -625,7 +634,7 @@ setup_lua_instance level filename setupref = do
 					threadDelay $ round $ delay * 1000000
 					return 0
 
-		Lua.registerhsfunction lstate "kolproxy_debug_print" (\x -> lua_log_line setupref ("kolproxy_debug_print: " ++ x) (return ()))
+		--Lua.registerhsfunction lstate "kolproxy_debug_print" (\x -> lua_log_line setupref ("kolproxy_debug_print: " ++ x) (return ()))
 
 		-- TODO: handle return codes?
 		void $ Lua.safeloadstring lstate "local dtb = debug.traceback; return function(e) kolproxy_debug_traceback = dtb(\"\", 2) return e end"

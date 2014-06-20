@@ -10,11 +10,11 @@ function COMMON_MACROSTUFF_START(rounds, hplevel)
 		lobsterwarning = [[
 
 if monstername lobsterfrogman
-  abort LFM
+	abort LFM
 endif
 
 if monstername ninja snowman assassin
-  abort assassin
+	abort assassin
 endif
 
 ]]
@@ -33,7 +33,7 @@ pickpocket
 			petemug = [[
 
 if hasskill Mug for the Audience
-  cast Mug for the Audience
+	cast Mug for the Audience
 endif
 
 ]]
@@ -52,7 +52,7 @@ scrollwhendone
 ]] .. lobsterwarning .. [[
 
 if (monstername clingy pirate) && (hascombatitem cocktail napkin)
-  use cocktail napkin
+	use cocktail napkin
 endif
 
 ]] .. petemug .. [[
@@ -75,14 +75,15 @@ function cast_olfaction(name)
 	end
 	return [[
 
-if monstername ]] .. name .. [[
-  if hasskill Transcendent Olfaction
-    cast Transcendent Olfaction
-  endif
+if (monstername ]] .. name .. [[)
 
-  if hasskill Make Friends
-    cast Make Friends
-  endif
+	if hasskill Transcendent Olfaction
+		cast Transcendent Olfaction
+	endif
+
+	if hasskill Make Friends
+		cast Make Friends
+	endif
 endif
 
 ]]
@@ -90,17 +91,19 @@ end
 
 function pete_banish()
 	return [[
+
 if (monstername Buzzy Beetle) || (monstername pygmy witch lawyer) || (monstername senile lihc) || (monstername chatty pirate) || (monstername bookbat) || (monstername A.M.C. gremline) || (monstername Box) || (monstername Trouser Snake)
 	if hasskill Walk Away From Explosion
 		cast Walk Away From Explosion
 	endif
-endif 
+endif
 
 if (monstername Buzzy Beetle) || (monstername pygmy witch lawyer) || (monstername slick lihc) || (monstername crusty pirate) || (monstername bookbat) || (monstername A.M.C. gremline) || (monstername Box) || (monstername Trouser Snake)
 	if (hascombatitem smoke grenade)
 		use smoke grenade
 	endif
 endif
+
 ]]
 end
 
@@ -153,19 +156,19 @@ function macro_sneaky_pete_action()
 		return [[
 
 if (hasskill Smoke Break)
-  cast Smoke Break
+	cast Smoke Break
 endif
 
 if (hasskill Pop Wheelie)
-  cast Pop Wheelie
+	cast Pop Wheelie
 endif
 
 if (hasskill Flash Headlight)
-  cast Flash Headlight
+	cast Flash Headlight
 endif
 
 if (!hasskill Pop Wheelie) && (!hasskill Flash Headlight)
-  attack
+	attack
 endif
 
 ]]
@@ -175,11 +178,11 @@ endif
 		return [[
 
 if (hasskill Smoke Break)
-  cast Smoke Break
+	cast Smoke Break
 endif
 
 if (hasskill Flash Headlight)
-  cast Flash Headlight
+	cast Flash Headlight
 endif
 
 ]] .. attack_action()
@@ -187,7 +190,7 @@ endif
 	if cfm and cfm.Stats and cfm.Stats.Atk and cfm.Stats.Atk - buffedmoxie() >= 5 then
 		return [[
 if (hasskill Pop Wheelie)
-  cast Pop Wheelie
+	cast Pop Wheelie
 
 ]] .. attack_action() .. [[
 
@@ -229,7 +232,7 @@ function elemental_damage_action()
 		return [[
 
 if (hasskill Smoke Break)
-  cast Smoke Break
+	cast Smoke Break
 endif
 
 ]] .. attack_action()
@@ -296,10 +299,10 @@ function maybe_stun_monster(is_dangerous)
 		can_stun = false
 	end
 	local macrolines = {}
-	local function cast_if_haveskill(x)
+	local function cast_if_haveskill(x) -- TODO: make a global function and use everywhere
 		if have_skill(x) then
 			table.insert(macrolines, "if (hasskill " .. x .. ")")
-			table.insert(macrolines, "  cast " .. x)
+			table.insert(macrolines, "	cast " .. x)
 			table.insert(macrolines, "endif")
 		end
 	end
@@ -401,7 +404,7 @@ function conditional_salve_action(extra)
 		return [[
 
 if hppercentbelow 75
-  cast Saucy Salve
+	cast Saucy Salve
 
 ]] .. (extra or "") .. [[
 
@@ -414,19 +417,19 @@ function stasis_action()
 	if classid() == 5 then
 		return [[
 
-  cast Suckerpunch
+	cast Suckerpunch
 
 ]]
 	elseif challenge == "fist" then
 		return [[
 
-  cast Sing
+	cast Sing
 
 ]]
 	else
 		return [[
 
-  use seal tooth
+	use seal tooth
 
 ]]
 	end
@@ -445,14 +448,14 @@ function stall_action()
 	end
 	if have_skill("Suckerpunch") then
 		table.insert(macrolines, "if (hasskill Suckerpunch)")
-		table.insert(macrolines, "  cast Suckerpunch")
-		table.insert(macrolines, "  goto stall_do_return")
+		table.insert(macrolines, "	cast Suckerpunch")
+		table.insert(macrolines, "	goto stall_do_return")
 		table.insert(macrolines, "endif")
 	end
 	if have_skill("Sing") then
 		table.insert(macrolines, "if (hasskill Sing)")
-		table.insert(macrolines, "  cast Sing")
-		table.insert(macrolines, "  goto stall_do_return")
+		table.insert(macrolines, "	cast Sing")
+		table.insert(macrolines, "	goto stall_do_return")
 		table.insert(macrolines, "endif")
 	end
 	if have_item("spectre scepter") then
@@ -465,7 +468,7 @@ function stall_action()
 end
 
 function fist_action()
-  return [[
+	return [[
 
 if (monstername ghuol whelp || monstername chalkdust wraith || monstername ghost)
 
@@ -474,21 +477,21 @@ if (monstername ghuol whelp || monstername chalkdust wraith || monstername ghost
 endif
 
 if !(monstername ghuol whelp || monstername chalkdust wraith) && hasskill Drunken Baby Style
-  cast Drunken Baby Style
+	cast Drunken Baby Style
 endif
 
 if !(monstername ghuol whelp || monstername chalkdust wraith) && !hasskill Drunken Baby Style
-  cast Flying Fire Fist
+	cast Flying Fire Fist
 endif
 
 ]]
 end
 
 function boris_action()
-  return [[
+	return [[
 
 if hasskill Throw Shield
-  cast Throw Shield
+	cast Throw Shield
 endif
 
 cast Mighty Axing
@@ -497,18 +500,21 @@ cast Mighty Axing
 end
 
 function boris_cleave_action()
-  return [[
+	return [[
 
 if hasskill Throw Shield
-  cast Throw Shield
+	cast Throw Shield
 endif
 
-  if hasskill Cleave
-    cast Cleave
-  endif
-  if !hasskill Cleave
+if hasskill Cleave
+	cast Cleave
+endif
+
+if !hasskill Cleave
+
 ]] .. boris_action() .. [[
-  endif
+
+endif
 
 ]]
 end
@@ -522,7 +528,7 @@ pickpocket
 ]] .. maybe_stun_monster(false) .. [[
 
 if hasskill Static Shock
-  cast Static Shock
+	cast Static Shock
 endif
 
 ]] .. macro_killing_begins() .. [[
@@ -530,18 +536,22 @@ endif
 ]]..conditional_salve_action()..[[
 
 while !times 15
+
 ]] .. attack_action() .. [[
+
 endwhile
 
 while !times 5
+
 ]] .. cannon_action() .. [[
+
 endwhile
 
 ]]
 end
 
 function macro_fist()
-  return [[
+	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
 ]] .. maybe_stun_monster() .. [[
@@ -551,8 +561,10 @@ function macro_fist()
 ]]..conditional_salve_action()..[[
 
 while !times 5
+
 ]]..fist_action()..[[
-  mark w_done
+
+	mark w_done
 endwhile
 
 ]]
@@ -570,7 +582,7 @@ function macro_maybe_runaway()
 
 if ]] .. "(monstername " .. table.concat(macro_runawayfrom_monsters, ") || (monstername ") .. ")" .. [[
 
-  runaway
+	runaway
 endif
 
 ]]
@@ -579,9 +591,9 @@ endif
 
 if ]] .. "(monstername " .. table.concat(macro_runawayfrom_monsters, ") || (monstername ") .. ")" .. [[
 
-  if (hasskill Peel Out)
-    cast Peel Out
-  endif
+	if (hasskill Peel Out)
+		cast Peel Out
+	endif
 endif
 
 ]]
@@ -590,7 +602,7 @@ endif
 
 if ]] .. "(monstername " .. table.concat(macro_runawayfrom_monsters, ") || (monstername ") .. ")" .. [[
 
-  runaway
+	runaway
 endif
 
 ]]

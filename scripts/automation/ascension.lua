@@ -1910,8 +1910,8 @@ endif
 					if have_item(pullname or item) then
 						did_action = true
 					else
-						stop("Tried to pull " .. tostring(pullname or item) .. " [run again to ignore]")
--- 						did_action = true -- try just continuing on for off-hands automation
+--						stop("Tried to pull " .. tostring(pullname or item) .. " [run again to ignore]")
+ 						did_action = true -- try just continuing on for off-hands automation
 					end
 				end
 			}
@@ -1944,7 +1944,8 @@ endif
 							return
 						end
 					end
-					stop("Tried to pull " .. descitem .. " [run again to ignore]")
+--					stop("Tried to pull " .. descitem .. " [run again to ignore]")
+					did_action = true
 				end
 			}
 		}
@@ -5165,7 +5166,7 @@ use ]] .. get_lair_tower_monster_items()[level] .. [[
 						script.want_familiar "Frumious Bandersnatch"
 						script.wear {}
 						script.heal_up()
-						if estimate_bonus("Monster Level") <= 0 and buffedmoxie() >= 300 and maxhp() >= 150 then
+						if estimate_bonus("Monster Level") <= 0 and buffedmoxie() >= 250 and maxhp() >= 150 then
 							local weapondata = equipment().weapon and maybe_get_itemdata(equipment().weapon)
 							if weapondata and weapondata.attack_stat == "Moxie" then
 								local form3ok = false

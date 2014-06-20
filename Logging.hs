@@ -69,13 +69,14 @@ internal_log_time_msg ref msg = appendline ref h_timing_log_ msg
 
 diffms before now = fromRational $ 1000 * toRational (diffUTCTime now before) :: Double
 
-lua_log_line ref msg action = do
-	start <- getCurrentTime
--- 	x <- log_time_interval ref ("lua:" ++ msg) $ action
-	x <- action
-	end <- getCurrentTime
-	appendline ref h_lua_log_ $ printf "[%8.1fms] %s" (diffms start end) msg
-	return x
+--lua_log_line ref msg action = do
+--	start <- getCurrentTime
+---- 	x <- log_time_interval ref ("lua:" ++ msg) $ action
+--	x <- action
+--	end <- getCurrentTime
+--	appendline ref h_lua_log_ $ printf "[%8.1fms] %s" (diffms start end) msg
+--	return x
+lua_log_line _ref _msg action = action
 
 log_retrieval ref msg start end = do
 	ct <- getCurrentTime

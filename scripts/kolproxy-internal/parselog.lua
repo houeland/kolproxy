@@ -144,11 +144,27 @@ local function is_interesting(x, laststatus)
 end
 
 local laststatus = nil
+local lastinventory = nil
 local laststatestatus = {}
 
 local ret_log_tbl = {}
 
 local set_key = false
+
+local gained_effects = {}
+local lost_effects = {}
+local gained_intrinsics = {}
+local lost_intrinsics = {}
+local gained_items = {}
+local lost_items = {}
+
+local function fix_inventory(inv)
+	local fixed = {}
+	for x, y in pairs(inv) do
+		fixed[tonumber(x)] = tonumber(y)
+	end
+	return fixed
+end
 
 for _, xidx in ipairs(tbl) do
 	local x = { idx = xidx }
@@ -176,6 +192,7 @@ for _, xidx in ipairs(tbl) do
 
 	if (not laststatus) or (laststatus.daysthisrun ~= x.statusafter.daysthisrun) or (laststatus.turnsthisrun < x.statusbefore.turnsthisrun) then
 		laststatus = x.statusbefore
+		lastinventory = fix_inventory(x.inventorybefore)
 	end
 	if tonumber(x.statusbefore.freedralph) == 1 and not parse_aftercore_turns then
 		print("=== === === DONE: Freed Ralph === === ===")
@@ -186,58 +203,75 @@ for _, xidx in ipairs(tbl) do
 		set_key = true
 	end
 
+	for effid, effname in pairs(x.statusafter.effects) do
+		if not laststatus.effects[effid] then
+			table.insert(gained_effects, effname[1])
+		end
+	end
+	for effid, effname in pairs(laststatus.effects) do
+		if not x.statusafter.effects[effid] then
+			table.insert(lost_effects, effname[1])
+		end
+	end
+	for effid, effname in pairs(x.statusafter.intrinsics) do
+		if not laststatus.intrinsics[effid] then
+			table.insert(gained_intrinsics, effname[1])
+		end
+	end
+	for effid, effname in pairs(laststatus.intrinsics) do
+		if not x.statusafter.intrinsics[effid] then
+			table.insert(lost_intrinsics, effname[1])
+		end
+	end
+	local xinventory = fix_inventory(x.inventoryafter)
+	for itemid, newcount in pairs(xinventory) do
+		local oldcount = tonumber(lastinventory[itemid]) or 0
+		if newcount > oldcount then
+			gained_items[itemid] = (gained_items[itemid] or 0) + newcount - oldcount
+		end
+	end
+	for itemid, oldcount in pairs(lastinventory) do
+		local newcount = tonumber(xinventory[itemid]) or 0
+		if newcount < oldcount then
+			lost_items[itemid] = (lost_items[itemid] or 0) + oldcount - newcount
+		end
+	end
+
 	if is_interesting(x, laststatus) then
-		do
-			local gained_effects = {}
-			for effid, effname in pairs(x.statusafter.effects) do
-				if not laststatus.effects[effid] then
-					table.insert(gained_effects, effname[1])
-				end
-			end
+		if next(gained_effects) then
 			table.sort(gained_effects)
-			if next(gained_effects) then
-				xtbl.gained_effects = gained_effects
-			end
+			xtbl.gained_effects = gained_effects
 		end
-
-		do
-			local lost_effects = {}
-			for effid, effname in pairs(laststatus.effects) do
-				if not x.statusafter.effects[effid] then
-					table.insert(lost_effects, effname[1])
-				end
-			end
+		if next(lost_effects) then
 			table.sort(lost_effects)
-			if next(lost_effects) then
-				xtbl.lost_effects = lost_effects
-			end
+			xtbl.lost_effects = lost_effects
 		end
-
-		do
-			local gained_intrinsics = {}
-			for effid, effname in pairs(x.statusafter.intrinsics) do
-				if not laststatus.intrinsics[effid] then
-					table.insert(gained_intrinsics, effname[1])
-				end
-			end
+		if next(gained_intrinsics) then
 			table.sort(gained_intrinsics)
-			if next(gained_intrinsics) then
-				xtbl.gained_intrinsics = gained_intrinsics
-			end
+			xtbl.gained_intrinsics = gained_intrinsics
 		end
-
-		do
-			local lost_intrinsics = {}
-			for effid, effname in pairs(laststatus.intrinsics) do
-				if not x.statusafter.intrinsics[effid] then
-					table.insert(lost_intrinsics, effname[1])
-				end
-			end
+		if next(lost_intrinsics) then
 			table.sort(lost_intrinsics)
-			if next(lost_intrinsics) then
-				xtbl.lost_intrinsics = lost_intrinsics
+			xtbl.lost_intrinsics = lost_intrinsics
+		end
+		if next(gained_items) then
+			xtbl.gained_items = {}
+			for x, y in pairs(gained_items) do
+				xtbl.gained_items[desc_item(x)] = y
 			end
 		end
+		if next(lost_items) then
+			xtbl.lost_items = {}
+			for x, y in pairs(lost_items) do
+				xtbl.lost_items[desc_item(x)] = y
+			end
+		end
+		gained_effects = {}
+		lost_effects = {}
+		gained_intrinsics = {}
+		lost_intrinsics = {}
+		gained_items = {}
+		lost_items = {}
 
 		xtbl.statusbefore = {
 			turnsthisrun = tonumber(laststatus.turnsthisrun),
@@ -304,7 +338,7 @@ for _, xidx in ipairs(tbl) do
 			end
 		end
 
-		if xtbl.title or xtbl.pulls or xtbl.gained_effects or xtbl.lost_effects or xtbl.gained_effects or xtbl.lost_effects or xtbl.new_runstate then
+		if xtbl.title or xtbl.pulls or xtbl.gained_effects or xtbl.lost_effects or xtbl.gained_effects or xtbl.lost_effects or xtbl.gained_items or xtbl.lost_items or xtbl.new_runstate then
 			if xtbl.title then
 				print(xtbl.statusafter.turnsthisrun, xtbl.title, xtbl.zonename, x.idx)
 			end
@@ -320,6 +354,8 @@ for _, xidx in ipairs(tbl) do
 
 -- 	print(x.idx, tonumber(laststatus.turnsthisrun), tonumber(x.statusbefore.turnsthisrun), tonumber(x.statusafter.turnsthisrun), x.statusafter.lastadv.name, x.requestedurl, x.retrievedurl)
 	laststatus = x.statusafter
+	lastinventory = xinventory
+
 	end
 end
 

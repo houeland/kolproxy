@@ -83,9 +83,6 @@ getPlayerId name ref = do
 				Just y = read_as x :: Maybe Integer
 		_ -> Nothing
 
--- TODO: Remove?
--- getRawCharpaneText ref = nochangeGetPageRawNoScripts "/charpane.php" ref
-
 
 
 -- Downloading utility methods. TODO: put these elsewhere

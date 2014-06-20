@@ -29,16 +29,17 @@ function lookup_player_id(inputname) -- chat cannot use character state
 	end
 	local name = inputname:lower()
 	local tbl = get_chat_state("kol.player ids.json")
-	if (tbl == "") then tbl = {} else tbl = fromjson(tbl) end
+	if tbl == "" then tbl = {} else tbl = fromjson(tbl) end
+	--print("DEBUG chat playerid", tojson(tbl))
 	if not tbl[name] then
 		local id = get_player_id(name)
 		--print("get_player_id", name, "=", id)
-		if id == "-1" then
-			return "-123", inputname
-		else
+		if id then
 			tbl[name] = id
 			set_chat_state("kol.player ids", "")
 			set_chat_state("kol.player ids.json", tojson(tbl))
+		else
+			return -123, inputname
 		end
 	end
 -- 	print("lookup_player_id.", inputname, tbl[name])

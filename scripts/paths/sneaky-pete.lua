@@ -1,13 +1,15 @@
 function retrieve_pete_friend()
 	if session["pete friend"] == nil then
-		local skillpt = get_page("/desc_skill.php", { whichskill = "15009" })
-		local friend = skillpt:match([[You recently made friends with a ([^<]+)]])
+		local skillpt = get_page("/desc_skill.php", { whichskill = 15009 })
+		local friend = skillpt:match([[You recently made friends with [^ ]- ([^<]+)]])
 		if friend then
 			session["pete friend"] = friend
 		else
 			session["pete friend"] = ""
 		end
+		print("DEBUG check pete friend")
 	end
+	print("DEBUG pete friend [" .. session["pete friend"] .. "]")
 	return session["pete friend"]
 end
 
@@ -40,7 +42,8 @@ end)
 add_processor("/fight.php", function()
 	if not ascensionpath("Avatar of Sneaky Pete") then return end
 	if text:contains("impressed by your charm and panache that you become fast friends") then
-		session["pete friend"] = monstername
+		print("DEBUG unset pete friend")
+		session["pete friend"] = nil
 	end
 end)
 

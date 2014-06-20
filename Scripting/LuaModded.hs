@@ -55,7 +55,6 @@ module Scripting.LuaModded
     -- * lua_* functions
     close,
     getglobal,
-    --gettable,
     gettop,
     isboolean,
     isnoneornil,
@@ -91,7 +90,7 @@ module Scripting.LuaModded
     -- * Haskell extensions
     StackValue(..),
     pushhsfunction_raw,
-    registerhsfunction
+--    registerhsfunction
 )
 where
 import Prelude hiding (error,concat)
@@ -103,7 +102,7 @@ import Foreign.Marshal.Alloc
 ---import Data.IORef
 import qualified Foreign.Storable as F
 --import qualified Data.List as L
-import Data.Maybe
+--import Data.Maybe
 import qualified Data.ByteString
 import qualified Data.ByteString.Char8
 import qualified Control.Exception
@@ -212,7 +211,7 @@ foreign import ccall "lua.h lua_isstring" c_lua_isstring :: LuaState -> CInt -> 
 foreign import ccall "lua.h lua_iscfunction" c_lua_iscfunction :: LuaState -> CInt -> IO CInt
 foreign import ccall "lua.h lua_isuserdata" c_lua_isuserdata :: LuaState -> CInt -> IO CInt
 foreign import ccall "lua.h lua_type" c_lua_type :: LuaState -> CInt -> IO CInt
-foreign import ccall "lua.h lua_typename" c_lua_typename :: LuaState -> CInt -> IO (Ptr CChar)
+--foreign import ccall "lua.h lua_typename" c_lua_typename :: LuaState -> CInt -> IO (Ptr CChar)
 
 foreign import ccall "lua.h lua_equal" c_lua_equal :: LuaState -> CInt -> CInt -> IO CInt
 foreign import ccall "lua.h lua_rawequal" c_lua_rawequal :: LuaState -> CInt -> CInt -> IO CInt
@@ -278,7 +277,7 @@ foreign import ccall "lua.h lua_concat" c_lua_concat :: LuaState -> CInt -> IO (
 foreign import ccall "lualib.h luaL_openlibs" c_luaL_openlibs :: LuaState -> IO ()
 foreign import ccall "lauxlib.h luaL_newstate" c_luaL_newstate :: IO LuaState
 foreign import ccall "lauxlib.h luaL_newmetatable" c_luaL_newmetatable :: LuaState -> Ptr CChar -> IO CInt
-foreign import ccall "lauxlib.h luaL_argerror" c_luaL_argerror :: LuaState -> CInt -> Ptr CChar -> IO CInt
+--foreign import ccall "lauxlib.h luaL_argerror" c_luaL_argerror :: LuaState -> CInt -> Ptr CChar -> IO CInt
 
 foreign import ccall "lauxlib.h luaL_loadstring" c_luaL_loadstring :: LuaState -> Ptr CChar -> IO CInt
 
@@ -428,8 +427,8 @@ touserdata :: LuaState -> Int -> IO (Ptr a)
 touserdata l n = c_lua_touserdata l (fromIntegral n)
 
 -- | See @lua_typename@ in Lua Reference Manual.
-typename :: LuaState -> LTYPE -> IO String
-typename l n = c_lua_typename l (fromIntegral (fromEnum n)) >>= peekCString
+--typename :: LuaState -> LTYPE -> IO String
+--typename l n = c_lua_typename l (fromIntegral (fromEnum n)) >>= peekCString
 
 -- | See @lua_xmove@ in Lua Reference Manual.
 ---xmove :: LuaState -> LuaState -> Int -> IO ()
@@ -729,14 +728,14 @@ safeloadstring l s = withCString s $ \s -> liftM fromIntegral (c_luaL_loadstring
 
 -- | See @luaL_argerror@ in Lua Reference Manual. Contrary to the 
 -- manual, Haskell function does return with value less than zero.
-argerror :: LuaState -> Int -> String -> IO CInt
-argerror l n msg = withCString msg $ \msg -> do
-    let doit l = c_luaL_argerror l (fromIntegral n) msg
-    f <- mkWrapper doit
-    c_lua_cpcall l f nullPtr
-    freeHaskellFunPtr f
-    -- here we should have error message string on top of the stack
-    return (-1)
+--argerror :: LuaState -> Int -> String -> IO CInt
+--argerror l n msg = withCString msg $ \msg -> do
+--    let doit l = c_luaL_argerror l (fromIntegral n) msg
+--    f <- mkWrapper doit
+--    c_lua_cpcall l f nullPtr
+--    freeHaskellFunPtr f
+--    -- here we should have error message string on top of the stack
+--    return (-1)
 
 
 
@@ -857,32 +856,32 @@ callfunc l f as = do
 --          dotable x = getfield l (-1) x >> gettop l >>= \n -> remove l (n-1)
 -- typenameindex l n = ltype l n >>= typename l
 
-class LuaImport a where
-    luaimport' :: Int -> a -> LuaCFunction
-    luaimportargerror :: Int -> String -> a -> LuaCFunction
+--class LuaImport a where
+--    luaimport' :: Int -> a -> LuaCFunction
+--    luaimportargerror :: Int -> String -> a -> LuaCFunction
 
-instance (StackValue a) => LuaImport (IO a) where
-    luaimportargerror n msg _x l = argerror l n msg
-    luaimport' _narg x l = x >>= push l >> return 1
+--instance (StackValue a) => LuaImport (IO a) where
+--    luaimportargerror n msg _x l = argerror l n msg
+--    luaimport' _narg x l = x >>= push l >> return 1
 
-instance (StackValue a,LuaImport b) => LuaImport (a -> b) where
-    luaimportargerror n msg x l = luaimportargerror n msg (x undefined) l
-    {-
-     - FIXME: Cannot catch this exception here, because we are called from C,
-     - and error propagation, stack unwinding, etc does not work.
-     - Cannot call lua_error, because it uses longjmp and would skip two layers of abstraction.
-     -}
-    luaimport' narg x l = do
-        arg <- peek l narg
-        case arg of
-            Just v -> luaimport' (narg+1) (x v) l
-            Nothing -> do
-                t <- ltype l narg
-                exp <- typename l (valuetype (fromJust arg))
-                got <- typename l t
-                luaimportargerror narg (exp ++ " expected, got " ++ got) (x undefined) l
+--instance (StackValue a,LuaImport b) => LuaImport (a -> b) where
+--    luaimportargerror n msg x l = luaimportargerror n msg (x undefined) l
+--    {-
+--     - FIXME: Cannot catch this exception here, because we are called from C,
+--     - and error propagation, stack unwinding, etc does not work.
+--     - Cannot call lua_error, because it uses longjmp and would skip two layers of abstraction.
+--     -}
+--    luaimport' narg x l = do
+--        arg <- peek l narg
+--        case arg of
+--            Just v -> luaimport' (narg+1) (x v) l
+--            Nothing -> do
+--                t <- ltype l narg
+--                exp <- typename l (valuetype (fromJust arg))
+--                got <- typename l t
+--                luaimportargerror narg (exp ++ " expected, got " ++ got) (x undefined) l
 
-foreign import ccall "wrapper" mkWrapper :: LuaCFunction -> IO (FunPtr LuaCFunction)
+--foreign import ccall "wrapper" mkWrapper :: LuaCFunction -> IO (FunPtr LuaCFunction)
 
 -- | Create new foreign Lua function. Function created can be called
 -- by Lua engine. Remeber to free the pointer with @freecfunction@.
@@ -897,10 +896,10 @@ foreign import ccall "wrapper" mkWrapper :: LuaCFunction -> IO (FunPtr LuaCFunct
 --
 -- Any Haskell exception will be converted to a string and returned
 -- as Lua error.
-luaimport :: LuaImport a => a -> LuaCFunction
-luaimport a l = luaimport' 1 a l `Control.Exception.catch` (\e -> do
-    push l (show (e :: Control.Exception.SomeException))
-    return (-1))
+--luaimport :: LuaImport a => a -> LuaCFunction
+--luaimport a l = luaimport' 1 a l `Control.Exception.catch` (\e -> do
+--    push l (show (e :: Control.Exception.SomeException))
+--    return (-1))
 
 -- | Free function pointer created with @newcfunction@.
 --freecfunction :: FunPtr LuaCFunction -> IO ()
@@ -1011,10 +1010,10 @@ pushhsfunction_raw l f = do
 -- You are not allowed to use @lua_error@ anywhere, but
 -- use an error code of (-1) to the same effect. Push
 -- error message as the sole return value.
-pushhsfunction :: LuaImport a => LuaState -> a -> IO ()
-pushhsfunction l f = do
-    pushhsfunction_raw l (luaimport f)
+--pushhsfunction :: LuaImport a => LuaState -> a -> IO ()
+--pushhsfunction l f = do
+--    pushhsfunction_raw l (luaimport f)
 
 -- | Imports a Haskell function and registers it at global name.
-registerhsfunction :: LuaImport a => LuaState -> String -> a -> IO ()
-registerhsfunction l n f = pushhsfunction l f >> setglobal l n
+--registerhsfunction :: LuaImport a => LuaState -> String -> a -> IO ()
+--registerhsfunction l n f = pushhsfunction l f >> setglobal l n
