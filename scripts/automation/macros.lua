@@ -58,9 +58,9 @@ endif
 ]] .. petemug .. [[
 
 if (monstername Racecar Bob) || (monstername Bob Racecar)
-  if (hascombatitem disposable instant camera)
-  	use disposable instant camera
-  endif
+	if (hascombatitem disposable instant camera)
+		use disposable instant camera
+	endif
 endif
 
 ]] .. banish
@@ -630,8 +630,8 @@ endif
 end
 
 function macro_softcore(extrastuff)
-  -- TODO: set correct gaze
-  return [[
+	-- TODO: set correct gaze
+	return [[
 
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
@@ -640,7 +640,7 @@ function macro_softcore(extrastuff)
 ]] .. (extrastuff or "") .. [[
 
 if (monstername tetchy pirate) || (monstername toothy pirate) || (monstername tipsy pirate)
-  use The Big Book of Pirate Insults
+	use The Big Book of Pirate Insults
 endif
 
 ]] .. macro_killing_begins() .. [[
@@ -651,17 +651,17 @@ endif
 end
 
 function set_gaze_action()
-  if challenge == "zombie" then
-    return [[
+	if challenge == "zombie" then
+		return [[
 
 cast Infectious Bite
 if hasskill Devour Minions
-  cast Devour Minions
+	cast Devour Minions
 endif
 
 ]]
-  end
-  return boris_action()
+	end
+	return boris_action()
 end
 
 function macro_softcore_boris(extrastuff)

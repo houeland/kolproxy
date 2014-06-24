@@ -2703,10 +2703,10 @@ mark m_done
 					macro_function = macro_noodleserpent,
 					choice_function = function(advtitle, choicenum, pagetext)
 						if advtitle == "Where Does The Lone Ranger Take His Garbagester?" then
-							if ascension["knocked over dumpster"] then
+							if ascension["__script.knocked over dumpster"] then
 								return "Dig through the dumpster"
-							else 
-								ascension["knocked over dumpster"] = true
+							else
+								ascension["__script.knocked over dumpster"] = true -- HACK: track this properly with a processor
 								return "Knock over the dumpster"
 							end
 						end
