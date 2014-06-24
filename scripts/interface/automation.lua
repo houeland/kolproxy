@@ -14,6 +14,9 @@ local function get_aftercore_buffs(tbl)
 	end
 end
 
+local zone_automation_times_left = 0
+local autochoices = {}
+
 local automate_zone_href = add_automation_script("automate-zone", function()
 	if not autoattack_is_set() then
 		stop "Setting an Auto-Attack is required for automated re-adventuring.<br><br>This can be done in KoL options &rarr; Combat, or with the /autoattack chat command (or the /aa abbreviation)."
@@ -21,25 +24,28 @@ local automate_zone_href = add_automation_script("automate-zone", function()
 	local zoneid = tonumber(params.zoneid)
 	local numtimes = tonumber(params.numtimes)
 	if zoneid and numtimes then
-		local autochoices = {}
-		autochoices["Don't Hold a Grudge"] = "Declare a thumb war"
-		autochoices["Having a Medicine Ball"] = "Gaze deeply into the mirror"
-		autochoices["Out in the Garden"] = "None of the above"
-		if ascensionstatus() == "Aftercore" then
-			autochoices["Disgustin' Junction"] = "Head down the tunnel"
-			autochoices["The Former or the Ladder"] = "Take the tunnel"
-			autochoices["Somewhat Higher and Mostly Dry"] = "Head down the dark tunnel"
-
-			autochoices["Foreshadowing Demon!"] = "Head towards all the trouble"
-			autochoices["You Must Choose Your Destruction!"] = "Follow the fists"
-			autochoices["A Test of Your Mettle"] = "Sure! Let's go kick its ass into next week!"
-			autochoices["A Maelstrom of Trouble"] = "Head Toward the Peril"
-			autochoices["To Get Groped or Get Mugged?"] = "Head Toward the Perv"
-			autochoices["A Choice to be Made"] = "Of course, little guy! Let's leap into the fray!"
-			autochoices["You May Be on Thin Ice"] = "Fight Back Your Chills"
-			autochoices["Some Sounds Most Unnerving"] = "Infernal Pachyderms Sound Pretty Neat"
-			autochoices["One More Demon to Slay"] = "Sure! I'll be wearing its guts like a wreath!"
+--		autochoices["Don't Hold a Grudge"] = "Declare a thumb war"
+--		autochoices["Having a Medicine Ball"] = "Gaze deeply into the mirror"
+--		autochoices["Out in the Garden"] = "None of the above"
+--		if ascensionstatus() == "Aftercore" then
+--			autochoices["Disgustin' Junction"] = "Head down the tunnel"
+--			autochoices["The Former or the Ladder"] = "Take the tunnel"
+--			autochoices["Somewhat Higher and Mostly Dry"] = "Head down the dark tunnel"
+--
+--			autochoices["Foreshadowing Demon!"] = "Head towards all the trouble"
+--			autochoices["You Must Choose Your Destruction!"] = "Follow the fists"
+--			autochoices["A Test of Your Mettle"] = "Sure! Let's go kick its ass into next week!"
+--			autochoices["A Maelstrom of Trouble"] = "Head Toward the Peril"
+--			autochoices["To Get Groped or Get Mugged?"] = "Head Toward the Perv"
+--			autochoices["A Choice to be Made"] = "Of course, little guy! Let's leap into the fray!"
+--			autochoices["You May Be on Thin Ice"] = "Fight Back Your Chills"
+--			autochoices["Some Sounds Most Unnerving"] = "Infernal Pachyderms Sound Pretty Neat"
+--			autochoices["One More Demon to Slay"] = "Sure! I'll be wearing its guts like a wreath!"
+--		end
+		if params.noncombattitle and params.noncombatoption then
+			autochoices[params.noncombattitle] = params.noncombatoption
 		end
+		zone_automation_times_left = numtimes
 		for i = 1, numtimes do
 			print("going for adv " .. i .. " / " .. numtimes)
 
@@ -47,28 +53,17 @@ local automate_zone_href = add_automation_script("automate-zone", function()
 
 			if perform_before_automated_readventuring then
 				perform_before_automated_readventuring()
-			end
-
 --			if hp() < maxhp() / 0.75 then
 --				cast_skill("Cannelloni Cocoon")
 --			end
+			end
 
 			-- adventure
-			text, url, advagain = autoadventure { zoneid = zoneid, noncombatchoices = autochoices }
-
-			if url:contains("choice.php") and text:contains("name=whichchoice value=91") then
-				local found, reached = compute_louvre_paths(91)
-				if found.Muscle then
-					local function go(cid)
-						if reached[cid] ~= -1000 then
-							go(reached[cid].whichchoice)
-							async_post_page("/choice.php", { pwd = params.pwd, whichchoice = reached[cid].whichchoice, option = reached[cid].option })
-						end
-					end
-					go(found.Muscle.whichchoice)
-					text, url = post_page("/choice.php", { pwd = params.pwd, whichchoice = found.Muscle.whichchoice, option = found.Muscle.option })
-					advagain = text:contains("You help him push his cart back onto dry land")
-				end
+			if locked() then
+				text, url = get_page("/choice.php")
+				text, url, advagain = handle_adventure_result(text, url, "?", nil, autochoices)
+			else
+				text, url, advagain = autoadventure { zoneid = zoneid, noncombatchoices = autochoices }
 			end
 
 			-- ...handle result...
@@ -76,17 +71,41 @@ local automate_zone_href = add_automation_script("automate-zone", function()
 				advagain = true
 			end
 
+			if not advagain and url:contains("choice.php") and locked() then
+				text = turn_automation_decorate_noncombat_page(text, zoneid, zone_automation_times_left)
+			end
+
 			if perform_after_automated_readventuring then
 				perform_after_automated_readventuring()
 			end
 
-			if not advagain then
+			if advagain then
+				zone_automation_times_left = zone_automation_times_left - 1
+			else
 				return text, url
 			end
 		end
 		return text, url
 	end
 end)
+
+function turn_automation_decorate_noncombat_page(pt, zoneid, timesleft)
+	local adventure_title
+	for x in pt:gmatch([[<tr><td style="color: white;" align=center bgcolor=blue.-><b>([^<]*)</b></td></tr>]]) do
+		if x == "Results:" then
+		else
+			adventure_title = x
+		end
+	end
+	if adventure_title then
+		adventure_title = adventure_title:gsub(" %(#[0-9]*%)$", "")
+		pt = pt:gsub([[<input class=button type=submit value=".-">]], function(x)
+			local val = x:match([[value="(.-)"]])
+			return x .. string.format([[<br><a href="%s" style="color:green">{ Automate: %s &rarr; %s }</a>]], automate_zone_href { pwd = session.pwd, zoneid = zoneid, numtimes = timesleft, noncombattitle = adventure_title, noncombatoption = val }, adventure_title, val)
+		end)
+	end
+	return pt
+end
 
 function show_links(match, link)
 	if setting_enabled("run automation scripts") and setting_enabled("enable readventuring automation") then

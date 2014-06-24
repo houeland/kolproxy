@@ -1797,6 +1797,16 @@ endif
 		end
 	end
 
+	function maybe_pull_in_casual(item)
+		if have_item(item) then return end
+		if ascensionstatus("Aftercore") or (not ascensionstatus("Hardcore") and ascensionpath("Slow and Steady")) then
+			ascension_automation_pull_item(item)
+			if ascension_script_option("ignore automatic pulls") then
+				return
+			end
+		end
+	end
+
 	add_task {
 		when = not have_item("digital key") and count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel")) >= 30,
 		task = tasks.make_digital_key,
@@ -1911,7 +1921,7 @@ endif
 						did_action = true
 					else
 --						stop("Tried to pull " .. tostring(pullname or item) .. " [run again to ignore]")
- 						did_action = true -- try just continuing on for off-hands automation
+						did_action = true -- try just continuing on for off-hands automation
 					end
 				end
 			}
