@@ -57,6 +57,12 @@ endif
 
 ]] .. petemug .. [[
 
+if (monstername Racecar Bob) || (monstername Bob Racecar)
+  if (hascombatitem disposable instant camera)
+  	use disposable instant camera
+  endif
+endif
+
 ]] .. banish
 
 end
@@ -1220,6 +1226,7 @@ endif
 
 ]]
 end
+
 
 function macro_8bit_realm()
 	local stasispart = [[
