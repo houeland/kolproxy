@@ -341,10 +341,17 @@ function maybe_stun_monster(is_dangerous)
 				cast_if_haveskill(x)
 			end
 		end
-		if ascensionpath("Avatar of Sneaky Pete") and automation_sneaky_pete_want_hate() and have_skill("Jump Shark") then
-			if have_item("Rain-Doh blue balls") or have_skill("Snap Fingers") or is_dangerous == false then
-				cast_if_haveskill("Snap Fingers")
-				cast_if_haveskill("Jump Shark")
+		if ascensionpath("Avatar of Sneaky Pete") then
+			if automation_sneaky_pete_want_hate() and have_skill("Jump Shark") then
+				if have_item("Rain-Doh blue balls") or have_skill("Snap Fingers") or is_dangerous == false then
+					cast_if_haveskill("Snap Fingers")
+					cast_if_haveskill("Jump Shark")
+				end
+			elseif not automation_sneaky_pete_want_hate() and have_skill("Fix Jukebox") and petelove() < 20 then
+				if have_item("Rain-Doh blue balls") or have_skill("Snap Fingers") or is_dangerous == false then
+					cast_if_haveskill("Snap Fingers")
+					cast_if_haveskill("Fix Jukebox")
+				end
 			end
 		end
 		if playerclass("Turtle Tamer") then
