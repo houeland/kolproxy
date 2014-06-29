@@ -97,9 +97,11 @@ end
 
 
 -- Bottom two lists are for banishing two monsters in a zone
+-- NB: in the palindome, give one monster to smoke grenade, the rest to walkaway, since it can't be used multiple times
+-- NB: don't banish tomb servant, because we might need the tower item
 function pete_banish()
 	return [[
-if (monstername animated mahogany nightstand) || (monstername Bullet Bill) || (monstername pygmy witch lawyer) || (monstername pygmy orderlies) || (monstername bookbat) || (monstername A.M.C. gremline) || (monstername Box) || (monstername Trouser Snake)
+if (monstername animated mahogany nightstand) || (monstername Bullet Bill) || (monstername pygmy witch lawyer) || (monstername pygmy orderlies) || (monstername bookbat) || (monstername A.M.C. gremlin) || (monstername Box) || (monstername Trouser Snake) || (monstername tomb asp)
 	if hasskill Walk Away From Explosion
 		cast Walk Away From Explosion
 	endif
@@ -109,13 +111,13 @@ if (monstername animated mahogany nightstand) || (monstername Bullet Bill) || (m
 	endif
 endif
 
-if (monstername senile lihc) || (monstername chatty pirate) || (monstername mad wino) || (monstername plaid ghost)
+if (monstername senile lihc) || (monstername chatty pirate) || (monstername mad wino) || (monstername plaid ghost) || (monstername Evil Olive) || (monstername Taco Cat) || (monstername Flock of Stab-bats)
 	if hasskill Walk Away From Explosion
 		cast Walk Away From Explosion
 	endif
 endif
 
-if (monstername slick lihc) || (monstername crusty pirate) || (monstername skeletal sommelier) || (monstername possessed laundry press)
+if (monstername slick lihc) || (monstername crusty pirate) || (monstername skeletal sommelier) || (monstername possessed laundry press) || (monstername Tan Gnat)
 	if (hascombatitem smoke grenade)
 		use smoke grenade
 	endif
