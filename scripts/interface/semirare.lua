@@ -45,6 +45,13 @@ add_processor("/inv_eat.php", function()
 	ascension["fortune cookie numbers"] = SRnumberlist
 end)
 
+add_processor("/clan_viplounge.php", function()
+	local sr_turn = text:match([[you spontaneously burp%-speak the number <b>([0-9]+)</b>]])
+	if sr_turn then
+		ascension["fortune cookie numbers"] = { turnsthisrun() + tonumber(sr_turn) }
+	end
+end)
+
 function get_semirare_info()
 	local turn = turnsthisrun()
 	local lastturn = tonumber((ascension["last semirare"] or {}).turn)
