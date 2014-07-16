@@ -217,9 +217,13 @@ endif
 	return attack_action()
 end
 
+local function can_kill_with_attack()
+	return not have_buff("QWOPped Up")
+end
+
 local function can_easily_attack_with_moxie_weapon()
 	local cfm = getCurrentFightMonster()
-	if using_moxie_weapon() and cfm and cfm.Stats and cfm.Stats.Atk and cfm.Stats.Atk - buffedmoxie() >= 25 then
+	if can_kill_with_attack() and using_moxie_weapon() and cfm and cfm.Stats and cfm.Stats.Atk and cfm.Stats.Atk - buffedmoxie() >= 25 then
 		if cfm.Stats.Phys and tonumber(cfm.Stats.Phys) and tonumber(cfm.Stats.Phys) > 0 then
 			return false
 		else
@@ -229,7 +233,7 @@ local function can_easily_attack_with_moxie_weapon()
 end
 
 function cannon_action()
-	if have_skill("Crab Claw Technique") and using_accordion() and not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } then
+	if can_kill_with_attack() and have_skill("Crab Claw Technique") and using_accordion() and not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } then
 		return attack_action()
 	elseif not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } and can_easily_attack_with_moxie_weapon() then
 		return attack_action()

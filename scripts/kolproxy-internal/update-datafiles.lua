@@ -142,7 +142,7 @@ local function remove_line_junk(l)
 	return l:gsub("\r$", "")
 end
 
-local function parse_mafia_bonuslist(bonuslist)
+local function parse_mafia_bonuslist(bonuslist, debug_source_name)
 	local checks = {
 		-- TODO: Rename these three to include the "%"
 		["Initiative"] = "Combat Initiative", -- "Combat Initiative +25%"
@@ -210,7 +210,7 @@ local function parse_mafia_bonuslist(bonuslist)
 
 		["Smithsness"] = "Smithsness", -- "+5 Smithsness"
 
-		-- TODO: Rename to "per"(?)
+		-- TODO: Rename to lowercase "per"?
 		["Experience"] = "Stats Per Fight", -- "+2 Stat(s) Per Fight"
 		["Experience (Muscle)"] = "Muscle Stats Per Fight", -- "+2 Muscle Stat(s) Per Fight"
 		["Experience (Mysticality)"] = "Mysticality Stats Per Fight", -- "+2 Mysticality Stat(s) Per Fight"
@@ -244,7 +244,7 @@ function parse_buffs()
 		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
 		local name2 = l:match([[^# ([^	:]+)]])
 		if section == "Status Effects" and name and bonuslist and not blacklist["buff: " .. name] and not name2 then
-			buffs[name] = { bonuses = parse_mafia_bonuslist(bonuslist) }
+			buffs[name] = { bonuses = parse_mafia_bonuslist(bonuslist, name) }
 		elseif section == "Status Effects" and name2 and not blacklist["buff: " .. name2] and not buffs[name2] then
 			buffs[name2] = {}
 		end
@@ -307,7 +307,7 @@ function parse_passives()
 		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
 		local name2 = l:match([[^# ([^	:]+)]])
 		if section == "Passive Skills" and name and bonuslist and not blacklist["buff: " .. name] and not name2 then
-			passives[name] = { bonuses = parse_mafia_bonuslist(bonuslist) }
+			passives[name] = { bonuses = parse_mafia_bonuslist(bonuslist, name) }
 		elseif section == "Passive Skills" and name2 and not blacklist["buff: " .. name2] and not passives[name2] then
 			passives[name2] = {}
 		end
@@ -339,7 +339,7 @@ function parse_outfits()
 		l = remove_line_junk(l)
 		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
 		if name and bonuslist and outfits[name] then
-			outfits[name].bonuses = parse_mafia_bonuslist(bonuslist)
+			outfits[name].bonuses = parse_mafia_bonuslist(bonuslist, name)
 		end
 	end
 	return outfits
@@ -486,7 +486,7 @@ function parse_items()
 	end
 
 	local section = nil
-	local equip_sections = { Hats = true, Containers = true, Shirts = true, Weapons = true, Offhand = true, Pants = true, Accessories = true, ["Familiar Items"] = true }
+	local equip_sections = { Hats = true, Containers = true, Shirts = true, Weapons = true, Offhands = true, Pants = true, Accessories = true, ["Familiar Items"] = true }
 	for l in io.lines("cache/files/modifiers.txt") do
 		l = remove_line_junk(l)
 		section = l:match([[^# (.*) section of modifiers.txt]]) or section
@@ -494,7 +494,7 @@ function parse_items()
 		local name2 = l:match([[^# ([^	:]+)]])
 		if section and equip_sections[section] and name and bonuslist and not blacklist[name] and not name2 and not blacklist["bonuses: " .. name] then
 			if items[name] then
-				items[name].equip_bonuses = parse_mafia_bonuslist(bonuslist)
+				items[name].equip_bonuses = parse_mafia_bonuslist(bonuslist, name)
 				items[name].song_duration = tonumber(bonuslist:match("Song Duration: ([0-9]+)"))
 				if bonuslist:match("Single Equip") then
 					items[name].equip_requirements = items[name].equip_requirements or {}
@@ -887,7 +887,7 @@ function parse_enthroned_familiars()
 		section = l:match([[^# (.*) section of modifiers.txt]]) or section
 		local name, bonuslist = l:match([[^Throne:([^	]+)	(.+)$]])
 		if section == "Enthroned familiars" and name and bonuslist then
-			enthroned_familiars[name] = parse_mafia_bonuslist(bonuslist)
+			enthroned_familiars[name] = parse_mafia_bonuslist(bonuslist, name)
 		end
 	end
 	return enthroned_familiars

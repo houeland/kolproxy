@@ -5,7 +5,7 @@ Contributors agree to let Eleron modify and redistribute their contributions as 
 
 You are separately granted each of the following licenses for the kolproxy Haskell and Lua source code files: Apache, BSD, GPL, MIT, MPL. (You can use the one you like best, or any combination.)
 
-The corresponding copyright notices and license texts are reproduced below. The files under the Scripting directory have additional license requirements.
+The corresponding copyright notices and license texts are reproduced below. The files under the scripts/restricted, Database, Scripting, and fileserver directories have additional license requirements.
 
 Apache copyright notice:
   Copyright 2009-2013 Tor Gunnar Houeland et al.

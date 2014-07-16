@@ -1,6 +1,6 @@
 Kolproxy is created by Tor Gunnar Houeland (houeland@pvv.org), player Eleron (#1564433) in the Kingdom of Loathing.
 
-Kolproxy uses versions of the following Haskell modules:
+The kolproxy core uses versions of the following Haskell modules:
   array
   base
   binary

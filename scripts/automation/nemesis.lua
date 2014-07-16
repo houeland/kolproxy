@@ -690,6 +690,7 @@ function automate_AT_nemesis_island()
 					if have_buff("Beaten Up") then
 						break
 					end
+				elseif result:contains("You slink away, dejected and defeated") and result:contains("You lose an effect") then
 				else
 					break
 				end

@@ -90,8 +90,9 @@ download_data_files = do
 
 	dldatafile "http://www.hogsofdestiny.com/faxbot/faxbot.xml"
 
-	dldatafile "http://userscripts.org/scripts/source/67792.user.js"
-	dldatafile "http://userscripts.org/scripts/source/68727.user.js"
+-- userscripts.org is down, scripts not yet available elsewhere(?)
+--	dldatafile "http://userscripts.org/scripts/source/67792.user.js"
+--	dldatafile "http://userscripts.org/scripts/source/68727.user.js"
 
 	dldatafile "http://www.houeland.com/kol/mallprices.json"
 	dldatafile "http://www.houeland.com/kol/consumable-advgain.json"

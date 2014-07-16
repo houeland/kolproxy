@@ -238,7 +238,7 @@ end)
 -- poop deck
 
 add_choice_text("O Cap'm, My Cap'm", {
-	["Front the meat and take the wheel"] = { text = "Pay 977 meat for stats or other options", good_choice = true },
+	["Front the meat and take the wheel"] = { text = "Pay 977 Meat for stats or other options", good_choice = true },
 	["Step away from the helm"] = { leave_noturn = true },
 	["Show the tropical island volcano lair map to the navigator"] = "Unlock and go to volcanic island",
 })

@@ -157,12 +157,12 @@ function bl_charpane_level_lines(lines)
 
 	table.insert(lines, string.format([[
 <tr>
-	<td class="progress" colspan="3" title="TODO TODO until level TODO (TODO substats needed)">
+	<td class="progress" colspan="3" title="%d substats until level %d">
 		<div class="progressbar" style="width:%f%%"></div>
 	</td>
 </tr>
 </table>
-]], (have_level * 100 / need_level)))
+]], need_level - have_level, level() + 1, partial_level * 100))
 end
 
 local function maximizer_link(bonus)

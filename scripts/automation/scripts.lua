@@ -1290,7 +1290,7 @@ function get_automation_scripts(cached_stuff)
 		if turns > 0 and turns < duration then
 			f.cast_buff(buff)
 			if buffturns(buff) <= turns then
-				critical("Failed to cast " .. buff)
+				critical("Failed to buff " .. duration .. " turns of: " .. buff)
 			end
 			f.ensure_buff_turns(buff, duration)
 		end
