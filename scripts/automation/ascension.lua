@@ -112,7 +112,7 @@ local function automate_day(whichday)
 	end
 
 	local function can_photocopy()
-		return not cached_stuff.have_faxed_today and have_item("Clan VIP Lounge key") and not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete")
+		return not ascension_script_option("use fax machine manually") and not cached_stuff.have_faxed_today and have_item("Clan VIP Lounge key") and not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete")
 	end
 
 	local function want_shore()
@@ -5708,6 +5708,7 @@ local ascension_script_options_tbl = {
 	["overdrink with nightcap"] = { yes = "overdrink automatically", no = "don't automate" },
 	["pull consumables"] = { yes = "pull and consume", no = "don't automate", when = function() return not ascensionstatus("Hardcore") and ascensionpath("Avatar of Sneaky Pete") end, default_yes = true },
 	["show debug information"] = { yes = "show additional console output", no = "skip debug messages" },
+	["use fax machine manually"] = { yes = "ignore the fax machine", no = "automate" },
 }
 
 function ascension_script_option(name)
@@ -5748,14 +5749,22 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 		path_support_text = string.format([[<p>You are currently in %s.</p>]], pathdesc)
 	end
 	local setting_buttons = {}
+	local stored_opts = ascension["__script.ascension script options"] or {}
 	for x, y in pairs(ascension_script_options_tbl) do
 		if not y.when or y.when() then
+			local yeschecked = ""
+			local nochecked = " checked"
+			if stored_opts[x] == "no" then
+			elseif stored_opts[x] == "yes" or y.default_yes then
+				yeschecked = " checked"
+				nochecked = ""
+			end
 			if y.default_yes then
-				table.insert(setting_buttons, string.format([[%s: <input type="radio" name="%s" value="yes" checked>%s]], x, x, y.yes))
-				table.insert(setting_buttons, string.format([[| %s<input type="radio" name="%s" value="no"><br>]], y.no, x))
+				table.insert(setting_buttons, string.format([[%s: <input type="radio" name="%s" value="yes"%s>%s]], x, x, yeschecked, y.yes))
+				table.insert(setting_buttons, string.format([[| %s<input type="radio" name="%s" value="no"%s><br>]], y.no, x, nochecked))
 			else
-				table.insert(setting_buttons, string.format([[%s: <input type="radio" name="%s" value="no" checked>%s]], x, x, y.no))
-				table.insert(setting_buttons, string.format([[| %s<input type="radio" name="%s" value="yes"><br>]], y.yes, x))
+				table.insert(setting_buttons, string.format([[%s: <input type="radio" name="%s" value="no"%s>%s]], x, x, nochecked, y.no))
+				table.insert(setting_buttons, string.format([[| %s<input type="radio" name="%s" value="yes"%s><br>]], y.yes, x, yeschecked))
 			end
 		end
 	end
