@@ -257,7 +257,7 @@ setup_turnplaying_script {
 			elseif classid() == 5 then -- disco bandit
 				automate_DB_nemesis_island()
 				result, resulturl = text, url
-			elseif classid() == 6 then -- accordion thief
+			elseif playerclass("Accordion Thief") then
 				automate_AT_nemesis_island()
 				result, resulturl = text, url
 			end
@@ -613,88 +613,88 @@ endif
 end
 
 function automate_AT_nemesis_island()
-			local pwd = session.pwd
-			get_page("/volcanoisland.php", { pwd = pwd, action = "npc" })
-			if count_item("hacienda key") < 5 then
-				text = "explore barracks"
-				for i = 1, 100 do
-					print("exploring barracks...", i)
-					if have_buff("Beaten Up") then
-						cast_skillid(1010) -- tongue of the walrus
-						cast_skillid(3012) -- cocoon
-					end
-					if count_item("hacienda key") >= 5 then
-						break
-					end
-					if not have_buff("The Sonata of Sneakiness") then
-						cast_skillid(6015, 2) -- sonata of sneakiness
-					end
-					if not have_buff("Smooth Movements") then
-						cast_skillid(5017, 2) -- smooth moves
-					end
-					local visited = ascension["nemesis.at.visited"] or {}
-					local want = {
-						{ "Head down the hall to the left", {
-							{ "Enter the kitchen", { "Check the cupboards", "Check the pantry", "Check the fridges" } },
-							{ "Enter the dining room", { "Search the tables", "Search the sideboard", "Search the china cabinets" } },
-							{ "Enter the storeroom", { "Search the crates", "Search the workbench", "Search the gun cabinet" } },
-						} },
-						{ "Head down the hall to the right", {
-							{ "Enter the bedroom", { "Search the beds", "Search the dressers", "Search the bathroom" } },
-							{ "Enter the library", { "Search the bookshelves", "Search the chairs", "Examine the chess set" } },
-							{ "Enter the parlour", { "Examine the pool table", "Examine the bar", "Examine the fireplace" } },
-						} },
-					}
-					local choice_name = nil
-					local choice_list = nil
-					for _, x in ipairs(want) do
-						for _, y in ipairs(x[2]) do
-							for _, z in ipairs(y[2]) do
-								local name = tostring(x[1]) .. ":" .. tostring(y[1]) .. ":" .. tostring(z)
-								if not visited[name] then
-									choice_name = name
-									choice_list = { x[1], y[1], z }
-								end
-							end
-						end
-					end
-					print("volcano:tuba")
-					local pt, url = get_page("/volcanoisland.php", { pwd = pwd, action = "tuba" })
-					if not choice_name then
-						stop "Explored all of nemesis AT barracks"
-					end
-					result, resulturl, advagain = handle_adventure_result(pt, url, 220, nil, {}, function(advtitle, choicenum)
-						print("visiting", choice_name)
-						visited[choice_name] = "yes"
-						ascension["nemesis.at.visited"] = visited
-						if advtitle == "The Island Barracks" then
-							return "Continue"
-						else
-							if choice_list[1] then
-								return table.remove(choice_list, 1)
-							end
-						end
-					end)
-					if not advagain and result:contains("fight.php") then
-						print("volcano:tuba:fight")
-						pt, url = get_page("/fight.php")
-						result, resulturl, advagain = handle_adventure_result(pt, url, 220, macro_ppnoodlecannon)
-					end
-					if not advagain then
-						if have_buff("Beaten Up") then
-							print("beaten up...")
-							cast_skillid(1010) -- tongue
-							cast_skillid(3012) -- cocoon
-							if have_buff("Beaten Up") then
-								break
-							end
-						else
-							break
+	get_page("/volcanoisland.php", { pwd = session.pwd, action = "npc" })
+	if count_item("hacienda key") >= 5 then
+		script.bonus_target { "easy combat" }
+		script.ensure_buffs {}
+		script.wear { weapon = "Squeezebox of the Ages" }
+		stop "TODO: kill AT nemesis"
+	else
+		text = "explore barracks"
+		for i = 1, 100 do
+			print("exploring barracks...", i)
+			if have_buff("Beaten Up") then
+				cast_skillid(1010) -- tongue of the walrus
+				cast_skillid(3012) -- cocoon
+			end
+			if count_item("hacienda key") >= 5 then
+				break
+			end
+			if not have_buff("The Sonata of Sneakiness") then
+				cast_skillid(6015, 2) -- sonata of sneakiness
+			end
+			if not have_buff("Smooth Movements") then
+				cast_skillid(5017, 2) -- smooth moves
+			end
+			local visited = ascension["nemesis.at.visited"] or {}
+			local want = {
+				{ "Head down the hall to the left", {
+					{ "Enter the kitchen", { "Check the cupboards", "Check the pantry", "Check the fridges" } },
+					{ "Enter the dining room", { "Search the tables", "Search the sideboard", "Search the china cabinets" } },
+					{ "Enter the storeroom", { "Search the crates", "Search the workbench", "Search the gun cabinet" } },
+				} },
+				{ "Head down the hall to the right", {
+					{ "Enter the bedroom", { "Search the beds", "Search the dressers", "Search the bathroom" } },
+					{ "Enter the library", { "Search the bookshelves", "Search the chairs", "Examine the chess set" } },
+					{ "Enter the parlour", { "Examine the pool table", "Examine the bar", "Examine the fireplace" } },
+				} },
+			}
+			local choice_name = nil
+			local choice_list = nil
+			for _, x in ipairs(want) do
+				for _, y in ipairs(x[2]) do
+					for _, z in ipairs(y[2]) do
+						local name = tostring(x[1]) .. ":" .. tostring(y[1]) .. ":" .. tostring(z)
+						if not visited[name] then
+							choice_name = name
+							choice_list = { x[1], y[1], z }
 						end
 					end
 				end
-				text = result
-			else
-				text = "TODO: have all hacienda keys"
 			end
+			print("volcano:tuba")
+			local pt, url = get_page("/volcanoisland.php", { pwd = session.pwd, action = "tuba" })
+			if not choice_name then
+				stop "Explored all of nemesis AT barracks"
+			end
+			result, resulturl, advagain = handle_adventure_result(pt, url, 220, nil, {}, function(advtitle, choicenum)
+				print("visiting", choice_name)
+				visited[choice_name] = "yes"
+				ascension["nemesis.at.visited"] = visited
+				if advtitle == "The Island Barracks" then
+					return "Continue"
+				elseif choice_list[1] then
+					return table.remove(choice_list, 1)
+				end
+			end)
+			if not advagain and result:contains("fight.php") then
+				print("volcano:tuba:fight")
+				pt, url = get_page("/fight.php")
+				result, resulturl, advagain = handle_adventure_result(pt, url, 220, macro_ppnoodlecannon)
+			end
+			if not advagain then
+				if have_buff("Beaten Up") then
+					print("beaten up...")
+					cast_skillid(1010) -- tongue
+					cast_skillid(3012) -- cocoon
+					if have_buff("Beaten Up") then
+						break
+					end
+				else
+					break
+				end
+			end
+		end
+		text = result
+	end
 end

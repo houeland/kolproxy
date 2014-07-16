@@ -69,6 +69,7 @@ end)
 
 function pullsleft()
 	if ascensionstatus("Hardcore") then return 0 end
+	if ascensionstatus("Aftercore") then return 1000 end
 	local pt = get_page("/storage.php", { which = 5 })
 	if pt:contains("You may not take any more") then
 		return 0

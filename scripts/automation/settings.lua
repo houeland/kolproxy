@@ -309,6 +309,7 @@ function get_ascension_automation_settings(want_bonus)
 			"Jarlsberg's pan",
 			{ name = "Operation Patriot Shield", check = function() return level() < 13 end },
 			"Bag o' Tricks",
+			{ name = "A Light that Never Goes Out", check = function() return want_bonus.plusitems end },
 			{ name = "Rain-Doh green lantern", check = function() return not want_bonus.not_casting_spells end },
 			"Operation Patriot Shield",
 			"astral shield",

@@ -1263,7 +1263,7 @@ function get_automation_scripts(cached_stuff)
 						critical("Too many AT songs to cast buff: " .. buffname)
 					elseif pt and pt:contains("can't use that skill") and ascensionpath("Way of the Surprising Fist") and AT_song_duration() == 0 then
 						return
-					elseif not ok_to_fail and not ignore_failure[buffname] then
+					elseif not ok_to_fail and not ignore_failure[buffname] and not ascensionpath("Slow and Steady") then
 						critical("Failed to ensure buff: " .. buffname)
 					end
 				end
@@ -2486,13 +2486,14 @@ mark m_done
 		elseif quest_text("Read the list of ingredients") then
 			inform "reading list of ingredients"
 			if have_item("Lord Spookyraven's spectacles") then
-				wear {acc1 = "Lord Spookyraven's spectacles"}
+				wear { acc1 = "Lord Spookyraven's spectacles" }
 			end
 			use_item("recipe: mortar-dissolving solution")
 			refresh_quest()
 			did_action = not quest_text("Read the list of ingredients")
 		elseif quest_text("Cook up the explosive mixture") then
-			cook_items("blasting soda", "bottle of Chateau de Vinegar")
+			inform "cook explosive mixture"
+			set_result(cook_items("blasting soda", "bottle of Chateau de Vinegar"))
 			refresh_quest()
 			did_action = quest_text("Heat up the explosive mixture")
 		elseif quest_text("Heat up the explosive mixture") then
@@ -2512,7 +2513,14 @@ mark m_done
 			refresh_quest()
 			did_action = not quest_text("Use the explosive on the")
 		elseif quest_text("Gather the mortar-dissolving ingredients") then
-			local ingredients = {}
+			local ingredients = {
+				{ item = "loosening powder", zone = "The Haunted Kitchen" },
+				{ item = "powdered castoreum", zone = "The Haunted Conservatory" },
+				{ item = "drain dissolver", zone = "The Haunted Bathroom", noncombats = { ["Off the Rack"] = "Take the towel" } },
+				{ item = "triple-distilled turpentine", zone = "The Haunted Gallery", noncombats = { ["Out in the Garden"] = "None of the above" } },
+				{ item = "detartrated anhydrous sublicalc", zone = "The Haunted Laboratory" },
+				{ item = "triatomaceous dust", zone = "The Haunted Storage Room" },
+			}
 			local target = {}
 			if quest_text("Gather the explosive ingredients") then
 				ingredients = {
@@ -2520,15 +2528,6 @@ mark m_done
 					{ item = "blasting soda", zone = "The Haunted Laundry Room" }
 				}
 				target = { "item", "extraitem" }
-			else
-				ingredients = {
-					{ item = "loosening powder", zone = "The Haunted Kitchen" },
-					{ item = "powdered castoreum", zone = "The Haunted Conservatory" },
-					{ item = "drain dissolver", zone = "The Haunted Bathroom", noncombats = { ["Off the Rack"] = "Take the towel" } },
-					{ item = "triple-distilled turpentine", zone = "The Haunted Gallery", noncombats = { ["Out in the Garden"] = "None of the above" } },
-					{ item = "detartrated anhydrous sublicalc", zone = "The Haunted Laboratory" },
-					{ item = "triatomaceous dust", zone = "The Haunted Storage Room" },
-				}
 			end
 			for _, x in ipairs(ingredients) do
 				if not have_item(x.item) then
@@ -2544,6 +2543,7 @@ mark m_done
 					}
 				end
 			end
+			stop "TODO: have all ingredients for spookyraven?"
 		elseif quest_text("Take the mortar-dissolving ingredients back") then
 			inform "dissolving suspicious masonry"
 			get_page("/place.php", { whichplace = "manor4", action = "manor4_chamberwall_label" })
@@ -2566,6 +2566,8 @@ mark m_done
 			else
 				stop "TODO: Beat Lord Spookyraven"
 			end
+		else
+			stop "TODO: nothing to do for spookyraven manor?"
 		end
 	end
 
