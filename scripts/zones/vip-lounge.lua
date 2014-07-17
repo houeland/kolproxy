@@ -1,5 +1,3 @@
--- TODO: fade out items that can't be used anymore
-
 add_processor("/clan_viplounge.php", function()
 	if text:match("You skillfully defeat .- and take control of the table.") or text:contains("You play a game of pool against yourself.") or text:contains("Try as you might, you are unable to defeat") then
 		increase_daily_counter("zone.vip lounge.pool table")
@@ -44,6 +42,7 @@ add_printer("/clan_viplounge.php", function()
 	text = text:gsub([[<p><Center><A href="clan_hall.php">Back to Clan Hall]], [[<p><center>]] .. table.concat(messages, "<br>") .. [[</center></p>%0]])
 end)
 
+-- TODO: combine in single setting?
 add_automator("/clan_viplounge.php", function()
 	if text:contains("April Shower") and session["clan vip shower available"] == nil then
 		local pt = get_page("/clan_viplounge.php", { action = "shower" })
@@ -53,12 +52,17 @@ add_automator("/clan_viplounge.php", function()
 		local pt = get_page("/clan_viplounge.php", { action = "swimmingpool" })
 		session["clan vip swimming pool available"] = not pt:contains("already worked out in the pool today")
 	end
+	if text:contains("A Speakeasy") and session["clan vip speakeasy available"] == nil then
+		local pt = get_page("/clan_viplounge.php", { action = "speakeasy" })
+		session["clan vip speakeasy available"] = not pt:contains("had your limit for today")
+	end
 end)
 
 add_processor("/clan_viplounge.php", function()
 	if params.preaction then
 		session["clan vip shower available"] = nil
 		session["clan vip swimming pool available"] = nil
+		session["clan vip speakeasy available"] = nil
 	end
 end)
 
@@ -90,11 +94,15 @@ end)
 add_printer("/clan_viplounge.php", function()
 	text = text:gsub([[title="A Relaxing Hot Tub %(no uses left today%)"]], [[%0 style="opacity: 0.3"]])
 	text = text:gsub([[title="A Crimbo Tree %(with no present under it.%)"]], [[%0 style="opacity: 0.3"]])
+	text = text:gsub([[alt="Too Old to use"]], [[%0 style="opacity: 0.3"]])
 	if session["clan vip shower available"] == false then
 		text = text:gsub([[title="April Shower"]], [[%0 style="opacity: 0.3"]])
 	end
 	if session["clan vip swimming pool available"] == false then
 		text = text:gsub([[title="An Olympic%-Sized Swimming Pool"]], [[%0 style="opacity: 0.3"]])
+	end
+	if session["clan vip speakeasy available"] == false then
+		text = text:gsub([[title="A Speakeasy"]], [[%0 style="opacity: 0.3"]])
 	end
 	if get_daily_counter("zone.vip lounge.deluxe mr klaw") >= 3 then
 		text = text:gsub([[title="Deluxe Mr. Klaw &quot;Skill&quot; Crane Game"]], [[%0 style="opacity: 0.3"]])
@@ -200,3 +208,65 @@ end
 function can_use_vip_fax_machine()
 	return not day["item.photocopied monster.used today"] and have_item("Clan VIP Lounge key") and not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete")
 end
+
+local hot_dog_href = add_automation_script("eat-hot-dog-and-restock", function()
+	if params.show_normal_page then
+		session["show normal vip hot dog page"] = true
+		return get_page("/clan_viplounge.php", { action = "hotdogstand" })
+	end
+	local whichdog = tonumber(params.whichdog)
+	local ingredient_cost = tonumber(params.ingredient_cost)
+	if not whichdog or not ingredient_cost then
+		error("Invalid parameters.")
+	end
+	result, resulturl = post_page("/clan_viplounge.php", { preaction = "eathotdog", whichdog = whichdog })
+	if result:contains("hourglass.gif") and not result:contains("aren't in the mood for any more fancy dogs") then
+		local pt, pturl = get_page("/clan_viplounge.php", { preaction = "hotdogsupply", hagnks = 1, whichdog = whichdog, quantity = ingredient_cost })
+		if not pt:contains("put some hot dog making supplies") then
+			error "Failed to restock ingredients"
+		end
+	end
+	return result, resulturl
+end)
+
+add_printer("/clan_viplounge.php", function()
+	if not text:contains("hot dog man smiles as you approach") or day["zone.vip lounge.fancy hot dog eaten"] or session["show normal vip hot dog page"] then return end
+	local changed = false
+	text = text:gsub([[<tr>.-</tr>]], function(tr)
+		if tr:contains("value=eathotdog") then
+			print(tr)
+			local name = nil
+			local ingredient_name = nil
+			local ingredient_cost = nil
+			local ingredient_hagnks = nil
+			local whichdog = nil
+			for td in tr:gmatch([[<td.-</td>]]) do
+				if td:contains("<span onclick") and td:contains("descitem(") then
+					name = td:match("<b>(.-)</b>")
+				elseif td:contains("<img style") and td:contains("descitem(") then
+					ingredient_name = td:match([[title="(.-)"]])
+				elseif td:contains("<b>x ") then
+					ingredient_cost = tonumber(td:match("<b>x ([0-9]-)</b>"))
+				elseif td:contains("preaction=hotdogsupply&hagnks=1") then
+					ingredient_hagnks = tonumber(td:match("rel='([0-9]-)'"))
+					whichdog = tonumber(td:match("whichdog=([0-9-]+)"))
+				end
+			end
+			--print(name, ingredient_name, ingredient_cost, ingredient_hagnks, whichdog)
+			if name and ingredient_name and ingredient_cost and (ingredient_hagnks or 0) >= ingredient_cost and (whichdog or 0) < 0 then
+				changed = true
+				local href = hot_dog_href { pwd = session.pwd, whichdog = whichdog, ingredient_cost = ingredient_cost }
+				return tr:gsub([[<input class=button type=submit value=Eat>]], string.format([[<a href="%s" style="color: green">{ Eat and restock }</a>]], href))
+			end
+		end
+	end)
+	if changed then
+		local normal_page_href = hot_dog_href { pwd = session.pwd, show_normal_page = 1 }
+		text = text:gsub([[</head>]], [[
+<style>
+#hotdogtable td:first-of-type { text-align: right }
+</style>
+</head>
+]]):gsub([[<table><tr><form action=clan_viplounge.php method=post>]], [[<table id="hotdogtable"><tr><form action=clan_viplounge.php method=post>]]):gsub([[Hot Dog Leaderboards</a>]], [[%0<br><a href="]]..normal_page_href..[[" style="color: green">{ Hide "eat and restock" links }</a>]])
+	end
+end)
