@@ -487,6 +487,8 @@ function get_automation_scripts(cached_stuff)
 				want_bonus.elemental_weapon_damage = true
 			elseif t == "rollover adventures" then
 				want_bonus.rollover_adventures = true
+			elseif t == "controlled damage" then
+				want_bonus.controlled_damage = true
 			else
 				error("Unknown bonus target: " .. t)
 			end
@@ -2868,81 +2870,6 @@ mark m_done
 		end
 	end
 
---	function f.do_pyramid()
---		local pyramidpt = get_page("/place.php", { whichplace = "pyramid" })
---		if not pyramidpt:contains("Middle Chamber") then
---			script.bonus_target { "noncombat", "extranoncombat" }
---			go("do upper chamber", "The Upper Chamber", macro_noodleserpent, nil, { "Spirit of Garlic" }, "Slimeling", 45)
---			if not did_action and get_result():contains("Down Dooby-Doo Down Down") then
---				did_action = true
---			end
---		else
---			stop "TODO: do pyramid"
---		end
---		if pyramidpt:match("pyramid3a.gif") then
---			if not have_item("carved wooden wheel") then
---				script.bonus_target { "item" }
---				go("find carved wheel", 124, macro_noodleserpent, nil, { "Spirit of Bacon Grease" }, "Mini-Hipster", 45)
---			else
---				script.bonus_target { "extranoncombat", "noncombat" }
---				script.set_runawayfrom { "Iiti Kitty", "tomb bat" }
---				go("place wheel in middle chamber", 125, macro_noodleserpent, {
---					["Wheel in the Pyramid, Keep on Turning"] = "Turn the wheel",
---				}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "Rogue Program", 45)
---			end
---		else
--- 			pyramid4_1.gif -> nuke
--- 			pyramid4_2.gif -> turn
--- 			pyramid4_3.gif -> bomb
--- 			pyramid4_4.gif -> token
--- 			pyramid4_5.gif -> turn
---			if pyramidpt:match("pyramid4_1b.gif") then
---				-- TODO: check if this will overlap with SR
---				inform "fight ed"
---				fam "Frumious Bandersnatch"
---				f.heal_up()
---				ensure_buffs { "Spirit of Garlic", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
---				maybe_ensure_buffs { "Mental A-cue-ity" }
---				ensure_mp(100)
---				if maxmp() >= 200 then
---					ensure_mp(150)
---				end
---				result, resulturl = get_page("/pyramid.php", { action = "lower" })
---				result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
---				while get_result():contains([[<!--WINWINWIN-->]]) and get_result():contains([[fight.php]]) do
---					result, resulturl = get_page("/fight.php")
---					result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
---				end
---				did_action = have_item("Holy MacGuffin")
---			elseif pyramidpt:match("pyramid4_1.gif") and have_item("ancient bomb") then
---				inform "use bomb"
---				async_get_page("/pyramid.php", { action = "lower" })
---				pyramidpt = get_page("/pyramid.php")
---				did_action = pyramidpt:contains("pyramid4_1b.gif")
---			elseif pyramidpt:match("pyramid4_3.gif") and not have_item("ancient bomb") and have_item("ancient bronze token") then
---				inform "buy bomb"
---				async_get_page("/pyramid.php", { action = "lower" })
---				did_action = have_item("ancient bomb")
---			elseif pyramidpt:match("pyramid4_4.gif") and not have_item("ancient bomb") and not have_item("ancient bronze token") then
---				inform "get token"
---				async_get_page("/pyramid.php", { action = "lower" })
---				did_action = have_item("ancient bronze token")
---			elseif pyramidpt:match("pyramid4_[12345].gif") then
---				if have_item("tomb ratchet") then
---					local c = count_item("tomb ratchet")
---					use_item("tomb ratchet")
---					did_action = count_item("tomb ratchet") < c
---				else
---					script.bonus_target { "extranoncombat", "noncombat" }
---					script.set_runawayfrom { "Iiti Kitty", "tomb bat" }
---					go("turn middle chamber wheel", 125, macro_noodleserpent, {
---						["Wheel in the Pyramid, Keep on Turning"] = "Turn the wheel",
---					}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "Rogue Program", 45)
---				end
---			end
---		end
---	end
-
 	function f.do_filthworms()
 		script.bonus_target { "item", "extraitem" }
 		if not have_buff("Super Vision") and have_item("Greatest American Pants") then
@@ -3195,6 +3122,7 @@ endif
 			refresh_quest()
 			did_action = quest_text("ready to ascend to the Icy Peak") or quest_text("close to figuring out what's going on at the Icy Peak") or quest_text("have slain Groar") or quest_text("for the source of all this chaos") or quest_text("and see what's up!")
 		elseif quest_text("3 wedges of goat cheese") then
+			maybe_pull_in_casual("goat cheese", 3)
 			get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
 			refresh_quest()
 			if not quest_text("3 wedges of goat cheese") then
@@ -3268,6 +3196,9 @@ endif
 				end })
 			end
 		elseif quest_text("like you to investigate the summit") or quest_text("Find your way to the Icy Peak") then
+			maybe_pull_in_casual("eXtreme mittens")
+			maybe_pull_in_casual("eXtreme scarf")
+			maybe_pull_in_casual("snowboarder pants")
 			local slope_outfit = {}
 			if have_item("eXtreme mittens") and have_item("eXtreme scarf") and have_item("snowboarder pants") then
 				slope_outfit = { hat = "eXtreme scarf", pants = "snowboarder pants", acc3 = "eXtreme mittens" }
@@ -3318,37 +3249,6 @@ endif
 		else
 			critical "Failed to finish trapper quest"
 		end
--- 			if have_item("astral shirt") or have_item("cane-mail shirt") then
--- 				did_action = true
--- 			elseif challenge == "fist" then
--- 				did_action = true
--- 			elseif highskill_at_run and not have_item("hipposkin poncho") then
--- 				async_post_page("/trapper.php", { action = "Yep.", pwd = get_pwd(), whichitem = get_itemid("hippopotamus skin"), qty = 1 })
--- 				if have_item("hippopotamus skin") then
--- 					inform "smith hipposkin poncho stuff"
--- 					if not have_item("tenderizing hammer") then
--- 						store_buy_item("tenderizing hammer", "s")
--- 					end
--- 					if not have_item("shirt kit") then
--- 						store_buy_item("shirt kit", "s")
--- 					end
--- 					smith_items("shirt kit", "hippopotamus skin")
--- 					did_action = have_item("hipposkin poncho")
--- 				end
--- 			elseif not have_item("yak anorak") and not highskill_at_run and have_skill("Torso Awaregness") and have_skill("Armorcraftiness") then
--- 				async_post_page("/trapper.php", { action = "Yep.", pwd = get_pwd(), whichitem = get_itemid("yak skin"), qty = 1 })
--- 				if have_item("yak skin") then
--- 					inform "smith and wear yak stuff"
--- 					if not have_item("tenderizing hammer") then
--- 						store_buy_item("tenderizing hammer", "s")
--- 					end
--- 					if not have_item("shirt kit") then
--- 						store_buy_item("shirt kit", "s")
--- 					end
--- 					smith_items("shirt kit", "yak skin")
--- 					did_action = have_item("yak anorak")
--- 				end
--- 			end
 	end
 
 	function f.do_muscle_powerleveling()
@@ -3438,7 +3338,8 @@ endif
 					stop "Not enough meat for insult book + dictionary."
 				end
 			end
-		elseif not ascensionstatus("Hardcore") and challenge then
+		elseif not ascensionstatus("Hardcore") then
+			inform "pulling swashbuckling outfit"
 			pull_in_softcore("eyepatch")
 			pull_in_softcore("swashbuckling pants")
 			pull_in_softcore("stuffed shoulder parrot")
@@ -3853,6 +3754,7 @@ mark m_done
 		local batholept = get_page("/bathole.php")
 		if not batholept:match("Boss") then
 			script.bonus_target { "item" }
+			maybe_pull_in_casual("sonar-in-a-biscuit")
 			if have_item("sonar-in-a-biscuit") then
 				inform "using sonar"
 				use_item("sonar-in-a-biscuit")
@@ -4355,7 +4257,7 @@ endif
 				inform "Spin that wheel!"
 				return "Spin That Wheel, Giants Get Real"
 			end
-		end})		
+		end })
 	end
 
 	-- Assume this is only called when castle is complete

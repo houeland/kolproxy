@@ -1767,13 +1767,14 @@ endif
 		}
 	}
 
-	function ascension_automation_pull_item(name)
+	function ascension_automation_pull_item(name, amount)
+		amount = amount or 1
 		softcore_stoppable_action("pulling " .. tostring(name))
 		if ascension_script_option("ignore automatic pulls") then
 			return
 		end
 		print("  pulling " .. tostring(name))
-		set_result(pull_storage_items { name })
+		set_result(pull_storage_item(name, amount))
 	end
 
 	function pull_in_softcore(item)
@@ -1797,10 +1798,11 @@ endif
 		end
 	end
 
-	function maybe_pull_in_casual(item)
-		if have_item(item) then return end
+	function maybe_pull_in_casual(item, amount)
+		amount = amount or 1
+		if count_item(item) >= amount then return end
 		if ascensionstatus("Aftercore") or (not ascensionstatus("Hardcore") and ascensionpath("Slow and Steady")) then
-			ascension_automation_pull_item(item)
+			ascension_automation_pull_item(item, amount - count_item(item))
 			if ascension_script_option("ignore automatic pulls") then
 				return
 			end
@@ -4134,7 +4136,7 @@ endif
 			ensure_yellow_ray() end,
 		f = function()
 			-- TODO: Should do this before level 9 to avoid noncombats!
-			script.bonus_target { "combat" }
+			script.bonus_target { "combat", "controlled damage" }
 			script.go("yellow raying hippy", 26, make_yellowray_macro("hippy"), {}, { "Musk of the Moose", "Carlweather's Cantata of Confrontation" }, "He-Boulder", 15, { choice_function = function(advtitle, choicenum)
 				if advtitle == "Peace Wants Love" then
 					if not have_item("filthy corduroys") then
@@ -4436,26 +4438,6 @@ endif
 		}
 	}
 
---				return {
---					message = "unlock upstairs",
---					fam = "Rogue Program",
---					buffs = { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic", "A Few Extra Pounds", "The Moxious Madrigal" },
---					bonus_target = { "noncombat" },
---					minmp = 30,
---					action = adventure {
---						zoneid = 104,
---						macro_function = macro_noodlecannon,
---						choice_function = function(advtitle, choicenum)
---							if advtitle == "Take a Look, it's in a Book!" then
---								return "", 99
---							elseif advtitle == "Melvil Dewey Would Be Ashamed" then
---								return "Gaffle the purple-bound book"
---							end
---						end
---					},
---				}
-
-
 	add_task {
 		when = DD_keys < 3 and not cached_stuff.done_daily_dungeon,
 		task = tasks.do_daily_dungeon,
@@ -4694,7 +4676,7 @@ endif
 			not have_frat_war_outfit() and
 			ensure_yellow_ray() end,
 		f = function()
-			script.bonus_target { "combat" }
+			script.bonus_target { "combat", "controlled damage" }
 			script.go("yellow raying frat house", 134, make_yellowray_macro("War"), {
 				["Catching Some Zetas"] = "Wake up the pledge and throw down",
 				["Fratacombs"] = "Wander this way",
