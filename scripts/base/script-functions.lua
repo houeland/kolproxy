@@ -536,6 +536,9 @@ function estimate_max_safe_drunkenness()
 	if have_skill("Hard Drinker") then
 		dlimit = dlimit + 10
 	end
+	if have_skill("Hollow Leg") then
+		dlimit = dlimit + 1
+	end
 
 	return dlimit - 1
 end

@@ -76,7 +76,7 @@ end)
 
 add_ascension_adventure_warning(function(zoneid)
 	if level() >= 13 then
-		if mcd() > 0 then
+		if mcd() > 0 and params.action ~= "lc_mcd" then
 			return "You might want to turn off the monster-annoyer since you're already level 13+.", "turn off monster-annoyer"
 		else
 			return
@@ -88,7 +88,7 @@ add_ascension_adventure_warning(function(zoneid)
 		end
 		return true
 	end
-	if moonsign_area() == "Degrassi Knoll" then
+	if moonsign_area("Degrassi Knoll") then
 		if not have_item("detuned radio") then
 			return "You might want to buy a detuned radio.", "buy detuned radio"
 		elseif mcd() == 0 then
@@ -96,13 +96,13 @@ add_ascension_adventure_warning(function(zoneid)
 		elseif mcd() < 10 and should_we_maximize_mcd() then
 			return "You might want to turn up your detuned radio.", "turn up detuned radio"
 		end
-	elseif moonsign_area() == "Little Canadia" then
+	elseif moonsign_area("Little Canadia") and params.action ~= "lc_mcd" then
 		if mcd() == 0 then
 			return "You might want to set the Mind-Control Device.", "set Mind-Control Device"
 		elseif mcd() < 11 and should_we_maximize_mcd() then
 			return "You might want to turn up the Mind-Control Device.", "turn up Mind-Control Device"
 		end
-	elseif moonsign_area() == "Gnomish Gnomad Camp" then
+	elseif moonsign_area("Gnomish Gnomad Camp") then
 		if have_unlocked_beach() then
 			if mcd() == 0 then
 				return "You might want to set the Annoy-o-Tron.", "set Annoy-o-Tron"

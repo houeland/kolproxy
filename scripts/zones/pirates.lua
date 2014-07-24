@@ -235,6 +235,24 @@ add_extra_ascension_adventure_warning(function(zoneid)
 	end
 end)
 
+add_processor("use item", function()
+	if text:contains("find the big pile of cannonballs on the F'c'le and polish each ball until it shines") then
+		ascension["zone.fcle.used ball polish"] = true
+	end
+end)
+
+add_processor("use item", function()
+	if text:contains("take the mop to the mizzenmast and scrub like you've never scrubbed before") then
+		ascension["zone.fcle.used mizzenmast mop"] = true
+	end
+end)
+
+add_processor("use item", function()
+	if text:contains("climb up into the rigging, lather it up, and rinse it off") then
+		ascension["zone.fcle.used rigging shampoo"] = true
+	end
+end)
+
 -- poop deck
 
 add_choice_text("O Cap'm, My Cap'm", {

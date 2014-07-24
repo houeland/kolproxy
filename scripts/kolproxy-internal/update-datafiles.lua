@@ -422,6 +422,9 @@ function parse_items()
 		if fakename and size and not blacklist[fakename] then
 			local name = lowercasemap[fakename:lower()]
 			if name then
+				if not items[fakename] then
+					hardwarn("wrong item capitalization", fakename, "should be", name)
+				end
 				items[name][field] = size
 				items[name].levelreq = levelreq
 				if advgainstr then

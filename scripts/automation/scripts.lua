@@ -4493,6 +4493,7 @@ endif
 				end
 				script.bonus_target { "item", "combat", "extraitem" }
 				softcore_stoppable_action("do fcle")
+				--stop "DEBUG: doing fcle"
 				go("doing fcle", "The F'c'le", macro_noodleserpent, {
 					["Chatterboxing"] = "Fight chatty fire with chatty fire",
 				}, { "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog", 40, { equipment = { hat = "eyepatch", pants = "swashbuckling pants", acc3 = "stuffed shoulder parrot" } })
