@@ -36,7 +36,7 @@ local function learn_dreadscroll_word(word, source)
 	if word then
 		local words = ascension["zones.sea.dreadscroll words"] or {}
 		words[source] = word
-		print("learning word: " .. word .. " from source " .. source)
+		print("INFO: learning dreadscroll word: " .. word .. " from source " .. tostring(source))
 		ascension["zones.sea.dreadscroll words"] = words
 	end
 end
@@ -75,8 +75,9 @@ end)
 
 add_printer("/choice.php", function()
 	if text:contains("You unroll the dreadscroll and look it over") then
+		-- TODO: fill in choices
 		local lines = {}
-		local order = {"Noncombat scrawl", "Mer-kin healscroll", "Vision house", "Direction", "Mer-kin killscroll", "Noncombat creature", "worktea", "Noncombat phrase"}
+		local order = { "Noncombat scrawl", "Mer-kin healscroll", "Vision house", "Direction", "Mer-kin killscroll", "Noncombat creature", "worktea", "Noncombat phrase" }
 		local words = ascension["zones.sea.dreadscroll words"] or {}
 		for _, name in ipairs(order) do
 			if words[name] then
