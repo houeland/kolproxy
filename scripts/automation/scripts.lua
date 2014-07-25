@@ -2702,6 +2702,7 @@ mark m_done
 				buffs = { "Smooth Movements", "The Sonata of Sneakiness" },
 				fam = "Slimeling",
 				minmp = 50,
+				bonus_target = { "noncombat", "item", "extraitem" },
 				action = adventure {
 					zone = "The Hidden Park",
 					macro_function = macro_noodleserpent,
@@ -4222,7 +4223,7 @@ endif
 		end
 
 		script.bonus_target { "noncombat", "item" }
-		go("finish castle quest", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 50, { equipment = ground_outfit, choice_function = function(advtitle, choicenum)
+		go("finish castle quest", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 50, { equipment = top_outfit, choice_function = function(advtitle, choicenum)
 			if advtitle == "Copper Feel" then
 				if not have_item("steam-powered model rocketship") then
 					return "Investigate the Whirligigs and Gimcrackery"
@@ -4298,10 +4299,26 @@ endif
 			action = adventure {
 				zone = "The Black Forest",
 				macro_function = macro_noodleserpent,
-				noncombats = { -- TODO: handle better
-					["All Over the Map"] = "Head toward the blackberry patch",
-					["You Found Your Thrill"] = "Attack the bushes",
-				},
+				choice_function = function(advtitle, choicenum, pagetext)
+					-- Get the drum when it is an option; otherwise, seek the galoshes
+					if advtitle == "All Over the Map" then
+						if pagetext:contains("black church") then
+							return "Check out the black church"
+						else 
+							return "Head toward the blackberry patch"
+						end
+					elseif advtitle == "You Found Your Thrill" then
+						if count_item("blackberry") >= 3 then
+							return "Visit the cobbler's house"
+						else
+							return "Attack the bushes"
+						end
+					elseif advtitle == "The Blackberry Cobbler" then
+						return "Make me some galoshes"
+					elseif advtitle == "Sunday Black Sunday" then
+						return "Dive into the orchestra pit"
+					end
+				end,
 			}
 		}
 	end
@@ -4577,6 +4594,7 @@ endif
 			elseif have_item("stunt nuts") and have_item("bird rib") and have_item("lion oil") then
 				cook_items("bird rib", "lion oil")
 				cook_items("wet stew", "stunt nuts")
+				did_action = have_item("wet stunt nut stew")
 			elseif quest_text("wet stunt nut stew") and not have_item("stunt nuts") then
 				script.bonus_target { "combat", "item" }
 				go("find stunt nuts", 386, macro_noodleserpent, {

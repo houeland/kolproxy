@@ -97,9 +97,11 @@ end
 
 
 -- Bottom two lists are for banishing two monsters in a zone
+-- NB: in the palindome, give one monster to smoke grenade, the rest to walkaway, since it can't be used multiple times
+-- NB: don't banish tomb servant, because we might need the tower item
 function pete_banish()
 	return [[
-if (monstername animated mahogany nightstand) || (monstername Bullet Bill) || (monstername pygmy witch lawyer) || (monstername pygmy orderlies) || (monstername bookbat) || (monstername A.M.C. gremline) || (monstername Box) || (monstername Trouser Snake)
+if (monstername animated mahogany nightstand) || (monstername Bullet Bill) || (monstername pygmy witch lawyer) || (monstername pygmy orderlies) || (monstername bookbat) || (monstername A.M.C. gremlin) || (monstername Box) || (monstername Trouser Snake) || (monstername tomb asp)
 	if hasskill Walk Away From Explosion
 		cast Walk Away From Explosion
 	endif
@@ -109,13 +111,13 @@ if (monstername animated mahogany nightstand) || (monstername Bullet Bill) || (m
 	endif
 endif
 
-if (monstername senile lihc) || (monstername chatty pirate) || (monstername mad wino) || (monstername plaid ghost)
+if (monstername senile lihc) || (monstername chatty pirate) || (monstername mad wino) || (monstername plaid ghost) || (monstername Evil Olive) || (monstername Taco Cat) || (monstername Flock of Stab-bats)
 	if hasskill Walk Away From Explosion
 		cast Walk Away From Explosion
 	endif
 endif
 
-if (monstername slick lihc) || (monstername crusty pirate) || (monstername skeletal sommelier) || (monstername possessed laundry press)
+if (monstername slick lihc) || (monstername crusty pirate) || (monstername skeletal sommelier) || (monstername possessed laundry press) || (monstername Tan Gnat)
 	if (hascombatitem smoke grenade)
 		use smoke grenade
 	endif
@@ -341,10 +343,17 @@ function maybe_stun_monster(is_dangerous)
 				cast_if_haveskill(x)
 			end
 		end
-		if ascensionpath("Avatar of Sneaky Pete") and automation_sneaky_pete_want_hate() and have_skill("Jump Shark") then
-			if have_item("Rain-Doh blue balls") or have_skill("Snap Fingers") or is_dangerous == false then
-				cast_if_haveskill("Snap Fingers")
-				cast_if_haveskill("Jump Shark")
+		if ascensionpath("Avatar of Sneaky Pete") then
+			if automation_sneaky_pete_want_hate() and have_skill("Jump Shark") then
+				if have_item("Rain-Doh blue balls") or have_skill("Snap Fingers") or is_dangerous == false then
+					cast_if_haveskill("Snap Fingers")
+					cast_if_haveskill("Jump Shark")
+				end
+			elseif not automation_sneaky_pete_want_hate() and have_skill("Fix Jukebox") and petelove() < 20 then
+				if have_item("Rain-Doh blue balls") or have_skill("Snap Fingers") or is_dangerous == false then
+					cast_if_haveskill("Snap Fingers")
+					cast_if_haveskill("Fix Jukebox")
+				end
 			end
 		end
 		if playerclass("Turtle Tamer") then
