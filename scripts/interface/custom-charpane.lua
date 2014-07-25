@@ -934,7 +934,7 @@ function compact_charpane_infolines(lines)
 			end
 		end
 		if x.tooltip then
-			table.insert(lines, string.format([[<span style="color:%s" title="%s">%s: %s</span><br>]], color, x.tooltip, ct_pre, ct_value))
+			table.insert(lines, string.format([[<span style="color:%s" title="%s">%s: %s<sup style="font-size: 50%%">(?)</sup></span><br>]], color, x.tooltip, ct_pre, ct_value))
 		else
 			table.insert(lines, string.format([[<span style="color:%s">%s: %s</span><br>]], color, ct_pre, ct_value))
 		end

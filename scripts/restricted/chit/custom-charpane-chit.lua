@@ -9,12 +9,11 @@ You should have received a copy of the GNU General Public License along with kol
 
 register_setting {
 	name = "use custom bleary charpane",
-	description = "Use bleary / ChIT version",
+	description = "Use prettier bleary / ChIT version",
 	group = "charpane",
-	default_level = "enthusiast",
+	default_level = "detailed",
 	parent = "use custom kolproxy charpane",
 	update_charpane = true,
-	beta_version = true,
 }
 
 register_setting {
@@ -116,8 +115,7 @@ function bl_charpane_level_lines(lines)
 	local partial_level, have_level, need_level = level_progress()
 	local compact = ""
 	if bl_compact() then compact = "compact" end
-	table.insert(lines, string.format([[<table id='chit_character' class="chit_brick nospace %s"><tr><th colspan='3'>]],
-					 compact))
+	table.insert(lines, string.format([[<table id='chit_character' class="chit_brick nospace %s"><tr><th colspan='3'>]], compact))
 	table.insert(lines, string.format([[<a class=nounder target=mainpane href="charsheet.php"><b>%s</b></a></th></tr>]], playername()))
 	table.insert(lines, [[<tr><td class='avatar' rowspan='4'><img src="]] .. (avatar_image() or "http://images.kingdomofloathing.com/itemimages/blank.gif") .. [["></td>]])
 	table.insert(lines, string.format([[<td class="label"><a target="mainpane" href="%s" title="Visit your guild">%s</a></td>]], guild_link(), classdesc()))
@@ -197,7 +195,7 @@ function bl_charpane_mystats_lines(lines)
 	add_organ_line("Stomach", fullness(), estimate_max_fullness())
 	add_organ_line("Liver", drunkenness(), estimate_max_safe_drunkenness())
 	if setting_enabled("show spleen counter") then
-	add_organ_line("Spleen", spleen(), estimate_max_spleen())
+		add_organ_line("Spleen", spleen(), estimate_max_spleen())
 	end
 
 	if playerclass("Seal Clubber") then
@@ -246,11 +244,11 @@ local function bl_compact_stats_bars(lines)
 	table.insert(lines, "</tr><tr></table></td><td><table><tr>")
 	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">HP</a></td><td class="info">%s&nbsp/&nbsp;%s</td>]], maximizer_link("Max HP"), hp(), maxhp()))
 	table.insert(lines, "</tr><tr>")
-	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(hp(), maxhp(), {[0] = "red", [50] = "orange", [75] = "green"})))
+	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(hp(), maxhp(), { [0] = "red", [50] = "orange", [75] = "green" })))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">MP</a></td><td class="info">%s&nbsp;/&nbsp;%s </td>]], maximizer_link("Max MP"), mp(), maxmp()))
 	table.insert(lines, "</tr><tr>")
-	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(mp(), maxmp(), {[0] = "red", [50] = "orange", [75] = "green"})))
+	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(mp(), maxmp(), { [0] = "red", [50] = "orange", [75] = "green" })))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane" >ML</a></td><td class="info">%+d</td>]], maximizer_link("Monster Level"), estimate_bonus("Monster Level")))
 	table.insert(lines, "</tr><tr>")
@@ -269,7 +267,7 @@ local function bl_compact_organ_bars(lines)
 	local organ_fmt = [[<td class="info"><span class="label">%s</span> %i&nbsp;/&nbsp;%i</td>]]
 	table.insert(lines, string.format(organ_fmt, "Stm",fullness(), estimate_max_fullness()))
 	table.insert(lines, string.format(organ_fmt, "Lvr",drunkenness(), estimate_max_safe_drunkenness()))
-	if setting_enabled("show spleen counter") then 
+	if setting_enabled("show spleen counter") then
 		table.insert(lines, string.format(organ_fmt, "Spl",spleen(), estimate_max_spleen()))
 	end
 	table.insert(lines, "</tr><tr>")
@@ -278,7 +276,7 @@ local function bl_compact_organ_bars(lines)
 	table.insert(lines, "</td><td>")
 	table.insert(lines, custom_progressbar(drunkenness(), estimate_max_safe_drunkenness(), { [0] = "green", [50] = "orange", [75] = "red", [100] = "gray" }))
 	table.insert(lines, "</td>")
-	if setting_enabled("show spleen counter") then 
+	if setting_enabled("show spleen counter") then
 		table.insert(lines, "<td>")
 		table.insert(lines, custom_progressbar(spleen(), estimate_max_spleen(), { [0] = "green", [50] = "orange", [75] = "red", [100] = "gray" }))
 		table.insert(lines, "</td>")
@@ -1677,10 +1675,11 @@ add_interceptor("/charpane.php", function()
 		end
 		table.insert(lines, [[<thead><tr><th colspan="2">Modifiers</th></tr></thead><tbody>]])
 		for _, mod_info in ipairs(run_charpane_line_functions()) do
-			if mod_info.compactname ~= "ML" then
+			if mod_info.compactname == "ML" then
 				-- ML is already in the above panel
+			else
 				local label = ""
-				if mod_info.link ~= nil then
+				if mod_info.link then
 					label = string.format([[<a target="mainpane" href="%s">%%s</a>]], mod_info.link)
 				else
 					label = "%s"
@@ -1690,7 +1689,11 @@ add_interceptor("/charpane.php", function()
 				else
 					label = string.format(label, mod_info.normalname or mod_info.name)
 				end
-				table.insert(lines, string.format([[<tr><td class="label">%s</td><td class="info">%s</td></tr>]], label, mod_info.value or mod_info.compactvalue or mod_info.normalvalue))
+				local tooltip = ""
+				if mod_info.tooltip then
+					tooltip = string.format([[<sup style="font-size: 50%%" title="%s">(?)</sup>]], mod_info.tooltip)
+				end
+				table.insert(lines, string.format([[<tr><td class="label">%s%s</td><td class="info">%s</td></tr>]], label, tooltip, mod_info.value or mod_info.compactvalue or mod_info.normalvalue))
 			end
 		end
 		table.insert(lines, [[</tbody></table>]])

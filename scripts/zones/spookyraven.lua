@@ -363,11 +363,10 @@ add_charpane_line(function()
 	if banish_turn then
 		local turns = banish_turn - turnsthisrun()
 		if turns > 0 then
-			return { name = "Garden", value = turns }
+			return { name = "Garden", value = turns, tooltip = "Out in the Garden encounter temporarily banished from The Haunted Gallery" }
 		end
 	end
 end)
-
 
 local lastlouvre = nil
 
