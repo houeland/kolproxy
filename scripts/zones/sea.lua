@@ -36,6 +36,7 @@ local function learn_dreadscroll_word(word, source)
 	if word then
 		local words = ascension["zones.sea.dreadscroll words"] or {}
 		words[source] = word
+		print("learning word: " .. word .. " from source " .. source)
 		ascension["zones.sea.dreadscroll words"] = words
 	end
 end
@@ -64,11 +65,23 @@ add_processor("/skills.php", function()
 	end
 end)
 
+add_processor("/inv_use.php", function()
+	if text:contains("You roll the bone, over and over, and every time it hits the ground, it bounces straight") then
+		local substr = text:match("You roll the bone, over and over, and every time it hits the ground, it bounces straight .+ You get so weirded out") or ""
+		local direction = substr:match("<b>(.-)</b>")
+		learn_dreadscroll_word(direction, "Direction")
+	end
+end)
+
 add_printer("/choice.php", function()
 	if text:contains("You unroll the dreadscroll and look it over") then
 		local lines = {}
-		for a, b in pairs(ascension["zones.sea.dreadscroll words"] or {}) do
-			table.insert(lines, string.format([[%s: <b>%s</b>]], a, b))
+		local order = {"Noncombat scrawl", "Mer-kin healscroll", "Vision house", "Direction", "Mer-kin killscroll", "Noncombat creature", "worktea", "Noncombat phrase"}
+		local words = ascension["zones.sea.dreadscroll words"] or {}
+		for _, name in ipairs(order) do
+			if words[name] then
+				table.insert(lines, string.format([[%s: <b>%s</b>]], name, words[name]))
+			end
 		end
 		text = text:gsub("</body>", [[<center style="color: green">]] .. table.concat(lines, "<br>") .. [[</center>%0]])
 	end

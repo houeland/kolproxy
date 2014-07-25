@@ -5,6 +5,10 @@ scrollwhendone
 abort pastround 20
 abort hppercentbelow 5
 
+if (monstername Mer-Kin drifter) && (hascombatitem pulled yellow taffy) && (!haseffect Everything Looks Yellow)
+	use pulled yellow taffy
+endif
+
 if hasskill Noodles of Fire
   cast Noodles of Fire
 endif
