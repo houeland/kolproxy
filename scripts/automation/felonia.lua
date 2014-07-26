@@ -1,3 +1,5 @@
+local dk_mayor_last = nil
+
 local felonia_href = setup_turnplaying_script {
 	name = "automate-felonia",
 	description = "Defeat Felonia (Degrassi Knoll quest)",
@@ -13,14 +15,11 @@ local felonia_href = setup_turnplaying_script {
 	end,
 	adventuring = function()
 		advagain = false
-		if quest_text("investigate the Gnolls' bugbear pens") then
-			result, resulturl = get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_mayor" })
-			refresh_quest()
-			advagain = quest_text("find your way to the spooky gravy fairies' barrow")
-		elseif quest_text("but first he needs you to") then
-			result, resulturl = get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_mayor" })
-			refresh_quest()
-			advagain = quest_text("investigate the Spooky Gravy Burrow")
+		result, resulturl = get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_mayor" })
+		refresh_quest()
+		if result ~= dk_mayor_last then
+			dk_mayor_last = result
+			advagain = true
 		elseif quest_text("investigate the Spooky Gravy Burrow") then
 			script.want_familiar "Flaming Gravy Fairy"
 			if not have_item("spooky glove") and have_item("small leather glove") and have_item("spooky fairy gravy") then
@@ -63,10 +62,6 @@ local felonia_href = setup_turnplaying_script {
 					result, resulturl, advagain = cast_autoattack_macro()
 				end
 			end
-		else
-			result, resulturl = get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_mayor" })
-			refresh_quest()
-			advagain = quest_text("investigate the Gnolls' bugbear pens")
 		end
 		__set_turnplaying_result(result, resulturl, advagain)
 	end,

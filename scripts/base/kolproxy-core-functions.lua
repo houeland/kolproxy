@@ -207,7 +207,7 @@ function run_file_with_environment(filename, orgenv, prefillenv)
 		else
 			orgenv[k] = v
 		end
-	end})
+	end })
 	local f, e = loadfile("scripts/" .. filename)
 	if not f then error(e, 2) end
 	setfenv(f, env)
@@ -234,6 +234,7 @@ function load_script_files(env)
 
 	local global_env = {}
 	local function load_file(category, name)
+		--print("DEBUG: load_file()", category, name)
 		local warn = true
 		run_file_with_environment(name, global_env, env)
 		warn = false
@@ -242,6 +243,8 @@ function load_script_files(env)
 	run_file_with_environment("kolproxy-internal/loaders.lua", { load_file = load_file }, {})
 
 	global_env.register_setting = nil
+
+	return global_env
 end
 
 function make_kol_html_frame(contents, title, bgcolor)

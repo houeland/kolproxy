@@ -4,10 +4,13 @@ register_setting {
 	group = "other",
 	default_level = "enthusiast",
 	beta_version = true,
+	hidden = true,
 }
 
 add_processor("/fight.php", function()
+	ascension["zone monster queue"] = nil
 	if not setting_enabled("track monster queues") then return end
+	if true then return end -- Disabled for now because of Unicode encoding issues
 	if requestpath == "/adventure.php" and fight.zone then
 		local zoneid = get_zoneid(fight.zone)
 		local zone = maybe_get_zonename(zoneid)

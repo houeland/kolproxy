@@ -615,10 +615,18 @@ end
 function automate_AT_nemesis_island()
 	get_page("/volcanoisland.php", { pwd = session.pwd, action = "npc" })
 	if count_item("hacienda key") >= 5 then
-		script.bonus_target { "easy combat" }
-		script.ensure_buffs {}
-		script.wear { weapon = "Squeezebox of the Ages" }
-		stop "TODO: kill AT nemesis"
+		for i = 1, 20 do
+			script.bonus_target { "easy combat" }
+			script.ensure_buffs {}
+			script.wear { weapon = "Squeezebox of the Ages" }
+			script.ensure_mp(50)
+			result, resulturl = get_page("/volcanoisland.php", { pwd = session.pwd, action = "tniat" })
+			result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_noodleserpent)
+			if not advagain and locked() then
+				break
+			end
+		end
+		text = result
 	else
 		text = "explore barracks"
 		for i = 1, 100 do
@@ -662,6 +670,7 @@ function automate_AT_nemesis_island()
 					end
 				end
 			end
+			script.ensure_mp(50)
 			print("volcano:tuba")
 			local pt, url = get_page("/volcanoisland.php", { pwd = session.pwd, action = "tuba" })
 			if not choice_name then

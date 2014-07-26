@@ -5669,6 +5669,7 @@ local function do_loop(whichday)
 	print("finished...", url)
 	return text, url
 end
+ascension_automation_script_do_loop = do_loop
 
 ascension_automation_script_href = add_automation_script("automate-ascension", function()
 	if params.skip_taskid then

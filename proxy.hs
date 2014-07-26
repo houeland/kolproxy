@@ -94,8 +94,8 @@ statusfunc ref = do
 		case x of
 			Right r -> return r
 			Left err -> throwIO err) `catch` (\e -> do
-                        	putWarningStrLn $ "statusfunc exception: " ++ show (e :: SomeException)
-                        	throwIO e))
+				putWarningStrLn $ "statusfunc exception: " ++ show (e :: SomeException)
+				throwIO e))
 
 -- TODO: Redo how scripts are run and used to do chat, make it more similar to normal pages
 kolProxyHandlerChat uri params baseref = do
