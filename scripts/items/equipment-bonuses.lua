@@ -29,6 +29,31 @@ function parse_modifier_bonuses_page(pt)
 	bonuses = bonuses + { ["Combat Initiative"] = tonumber(pt:match([[>([+-][0-9]+)%% Combat Initiative<]])) }
 	bonuses = bonuses + { ["Adventures per day"] = tonumber(pt:match([[>([+-][0-9]+) Adventure%(s%) per day when equipped.?<]])) }
 	bonuses = bonuses + { ["Familiar Weight"] = tonumber(pt:match([[>([+-][0-9]+) to Familiar Weight<]])) }
+	bonuses = bonuses + { ["Cold Resistance"] = tonumber(pt:match([[ Cold Resistance %(([+-][0-9]+)%)<]])) }
+	bonuses = bonuses + { ["Hot Resistance"] = tonumber(pt:match([[ Hot Resistance %(([+-][0-9]+)%)<]])) }
+	bonuses = bonuses + { ["Sleaze Resistance"] = tonumber(pt:match([[ Sleaze Resistance %(([+-][0-9]+)%)<]])) }
+	bonuses = bonuses + { ["Spooky Resistance"] = tonumber(pt:match([[ Spooky Resistance %(([+-][0-9]+)%)<]])) }
+	bonuses = bonuses + { ["Stench Resistance"] = tonumber(pt:match([[ Stench Resistance %(([+-][0-9]+)%)<]])) }
+	bonuses = bonuses + { ["Slime Resistance"] = tonumber(pt:match([[ Slime Resistance %(([+-][0-9]+)%)<]])) }
+	local all_elements = tonumber(pt:match([[ Resistance to All Elements %(([+-][0-9]+)%)<]]))
+	bonuses = bonuses + { ["Cold Resistance"] = all_elements, ["Hot Resistance"] = all_elements, ["Sleaze Resistance"] = all_elements, ["Spooky Resistance"] = all_elements, ["Stench Resistance"] = all_elements }
+	bonuses = bonuses + { ["Spell Damage"] = tonumber(pt:match([[>Spell Damage ([+-][0-9]+)<]])) }
+	bonuses = bonuses + { ["Spell Damage %"] = tonumber(pt:match([[>Spell Damage ([+-][0-9]+)%%<]])) }
+	bonuses = bonuses + { ["Weapon Damage"] = tonumber(pt:match([[>Weapon Damage ([+-][0-9]+)<]])) }
+	bonuses = bonuses + { ["Weapon Damage %"] = tonumber(pt:match([[>Weapon Damage ([+-][0-9]+)%%<]])) }
+	bonuses = bonuses + { ["% Chance of Critical Hit"] = tonumber(pt:match([[>([+-][0-9]+)%% [Cc]hance of Critical Hit<]])) }
+	bonuses = bonuses + { ["% Chance of Spell Critical Hit"] = tonumber(pt:match([[>([+-][0-9]+)%% [Cc]hance of Spell Critical Hit<]])) }
+	bonuses = bonuses + { ["Muscle"] = tonumber(pt:match([[>Muscle ([+-][0-9]+)<]])) }
+	bonuses = bonuses + { ["Muscle %"] = tonumber(pt:match([[>Muscle ([+-][0-9]+)%%<]])) }
+	bonuses = bonuses + { ["Mysticality"] = tonumber(pt:match([[>Mysticality ([+-][0-9]+)<]])) }
+	bonuses = bonuses + { ["Mysticality %"] = tonumber(pt:match([[>Mysticality ([+-][0-9]+)%%<]])) }
+	bonuses = bonuses + { ["Moxie"] = tonumber(pt:match([[>Moxie ([+-][0-9]+)<]])) }
+	bonuses = bonuses + { ["Moxie %"] = tonumber(pt:match([[>Moxie ([+-][0-9]+)%%<]])) }
+	local all_attributes = tonumber(pt:match([[>All Attributes ([+-][0-9]+)<]]))
+	local all_attributes_percent = tonumber(pt:match([[>All Attributes ([+-][0-9]+)%%<]]))
+	bonuses = bonuses + { ["Muscle"] = all_attributes, ["Mysticality"] = all_attributes, ["Moxie"] = all_attributes }
+	bonuses = bonuses + { ["Muscle %"] = all_attributes_percent, ["Mysticality %"] = all_attributes_percent, ["Moxie %"] = all_attributes_percent }
+-- TODO: add more bonuses
 
 	if pt:contains(">Monsters will be more attracted to you.<") then
 		bonuses = bonuses + { ["Monsters will be more attracted to you"] = 5 }
@@ -133,6 +158,7 @@ local items_to_cache = {
 	["Frown Exerciser"] = true,
 	["Crown of Thrones"] = true,
 	["Buddy Bjorn"] = true,
+	["Sword of Procedural Generation"] = true,
 }
 
 add_automator("all pages", function()

@@ -149,6 +149,8 @@ load_file("automation", "automation/seahorse.lua")
 load_file("automation", "automation/sea-violence.lua")
 load_file("automation", "automation/sea-hatred.lua")
 
+load_file("automation", "automation/aftercore-automation.lua")
+
 load_file("interface", "items/equipment-bonuses.lua")
 load_file("interface", "interface/display-bonuses.lua")
 load_file("interface", "buffs/buff-bonuses.lua")

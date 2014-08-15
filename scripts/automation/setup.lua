@@ -160,6 +160,7 @@ automation_script_details_list["castle-farming"] = { simple_link = "beanstalk.ph
 automation_script_details_list["add-log-notes"] = { simple = true, description = "Add note to ascension log" }
 automation_script_details_list["automate-aftercore-pulls"] = { simple = true, description = "Pull useful aftercore items from storage" }
 automation_script_details_list["setup-ascension-automation"] = { simple = true, description = "Setup ascension automation script" }
+automation_script_details_list["setup-aftercore-automation"] = { simple = true, description = "Setup aftercore automation" }
 automation_script_details_list["custom-inventory-diff"] = { simple = true, description = "Show items found this session" }
 
 automation_script_details_list["custom-cosmic-kitchen"] = { simple = true, description = "Cosmic kitchen dinner planner" }

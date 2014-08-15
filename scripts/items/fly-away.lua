@@ -40,7 +40,7 @@ add_choice_text("Pants-Gazing", { -- choice adventure number: 508
 	["Super Structure"] = { text = "Damage Absorption +500<br>Superhuman Resistance (+5) to all elements" },
 	["Super Vision"] = { text = "+25% Item Drops from Monsters" },
 	["Super Speed"] = { text = "Moxie +100%" },
-	["Super Accuracy"] = { text = "+30% chance of Critical Hit" },
+	["Super Accuracy"] = { text = "+30% Chance of Critical Hit" },
 	["Ignore the pants"] = { text = "" },
 })
 

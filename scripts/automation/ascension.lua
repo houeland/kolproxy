@@ -867,17 +867,17 @@ endif
 		}
 	}
 
-	add_task {
-		when = have_item("batskin belt") and have_item("dragonbone belt buckle"),
-		task = {
-			message = "paste badass belt",
-			nobuffing = true,
-			action = function()
-				set_result(meatpaste_items("batskin belt", "dragonbone belt buckle"))
-				did_action = have_item("badass belt")
-			end
-		}
-	}
+--	add_task {
+--		when = have_item("batskin belt") and have_item("dragonbone belt buckle"),
+--		task = {
+--			message = "paste badass belt",
+--			nobuffing = true,
+--			action = function()
+--				set_result(meatpaste_items("batskin belt", "dragonbone belt buckle"))
+--				did_action = have_item("badass belt")
+--			end
+--		}
+--	}
 
 	local function count_spare_brains()
 		if have_item("good brain") or have_item("decent brain") or have_item("crappy brain") then

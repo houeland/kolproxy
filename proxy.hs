@@ -23,6 +23,7 @@ import Network.URI
 import System.Directory (doesFileExist, createDirectoryIfMissing)
 import System.Environment (getArgs)
 import System.IO
+import Text.Regex.TDFA
 import qualified Data.ByteString.Char8
 import qualified Data.Map
 
@@ -253,6 +254,26 @@ kolProxyHandler uri params baseref = do
 		"/kolproxy-automation-script" -> check_pwd_for $ Nothing
 		"/kolproxy-script" -> check_pwd_for $ Nothing
 
+		"/kolproxy-fileserver" -> check_pwd_for $ Just $ do
+			resp <- case lookup "filename" allparams of
+				Just p -> if (p =~ "[a-z]+/[A-Za-z_]+\\.?[A-Za-z_]*")
+					then do
+						exists <- doesFileExist ("fileserver/" ++ p)
+						if exists
+							then do
+								contents <- Data.ByteString.Char8.readFile ("fileserver/" ++ p)
+								let ct = case matchGroups "\\.([A-Za-z_]+)$" p of
+									[["css"]] -> "text/css; charset=UTF-8"
+									[["html"]] -> "text/html; charset=UTF-8"
+									[["js"]] -> "text/javascript; charset=UTF-8"
+									_ -> "text/plain; charset=UTF-8"
+								return $ Just (contents, ct)
+							else return Nothing
+					else return Nothing
+				_ -> return Nothing
+			case resp of
+				Nothing -> makeResponse (Data.ByteString.Char8.pack $ "Invalid request.") uri []
+				Just (x, y) -> makeResponseWithNoExtraHeaders x uri [("Content-Type", y), ("Cache-Control", "no-cache")]
 		_ -> return Nothing
 
 	retresp <- log_time_interval origref ("run handler for: " ++ (show uri)) $ case response of

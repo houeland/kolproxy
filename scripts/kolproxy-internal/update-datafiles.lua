@@ -189,8 +189,7 @@ local function parse_mafia_bonuslist(bonuslist, debug_source_name)
 		["Weapon Damage"] = "Weapon Damage", -- "Weapon Damage +7"
 		["Weapon Damage Percent"] = "Weapon Damage %", -- "Weapon Damage +50%"
 
-		-- TODO: Rename to "Chance"
-		["Critical Hit Percent"] = "% chance of Critical Hit", -- "+5% Chance of Critical Hit", "+20% chance of Critical Hit"
+		["Critical Hit Percent"] = "% Chance of Critical Hit", -- "+5% Chance of Critical Hit", "+20% chance of Critical Hit"
 		["Spell Critical Percent"] = "% Chance of Spell Critical Hit", -- "+20% Chance of Spell Critical Hit"
 
 		["Maximum HP"] = "Maximum HP", -- "Maximum HP +20"
