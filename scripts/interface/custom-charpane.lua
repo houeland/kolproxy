@@ -120,7 +120,6 @@ function get_motorbike_display()
 	return [[<a target=mainpane href=main.php?action=motorcycle><img src=http://images.kingdomofloathing.com/itemimages/]] .. pic .. [[ width=30 height=30 border=0 alt="Your Motorcycle" title="Your Motorcycle"></a><br>]] .. table.concat(lovehate, ", ") .. "<br>"
 end
 
-
 function kolproxy_custom_charpane_mode()
 	if setting_enabled("use custom bleary charpane") then
 		return "bleary"
@@ -679,7 +678,6 @@ function full_charpane_level_lines(lines)
 	end
 end
 
-
 function compact_charpane_hpmp_lines(lines)
 	table.insert(lines, string.format([[HP: <b>%s</b><br>]], format_hpmp(hp(), maxhp())))
 	if ascensionpath("Zombie Slayer") then
@@ -694,14 +692,14 @@ function compact_charpane_hpmp_lines(lines)
 		table.insert(lines, string.format([[Soulsauce: <b>%s</b><br>]], soulsauce()))
 	end
 	if ascensionpath("Heavy Rains") then
-		if status().thunder then
-			table.insert(lines, string.format([[dB: <b>%s</b> [%s]<br>]], thunder(), get_daily_counter("thunder fights won")))
+		if heavyrains_thunder() then
+			table.insert(lines, string.format([[dB: <b>%s</b> [%s]<br>]], heavyrains_thunder(), get_daily_counter("thunder fights won")))
 		end
-		if status().rain then
-			table.insert(lines, string.format([[Drops: <b>%s</b> [%s]<br>]], rain(), get_daily_counter("rain fights won")))
+		if heavyrains_rain() then
+			table.insert(lines, string.format([[Drops: <b>%s</b> [%s]<br>]], heavyrains_rain(), get_daily_counter("rain fights won")))
 		end
-		if status().lightning then
-			table.insert(lines, string.format([[Bolts: <b>%s</b><br>]], lightning()))
+		if heavyrains_lightning() then
+			table.insert(lines, string.format([[Bolts: <b>%s</b><br>]], heavyrains_lightning()))
 		end
 	end
 	table.insert(lines, string.format([[Meat: <b>%s</b><br>]], format_integer(meat())))
@@ -717,14 +715,14 @@ function full_charpane_hpmp_lines(lines)
 		table.insert(lines, string.format([[<center>Soulsauce: <b>%s</b></center>]], soulsauce()))
 	end
 	if ascensionpath("Heavy Rains") then
-		if status().thunder then
-			table.insert(lines, string.format([[<center>Thunder: <b>%d dBs</b> [%s]</center>]], thunder(), get_daily_counter("thunder fights won")))
+		if heavyrains_thunder() then
+			table.insert(lines, string.format([[<center>Thunder: <b>%d dBs</b> [%s]</center>]], heavyrains_thunder(), get_daily_counter("thunder fights won")))
 		end
-		if status().rain then
-			table.insert(lines, string.format([[<center>Rain: <b>%d drops</b> [%s]</center>]], rain(), get_daily_counter("rain fights won")))
+		if heavyrains_thunder() then
+			table.insert(lines, string.format([[<center>Rain: <b>%d drops</b> [%s]</center>]], heavyrains_rain(), get_daily_counter("rain fights won")))
 		end
-		if status().lightning then
-			table.insert(lines, string.format([[<center>Lightning: <b>%d bolts</b></center>]], lightning()))
+		if heavyrains_lightning() then
+			table.insert(lines, string.format([[<center>Lightning: <b>%d bolts</b></center>]], heavyrains_lightning()))
 		end
 	end
 
