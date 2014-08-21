@@ -273,7 +273,7 @@ kolProxyHandler uri params baseref = do
 				_ -> return Nothing
 			case resp of
 				Nothing -> makeResponse (Data.ByteString.Char8.pack $ "Invalid request.") uri []
-				Just (x, y) -> makeResponseWithNoExtraHeaders x uri [("Content-Type", y), ("Cache-Control", "no-cache")]
+				Just (x, y) -> makeResponseWithNoExtraHeaders x uri [("Content-Type", y), ("Cache-Control", "max-age=3600")]
 		_ -> return Nothing
 
 	retresp <- log_time_interval origref ("run handler for: " ++ (show uri)) $ case response of

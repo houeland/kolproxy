@@ -214,7 +214,7 @@ function get_lair_tower_monster_items()
 end
 
 function requires_wand_of_nagamar()
-	return not ascensionpath("Bees Hate You") and not ascensionpath("Avatar of Boris") and not ascensionpath("Bugbear Invasion") and not ascensionpath("Zombie Slayer") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("KOLHS") and not ascensionpath("Avatar of Sneaky Pete")
+	return not ascensionpath("Bees Hate You") and not ascensionpath("Avatar of Boris") and not ascensionpath("Bugbear Invasion") and not ascensionpath("Zombie Slayer") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("KOLHS") and not ascensionpath("Avatar of Sneaky Pete") and not ascensionpath("Heavy Rains")
 end
 
 add_automator("/campground.php", function()
@@ -1287,6 +1287,8 @@ add_printer("/lair6.php", function()
 		placedescs[4] = "Beat the first familiar (requires nothing)"
 		placedescs[5] = "Beat the second familiar (requires nothing)"
 		placedescs[6] = "Defeat The Naughty Sorceress and The Avatar of Jarlsberg"
+	elseif ascensionpath("Heavy Rains") then
+		placedescs[6] = "Defeat The Rain King"
 	end
 	local status = "<b>Chamber progress</b><br>"
 	for x, y in ipairs(placedescs) do

@@ -71,15 +71,15 @@ end
 local function progresscolor(c, m, thresholds)
 	local pct = math.min(100, c * 100 / m)
 	local color = "blue"
-	if thresholds ~= nil then 
+	if thresholds ~= nil then
 		local sorted = {}
 		for lvl in pairs(thresholds) do
-			table.insert(sorted, lvl) 
+			table.insert(sorted, lvl)
 		end
 		table.sort(sorted)
 		for _, lvl in ipairs(sorted) do
-			if pct >= lvl then 
-				color = thresholds[lvl] 
+			if pct >= lvl then
+				color = thresholds[lvl]
 			end
 		end
 	end
@@ -113,9 +113,7 @@ end
 
 function bl_charpane_level_lines(lines)
 	local partial_level, have_level, need_level = level_progress()
-	local compact = ""
-	if bl_compact() then compact = "compact" end
-	table.insert(lines, string.format([[<table id='chit_character' class="chit_brick nospace %s"><tr><th colspan='3'>]], compact))
+	table.insert(lines, string.format([[<table id='chit_character' class="chit_brick nospace"><tr><th colspan='3'>]]))
 	table.insert(lines, string.format([[<a class=nounder target=mainpane href="charsheet.php"><b>%s</b></a></th></tr>]], playername()))
 	table.insert(lines, [[<tr><td class='avatar' rowspan='4'><img src="]] .. (avatar_image() or "http://images.kingdomofloathing.com/itemimages/blank.gif") .. [["></td>]])
 	table.insert(lines, string.format([[<td class="label"><a target="mainpane" href="%s" title="Visit your guild">%s</a></td>]], guild_link(), classdesc()))
@@ -139,7 +137,7 @@ function bl_charpane_level_lines(lines)
 
 	table.insert(lines, string.format([[
 <tr>
-	<td colspan="2">
+	<td>
 		<div class="chit_resource">
 			<div title="Meat" style="float:left">
 				<span>%s</span><img src="http://images.kingdomofloathing.com/itemimages/meat.gif">
@@ -152,6 +150,65 @@ function bl_charpane_level_lines(lines)
 	</td>
 </tr>
 ]], format_integer(meat()), format_integer(advs()), format_integer(advs())))
+
+	table.insert(lines, string.format([[
+<tr>
+	<td class="progress" colspan="3" title="%d substats until level %d">
+		<div class="progressbar" style="width:%f%%"></div>
+	</td>
+</tr>
+</table>
+]], need_level - have_level, level() + 1, partial_level * 100))
+end
+
+function bl_path_resources_compact()
+	if ascensionpath("Heavy Rains") then
+		local function makespan(amount, name, icon)
+			amount = amount or 0
+			return string.format([[<span title="%d %s">%d<img src="http://images.kingdomofloathing.com/itemimages/%s"></span>]], amount, name, amount, icon)
+		end
+		return [[
+		<div class="chit_resource"><div>
+			]] .. makespan(heavyrains_thunder(), "thunder", "echo.gif") .. [[
+			]] .. makespan(heavyrains_rain(), "rain", "familiar31.gif") .. [[
+			]] .. makespan(heavyrains_lightning(), "lightning", "cloudlightning.gif") .. [[
+		</div></div>
+]]
+	end
+	return ""
+end
+
+function bl_charpane_level_lines_compact(lines)
+	local partial_level, have_level, need_level = level_progress()
+	table.insert(lines, string.format([[<table id='chit_character' class="chit_brick nospace compact">]]))
+--	table.insert(lines, string.format([[<a class=nounder target=mainpane href="charsheet.php"><b>%s</b></a></th></tr>]], playername()))
+	table.insert(lines, [[<tr><td class='compactavatar' rowspan='4'><img src="]] .. (avatar_image() or "http://images.kingdomofloathing.com/itemimages/blank.gif") .. [["></td>]])
+	table.insert(lines, string.format([[<td class="label"><a target="mainpane" href="charsheet.php">%s</a></td>]], playername()))
+	table.insert(lines, string.format([[<td class="level" rowspan="2" style="width:30px;"><a target="mainpane" href="council.php" title="Visit the Council">%s</a></td></tr>]], round_down(level() + partial_level, 1)))
+	table.insert(lines, string.format([[<tr><td class="label"><a target="mainpane" href="%s" title="Visit your guild">%s %s</a></td></tr>]], guild_link(), pathdesc(), classdesc_compact()))
+
+	table.insert(lines, string.format([[
+<tr>
+	<td>%s</td>
+	<td class="turns" align="top" title="Turns played (this run)">%d/%s</td>
+</tr>
+<tr>
+	<td>
+		<div class="chit_resource">
+			<div title="Meat">
+				<span>%s</span><img src="http://images.kingdomofloathing.com/itemimages/meat.gif">
+			</div>
+		</div>
+	</td>
+	<td>
+		<div class="chit_resource">
+			<div title="%s Adventures remaining" class="nowrap">
+				<span>%s</span><img src="http://images.kingdomofloathing.com/itemimages/slimhourglass.gif">
+			</div>
+		</div>
+	</td>
+</tr>
+]], bl_path_resources_compact(), daysthisrun(), turnsthisrun(), format_integer(meat()), format_integer(advs()), format_integer(advs())))
 
 	table.insert(lines, string.format([[
 <tr>
@@ -252,7 +309,7 @@ local function bl_compact_stats_bars(lines)
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane" >ML</a></td><td class="info">%+d</td>]], maximizer_link("Monster Level"), estimate_bonus("Monster Level")))
 	table.insert(lines, "</tr><tr>")
-	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(1, 1, { [0] = "#cbcbcb" })))
+	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(mcd(), maxmcd(), { [0] = "red", [50] = "orange", [75] = "green" })))
 	table.insert(lines, "</tr></table></td></tr>")
 end
 
@@ -265,10 +322,10 @@ local function bl_compact_organ_bars(lines)
 	--table.insert(lines, [[<tr><td class="label">F</td><td class="label">D</td><td class="label">S</td></tr>]])
 	table.insert(lines, "<tr>")
 	local organ_fmt = [[<td class="info"><span class="label">%s</span> %i&nbsp;/&nbsp;%i</td>]]
-	table.insert(lines, string.format(organ_fmt, "Stm",fullness(), estimate_max_fullness()))
-	table.insert(lines, string.format(organ_fmt, "Lvr",drunkenness(), estimate_max_safe_drunkenness()))
+	table.insert(lines, string.format(organ_fmt, "Stm", fullness(), estimate_max_fullness()))
+	table.insert(lines, string.format(organ_fmt, "Lvr", drunkenness(), estimate_max_safe_drunkenness()))
 	if setting_enabled("show spleen counter") then
-		table.insert(lines, string.format(organ_fmt, "Spl",spleen(), estimate_max_spleen()))
+		table.insert(lines, string.format(organ_fmt, "Spl", spleen(), estimate_max_spleen()))
 	end
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, "<td>")
@@ -565,60 +622,61 @@ function bl_charpane_buff_lines(lines)
 		table.insert(bufflines, string.format([[<tr class="intrinsic %s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td><td class='info' colspan='3'>Lvl %d %s</td></tr>]], compact_class, thrall.picture, thrall.level, thrall.name))
 	end
 	if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
-	table.insert(lines, [[
-<table id="chit_effects" class="chit_brick nospace">
-	<thead>
-		<tr>
-			<th colspan="4">Effects</th>
-		</tr>
-	</thead>
-]] .. table.concat(bufflines) .. [[
-</table>]])
+	table.insert(lines, [[<table id="chit_effects" class="chit_brick nospace">]])
+	if bl_compact() and tonumber(api_flag_config().compacteffects) == 1 then
+	else
+		table.insert(lines, [[<thead>
+			<tr>
+				<th colspan="4">Effects</th>
+			</tr>
+		</thead>]])
+	end
+	table.insert(lines, table.concat(bufflines))
+	table.insert(lines, [[</table>]])
 end
 
 function charpane_bleary_js()
+-- TODO: remove javascript resizing if possible
 	return [[
 <script type="text/javascript">
 //Resize window
-	$(window).resize(function() {
-		var pad = 5
-		var roofOffset = 4
-		var floorOffset = 4
-		var roof = $("#chit_roof")
-		var walls = $("#chit_walls")
-		var floor = $("#chit_floor")
-
-		var roofHeight = roof ? roof.outerHeight(true) : 0
-		var floorHeight = floor ? floor.outerHeight(true) : 0
-		var availableHeight = $(document).height() - floorHeight - roofOffset - floorOffset - pad;
-
-		if (floor) {
-			floor.css({ "bottom": floorOffset + "px" });
-		}
-
-		if (roof) {
-			roof.css({ "top": roofOffset + "px" });
-			if (!walls || (roofHeight > availableHeight)) {
-				roof.css("bottom", (floorOffset + floorHeight + pad) + "px");
-			}
-		}
-
-		if (walls && (roofHeight >= availableHeight)) {
-			walls.css("bottom", (floorOffset + floorHeight + pad) + "px");
-		}
-
-		else if (walls && (roofHeight < availableHeight)) {
-			walls.css("bottom", (floorOffset + floorHeight + pad) + "px");
-			if (roof) {
-				walls.css("top", (roofOffset + roofHeight + pad) + "px");
-			} else {
-				walls.css("top", (roofOffset) + "px");
-			}
-		}
-	});
+//	$(window).resize(function() {
+//		var pad = 2
+//		var roofOffset = 2
+//		var floorOffset = 2
+//		var roof = $("#chit_roof")
+//		var walls = $("#chit_walls")
+//		var floor = $("#chit_floor")
+//
+//		var roofHeight = roof ? roof.outerHeight(true) : 0
+//		var floorHeight = floor ? floor.outerHeight(true) : 0
+//		var availableHeight = $(document).height() - floorHeight - roofOffset - floorOffset - pad;
+//
+//		if (floor) {
+//			floor.css({ "bottom": floorOffset + "px" });
+//		}
+//
+//		if (roof) {
+//			roof.css({ "top": roofOffset + "px" });
+//			if (!walls || (roofHeight > availableHeight)) {
+//				roof.css("bottom", (floorOffset + floorHeight + pad) + "px");
+//			}
+//		}
+//
+//		if (walls && (roofHeight >= availableHeight)) {
+//			walls.css("bottom", (floorOffset + floorHeight + pad) + "px");
+//		} else if (walls && (roofHeight < availableHeight)) {
+//			walls.css("bottom", (floorOffset + floorHeight + pad) + "px");
+//			if (roof) {
+//				walls.css("top", (roofOffset + roofHeight + pad) + "px");
+//			} else {
+//				walls.css("top", (roofOffset) + "px");
+//			}
+//		}
+//	});
 
 	$(document).ready(function() {
-		$(window).resize();
+//		$(window).resize();
 
 //Picker Launchers
 	//use bind for multiple events (KoL uses jQuery 1.3, using multiple events for 'live' was added in jQuery 1.4)
@@ -708,17 +766,22 @@ add_interceptor("/charpane.php", function()
 
 	local extra_js, fams = get_familiar_grid()
 
-	table.insert(lines, [[<div id="chit_house"><div id="chit_roof" class="chit_chamber">]])
-	bl_charpane_level_lines(lines)
+	table.insert(lines, [[<div id="chit_house">]])
+--	table.insert(lines, [[<div id="chit_roof" class="chit_chamber">]])
+--	table.insert(lines, [[</div><!-- end roof -->]])
+
+	table.insert(lines, [[<div id="chit_walls" class="chit_chamber">]])
 	if bl_compact() then
+		bl_charpane_level_lines_compact(lines)
 		bl_compact_stats_panel(lines)
 	else
+		bl_charpane_level_lines(lines)
 		bl_charpane_mystats_lines(lines)
 	end
 	-- todo: move to new function
 	if setting_enabled("show modifier estimates") then
 		if bl_compact() then
-			table.insert(lines, [[<table id="chit_modifiers" class="chit_brick nospace compact">]])
+			table.insert(lines, [[<table id="chit_modifiers" class="chit_brick compact nospace">]])
 		else
 			table.insert(lines, [[<table id="chit_modifiers" class="chit_brick nospace">]])
 		end
@@ -756,25 +819,25 @@ add_interceptor("/charpane.php", function()
 	else
 		bl_charpane_compact_familiar(lines)
 	end
-	table.insert(lines, [[</div><!-- end roof -->]])
-
-	table.insert(lines, [[<div id="chit_walls" class="chit_chamber">]])
 	bl_charpane_buff_lines(lines)
-	table.insert(lines, [[</div><!-- end walls -->
-<div id="chit_floor" class="chit_chamber">
-	<table id="chit_toolbar">
+	if not setting_enabled("show modifier estimates") or ascensionstatus("Aftercore") then
+		table.insert(lines, [[<table id="chit_toolbar">
 		<tr>
 			<th>
 				<ul style="float:left">
-					<li><a href="charpane.php" title="Reload"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAI/SURBVDjLjZPbS9NhHMYH+zNidtCSQrqwQtY5y2QtT2QGrTZf13TkoYFlzsWa/tzcoR3cSc2xYUlGJfzAaIRltY0N12H5I+jaOxG8De+evhtdOP1hu3hv3sPzPO/z4SsBIPnfuvG8cbBlWiEVO5OUItA0VS8oxi9EdhXo+6yV3V3UGHRvVXHNfNv6zRfNuBZVoiFcB/3LdnQ8U+Gk+bhPVKB3qUOuf6/muaQR/qwDkZ9BRFdCmMr5EPz6BN7lMYylLGgNNaKqt3K0SKDnQ7us690t3rNsxeyvaUz+8OJpzo/QNzd8WTtcaQ7WlBmPvxhx1V2Pg7oDziIBimwwf3qAGWESkVwQ7owNujk1ztvk+cg4NnAUTT4FrrjqUKHdF9jxBfXr1rgjaSk4OlMcLrnOrJ7latxbL1V2lgvlbG9MtMTrMw1r1PImtfyn1n5q47TlBLf90n5NmalMtUdKZoyQMkLKlIGLjMyYhFpmlz3nGEVmFJlRZNaf7pIaEndM24XIjCOzjX9mm2S2JsqdkMYIqbB1j5C6yWzVk7YRFTsGFu7l+4nveExIA9aMCcOJh6DIoMigyOh+o4UryRWQOtIjaJtoziM1FD0mpE4uZcTc72gBaUyYKEI6khgqINXO3saR7kM8IZUVCRDS0Ucf+xFbCReQhr97MZ51wpWxYnhpCD3zOrT4lTisr+AJqVx0Fiiyr4/vhP4VyyMFIUWNqRrV96vWKXKckBoIqWzXYcoPDrUslDJoopuEVEpIB0sR+AuErIiZ6OqMKAAAAABJRU5ErkJggg=="></a></li>
-					<!--<li><a class="tool_launcher" title="Elements" href="#" rel="elements"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA0JJREFUeNpUU01oXFUU/u59//PmvTd5k8ybmUxttS3ahIYEBCPFVAmFCoLNTgxCV8WFO3GhWFcu3AgiojsRdOOqiy4kWJA2VaiiBRGpRWY6mTRpMtM3/7/v3Xc9KUTaAx/3LM757ne/cy6TUuIwcpvHFG88XitxY32WW/MFzovTnIkMi2o+j/4omtG3Z5ZqP+KxYIcExevnnlHj+qcLdvHCi/5pnPJKCAwXDmdQozbQryFqb0Rqq/O12RAfHF/bCv8nyG1eOubI8Mqq/9ziS4XTsC2JoagiLQeYpqKA2QjUk5D9Hnpbm4grP/3Ay/310ns7TR7cuqxbSuaz1ezq4itHVnFX3cffcQURdFg8QIrPwACHGPwOdKtw3LOwUi+/Gg31ywcKVDD/tXnbff1MfgF/4T5JDjDFskhzwGUmHJk8UqJOdIhmnZ5SheEto9v65e1/3ix8x00jvz7vnoBmeVDgI8OK8HkJHi/S7Tl4Sh6WCMB7PsFDUntIntiwC2et3h57Q9XV3ELBnsWdCLBYAJMppIITCTBFpyMF+KAJ2RmBhS2CjrhThqYFiFvq8yp4vuDpWewkAjY1KFKBRrBJj0tk+mgI0T5oNoCGBuxxSJoKz+cRhziioq0LmdWR9CJEjCNWlEcYUT7kClITC7Lr0ARcggeM6UwmmIyoLnaEGu8r221PzFl9hsFIoqtINMk4LshhynVyOkUESZsaBx7kmLzIaejX9xHFTkUdP9Ru1ax47oUZEz/XxtTAIGMJQfthGgwWESh9DbxhQzZdJB0HylIBzd/ukALzhoqa/OZqpfvW3IqiukOOxo7AJOLgmkRaZzBoUfWhhNNNQbZtaKdOILy3i/qv2w3A+Z7vfPTUjUFl9NW1zSaOewy+whFuC7R3BZr3BVqUhw8EhmSgejJAz9BQuXkPg4n28fn61bJ6sE2yF314faNbiqvjtZWlacytmOhsCcgwQUzjZAWF9pmGUG2ivHEX4Z/h5x6zv3ziM+UXb6eTvdb7KbB3zi377rNPeyh6OtKC3NzvYlxuYHR7b1dL2p9keOuL8/V3kycIDmN25tpCRvYuZCCWPSaPTiVCZJH8m4W8eZRZVy421iqP1/8nwAD8GGnksWlP5wAAAABJRU5ErkJggg=="></a></li>-->]])
-	if not setting_enabled("show modifier estimates") then
-		table.insert(lines, [[<li><a class="tool_launcher" title="Modifiers" href="#" rel="modifiers"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAGxSURBVDjLpVM9a8JQFL0vUUGFfowFpw4dxM2vf9G5newv6OIvEDoVOnUQf0G7CEYQHVzUVZQoaKFugoW20EUaTd5L+u6NSQORdvDC5dyEd+499ySPOY4Dh0TEK8rl8n0mk7lOJBIpVVWBMUaJAzCFEMA5B8MwPpfL5VOlUrklonegWq3qEr+c/2Nbq9VWHs9XkEwm0xLUy/Lzn5KbD1exaDR6FlpBURSq4/E4HJ2c4jMwmYpcw6vf31be2bAHQTPVHYEFyAr7VeEACzfAQKPuSmlCy7LINBcteifSx3ROWutzlCAZ3Z9Op9ButyEWi8F8Poder0drXTQ1SNUeqalt22EFQrgvC4UC5HI5mow1EjA/SjdEjEQiYAd+HV8BF5xwNBpBo9EgBZPJBDqdDimYzWbQ7XapmeA8rIDLiRjFYpEm4zTEfD7v19lslhSgJ2EFXBAOh0Oo1+vk/ng8Bk3TyBtd16HVarkrCRFWYFqmrwAzqMDzBhMVWNaeFSzT5P3BQJXI3G+9P14XC8c0t5tQg/V6/dLv9c+l3ATDFrvL5HZyCBxpv5Rvboxv3eOxQ6/zD+IbEqvBQWgxAAAAAElFTkSuQmCC"></a></li>]])
+					<li><a href="charpane.php" title="Reload"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAI/SURBVDjLjZPbS9NhHMYH+zNidtCSQrqwQtY5y2QtT2QGrTZf13TkoYFlzsWa/tzcoR3cSc2xYUlGJfzAaIRltY0N12H5I+jaOxG8De+evhtdOP1hu3hv3sPzPO/z4SsBIPnfuvG8cbBlWiEVO5OUItA0VS8oxi9EdhXo+6yV3V3UGHRvVXHNfNv6zRfNuBZVoiFcB/3LdnQ8U+Gk+bhPVKB3qUOuf6/muaQR/qwDkZ9BRFdCmMr5EPz6BN7lMYylLGgNNaKqt3K0SKDnQ7us690t3rNsxeyvaUz+8OJpzo/QNzd8WTtcaQ7WlBmPvxhx1V2Pg7oDziIBimwwf3qAGWESkVwQ7owNujk1ztvk+cg4NnAUTT4FrrjqUKHdF9jxBfXr1rgjaSk4OlMcLrnOrJ7latxbL1V2lgvlbG9MtMTrMw1r1PImtfyn1n5q47TlBLf90n5NmalMtUdKZoyQMkLKlIGLjMyYhFpmlz3nGEVmFJlRZNaf7pIaEndM24XIjCOzjX9mm2S2JsqdkMYIqbB1j5C6yWzVk7YRFTsGFu7l+4nveExIA9aMCcOJh6DIoMigyOh+o4UryRWQOtIjaJtoziM1FD0mpE4uZcTc72gBaUyYKEI6khgqINXO3saR7kM8IZUVCRDS0Ucf+xFbCReQhr97MZ51wpWxYnhpCD3zOrT4lTisr+AJqVx0Fiiyr4/vhP4VyyMFIUWNqRrV96vWKXKckBoIqWzXYcoPDrUslDJoopuEVEpIB0sR+AuErIiZ6OqMKAAAAABJRU5ErkJggg=="></a></li>]])
+--					<li><a class="tool_launcher" title="Elements" href="#" rel="elements"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA0JJREFUeNpUU01oXFUU/u59//PmvTd5k8ybmUxttS3ahIYEBCPFVAmFCoLNTgxCV8WFO3GhWFcu3AgiojsRdOOqiy4kWJA2VaiiBRGpRWY6mTRpMtM3/7/v3Xc9KUTaAx/3LM757ne/cy6TUuIwcpvHFG88XitxY32WW/MFzovTnIkMi2o+j/4omtG3Z5ZqP+KxYIcExevnnlHj+qcLdvHCi/5pnPJKCAwXDmdQozbQryFqb0Rqq/O12RAfHF/bCv8nyG1eOubI8Mqq/9ziS4XTsC2JoagiLQeYpqKA2QjUk5D9Hnpbm4grP/3Ay/310ns7TR7cuqxbSuaz1ezq4itHVnFX3cffcQURdFg8QIrPwACHGPwOdKtw3LOwUi+/Gg31ywcKVDD/tXnbff1MfgF/4T5JDjDFskhzwGUmHJk8UqJOdIhmnZ5SheEto9v65e1/3ix8x00jvz7vnoBmeVDgI8OK8HkJHi/S7Tl4Sh6WCMB7PsFDUntIntiwC2et3h57Q9XV3ELBnsWdCLBYAJMppIITCTBFpyMF+KAJ2RmBhS2CjrhThqYFiFvq8yp4vuDpWewkAjY1KFKBRrBJj0tk+mgI0T5oNoCGBuxxSJoKz+cRhziioq0LmdWR9CJEjCNWlEcYUT7kClITC7Lr0ARcggeM6UwmmIyoLnaEGu8r221PzFl9hsFIoqtINMk4LshhynVyOkUESZsaBx7kmLzIaejX9xHFTkUdP9Ru1ax47oUZEz/XxtTAIGMJQfthGgwWESh9DbxhQzZdJB0HylIBzd/ukALzhoqa/OZqpfvW3IqiukOOxo7AJOLgmkRaZzBoUfWhhNNNQbZtaKdOILy3i/qv2w3A+Z7vfPTUjUFl9NW1zSaOewy+whFuC7R3BZr3BVqUhw8EhmSgejJAz9BQuXkPg4n28fn61bJ6sE2yF314faNbiqvjtZWlacytmOhsCcgwQUzjZAWF9pmGUG2ivHEX4Z/h5x6zv3ziM+UXb6eTvdb7KbB3zi377rNPeyh6OtKC3NzvYlxuYHR7b1dL2p9keOuL8/V3kycIDmN25tpCRvYuZCCWPSaPTiVCZJH8m4W8eZRZVy421iqP1/8nwAD8GGnksWlP5wAAAABJRU5ErkJggg=="></a></li>]])
+		if not setting_enabled("show modifier estimates") then
+			table.insert(lines, [[<li><a class="tool_launcher" title="Modifiers" href="#" rel="modifiers"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAGxSURBVDjLpVM9a8JQFL0vUUGFfowFpw4dxM2vf9G5newv6OIvEDoVOnUQf0G7CEYQHVzUVZQoaKFugoW20EUaTd5L+u6NSQORdvDC5dyEd+499ySPOY4Dh0TEK8rl8n0mk7lOJBIpVVWBMUaJAzCFEMA5B8MwPpfL5VOlUrklonegWq3qEr+c/2Nbq9VWHs9XkEwm0xLUy/Lzn5KbD1exaDR6FlpBURSq4/E4HJ2c4jMwmYpcw6vf31be2bAHQTPVHYEFyAr7VeEACzfAQKPuSmlCy7LINBcteifSx3ROWutzlCAZ3Z9Op9ButyEWi8F8Poder0drXTQ1SNUeqalt22EFQrgvC4UC5HI5mow1EjA/SjdEjEQiYAd+HV8BF5xwNBpBo9EgBZPJBDqdDimYzWbQ7XapmeA8rIDLiRjFYpEm4zTEfD7v19lslhSgJ2EFXBAOh0Oo1+vk/ng8Bk3TyBtd16HVarkrCRFWYFqmrwAzqMDzBhMVWNaeFSzT5P3BQJXI3G+9P14XC8c0t5tQg/V6/dLv9c+l3ATDFrvL5HZyCBxpv5Rvboxv3eOxQ6/zD+IbEqvBQWgxAAAAAElFTkSuQmCC"></a></li>]])
+		end
+		if ascensionstatus("Aftercore") then
+			table.insert(lines, string.format([[<li><a href="%s" target="mainpane" style="color: green">{ Get buffs }</a></li>]], make_get_buffs_href()))
+		end
+		table.insert(lines,[[</ul></th></tr></table>]])
 	end
-	if ascensionstatus("Aftercore") then
-		table.insert(lines, string.format([[<li><a href="%s" target="mainpane" style="color: green">{ Get buffs }</a></li>]], make_get_buffs_href()))
-	end
-	table.insert(lines,[[</ul></th></tr></table></div><!-- end floor -->]])
+	table.insert(lines, [[</div><!-- end walls -->]])
+--	table.insert(lines, [[<div id="chit_floor" class="chit_chamber">]])
+--	table.insert(lines,[[</div><!-- end floor -->]])
 
 	table.insert(lines, [[<div id="chit_closet">]])
 	table.insert(lines, bl_charpane_fam_picker(fams))
@@ -784,8 +847,7 @@ add_interceptor("/charpane.php", function()
 	table.insert(lines, [[</div><!-- end house -->]])
 
 	local text = [[
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-"http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
 <head>
 <title>KoL custom charpane</title>

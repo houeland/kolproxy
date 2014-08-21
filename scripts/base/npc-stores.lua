@@ -16,6 +16,12 @@ function buy_itemname(name, input_amount)
 	return function() return [[{ /buy ]] .. amount .. " " .. name .. [[ failed. }]] end
 end
 
+function buy_item(name, input_amount)
+	local itemname = maybe_get_itemname(name)
+	assert(itemname)
+	return buy_itemname(itemname, input_amount)
+end
+
 function store_buy_item(name, whichstore, amount)
 	return buy_itemname(name, amount)
 end

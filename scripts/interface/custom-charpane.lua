@@ -305,6 +305,10 @@ function classdesc()
 	end
 end
 
+function classdesc_compact()
+	return get_initials(playerclassname()) or "?"
+end
+
 function classpathdesc()
 	local p = pathdesc()
 	if p ~= "" then

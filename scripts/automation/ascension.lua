@@ -111,10 +111,6 @@ local function automate_day(whichday)
 		return not have_buff("Everything Looks Yellow")
 	end
 
-	local function can_photocopy()
-		return not ascension_script_option("use fax machine manually") and not cached_stuff.have_faxed_today and have_item("Clan VIP Lounge key") and not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete")
-	end
-
 	local function want_shore()
 		return not unlocked_island() and not have_item("skeleton") and not ascensionpath("Avatar of Sneaky Pete")
 	end
@@ -532,6 +528,10 @@ endif
 
 	local script = get_automation_scripts(cached_stuff)
 	local tasks = get_automation_tasks(script, cached_stuff)
+
+	local function can_photocopy()
+		return not ascension_script_option("use fax machine manually") and not cached_stuff.have_faxed_today and have_item("Clan VIP Lounge key") and not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete") and not script.fax_machine_too_old()
+	end
 
 	local function countif(x)
 		if have_item(x) then
@@ -1969,7 +1969,7 @@ endif
 	want_softcore_item_oneof { "Loathing Legion necktie", "Loathing Legion abacus", "Loathing Legion can opener", "Loathing Legion chainsaw", "Loathing Legion corkscrew", "Loathing Legion defibrillator", "Loathing Legion double prism", "Loathing Legion electric knife", "Loathing Legion hammer", "Loathing Legion helicopter", "Loathing Legion jackhammer", "Loathing Legion kitchen sink", "Loathing Legion knife", "Loathing Legion many-purpose hook", "Loathing Legion moondial", "Loathing Legion pizza stone", "Loathing Legion rollerblades", "Loathing Legion tape measure", "Loathing Legion tattoo needle", "Loathing Legion universal screwdriver" }
 	want_softcore_item("plastic vampire fangs")
 	want_softcore_item_oneof { "stinky cheese diaper", "stinky cheese wheel", "stinky cheese eye", "Staff of Queso Escusado", "stinky cheese sword" }
-	want_softcore_item("Greatest American Pants")
+	want_softcore_item_oneof { "Greatest American Pants", "Pantsgiving" }
 	want_softcore_item("Camp Scout backpack")
 	want_softcore_item_oneof { "Jekyllin hide belt", "Mr. Accessory Jr.", "astral mask" }
 	want_softcore_item_oneof { "Boris's Helm (askew)", "Boris's Helm", "Spooky Putty mitre" }
@@ -2034,6 +2034,18 @@ endif
 			action = function()
 				store_buy_item("Clancy's crumhorn", "p")
 				did_action = have_item("Clancy's crumhorn")
+			end
+		}
+	}
+
+	add_task {
+		when = ascensionpath("Heavy Rains") and not have_item("miniature life preserver") and meat() >= 500,
+		task = {
+			message = "buy miniature life preserver",
+			nobuffing = true,
+			action = function()
+				buy_item("miniature life preserver")
+				did_action = have_item("miniature life preserver")
 			end
 		}
 	}
@@ -3095,6 +3107,8 @@ endif
 		if challenge == "fist" then
 			larvafam = "Knob Goblin Organ Grinder"
 			larvamacro = macro_fist
+		elseif not script.have_familiar("Mini-Hipster") then
+			larvamacro = macro_noodlecannon
 		end
 		add_task {
 			prereq = quest("Looking for a Larva in All the Wrong Places"),
@@ -4641,39 +4655,10 @@ endif
 		end
 	end }
 
---	add_task {
---		when = ascensionstatus() ~= "Hardcore" and quest("Make War, Not... Oh, Wait") and not have_frat_war_outfit(),
---		task = {
---			message = "pull frat war outfit",
---			action = function()
---				if daysthisrun() >= 3 then
---					pull_in_softcore("beer helmet")
---					pull_in_softcore("distressed denim pants")
---					pull_in_softcore("bejeweled pledge pin")
---					did_action = have_frat_war_outfit()
---				else
---					if not have_item("pumpkin") and not have_item("pumpkin bomb") then
---						local macro = make_yellowray_macro("War")
---						if not script.have_familiar("He-Boulder") then
---							pull_in_softcore("unbearable light")
---							macro = "use unbearable light"
---						end
---						script.go("yellow raying frat house", 134, macro, {
---							["Catching Some Zetas"] = "Wake up the pledge and throw down",
---							["Fratacombs"] = "Wander this way",
---							["One Less Room Than In That Movie"] = "Officers' Lounge",
---						}, {}, "He-Boulder", 20, { equipment = { hat = "filthy knitted dread sack", pants = "filthy corduroys" } })
---					else
---						stop "TODO: Get frat war outfit [not automated when it's day 2]"
---					end
---				end
---			end
---		}
---	}
-
 	add_task {
 		prereq = function() return quest("Make War, Not... Oh, Wait") and
 			not have_frat_war_outfit() and
+			have_hippy_outfit() and
 			ensure_yellow_ray() end,
 		f = function()
 			script.bonus_target { "combat", "controlled damage" }
@@ -4684,6 +4669,19 @@ endif
 			}, {}, "He-Boulder", 20, { equipment = { hat = "filthy knitted dread sack", pants = "filthy corduroys" } })
 			did_action = have_frat_war_outfit()
 		end,
+	}
+
+	add_task {
+		when = ascensionstatus() ~= "Hardcore" and quest("Make War, Not... Oh, Wait") and not have_frat_war_outfit(),
+		task = {
+			message = "pull frat war outfit",
+			action = function()
+				pull_in_softcore("beer helmet")
+				pull_in_softcore("distressed denim pants")
+				pull_in_softcore("bejeweled pledge pin")
+				did_action = have_frat_war_outfit()
+			end
+		}
 	}
 
 	add_task {

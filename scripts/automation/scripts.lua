@@ -1121,6 +1121,7 @@ function get_automation_scripts(cached_stuff)
 			["Heavy Petting"] = true,
 			["Peeled Eyeballs"] = true,
 			["Silent Running"] = true,
+			["A Few Extra Pounds"] = true,
 		}
 		if ascensionpath("Avatar of Boris") and not ignore_buffing_and_outfit then
 			if want_bonus.boris_song then
@@ -1308,7 +1309,7 @@ function get_automation_scripts(cached_stuff)
 	end
 	local maybe_ensure_buffs_in_fist = f.maybe_ensure_buffs_in_fist
 
-	local wear_slots = { "hat", "container", "shirt", "weapon", "offhand", "pants", "acc1", "acc2", "acc3" }
+	local wear_slots = { "hat", "container", "shirt", "weapon", "offhand", "pants", "acc1", "acc2", "acc3", "familiarequip" }
 
 	function f.unequip_if_worn(itemname)
 		for _, s in ipairs(wear_slots) do
@@ -1392,7 +1393,7 @@ function get_automation_scripts(cached_stuff)
 		end
 	end
 
-	function f.wear(tbl)
+	function f.choose_equipment(tbl)
 		if want_bonus.plusinitiative then
 			f.fold_item("Loathing Legion rollerblades")
 		elseif want_bonus.rollover_adventures then
@@ -1419,6 +1420,7 @@ function get_automation_scripts(cached_stuff)
 			f.fold_item("Sneaky Pete's leather jacket (collar popped)")
 		end
 
+		-- TODO: put in settings
 		if not tbl.pants and want_bonus.runawayfrom and have_item("Greatest American Pants") and get_daily_counter("item.fly away.free runaways") < 9 then
 			tbl.pants = "Greatest American Pants"
 		end
@@ -1485,9 +1487,14 @@ function get_automation_scripts(cached_stuff)
 			neweq.offhand = nil
 		end
 
-		neweq = reuse_equipment_slots(neweq)
---		print("DEBUG: setting equipment: ", table_to_str(neweq))
-		set_equipment(neweq)
+		return neweq
+	end
+
+	function f.wear(tbl)
+		local neweq = script.choose_equipment(tbl)
+		local neweq_reused = reuse_equipment_slots(neweq)
+--		print("DEBUG: setting equipment: ", tostring(neweq), "based on", tostring(tbl))
+		set_equipment(neweq_reused)
 	end
 
 	local wear = f.wear
@@ -1676,9 +1683,6 @@ endif
 			towear.familiarequip = famequip
 		elseif (famequip == "spangly sombrero" or famequip == "spangly mariachi pants") and have_item(famequip) then -- TODO: hackish for spanglerack
 			towear.familiarequip = famequip
-		end
-		if not towear.familiarequip and have_item("astral pet sweater") then
-			towear.familiarequip = "astral pet sweater"
 		end
 		script.wear(towear)
 		script.heal_up()
@@ -3609,12 +3613,18 @@ endif
 				critical "No suitable tile found for rat cellar"
 			end
 			fam(withfam or "Rogue Program")
+			if macrofunc then
+			elseif familiar("Rogue Program") then
+				macrofunc = macro_stasis
+			else
+				macrofunc = macro_noodlecannon
+			end
 			f.heal_up()
 			f.burn_mp(20 + (minmp or 0))
 			ensure_mp(5 + (minmp or 0))
 			local pt, url = explore()
 			-- TODO: handle barrels better?
-			result, resulturl, did_action = handle_adventure_result(pt, url, "?", (macrofunc or macro_stasis)(), {
+			result, resulturl, did_action = handle_adventure_result(pt, url, "?", macrofunc(), {
 				["1984 Had Nothing on This Cellar"] = "Dump out the crate",
 				["A Rat's Home..."] = "Kick over the castle",
 				["Crate Expectations"] = "Smash the crates",
@@ -4677,6 +4687,14 @@ endif
 		end
 	end
 
+	function f.fax_machine_too_old()
+		if cached_stuff.fax_machine_too_old == nil then
+			local faxpt = get_page("/clan_viplounge.php", { action = "faxmachine" })
+			cached_stuff.fax_machine_too_old = faxpt:contains("clan thing is too old to be used on this path")
+		end
+		return cached_stuff.fax_machine_too_old
+	end
+
 	function f.get_faxbot_fax(target)
 		if playername():match("^Devster[0-9]+$") then
 			stop("Get fax for devster: " .. target)
@@ -4904,7 +4922,7 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 		local optname = nil
 		if specialnoncombatfunction then
 			optname, pickchoice = specialnoncombatfunction(adventure_title, choice_adventure_number, pt)
-		else
+		elseif noncombatchoices then
 			optname = noncombatchoices[adventure_title]
 		end
 		if optname and not pickchoice then

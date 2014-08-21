@@ -279,6 +279,13 @@ function setup_functions()
 			end
 		end
 		function mcd() return tonumber(status().mcd) end
+		function maxmcd()
+			if moonsign_area("Little Canadia") then
+				return 11
+			else
+				return 10
+			end
+		end
 		function applied_scratchnsniff_stickers()
 			local tbl = {}
 			for a, b in pairs(status().stickers or {}) do
@@ -386,6 +393,10 @@ function setup_functions()
 		function horde_size() return tonumber(status().horde) end
 		function petelove() return tonumber(status().petelove) or 0 end -- Not automatically up-to-date
 		function petehate() return tonumber(status().petehate) or 0 end
+
+		function heavyrains_thunder() return tonumber(status().thunder) end
+		function heavyrains_rain() return tonumber(status().rain) end
+		function heavyrains_lightning() return tonumber(status().lightning) end
 
 		function raw_retrieve_skills()
 			if locked() then

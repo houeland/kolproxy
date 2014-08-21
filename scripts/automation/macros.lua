@@ -380,6 +380,10 @@ function maybe_stun_monster(is_dangerous)
 		if playerclass("Sauceror") and have_skill("Itchy Curse Finger") then
 			cast_if_haveskill("Curse of Weaksauce")
 		end
+		table.insert(macrolines, [[
+			if hasskill Pocket Crumbs
+				cast Pocket Crumbs
+			endif]])
 	end
 
 	if playerclass("Accordion Thief") then

@@ -488,7 +488,7 @@ function parse_items()
 	end
 
 	local section = nil
-	local equip_sections = { Hats = true, Containers = true, Shirts = true, Weapons = true, Offhands = true, Pants = true, Accessories = true, ["Familiar Items"] = true }
+	local equip_sections = { Hats = true, Containers = true, Shirts = true, Weapons = true, ["Off-hand"] = true, Offhand = true, Offhands = true, Pants = true, Accessories = true, ["Familiar Items"] = true }
 	for l in io.lines("cache/files/modifiers.txt") do
 		l = remove_line_junk(l)
 		section = l:match([[^# (.*) section of modifiers.txt]]) or section

@@ -260,6 +260,10 @@ function get_ascension_automation_settings(want_bonus)
 				"baconstone ring",
 				"badass belt",
 				"shiny ring",
+			},
+			familiarequip = {
+				{ name = "miniature life preserver", check = function() return ascensionpath("Heavy Rains") end },
+				"astral pet sweater",
 			}
 		}
 	}
