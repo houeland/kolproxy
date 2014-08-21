@@ -120,6 +120,7 @@ function get_motorbike_display()
 	return [[<a target=mainpane href=main.php?action=motorcycle><img src=http://images.kingdomofloathing.com/itemimages/]] .. pic .. [[ width=30 height=30 border=0 alt="Your Motorcycle" title="Your Motorcycle"></a><br>]] .. table.concat(lovehate, ", ") .. "<br>"
 end
 
+
 function kolproxy_custom_charpane_mode()
 	if setting_enabled("use custom bleary charpane") then
 		return "bleary"
@@ -674,6 +675,7 @@ function full_charpane_level_lines(lines)
 	end
 end
 
+
 function compact_charpane_hpmp_lines(lines)
 	table.insert(lines, string.format([[HP: <b>%s</b><br>]], format_hpmp(hp(), maxhp())))
 	if ascensionpath("Zombie Slayer") then
@@ -687,9 +689,21 @@ function compact_charpane_hpmp_lines(lines)
 	if playerclass("Sauceror") then
 		table.insert(lines, string.format([[Soulsauce: <b>%s</b><br>]], soulsauce()))
 	end
+	if ascensionpath("Heavy Rains") then
+		if status().thunder then
+			table.insert(lines, string.format([[dB: <b>%s</b> [%s]<br>]], thunder(), get_daily_counter("thunder fights won")))
+		end
+		if status().rain then
+			table.insert(lines, string.format([[Drops: <b>%s</b> [%s]<br>]], rain(), get_daily_counter("rain fights won")))
+		end
+		if status().lightning then
+			table.insert(lines, string.format([[Bolts: <b>%s</b><br>]], lightning()))
+		end
+	end
 	table.insert(lines, string.format([[Meat: <b>%s</b><br>]], format_integer(meat())))
 	table.insert(lines, string.format([[Turns: <b>%s</b> <span class="tiny">(%s played, day %s)</span><br>]], advs(), turnsthisrun(), daysthisrun()))
 end
+
 
 function full_charpane_hpmp_lines(lines)
 	if playerclass("Seal Clubber") then
@@ -698,6 +712,18 @@ function full_charpane_hpmp_lines(lines)
 	if playerclass("Sauceror") then
 		table.insert(lines, string.format([[<center>Soulsauce: <b>%s</b></center>]], soulsauce()))
 	end
+	if ascensionpath("Heavy Rains") then
+		if status().thunder then
+			table.insert(lines, string.format([[<center>Thunder: <b>%d dBs</b> [%s]</center>]], thunder(), get_daily_counter("thunder fights won")))
+		end
+		if status().rain then
+			table.insert(lines, string.format([[<center>Rain: <b>%d drops</b> [%s]</center>]], rain(), get_daily_counter("rain fights won")))
+		end
+		if status().lightning then
+			table.insert(lines, string.format([[<center>Lightning: <b>%d bolts</b></center>]], lightning()))
+		end
+	end
+
 	table.insert(lines, [[<table cellpadding=3 align=center>]])
 	table.insert(lines, string.format([[<tr><td align=center><img src="http://images.kingdomofloathing.com/itemimages/hp.gif" class=hand title="Hit Points" alt="Hit Points"><br><span class=black>%s</span></td>]], format_hpmp(hp(), maxhp())))
 	if ascensionpath("Zombie Slayer") then
