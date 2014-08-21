@@ -1,29 +1,39 @@
-local bees = {
-	["beebee gunners"] = true,
-	["moneybee"] = true,
-	["mumblebee"] = true,
-	["beebee queue"] = true,
-	["bee swarm"] = true,
-	["buzzerker"] = true,
-	["Beebee King"] = true,
-	["bee thoven"] = true,
-	["Queen Bee"] = true,
-}
+function get_wanderer_turn(label)
+	return ascension["wanderer: "..label]
+end
 
-add_processor("/fight.php", function()
-	if bees[monstername()] then
-		ascension["bee turn"] = turnsthisrun() + 15
+function add_wandering_monster_tracker(label, monster_list, min_offset, max_offset)
+
+	-- create a lookup table from a list
+	local monster_table = {}
+	for _, m in ipairs(monster_list) do
+		monster_table[m] = true
 	end
-end)
 
-add_charpane_line(function()
-	local next_bee_turn = ascension["bee turn"]
-	if next_bee_turn then
-		local turnmin = next_bee_turn - turnsthisrun()
-		local turnmax = next_bee_turn + 5 - turnsthisrun()
-		if turnmax >= 0 then
-			if turnmin < 0 then turnmin = 0 end
-			return { name = "Bee", value = turnmin .. " to " .. turnmax }
+	--- Add a fight processor to check if a monster is in the list
+	add_processor("/fight.php", function()
+		if monster_table[monstername()] then
+			ascension["wanderer: "..label]  = turnsthisrun() + min_offset
 		end
-	end
-end)
+	end)
+
+	-- display the wandering monster window in the charpane
+	local window = max_offset - min_offset
+	add_charpane_line(function()
+		local next_turn = ascension["wanderer: "..label]
+		if next_turn then
+			local turnmin = next_turn - turnsthisrun()
+			local turnmax = next_turn + window - turnsthisrun()
+			if turnmax >= 0 then
+				if turnmin < 0 then turnmin = 0 end
+				return { name = label, value = turnmin .. " to " .. turnmax }
+			end
+		end
+	end)
+
+end
+
+
+local bees = {"beebee gunners", "moneybee", "mumblebee", "beebee queue", "bee swarm", "buzzerker", "Beebee King", "bee thoven", "Queen Bee"}
+add_wandering_monster_tracker("Bees", bees, 15, 20)
+
