@@ -701,9 +701,7 @@ function compact_charpane_hpmp_lines(lines)
 		if heavyrains_lightning() then
 			table.insert(lines, string.format([[Bolts: <b>%s</b><br>]], heavyrains_lightning()))
 		end
-		local depth = get_water_depth_modifier()
-		if depth >= 0 then depth = "+" .. depth end
-		table.insert(lines, string.format([[Depth: <b>%s</b><br>]], depth))
+		table.insert(lines, string.format([[Depth: <b>%+d</b><br>]], get_water_depth_modifier()))
 	end
 	table.insert(lines, string.format([[Meat: <b>%s</b><br>]], format_integer(meat())))
 	table.insert(lines, string.format([[Turns: <b>%s</b> <span class="tiny">(%s played, day %s)</span><br>]], advs(), turnsthisrun(), daysthisrun()))
@@ -727,9 +725,7 @@ function full_charpane_hpmp_lines(lines)
 		if heavyrains_lightning() then
 			table.insert(lines, string.format([[<center>Lightning: <b>%d bolts</b></center>]], heavyrains_lightning()))
 		end
-		local depth = get_water_depth_modifier()
-		if depth >= 0 then depth = "+" .. depth end
-		table.insert(lines, string.format([[<center>Depth: <b>%s</b></center>]], depth))
+		table.insert(lines, string.format([[<center>Depth: <b>%+d</b></center>]], get_water_depth_modifier()))
 	end
 
 	table.insert(lines, [[<table cellpadding=3 align=center>]])

@@ -1,0 +1,951 @@
+/*Defaults */
+body {
+	margin:0px;
+	font-size:1em;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+a:hover {
+	color:blue;
+}
+a:link { color: black; }
+a:visited { color: black; }
+a:active { color: black; }
+.nounder { text-decoration: none; }
+.tiny { font-size: 0.9em; }
+.black {
+	font-weight: bold;
+	color: black;
+	font-size: smaller;
+}
+.hand {
+	cursor:pointer;
+}
+.nospace {
+	padding:0px;
+	border-spacing:0px;
+}
+
+#chit_house {
+}
+#chit_roof {
+	position:absolute;
+	overflow-x:hidden;
+	overflow-y:auto;
+	margin:0px;
+	top:4px;
+	left:4px;
+	right:4px;
+}
+#chit_walls {
+	border-top:1px solid #E0E0E0;
+	border-bottom:1px solid #E0E0E0;
+	margin-top:4px;
+	left:4px;
+	right:4px;
+	position:absolute;
+	overflow-x:hidden;
+	overflow-y:auto;
+}
+#chit_floor {
+	position:absolute;
+	overflow-x:hidden;
+	overflow-y:auto;
+	margin:0px;
+	left:4px;
+	right:4px;
+	bottom:4px
+}
+#chit_toolbar {
+	border-collapse:separate;
+	border:1px solid #D0D0D0;
+	empty-cells:show;
+	font-size:12px;
+	font-weight:normal;
+	margin:0px;
+	width:100%;
+	padding:1px 1px 1px 1px;
+}
+#chit_toolbar img {
+	border:0px;
+	width:16px;
+	height:16px;
+}
+
+#chit_toolbar th {
+	text-align:center;
+	vertical-align:middle;
+	background-color:#F0F0F0;
+	padding:2px;
+}
+
+/* Table defaults */
+table.chit_brick {
+	background-color:white;
+	border-collapse:separate;
+	border:1px solid #D0D0D0;
+	empty-cells:show;
+	font-size:12px;
+	font-weight:normal;
+	margin-bottom:3px;
+	width:100%;
+	padding:1px 1px 0px 1px;
+}
+table.chit_brick:last-child {
+	margin-bottom:0px;
+}
+table.chit_brick a {
+	text-decoration:none;
+}
+table.chit_brick tr td a:hover {
+	color:blue;
+}
+table.chit_brick img {
+	border:0;
+	margin:0;
+	padding:0;
+}
+div.chit_skeleton table.chit_brick {
+	margin-bottom:0px;
+}
+table.chit_brick th {
+	word-wrap:break-word;
+	max-width:200px;
+	text-align:center;
+	vertical-align:middle;
+	background-color:#F0F0F0;
+	padding:2px;
+}
+table.chit_brick th img {
+	float:left;
+}
+div.chit_skeleton table.chit_brick th {
+	background-color:#F0F0B0;
+}
+
+/* location: used for counter checkers locations */
+table.chit_brick tr td.location {
+	background-color:white;
+	padding:3px 6px;
+	text-align:left;
+	color:#666666;
+	line-height:1.4;
+}
+table.chit_brick tr td.location a {
+	display:block;
+	font-weight:bold;
+}
+table.chit_brick tr td.info {
+	padding:3px;
+}
+table.chit_brick tr.helper th {
+	background-color:#F0F0B0;
+}
+table.chit_brick tr.wellfed th {
+	background-color:#F0F0B0;
+}
+
+table.chit_brick td {
+	border:0px;
+	text-align:center;
+	vertical-align:middle;
+}
+table.chit_brick tr td.progress {
+	padding:1px;
+}
+table.chit_brick tr td.icon {
+	background-color:white;
+	border:0px;
+	padding:3px;
+	width:30px;
+	height:30px;
+}
+table.chit_brick tr td.icon img {
+	border:0px;
+	width:30px;
+	height:30px;
+}
+table.chit_brick tr td.clancy img {
+	background-color:white;
+	padding:3px;
+	border:0px;
+	width:40px;
+	height:80px;
+}
+table.chit_brick tr td.companion img {
+	background-color:white;
+	padding:3px;
+	border:0px;
+	width:80px;
+	height:80px;
+	padding:0px 0px 0px 0px;
+	margin:-5px -5px -5px -5px;
+}
+table.chit_brick tr td.motorcycle img {
+	text-align:center;
+	height:70px;
+	margin:-3px 0px -9px 0px;
+}
+
+/* section adds the light grey bar above the table row */
+table.chit_brick tr.section td {
+	border-top:1px solid #F0F0F0;
+}
+
+/* Florist Friars formatting */
+td.florist {
+	color:#606060;
+	font-weight:bold;
+	text-align:center;
+	padding:0px;
+	max-width:60px;
+}
+td.florist img {
+	margin:-5px 2px 0px 2px;
+	vertical-align:middle;
+	height:40px;
+}
+tr.florist img {
+	vertical-align:middle;
+	max-height:50px;
+}
+tr.florist :first-line {
+	font-weight:bold;
+}
+
+/* Character Panel */
+#chit_character tr td.level {
+	font-size:21px;
+	background-color:#F8F8F8;
+	width:40px;
+}
+
+#chit_character tr td.avatar {
+	background-color:white;
+	padding:2px;
+	width:45px;
+	vertical-align:middle;
+}
+#chit_character tr td.avatar img {
+	width:45px;
+	height:75px;
+}
+#chit_character tr td.compactavatar img {
+	width:30px;
+	height:50px;
+}
+#chit_character tr td.label {
+	font-weight:bold;
+	text-align:left;
+	padding:1px 4px;
+}
+#chit_character tr td.info {
+	color:#606060;
+	text-align:left;
+	padding:1px 4px;
+}
+#chit_character tr td.info a {
+	font-weight:bold;
+	white-space:nowrap;
+}
+
+#chit_character tr td.turns {
+	border-top:1px solid white;
+	background-color:#F8F8F8;
+	padding:1px 4px;
+}
+#chit_character tr td.progress {
+	border-top:1px solid #DDDDDD;
+	height:5px;
+}
+
+#chit_character tr td.progress div.progressbar {
+	height:3px;
+}
+
+#chit_character.compact tr td.progress {
+	border-top:0px;
+	height:3px;
+}
+
+#chit_character.compact tr td.progress div.progressbar {
+	height:2px;
+}
+
+
+.chit_resource {
+	color:darkred;
+	font-weight:bold;
+	background-color:#F8F8F8;
+	padding:0px 2px;
+}
+.chit_resource div span, .chit_resource div img {
+	vertical-align:middle;
+}
+.chit_resource div img {
+	max-width:12px;
+	max-height:12px;
+	padding-left:3px;
+}
+
+/* Stats Panel */
+#chit_stats tbody tr:first-child td {
+	border-top:1px solid #F0F0F0;
+}
+
+#chit_stats tr td.label, #chit_substats tr td.label, #chit_organs tr td.label {
+	font-weight:bold;
+	text-align:left;
+	padding:2px;
+	width:50px;
+}
+#chit_stats tr td.info, #chit_substats tr td.info tr td.info {
+	color:#606060;
+	font-weight:bold;
+	text-align:right;
+	padding:1px;
+	width:50px;
+}
+#chit_stats tr td.fury {
+	color:red;
+	font-weight:900;
+	text-align:center;
+	padding:1px;
+	max-width:50px;
+}
+#chit_organs tr td.info {
+	color:#606060;
+	font-weight:bold;
+	text-align:center;
+	padding:2px;
+	width:40px;
+	display:block;
+}
+#chit_stats tr td.info a, #chit_stats tr td.progress a {
+	color:#606060;
+	white-space:nowrap;
+}
+#chit_stats tr td.info a:hover, #chit_stats tr td.progress a:hover {
+	color:blue;
+}
+#chit_stats.nobars tr td.info {
+	width:135px;
+}
+#chit_stats tr td.progress, #chit_substats tr td.progress, #chit_organs tr td.progress {
+	width:100%;
+	padding:2px 2px 2px 2px;
+	text-align:right;
+	font-weight:bold;
+	color:#A0A0A0;
+}
+
+#chit_stats tr td.progress .compact {
+width: auto;
+}
+#chit_stats tr td.history {
+	color:#606060;
+	font-weight:normal;
+	text-align:left;
+	padding:2px;
+}
+#chit_stats tr td.history a {
+	font-weight:bold;
+	color:#606060;
+}
+#chit_stats tr td.history a:hover {
+	color:blue;
+}
+
+/* compact mode */
+
+table#compact_organs {
+border-bottom: 1px solid #F0F0F0;
+width: 100%;
+}
+
+
+#chit_stats #compact_organs td.label, #chit_stats #compact_organs td.info {
+font-size: 10px;
+text-align: center;
+padding: 0px;
+}
+
+#chit_stats.compact tbody tr:first-child td {
+	border-top:0px;
+}
+
+#chit_stats.compact tr td.label {
+	width: 40px;
+}
+
+#chit_stats.compact td.statbar, #chit_stats.compact tr td.label, #chit_stats.compact tr td.info {
+padding: 0px;
+}
+
+div.progressbox {
+	padding:1px;
+	background-color:#F0F0F0;
+	border:1px solid #E0E0E0;
+	height:6px
+}
+
+.compact div.progressbox {
+	padding: 0px;
+	background-color:#F0F0F0;
+	border:1px solid #E0E0E0;
+	height:3px
+}
+
+div.progressbar {
+	height:100%;
+	background-color:blue
+}
+
+.compact div.progressbar {
+	height: 3px;
+	background-color: blue;
+}
+
+/* Hide-away Modifiers Panel */
+#chit_mod_panel tbody tr:first-child td {
+	border-top:1px solid #F0F0F0;
+}
+
+#chit_mod_panel tr td.label {
+	font-weight:bold;
+	text-align:left;
+	padding:2px;
+}
+#chit_mod_panel tr td.info{
+	color:#606060;
+	font-weight:bold;
+	text-align:right;
+	padding:2px;
+}
+
+/* Main Modifiers Panel */
+
+#chit_modifiers tr td.label {
+	text-align: left;
+	font-weight:bold;
+}
+
+#chit_modifiers tr td.info {
+	color:#606060;
+	font-weight:bold;
+	text-align:left;
+}
+
+#chit_modifiers.compact thead {
+display: none;
+}
+
+#chit_modifiers.compact tbody{
+font-size: 10px;
+padding: 2px;
+}
+
+#chit_modifiers.compact tr td.label, #chit_modifiers.compact tr td.info {
+padding: 0px;
+}
+
+/* MCD Panel + popup */
+#chit_mcd tr th.busy {
+	background-image:url(/images/relayimages/chit/busy.gif);
+	background-position:5px center;
+	background-repeat:no-repeat;
+}
+#chit_mcd td, #chit_pickermcd td {
+	padding:2px 4px;
+	text-align:left;
+}
+#chit_mcd tr:hover td, #chit_pickermcd tr:hover td {
+	background-color:#F8F8F8;
+}
+#chit_mcd tr.current td, #chit_pickermcd tr.current td {
+	background-color:#F0F0F0;
+	font-weight:bold;
+}
+#chit_mcd td.level, #chit_pickermcd td.level {
+	font-weight:bold;
+	text-align:center;
+	width:20px;
+}
+#chit_mcd td a, #chit_pickermcd td a {
+	display:block;
+}
+
+/* Familiars Panel */
+#chit_familiar tr td.progress {
+	border-top:1px solid #DDDDDD;
+}
+#chit_familiar tr td.progress div.progressbar {
+	height:4px;
+}
+#chit_familiar tr td.info {
+	border-left:1px solid #F0F0F0;
+	border-right:1px solid #F0F0F0;
+	font-weight:bold;
+	line-height:1.4;
+}
+
+/* compact mode familiar panel */
+
+#chit_familiar.compact tr td.progress {
+	border-top:1px solid #DDDDDD;
+}
+#chit_familiar.compact tr td.progress div.progressbar {
+	height:4px;
+}
+
+#chit_familiar.compact tr td {
+	font-size: 11px;
+}
+
+#chit_familiar.compact tr td.famname {
+	font-weight: bold;
+}
+
+#chit_familiar.compact tr td.info {
+	border-left:1px solid #F0F0F0;
+	border-right:1px solid #F0F0F0;
+	font-weight:bold;
+	line-height:1.4;
+	font-size: 10px;
+}
+
+#chit_familiar.compact img {
+	width: 20px;
+	height: 20px;
+}
+
+#chit_familiar.compact tr td.icon {
+	width: 20px;
+	height: 20px;
+	padding: 0px;
+}
+
+#chit_familiar.compact tr td.equip {
+	width: 20px;
+	height: 20px;
+	padding: 0px;
+	border: 1px solid #F0F0F0;
+}
+
+#chit_familiar.compact tr td.info {
+	padding: 0px;
+}
+
+/* Trail (Last Adventure) Panel */
+#chit_trail tr td {
+	padding:0px 4px 2px 4px;
+	font-size:12px;
+}
+#chit_trail tr td.last {
+	padding:2px 4px;
+	font-size:12px;
+	font-weight:bold;
+}
+
+/* Effects Panel */
+#chit_effects a {
+	text-decoration:none;
+}
+#chit_effects td.shrug a:hover, #chit_effects td.infinity a:hover, #chit_effects td.infizero a:hover {
+	color:red;
+}
+
+#chit_effects tbody.intrinsics td.info {
+	text-align:left;
+}
+#chit_effects td {
+	border-bottom:1px solid #F0F0F0;
+	vertical-align:middle;
+	padding:0px;
+}
+#chit_effects tr:last-child td {
+	border-bottom:3px solid #E0E0E0;
+}
+#chit_effects tbody:last-child tr:last-child td {
+	border-bottom:0px;
+}
+#chit_effects td.icon {
+	text-align:left;
+	width:20px;
+	padding:1px 2px;
+}
+#chit_effects td.icon img {
+	border:0px;
+	width:20px;
+	height:20px;
+}
+#chit_effects td.noshrug, #chit_effects td.shrug {
+	text-align:center;
+	padding:0px 2px;
+	width:25px;
+}
+#chit_effects td.shrug a, #chit_effects td.infinity a, #chit_effects td.infizero a {
+	color:blue;
+}
+#chit_effects td.info {
+	padding:1px 3px;
+	text-align:left;
+	font-size: 11px;
+}
+#chit_effects td.powerup {
+	width:20px;
+	text-align:center;
+}
+#chit_effects td.infinity {
+	text-align:center;
+	font-size:16px;
+	font-weight:bold;
+}
+#chit_effects td.infizero {
+	text-align:center;
+	font-size:10px;
+	font-weight:bold;
+}
+#chit_effects td.powerup a {
+	display:block;
+	height:100%;
+}
+#chit_effects td.right {
+	text-align:right;
+	padding-right:4px;
+}
+
+
+/* for compact effects list */
+
+#chit_effects .compact td.shrug {
+font-size: 11px;
+}
+#chit_effects .compact td.icon {
+	text-align:left;
+	width:15px;
+	height: 15px;
+	padding:1px 2px;
+}
+#chit_effects .compact td.icon img {
+	border:0px;
+	width:15px;
+	height:15px;
+}
+#chit_effects .compact td.noshrug, #chit_effects td.shrug {
+	text-align:center;
+	padding:0px 2px;
+	width:15px;
+}
+
+#chit_effects .compact td.powerup {
+	width:15px;
+	text-align:center;
+}
+
+.efmods {
+	color:#686868; /* slightly darker than modspooky */
+}
+#chit_effects .efmods {
+	font-size:10px;
+}
+.efmods .modcold {
+	color:blue;
+}
+.efmods .modhot {
+	color:red;
+}
+.efmods .modsleaze {
+	color:purple;
+}
+.efmods .modspooky {
+	color:#989898; /* slightly lighter than efmods */
+}
+.efmods .modstench {
+	color:green;
+}
+
+/* chit_picker defines the popup details, use for companion/familiar, MCD, etc. */
+table.chit_picker {
+	width:100%;
+	border:1px solid blue;
+	font-size:12px;
+	background-color:#F8F8F8;
+	text-align:center;
+	vertical-align:middle;
+	padding:0px;
+	border-spacing:0px;
+}
+table.chit_picker th {
+	background-color:blue;
+	color:white;
+	padding:4px 12px;
+	background-position:top right;
+	background-image:none;
+	background-repeat:no-repeat;
+	cursor:pointer;
+}
+table.chit_picker th:hover {
+	background-image:url(/images/closebutton.gif);
+}
+
+table.chit_picker td {
+	border-left:0px;
+	border-right:0px;
+	border-top:0px solid #DDDDDD;
+	border-bottom:1px solid white;
+}
+table.chit_picker tr.pickitem td {
+}
+table.chit_picker tr.picknone td.info {
+	padding:8px;
+	color:#333333;
+}
+table.chit_picker td.icon {
+	width:30px;
+	background-color:white;
+}
+table.chit_picker td.icon img {
+	border:2px solid white;
+}
+table.chit_picker td.item {
+	padding:0px 6px;
+}
+table.chit_picker tr.pickloader td.item {
+	padding:4px 12px;
+}
+table.chit_picker tr.pickitem td.remove {
+	border-left:4px solid red;
+}
+table.chit_picker tr.pickitem td.fold {
+	border-left:4px solid orange;
+}
+table.chit_picker tr.pickitem td.make {
+	border-left:4px solid orange;
+}
+table.chit_picker tr.pickitem td.inventory {
+	border-left:4px solid green;
+}
+table.chit_picker tr.pickitem td.clancy {
+	border-left:4px solid green;
+}
+table.chit_picker tr.pickitem td.retrieve {
+	border-left:4px solid purple;
+}
+table.chit_picker tr.pickitem td.action {
+	border-bottom:1px solid #E0E0E0;
+	padding:4px 8px;
+	font-weight:bold;
+}
+table.chit_picker tr td a {
+/*	display:block;
+	width:100%;
+	height:	100%; */
+	text-decoration:none;
+	color:black;
+}
+table.chit_picker tr.pickitem a:hover {
+	text-decoration:none;
+	color:blue;
+}
+
+/* Familiar Panel */
+#chit_pickerfam tr:hover td {
+	background-color:#F0F0F0;
+}
+
+/* chit_skeleton */
+div.chit_skeleton {
+	position:absolute;
+	display:block;
+	z-index:10;
+	right:10px;
+	left:10px;
+}
+
+div.chit_skeleton table.chit_brick th {
+	background-position:top right;
+	background-image:none;
+	background-repeat:no-repeat;
+	cursor:pointer;
+}
+div.chit_skeleton table.chit_brick th:hover {
+	background-image:url(/images/relayimages/chit/collapse.png);
+}
+
+/* Current Quests Panel (#nudges ID matched KOL usage) */
+#nudges td.small {
+	font-size:1em;
+	border-top:1px solid #F0F0F0;
+	padding:4px;
+}
+
+#nudges td a {
+	display:inline;
+}
+
+#nudges div {
+	padding-right:20px;
+	text-align:left;
+	line-height:1.4;
+}
+
+#nudges div .close {
+	position:absolute;
+	top:0px;
+	right:0px;
+	border:0px solid red;
+	display:inline;
+	height:10px;
+	width:10px;
+}
+
+/* Elements Panel (KOLWiki Elements image) */
+#chit_elements td {
+	overflow-x:hidden;
+}
+
+#chit_elements td img {
+	vertical-align:middle;
+	text-align:center;
+	width:100%;
+	max-width:200px;
+}
+
+/* Toolbar Panel (icons + popups) */
+#chit_toolbar {
+	padding:0px;
+	border-spacing:0px;
+}
+#chit_toolbar ul {
+	list-style-type:none;
+	margin:0px;
+	padding:0px;
+}
+
+#chit_toolbar ul li {
+	display:inline;
+	margin:0px;
+	padding:0px 3px;
+	border:0px;
+}
+#chit_toolbar ul li a {
+	margin:0px;
+	padding:0px;
+	border:0px;
+}
+#chit_toolbar ul li img {
+	margin:0px;
+	padding:0px;
+	border:0px;
+	vertical-align:middle;
+}
+
+.chit_chamber #chit_update th {
+	background-color:#dce1f5;
+}
+#chit_update a {
+	font-weight:bold;
+}
+#chit_update p {
+	padding:4px;
+	margin:0px;
+}
+
+#fam_equip {
+	position:relative;
+}
+img#fam_equip {
+	position:absolute;
+	top:0;
+	left:0;
+	z-index:5;
+}
+#fam_lock {
+	position:absolute;
+	top:21px;
+	left:17px;
+	z-index:10;
+	max-width:16px;
+	max-height:16px;
+	border:1px solid black;
+}
+
+/* Quests Tracker Panel added by ckb */
+#chit_tracker tr td {
+	padding:0px 4px 2px 4px;
+	/* font-size:12px; */
+	font-size:12px;
+	text-align:left;
+	border-top:1px solid #F0F0F0;
+}
+#chit_tracker td a {
+	font-weight:bold;
+}
+#chit_tracker tr td table {
+	width:100%;
+	border:0px;
+	padding:0px 0px 0px 0px;
+}
+#chit_tracker tr td table tr td {
+	margin-bottom:0px;
+	border:0px;
+	padding:0px 0px 0px 0px;
+}
+
+/* Fancy Currency by DeadNed (#1909053)
+   Not curently being used, but maybe... if I put in some time */
+#chit_currency ul {
+	margin:0;
+	padding:0;
+	list-style:none;
+}
+#chit_currency ul li {
+	display:block;
+	position:relative;
+	float:left;
+}
+#chit_currency li ul {
+	display:none;
+}
+#chit_currency ul li a {
+	display:block;
+	text-decoration:none;
+	padding:5px 15px 5px 15px;
+	background:#ffffff;
+	margin-left:1px;
+	white-space:nowrap;
+	font-weight:bold;
+	color:black;
+	font-size:smaller;
+}
+.nowrap {
+	white-space:nowrap;
+}
+#chit_currency ul li a:hover {
+	background:#eeeeee;
+}
+#chit_currency li:hover ul {
+	display:block;
+	position:absolute;
+}
+#chit_currency li:hover li {
+	float:none;
+	font-size:12px;
+}
+
+
+.blup {
+
+width: 13px;
+height: 14px;
+background-repeat: no-repeat;
+background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAOCAQAAABedl5ZAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAJ9JREFUGNOV0E8LwWAAx/FdV8prkOeZtcPyp0hYpjUHJamRXKyMNa/I+1PK/bl59nWRMIq+x8/l1884Gt8yfiK7bF1F/QO5JUePkBfhvFHbbOqQmDHyLGpP1De7TEiIiAmRJ1F5kMeMlDVzFmwIsKiad/KVp6akRGzxsZVULzMGOmVJgpsXFg51xoodjSL5+kDGnlaRAnw8enTy/4567wZAto4PusD6jAAAAABJRU5ErkJggg==);
+}
+.blrup {
+width: 13px;
+height: 14px;
+background-repeat: no-repeat;
+background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAOCAYAAAD0f5bSAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAATZJREFUeNq80stLAnEQB/Dv77UvhXXFyBCyIBEieggVqwimYvf+wc5dor1JJHSUII8VBEFgBBnBHtxVt/VXHjrUij0OzWEGhvkwMAyRUuK3QfGHmIrOVGo2LfrqZNjmj9B50oozIl5ShRLjQ3nqLLHVmai9mNO5YrhmpUKTtQYWivtz3Jetd5ifijprtg4j7iV2bZqq1jHsPiBRLCJdaqTZAC1nhS1HNwndswoFWNUaRr1nyEGAUfcR1paN+e29DA343XGe65NR/mGYULz+9S3CUWCY5R2Ergstm8XTiQO30/ZoDDi4H/uf0MZFMzapl+vl0CzblAgFUjJ4N1ey7o9jM6/HmDJJIFwF5QKMqpGT868NIjQQJmDkcpBhCCja9wgqpb3DI4SBh7HfhxB6ZIT82++9CTAAso5biZF3emoAAAAASUVORK5CYII=);
+
+}
