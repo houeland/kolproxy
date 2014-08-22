@@ -1058,9 +1058,13 @@ function parse_zones()
 	for l in io.lines("cache/files/adventures.txt") do
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
-		local zoneurl, name = tbl[2], tbl[5]
+		local zoneurl, attributes, name = tbl[2], tbl[3], tbl[4]
 		if zoneurl and name then
-			zones[name] = { zoneid = tonumber(zoneurl:match("adventure=([0-9]*)")) }
+			zones[name] = { 
+				zoneid = tonumber(zoneurl:match("adventure=([0-9]*)")),
+				stat = tonumber(attributes:match("Stat:%s(%w+)")),
+				terrain = attributes:match("Env:%s(%w+)"),
+			}
 		end
 	end
 

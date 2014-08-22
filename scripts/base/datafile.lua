@@ -271,3 +271,9 @@ function maybe_get_zonename(zone)
 	local id = get_zoneid(zone)
 	return zoneid_name_lookup[id]
 end
+
+function maybe_get_zone_data(zone)
+	local zone = maybe_get_zonename(zone)
+	local data = datafile("zones")[zone]
+	return data
+end
