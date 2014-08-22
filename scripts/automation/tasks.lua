@@ -582,6 +582,7 @@ mark m_done
 				end
 
 				local force_advagain = false
+				local else_defaulted_count = 0
 				local function ncfunc(advtitle, choicenum, pagetext)
 					if advtitle == "Welcome to the Great Overlook Lodge" then
 						force_advagain = true
@@ -597,6 +598,11 @@ mark m_done
 							end
 						end
 					else
+						if else_defaulted_count >= 10 then
+							stop "Failed to make progress in Twin Peak"
+						end
+						else_defaulted_count = else_defaulted_count + 1
+						print("AUTOMATION: defaulting to choice 1")
 						return "", 1
 					end
 				end

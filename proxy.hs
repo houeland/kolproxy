@@ -69,6 +69,8 @@ doProcessPage ref uri params = do
 				log_page_result ref (Right status_before) log_time state_before uri params effuri pagetext status_after state_after
 				return ()) `catch` (\e -> putErrorStrLn $ "processpage logging exception: " ++ (show (e :: KolproxyException)))
 
+			forkIO_ "proxy:checkserverstate" $ checkServerState ref
+
 			return (y, pagetext, effuri, hdrs, code)
 		putMVar mv =<< case x of
 			Right (Right msg, _, effuri, hdrs, code) -> do

@@ -3619,6 +3619,7 @@ endif
 			else
 				macrofunc = macro_noodlecannon
 			end
+			script.wear {}
 			f.heal_up()
 			f.burn_mp(20 + (minmp or 0))
 			ensure_mp(5 + (minmp or 0))
@@ -4229,7 +4230,7 @@ endif
 
 		local top_outfit = {}
 		if have_item("Mohawk wig") then
-			top_outfit =  {hat = "Mohawk wig"}
+			top_outfit = { hat = "Mohawk wig" }
 		end
 
 		script.bonus_target { "noncombat", "item" }
@@ -4265,10 +4266,12 @@ endif
 					return "Pick a Fight"
 				end
 			elseif advtitle == "Keep On Turnin' the Wheel in the Sky" then
-				inform "Spin that wheel!"
 				return "Spin That Wheel, Giants Get Real"
 			end
 		end })
+		if not did_action and get_result():contains("they should stay cleaned up") then
+			did_action = true
+		end
 	end
 
 	-- Assume this is only called when castle is complete

@@ -171,6 +171,7 @@ function get_ascension_automation_settings(want_bonus)
 				{ name = "cane-mail shirt", check = function() return (level() < 13) end },
 				"astral shirt",
 				"flaming pink shirt",
+				"famous blue raincoat",
 				{ name = "sugar shirt", check = function() return (level() < 13) end },
 				{ name = "hipposkin poncho", check = function() return (level() < 13) end },
 				"yak anorak",

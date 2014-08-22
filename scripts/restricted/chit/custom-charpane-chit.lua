@@ -271,6 +271,10 @@ function bl_charpane_mystats_lines(lines)
 	table.insert(lines, chit_progressline("MP", string.format("%i&nbsp;/&nbsp;%i", mp(), maxmp()), color_progressbar(mp(), maxmp(), "blue", "green")))
 	table.insert(lines, [[</tbody>]])
 	table.insert(lines, [[</table>]])
+	local resources = bl_path_resources_compact()
+	if resources ~= "" then
+		table.insert(lines, string.format([[<center>%s</center>]], resources))
+	end
 end
 
 local function bl_compact_stats_bars(lines)

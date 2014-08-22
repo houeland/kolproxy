@@ -302,29 +302,39 @@ download_actionbar ref = do
 --	writeFile ("logs/api/actionbar-data-" ++ show t ++ ".json") json
 	return json
 
+writeServerSettings ref store_reason = do
+	ai <- getApiInfo ref -- TODO: make this is the correct timed api load, or just the fastest possible. latest valid cached one?
+	(oldturns, oldid) <- readIORef (storedStateId_ $ sessionData $ ref)
+	newstateid <- if oldturns == turnsplayed ai
+		then return (turnsplayed ai, oldid + 1)
+		else return (turnsplayed ai, 1)
+	cachedactionbar <- readIORef (cachedActionbar_ $ sessionData $ ref)
+	json <- case cachedactionbar of
+		Just x -> return x
+		_ -> download_actionbar ref
+	let Ok storedjslist = fromJSObject <$> decodeStrict json
+	writeIORef (processPageStoreStateReason_ $ sessionData $ ref) Nothing
+	stateobj_new <- makeStateJSON_new ref newstateid
+	let newjson = encodeStrict $ toJSObject $ filter (\(x, _) -> x /= "kolproxy state" && x /= "kolproxy json state") storedjslist ++ [("kolproxy json state", JSObject stateobj_new)]
+	void $ postPageRawNoScripts "/actionbar.php" [("action", "set"), ("for", "kolproxy " ++ kolproxy_version_number ++ " by Eleron"), ("format", "json"), ("bar", newjson), ("pwd", pwd ai)] ref
+	putStrLn $ "INFO: Stored settings on server (" ++ (show $ length newjson) ++ " bytes) because: " ++ store_reason
+	writeIORef (cachedActionbar_ $ sessionData $ ref) (Just newjson)
+	writeIORef (storedStateId_ $ sessionData $ ref) newstateid
+
+checkServerState ref = do
+	maybe_reason <- readIORef (processPageStoreStateReason_ $ sessionData $ ref)
+	case maybe_reason of
+		Nothing -> return ()
+		Just reason -> writeServerSettings ref reason
+
 storeSettingsOnServer ref store_reason = when (store_state_in_actionbar ref) $ do
 	Just (_, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
 	let daymap = Data.Map.filterWithKey (\x _y -> not $ isPrefixOf "fight." x) extra_daymap
 	let statedesc = show (charmap, ascmap, daymap)
 	laststored <- readIORef (lastStoredState_ $ sessionData $ ref)
 	when (laststored /= Just statedesc) $ do
-		ai <- getApiInfo ref -- TODO: make this the correct timed api load, or just the fastest possible. latest valid cached one?
-		(oldturns, oldid) <- readIORef (storedStateId_ $ sessionData $ ref)
-		newstateid <- if oldturns == turnsplayed ai
-			then return (turnsplayed ai, oldid + 1)
-			else return (turnsplayed ai, 1)
-		cachedactionbar <- readIORef (cachedActionbar_ $ sessionData $ ref)
-		json <- case cachedactionbar of
-			Just x -> return x
-			_ -> download_actionbar ref
-		let Ok storedjslist = fromJSObject <$> decodeStrict json
-		stateobj_new <- makeStateJSON_new ref newstateid
-		let newjson = encodeStrict $ toJSObject $ filter (\(x, _) -> x /= "kolproxy state" && x /= "kolproxy json state") storedjslist ++ [("kolproxy json state", JSObject stateobj_new)]
-		void $ postPageRawNoScripts "/actionbar.php" [("action", "set"), ("for", "kolproxy " ++ kolproxy_version_number ++ " by Eleron"), ("format", "json"), ("bar", newjson), ("pwd", pwd ai)] ref
-		putStrLn $ "INFO: stored settings on server (" ++ (show $ length newjson) ++ " bytes.) because: " ++ store_reason
-		writeIORef (cachedActionbar_ $ sessionData $ ref) (Just newjson)
 		writeIORef (lastStoredState_ $ sessionData $ ref) (Just statedesc)
-		writeIORef (storedStateId_ $ sessionData $ ref) newstateid
+		writeIORef (processPageStoreStateReason_ $ sessionData $ ref) (Just store_reason)
 
 loadSettingsFromServer ref = do
 	json <- download_actionbar ref

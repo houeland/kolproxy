@@ -63,6 +63,7 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff = do
 		statestuff ("character-" ++ (charName ai) ++ ".state.sqlite3") action
 	luainstancesref <- newIORef $ Data.Map.empty
 	laststoredstateref <- newIORef Nothing
+	processpagestorestatereasonref <- newIORef Nothing
 	storedstateidref <- newIORef (-1, -1)
 	actionbarref <- newIORef Nothing
 	return ServerSessionType {
@@ -79,6 +80,7 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff = do
 			stateData_ = statedata,
 			luaInstances_ = luainstancesref,
 			lastStoredState_ = laststoredstateref,
+			processPageStoreStateReason_ = processpagestorestatereasonref,
 			storedStateId_ = storedstateidref,
 			cachedActionbar_ = actionbarref
 		}

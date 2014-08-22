@@ -75,7 +75,7 @@ get_latest_kolproxy_version = do
 		then return version
 		else return "?"
 
-set_state ref l = do
+set_state_processpage ref l = do
 	stateset <- peekJustString l 1
 	var <- peekJustString l 2
 	canread <- canReadState ref
@@ -91,6 +91,11 @@ set_state ref l = do
 		Just value -> setState ref stateset var value
 		Nothing -> unsetState ref stateset var
 	return 0
+
+set_state_browserrequest ref l = do
+	x <- set_state_processpage ref l
+	checkServerState ref
+	return x
 
 get_state ref l = do
 	stateset <- peekJustString l 1
@@ -604,14 +609,14 @@ setup_lua_instance level filename setupref = do
 				register_function "set_chat_state" set_chat_state
 				register_function "get_chat_state" get_chat_state
 			PROCESS -> do
-				register_function "set_state" set_state
+				register_function "set_state" set_state_processpage
 				register_function "get_state" get_state
 				register_function "reset_fight_state" $ \ref _l -> do
 					uglyhack_resetFightState ref
 					return 0
 				register_function "get_api_itemid_info" get_api_itemid_info
 			BROWSERREQUEST -> do
-				register_function "set_state" set_state
+				register_function "set_state" set_state_browserrequest
 				register_function "get_state" get_state
 				register_function "reset_fight_state" $ \ref _l -> do
 					uglyhack_resetFightState ref
