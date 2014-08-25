@@ -349,17 +349,11 @@ endif
 			local physresist = 0
 			local cfmhp = 10
 			local cfmatt = 10
-			if cfm and cfm.Stats and cfm.Stats.Element then
-				monster_element = cfm.Stats.Element
-			end
-			if cfm and cfm.Stats and cfm.Stats.Phys then
-				physresist = tonumber(cfm.Stats.Phys)
-			end
-			if cfm and cfm.Stats and cfm.Stats.HP then
-				cfmhp = tonumber(cfm.Stats.HP)
-			end
-			if cfm and cfm.Stats and cfm.Stats.Atk then
-				cfmatt = tonumber(cfm.Stats.Atk)
+			if cfm and cfm.Stats then
+				monster_element = cfm.Stats.Element or ""
+				physresist = cfm.Stats.physicalresistpercent or 0
+				cfmhp = tonumber(cfm.Stats.HP) or 10
+				cfmatt = tonumber(cfm.Stats.Atk) or 10
 			end
 			if (mp() >= 20 and have_skill("Slice")) and cfmhp >= 90 and physresist == 0 and (cfmatt > buffedmoxie() + 30) then
 				killspell = [[

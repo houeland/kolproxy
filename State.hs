@@ -313,7 +313,6 @@ writeServerSettings ref store_reason = do
 		Just x -> return x
 		_ -> download_actionbar ref
 	let Ok storedjslist = fromJSObject <$> decodeStrict json
-	writeIORef (processPageStoreStateReason_ $ sessionData $ ref) Nothing
 	stateobj_new <- makeStateJSON_new ref newstateid
 	let newjson = encodeStrict $ toJSObject $ filter (\(x, _) -> x /= "kolproxy state" && x /= "kolproxy json state") storedjslist ++ [("kolproxy json state", JSObject stateobj_new)]
 	void $ postPageRawNoScripts "/actionbar.php" [("action", "set"), ("for", "kolproxy " ++ kolproxy_version_number ++ " by Eleron"), ("format", "json"), ("bar", newjson), ("pwd", pwd ai)] ref
@@ -325,7 +324,9 @@ checkServerState ref = do
 	maybe_reason <- readIORef (processPageStoreStateReason_ $ sessionData $ ref)
 	case maybe_reason of
 		Nothing -> return ()
-		Just reason -> writeServerSettings ref reason
+		Just reason -> do
+			writeIORef (processPageStoreStateReason_ $ sessionData $ ref) Nothing
+			writeServerSettings ref reason
 
 storeSettingsOnServer ref store_reason = when (store_state_in_actionbar ref) $ do
 	Just (_, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)

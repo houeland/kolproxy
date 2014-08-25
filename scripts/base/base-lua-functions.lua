@@ -48,6 +48,18 @@ if table then
 	end
 end
 
+if math then
+	function math.minmax(min, x, max)
+		if x > max then
+			return max
+		elseif x < min then
+			return min
+		else
+			return x
+		end
+	end
+end
+
 exported_raw_tostring = tostring
 local raw_tostring = tostring
 

@@ -263,13 +263,7 @@ add_printer("/fight.php", function()
 		local monster = getCurrentFightMonster()
 
 		if monster then
-			local bonuses = make_bonuses_table {}
-			for x in text:gmatch([[/friarplants/[^ ]* alt="(.-)"]]) do
-				local plusitem = tonumber(x:match("+([0-9]+)%% Item drops"))
-				local plusmeat = tonumber(x:match("+([0-9]+)%% Meat drops"))
-				local plusinit = tonumber(x:match("+([0-9]+)%% Combat Initiative"))
-				bonuses = bonuses + { ["Item Drops from Monsters"] = plusitem, ["Meat from Monsters"] = plusmeat, ["Combat Initiative"] = plusinit }
-			end
+			local bonuses = estimate_fight_page_bonuses(text)
 			text = text:gsub([[(id=['"]monname['"].-)(</td>)]], function(prefix, suffix)
 				return prefix .. [[<div style='font-size:11px;color:#555;margin-top:5px;'>]] .. formatMonsterStats(monster) .. formatMonsterItems(monster, bonuses) .. [[</div>]] .. suffix
 			end)

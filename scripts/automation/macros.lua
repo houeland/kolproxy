@@ -192,7 +192,7 @@ endif
 ]]
 	end
 	local cfm = getCurrentFightMonster()
-	if cfm and cfm.Stats and cfm.Stats.Phys and tonumber(cfm.Stats.Phys) and tonumber(cfm.Stats.Phys) > 0 then
+	if cfm and cfm.Stats and cfm.Stats.physicalresistpercent and tonumber(cfm.Stats.physicalresistpercent) and tonumber(cfm.Stats.physicalresistpercent) > 40 then
 		return [[
 
 if (hasskill Smoke Break)
@@ -226,7 +226,7 @@ end
 local function can_easily_attack_with_moxie_weapon()
 	local cfm = getCurrentFightMonster()
 	if can_kill_with_attack() and using_moxie_weapon() and cfm and cfm.Stats and cfm.Stats.Atk and cfm.Stats.Atk - buffedmoxie() >= 25 then
-		if cfm.Stats.Phys and tonumber(cfm.Stats.Phys) and tonumber(cfm.Stats.Phys) > 0 then
+		if cfm.Stats.physicalresistpercent and tonumber(cfm.Stats.physicalresistpercent) and tonumber(cfm.Stats.Phys) > 40 then
 			return false
 		else
 			return true
@@ -1172,8 +1172,8 @@ function make_cannonsniff_macro(name)
 	local physresist = 0
 	local cfmhp = 10
 	local elem = nil
-	if cfm and cfm.Stats and cfm.Stats.Phys then
-		physresist = tonumber(cfm.Stats.Phys)
+	if cfm and cfm.Stats and cfm.Stats.physicalresistpercent then
+		physresist = tonumber(cfm.Stats.physicalresistpercent)
 	end
 	if cfm and cfm.Stats and cfm.Stats.HP then
 		cfmhp = tonumber(cfm.Stats.HP)
@@ -1737,4 +1737,97 @@ while !times 15
 endwhile
 
 ]]
+end
+
+--[[--
+function macro_stasis()
+function macro_noodlecannon()
+function macro_noodleserpent()
+function macro_ppnoodlecannon()
+function macro_noodlegeyser(maxtimes)
+function macro_spookyraven()
+function macro_hiddencity()
+function macro_bossbat()
+
+	local mname = fight["currently fighting"] and fight["currently fighting"].name or "?"
+	local cfm = getCurrentFightMonster()
+
+	if cfm and cfm.Stats and cfm.Stats.physicalresistpercent and tonumber(cfm.Stats.physicalresistpercent) and tonumber(cfm.Stats.physicalresistpercent) > 40 then
+
+local function can_kill_with_attack()
+	return not have_buff("QWOPped Up")
+end
+
+local function can_easily_attack_with_moxie_weapon()
+	local cfm = getCurrentFightMonster()
+	if can_kill_with_attack() and using_moxie_weapon() and cfm and cfm.Stats and cfm.Stats.Atk and cfm.Stats.Atk - buffedmoxie() >= 25 then
+		if cfm.Stats.physicalresistpercent and tonumber(cfm.Stats.physicalresistpercent) and tonumber(cfm.Stats.physicalresistpercent) > 40 then
+			return false
+		else
+			return true
+		end
+	end
+end
+
+function estimate_elemental_weapon_damage_sum()
+	return estimate_bonus("Cold Damage") + estimate_bonus("Hot Damage") + estimate_bonus("Sleaze Damage") + estimate_bonus("Spooky Damage") + estimate_bonus("Stench Damage")
+end
+
+--]]--
+
+function get_equipment_absorption()
+	local da = 0
+	for _, slot in ipairs { "hat", "shirt", "pants" } do
+		local itemid = equipment()[slot]
+		if itemid then
+			local itemdata = maybe_get_itemdata(itemid)
+			if itemdata then
+				da = da + (itemdata.power or 0)
+				if have_skill("Tao of the Terrapin") and (slot == "hat" or slot == "pants") then
+					da = da + (itemdata.power or 0)
+				end
+			end
+		end
+	end
+	return da
+end
+
+function is_wearing_shield()
+	local itemdata = maybe_get_itemdata(equipment().offhand)
+	if itemdata and itemdata.is_shield then
+		return true
+	else
+		return false
+	end
+end
+
+function estimate_current_monster_fight_damage(cfm, bonuses)
+	local monster_attack = cfm.Stats.Atk
+	local defend_stat = buffedmoxie()
+	if buffedmuscle() > defend_stat and have_skill("Hero of the Half-Shell") and is_wearing_shield() then
+		defend_stat = buffedmuscle()
+	end
+	local DA = math.minmax(10, get_equipment_absorption() + bonuses["Damage Absorption"], 1000)
+	local DR = bonuses["Damage Reduction"]
+	local diff = math.max(0, monster_attack - defend_stat)
+	local base_dmg = diff + 0.225 * monster_attack - DR
+	local absorbmod = 1.1 - math.sqrt(DA / 1000)
+	local elementalmod = 1 -- TODO: implement
+	--print("DEBUG: base damage", 0.20 * monster_attack, "to", 0.25 * monster_attack)
+	--print("DEBUG: after reduction", 0.225 * monster_attack, "to", base_dmg)
+	--print("DEBUG: absorb", DA, "(", absorbmod, ")")
+	--print("DEBUG: final damage", base_dmg * absorbmod * elementalmod)
+	return math.max(1, base_dmg * absorbmod * elementalmod)
+end
+
+macro_kill_monster_text = ""
+function macro_kill_monster(pt)
+	local cfm = getCurrentFightMonster()
+	if not cfm or not cfm.Stats or not cfm.Stats.Atk then
+		return macro_noodleserpent
+	end
+	local bonuses = estimate_modifier_bonuses() + estimate_fight_page_bonuses(pt)
+	local monster_damage = estimate_current_monster_fight_damage(cfm, bonuses)
+	macro_kill_monster_text = pt
+	return ""
 end

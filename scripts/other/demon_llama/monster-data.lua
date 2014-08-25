@@ -18,7 +18,7 @@ local function beesIncreaser(name, base_data)
 		base_data.Atk = base_data.Atk * modifier
 		base_data.Def = base_data.Def * modifier
 	end
-	
+
 	return base_data
 end
 
@@ -34,6 +34,34 @@ local monster_image_prefixes = {
 	slime3 = "slime3",
 	slime4 = "slime4",
 	slime5 = "slime5",
+}
+
+function estimate_fight_page_bonuses(fight_text)
+	local bonuses = make_bonuses_table {}
+	for x in fight_text:gmatch([[/friarplants/[^ ]* alt="(.-)"]]) do
+		local plusitem = tonumber(x:match("+([0-9]+)%% Item drops"))
+		local plusmeat = tonumber(x:match("+([0-9]+)%% Meat drops"))
+		local plusinit = tonumber(x:match("+([0-9]+)%% Combat Initiative"))
+		local plusml = tonumber(x:match("+([0-9]+) Monster Level"))
+		bonuses = bonuses + { ["Item Drops from Monsters"] = plusitem, ["Meat from Monsters"] = plusmeat, ["Combat Initiative"] = plusinit, ["Monster Level"] = plusml }
+	end
+
+	if ascensionpath("BIG!") then
+		bonuses = bonuses + { ["Monster Level"] = 150 }
+	end
+
+	local waterlevel = tonumber(fight_text:match([[alt="Water %(depth: ([0-9]+)%)"]]))
+	if waterlevel then
+		bonuses = bonuses + { ["Monster Level"] = waterlevel * 10 }
+	end
+
+	return bonuses
+end
+
+local monster_stat_data = {
+	["oil tycoon"] = { autohit = true, stunresistpercent = 50, elementalresistpercent = 25 },
+	["oil baron"] = { autohit = true, stunresistpercent = 75, elementalresistpercent = 50 },
+	["oil cartel"] = { autohit = true, stunresistpercent = 100, elementalresistpercent = 75, groupsize = 3 },
 }
 
 function buildCurrentFightMonsterDataCache(for_monster_name, fight_text)
@@ -55,18 +83,14 @@ function buildCurrentFightMonsterDataCache(for_monster_name, fight_text)
 	if not monster then return nil end
 	monster = table.copy(monster)
 
+	local modifiers = estimate_modifier_bonuses() + estimate_fight_page_bonuses(fight_text)
+	local ml = modifiers["Monster Level"]
+
 	local ml_increases = {
 		HP = true,
 		Atk = true,
 		Def = true,
 	}
-
-	local modifiers = estimate_modifier_bonuses()
-	local ml = modifiers["Monster Level"] or 0
-
-	if ascensionpath("BIG!") then
-		ml = ml + 150
-	end
 
 	for a, b in pairs(monster.Stats or {}) do
 		if ml_increases[a] and tonumber(b) then
@@ -76,20 +100,31 @@ function buildCurrentFightMonsterDataCache(for_monster_name, fight_text)
 		end
 	end
 
+	local mlresistpercent = math.min(ml * 0.4, 50)
+	monster.Stats.physicalresistpercent = math.max(monster.Stats.Phys or mlresistpercent, mlresistpercent) -- TODO: rename in datafile
+	monster.Stats.Phys = nil
+	monster.Stats.elementalresistpercent = mlresistpercent -- TODO: base values should be in datafile!
+	if ml >= 51 then
+		monster.Stats.stunresistpercent = math.min(100, ml - 50) -- TODO: added to base, should be in datafile!
+	end
+	if ml >= 151 then
+		monster.Stats.staggerimmune = true
+	end
+
 	--In a bees hate you, monster's with b in their names get increased by 20% per b
 	--This is AFTER ML is applied
 	if ascensionpath("Bees Hate You") then
 		monster.Stats = beesIncreaser(monstername(), monster.Stats)
 	end
 
-	local item = modifiers["Item Drops from Monsters"] or 0
+	local item = modifiers["Item Drops from Monsters"]
 	for _, idata in pairs(monster.Items or {}) do
 		idata.dropratepercent = idata.Chance
 		if not idata["pickpocket only"] then
 			local chance = idata.Chance or 0
 			local p_mod = chance * (1 + item/100)
 			p_mod = math.max(math.min(p_mod, 100), 0)
-			idata.Chance = tonumber(round_down(p_mod, 2))
+			idata.Chance = tonumber(round_down(p_mod, 2)) -- TODO: Don't apply droprate increase here!
 		end
 	end
 	return monster

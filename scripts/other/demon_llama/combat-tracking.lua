@@ -43,7 +43,7 @@ local function stripOutBlackList(fightBodyText)
 end
 
 local mainPattern =" [0-9()+%s]+ " --this is the main damage pattern 
-							 --it WILL need a suffix otherwise it will capture too many things
+                                   --it WILL need a suffix otherwise it will capture too many things
 
 local whiteList = {
 	mainPattern..[[damage]], --main pattern, this will cover most of the things
@@ -119,14 +119,14 @@ add_processor("/fight.php", function()
 	fightBody = getFightBody(text)
 
 	fight["damage inflicted"] = (tonumber(fight["damage inflicted"]) or 0) + getCombatDamage(fightBody)
-	
+
 	--atk delevel
 	local atkDelevel = 0
 	for number in fightBody:gmatch([[Monster attack power reduced by <b>%d+]]) do
 		atkDelevel = atkDelevel + tonumber(number:match([[%d+]]))
 	end
 	fight["attack decrease"] = (tonumber(fight["attack decrease"]) or 0) + atkDelevel
-	
+
 	--def delevel
 	local defDelevel = 0
 	for number in fightBody:gmatch([[Monster defense reduced by <b>%d+]]) do

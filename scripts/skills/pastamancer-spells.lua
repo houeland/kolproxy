@@ -10,7 +10,7 @@ function estimate_spell(spellname)
 	end
 end
 
-local function calcdmg(basedmgmin, basedmgmax, mystmult, cap, element)
+function calculate_spell_skill_damage(basedmgmin, basedmgmax, mystmult, cap, element)
 	local bonusdmg = estimate_bonus("Spell Damage") + estimate_bonus("Damage to " .. element .. " Spells")
 	local mystbonus = math.floor(mystmult * buffedmysticality())
 	local mindmg = basedmgmin + mystbonus + bonusdmg
@@ -73,27 +73,27 @@ local function pastahalftune(f)
 end
 
 add_spell_estimator("Cannelloni Cannon", function()
-	local function f(e) return calcdmg(16, 32, 0.25, pastacap(50), e) end
+	local function f(e) return calculate_spell_skill_damage(16, 32, 0.25, pastacap(50), e) end
 	return { mpcost = pastamp(8), damage = pastatune(f) }
 end)
 
 add_spell_estimator("Stringozzi Serpent", function()
-	local dmg = calcdmg(16, 32, 0.25, pastacap(75), "Physical")
+	local dmg = calculate_spell_skill_damage(16, 32, 0.25, pastacap(75), "Physical")
 	return { mpcost = pastamp(16), damage = { { probability = 1, sources = { dmg, dmg } } } }
 end)
 
 add_spell_estimator("Stuffed Mortar Shell", function()
-	local function f(e) return calcdmg(32, 64, 0.5, nil, e) end
+	local function f(e) return calculate_spell_skill_damage(32, 64, 0.5, nil, e) end
 	return { mpcost = pastamp(8), damage = pastatune(f), special = true }
 end)
 
 add_spell_estimator("Weapon of the Pastalord", function()
-	local function f(e) return calcdmg(32, 64, 0.5, nil, e) end
+	local function f(e) return calculate_spell_skill_damage(32, 64, 0.5, nil, e) end
 	return { mpcost = pastamp(32), damage = pastahalftune(f) }
 end)
 
 add_spell_estimator("Fearful Fettucini", function()
-	local dmg = calcdmg(32, 64, 0.5, nil, "Spooky")
+	local dmg = calculate_spell_skill_damage(32, 64, 0.5, nil, "Spooky")
 	return { mpcost = pastamp(32), damage = { { probability = 1, sources = { dmg } } } }
 end)
 

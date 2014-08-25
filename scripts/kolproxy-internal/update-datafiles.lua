@@ -481,6 +481,9 @@ function parse_items()
 				items[name].equip_requirements = reqtbl
 				items[name].power = power
 				items[name].weapon_hands = tonumber((weaptype or ""):match("^([0-9]+)%-handed"))
+				if weaptype == "shield" then
+					items[name].is_shield = true
+				end
 			else
 				hardwarn("equipment:item does not exist", name)
 			end

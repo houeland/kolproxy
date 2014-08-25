@@ -4891,7 +4891,7 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 			if macro then
 				local macrotext = macro
 				if type(macrotext) ~= "string" then
-					macrotext = macro()
+					macrotext = macro(pt)
 				end
 				local pt, url = post_page("/fight.php", { action = "macro", macrotext = macrotext })
 -- 				print("recurse with macro")

@@ -791,7 +791,7 @@ add_interceptor("/charpane.php", function()
 		end
 		table.insert(lines, [[<thead><tr><th colspan="2">Modifiers</th></tr></thead><tbody>]])
 		for _, mod_info in ipairs(run_charpane_line_functions()) do
-			if mod_info.compactname == "ML" then
+			if mod_info.compactname == "ML" and bl_compact() then
 				-- ML is already in the above panel
 			else
 				local label = ""

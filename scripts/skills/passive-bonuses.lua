@@ -10,8 +10,13 @@ end)
 function estimate_passive_bonuses(passivename)
 	local passivearray = {
 		["Expert Panhandling"] = { ["Meat from Monsters"] = 10 }, -- TODO: 15 when wearing a saucepan
-		["Slimy Shoulders"] = get_cached_modifier_bonuses("skill", "Slimy Shoulders") or {},--{ ["Combat Initiative"] = 20 },
+		["Slimy Shoulders"] = get_cached_modifier_bonuses("skill", "Slimy Shoulders") or {},
+		["Skin of the Leatherback"] = { ["Damage Reduction"] = math.ceil(level() / 2) },
 	}
+
+	if equipment().weapon or equipment().offhand then
+		passivearray["Master of the Surprising Fist"] = {}
+	end
 
 	if passivearray[passivename] then
 		return make_bonuses_table(passivearray[passivename])
@@ -27,6 +32,7 @@ function estimate_current_passive_bonuses()
 	local bonuses = {}
 	for skill, _ in pairs(get_player_skills() or {}) do
 		add_modifier_bonuses(bonuses, estimate_passive_bonuses(skill))
+		local bb = estimate_passive_bonuses(skill)
 	end
 	return bonuses
 end
