@@ -2,6 +2,7 @@
 function add_modifier_bonuses(target, source)
 	if not source then
 		print("WARNING: no source for add_modifier_bonuses()")
+		--error("no source")
 	end
 	for a, b in pairs(source or {}) do
 		if b == "?" then
@@ -14,52 +15,77 @@ function add_modifier_bonuses(target, source)
 	end
 end
 
+function subtract_modifier_bonuses(target, source)
+	if not source then
+		print("WARNING: no source for subtract_modifier_bonuses()")
+		--error("no source")
+	end
+	for a, b in pairs(source or {}) do
+		if b == "?" then
+		elseif b == true then
+		else
+			target[a] = (target[a] or 0) - b
+		end
+	end
+end
+
 function parse_modifier_bonuses_page(pt)
 	local bonuses = make_bonuses_table {}
-	bonuses = bonuses + { ["Item Drops from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops from Monsters<]])) }
-	bonuses = bonuses + { ["Item Drops from Monsters (Dreadsylvania only)"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops from Monsters %(Dreadsylvania only%)<]])) }
-	bonuses = bonuses + { ["Item Drops (KoL High School zones only)"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops %(KoL High School zones only%)<]])) }
-	bonuses = bonuses + { ["Item Drops (Underwater only)"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops %(Underwater only%)<]])) }
-	bonuses = bonuses + { ["Food Drops from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Food Drops from Monsters<]])) }
-	bonuses = bonuses + { ["Booze Drops from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Booze Drops from Monsters<]])) }
-	bonuses = bonuses + { ["Meat from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Meat from Monsters<]])) }
-	bonuses = bonuses + { ["Meat from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Meat Drops from Monsters<]])) }
-	bonuses = bonuses + { ["Monster Level"] = tonumber(pt:match([[>([+-][0-9]+) to Monster Level<]])) }
-	bonuses = bonuses + { ["Combat Initiative"] = tonumber(pt:match([[>Combat Initiative ([+-][0-9]+)%%<]])) }
-	bonuses = bonuses + { ["Combat Initiative"] = tonumber(pt:match([[>([+-][0-9]+)%% Combat Initiative<]])) }
-	bonuses = bonuses + { ["Adventures per day"] = tonumber(pt:match([[>([+-][0-9]+) Adventure%(s%) per day when equipped.?<]])) }
-	bonuses = bonuses + { ["Familiar Weight"] = tonumber(pt:match([[>([+-][0-9]+) to Familiar Weight<]])) }
-	bonuses = bonuses + { ["Cold Resistance"] = tonumber(pt:match([[ Cold Resistance %(([+-][0-9]+)%)<]])) }
-	bonuses = bonuses + { ["Hot Resistance"] = tonumber(pt:match([[ Hot Resistance %(([+-][0-9]+)%)<]])) }
-	bonuses = bonuses + { ["Sleaze Resistance"] = tonumber(pt:match([[ Sleaze Resistance %(([+-][0-9]+)%)<]])) }
-	bonuses = bonuses + { ["Spooky Resistance"] = tonumber(pt:match([[ Spooky Resistance %(([+-][0-9]+)%)<]])) }
-	bonuses = bonuses + { ["Stench Resistance"] = tonumber(pt:match([[ Stench Resistance %(([+-][0-9]+)%)<]])) }
-	bonuses = bonuses + { ["Slime Resistance"] = tonumber(pt:match([[ Slime Resistance %(([+-][0-9]+)%)<]])) }
+	bonuses.add { ["Item Drops from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops from Monsters<]])) }
+	bonuses.add { ["Item Drops from Monsters (Dreadsylvania only)"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops from Monsters %(Dreadsylvania only%)<]])) }
+	bonuses.add { ["Item Drops (KoL High School zones only)"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops %(KoL High School zones only%)<]])) }
+	bonuses.add { ["Item Drops (Underwater only)"] = tonumber(pt:match([[>([+-][0-9]+)%% Item Drops %(Underwater only%)<]])) }
+	bonuses.add { ["Food Drops from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Food Drops from Monsters<]])) }
+	bonuses.add { ["Booze Drops from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Booze Drops from Monsters<]])) }
+	bonuses.add { ["Meat from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Meat from Monsters<]])) }
+	bonuses.add { ["Meat from Monsters"] = tonumber(pt:match([[>([+-][0-9]+)%% Meat Drops from Monsters<]])) }
+	bonuses.add { ["Monster Level"] = tonumber(pt:match([[>([+-][0-9]+) to Monster Level<]])) }
+	bonuses.add { ["Combat Initiative"] = tonumber(pt:match([[>Combat Initiative ([+-][0-9]+)%%<]])) }
+	bonuses.add { ["Combat Initiative"] = tonumber(pt:match([[>([+-][0-9]+)%% Combat Initiative<]])) }
+
+	bonuses.add { ["Adventures per day"] = tonumber(pt:match([[>([+-][0-9]+) Adventure%(s%) per day when equipped.?<]])) }
+	bonuses.add { ["Familiar Weight"] = tonumber(pt:match([[>([+-][0-9]+) to Familiar Weight<]])) }
+
+	bonuses.add { ["Cold Resistance"] = tonumber(pt:match([[ Cold Resistance %(([+-][0-9]+)%)<]])) }
+	bonuses.add { ["Hot Resistance"] = tonumber(pt:match([[ Hot Resistance %(([+-][0-9]+)%)<]])) }
+	bonuses.add { ["Sleaze Resistance"] = tonumber(pt:match([[ Sleaze Resistance %(([+-][0-9]+)%)<]])) }
+	bonuses.add { ["Spooky Resistance"] = tonumber(pt:match([[ Spooky Resistance %(([+-][0-9]+)%)<]])) }
+	bonuses.add { ["Stench Resistance"] = tonumber(pt:match([[ Stench Resistance %(([+-][0-9]+)%)<]])) }
+	bonuses.add { ["Slime Resistance"] = tonumber(pt:match([[ Slime Resistance %(([+-][0-9]+)%)<]])) }
 	local all_elements = tonumber(pt:match([[ Resistance to All Elements %(([+-][0-9]+)%)<]]))
-	bonuses = bonuses + { ["Cold Resistance"] = all_elements, ["Hot Resistance"] = all_elements, ["Sleaze Resistance"] = all_elements, ["Spooky Resistance"] = all_elements, ["Stench Resistance"] = all_elements }
-	bonuses = bonuses + { ["Spell Damage"] = tonumber(pt:match([[>Spell Damage ([+-][0-9]+)<]])) }
-	bonuses = bonuses + { ["Spell Damage %"] = tonumber(pt:match([[>Spell Damage ([+-][0-9]+)%%<]])) }
-	bonuses = bonuses + { ["Weapon Damage"] = tonumber(pt:match([[>Weapon Damage ([+-][0-9]+)<]])) }
-	bonuses = bonuses + { ["Weapon Damage %"] = tonumber(pt:match([[>Weapon Damage ([+-][0-9]+)%%<]])) }
-	bonuses = bonuses + { ["% Chance of Critical Hit"] = tonumber(pt:match([[>([+-][0-9]+)%% [Cc]hance of Critical Hit<]])) }
-	bonuses = bonuses + { ["% Chance of Spell Critical Hit"] = tonumber(pt:match([[>([+-][0-9]+)%% [Cc]hance of Spell Critical Hit<]])) }
-	bonuses = bonuses + { ["Muscle"] = tonumber(pt:match([[>Muscle ([+-][0-9]+)<]])) }
-	bonuses = bonuses + { ["Muscle %"] = tonumber(pt:match([[>Muscle ([+-][0-9]+)%%<]])) }
-	bonuses = bonuses + { ["Mysticality"] = tonumber(pt:match([[>Mysticality ([+-][0-9]+)<]])) }
-	bonuses = bonuses + { ["Mysticality %"] = tonumber(pt:match([[>Mysticality ([+-][0-9]+)%%<]])) }
-	bonuses = bonuses + { ["Moxie"] = tonumber(pt:match([[>Moxie ([+-][0-9]+)<]])) }
-	bonuses = bonuses + { ["Moxie %"] = tonumber(pt:match([[>Moxie ([+-][0-9]+)%%<]])) }
+	bonuses.add { ["Cold Resistance"] = all_elements, ["Hot Resistance"] = all_elements, ["Sleaze Resistance"] = all_elements, ["Spooky Resistance"] = all_elements, ["Stench Resistance"] = all_elements }
+
+	bonuses.add { ["Spell Damage"] = tonumber(pt:match([[>Spell Damage ([+-][0-9]+)<]])) }
+	bonuses.add { ["Spell Damage %"] = tonumber(pt:match([[>Spell Damage ([+-][0-9]+)%%<]])) }
+	bonuses.add { ["Weapon Damage"] = tonumber(pt:match([[>Weapon Damage ([+-][0-9]+)<]])) }
+	bonuses.add { ["Weapon Damage %"] = tonumber(pt:match([[>Weapon Damage ([+-][0-9]+)%%<]])) }
+	bonuses.add { ["% Chance of Critical Hit"] = tonumber(pt:match([[>([+-][0-9]+)%% [Cc]hance of Critical Hit<]])) }
+	bonuses.add { ["% Chance of Spell Critical Hit"] = tonumber(pt:match([[>([+-][0-9]+)%% [Cc]hance of Spell Critical Hit<]])) }
+
+	bonuses.add { ["Muscle"] = tonumber(pt:match([[>Muscle ([+-][0-9]+)<]])) }
+	bonuses.add { ["Muscle %"] = tonumber(pt:match([[>Muscle ([+-][0-9]+)%%<]])) }
+	bonuses.add { ["Mysticality"] = tonumber(pt:match([[>Mysticality ([+-][0-9]+)<]])) }
+	bonuses.add { ["Mysticality %"] = tonumber(pt:match([[>Mysticality ([+-][0-9]+)%%<]])) }
+	bonuses.add { ["Moxie"] = tonumber(pt:match([[>Moxie ([+-][0-9]+)<]])) }
+	bonuses.add { ["Moxie %"] = tonumber(pt:match([[>Moxie ([+-][0-9]+)%%<]])) }
 	local all_attributes = tonumber(pt:match([[>All Attributes ([+-][0-9]+)<]]))
 	local all_attributes_percent = tonumber(pt:match([[>All Attributes ([+-][0-9]+)%%<]]))
-	bonuses = bonuses + { ["Muscle"] = all_attributes, ["Mysticality"] = all_attributes, ["Moxie"] = all_attributes }
-	bonuses = bonuses + { ["Muscle %"] = all_attributes_percent, ["Mysticality %"] = all_attributes_percent, ["Moxie %"] = all_attributes_percent }
+	bonuses.add { ["Muscle"] = all_attributes, ["Mysticality"] = all_attributes, ["Moxie"] = all_attributes }
+	bonuses.add { ["Muscle %"] = all_attributes_percent, ["Mysticality %"] = all_attributes_percent, ["Moxie %"] = all_attributes_percent }
+
+	bonuses.add { ["Maximum HP"] = tonumber(pt:match([[>Maximum HP ([+-][0-9]+)<]])) }
+	bonuses.add { ["Maximum HP %"] = tonumber(pt:match([[>Maximum HP ([+-][0-9]+)%%<]])) }
+	bonuses.add { ["Maximum MP"] = tonumber(pt:match([[>Maximum MP ([+-][0-9]+)<]])) }
+	bonuses.add { ["Maximum MP %"] = tonumber(pt:match([[>Maximum MP ([+-][0-9]+)%%<]])) }
+	local maxhpmp = tonumber(pt:match([[>Maximum HP/MP ([+-][0-9]+)<]]))
+	bonuses.add { ["Maximum HP"] = maxhpmp, ["Maximum MP"] = maxhpmp }
 -- TODO: add more bonuses
 
 	if pt:contains(">Monsters will be more attracted to you.<") then
-		bonuses = bonuses + { ["Monsters will be more attracted to you"] = 5 }
+		bonuses.add { ["Monsters will be more attracted to you"] = 5 }
 	end
 	if pt:contains(">Monsters will be less attracted to you.<") then
-		bonuses = bonuses + { ["Monsters will be more attracted to you"] = -5 }
+		bonuses.add { ["Monsters will be more attracted to you"] = -5 }
 	end
 	return bonuses
 end
@@ -181,7 +207,7 @@ add_automator("all pages", function()
 	end
 end)
 
-local function estimate_item_equip_bonuses_uncached(item)
+function estimate_item_equip_bonuses_uncached(item)
 	local itemarray = {
 		["parasitic tentacles"] = { ["Combat Initiative"] = math.min(15, level()) * (2 + (have_buff("Yuletide Mutations") and 1 or 0)) },
 		["frosty halo"] = { ["Item Drops from Monsters"] = (not equipment().weapon and not equipment().offhand) and 25 or nil },
@@ -228,7 +254,7 @@ local function estimate_item_equip_bonuses_uncached(item)
 		if itemdata then
 			local bonuses = make_bonuses_table(itemdata.equip_bonuses or {})
 			if itemdata.song_duration and have_skill("Accordion Appreciation") then
-				bonuses = bonuses + bonuses
+				bonuses.add(itemdata.equip_bonuses or {})
 			end
 			return bonuses
 		else

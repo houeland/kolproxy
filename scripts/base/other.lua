@@ -470,16 +470,31 @@ add_ascension_assistance(function() return not talked_to_toot end, function()
 		async_get_page("/tutorial.php", { action = "toot" })
 		use_item("letter from King Ralph XI")
 		async_post_page("/galaktik.php", { action = "startquest", pwd = session.pwd })
-		if not ascensionpath("Bees Hate You") then
-			use_item("Newbiesport&trade; tent")
-		end
+--		if not ascensionpath("Bees Hate You") then
+--			use_item("Newbiesport&trade; tent")
+--		end
 	end
 	talked_to_toot = true
 end)
 
--- Use Cobb's Knob map
+local function add_use_item_ascension_assistance(itemname)
+	add_ascension_assistance(function() return have_item(itemname) end, function()
+		use_item(itemname)
+	end)
+end
+
+add_use_item_ascension_assistance("astral hot dog dinner")
+add_use_item_ascension_assistance("astral six-pack")
+add_use_item_ascension_assistance("carton of astral energy drinks")
+
+add_use_item_ascension_assistance("telegram from Lady Spookyraven")
+
 add_ascension_assistance(function() return have_item("Knob Goblin encryption key") and have_item("Cobb's Knob map") and not ascensionpath("Bees Hate You") end, function()
 	use_item("Cobb's Knob map")
+end)
+
+add_ascension_assistance(function() return have_item("Lady Spookyraven's necklace") end, function()
+	get_page("/place.php", { whichplace = "manor1", action = "manor1_ladys" })
 end)
 
 function pick_up_continuum_transfunctioner()
@@ -490,25 +505,21 @@ function pick_up_continuum_transfunctioner()
 	return async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 664, option = 1 })
 end
 
--- Pick up transfunctioner
 add_ascension_assistance(function() return level() >= 2 and not have_item("continuum transfunctioner") end, function()
 	async_post_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker_quest" })
 	pick_up_continuum_transfunctioner()
 end)
 
--- untinker bridge
 add_ascension_assistance(function() return have_item("abridged dictionary") end, function()
+	-- untinker bridge
 	async_post_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker", pwd = session.pwd, preaction = "untinker", whichitem = get_itemid("abridged dictionary") })
 end)
 
--- Use roflmao scrolls
-add_ascension_assistance(function() return level() >= 9 and have_item("64735 scroll") end, function()
+add_ascension_assistance(function() return level() >= 9 and have_item("64735 scroll") and have_item("dictionary") end, function()
 	use_item("64735 scroll")
 end)
 
-add_ascension_assistance(function() return have_item("hermit script") end, function()
-	use_item("hermit script")
-end)
+add_use_item_ascension_assistance("hermit script")
 
 add_ascension_assistance(function() return have_item("&quot;2 Love Me, Vol. 2&quot;") end, function()
 	use_item("&quot;2 Love Me, Vol. 2&quot;")

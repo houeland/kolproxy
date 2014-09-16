@@ -10,7 +10,7 @@ function get_water_depth_modifier()
 		mod = mod - 2
 	end
 	if have_equipped_item("fishbone corset") then
-		mod = mod - 2	
+		mod = mod - 2
 	end
 	return mod
 end
@@ -34,7 +34,6 @@ function get_water_level(zone)
 	level = math.min(6, math.max(1, level))
 	return level
 end
-
 
 local rain_monsters = {
 	"giant tardigrade",
@@ -64,14 +63,28 @@ add_processor("won fight", function()
 end)
 
 add_warning {
-	message = "You are in danger of being gored by a storm cow. Balance MP and HP accordingly!",
+	message = "You are in danger of being attacked by a storm cow. Balance MP and HP accordingly!",
 	path = "/adventure.php",
 	type = "extra",
 	check = function(zoneid)
 		local zone_data = maybe_get_zone_data(zoneid)
 		if zone_data and zone_data.terrain == "outdoor" and get_water_level(zoneid) == 6 then
 			if get_wanderer_turn("Rain monster") and turnsthisrun() >= get_wanderer_turn("Rain monster") then
-				return (mp() - 50) > 0.75 * hp() or mp() > 100
+				return mp() - 50 >= 0.75 * hp() or mp() >= 100
+			end
+		end
+	end,
+}
+
+add_warning {
+	message = "You are in danger of being instantly killed by a storm cow. Balance MP and HP accordingly!",
+	path = "/adventure.php",
+	type = "warning",
+	check = function(zoneid)
+		local zone_data = maybe_get_zone_data(zoneid)
+		if zone_data and zone_data.terrain == "outdoor" and get_water_level(zoneid) == 6 then
+			if get_wanderer_turn("Rain monster") and turnsthisrun() >= get_wanderer_turn("Rain monster") then
+				return mp() - 50 >= hp()
 			end
 		end
 	end,

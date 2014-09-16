@@ -26,16 +26,6 @@ register_setting {
 	beta_version = true,
 }
 
-register_setting {
-	name = "display thrall as intrinsic",
-	description = "Display pasta thrall as if it were an effect",
-	group = "charpane",
-	default_level = "enthusiast",
-	parent = "use custom bleary charpane",
-	update_charpane = true,
-	beta_version = true,
-}
-
 local function chit_progressbar(c, m, color)
 	local pct = math.min(100, c * 100 / m)
 	return string.format([[<div class="progressbox" title="%i / %i"><div class="progressbar" style="background-color: %s; width: %i%%"></div></div>]], c, m, color, pct)
@@ -267,14 +257,18 @@ function bl_charpane_mystats_lines(lines)
 	end
 	table.insert(lines, [[</tbody>]])
 	table.insert(lines, [[<tbody>]])
-	table.insert(lines, chit_progressline("HP", string.format("%i&nbsp;/&nbsp;%i", hp(), maxhp()), color_progressbar(hp(), maxhp(), "blue", "green")))
-	table.insert(lines, chit_progressline("MP", string.format("%i&nbsp;/&nbsp;%i", mp(), maxmp()), color_progressbar(mp(), maxmp(), "blue", "green")))
+	table.insert(lines, chit_progressline("HP", string.format([[<a href="%s">%i</a>&nbsp;/&nbsp;<a href="%s">%i</a>]], script_heal_up_href { pwd = session.pwd }, hp(), script_heal_up_href { pwd = session.pwd, force_heal_up = 1 }, maxhp()), color_progressbar(hp(), maxhp(), "blue", "green")))
+	table.insert(lines, chit_progressline("MP", string.format([[%i&nbsp;/&nbsp;%i]], mp(), maxmp()), color_progressbar(mp(), maxmp(), "blue", "green")))
 	table.insert(lines, [[</tbody>]])
 	table.insert(lines, [[</table>]])
 	local resources = bl_path_resources_compact()
 	if resources ~= "" then
 		table.insert(lines, string.format([[<center>%s</center>]], resources))
 	end
+end
+
+local function cast_cocoon(str)
+	return string.format([[<span style="cursor: pointer;" onclick="kolproxy_cast_skillid(%d, event.shiftKey)" data-skillid="%d">%s</span>]], 3012, 3012, str)
 end
 
 local function bl_compact_stats_bars(lines)
@@ -303,7 +297,7 @@ local function bl_compact_stats_bars(lines)
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, "<td class='statbar' colspan='2'>" .. stat_line(rawmoxie()) .. "</td>")
 	table.insert(lines, "</tr><tr></table></td><td><table><tr>")
-	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">HP</a></td><td class="info">%s&nbsp/&nbsp;%s</td>]], maximizer_link("Max HP"), hp(), maxhp()))
+	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">HP</a></td><td class="info">%s&nbsp/&nbsp;%s</td>]], maximizer_link("Max HP"), cast_cocoon(hp()), cast_cocoon(maxhp())))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(hp(), maxhp(), { [0] = "red", [50] = "orange", [75] = "green" })))
 	table.insert(lines, "</tr><tr>")
@@ -323,13 +317,12 @@ local function bl_compact_organ_bars(lines)
 	local function add_organ_cells(full, fullmax)
 		table.insert(lines, string.format([[<td class="info">%i / %i</td>]], full, fullmax))
 	end
-	--table.insert(lines, [[<tr><td class="label">F</td><td class="label">D</td><td class="label">S</td></tr>]])
 	table.insert(lines, "<tr>")
-	local organ_fmt = [[<td class="info"><span class="label">%s</span> %i&nbsp;/&nbsp;%i</td>]]
-	table.insert(lines, string.format(organ_fmt, "Stm", fullness(), estimate_max_fullness()))
-	table.insert(lines, string.format(organ_fmt, "Lvr", drunkenness(), estimate_max_safe_drunkenness()))
+	local organ_fmt = [[<td class="info"><span class="label">%s</span>&nbsp;%i&nbsp;/&nbsp;%i</td>]]
+	table.insert(lines, string.format(organ_fmt, "F:", fullness(), estimate_max_fullness()))
+	table.insert(lines, string.format(organ_fmt, "D:", drunkenness(), estimate_max_safe_drunkenness()))
 	if setting_enabled("show spleen counter") then
-		table.insert(lines, string.format(organ_fmt, "Spl", spleen(), estimate_max_spleen()))
+		table.insert(lines, string.format(organ_fmt, "S:", spleen(), estimate_max_spleen()))
 	end
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, "<td>")
@@ -490,7 +483,7 @@ local function bl_charpane_compact_familiar(lines)
 	else
 		table.insert(lines, [[<tr><td class="icon"><a href="familiar.php" target="mainpane"><img src="http://images.kingdomofloathing.com/itemimages/blank.gif" width="20" height="20" class="chit_launcher" rel="chit_pickerfam" style="border: 1px solid #f0f0f0;"></td><td><a href="familiar.php" target="mainpane">No familiar</a><td class='weight'>0</td><td class="equip"><img src="http://images.kingdomofloathing.com/itemimages/blank.gif"></td></tr>]])
 	end
-	if pastathrall() and not setting_enabled("display thrall as intrinsic") then
+	if pastathrall() and not setting_enabled("display counters as effects") then
 		local thrall = get_current_pastathrall_info()
 		table.insert(lines, string.format([[<tr><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td><td class='famname'>%s</td><td class='weight'>%s</td></tr>]], thrall.picture, thrall.name, thrall.level))
 		table.insert(lines, string.format([[<tr><td class='info' colspan='4'>%s</td></tr>]], table.concat(thrall.abilities, ", ")))
@@ -576,11 +569,6 @@ function bl_charpane_buff_lines(lines)
 	local bufflines = {}
 
 	local last_buff_type = nil
-	local compact_class = ""
-
-	if tonumber(api_flag_config().compacteffects) == 1 then
-		compact_class = "compact"
-	end
 
 	for _, x in ipairs(get_sorted_buff_array()) do
 		local styleinfo = ""
@@ -612,21 +600,25 @@ function bl_charpane_buff_lines(lines)
 			strarrow = make_strarrow(x.upeffect)
 		end
 
-		local str = string.format([[<tr class="%s %s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td class='info'>%s</td><td class='%s'>%s</td><td class='powerup'><span oncontextmenu="return maybe_shrug(&quot;%s&quot;)">%s</span></td></tr>]], buff_type, compact_class, x.imgname, x.descid, x.title, x.title, shrug_class, display_duration(x.duration), x.title, strarrow)
+		local str = string.format([[<tr class="%s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td class='info'><div>%s</div></td><td class='%s'>%s</td><td class='powerup'><span oncontextmenu="return maybe_shrug(&quot;%s&quot;)">%s</span></td></tr>]], buff_type, x.imgname, x.descid, x.title, x.title, shrug_class, display_duration(x.duration), x.title, strarrow)
 		table.insert(bufflines, str)
 	end
 
-	if pastathrall() and setting_enabled("display thrall as intrinsic") then
+	if pastathrall() and setting_enabled("display counters as effects") then
 		-- TODO: do in buff listing, not here
 		if last_buff_type ~= "intrinsic" then
 			if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
 			table.insert(bufflines, [[<tbody class="intrinsic">]])
 		end
 		local thrall = get_current_pastathrall_info()
-		table.insert(bufflines, string.format([[<tr class="intrinsic %s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td><td class='info' colspan='3'>Lvl %d %s</td></tr>]], compact_class, thrall.picture, thrall.level, thrall.name))
+		table.insert(bufflines, string.format([[<tr class="intrinsic"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td><td class='info' colspan='3'><div>Lvl %d %s</div></td></tr>]], thrall.picture, thrall.level, thrall.name))
 	end
 	if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
-	table.insert(lines, [[<table id="chit_effects" class="chit_brick nospace">]])
+	if tonumber(api_flag_config().compacteffects) == 1 then
+		table.insert(lines, [[<table id="chit_effects" class="chit_brick compact nospace">]])
+	else
+		table.insert(lines, [[<table id="chit_effects" class="chit_brick nospace">]])
+	end
 	if bl_compact() and tonumber(api_flag_config().compacteffects) == 1 then
 	else
 		table.insert(lines, [[<thead>
@@ -817,7 +809,7 @@ add_interceptor("/charpane.php", function()
 	bl_charpane_zone_lines(lines)
 	if not bl_compact() then
 		bl_charpane_familiar(lines)
-		if pastathrall() and not setting_enabled("display thrall as intrinsic") then
+		if pastathrall() and not setting_enabled("display counters as effects") then
 			bl_charpane_thrall(lines)
 		end
 	else

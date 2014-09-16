@@ -1,21 +1,6 @@
 function get_ascension_automation_settings(want_bonus)
 	local tbl = {
-		should_wear_weapons = playerclass("Accordion Thief") or
-				challenge == "zombie" or
-				challenge == "jarlsberg" or
-				have_item("Jarlsberg's pan (Cosmic portal mode)") or
-				have_item("Operation Patriot Shield") or
-				have_item("Sneaky Pete's basket") or
-				have_item("Brimstone Bludgeon") or
-				have_item("Brimstone Bunker") or
-				have_item("astral shield") or
-				have_item("right bear arm") or
-				have_item("left bear arm") or
-				have_item("Meat Tenderizer is Murder") or
-				have_item("A Light that Never Goes Out") or
-				have_item("Staff of the Headmaster's Victuals") or
-				have_item("Saucepanic") or
-				have_item("Frankly Mr. Shank"),
+		should_wear_weapons = not ascensionpath("Way of the Surprising Fist"),
 		ignore_buffs = {},
 		slimeling_feed_items = {
 			"snapdragon pistil", "elephant stinger",
@@ -152,9 +137,9 @@ function get_ascension_automation_settings(want_bonus)
 				"snorkel",
 			},
 			container = {
+				"Buddy Bjorn",
 				{ name = "Rain-Doh red wings", check = function() return want_bonus.plusinitiative end },
 				{ name = "Camp Scout backpack", check = function() return not want_bonus.easy_combat end },
-				"Buddy Bjorn",
 				"Misty Cape",
 				"Misty Cloak",
 				"Misty Robe",
@@ -165,6 +150,7 @@ function get_ascension_automation_settings(want_bonus)
 			},
 			shirt = {
 				{ name = "Sneaky Pete's leather jacket", check = function() return want_bonus.rollover_adventures end },
+				"fishbone corset",
 				{ name = "flaming pink shirt", check = function() return want_bonus.plusitems end },
 				"Sneaky Pete's leather jacket (collar popped)",
 				"Sneaky Pete's leather jacket",
@@ -230,11 +216,12 @@ function get_ascension_automation_settings(want_bonus)
 				{ name = "Brimstone Brooch", check = function() return not ascensionstatus("Aftercore") end },
 				{ name = "Brimstone Bracelet", check = function() return not ascensionstatus("Aftercore") end },
 				{ name = "plastic vampire fangs", check = function() return (mp() < 60 or level() < 9) end },
-				{ name = "hockey stick of furious angry rage", check = function() return level() < 13 end },
+				{ name = "hockey stick of furious angry rage", check = function() return not want_bonus.easy_combat and level() < 13 end },
+				{ name = "Hand in Glove", check = function() return not want_bonus.easy_combat and level() < 13 end },
 				"over-the-shoulder Folder Holder",
 				"astral ring",
 				"astral mask",
-				{ name = "astral belt", check = function() return (level() >= 7 or (challenge == "fist" and fist_level > 0) or highskill_at_run or ascensionstatus() ~= "Hardcore") and (level() < 13) end }, -- How early should we wear this?
+				{ name = "astral belt", check = function() return (level() >= 7 or (challenge == "fist" and fist_level > 0) or highskill_at_run or ascensionstatus() ~= "Hardcore") and not want_bonus.easy_combat and level() < 13 end }, -- How early should we wear this?
 				{ name = "Loathing Legion necktie", check = function() return level() < 13 end },
 				{ name = "C.A.R.N.I.V.O.R.E. button", check = function() return level() < 13 end },
 				{ name = "frosty halo", check = function() return want_bonus.plusitems and not equipment().weapon end },
@@ -268,7 +255,7 @@ function get_ascension_automation_settings(want_bonus)
 			}
 		}
 	}
-	if tbl.should_wear_weapons or not can_wear_weapons() then
+	if tbl.should_wear_weapons then
 		tbl.default_equipment.weapon = {
 			"Trusty",
 			{ name = "Staff of Simmering Hatred", check = function() return not want_bonus.not_casting_spells end },
@@ -291,6 +278,7 @@ function get_ascension_automation_settings(want_bonus)
 			"Staff of the Healthy Breakfast",
 			"Staff of Fruit Salad",
 			"Shakespeare's Sister's Accordion",
+			"Thor's Pliers",
 			{ name = "Staff of the Headmaster's Victuals", check = function() return not want_bonus.not_casting_spells end },
 			"alarm accordion",
 			"peace accordion",
@@ -299,9 +287,10 @@ function get_ascension_automation_settings(want_bonus)
 			"accordion file",
 			"baritone accordion",
 			"stolen accordion",
-			"Saucepanic",
-			"Frankly Mr. Shank",
-			"Meat Tenderizer is Murder",
+			{ name = "Meat Tenderizer is Murder", check = function() return playerclass("Seal Clubber") end },
+			{ name = "Hand that Rocks the Ladle", check = function() return playerclass("Pastamancer") end },
+			{ name = "Saucepanic", check = function() return playerclass("Sauceror") end },
+			{ name = "Frankly Mr. Shank", check = function() return playerclass("Disco Bandit") end },
 			"Sneaky Pete's basket",
 			"hilarious comedy prop",
 			"ironic battle spoon",
@@ -319,8 +308,8 @@ function get_ascension_automation_settings(want_bonus)
 			"Operation Patriot Shield",
 			"astral shield",
 			"Brimstone Bunker",
+			{ name = "Ouija Board, Ouija Board", check = function() return playerclass("Turtle Tamer") end },
 			"A Light that Never Goes Out",
-			"Ouija Board, Ouija Board",
 			"left bear arm",
 			{ name = "hot plate", check = function() return want_bonus.elemental_weapon_damage end },
 			{ name = "Victor, the Insult Comic Hellhound Puppet", check = function() return want_bonus.monster_level end },

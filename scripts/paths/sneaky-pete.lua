@@ -69,13 +69,13 @@ function estimate_current_sneaky_pete_motorcycle_bonuses()
 	local bonuses = make_bonuses_table {}
 	local upgrades = sneaky_pete_motorcycle_upgrades()
 	if upgrades["Gas Tank"] == "Nitro-Burnin' Funny Tank" then
-		bonuses = bonuses + make_bonuses_table { ["Combat Initiative"] = 50 }
+		bonuses.add { ["Combat Initiative"] = 50 }
 	end
 	if upgrades["Cowling"] == "Sweepy Red Light" then
-		bonuses = bonuses + make_bonuses_table { ["Stats Per Fight"] = 5 }
+		bonuses.add { ["Stats Per Fight"] = 5 }
 	end
 	if upgrades["Seat"] == "Sissy Bar" then
-		bonuses = bonuses + make_bonuses_table { ["Monster Level"] = -30 }
+		bonuses.add { ["Monster Level"] = -30 }
 	end
 	return bonuses
 end

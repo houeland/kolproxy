@@ -27,8 +27,6 @@ function softcore_stoppable_action(msg)
 	end
 end
 
-local debug_show_empty_messages = false
-
 local cached_stuff = {}
 
 local function write_log_line(msg)
@@ -64,6 +62,7 @@ end
 local function automate_day(whichday)
 	reset_error_trace_steps()
 	finished = false
+	show_spammy_automation_events = ascension_script_option("show debug information")
 
 	if show_spammy_automation_events then
 		print()
@@ -119,6 +118,10 @@ local function automate_day(whichday)
 		return level() >= 5 and not have_item("Cobb's Knob map")
 	end
 
+	local function need_encryption_key()
+		return not have_item("Knob Goblin encryption key") and not unlocked_knob()
+	end
+
 	-- TODO: do these properly
 	local function started_war()
 		return quest("Make War, Not... Oh, Wait")
@@ -172,29 +175,6 @@ local function automate_day(whichday)
 		if fist_level >= 3 then
 			-- TODO: be reasonably drunk when using drunken baby to kill
 			serpent_action = fist_action
-		end
-	elseif ascensionpathid() == 7 then
-		challenge = "trendy"
-		serpent_action = geyser_action
-		function make_yellowray_macro(name)
-			return [[
-]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
-
-if monstername ]] .. name .. [[
-
-  use unbearable light
-  goto m_done
-endif
-
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
-
-while !times 3
-]] .. cannon_action() .. [[
-endwhile
-
-mark m_done
-
-]]
 		end
 	elseif ascensionpath("Avatar of Boris") then
 		-- TODO: pull third wine bottle
@@ -478,8 +458,8 @@ endif
 		cached_stuff.gotten_guild_challenge = true
 	end
 
-	if cached_stuff.kgs_available == nil then
-		cached_stuff.kgs_available = check_buying_from_knob_dispensary()
+	if cached_stuff.currently_checked.kgs_available == nil then
+		cached_stuff.currently_checked.kgs_available = check_buying_from_knob_dispensary()
 	end
 
 	local function ensure_empty_config_table(t)
@@ -1150,9 +1130,20 @@ endif
 		}
 	}
 
+	local function can_use_spleen(size)
+		if have_item("astral energy drink") then
+			if spleen() + size + 8 > estimate_max_spleen() then
+				return false
+			elseif advs() >= 15 then
+				return false
+			end
+		end
+		return estimate_max_spleen() - spleen() >= size
+	end
+
 	local function add_spleen_item_task(name, size, minlevel)
 		add_task {
-			when = estimate_max_spleen() - spleen() >= size and have_item(name) and level() >= minlevel,
+			when = can_use_spleen(size) and have_item(name) and level() >= minlevel,
 			task = {
 				message = "use " .. name,
 				nobuffing = true,
@@ -1961,18 +1952,17 @@ endif
 	want_softcore_item("Rain-Doh indigo cup", "can of Rain-Doh")
 	want_softcore_item("Juju Mojo Mask")
 	want_softcore_item_oneof { "Loathing Legion necktie", "Loathing Legion abacus", "Loathing Legion can opener", "Loathing Legion chainsaw", "Loathing Legion corkscrew", "Loathing Legion defibrillator", "Loathing Legion double prism", "Loathing Legion electric knife", "Loathing Legion hammer", "Loathing Legion helicopter", "Loathing Legion jackhammer", "Loathing Legion kitchen sink", "Loathing Legion knife", "Loathing Legion many-purpose hook", "Loathing Legion moondial", "Loathing Legion pizza stone", "Loathing Legion rollerblades", "Loathing Legion tape measure", "Loathing Legion tattoo needle", "Loathing Legion universal screwdriver" }
-	want_softcore_item("plastic vampire fangs")
+	want_softcore_item_oneof { "over-the-shoulder Folder Holder", "plastic vampire fangs" }
 	want_softcore_item_oneof { "stinky cheese diaper", "stinky cheese wheel", "stinky cheese eye", "Staff of Queso Escusado", "stinky cheese sword" }
 	want_softcore_item_oneof { "Greatest American Pants", "Pantsgiving" }
-	want_softcore_item("Camp Scout backpack")
-	want_softcore_item_oneof { "Jekyllin hide belt", "Mr. Accessory Jr.", "astral mask" }
 	want_softcore_item_oneof { "Boris's Helm (askew)", "Boris's Helm", "Spooky Putty mitre" }
+	want_softcore_item_oneof { "Buddy Bjorn", "Camp Scout backpack" }
+	want_softcore_item_oneof { "Jekyllin hide belt", "Mr. Accessory Jr.", "over-the-shoulder Folder Holder", "astral mask" }
 	if can_wear_weapons() and not have_item("Jarlsberg's pan (Cosmic portal mode)") and not have_item("Jarlsberg's pan") then
 		want_softcore_item("Operation Patriot Shield")
 	end
-	if ascensionpath("Avatar of Jarlsberg") or ascensionpath("Avatar of Sneaky Pete") then
-		want_softcore_item("ring of conflict")
-	end
+	want_softcore_item_oneof { "Sneaky Pete's leather jacket (collar popped)", "Sneaky Pete's leather jacket", "astral shirt" }
+	want_softcore_item("ring of conflict")
 
 	add_task {
 		when = ascensionstatus() ~= "Hardcore" and
@@ -2481,6 +2471,9 @@ endif
 		}
 	}
 
+	add_task(tasks.check_hidden_temple)
+	add_task(tasks.use_spooky_temple_map)
+
 	-- start of turn-spending things
 
 	add_task {
@@ -2820,12 +2813,6 @@ endif
 		}
 	}
 
---	add_task {
---		prereq = quest_text("this is Azazel in Hell") and challenge == "boris" and daysthisrun() == 1 and (have_item("Clancy's lute") or clancy_instrumentid() == 3) and estimate_max_fullness() - fullness() >= 5 and not ascension_script_option("skip azazel quest"),
---		f = script.do_azazel,
---		message = "azazel in boris",
---	}
-
 	add_task {
 		when = challenge == "boris" and
 			daysthisrun() == 1 and
@@ -2995,11 +2982,57 @@ endif
 
 	add_task {
 		prereq = use_new_faxing and
-			not have_item("Knob Goblin encryption key") and
-			not unlocked_knob(),
+			need_encryption_key(),
 		f = script.unlock_cobbs_knob,
 		message = "unlock cobbs knob",
 	}
+
+	if script_want_2_day_SCHR() then
+		add_task {
+			prereq = need_encryption_key(),
+			f = script.unlock_cobbs_knob,
+			message = "unlock cobbs knob",
+		}
+
+		add_task {
+			when = have_skill("Rain Man") and
+				heavyrains_rain() >= 50 and
+				script.have_familiar("Reanimated Reanimator") and
+				not day["wandering copied monster"] and
+				quest_text("for the key to the Haunted Billiards Room"),
+			task = {
+				message = "make writing desk and wink it",
+				familiar = "Reanimated Reanimator",
+				action = function()
+					script.ensure_buffs {}
+					script.wear {}
+					script.heal_up()
+					stop "TODO: cast rain man, fight a writing desk, wink it with reanimator, copy 1x with rain-doh black box"
+				end,
+			}
+		}
+
+		add_task {
+			when = have_skill("Rain Man") and
+				heavyrains_rain() >= 50 and
+				script.have_familiar("Reanimated Reanimator") and
+				not day["wandering copied monster"] and
+				not have_item("barrel of gunpowder"),
+				-- and not finished sonofa
+			task = {
+				message = "make lobsterfrogman and wink it",
+				familiar = "Reanimated Reanimator",
+				action = function()
+					script.ensure_buffs {}
+					script.wear {}
+					script.heal_up()
+					stop "TODO: cast rain man, fight a lobsterfrogman, wink it with reanimator, copy 1x with rain-doh black box"
+				end,
+			}
+		}
+
+		add_task(tasks.unlock_hidden_temple_with_high_ML)
+	end
 
 	add_task {
 		when = use_new_faxing and quest("The Goblin Who Wouldn't Be King"),
@@ -3032,14 +3065,14 @@ endif
 
 	add_task {
 		when = have_item("Cobb's Knob lab key") and
-			not cached_stuff.kgs_available and
+			not cached_stuff.currently_checked.kgs_available and
 			can_disguise_as_guard(),
 		task = {
 			message = "learn knob lab password",
 			action = adventure { zoneid = 257 },
 			equipment = { hat = "Knob Goblin elite helm", weapon = "Knob Goblin elite polearm", pants = "Knob Goblin elite pants" },
 			after_action = function()
-				cached_stuff.kgs_available = nil
+				cached_stuff.currently_checked.kgs_available = nil
 				did_action = get_result():contains("FARQUAR")
 			end
 		}
@@ -3323,44 +3356,6 @@ endif
 	}
 
 	add_task {
-		prereq = (challenge == "trendy") and spleen() < 12 and level() < 6,
-		message = "get spleen in trendy day 1",
-		fam = "Pair of Stomping Boots",
-		minmp = 5,
-		action = function()
-			if familiarid() ~= 150 then
-				critical "Failed to use stomping boots in trendy"
-			end
-			if have_item("oily paste") then
-				local a = advs()
-				set_result(use_item("oily paste"))
-				did_action = advs() > a
-			else
-				local f = adventure {
-					zoneid = 240,
-					macro_function = function()
-						return [[
-]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
-pickpocket
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
-
-if hasskill release the boots
-  cast release the boots
-endif
-
-while !times 10
-  attack
-endwhile
-
-]]
-					end
-				}
-				return f()
-			end
-		end
-	}
-
-	add_task {
 		when = quest("Ooh, I Think I Smell a Bat.") and
 			challenge ~= "fist" and
 			(not session["__script.no stench resist"] or have_item("Knob Goblin harem veil")),
@@ -3393,13 +3388,7 @@ endwhile
 	add_task(tasks.get_library_key)
 
 	add_task {
-		prereq = level() >= 6 and quest("The Goblin Who Wouldn't Be King") and quest_text("haven't figured out how to decrypt it yet"),
-		f = script.unlock_cobbs_knob,
-	}
-
-	add_task {
-		prereq = not have_item("Knob Goblin encryption key") and
-			not unlocked_knob(),
+		prereq = need_encryption_key(),
 		f = script.unlock_cobbs_knob,
 	}
 
@@ -3446,7 +3435,7 @@ endwhile
 		when = (playerclass("Seal Clubber") or playerclass("Turtle Tamer")) and
 			level() < 11 and
 			have_item("Cobb's Knob lab key") and
-			cached_stuff.kgs_available == false and
+			cached_stuff.currently_checked.kgs_available == false and
 			not have_guard_outfit() and
 			can_wear_weapons(),
 		task = {
@@ -3680,44 +3669,6 @@ endwhile
 			},
 		}
 	end
-
-	add_task {
-		prereq = (challenge == "trendy") and spleen() < 12 and advs() < 20,
-		message = "get spleen in trendy",
-		fam = "Pair of Stomping Boots",
-		minmp = 5,
-		action = function()
-			if familiarid() ~= 150 then
-				critical "Failed to use stomping boots in trendy"
-			end
-			if have_item("goblin paste") then
-				local a = advs()
-				set_result(use_item("goblin paste"))
-				did_action = advs() > a
-			else
-				local f = adventure {
-					zoneid = 260,
-					macro_function = function()
-						return [[
-]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
-pickpocket
-]] .. COMMON_MACROSTUFF_FLYERS .. [[
-
-if hasskill release the boots
-  cast release the boots
-endif
-
-while !times 10
-  attack
-endwhile
-
-]]
-					end
-				}
-				return f()
-			end
-		end
-	}
 
 	add_task {
 		when = not cached_stuff.did_forest_runaways,
@@ -4403,48 +4354,7 @@ endif
 		}
 	}
 
-	add_task {
-		when = (challenge == "boris" or challenge == "zombie") and
-			not cached_stuff.unlocked_hidden_temple and
-			((have_item("Greatest American Pants") and get_daily_counter("item.fly away.free runaways") < 9) or daysthisrun() >= 2),
-		task = {
-			message = "unlock hidden temple",
-			nobuffing = true,
-			action = function()
-				local woodspt = get_page("/woods.php")
-				if woodspt:contains("The Hidden Temple") then
-					cached_stuff.unlocked_hidden_temple = true
-					did_action = true
-				else
-					ignore_buffing_and_outfit = false
-					script.unlock_hidden_temple()
-				end
-			end
-		}
-	}
-
---	add_task {
---		prereq = mainstat_type("Muscle") and not have_item("Spookyraven gallery key") and level() < 13,
---		f = script.do_muscle_powerleveling,
---	}
-
-	add_task {
-		when = level() < 7 and not cached_stuff.unlocked_hidden_temple,
-		task = {
-			message = "unlock hidden temple",
-			nobuffing = true,
-			action = function()
-				local woodspt = get_page("/woods.php")
-				if woodspt:contains("The Hidden Temple") then
-					cached_stuff.unlocked_hidden_temple = true
-					did_action = true
-				else
-					ignore_buffing_and_outfit = false
-					script.unlock_hidden_temple()
-				end
-			end
-		}
-	}
+	add_task(tasks.unlock_hidden_temple)
 
 	add_task {
 		when = DD_keys < 3 and not cached_stuff.done_daily_dungeon,
@@ -4535,16 +4445,18 @@ endif
 	}
 
 	add_task {
-		when = function() return not ascensionstatus("Aftercore") and
+		when = not ascensionstatus("Aftercore") and
 			level() >= 10 and
 			requires_wand_of_nagamar() and
 			not have_wand_or_parts() and
-			ensure_clover() end,
+			can_ensure_clover(),
 		task = {
 			message = "clovering for wand",
 			nobuffing = true,
 			action = function()
-				result, resulturl = autoadventure { zoneid = 322 }
+				if ensure_clover() then
+					result, resulturl = autoadventure { zoneid = 322 }
+				end
 				did_action = have_wand_or_parts()
 			end
 		}
@@ -4592,13 +4504,13 @@ endif
 	}
 
 	add_task {
-		when = function() return ascensionstatus("Softcore") and
+		when = ascensionstatus("Softcore") and
 			not ascensionpath("Bees Hate You") and
 			not cached_stuff.tried_pulling_large_box and
 			level() >= 10 and
 			turnsthisrun() >= 300 and
 			real_DD_keys >= 3 and
-			ensure_clover() end,
+			can_ensure_clover(),
 		task = {
 			message = "considering pulling large box",
 			nobuffing = true,
@@ -4617,7 +4529,7 @@ endif
 				if have_item("small box") or have_item("large box") or have_item("blessed large box") then
 					want = false
 				end
-				if want and (pullsleft() or 0) >= 5 then
+				if want and (pullsleft() or 0) >= 5 and ensure_clover() then
 					pull_in_softcore("large box")
 					meatpaste_items("large box", "ten-leaf clover")
 					use_item("blessed large box")
@@ -5390,12 +5302,11 @@ use gauze garter
 			x.f()
 		else
 			x.prereq = nil
-			if not x.hide_message and not debug_show_empty_messages then
-				if x.message then
-					inform(x.message)
-				elseif debug_show_empty_messages then
-					inform "{ no task message }"
-				end
+			if x.hide_message and not ascension_script_option("show debug information") then
+			elseif x.message then
+				inform(x.message)
+			elseif ascension_script_option("show debug information") then
+				inform "{ no task message }"
 			end
 			x.message = nil
 			x.hide_message = nil
@@ -5684,7 +5595,21 @@ local ascension_script_options_tbl = {
 	["pull consumables"] = { yes = "pull and consume", no = "don't automate", when = function() return not ascensionstatus("Hardcore") and ascensionpath("Avatar of Sneaky Pete") end, default_yes = true },
 	["show debug information"] = { yes = "show additional console output", no = "skip debug messages" },
 	["use fax machine manually"] = { yes = "ignore the fax machine", no = "automate" },
+	["skip library key"] = { yes = "get library key manually", no = "automate quest normally" },
+	["go for a 2-day SCHR"] = { yes = "yes I'm crazy", no = "no thanks", when = function() return ascensionpath("Heavy Rains") end },
 }
+
+function script_want_library_key()
+	return not ascension_script_option("skip library key")
+end
+
+function script_want_2_day_SCHR()
+	return ascension_script_option("go for a 2-day SCHR")
+end
+
+function script_use_unified_kill_macro()
+	return script_want_2_day_SCHR() or ascensionpath("Heavy Rains")
+end
 
 function ascension_script_option(name)
 	if not ascension_script_options_tbl[name] then
@@ -5705,7 +5630,7 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 		return get_page("/main.php")
 	end
 
-	local ok_paths = { [0] = true, ["Avatar of Boris"] = true, [10] = true, ["Avatar of Jarlsberg"] = true, ["BIG!"] = true, ["Avatar of Sneaky Pete"] = true }
+	local ok_paths = { [0] = true, ["Avatar of Boris"] = true, [10] = true, ["Avatar of Jarlsberg"] = true, ["BIG!"] = true, ["Avatar of Sneaky Pete"] = true, ["Heavy Rains"] = true }
 -- ["Way of the Surprising Fist"] = true -- needs updates
 	local path_support_text = ""
 	local pathdesc = string.format([[%s %s]], ascensionstatus(), ascensionpathname())
@@ -5715,7 +5640,7 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 	local path_is_ok = true
 	if ascensionpath("Class Act II: A Class For Pigs") and (playerclass("Pastamancer") or playerclass("Accordion Thief")) then
 		path_is_ok = true
-	elseif (not ok_paths[ascensionpathid()] and not ok_paths[ascensionpathname()]) or (ascensionpathid() == 0 and ascensionstatus() ~= "Hardcore") then
+	elseif not ok_paths[ascensionpathid()] and not ok_paths[ascensionpathname()] then
 		path_is_ok = false
 	end
 	if not path_is_ok then

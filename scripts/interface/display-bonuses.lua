@@ -38,51 +38,128 @@ function estimate_current_other_bonuses()
 	return bonuses
 end
 
-function estimate_bonus(name)
-	return estimate_modifier_bonuses()[name]
+function estimate_current_class_bonuses()
+	local bonuses = make_bonuses_table {}
+	if playerclass("Seal Clubber") or playerclass("Turtle Tamer") then
+		bonuses.add { ["Maximum HP %"] = 50 }
+	elseif playerclass("Pastamancer") or playerclass("Sauceror") then
+		bonuses.add { ["Maximum MP %"] = 50 }
+	end
+	return bonuses
 end
 
-function estimate_modifier_bonuses()
+function estimate_modifier_bonuses_base()
 	local bonuses = make_bonuses_table {}
-	bonuses = bonuses + estimate_current_equipment_bonuses()
-	bonuses = bonuses + estimate_current_outfit_bonuses()
-	bonuses = bonuses + estimate_current_buff_bonuses()
-	bonuses = bonuses + estimate_current_intrinsic_bonuses()
-	bonuses = bonuses + estimate_current_passive_bonuses()
-	bonuses = bonuses + estimate_current_familiar_bonuses()
-	bonuses = bonuses + estimate_current_companion_bonuses()
-	bonuses = bonuses + estimate_current_pastathrall_bonuses()
---	bonuses = bonuses + estimate_current_moonsign_bonuses()
-	bonuses = bonuses + estimate_current_sneaky_pete_motorcycle_bonuses()
-	bonuses = bonuses + estimate_current_other_bonuses()
-
-	bonuses["Monsters will be more attracted to you (base)"] = bonuses["Monsters will be more attracted to you"]
-	bonuses["Monsters will be more attracted to you"] = adjust_combat(bonuses["Monsters will be more attracted to you"])
-
-	-- TODO: Separate between combat and underwater combat?
-	bonuses = bonuses + make_bonuses_table { ["Monsters will be more attracted to you"] = estimate_underwater_combat() }
-
-	-- TODO: Estimate as part of each item's bonuses?
-	if have_equipped_item("Sheila Take a Crossbow") then
-		bonuses = bonuses + make_bonuses_table { ["Combat Initiative"] = bonuses["Smithsness"] * 1 }
-	end
-	if have_equipped_item("A Light that Never Goes Out") then
-		bonuses = bonuses + make_bonuses_table { ["Item Drops from Monsters"] = bonuses["Smithsness"] * 1 }
-	end
-	if have_equipped_item("Half a Purse") then
-		bonuses = bonuses + make_bonuses_table { ["Meat from Monsters"] = bonuses["Smithsness"] * 2 }
-	end
-	if have_equipped_item("Hand in Glove") then
-		bonuses = bonuses + make_bonuses_table { ["Monster Level"] = bonuses["Smithsness"] * 1 }
-	end
-
+	bonuses.add(estimate_current_equipment_bonuses())
+	bonuses.add(estimate_current_outfit_bonuses())
+	bonuses.add(estimate_current_buff_bonuses())
+	bonuses.add(estimate_current_intrinsic_bonuses())
+	bonuses.add(estimate_current_passive_bonuses())
+	bonuses.add(estimate_current_familiar_bonuses())
+	bonuses.add(estimate_current_companion_bonuses())
+	bonuses.add(estimate_current_class_bonuses())
+	bonuses.add(estimate_current_pastathrall_bonuses())
+--	bonuses.add(estimate_current_moonsign_bonuses())
+	bonuses.add(estimate_current_sneaky_pete_motorcycle_bonuses())
+	bonuses.add(estimate_current_other_bonuses())
 	return bonuses
+end
+
+--function estimate_modifier_bonuses_base()
+--	return log_time_interval("estimate_modifier_bonuses_base()", function()
+--	local bonuses = make_bonuses_table {}
+--	bonuses.add(log_time_interval("equipment", estimate_current_equipment_bonuses))
+--	bonuses.add(log_time_interval("outfit", estimate_current_outfit_bonuses))
+--	bonuses.add(log_time_interval("buff", estimate_current_buff_bonuses))
+--	bonuses.add(log_time_interval("intrinsic", estimate_current_intrinsic_bonuses))
+--	bonuses.add(log_time_interval("passive", estimate_current_passive_bonuses))
+--	bonuses.add(log_time_interval("familiar", estimate_current_familiar_bonuses))
+--	bonuses.add(log_time_interval("companion", estimate_current_companion_bonuses))
+--	bonuses.add(log_time_interval("class", estimate_current_class_bonuses))
+--	bonuses.add(log_time_interval("pastathrall", estimate_current_pastathrall_bonuses))
+--	bonuses.add(log_time_interval("sneaky_pete", estimate_current_sneaky_pete_motorcycle_bonuses))
+--	bonuses.add(log_time_interval("other", estimate_current_other_bonuses))
+--	return bonuses
+--	end)
+--end
+
+function estimate_item_synergy_bonuses(item, base_bonuses)
+	if get_itemid(item) == get_itemid("Meat Tenderizer is Murder") then
+		return { ["Muscle %"] = base_bonuses["Smithsness"] * 2 }
+	elseif get_itemid(item) == get_itemid("Ouija Board, Ouija Board") then
+		return { ["Muscle %"] = base_bonuses["Smithsness"] * 2 }
+	elseif get_itemid(item) == get_itemid("Hand that Rocks the Ladle") then
+		return { ["Mysticality %"] = base_bonuses["Smithsness"] * 2 }
+	elseif get_itemid(item) == get_itemid("Saucepanic") then
+		return { ["Mysticality %"] = base_bonuses["Smithsness"] * 2 }
+	elseif get_itemid(item) == get_itemid("Frankly Mr. Shank") then
+		return { ["Moxie %"] = base_bonuses["Smithsness"] * 2 }
+	elseif get_itemid(item) == get_itemid("Shakespeare's Sister's Accordion") then
+		return { ["Moxie %"] = base_bonuses["Smithsness"] * 2 }
+	elseif get_itemid(item) == get_itemid("Sheila Take a Crossbow") then
+		return { ["Combat Initiative"] = base_bonuses["Smithsness"] * 1 }
+	elseif get_itemid(item) == get_itemid("Staff of the Headmaster's Victuals") then
+	elseif get_itemid(item) == get_itemid("Work is a Four Letter Sword") then
+	elseif get_itemid(item) == get_itemid("A Light that Never Goes Out") then
+		return { ["Item Drops from Monsters"] = base_bonuses["Smithsness"] * 1 }
+	elseif get_itemid(item) == get_itemid("Half a Purse") then
+		return { ["Meat from Monsters"] = base_bonuses["Smithsness"] * 2 }
+	elseif get_itemid(item) == get_itemid("Hairpiece On Fire") then
+		return { ["Maximum MP"] = base_bonuses["Smithsness"] * 1 }
+	elseif get_itemid(item) == get_itemid("Vicar's Tutu") then
+		return { ["Maximum HP"] = base_bonuses["Smithsness"] * 2 }
+	elseif get_itemid(item) == get_itemid("Hand in Glove") then
+		return { ["Monster Level"] = base_bonuses["Smithsness"] * 1 }
+	end
+end
+
+function estimate_buff_synergy_bonuses(buff, base_bonuses)
+	if buff == "Merry Smithsness" then
+		return { ["Muscle %"] = base_bonuses["Smithsness"] * 1, ["Mysticality %"] = base_bonuses["Smithsness"] * 1, ["Moxie %"] = base_bonuses["Smithsness"] * 1 }
+	end
+end
+
+function estimate_current_equipment_synergy(base_bonuses)
+	local bonuses = make_bonuses_table {}
+	for _, x in pairs(equipment()) do
+		bonuses.add(estimate_item_synergy_bonuses(x, base_bonuses) or {})
+	end
+	return bonuses
+end
+
+function estimate_current_buff_synergy(base_bonuses)
+	local bonuses = make_bonuses_table {}
+	for _, x in ipairs { "Merry Smithsness" } do
+		if have_buff(x) then
+			bonuses.add(estimate_buff_synergy_bonuses(x, base_bonuses) or {})
+		end
+	end
+	return bonuses
+end
+
+function estimate_current_synergy(base_bonuses)
+	local bonuses = make_bonuses_table {}
+	bonuses.add(estimate_current_equipment_synergy(base_bonuses))
+	bonuses.add(estimate_current_buff_synergy(base_bonuses))
+	return bonuses
+end
+
+function estimate_current_bonuses()
+	return log_time_interval("estimate_current_bonuses()", function()
+	local bonuses = estimate_modifier_bonuses_base()
+	bonuses.add(estimate_current_synergy(bonuses))
+	return bonuses
+	end)
+end
+
+function estimate_bonus(name)
+	return estimate_current_bonuses()[name]
 end
 
 add_charpane_line(function()
 	if not setting_enabled("show modifier estimates") then return end
 
-	local bonuses = estimate_modifier_bonuses()
+	local bonuses = estimate_current_bonuses()
 	local ml_init_penalty = compute_monster_initiative_bonus(bonuses["Monster Level"])
 
 	local com = bonuses["Monsters will be more attracted to you"]
@@ -113,6 +190,13 @@ add_charpane_line(function()
 		initbonusstr = string.format(" (from %+d%%)", initial_init)
 	end
 
+	-- TODO: redo without overwriting bonuses table
+	bonuses["Monsters will be more attracted to you (base)"] = bonuses["Monsters will be more attracted to you"]
+	bonuses["Monsters will be more attracted to you"] = adjust_combat(bonuses["Monsters will be more attracted to you"])
+
+	-- TODO: Separate between combat and underwater combat?
+	bonuses.add { ["Monsters will be more attracted to you"] = estimate_underwater_combat() }
+
 	local ncbonusstr = ""
 	if com ~= bonuses["Monsters will be more attracted to you (base)"] then
 		ncbonusstr = string.format(" (from %+d%%)", bonuses["Monsters will be more attracted to you (base)"])
@@ -137,13 +221,36 @@ add_charpane_line(function()
 	}
 end)
 
-function estimate_maxhp_increases(bonuses)
-	bonuses = make_bonuses_table(bonuses)
+function estimate_stat(statname, bonuses)
+	bonuses = bonuses or estimate_current_bonuses()
+	if statname == "Muscle" then
+		return math.ceil(basemuscle() + bonuses["Muscle"] + bonuses["Muscle %"] / 100 * basemuscle())
+	elseif statname == "Mysticality" then
+		return math.ceil(basemysticality() + bonuses["Mysticality"] + bonuses["Mysticality %"] / 100 * basemysticality())
+	elseif statname == "Moxie" then
+		return math.ceil(basemoxie() + bonuses["Moxie"] + bonuses["Moxie %"] / 100 * basemoxie())
+	end
+end
+
+function estimate_maxhp(bonuses)
+	bonuses = bonuses or estimate_current_bonuses()
 	local abshp = bonuses["Maximum HP"]
-	local multiplier = 1
-	-- TODO: multiplier increases
-	local muscle = bonuses["Muscle"] + bonuses["Muscle %"]/100 * basemuscle()
-	return abshp + multiplier * muscle
+	local multiplier = 1 + bonuses["Maximum HP %"] / 100
+	local muscle = estimate_stat("Muscle", bonuses)
+	return math.ceil(abshp + multiplier * (muscle + 3))
+end
+
+function estimate_maxmp(bonuses)
+	bonuses = bonuses or estimate_current_bonuses()
+	local abshp = bonuses["Maximum MP"]
+	local multiplier = 1 + bonuses["Maximum MP %"] / 100
+	local mysticality = estimate_stat("Mysticality", bonuses)
+	if have_equipped_item("Travoltan trousers") then
+		mysticality = math.max(mysticality, estimate_stat("Moxie", bonuses))
+	elseif have_equipped_item("moxie magnet") then
+		mysticality = estimate_stat("Moxie", bonuses)
+	end
+	return math.ceil(abshp + multiplier * mysticality)
 end
 
 function check_valid_modifier_name(name)
@@ -159,6 +266,11 @@ local bonus_meta_table = {
 		return tbl
 	end,
 	__index = function(tbl, key)
+		if key == "add" then
+			return function(extra)
+				add_modifier_bonuses(tbl, extra)
+			end
+		end
 		check_valid_modifier_name(key)
 		return 0
 	end,

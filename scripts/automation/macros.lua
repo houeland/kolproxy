@@ -161,6 +161,14 @@ local function using_accordion()
 	return itemdata.song_duration ~= nil
 end
 
+local function using_club()
+	if not equipment().weapon then return false end
+	local itemdata = maybe_get_itemdata(equipment().weapon)
+	if not itemdata then return false end
+	if not itemdata.weapon_type then return false end
+	return itemdata.weapon_type:contains("club")
+end
+
 local function using_moxie_weapon()
 	if not equipment().weapon then return false end
 	local itemdata = maybe_get_itemdata(equipment().weapon)
@@ -242,7 +250,7 @@ function cannon_action()
 	elseif ascensionpath("Avatar of Sneaky Pete") then
 		return macro_sneaky_pete_action()
 	end
-	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Bawdy Refrain", fury() >= 1 and "Furious Wallop" or "???", "Kneebutt", "Toss", "Clobber", "Ravioli Shurikens" }
+	return macro_cast_skill { pastathrall() and "Cannelloni Cannon" or "???", "Saucestorm", "Cannelloni Cannon", "Bawdy Refrain", fury() >= 1 and "Furious Wallop" or "???", "Kneebutt", "Toss", "Clobber", "Ravioli Shurikens" }
 end
 
 function estimate_elemental_weapon_damage_sum()
@@ -261,7 +269,7 @@ endif
 	elseif ascensionpath("Avatar of Sneaky Pete") and estimate_elemental_weapon_damage_sum() >= 10 then
 		return attack_action()
 	end
-	return macro_cast_skill { "Cannelloni Cannon", "Saucestorm", "Bawdy Refrain" }
+	return macro_cast_skill { pastathrall() and "Cannelloni Cannon" or "???", "Saucestorm", "Cannelloni Cannon", "Bawdy Refrain" }
 end
 
 function serpent_action()
@@ -319,6 +327,10 @@ function maybe_stun_monster(is_dangerous)
 	local cfm = getCurrentFightMonster()
 	if mname:match("^oil ") then
 		can_stun = false
+	end
+	if cfm and cfm.Stats and cfm.Stats.staggerimmune then
+		can_stun = false
+		can_stagger = false
 	end
 	local macrolines = {}
 	local function cast_if_haveskill(x) -- TODO: make a global function and use everywhere
@@ -552,7 +564,10 @@ endif
 ]]
 end
 
-function macro_autoattack()
+function macro_autoattack(pt)
+	if script_use_unified_kill_macro() then
+		return macro_kill_monster(pt)
+	end
 	return [[
 ]] .. COMMON_MACROSTUFF_START(25, 50) .. [[
 
@@ -922,8 +937,10 @@ endwhile
 end
 
 
-function macro_stasis()
-	if maxhp() < 30 or maxmp() < 30 or not have_skill("Tao of the Terrapin") then
+function macro_stasis(pt)
+	if script_use_unified_kill_macro() then
+		return macro_kill_monster(pt)
+	elseif maxhp() < 30 or maxmp() < 30 or not have_skill("Tao of the Terrapin") then
 		return macro_noodlecannon()
 	end
 	return [[
@@ -1166,7 +1183,7 @@ endwhile
 ]]
 end
 
-function make_cannonsniff_macro(name)
+local function make_cannonsniff_macro_raw(name)
 	local cfm = getCurrentFightMonster()
 	--print("DEBUG: making cannonsniff macro for", name, "vs", cfm)
 	local physresist = 0
@@ -1181,10 +1198,16 @@ function make_cannonsniff_macro(name)
 	if cfm and cfm.Stats and cfm.Stats.Element then
 		elem = cfm.Stats.Element
 	end
-	if physresist == 0 and cfmhp >= 100 and not elem then
+	if physresist <= 60 and cfmhp >= 100 and not elem then
 		return make_sniff_macro(name, serpent_action)
 	else
 		return make_sniff_macro(name, cannon_action)
+	end
+end
+
+function make_cannonsniff_macro(name)
+	return function()
+		return make_cannonsniff_macro_raw(name)
 	end
 end
 
@@ -1245,7 +1268,10 @@ endif
 end
 
 
-function macro_8bit_realm()
+function macro_8bit_realm(pt)
+	if script_use_unified_kill_macro() then
+		return macro_kill_monster(pt)
+	end
 	local stasispart = [[
 
 while !times 20
@@ -1334,8 +1360,8 @@ mark m_done
 ]]
 end
 
-function macro_noodlecannon()
-  return [[
+local function macro_noodlecannon_raw()
+	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
 ]] .. maybe_stun_monster() .. [[
@@ -1358,8 +1384,15 @@ endif
 ]]
 end
 
-function macro_noodleserpent()
-  return [[
+function macro_noodlecannon(pt)
+	if script_use_unified_kill_macro() then
+		return macro_kill_monster(pt)
+	end
+	return macro_noodlecannon_raw()
+end
+
+local function macro_noodleserpent_raw()
+	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 40) .. [[
 
 ]] .. maybe_stun_monster() .. [[
@@ -1375,8 +1408,18 @@ endwhile
 ]]
 end
 
-function macro_ppnoodlecannon()
-  return [[
+function macro_noodleserpent(pt)
+	if script_use_unified_kill_macro() then
+		return macro_kill_monster(pt)
+	end
+	return macro_noodleserpent_raw()
+end
+
+function macro_ppnoodlecannon(pt)
+	if script_use_unified_kill_macro() then
+		return macro_kill_monster(pt)
+	end
+	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 40) .. [[
 pickpocket
 
@@ -1397,8 +1440,7 @@ endwhile
 ]]
 end
 
-function macro_noodlegeyser(maxtimes)
-	return function()
+function macro_noodlegeyser_raw(maxtimes)
 		return [[
 ]] .. COMMON_MACROSTUFF_START(20, 25) .. [[
 
@@ -1413,6 +1455,14 @@ while !times ]] .. maxtimes .. [[
 endwhile
 
 ]]
+end
+
+function macro_noodlegeyser(maxtimes)
+	return function(pt)
+		if script_use_unified_kill_macro() then
+			return macro_kill_monster(pt)
+		end
+		return macro_noodlegeyser_raw(maxtimes)
 	end
 end
 
@@ -1439,8 +1489,11 @@ endwhile
 ]]
 end
 
-function macro_spookyraven()
-  return [[
+function macro_spookyraven(pt)
+	if script_use_unified_kill_macro() then
+		return macro_kill_monster(pt)
+	end
+	return [[
 ]]..COMMON_MACROSTUFF_START(20, 5) .. [[
 
 ]] .. maybe_stun_monster(true) .. [[
@@ -1454,7 +1507,10 @@ endwhile
 ]]
 end
 
-function macro_hiddencity()
+function macro_hiddencity(pt)
+	if script_use_unified_kill_macro() then
+		return macro_kill_monster(pt)
+	end
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
@@ -1507,36 +1563,11 @@ function make_gremlin_macro(name, wrongmsg)
 ]] .. COMMON_MACROSTUFF_START(25, 20) .. [[
 
 sub stall
-]]..conditional_salve_action("goto do_return")..[[
 
 ]]..maybeheal..[[
 
-  if hasskill Static Shock
-	cast Static Shock
-	goto do_return
-  endif
-  if hascombatitem seal tooth
-	use seal tooth
-	goto do_return
-  endif
-  if hascombatitem spices
-	use spices
-	goto do_return
-  endif
-  if hasskill suckerpunch
-    cast suckerpunch
-	goto do_return
-  endif
-  if hasskill sing
-    cast sing
-    goto do_return
-  endif
-  if hascombatitem spectre scepter
-    use spectre scepter
-    goto do_return
-  endif
-  abort Need stalling skill or item
-  mark do_return
+]]..stall_action()..[[
+
 endsub
 
 if monstername ]] .. name .. [[
@@ -1567,8 +1598,11 @@ endwhile
 ]]
 end
 
-function macro_bossbat()
-  return [[
+function macro_bossbat(pt)
+	if script_use_unified_kill_macro() then
+		return macro_kill_monster(pt)
+	end
+	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
 ]] .. maybe_stun_monster() .. [[
@@ -1739,42 +1773,7 @@ endwhile
 ]]
 end
 
---[[--
-function macro_stasis()
-function macro_noodlecannon()
-function macro_noodleserpent()
-function macro_ppnoodlecannon()
-function macro_noodlegeyser(maxtimes)
-function macro_spookyraven()
-function macro_hiddencity()
-function macro_bossbat()
-
-	local mname = fight["currently fighting"] and fight["currently fighting"].name or "?"
-	local cfm = getCurrentFightMonster()
-
-	if cfm and cfm.Stats and cfm.Stats.physicalresistpercent and tonumber(cfm.Stats.physicalresistpercent) and tonumber(cfm.Stats.physicalresistpercent) > 40 then
-
-local function can_kill_with_attack()
-	return not have_buff("QWOPped Up")
-end
-
-local function can_easily_attack_with_moxie_weapon()
-	local cfm = getCurrentFightMonster()
-	if can_kill_with_attack() and using_moxie_weapon() and cfm and cfm.Stats and cfm.Stats.Atk and cfm.Stats.Atk - buffedmoxie() >= 25 then
-		if cfm.Stats.physicalresistpercent and tonumber(cfm.Stats.physicalresistpercent) and tonumber(cfm.Stats.physicalresistpercent) > 40 then
-			return false
-		else
-			return true
-		end
-	end
-end
-
-function estimate_elemental_weapon_damage_sum()
-	return estimate_bonus("Cold Damage") + estimate_bonus("Hot Damage") + estimate_bonus("Sleaze Damage") + estimate_bonus("Spooky Damage") + estimate_bonus("Stench Damage")
-end
-
---]]--
-
+-- TODO: move to other file
 function get_equipment_absorption()
 	local da = 0
 	for _, slot in ipairs { "hat", "shirt", "pants" } do
@@ -1793,6 +1792,7 @@ function get_equipment_absorption()
 end
 
 function is_wearing_shield()
+	if not equipment().offhand then return false end
 	local itemdata = maybe_get_itemdata(equipment().offhand)
 	if itemdata and itemdata.is_shield then
 		return true
@@ -1822,12 +1822,127 @@ end
 
 macro_kill_monster_text = ""
 function macro_kill_monster(pt)
+	pt = pt or ""
 	local cfm = getCurrentFightMonster()
 	if not cfm or not cfm.Stats or not cfm.Stats.Atk then
-		return macro_noodleserpent
+		print_ascensiondebug("macro_kill generation", "cfm incomplete when generating combat macro", tostring(cfm))
+		return macro_noodleserpent_raw
 	end
-	local bonuses = estimate_modifier_bonuses() + estimate_fight_page_bonuses(pt)
+	local pt_monster_name = nil
+	local function monstername(str)
+		-- WORKAROUND: Regular functionality not currently available while automating
+		if str then
+			return monstername() == str
+		end
+		if not pt_monster_name then
+			for spantext in pt:gmatch([[<span.-</span>]]) do
+				if spantext:contains("monname") then
+					local monster_name = spantext:match([[<span [^>]*id=['"]monname['"][^>]*>(.-)</span>]]) or monster_name
+					pt_monster_name = monster_name:gsub("^[^ ]* ", "")
+				end
+			end
+		end
+		return pt_monster_name or ""
+	end
+	local bonuses = estimate_current_bonuses()
+	bonuses.add(estimate_fight_page_bonuses(pt))
 	local monster_damage = estimate_current_monster_fight_damage(cfm, bonuses)
+	local physically_resistant = tonumber(cfm.Stats.physicalresistpercent) and tonumber(cfm.Stats.physicalresistpercent) >= 67
 	macro_kill_monster_text = pt
-	return ""
+	local use_crumbs = ""
+	if have_equipped_item("Pantsgiving") then
+		use_crumbs = "cast Pocket Crumbs"
+	end
+	local use_raindoh_flyers = ""
+	local raindoh_flyers_list = {}
+	if have_item("rock band flyers") then
+		table.insert(raindoh_flyers_list, "rock band flyers")
+	end
+	if have_item("Rain-Doh indigo cup") then
+		table.insert(raindoh_flyers_list, "Rain-Doh indigo cup")
+	end
+	if have_item("Rain-Doh blue balls") then
+		table.insert(raindoh_flyers_list, "Rain-Doh blue balls")
+	end
+	if have_skill("Ambidextrous Funkslinging") and raindoh_flyers_list[2] then
+		use_raindoh_flyers = string.format("use %s, %s", raindoh_flyers_list[1], raindoh_flyers_list[2])
+	elseif raindoh_flyers_list[1] then
+		use_raindoh_flyers = string.format("use %s", raindoh_flyers_list[1])
+	end
+
+	print_ascensiondebug("macro_kill", monstername(), script_want_2_day_SCHR(), playerclass("Seal Clubber"), not pt:contains("Procrastination Giant"), using_club(), not physically_resistant, use_crumbs, use_raindoh_flyers)
+
+	if monstername("storm cow") then
+		return [[abort storm cow]]
+	elseif monstername("Aquabat") then
+		return [[abort heavy rains boss]]
+	elseif monstername("Aquagoblin") then
+		return [[abort heavy rains boss]]
+	elseif monstername("Auqadargon") then
+		return [[abort heavy rains boss]]
+	elseif monstername("Gurgle") then
+		return [[abort heavy rains boss]]
+	elseif monstername("Lord Soggyraven") then
+		return [[abort heavy rains boss]]
+	elseif monstername("Protector Spurt") then
+		return [[abort heavy rains boss]]
+	elseif monstername("Dr. Aquard") then
+		-- no spells
+		return [[abort heavy rains boss - no spells]]
+	elseif monstername("The Aquaman") then
+		return [[abort heavy rains boss]]
+	elseif monstername("Big Wisnaqua") then
+		return [[abort heavy rains boss]]
+	elseif monstername("The Rain King") then
+		return [[abort heavy rains boss]]
+	elseif have_skill("Lightning Strike") and heavyrains_lightning() >= 20 and not cfm.Stats.boss then
+		return use_crumbs .. [[
+
+]] .. use_raindoh_flyers .. [[
+
+cast Lightning Strike
+]]
+	elseif script_want_2_day_SCHR() and playerclass("Seal Clubber") and not pt:contains("Procrastination Giant") and (using_club() or equipment().weapon == get_itemid("Thor's Pliers")) and not physically_resistant and have_skill("Lunging Thrust-Smack") then
+		return use_crumbs .. [[
+
+]] .. use_raindoh_flyers .. [[
+
+cast lunging thrust-smack
+cast lunging thrust-smack
+
+abort hppercentbelow 50
+
+cast lunging thrust-smack
+cast lunging thrust-smack
+cast lunging thrust-smack
+]]
+--	elseif playerclass("Sauceror") and have_skill("Itchy Curse Finger") and have_skill("Curse of Weaksauce") and not cfm.Stats.staggerimmune then
+	elseif playerclass("Sauceror") and have_skill("Itchy Curse Finger") and have_skill("Curse of Weaksauce") and have_skill("Saucegeyser") then
+		return [[
+cast Curse of Weaksauce
+
+]] .. use_crumbs .. [[
+
+]] .. use_raindoh_flyers .. [[
+
+cast Saucegeyser
+cast Saucegeyser
+cast Saucegeyser
+
+abort hppercentbelow 50
+abort mpbelow 50
+
+cast Saucegeyser
+cast Saucegeyser
+cast Saucegeyser
+cast Saucegeyser
+cast Saucegeyser
+]]
+	elseif pt:contains("Green Ops Soldier") then
+		return macro_noodlegeyser_raw(5)
+	elseif physically_resistant then
+		return macro_noodlecannon_raw
+	else
+		return macro_noodleserpent_raw
+	end
 end

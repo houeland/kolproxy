@@ -340,7 +340,7 @@ tr.florist :first-line {
 }
 
 #chit_stats tr td.progress .compact {
-width: auto;
+	width: auto;
 }
 #chit_stats tr td.history {
 	color:#606060;
@@ -359,15 +359,15 @@ width: auto;
 /* compact mode */
 
 table#compact_organs {
-border-bottom: 1px solid #F0F0F0;
-width: 100%;
+	border-bottom: 1px solid #F0F0F0;
+	width: 100%;
 }
 
 
 #chit_stats #compact_organs td.label, #chit_stats #compact_organs td.info {
-font-size: 10px;
-text-align: center;
-padding: 0px;
+	font-size: 10px;
+	text-align: center;
+	padding: 0px;
 }
 
 #chit_stats.compact tbody tr:first-child td {
@@ -379,7 +379,7 @@ padding: 0px;
 }
 
 #chit_stats.compact td.statbar, #chit_stats.compact tr td.label, #chit_stats.compact tr td.info {
-padding: 0px;
+	padding: 0px;
 }
 
 div.progressbox {
@@ -618,29 +618,34 @@ padding: 0px;
 
 /* for compact effects list */
 
-#chit_effects .compact td.shrug {
-font-size: 11px;
+#chit_effects.compact {
+	table-layout: fixed;
 }
-#chit_effects .compact td.icon {
+#chit_effects.compact td.icon {
 	text-align:left;
 	width:15px;
-	height: 15px;
+	height:15px;
 	padding:1px 2px;
 }
-#chit_effects .compact td.icon img {
+#chit_effects.compact td.icon img {
 	border:0px;
 	width:15px;
 	height:15px;
 }
-#chit_effects .compact td.noshrug, #chit_effects td.shrug {
-	text-align:center;
+#chit_effects.compact td.noshrug, #chit_effects.compact td.shrug, #chit_effects.compact td.infinity {
+	font-size: 11px;
+	text-align:right;
 	padding:0px 2px;
-	width:15px;
+	width:3em;
 }
-
-#chit_effects .compact td.powerup {
+#chit_effects.compact td.powerup {
 	width:15px;
 	text-align:center;
+}
+#chit_effects.compact td.info div {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .efmods {

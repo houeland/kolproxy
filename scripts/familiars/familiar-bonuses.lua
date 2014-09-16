@@ -44,9 +44,9 @@ function estimate_current_familiar_bonuses()
 		if d then
 			-- SPADE: Is this floored?
 			local fairy = d.familiar_types["Baby Gravy Fairy"]
-			if fairy then bonuses = bonuses + { ["Item Drops from Monsters"] = fairy_bonus(math.floor(buffedfamiliarweight() * fairy)) } end
+			if fairy then bonuses.add { ["Item Drops from Monsters"] = fairy_bonus(math.floor(buffedfamiliarweight() * fairy)) } end
 			local leprechaun = d.familiar_types["Leprechaun"]
-			if leprechaun then bonuses = bonuses + { ["Meat from Monsters"] = leprechaun_bonus(math.floor(buffedfamiliarweight() * leprechaun)) } end
+			if leprechaun then bonuses.add { ["Meat from Monsters"] = leprechaun_bonus(math.floor(buffedfamiliarweight() * leprechaun)) } end
 		end
 		return bonuses
 	elseif familiar("Purse Rat") then
@@ -86,9 +86,9 @@ function estimate_current_familiar_bonuses()
 	else
 		-- TODO: grimacite-dependent familiars
 		local bonuses = make_bonuses_table {}
-		if vanilla_fairies[familiarid()] then bonuses = bonuses + { ["Item Drops from Monsters"] = fairy_bonus(buffedfamiliarweight()) } end
-		if vanilla_leprechauns[familiarid()] then bonuses = bonuses + { ["Meat from Monsters"] = leprechaun_bonus(buffedfamiliarweight()) } end
-		if vanilla_volleyballs[familiarid()] then bonuses = bonuses + { ["Stats Per Fight"] = volleyball_bonus(buffedfamiliarweight()) } end
+		if vanilla_fairies[familiarid()] then bonuses.add { ["Item Drops from Monsters"] = fairy_bonus(buffedfamiliarweight()) } end
+		if vanilla_leprechauns[familiarid()] then bonuses.add { ["Meat from Monsters"] = leprechaun_bonus(buffedfamiliarweight()) } end
+		if vanilla_volleyballs[familiarid()] then bonuses.add { ["Stats Per Fight"] = volleyball_bonus(buffedfamiliarweight()) } end
 		return bonuses
 	end
 end

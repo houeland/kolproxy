@@ -33,6 +33,10 @@ function setup_variables()
 			encounter_source = "other"
 		elseif text:contains("hear a wolf whistle from behind you") then
 			encounter_source = "Obtuse Angel"
+		elseif text:contains("You bend the drops to your will, and your will is") then
+			encounter_source = "Rain Man"
+		elseif text:contains("You play back the recording and") then
+			encounter_source = "Rain-Doh box full of monster"
 		elseif text:contains("<td bgcolor=black align=center><font color=white size=1>") then
 			encounter_source = "Mini-Hipster"
 		elseif monster_name and monster_name:contains("Black Crayon") then

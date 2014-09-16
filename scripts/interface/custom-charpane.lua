@@ -25,6 +25,15 @@ register_setting {
 }
 
 register_setting {
+	name = "display counters as effects",
+	description = "Display turn counters etc. as if they were effects",
+	group = "charpane",
+	default_level = "enthusiast",
+	update_charpane = true,
+	beta_version = true,
+}
+
+register_setting {
 	name = "show multiple previous-adventure links",
 	description = "Show multiple previous-adventure links",
 	group = "charpane",
@@ -175,6 +184,100 @@ function get_sorted_buff_array()
 	table.sort(sorting, buff_sort_func)
 	return sorting
 end
+
+--[==[--
+	local buff_colors = {
+		["On the Trail"] = "purple",
+		["Everything Looks Red"] = "red",
+		["Everything Looks Blue"] = "blue",
+		["Everything Looks Yellow"] = "goldenrod",
+	}
+	if pastathrall() and setting_enabled("display counters as effects") then
+		-- TODO: do in buff listing, not here
+		if last_buff_type ~= "intrinsic" then
+			if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
+			table.insert(bufflines, [[<tbody class="intrinsic">]])
+		end
+		local thrall = get_current_pastathrall_info()
+		table.insert(bufflines, string.format([[<tr class="intrinsic"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td><td class='info' colspan='3'><div>Lvl %d %s</div></td></tr>]], thrall.picture, thrall.level, thrall.name))
+	end
+
+
+function compact_charpane_buff_lines(lines)
+		local curbuffline = nil
+		for _, x in ipairs(get_sorted_buff_array()) do
+			local styleinfo = ""
+			local imgstyleinfo = ""
+			if buff_colors[x.title] then
+				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
+				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
+			end
+			local strarrow = make_strarrow(x.upeffect)
+			local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>%s</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, display_duration(x.duration))
+			if not curbuffline then
+				curbuffline = "<td>" .. strarrow .. "</td>" .. str
+			else
+				table.insert(bufflines, string.format([[<tr>%s<td>&nbsp;</td>%s<td>%s</td></tr>]], curbuffline, str, strarrow))
+				curbuffline = nil
+			end
+		end
+		if curbuffline then
+			table.insert(bufflines, string.format([[<tr>%s<td></td><td></td><td></td></tr>]], curbuffline))
+		end
+end
+
+function full_charpane_buff_lines(lines)
+		for _, x in ipairs(get_sorted_buff_array()) do
+			local styleinfo = ""
+			local imgstyleinfo = ""
+			if buff_colors[x.title] then
+				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
+				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
+			end
+			local strarrow = make_strarrow(x.upeffect)
+			local str = string.format([[<tr><td>%s</td><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s %s</font><br></td></tr>]], strarrow, imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_duration(x.duration))
+			table.insert(bufflines, str)
+		end
+end
+
+function bl_charpane_buff_lines(lines)
+	for _, x in ipairs(get_sorted_buff_array()) do
+		local styleinfo = ""
+		local imgstyleinfo = ""
+		local buff_type = "effect"
+		local shrug_class = "shrug"
+		if x.is_song and setting_enabled("display songs above other effects") then
+			buff_type = "song"
+		elseif x.duration == "&infin;" then
+			buff_type = "intrinsic"
+			shrug_class = "infinity"
+		end
+
+		if buff_type ~= last_buff_type then
+			if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
+			table.insert(bufflines, string.format([[<tbody class="%s">]], buff_type))
+		end
+		last_buff_type = buff_type
+
+		if buff_colors[x.title] then
+			styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
+			imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
+		end
+
+		local strarrow = ""
+		if tonumber(api_flag_config().compacteffects) == 1 then
+			strarrow = make_compact_arrow(x.duration, x.upeffect)
+		else
+			strarrow = make_strarrow(x.upeffect)
+		end
+
+		local str = string.format([[<tr class="%s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td class='info'><div>%s</div></td><td class='%s'>%s</td><td class='powerup'><span oncontextmenu="return maybe_shrug(&quot;%s&quot;)">%s</span></td></tr>]], buff_type, x.imgname, x.descid, x.title, x.title, shrug_class, display_duration(x.duration), x.title, strarrow)
+		table.insert(bufflines, str)
+	end
+
+	if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
+end
+--]==]--
 
 function make_strarrow(upeffect)
 	-- TODO: put skillid and itemid in buff table instead of parsing here

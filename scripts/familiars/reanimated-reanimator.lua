@@ -27,9 +27,9 @@ function estimate_reanimated_reanimator_bonuses()
 	local cached = session["familiar.reanimator cached bonuses"] or {}
 	local bonuses = make_bonuses_table {}
 	-- TODO: volleyball bonus
-	bonuses = bonuses + { ["Stats Per Fight"] = volleyball_bonus(buffedfamiliarweight()) }
-	if (cached.legs or 0) >= 5 then bonuses = bonuses + { ["Item Drops from Monsters"] = fairy_bonus(cached.legs) } end
-	if (cached.skulls or 0) >= 5 then bonuses = bonuses + { ["Meat from Monsters"] = leprechaun_bonus(cached.skulls) } end
+	bonuses.add { ["Stats Per Fight"] = volleyball_bonus(buffedfamiliarweight()) }
+	if (cached.legs or 0) >= 5 then bonuses.add { ["Item Drops from Monsters"] = fairy_bonus(cached.legs) } end
+	if (cached.skulls or 0) >= 5 then bonuses.add { ["Meat from Monsters"] = leprechaun_bonus(cached.skulls) } end
 	return bonuses
 end
 

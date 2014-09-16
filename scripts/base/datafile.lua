@@ -75,6 +75,11 @@ local function get_item_data_by_id(id)
 	end
 end
 
+local itemid_overrides = {}
+function register_itemid_override(name, id)
+	itemid_overrides[name] = id
+end
+
 function maybe_get_itemid(name)
 	if name == nil then
 		return nil
@@ -87,7 +92,7 @@ function maybe_get_itemid(name)
 		error("Invalid itemid type: " .. t)
 	end
 
-	return (get_item_data_by_name(name) or {}).id
+	return itemid_overrides[name] or (get_item_data_by_name(name) or {}).id
 end
 
 function get_itemid(name)

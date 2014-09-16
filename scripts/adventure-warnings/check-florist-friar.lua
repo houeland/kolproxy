@@ -7,23 +7,17 @@ register_setting {
 }
 
 register_setting {
-        name = "automate florist friar planting",
-        description = "Automate Florist Friar planting",
-        group = "automation",
-        default_level = "enthusiast",
+	name = "automate florist friar planting",
+	description = "Automate Florist Friar planting",
+	group = "automation",
+	default_level = "enthusiast",
 }
 
 local have_friar = nil
 local checked_zones = {}
 
--- TODO: redo with add_warning?
-add_interceptor("/adventure.php", function()
-	local ok = false
-	if setting_enabled("enable adventure warnings") and setting_enabled("show extra notices") and setting_enabled("show extra notices/check florist friar") then ok = true end
-	if setting_enabled("automate florist friar planting") then ok = true end
-	if not ok then return end
-	if locked() then return end
-	local pt
+function zone_awaiting_florist_decision(zone)
+	local pt = nil
 	if have_friar == false then
 		return
 	elseif have_friar == nil then
@@ -36,51 +30,66 @@ add_interceptor("/adventure.php", function()
 			return
 		end
 	end
-	local lastadv = lastadventuredata()
-	if tonumber(params.snarfblat) == tonumber(lastadv.id) and tonumber(lastadv.id) then
-		if checked_zones[tonumber(lastadv.id)] then return end
-		if session["warning-no florist plants, zoneid " .. tonumber(lastadv.id)] then return end
+
+	local lastzone = lastadventurezoneid()
+	if lastzone and get_zoneid(zone) == lastzone then
+		if checked_zones[lastzone] then return end
+		if session["warning-no florist plants, zoneid " .. lastzone] then return end
 		local noplants = 0
 		if not pt then
+			print("INFO: checking friar for plants")
 			pt = get_page("/place.php", { whichplace = "forestvillage", action = "fv_friar" })
 		end
 		for x in pt:gmatch([[title="No Plant"]]) do
 			noplants = noplants + 1
 		end
-		print("INFO: checking friar for plants")
 		if noplants == 3 then
-			--print("INFO:   no plants!")
-			local apply_plants = {}
-			if setting_enabled("automate florist friar planting") then
-				local lastadvzoneid = tonumber(lastadventuredata().link:match("^adventure%.php%?snarfblat=([0-9]+)$"))
-				local stored_state = ascension["automation.florist friar.automatic planting"] or {}
-				local want_plants = stored_state[tostring(lastadvzoneid)] or {}
-				local available = check_current_available_florist_friar_plants(pt)
-				for _, x in ipairs(want_plants) do
-					if available[x] then
-						table.insert(apply_plants, x)
-					end
-				end
-			end
-			if apply_plants[1] then
-				local planted_territorial = false
-				local planted_count = 0
-				for _, x in ipairs(apply_plants) do
-					local xmod = x % 10
-					local is_territorial = (xmod >= 1 and xmod <= 3)
-					if (not is_territorial or not planted_territorial) and planted_count < 3 then
-						print("INFO: florist friar planting", x)
-						async_post_page("/choice.php", { whichchoice = 720, pwd = session.pwd, option = 1, plant = x })
-						planted_count = planted_count + 1
-						planted_territorial = planted_territorial or is_territorial
-					end
-				end
-			elseif setting_enabled("show extra notices/check florist friar") then
-				return intercept_warning { message = "The Florist Friar has not planted anything here yet.", id = "no florist plants, zoneid " .. tonumber(lastadv.id), customdisablecolor = "rgb(51, 153, 51)", customwarningprefix = "Notice: ", customaction = string.format([[<a href="%s">%s</a>]], make_href("/place.php", { whichplace = "forestvillage", action = "fv_friar" }), "Visit Florist Friar.") }
-			end
+--			--print("INFO:   no plants!")
+			return true
 		else
-			checked_zones[tonumber(lastadv.id)] = true
-			--print("INFO:   have some plants", 3 - noplants)
+--			--print("INFO:   have some plants", 3 - noplants)
+			checked_zones[lastzone] = true
+			return false
+		end
+	end
+end
+
+function plant_florist_plants(want_plants)
+	local available = check_current_available_florist_friar_plants()
+	local planted_territorial = false
+	local planted_count = 0
+	for _, x in ipairs(want_plants) do
+		if available[x] then
+			local xmod = x % 10
+			local is_territorial = (xmod >= 1 and xmod <= 3)
+			if (not is_territorial or not planted_territorial) and planted_count < 3 then
+				print("INFO: florist friar planting", x)
+				async_post_page("/choice.php", { whichchoice = 720, pwd = session.pwd, option = 1, plant = x })
+				planted_count = planted_count + 1
+				planted_territorial = planted_territorial or is_territorial
+			end
+		end
+	end
+end
+
+-- TODO: redo with add_warning!
+add_interceptor("/adventure.php", function()
+	local ok = false
+	if setting_enabled("enable adventure warnings") and setting_enabled("show extra notices") and setting_enabled("show extra notices/check florist friar") then ok = true end
+	if setting_enabled("automate florist friar planting") then ok = true end
+	if not ok then return end
+	if locked() then return end
+	if tonumber(params.snarfblat) and zone_awaiting_florist_decision(tonumber(params.snarfblat)) then
+		local want_plants = nil
+		if setting_enabled("automate florist friar planting") then
+			local lastadvzoneid = lastadventurezoneid()
+			local stored_state = ascension["automation.florist friar.automatic planting"] or {}
+			want_plants = stored_state[tostring(lastadvzoneid)] or {}
+		end
+		if want_plants then
+			plant_florist_plants(want_plants)
+		elseif setting_enabled("show extra notices/check florist friar") then
+			return intercept_warning { message = "The Florist Friar has not planted anything here yet.", id = "no florist plants, zoneid " .. lastadventurezoneid(), customdisablecolor = "rgb(51, 153, 51)", customwarningprefix = "Notice: ", customaction = string.format([[<a href="%s">%s</a>]], make_href("/place.php", { whichplace = "forestvillage", action = "fv_friar" }), "Visit Florist Friar.") }
 		end
 	end
 end)
@@ -105,7 +114,7 @@ end
 local configure_friar_href = add_automation_script("custom-configure-florist-friar-automation", function()
 	local lines = {}
 	local lastadv = lastadventuredata()
-	local lastadvzoneid = tonumber(lastadv.link:match("^adventure%.php%?snarfblat=([0-9]+)$"))
+	local lastadvzoneid = lastadventurezoneid()
 	local prefilltext = ""
 	if lastadv.name and lastadvzoneid then
 		local friarpt = get_page("/place.php", { whichplace = "forestvillage", action = "fv_friar" })

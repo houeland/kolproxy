@@ -236,6 +236,7 @@ do
 				want_zoneids[get_zoneid(z)] = true
 			end
 		end
+		-- TODO: default trigger on place.php with params.action
 		local path = tbl.path or "/adventure.php"
 		local function f()
 			if tbl.when == "ascension" and freedralph() then return end

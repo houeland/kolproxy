@@ -176,9 +176,10 @@ function do_daily_visits()
 	dopage("/clan_viplounge.php", { action = "klaw" })
 	dopage("/clan_viplounge.php", { action = "klaw" })
 
-	dopage("/clan_rumpus.php", { action = "click", spot = 3, furni = 3 })
-	dopage("/clan_rumpus.php", { action = "click", spot = 3, furni = 3 })
-	dopage("/clan_rumpus.php", { action = "click", spot = 3, furni = 3 })
+	dopage("/clan_rumpus.php", { action = "click", spot = 3 })
+	dopage("/clan_rumpus.php", { action = "click", spot = 3 })
+	dopage("/clan_rumpus.php", { action = "click", spot = 3 })
+	dopage("/clan_rumpus.php", { action = "click", spot = 4 })
 
 	dopage("/store.php", { whichstore = "h" })
 

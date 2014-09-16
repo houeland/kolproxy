@@ -6,7 +6,7 @@ function evaluate_mafiaexpression(expression_input, tbl)
 	expr = expr:gsub("MUS", buffedmuscle)
 	expr = expr:gsub("MYS", buffedmysticality)
 	expr = expr:gsub("MOX", buffedmoxie)
-	expr = expr:gsub("ML", function() return estimate_modifier_bonuses()["Monster Level"] or 0 end)
+	expr = expr:gsub("ML", function() return estimate_bonus("Monster Level") end)
 	expr = expr:gsub("HP", maxhp)
 	expr = expr:gsub("BL", estimate_basement_level)
 

@@ -53,6 +53,7 @@ function retrieve_item_potency(item)
 		print("WARNING: called retrieve_item_potency(" .. tostring(item) .. ")")
 		return
 	end
+
 	local d = maybe_get_itemdata(item)
 	local dn = maybe_get_itemname(item)
 	if d and d.drunkenness and dn and dn:contains("dusty bottle of") then
@@ -68,25 +69,75 @@ function retrieve_item_potency(item)
 	end
 end
 
+function retrieve_speakeasy_potency(drinkid)
+	if not cached_potency["speakeasy:" .. tostring(drinkid)] then
+		local speakeasy_pt = get_page("/clan_viplounge.php", { action = "speakeasy" })
+		local drink_descids = {}
+		for x in speakeasy_pt:gmatch("<tr.-</tr>") do
+			local drinkid = tonumber(x:match([[input type="hidden" name="drink" value="([0-9]+)"]]))
+			local descid = tonumber(x:match([[descitem%(([0-9]+)%)]]))
+			if drinkid and descid then
+				drink_descids[drinkid] = descid
+			end
+		end
+		--print("DEBUG: drink_descids", tostring(drink_descids))
+		if drink_descids[drinkid] then
+			local pt = get_page("/desc_item.php", { whichitem = drink_descids[drinkid] })
+			cached_potency["speakeasy:" .. drinkid] = tonumber(pt:match([[>Potency: <b>([0-9]*)</b><]]))
+		end
+	end
+	return cached_potency["speakeasy:" .. tostring(drinkid)]
+end
+
+function drink_booze_warning(potency_f, quantity)
+	local potency = nil
+	if ascensionstatus() == "Aftercore" or have_skill("The Ode to Booze") then
+		if not have_buff("Ode to Booze") then
+			return "You do not have Ode to Booze active.", "drinking without ode"
+		end
+		potency = potency or potency_f()
+		if not potency then
+			return "You might not have enough turns of Ode to Booze active (unspecified potency).", "drinking unspecified potency without enough turns of ode to booze"
+		end
+		local need_turns = quantity * potency
+		if buffturns("Ode to Booze") < need_turns then
+			return "You do not have enough turns of Ode to Booze active (need " .. need_turns .. " turns).", "drinking without enough turns of ode to booze"
+		end
+	end
+
+	potency = potency or potency_f()
+	if potency and drunkenness() + potency * quantity <= estimate_max_safe_drunkenness() then
+	elseif drunkenness() >= estimate_max_safe_drunkenness() then
+	else
+		return "You have not drunk to full liver before nightcapping.", "not drunk before nightcapping"
+	end
+end
+
+function drink_booze_extra_warning(potency_f, quantity)
+	local potency = potency_f()
+	if not potency then
+		return "This booze could make you fallen-down drunk (unspecified potency).", "overdrinking unspecified potency"
+	elseif drunkenness() + potency * quantity <= estimate_max_safe_drunkenness() then
+	elseif drunkenness() >= estimate_max_safe_drunkenness() then
+	else
+		return "This booze will make you fallen-down drunk.", "overdrinking", "OK, I'm done for today, disable the warning and do it."
+	end
+end
+
 add_always_warning("/inv_booze.php", function()
 	for _, x in ipairs { "steel margarita", "shot of flower schnapps", "used beer", "slap and slap again", "beery blood" } do
 		if tonumber(params.whichitem) == get_itemid(x) then
 			return
 		end
 	end
-	if ascensionstatus() == "Aftercore" or have_skill("The Ode to Booze") then
-		if not have_buff("Ode to Booze") then
-			return "You do not have Ode to Booze active.", "drinking without ode"
-		end
-		local potency = retrieve_item_potency(tonumber(params.whichitem))
-		if not potency then
-			return "You might not have enough turns of Ode to Booze active (unspecified potency).", "drinking unspecified potency without enough turns of ode to booze"
-		end
-		local need_turns = (tonumber(params.quantity) or 1) * potency
-		if buffturns("Ode to Booze") < need_turns then
-			return "You do not have enough turns of Ode to Booze active (need " .. need_turns .. " turns).", "drinking without enough turns of ode to booze"
-		end
+	return drink_booze_warning(function() return retrieve_item_potency(tonumber(params.whichitem)) end, tonumber(params.quantity) or 1)
+end)
+
+add_extra_always_warning("/inv_booze.php", function()
+	if tonumber(params.whichitem) == get_itemid("steel margarita") then
+		return
 	end
+	return drink_booze_extra_warning(function() return retrieve_item_potency(tonumber(params.whichitem)) end, tonumber(params.quantity) or 1)
 end)
 
 add_always_warning("/cafe.php", function()
@@ -102,58 +153,31 @@ end)
 add_always_warning("/cafe.php", function()
 	if params.action ~= "CONSUME!" or tonumber(params.cafeid) ~= 2 then return end
 	-- Micromicrobrewery
-	if ascensionstatus() == "Aftercore" or have_skill("The Ode to Booze") then
-		if not have_buff("Ode to Booze") then
-			return "You do not have Ode to Booze active.", "drinking without ode"
-		end
-		local potency = nil
-		if tonumber(params.whichitem) == -1 or tonumber(params.whichitem) == -2 or tonumber(params.whichitem) == -3 then
-			potency = 3
-		end
-		-- TODO: check potency for other drinks
-		if not potency then
-			return "You might not have enough turns of Ode to Booze active (unknown potency).", "drinking unspecified potency without enough turns of ode to booze"
-		end
-		local need_turns = (tonumber(params.quantity) or 1) * potency
-		if buffturns("Ode to Booze") < need_turns then
-			return "You do not have enough turns of Ode to Booze active (need " .. need_turns .. " turns).", "drinking without enough turns of ode to booze"
-		end
+	local potency = nil
+	if tonumber(params.whichitem) == -1 or tonumber(params.whichitem) == -2 or tonumber(params.whichitem) == -3 then
+		potency = 3
 	end
+	return drink_booze_warning(function() return potency end, tonumber(params.quantity) or 1)
 end)
 
-add_always_warning("/inv_booze.php", function()
-	local safe = false
-	local whichitem = tonumber(params.whichitem)
-	local potency = retrieve_item_potency(whichitem)
-	if potency and drunkenness() + potency * (tonumber(params.quantity) or 1) <= estimate_max_safe_drunkenness() then
-		safe = true
-	elseif whichitem == get_itemid("steel margarita") then
-		safe = true
+add_extra_always_warning("/cafe.php", function()
+	if params.action ~= "CONSUME!" or tonumber(params.cafeid) ~= 2 then return end
+	-- Micromicrobrewery
+	local potency = nil
+	if tonumber(params.whichitem) == -1 or tonumber(params.whichitem) == -2 or tonumber(params.whichitem) == -3 then
+		potency = 3
 	end
-
-	if not safe and drunkenness() < estimate_max_safe_drunkenness() then
-		return "You have not drunk to full liver before nightcapping.", "not drunk before nightcapping"
-	end
+	return drink_booze_extra_warning(function() return potency end, tonumber(params.quantity) or 1)
 end)
 
-add_extra_always_warning("/inv_booze.php", function()
-	local safe = false
-	local whichitem = tonumber(params.whichitem)
-	local potency = retrieve_item_potency(whichitem)
+add_always_warning("/clan_viplounge.php", function()
+	if params.preaction ~= "speakeasydrink" then return end
+	return drink_booze_warning(function() return retrieve_speakeasy_potency(tonumber(params.drink)) end, 1)
+end)
 
-	if not potency then
-		return "This booze could make you fallen-down drunk (unspecified potency).", "overdrinking unspecified potency"
-	end
-
-	if drunkenness() + potency * (tonumber(params.quantity) or 1) <= estimate_max_safe_drunkenness() then
-		safe = true
-	elseif whichitem == get_itemid("steel margarita") then
-		safe = true
-	end
-
-	if not safe then
-		return "This booze will make you fallen-down drunk.", "overdrinking", "OK, I'm done for today, disable the warning and do it."
-	end
+add_extra_always_warning("/clan_viplounge.php", function()
+	if params.preaction ~= "speakeasydrink" then return end
+	return drink_booze_extra_warning(function() return retrieve_speakeasy_potency(tonumber(params.drink)) end, 1)
 end)
 
 local function check_eating_warning(itemid, quantity, whicheffect)

@@ -128,7 +128,7 @@ add_warning {
 	type = "warning",
 	when = "ascension",
 	zone = "The Arid, Extra-Dry Desert",
-	check = function() return can_wear_weapons() and not have_equipped_item("UV-resistant compass") end
+	check = function() return can_wear_weapons() and not have_equipped_item("UV-resistant compass") and not have_equipped_item("ornate dowsing rod") end
 }
 
 add_warning {

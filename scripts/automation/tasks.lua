@@ -17,9 +17,12 @@ function get_automation_tasks(script, cached_stuff)
 				["Disco Bandit"] = "Frankly Mr. Shank",
 				["Accordion Thief"] = "Shakespeare's Sister's Accordion",
 			}
-			if moonsign_area("Degrassi Knoll") and want_smith_weapons[playerclassname()] then
-				local want_items = { want_smith_weapons[playerclassname()], "A Light that Never Goes Out", "Hairpiece On Fire" }
-				if ascensionstatus("Hardcore") then table.insert(want_items, "Vicar's Tutu") end
+			if moonsign_area("Degrassi Knoll") then
+				local want_items = {}
+				if want_smith_weapons[playerclassname()] and not have_item("Thor's Pliers") then table.insert(want_items, want_smith_weapons[playerclassname()]) end
+				table.insert(want_items, "A Light that Never Goes Out")
+				table.insert(want_items, "Hairpiece On Fire")
+				table.insert(want_items, "Vicar's Tutu")
 				for _, x in ipairs(want_items) do
 					if not have_item(x) then
 						if not have_item("lump of Brituminous coal") then
@@ -44,6 +47,18 @@ function get_automation_tasks(script, cached_stuff)
 					if not have_item(x) then
 						break
 					end
+				end
+
+				local have_all = true
+				for idx, x in ipairs(want_items) do
+					if idx >= 3 then
+						break
+					elseif not have_item(x) then
+						have_all = false
+					end
+				end
+				if have_all and level() <= 6 then
+					pull_in_softcore("Hand in Glove")
 				end
 			end
 
@@ -594,16 +609,22 @@ mark m_done
 									stop "Failed to make progress in Twin Peak"
 								end
 								cached_stuff.previous_twin_peak_noncombat_option = x
+								print("AUTOMATION: picking choice", x)
 								return x
 							end
 						end
 					else
 						if else_defaulted_count >= 10 then
-							stop "Failed to make progress in Twin Peak"
+							print(pagetext)
+							print(advtitle, choicenum)
+							print("AUTOMATION: assume it's OK and move on, twin peak is buggy")
+							set_result(pagetext)
+							--stop "Failed to make default-progress in Twin Peak"
+						else
+							else_defaulted_count = else_defaulted_count + 1
+							print("AUTOMATION: defaulting to choice 1")
+							return "", 1
 						end
-						else_defaulted_count = else_defaulted_count + 1
-						print("AUTOMATION: defaulting to choice 1")
-						return "", 1
 					end
 				end
 
@@ -885,7 +906,8 @@ mark m_done
 	end
 
 	t.get_billiards_room_key = {
-		when = not have_item("Spookyraven billiards room key"),
+		when = script_want_library_key() and
+			not have_item("Spookyraven billiards room key"),
 		task = {
 			message = "get billiards room key",
 			familiar = "Exotic Parrot",
@@ -900,7 +922,8 @@ mark m_done
 	}
 
 	t.get_library_key = {
-		when = not have_item("Spookyraven library key") and
+		when = script_want_library_key() and
+			not have_item("Spookyraven library key") and
 			have_item("Spookyraven billiards room key") and
 			drunkenness() <= 12 and drunkenness() >= 5,
 		task = {
@@ -958,6 +981,56 @@ mark m_done
 				refresh_quest()
 				did_action = not quest_text("Go see Lady Spookyraven") and not quest_text("Go back to")
 			end,
+		}
+	}
+
+	t.check_hidden_temple = {
+		when = cached_stuff.currently_checked.unlocked_hidden_temple == nil,
+		task = {
+			message = "check hidden temple",
+			nobuffing = true,
+			action = function()
+				local woodspt = get_page("/woods.php")
+				cached_stuff.currently_checked.unlocked_hidden_temple = woodspt:contains("The Hidden Temple")
+				did_action = true
+			end
+		}
+	}
+
+	t.use_spooky_temple_map = {
+		when = have_item("Spooky Temple map") and have_item("Spooky-Gro fertilizer") and have_item("spooky sapling"),
+		task = {
+			message = "use spooky temple map",
+			nobuffing = true,
+			action = function()
+				cached_stuff.currently_checked.unlocked_hidden_temple = nil
+				set_result(use_item("Spooky Temple map"))
+				local newwoodspt = get_page("/woods.php")
+				did_action = newwoodspt:contains("The Hidden Temple")
+			end
+		}
+	}
+
+	t.unlock_hidden_temple = {
+		when = not cached_stuff.currently_checked.unlocked_hidden_temple,
+		task = {
+			message = "unlock hidden temple",
+			action = function()
+				script.unlock_hidden_temple()
+			end
+		}
+	}
+
+	t.unlock_hidden_temple_with_high_ML = {
+		when = not cached_stuff.currently_checked.unlocked_hidden_temple,
+		task = {
+			message = "unlock hidden temple",
+			action = function()
+				if zone_awaiting_florist_decision("The Spooky Forest") then
+					plant_florist_plants { 1, 10, 9 }
+				end
+				script.unlock_hidden_temple()
+			end
 		}
 	}
 
@@ -1024,12 +1097,24 @@ mark m_done
 						maybe_buffs = { "Mental A-cue-ity" },
 						minmp = minmp,
 						familiar = "Frumious Bandersnatch",
+						bonus_target = { "easy combat" },
 						action = function()
 							result, resulturl = get_page("/place.php", { whichplace = "pyramid", action = "pyramid_state1a" })
-							result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
+							result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5), { ["Ed the Undrowning"] = "If you say so..." })
 							while get_result():contains([[<!--WINWINWIN-->]]) and get_result():contains([[fight.php]]) do
 								result, resulturl = get_page("/fight.php")
-								result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
+								print("DEBUG: fighting ed, getting macro")
+								local mt = macro_noodlegeyser(5)
+								print("DEBUG: fighting ed, macro:", mt, type(mt))
+								local mte = mt
+								for i = 1, 10 do
+									print("DEBUG:.... fighting ed, macro", mte, type(mte))
+									if type(mte) ~= "string" then
+										mte = mte()
+									end
+								end
+								result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", mt)
+--								result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
 							end
 							did_action = have_item("Holy MacGuffin")
 						end

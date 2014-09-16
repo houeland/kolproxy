@@ -16,6 +16,9 @@ import Control.Monad
 import Data.IORef
 import Data.List
 import Data.Maybe
+import Data.Time.Clock
+import Data.Time.LocalTime
+--import Data.Time.Format
 import Network.URI
 import Network.CGI
 import System.IO.Error (isUserError, ioeGetErrorString)
@@ -868,6 +871,15 @@ runLogScript log_db code = do
 				Lua.pushstring l (uriPath uri)
 				return 1
 			_ -> return 0
+
+	utc_arbitrary_epoch <- zonedTimeToUTC <$> getZonedTime
+
+	register_function "time_to_number" $ \l -> do
+		timestr <- peekJustString l 1
+		let utc_time = zonedTimeToUTC $ read timestr
+		let diff = diffUTCTime utc_time utc_arbitrary_epoch
+		Lua.pushnumber l $ realToFrac diff
+		return 1
 
 	let l = lstate
 

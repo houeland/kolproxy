@@ -1,6 +1,7 @@
 -- intercept.lua
 
 function log_time_interval(msg, f) return f() end
+--log_time_interval = kolproxy_log_time_interval
 
 local interceptors = {}
 

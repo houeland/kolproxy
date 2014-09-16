@@ -194,6 +194,8 @@ local function parse_mafia_bonuslist(bonuslist, debug_source_name)
 
 		["Maximum HP"] = "Maximum HP", -- "Maximum HP +20"
 		["Maximum MP"] = "Maximum MP", -- "Maximum MP +20"
+		["Maximum HP Percent"] = "Maximum HP %", -- "Maximum HP +100%"
+		["Maximum MP Percent"] = "Maximum MP %", -- "Maximum MP +50%"
 
 		-- TODO: Find better names for these. "(minimum)" at the end? Rename to "Adventure"(?)
 		["HP Regen Min"] = "Regenerate minimum HP per adventure", -- "Regenerate 30-60 HP per adventure", "Regenerate 10-15 HP and MP per adventure"
@@ -299,12 +301,24 @@ end
 function parse_passives()
 	local passives = {}
 
+	local function remove_skillname_junk(skillname)
+		if skillname then
+			local cleaned = skillname:match("^(.+) %(Skill%)")
+			if cleaned then
+				return cleaned
+			end
+		end
+		return skillname
+	end
+
 	local section = nil
 	for l in io.lines("cache/files/modifiers.txt") do
 		l = remove_line_junk(l)
 		section = l:match([[^# (.*) section of modifiers.txt]]) or section
 		local name, bonuslist = l:match([[^([^	]+)	(.+)$]])
 		local name2 = l:match([[^# ([^	:]+)]])
+		name = remove_skillname_junk(name)
+		name2 = remove_skillname_junk(name2)
 		if section == "Passive Skills" and name and bonuslist and not blacklist["buff: " .. name] and not name2 then
 			passives[name] = { bonuses = parse_mafia_bonuslist(bonuslist, name) }
 		elseif section == "Passive Skills" and name2 and not blacklist["buff: " .. name2] and not passives[name2] then
@@ -481,6 +495,7 @@ function parse_items()
 				items[name].equip_requirements = reqtbl
 				items[name].power = power
 				items[name].weapon_hands = tonumber((weaptype or ""):match("^([0-9]+)%-handed"))
+				items[name].weapon_type = weaptype
 				if weaptype == "shield" then
 					items[name].is_shield = true
 				end

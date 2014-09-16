@@ -110,11 +110,15 @@ aftercore_automation_href = add_automation_script("aftercore-automation", functi
 	end
 	while remaining_fullness() >= 5 do
 		local f = remaining_fullness()
-		script.ensure_buffs { "Got Milk" }
-		script.ensure_buff_turns("Got Milk", remaining_fullness())
 		local himeins = { "hot hi mein", "cold hi mein", "stinky hi mein", "spooky hi mein", "sleazy hi mein" }
 		pull_storage_items(himeins)
-		for _, x in ipairs(himeins) do eat_item(x) end
+		for _, x in ipairs(himeins) do
+			if have_item(x) and remaining_fullness() >= 5 then
+				script.ensure_buffs { "Got Milk" }
+				script.ensure_buff_turns("Got Milk", remaining_fullness())
+				eat_item(x)
+			end
+		end
 		if f == remaining_fullness() then break end
 	end
 	local eq = equipment()

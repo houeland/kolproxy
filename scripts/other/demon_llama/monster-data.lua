@@ -43,16 +43,16 @@ function estimate_fight_page_bonuses(fight_text)
 		local plusmeat = tonumber(x:match("+([0-9]+)%% Meat drops"))
 		local plusinit = tonumber(x:match("+([0-9]+)%% Combat Initiative"))
 		local plusml = tonumber(x:match("+([0-9]+) Monster Level"))
-		bonuses = bonuses + { ["Item Drops from Monsters"] = plusitem, ["Meat from Monsters"] = plusmeat, ["Combat Initiative"] = plusinit, ["Monster Level"] = plusml }
+		bonuses.add { ["Item Drops from Monsters"] = plusitem, ["Meat from Monsters"] = plusmeat, ["Combat Initiative"] = plusinit, ["Monster Level"] = plusml }
 	end
 
 	if ascensionpath("BIG!") then
-		bonuses = bonuses + { ["Monster Level"] = 150 }
+		bonuses.add { ["Monster Level"] = 150 }
 	end
 
 	local waterlevel = tonumber(fight_text:match([[alt="Water %(depth: ([0-9]+)%)"]]))
 	if waterlevel then
-		bonuses = bonuses + { ["Monster Level"] = waterlevel * 10 }
+		bonuses.add { ["Monster Level"] = waterlevel * 10 }
 	end
 
 	return bonuses
@@ -83,7 +83,7 @@ function buildCurrentFightMonsterDataCache(for_monster_name, fight_text)
 	if not monster then return nil end
 	monster = table.copy(monster)
 
-	local modifiers = estimate_modifier_bonuses() + estimate_fight_page_bonuses(fight_text)
+	local modifiers = estimate_current_bonuses() + estimate_fight_page_bonuses(fight_text)
 	local ml = modifiers["Monster Level"]
 
 	local ml_increases = {

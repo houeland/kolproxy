@@ -211,6 +211,12 @@ function setup_functions()
 			return stats[mainstat_type()]
 		end
 		function lastadventuredata() return status().lastadv end
+		function lastadventurezoneid()
+			local lastadv = lastadventuredata()
+			if lastadv and lastadv.link then
+				return tonumber(lastadv.link:match("^adventure%.php%?snarfblat=([0-9]+)$"))
+			end
+		end
 		function ascensionpathid() return tonumber(status().path) end
 		function ascensionpathname() return status().pathname end
 		function ascensionpath(check)
