@@ -118,7 +118,7 @@ function drink_booze_extra_warning(potency_f, quantity)
 	if not potency then
 		return "This booze could make you fallen-down drunk (unspecified potency).", "overdrinking unspecified potency"
 	elseif drunkenness() + potency * quantity <= estimate_max_safe_drunkenness() then
-	elseif drunkenness() >= estimate_max_safe_drunkenness() then
+	elseif drunkenness() > estimate_max_safe_drunkenness() then
 	else
 		return "This booze will make you fallen-down drunk.", "overdrinking", "OK, I'm done for today, disable the warning and do it."
 	end

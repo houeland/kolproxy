@@ -57,7 +57,7 @@ function get_automation_tasks(script, cached_stuff)
 						have_all = false
 					end
 				end
-				if have_all and level() <= 6 then
+				if have_all and level() <= 6 and script_use_unified_kill_macro() then
 					pull_in_softcore("Hand in Glove")
 				end
 			end

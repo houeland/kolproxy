@@ -662,6 +662,10 @@ endif
 end
 
 function macro_softcore(extrastuff)
+	if extrastuff and extrastuff:contains("fight.php") then
+		-- TODO: temporary workaround for macros getting the fight page as input now
+		extrastuff = nil
+	end
 	-- TODO: set correct gaze
 	return [[
 
@@ -697,6 +701,10 @@ endif
 end
 
 function macro_softcore_boris(extrastuff)
+	if extrastuff and extrastuff:contains("fight.php") then
+		-- TODO: temporary workaround for macros getting the fight page as input now
+		extrastuff = nil
+	end
   local set_gaze = ""
   if not have_intrinsic("Gaze of the Volcano God") and have_equipped_item("Juju Mojo Mask") and (challenge == "boris" or challenge == "zombie") then
     if have_intrinsic("Gaze of the Trickster God") or have_intrinsic("Gaze of the Lightning God") then
@@ -1038,6 +1046,10 @@ goto start_loop
 end
 
 function macro_hardcore_boris(extrastuff)
+	if extrastuff and extrastuff:contains("fight.php") then
+		-- TODO: temporary workaround for macros getting the fight page as input now
+		extrastuff = nil
+	end
   local hplevel = 35
   if challenge == "jarlsberg" then
     hplevel = 10
@@ -1872,27 +1884,84 @@ function macro_kill_monster(pt)
 
 	print_ascensiondebug("macro_kill", monstername(), script_want_2_day_SCHR(), playerclass("Seal Clubber"), not pt:contains("Procrastination Giant"), using_club(), not physically_resistant, use_crumbs, use_raindoh_flyers)
 
+	local function heavy_rains_spell()
+		if have_skill("Saucestorm") then
+			return [[
+]] .. use_crumbs .. [[
+
+cast Saucestorm
+cast Saucestorm
+
+]] .. use_raindoh_flyers .. [[
+
+cast Saucestorm
+cast Saucestorm
+cast Saucestorm
+
+abort hppercentbelow 50
+abort mpbelow 50
+
+cast Saucestorm
+cast Saucestorm
+cast Saucestorm
+cast Saucestorm
+cast Saucestorm
+]]
+		else
+			return [[abort heavy rains boss]]
+		end
+	end
+
+	local function heavy_rains_attack()
+		if have_skill("Lunging Thrust-Smack") then
+			return [[
+]] .. use_crumbs .. [[
+
+cast Lunging Thrust-Smack
+cast Lunging Thrust-Smack
+
+]] .. use_raindoh_flyers .. [[
+
+cast Lunging Thrust-Smack
+cast Lunging Thrust-Smack
+cast Lunging Thrust-Smack
+
+abort hppercentbelow 50
+abort mpbelow 50
+
+cast Lunging Thrust-Smack
+cast Lunging Thrust-Smack
+cast Lunging Thrust-Smack
+cast Lunging Thrust-Smack
+cast Lunging Thrust-Smack
+]]
+		else
+			return [[abort heavy rains boss - no spells]]
+		end
+	end
+
+	-- TODO: get proper monster resistance information in data files!
 	if monstername("storm cow") then
 		return [[abort storm cow]]
 	elseif monstername("Aquabat") then
-		return [[abort heavy rains boss]]
+		return heavy_rains_spell()
 	elseif monstername("Aquagoblin") then
-		return [[abort heavy rains boss]]
+		-- dangerous, removes buffs and fought while dressed up in goblin gear
+		return [[abort heavy rains boss - dangerous]]
 	elseif monstername("Auqadargon") then
-		return [[abort heavy rains boss]]
+		return heavy_rains_spell()
 	elseif monstername("Gurgle") then
-		return [[abort heavy rains boss]]
+		return heavy_rains_physical()
 	elseif monstername("Lord Soggyraven") then
-		return [[abort heavy rains boss]]
+		return heavy_rains_spell()
 	elseif monstername("Protector Spurt") then
-		return [[abort heavy rains boss]]
+		return heavy_rains_spell()
 	elseif monstername("Dr. Aquard") then
-		-- no spells
-		return [[abort heavy rains boss - no spells]]
+		return heavy_rains_physical()
 	elseif monstername("The Aquaman") then
-		return [[abort heavy rains boss]]
+		return heavy_rains_spell()
 	elseif monstername("Big Wisnaqua") then
-		return [[abort heavy rains boss]]
+		return heavy_rains_spell()
 	elseif monstername("The Rain King") then
 		return [[abort heavy rains boss]]
 	elseif have_skill("Lightning Strike") and heavyrains_lightning() >= 20 and not cfm.Stats.boss then

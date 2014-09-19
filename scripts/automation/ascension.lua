@@ -1951,12 +1951,19 @@ endif
 
 	want_softcore_item("Rain-Doh indigo cup", "can of Rain-Doh")
 	want_softcore_item("Juju Mojo Mask")
+	if can_wear_weapons() then
+		want_softcore_item("Thor's Pliers")
+	end
 	want_softcore_item_oneof { "Loathing Legion necktie", "Loathing Legion abacus", "Loathing Legion can opener", "Loathing Legion chainsaw", "Loathing Legion corkscrew", "Loathing Legion defibrillator", "Loathing Legion double prism", "Loathing Legion electric knife", "Loathing Legion hammer", "Loathing Legion helicopter", "Loathing Legion jackhammer", "Loathing Legion kitchen sink", "Loathing Legion knife", "Loathing Legion many-purpose hook", "Loathing Legion moondial", "Loathing Legion pizza stone", "Loathing Legion rollerblades", "Loathing Legion tape measure", "Loathing Legion tattoo needle", "Loathing Legion universal screwdriver" }
 	want_softcore_item_oneof { "over-the-shoulder Folder Holder", "plastic vampire fangs" }
 	want_softcore_item_oneof { "stinky cheese diaper", "stinky cheese wheel", "stinky cheese eye", "Staff of Queso Escusado", "stinky cheese sword" }
 	want_softcore_item_oneof { "Greatest American Pants", "Pantsgiving" }
 	want_softcore_item_oneof { "Boris's Helm (askew)", "Boris's Helm", "Spooky Putty mitre" }
-	want_softcore_item_oneof { "Buddy Bjorn", "Camp Scout backpack" }
+	if can_change_familiar() then
+		want_softcore_item_oneof { "Buddy Bjorn", "Camp Scout backpack" }
+	else
+		want_softcore_item("Camp Scout backpack")
+	end
 	want_softcore_item_oneof { "Jekyllin hide belt", "Mr. Accessory Jr.", "over-the-shoulder Folder Holder", "astral mask" }
 	if can_wear_weapons() and not have_item("Jarlsberg's pan (Cosmic portal mode)") and not have_item("Jarlsberg's pan") then
 		want_softcore_item("Operation Patriot Shield")
@@ -5509,6 +5516,20 @@ use gauze garter
 				end
 			end)
 		end
+		did_action = not locked()
+	end
+
+	if locked() == "choice" and playerclass("Turtle Tamer") then
+		-- TODO: only trigger when there's only one choice
+		local ctr = 0
+		result, resulturl = get_page("/choice.php")
+		result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, nil, function(advtitle, choicenum, pt)
+			if ctr < 10 then
+				ctr = ctr + 1
+				print("AUTOMATION: guessing this is a turtle taming choice adventure, picking option 1")
+				return "", 1
+			end
+		end)
 		did_action = not locked()
 	end
 

@@ -1014,6 +1014,19 @@ function verify_faxbot_monsters(data)
 	end
 end
 
+local function sort_and_remove_duplicates(tbl)
+	local key_tbl = {}
+	for _, x in ipairs(tbl) do
+		key_tbl[x] = true
+	end
+	local output_tbl = {}
+	for x, _ in pairs(key_tbl) do
+		table.insert(output_tbl, x)
+	end
+	table.sort(output_tbl)
+	return output_tbl
+end
+
 function parse_semirares()
 	local semirares = {}
 	for l in io.lines("cache/files/encounters.txt") do
@@ -1024,7 +1037,7 @@ function parse_semirares()
 			table.insert(semirares, title)
 		end
 	end
-	return semirares
+	return sort_and_remove_duplicates(semirares)
 end
 
 function verify_semirares(data)

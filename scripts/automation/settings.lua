@@ -291,6 +291,8 @@ function get_ascension_automation_settings(want_bonus)
 			{ name = "Hand that Rocks the Ladle", check = function() return playerclass("Pastamancer") end },
 			{ name = "Saucepanic", check = function() return playerclass("Sauceror") end },
 			{ name = "Frankly Mr. Shank", check = function() return playerclass("Disco Bandit") end },
+			"Sheila Take a Crossbow",
+			"Work is a Four Letter Sword",
 			"Sneaky Pete's basket",
 			"hilarious comedy prop",
 			"ironic battle spoon",
