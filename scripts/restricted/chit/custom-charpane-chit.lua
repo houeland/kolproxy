@@ -11,7 +11,7 @@ register_setting {
 	name = "use custom bleary charpane",
 	description = "Use prettier bleary / ChIT version",
 	group = "charpane",
-	default_level = "detailed",
+	default_level = "standard",
 	parent = "use custom kolproxy charpane",
 	update_charpane = true,
 }
@@ -130,13 +130,16 @@ function bl_charpane_level_lines(lines)
 	<td>
 		<div class="chit_resource">
 			<div title="Meat" style="float:left">
-				<span>%s</span><img src="http://images.kingdomofloathing.com/itemimages/meat.gif">
-			</div>
-			<div title="%s Adventures remaining" style="float:right">
-				<span>%s</span><img src="http://images.kingdomofloathing.com/itemimages/slimhourglass.gif">
+				<img src="http://images.kingdomofloathing.com/itemimages/meat.gif"><span>%s</span>
 			</div>
 		</div>
-		<div style="clear:both"></div>
+	</td>
+	<td>
+		<div class="chit_resource">
+			<div title="%s Adventures remaining" style="float:right">
+				<img src="http://images.kingdomofloathing.com/itemimages/slimhourglass.gif"><span>%s</span>
+			</div>
+		</div>
 	</td>
 </tr>
 ]], format_integer(meat()), format_integer(advs()), format_integer(advs())))
@@ -151,18 +154,18 @@ function bl_charpane_level_lines(lines)
 ]], need_level - have_level, level() + 1, partial_level * 100))
 end
 
-function bl_path_resources_compact()
+function bl_path_resources_compact() -- TODO: move to other file and only wrap result in chit_resource
 	if ascensionpath("Heavy Rains") then
 		local function makespan(amount, name, icon)
 			amount = amount or 0
-			return string.format([[<span title="%d %s">%d<img src="http://images.kingdomofloathing.com/itemimages/%s"></span>]], amount, name, amount, icon)
+			return string.format([[<span title="%d %s" style="white-space: nowrap"><img src="http://images.kingdomofloathing.com/itemimages/%s">%d</span>]], amount, name, icon, amount)
 		end
 		return [[
-		<div class="chit_resource"><div>
-			]] .. makespan(heavyrains_thunder(), "thunder", "echo.gif") .. [[
-			]] .. makespan(heavyrains_rain(), "rain", "familiar31.gif") .. [[
-			]] .. makespan(heavyrains_lightning(), "lightning", "cloudlightning.gif") .. [[
-		</div></div>
+<div class="chit_resource"><div>
+	]] .. makespan(heavyrains_thunder(), "thunder", "echo.gif") .. [[
+	]] .. makespan(heavyrains_rain(), "rain", "familiar31.gif") .. [[
+	]] .. makespan(heavyrains_lightning(), "lightning", "cloudlightning.gif") .. [[
+</div></div>
 ]]
 	end
 	return ""
@@ -186,14 +189,14 @@ function bl_charpane_level_lines_compact(lines)
 	<td>
 		<div class="chit_resource">
 			<div title="Meat">
-				<span>%s</span><img src="http://images.kingdomofloathing.com/itemimages/meat.gif">
+				<img src="http://images.kingdomofloathing.com/itemimages/meat.gif"><span>%s</span>
 			</div>
 		</div>
 	</td>
 	<td>
 		<div class="chit_resource">
 			<div title="%s Adventures remaining" class="nowrap">
-				<span>%s</span><img src="http://images.kingdomofloathing.com/itemimages/slimhourglass.gif">
+				<img src="http://images.kingdomofloathing.com/itemimages/slimhourglass.gif"><span>%s</span>
 			</div>
 		</div>
 	</td>
@@ -774,7 +777,7 @@ add_interceptor("/charpane.php", function()
 		bl_charpane_level_lines(lines)
 		bl_charpane_mystats_lines(lines)
 	end
-	-- todo: move to new function
+	-- TODO: move to new function
 	if setting_enabled("show modifier estimates") then
 		if bl_compact() then
 			table.insert(lines, [[<table id="chit_modifiers" class="chit_brick compact nospace">]])

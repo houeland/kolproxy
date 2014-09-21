@@ -604,7 +604,7 @@ local function parse_monster_stats(stats, monster_debug_line)
 		elseif stats:sub(i, i) == " " then -- space (formatting error, ignore)
 			pos = i + 1
 		else
-			name, value, pos = stats:match("^([^:]+): ([^ ]+) ()", i)
+			name, value, pos = stats:match("^([^:]+): +([^ ]+) ()", i)
 			if name and value then
 				if tonumber(value) then
 					value = tonumber(value)
@@ -721,6 +721,10 @@ function parse_monsters()
 			}
 		end
 	end
+	monsters["booty crab"].Stats.boss = true
+	monsters["cosmetics wraith"].Stats.boss = true
+	monsters["huge ghuol"].Stats.boss = true
+	monsters["knob goblin king"].Stats.boss = true
 	return monsters
 end
 
@@ -739,14 +743,15 @@ function verify_monsters(data)
 			cube_ok = true
 		end
 	end
-	if data["hellion"].Stats.Element == "Hot" and data["hellion"].Stats.Phylum == "Demon" and data["hellion"].Stats.HP == 52 then
-		if data["hank north, photojournalist"].Stats.HP == 180 then
-			if data["beefy bodyguard bat"].Stats.Meat == 250 then
-				return data
-			end
-		end
-	end
-	print("DEBUG:", tojson(data["hellion"]))
+	if not cube_ok then return end
+
+	local correct_data = {
+		["hellion"] = { Stats = { HP = 52, Element = "Hot", Phylum = "Demon" } },
+		["hank north, photojournalist"] = { Stats = { HP = 180 } },
+		["beefy bodyguard bat"] = { Stats = { Meat = 250 } },
+		["booty crab"] = { Stats = { boss = true } },
+	}
+	return verify_data_fits(correct_data, data)
 end
 
 function parse_hatrack()

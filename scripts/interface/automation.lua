@@ -108,7 +108,7 @@ function turn_automation_decorate_noncombat_page(pt, zoneid, timesleft)
 end
 
 function show_links(match, link)
-	if setting_enabled("run automation scripts") and setting_enabled("enable readventuring automation") then
+	if setting_enabled("enable readventuring automation") then
 		local function newtext(x)
 			return [[
 <script language="javascript">

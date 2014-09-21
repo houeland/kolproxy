@@ -1951,13 +1951,13 @@ cast Lunging Thrust-Smack
 	elseif monstername("Auqadargon") then
 		return heavy_rains_spell()
 	elseif monstername("Gurgle") then
-		return heavy_rains_physical()
+		return heavy_rains_attack()
 	elseif monstername("Lord Soggyraven") then
 		return heavy_rains_spell()
 	elseif monstername("Protector Spurt") then
 		return heavy_rains_spell()
 	elseif monstername("Dr. Aquard") then
-		return heavy_rains_physical()
+		return heavy_rains_attack()
 	elseif monstername("The Aquaman") then
 		return heavy_rains_spell()
 	elseif monstername("Big Wisnaqua") then

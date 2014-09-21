@@ -396,7 +396,7 @@ end)
 
 -- Pick up filthy lucre
 add_automator("/fight.php", function()
-	if not setting_enabled("enable ascension assistance") then return end
+	if not setting_enabled("automate simple tasks") then return end
 	local bounty1, bounty2 = text:match("%(([0-9]+) of ([0-9]+) found.%)")
 	if tonumber(bounty2) and bounty1 == bounty2 and not locked() then
 			local scan = setup_automation_scan_page_results()
@@ -416,24 +416,33 @@ add_submit_page_listener(function(ptf)
 	end
 end)
 
+local ascension_assistance_list = {}
 function add_ascension_assistance(checkf, f)
-	local last_checked = nil
-	add_automator("all pages", function()
-		if not setting_enabled("enable ascension assistance") then return end
-		if last_checked ~= level() and not locked() and checkf() then
-			local scan = setup_automation_scan_page_results()
-			active_automation_assistance_scanner = scan
-			local new_last_checked = level()
-			function reset_last_checked()
-				new_last_checked = last_checked
-			end
-			pcall(f)
-			active_automation_assistance_scanner = nil
-			last_checked = new_last_checked
-			text = setup_automation_display_page_results(scan, text)
-		end
-	end)
+	table.insert(ascension_assistance_list, { checkf = checkf, f = f, last_checked = nil })
 end
+
+add_automator("all pages", function()
+	if not setting_enabled("automate simple tasks") then return end
+	local scan = setup_automation_scan_page_results()
+	active_automation_assistance_scanner = scan
+	for i = 1, 10 do
+		local activated = false
+		for _, aa in ipairs(ascension_assistance_list) do
+			if aa.last_checked ~= level() and not locked() and aa.checkf() then
+				activated = true
+				local new_last_checked = level()
+				function reset_last_checked()
+					new_last_checked = nil
+				end
+				pcall(f)
+				aa.last_checked = new_last_checked
+			end
+		end
+		if not activated then break end
+	end
+	active_automation_assistance_scanner = nil
+	text = setup_automation_display_page_results(scan, text)
+end)
 
 -- Visit council
 add_ascension_assistance(function() return true end, function()
@@ -479,7 +488,11 @@ end)
 
 local function add_use_item_ascension_assistance(itemname)
 	add_ascension_assistance(function() return have_item(itemname) end, function()
-		use_item(itemname)
+		local c = count_item(itemname)
+		use_item(itemname)()
+		if count_item(itemname) < c then
+			reset_last_checked()
+		end
 	end)
 end
 
@@ -488,6 +501,8 @@ add_use_item_ascension_assistance("astral six-pack")
 add_use_item_ascension_assistance("carton of astral energy drinks")
 
 add_use_item_ascension_assistance("telegram from Lady Spookyraven")
+
+add_use_item_ascension_assistance("evil eye")
 
 add_ascension_assistance(function() return have_item("Knob Goblin encryption key") and have_item("Cobb's Knob map") and not ascensionpath("Bees Hate You") end, function()
 	use_item("Cobb's Knob map")
@@ -549,7 +564,6 @@ local hermit_items_href = add_automation_script("get-hermit-items", function()
 end)
 
 add_printer("/hermit.php", function()
-	if not setting_enabled("enable ascension assistance") then return end
 	if text:contains("don't have anything worthless enough") then
 		text = text:gsub("worthless enough for him to want to trade for it.<P>", [[%0<a href="]] .. hermit_items_href { pwd = session.pwd } .. [[" style="color:green">{ Get trinket and/or permit }</a><p>]])
 	end

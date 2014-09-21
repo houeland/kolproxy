@@ -678,14 +678,13 @@ function automate_lair_statues(text)
 	end
 
 	if not have_item("stone tablet (Squeezings of Woe)") then
-		if not have_item("digital key") and setting_enabled("enable ascension assistance") then
-			if count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel")) >= 30 then
-				if count_item("white pixel") < 30 then
-					local to_make = 30 - count_item("white pixel")
-					shop_buy_item({ ["white pixel"] = to_make }, "mystic")
-				end
-				shop_buy_item("digital key", "mystic")
+		local pixels = count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel"))
+		if not have_item("digital key") and setting_enabled("automate simple tasks") and pixels >= 30 then
+			if count_item("white pixel") < 30 then
+				local to_make = 30 - count_item("white pixel")
+				shop_buy_item({ ["white pixel"] = to_make }, "mystic")
 			end
+			shop_buy_item("digital key", "mystic")
 		end
 		if have_item("digital key") then
 			async_post_page("/lair2.php", { prepreaction = "sequence", seq1= "up", seq2 = "up", seq3 = "down", seq4 = "down", seq5 = "left", seq6 = "right", seq7 = "left", seq8 = "right", seq9 = "b", seq10 = "a" })
@@ -765,7 +764,6 @@ local automate_statues_href = add_automation_script("automate-lair-statues", fun
 end)
 
 add_printer("/lair2.php", function()
-	if not setting_enabled("run automation scripts") or not setting_enabled("automate simple tasks") then return end
 	text = text:gsub([[</body>]], [[<center><a href="]] .. automate_statues_href { pwd = session.pwd } .. [[" style="color: green;">{ Automate the statues. }</a></center>%0]])
 end)
 

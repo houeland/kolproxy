@@ -57,9 +57,9 @@ function get_automation_tasks(script, cached_stuff)
 						have_all = false
 					end
 				end
-				if have_all and level() <= 6 and script_use_unified_kill_macro() then
-					pull_in_softcore("Hand in Glove")
-				end
+--				if have_all and level() <= 6 and script_use_unified_kill_macro() then
+--					pull_in_softcore("Hand in Glove")
+--				end
 			end
 
 			if not have_item("shining halo") and level() == 1 and not get_ascension_automation_settings().should_wear_weapons then
@@ -1193,6 +1193,34 @@ mark m_done
 
 	t.tasklist_pyramid_quest = { t.unlock_pyramid, t.a_pyramid_scheme }
 
+	local function want_skill(skills)
+		for _, x in ipairs(skills) do
+			if not have_skill(x) then
+				return x
+			end
+		end
+	end
+
+	local function heavyrains_make_train_skill_task(item, skills)
+		local skill = want_skill(skills)
+		return {
+			when = not ascension_script_option("train skills manually") and have_item(item) and skill,
+			task = {
+				message = "train skill " .. tostring(skill),
+				nobuffing = true,
+				action = function()
+					did_action = heavyrains_train_skill(item, skill)
+				end,
+			}
+		}
+	end
+
+	t.tasklist_heavyrains_train_skills = {
+		heavyrains_make_train_skill_task("thunder thigh", { "Thunderheart", "Thunderstrike", "Thunder Clap", "Thunder Thighs" }),
+		heavyrains_make_train_skill_task("aquaconda brain", { "Rain Man", "Rain Delay", "Rain Dance" }),
+		heavyrains_make_train_skill_task("lightning milk", { "Sheet Lightning", "Lightning Strike", "Riding the Lightning" }),
+	}
+
 	return t
 end
 
@@ -1206,4 +1234,16 @@ function maketask_use_item(item)
 			did_action = count_item(item) == c - 1
 		end
 	}
+end
+
+function heavyrains_train_skill(item, skill)
+	result, resulturl = use_item(item)()
+	result, resulturl = get_page("/choice.php", { forceoption = 0 })
+	result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, {
+		["The Thunder Rolls..."] = skill,
+		["The Rain Falls Down With Your Help..."] = skill,
+		["And The Lightning Strikes..."] = skill,
+	})
+	get_page("/main.php")
+	return have_skill(skill)
 end

@@ -560,7 +560,6 @@ local href = add_automation_script("automate-volcanomaze", function()
 end)
 
 add_printer("/volcanomaze.php", function()
-	if not setting_enabled("run automation scripts") or not setting_enabled("automate simple tasks") then return end
 	text = text:gsub([[value="Swim Back to Shore".->]], [[%0<br><a href="]].. href { pwd = session.pwd } ..[[" style="color:green">{ solve }</a>]])
 end)
 

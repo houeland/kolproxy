@@ -73,7 +73,7 @@ end)
 
 add_printer("/place.php", function()
 	if params.whichplace ~= "beanstalk" and params.whichplace ~= "giantcastle" then return end
-	if not setting_enabled("run automation scripts") or not setting_enabled("automate simple tasks") then return end
+	if not setting_enabled("enable turnplaying automation") then return end
 	if not ascensionstatus("Aftercore") then return end
 	local scriptsource = [[
 <script language="javascript">

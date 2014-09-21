@@ -21,9 +21,8 @@ local automate_dungeon_fist_href = add_automation_script("automate-dungeonfist",
 end)
 
 add_printer("/arcade.php", function()
-	if setting_enabled("run automation scripts") then
-		local function newtext(x)
-			return [[
+	local function newtext(x)
+		return [[
 <script language="javascript">
 function automate_N_times(url) {
 	N = prompt('Play how many games of Dungeon Fist?');
@@ -32,7 +31,6 @@ function automate_N_times(url) {
 	}
 }
 </script><br><a href="javascript:automate_N_times('/kolproxy-automation-script?pwd=]] .. session.pwd .. [[&automation-script=automate-dungeonfist')" style="color:green">{ Automate Dungeon Fist (]] .. make_plural(count_item("Game Grid token"), "token", "tokens") .. [[ available) }</a>]]
-		end
-		text = text:gsub("(<a href=town_wrong.php>Back [^<]+</a>)", function(alltext, a, b, c) return alltext .. " " .. newtext(a, b, c) .. "\n" end)
 	end
+	text = text:gsub("(<a href=town_wrong.php>Back [^<]+</a>)", function(alltext, a, b, c) return alltext .. " " .. newtext(a, b, c) .. "\n" end)
 end)

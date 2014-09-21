@@ -33,3 +33,5 @@ function fight_N_times() {
 </script>
 <p><a href="javascript:fight_N_times()" style="color: green">{ Fight N random opponents }</a></p>]])
 end)
+
+-- /campground.php [("smashstone","Yep."),("pwd","34e80db63287568e4219715385c710c6"),("confirm","on")]

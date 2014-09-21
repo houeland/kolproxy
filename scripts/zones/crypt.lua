@@ -38,30 +38,6 @@ add_choice_text("Death Rattlin'", { -- choice adventure number: 523
 	["Leave the drawers alone"] = { leave_noturn = true },
 })
 
-add_automator("/fight.php", function()
-	if not setting_enabled("automate simple tasks") then return end
-	if text:contains("WINWINWIN") or text:contains("state['fightover'] = true;") or text:contains([[<a href="crypt.php">Go back to The Defiled Cyrpt</a>]]) then
-		-- TODO: would prefer a perfect trigger after fights
-		if have_item("evil eye") then
-			-- This currently uses any evil eyes you have, even if the Nook is completed.
-			session["used evil eye"] = nil
-			local c = count_item("evil eye")
-			use_item("evil eye")
-			if count_item("evil eye") == c - 1 then
-				session["used evil eye"] = "Automatically used."
-			end
-		end
-	end
-end)
-
-add_itemdrop_counter("evil eye", function(c)
-	-- TODO: really not a counter
-	local result = session["used evil eye"]
-	if result then
-		return "{ " .. result .. " }"
-	end
-end)
-
 function parse_evilometer()
 	if have_item("Evilometer") then
 		local pagetext = use_item("Evilometer")()

@@ -154,12 +154,11 @@ local function automate_day(whichday)
 			return 30
 		end
 	end
+	local max_petehate = max_petelove
 
 	local function is_cursed()
 		return have_buff("Thrice-Cursed") or have_buff("Twice-Cursed") or have_buff("Once-Cursed")
 	end
-
-	local max_petehate = max_petelove
 
 	challenge = nil
 	if ascensionpath("Way of the Surprising Fist") then
@@ -840,18 +839,6 @@ endif
 			end
 		}
 	}
-
---	add_task {
---		when = have_item("batskin belt") and have_item("dragonbone belt buckle"),
---		task = {
---			message = "paste badass belt",
---			nobuffing = true,
---			action = function()
---				set_result(meatpaste_items("batskin belt", "dragonbone belt buckle"))
---				did_action = have_item("badass belt")
---			end
---		}
---	}
 
 	local function count_spare_brains()
 		if have_item("good brain") or have_item("decent brain") or have_item("crappy brain") then
@@ -2559,6 +2546,11 @@ endif
 	}
 
 	add_task {
+		when = not have_item("seal tooth") and meat() >= 2000,
+		task = tasks.get_seal_tooth,
+	}
+
+	add_task {
 		when = AT_song_duration() > 0 and level() < 5 and (buffturns("The Moxious Madrigal") < 10 or buffturns("The Magical Mojomuscular Melody") < 10) and have_skill("The Moxious Madrigal") and have_skill("The Magical Mojomuscular Melody"),
 		task = tasks.extend_tmm_and_mojo,
 	}
@@ -2986,6 +2978,8 @@ endif
 	local function have_harem_outfit()
 		return have_item("Knob Goblin harem veil") and have_item("Knob Goblin harem pants")
 	end
+
+	add_tasklist(tasks.tasklist_heavyrains_train_skills)
 
 	add_task {
 		prereq = use_new_faxing and
@@ -5610,7 +5604,7 @@ local ascension_script_options_tbl = {
 	["eat manually"] = { yes = "eat manually", no = "automate consumption" },
 	["summon tomes manually"] = { yes = "summon manually", no = "automate summoning" },
 	["ignore automatic pulls"] = { yes = "only pull softcore items manually", no = "automate some pulls", when = function() return not ascensionstatus("Hardcore") end },
-	["train skills manually"] = { yes = "train manually", no = "automate training", when = function() return ascensionpath("Avatar of Jarlsberg") or ascensionpath("Avatar of Sneaky Pete") end },
+	["train skills manually"] = { yes = "train manually", no = "automate training", when = function() return ascensionpath("Avatar of Jarlsberg") or ascensionpath("Avatar of Sneaky Pete") or ascensionpath("Heavy Rains") end },
 	["100% familiar run"] = { yes = "don't change familiar", no = "automate familiar choice", when = function() return can_change_familiar() end },
 	["overdrink with nightcap"] = { yes = "overdrink automatically", no = "don't automate" },
 	["pull consumables"] = { yes = "pull and consume", no = "don't automate", when = function() return not ascensionstatus("Hardcore") and ascensionpath("Avatar of Sneaky Pete") end, default_yes = true },

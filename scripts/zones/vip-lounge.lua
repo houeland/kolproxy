@@ -161,7 +161,6 @@ local faxbot_href = add_automation_script("get-faxbot-monster", function()
 end)
 
 add_printer("/clan_viplounge.php", function()
-	if not setting_enabled("run automation scripts") then return end
 	local faxbot_monsters_datafile = datafile("faxbot monsters")
 	text = text:gsub([[<input class=button type=submit value="Receive a Fax"></form>]], function(x)
 		local optgroups = {}

@@ -513,13 +513,17 @@ function get_automation_scripts(cached_stuff)
 		want_bonus.runawayfrom = runawayfrom
 	end
 
-	function f.burn_mp(downto, hundreds, recursed)
+	function f.burn_mp(downto_input, hundreds, recursed)
+		local downto = downto_input
 		if not hundreds then
 			hundreds = 50
 		end
 		if not downto then
 			error "No downto parameter specified for burn_mp()"
 		end
+		local maxmp_downto = math.min(80, maxmp() / 4)
+		local ml_downto = math.min(80, downto_input + estimate_bonus("Monster Level") / 2)
+		downto = math.max(downto, maxmp_downto)
 		local distance = 30
 		if level() >= 8 then
 			distance = 50
@@ -534,7 +538,7 @@ function get_automation_scripts(cached_stuff)
 		end
 		local ignore_buffs = get_ascension_automation_settings().ignore_buffs
 --		print("DEBUG: burn_mp()", maxmp(), maxmp() - mp(), distance, mp(), downto, hundreds)
-		if maxmp() > 50 and (maxmp() - mp()) < distance and mp() > downto and hundreds < 1000 then
+		if maxmp() >= 50 and maxmp() > downto and (maxmp() - mp()) < distance and mp() > downto and hundreds < 1000 then
 			if show_spammy_automation_events and not recursed then
 				print("  burning excess MP from " .. mp() .. " down to " .. downto)
 			end
@@ -548,6 +552,10 @@ function get_automation_scripts(cached_stuff)
 				cast_skillid(6007, math.floor(toburn / 5)) -- mojo
 			elseif buffturns("Leash of Linguini") < hundreds and toburn >= 12 then
 				cast_skillid(3010, math.floor(toburn / 12)) -- leash of linguini
+			elseif buffturns("Ghostly Shell") < hundreds and toburn >= 6 and not ignore_buffs["Ghostly Shell"] then
+				cast_skillid(2007, math.floor(toburn / 6)) -- ghostly shell
+			elseif buffturns("Astral Shell") < hundreds and toburn >= 10 and not ignore_buffs["Astral Shell"] then
+				cast_skillid(2012, math.floor(toburn / 10)) -- astral shell
 			elseif level() >= 6 and level() < 13 and buffturns("Ur-Kel's Aria of Annoyance") < hundreds and toburn >= 30 and not ignore_buffs["Ur-Kel's Aria of Annoyance"] then
 				cast_skillid(6017, math.floor(toburn / 30)) -- aria
 			elseif buffturns("Empathy") < hundreds and toburn >= 15 and not ignore_buffs["Empathy"] then
@@ -556,10 +564,6 @@ function get_automation_scripts(cached_stuff)
 				cast_skillid(6010, math.floor(toburn / 11)) -- phat loot
 			elseif buffturns("Springy Fusilli") < hundreds and toburn >= 10 then
 				cast_skillid(3015, math.floor(toburn / 10)) -- springy fusilli
-			elseif buffturns("Ghostly Shell") < hundreds and toburn >= 6 and not ignore_buffs["Ghostly Shell"] then
-				cast_skillid(2007, math.floor(toburn / 6)) -- ghostly shell
-			elseif buffturns("Astral Shell") < hundreds and toburn >= 10 and not ignore_buffs["Astral Shell"] then
-				cast_skillid(2012, math.floor(toburn / 10)) -- astral shell
 --			elseif level() >= 8 and buffturns("A Few Extra Pounds") < hundreds and toburn >= 10 then
 --				cast_skillid(1024, math.floor(toburn / 10)) -- holiday weight gain
 			elseif buffturns("Reptilian Fortitude") < hundreds and toburn >= 10 and not ignore_buffs["Reptilian Fortitude"] then
@@ -567,7 +571,7 @@ function get_automation_scripts(cached_stuff)
 			elseif buffturns("Antibiotic Saucesphere") < hundreds and toburn >= 15 and not ignore_buffs["Antibiotic Saucesphere"] then
 				cast_skill("Antibiotic Saucesphere", math.floor(toburn / 15))
 			else
-				return f.burn_mp(downto, hundreds + 100, true)
+				return f.burn_mp(downto_input, hundreds + 100, true)
 			end
 -- 		else
 -- 			print("skipping mp burn")
@@ -1256,12 +1260,18 @@ function get_automation_scripts(cached_stuff)
 			shrug_buff("Ur-Kel's Aria of Annoyance")
 			set_mcd(0) -- HACK: don't want this to be done here!
 		end
-		if have_item("Flaskfull of Hollow") and buffturns("Merry Smithsness") < 10 and not ascensionstatus("Aftercore") then
-			use_item("Flaskfull of Hollow")
-		end
 		if playerclass("Pastamancer") and maxmp() >= 12 and pastathrallid() == 0 and have_skill("Bind Vampieroghi") then
 			script.ensure_mp(12)
 			cast_skill("Bind Vampieroghi")
+		end
+		if have_item("Flaskfull of Hollow") and buffturns("Merry Smithsness") < 10 and not ascensionstatus("Aftercore") then
+			use_item("Flaskfull of Hollow")
+		end
+		if have_skill("Thunderheart") and buffturns("Thunderheart") <= 150 and heavyrains_thunder() >= 20 then
+			cast_skill("Thunderheart")
+		end
+		if have_skill("Sheet Lightning") and buffturns("Stormswaddled") <= 150 and heavyrains_lightning() >= 10 then
+			cast_skill("Sheet Lightning")
 		end
 		local function try_casting_buff(buffname, try_shrugging)
 			if buffs[buffname] then
@@ -1569,7 +1579,7 @@ if (monstername baa'baa'bu'ran)
 
 endif
 
-]]}
+]] }
 								did_action = count_item("stone wool") >= 2
 								return result, resulturl, did_action
 							end
@@ -1964,6 +1974,21 @@ endif
 			return
 		end
 
+		if ascensionpath("Heavy Rains") and not ascensionstatus("Hardcore") then
+			if level() >= 6 and not have_item("Boris's key") and not have_item("Jarlsberg's key") and not have_item("Sneaky Pete's key") and space() >= 13 and meat() >= 40 and pullsleft() >= 4 then
+				pull_in_softcore("milk of magnesium")
+				script.ensure_buffs { "Got Milk" }
+				result, resulturl, did_action = eat_fortune_cookie()
+				if not did_action then stop "Error while eating" end
+				result, resulturl, did_action = pull_and_eat_key_lime_pie("Boris")
+				if not did_action then stop "Error while eating" end
+				result, resulturl, did_action = pull_and_eat_key_lime_pie("Jarlsberg")
+				if not did_action then stop "Error while eating" end
+				result, resulturl, did_action = pull_and_eat_key_lime_pie("Sneaky Pete")
+				if not did_action then stop "Error while eating" end
+				return result, resulturl, did_action
+			end
+		end
 		if ascensionstatus() ~= "Hardcore" then return end
 
 		if not can_eat_normal_food() then return end
@@ -2820,7 +2845,7 @@ endif
 			if not have_buff("Stone-Faced") and have_item("stone wool") then
 				use_item("stone wool")
 			end
-			if have_buff("Stone-Faced") or ascensionstatus() == "Hardcore" then
+			if have_buff("Stone-Faced") or ascensionstatus("Hardcore") then
 				ignore_buffing_and_outfit = true
 				if not have_item("the Nostril of the Serpent") and ascension["zone.hidden temple.placed Nostril of the Serpent"] ~= "yes" then
 					go("unlock hidden city", 280, macro_noodlecannon, {}, {}, "Mini-Hipster", 25, { choice_function = function(advtitle, choicenum, pagetext)
@@ -2873,12 +2898,9 @@ endif
 					end
 				end
 			else
+				inform "pulling stone wool"
 				pull_in_softcore("stone wool")
-				if have_item("stone wool") then
-					did_action = true
-				else
-					stop "TODO: Do hidden temple."
-				end
+				did_action = have_item("stone wool")
 			end
 		end
 	end
@@ -3296,6 +3318,7 @@ endif
 		script.go("mysticality powerleveling", "The Haunted Bathroom", macro_noodlecannon, {
 			["Don't Hold a Grudge"] = "Declare a thumb war",
 			["Having a Medicine Ball"] = "Gaze deeply into the mirror",
+			["Off the Rack"] = "Take the towel",
 		}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic" }, "Rogue Program", 35)
 	end
 
@@ -3418,6 +3441,7 @@ endif
 	function f.knob_goblin_king_with_cake(killmacro)
 		if have_item("Knob cake") then
 			inform "fight king in guard outfit"
+			script.bonus_target { "easy combat" }
 			wear { hat = "Knob Goblin elite helm", weapon = "Knob Goblin elite polearm", pants = "Knob Goblin elite pants" }
 			ensure_buffs { "Springy Fusilli", "Spirit of Garlic" }
 			ensure_mp(40)
@@ -4555,6 +4579,7 @@ endif
 			end
 			if have_item("Mega Gem") then
 				inform "fighting Dr. Awkward"
+				script.bonus_target { "easy combat" }
 				fam "Knob Goblin Organ Grinder"
 				script.ensure_buffs { "A Few Extra Pounds", "Spirit of Garlic" }
 				script.wear { acc3 = "Mega Gem", acc2 = "Talisman o' Nam" }
@@ -4563,14 +4588,22 @@ endif
 				result, resulturl = get_page("/place.php", { whichplace = "palindome", action = "pal_droffice" })
 				result, resulturl = handle_adventure_result(get_result(), resulturl, "?", macro_noodleserpent, { ["Dr. Awkward"] = "War, sir, is raw!" })
 				did_action = have_item("Staff of Fats")
-			elseif have_item("wet stunt nut stew") then
+			elseif quest_text("wet stunt nut stew") and have_item("wet stunt nut stew") then
 				inform "getting mega gem"
-				get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" })
+				result, resulturl = get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" })
 				did_action = have_item("Mega Gem")
-			elseif have_item("stunt nuts") and have_item("bird rib") and have_item("lion oil") then
-				cook_items("bird rib", "lion oil")
+			elseif quest_text("wet stunt nut stew") and have_item("stunt nuts") and have_item("wet stew") then
+				inform "cooking wet stunt nut stew"
 				cook_items("wet stew", "stunt nuts")
 				did_action = have_item("wet stunt nut stew")
+			elseif quest_text("wet stunt nut stew") and have_item("stunt nuts") and have_item("bird rib") and have_item("lion oil") then
+				inform "cooking wet stew"
+				cook_items("bird rib", "lion oil")
+				did_action = have_item("wet stew")
+			elseif quest_text("wet stunt nut stew") and have_item("stunt nuts") and pullsleft() >= 3 then
+				inform "pulling wet stew"
+				pull_in_softcore("wet stew")
+				did_action = have_item("wet stew")
 			elseif quest_text("wet stunt nut stew") and not have_item("stunt nuts") then
 				script.bonus_target { "combat", "item" }
 				go("find stunt nuts", 386, macro_noodleserpent, {

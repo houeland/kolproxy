@@ -24,25 +24,10 @@ end
 --}
 
 register_setting {
-	name = "run automation scripts",
-	description = "Allow the kolproxy scripts to download pages (required for everything else)",
-	group = "automation",
-	default_level = "limited",
-	hidden = true,
-}
-
-register_setting {
 	name = "automate simple tasks",
-	description = "Automatically complete simple puzzles that don't cost turns",
+	description = "Automatically complete simple puzzles and tasks that don't cost turns",
 	group = "automation",
 	default_level = "standard",
-}
-
-register_setting {
-	name = "enable ascension assistance",
-	description = "Enable ascension assistance (automatically completes simple ascension-relevant tasks)",
-	group = "automation",
-	default_level = "enthusiast",
 }
 
 register_setting {
