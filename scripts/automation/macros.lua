@@ -1832,14 +1832,18 @@ function estimate_current_monster_fight_damage(cfm, bonuses)
 	return math.max(1, base_dmg * absorbmod * elementalmod)
 end
 
+local macro_target = {}
+function reset_macro_target()
+	macro_target = {}
+end
+
+function add_macro_target(a, b)
+	macro_target[a] = b or true
+end
+
 macro_kill_monster_text = ""
 function macro_kill_monster(pt)
 	pt = pt or ""
-	local cfm = getCurrentFightMonster()
-	if not cfm or not cfm.Stats or not cfm.Stats.Atk then
-		print_ascensiondebug("macro_kill generation", "cfm incomplete when generating combat macro", tostring(cfm))
-		return macro_noodleserpent_raw
-	end
 	local pt_monster_name = nil
 	local function monstername(str)
 		-- WORKAROUND: Regular functionality not currently available while automating
@@ -1856,6 +1860,12 @@ function macro_kill_monster(pt)
 		end
 		return pt_monster_name or ""
 	end
+	local cfm = getCurrentFightMonster()
+	if not cfm or not cfm.Stats or not cfm.Stats.Atk then
+		print_ascensiondebug("macro_kill generation", "cfm incomplete when generating combat macro", tostring(cfm))
+		print_ascensiondebug("macro_kill generation", "monster", monstername())
+		return macro_noodleserpent_raw
+	end
 	local bonuses = estimate_current_bonuses()
 	bonuses.add(estimate_fight_page_bonuses(pt))
 	local monster_damage = estimate_current_monster_fight_damage(cfm, bonuses)
@@ -1867,6 +1877,9 @@ function macro_kill_monster(pt)
 	end
 	local use_raindoh_flyers = ""
 	local raindoh_flyers_list = {}
+	if macro_target.itemcopy and macro_target.itemcopy[monstername()] and have_item("Rain-Doh black box") then
+		table.insert(raindoh_flyers_list, "Rain-Doh black box")
+	end
 	if have_item("rock band flyers") then
 		table.insert(raindoh_flyers_list, "rock band flyers")
 	end
@@ -1882,6 +1895,33 @@ function macro_kill_monster(pt)
 		use_raindoh_flyers = string.format("use %s", raindoh_flyers_list[1])
 	end
 
+	local use_other = ""
+	if macro_target.familiarcopy and macro_target.familiarcopy[monstername()] and familiar("Reanimated Reanimator") then
+		use_other = [[
+
+if hasskill Wink at
+	cast Wink at
+endif
+
+]]
+	end
+
+	if have_equipped_item("Thor's Pliers") and not cfm.Stats.staggerimmune then
+		use_other = use_other .. [[
+
+cast Ply Reality
+
+]]
+	end
+
+	if have_equipped_item("Pantsgiving") and not cfm.Stats.staggerimmune then
+		use_other = use_other .. [[
+
+cast Air Dirty Laundry
+
+]]
+	end
+
 	print_ascensiondebug("macro_kill", monstername(), script_want_2_day_SCHR(), playerclass("Seal Clubber"), not pt:contains("Procrastination Giant"), using_club(), not physically_resistant, use_crumbs, use_raindoh_flyers)
 
 	local function heavy_rains_spell()
@@ -1889,11 +1929,12 @@ function macro_kill_monster(pt)
 			return [[
 ]] .. use_crumbs .. [[
 
-cast Saucestorm
-cast Saucestorm
-
 ]] .. use_raindoh_flyers .. [[
 
+]] .. use_other .. [[
+
+cast Saucestorm
+cast Saucestorm
 cast Saucestorm
 cast Saucestorm
 cast Saucestorm
@@ -1917,11 +1958,12 @@ cast Saucestorm
 			return [[
 ]] .. use_crumbs .. [[
 
-cast Lunging Thrust-Smack
-cast Lunging Thrust-Smack
-
 ]] .. use_raindoh_flyers .. [[
 
+]] .. use_other .. [[
+
+cast Lunging Thrust-Smack
+cast Lunging Thrust-Smack
 cast Lunging Thrust-Smack
 cast Lunging Thrust-Smack
 cast Lunging Thrust-Smack
@@ -1947,7 +1989,11 @@ cast Lunging Thrust-Smack
 		return heavy_rains_spell()
 	elseif monstername("Aquagoblin") then
 		-- dangerous, removes buffs and fought while dressed up in goblin gear
-		return [[abort heavy rains boss - dangerous]]
+		if have_item("Rain-Doh blue balls") and have_skill("Saucestorm") then
+			return heavy_rains_spell()
+		else
+			return [[abort heavy rains boss - dangerous]]
+		end
 	elseif monstername("Auqadargon") then
 		return heavy_rains_spell()
 	elseif monstername("Gurgle") then
@@ -1969,12 +2015,16 @@ cast Lunging Thrust-Smack
 
 ]] .. use_raindoh_flyers .. [[
 
+]] .. use_other .. [[
+
 cast Lightning Strike
 ]]
 	elseif script_want_2_day_SCHR() and playerclass("Seal Clubber") and not pt:contains("Procrastination Giant") and (using_club() or equipment().weapon == get_itemid("Thor's Pliers")) and not physically_resistant and have_skill("Lunging Thrust-Smack") then
 		return use_crumbs .. [[
 
 ]] .. use_raindoh_flyers .. [[
+
+]] .. use_other .. [[
 
 cast lunging thrust-smack
 cast lunging thrust-smack
@@ -1993,6 +2043,8 @@ cast Curse of Weaksauce
 ]] .. use_crumbs .. [[
 
 ]] .. use_raindoh_flyers .. [[
+
+]] .. use_other .. [[
 
 cast Saucegeyser
 cast Saucegeyser

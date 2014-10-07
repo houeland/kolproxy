@@ -1270,6 +1270,9 @@ function get_automation_scripts(cached_stuff)
 		if have_skill("Thunderheart") and buffturns("Thunderheart") <= 150 and heavyrains_thunder() >= 20 then
 			cast_skill("Thunderheart")
 		end
+		if have_skill("Rain Dance") and buffturns("Rain Dancin'") <= 50 and heavyrains_rain() >= 10 then
+			cast_skill("Rain Dance")
+		end
 		if have_skill("Sheet Lightning") and buffturns("Stormswaddled") <= 150 and heavyrains_lightning() >= 10 then
 			cast_skill("Sheet Lightning")
 		end
@@ -1941,10 +1944,37 @@ endif
 			return result, resulturl, did_action
 		end
 
+		local function pull_himein()
+			local himeins = { "hot hi mein", "cold hi mein", "stinky hi mein", "spooky hi mein", "sleazy hi mein" }
+			for _, x in ipairs(himeins) do
+				if have_item(x) then
+					return x
+				end
+			end
+			for _, x in ipairs(himeins) do
+				maybe_pull_in_softcore(x)
+				if have_item(x) then
+					return x
+				end
+			end
+		end
+
+		local function pull_and_eat_hi_mein()
+			local f = fullness()
+			inform "pull and eat hi mein"
+			local himeinname = pull_himein()
+			if not himeinname then
+				stop "TODO: Buy hi mein in mall and pull"
+			end
+			set_result(eat_item(himeinname)())
+			did_action = (fullness() == f + 5)
+			return result, resulturl, did_action
+		end
+
 		if ascensionpath("Avatar of Sneaky Pete") and not ascensionstatus("Hardcore") then
 			if (space() % 4) > 0 and script.get_turns_until_sr() == nil and meat() >= 40 then
 				return eat_fortune_cookie()
-			elseif space() >= 4 and level() >= 6 then
+			elseif space() >= 4 and level() >= 6 and ascension_script_option("pull consumables") then
 				if not have_item("Jarlsberg's key") then
 					return pull_and_eat_key_lime_pie("Jarlsberg")
 				elseif not have_item("Boris's key") then
@@ -1974,7 +2004,7 @@ endif
 			return
 		end
 
-		if ascensionpath("Heavy Rains") and not ascensionstatus("Hardcore") then
+		if ascensionpath("Heavy Rains") and not ascensionstatus("Hardcore") and ascension_script_option("pull consumables") then
 			if level() >= 6 and not have_item("Boris's key") and not have_item("Jarlsberg's key") and not have_item("Sneaky Pete's key") and space() >= 13 and meat() >= 40 and pullsleft() >= 4 then
 				pull_in_softcore("milk of magnesium")
 				script.ensure_buffs { "Got Milk" }
@@ -1985,6 +2015,16 @@ endif
 				result, resulturl, did_action = pull_and_eat_key_lime_pie("Jarlsberg")
 				if not did_action then stop "Error while eating" end
 				result, resulturl, did_action = pull_and_eat_key_lime_pie("Sneaky Pete")
+				if not did_action then stop "Error while eating" end
+				return result, resulturl, did_action
+			elseif level() >= 7 and space() >= 15 and pullsleft() >= 4 then
+				pull_in_softcore("milk of magnesium")
+				script.ensure_buffs { "Got Milk" }
+				result, resulturl, did_action = pull_and_eat_hi_mein()
+				if not did_action then stop "Error while eating" end
+				result, resulturl, did_action = pull_and_eat_hi_mein()
+				if not did_action then stop "Error while eating" end
+				result, resulturl, did_action = pull_and_eat_hi_mein()
 				if not did_action then stop "Error while eating" end
 				return result, resulturl, did_action
 			end
@@ -3945,6 +3985,7 @@ endif
 			go("do crypt nook", 264, macro_noodlecannon, noncombattbl, { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Leash of Linguini", "Empathy" }, "Slimeling", 25)
 		else
 			inform "kill bonerdagon"
+			script.bonus_target { "easy combat" }
 			if challenge == "boris" then
 				local toequip = {}
 				if buffedmainstat() < 120 then
@@ -4624,7 +4665,7 @@ endif
 				inform "talking to Mr. Alarm"
 				set_result(get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" }))
 				refresh_quest()
-				did_action = quest_text("wet stunt nut stew")
+				did_action = quest_text("wet stunt nut stew") or have_item("Mega Gem")
 			else
 				local pt = get_page("/place.php", { whichplace = "palindome" })
 				if pt:contains("Mr. Alarm") then
@@ -4684,14 +4725,6 @@ endif
 				end
 			end
 		end
-	end
-
-	function f.fax_machine_too_old()
-		if cached_stuff.fax_machine_too_old == nil then
-			local faxpt = get_page("/clan_viplounge.php", { action = "faxmachine" })
-			cached_stuff.fax_machine_too_old = faxpt:contains("clan thing is too old to be used on this path")
-		end
-		return cached_stuff.fax_machine_too_old
 	end
 
 	function f.get_faxbot_fax(target)
@@ -5074,4 +5107,14 @@ end
 
 function bjornify(fam)
 	return async_get_page("/familiar.php", { action = "backpack", ajax = 1, famid = get_familiarid(fam), pwd = session.pwd })
+end
+
+local too_old = nil
+function fax_machine_is_too_old()
+	-- TODO: use common cache, reset on path change
+	if too_old == nil then
+		local faxpt = get_page("/clan_viplounge.php", { action = "faxmachine" })
+		too_old = faxpt:contains("clan thing is too old to be used on this path")
+	end
+	return too_old
 end

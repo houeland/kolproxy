@@ -318,7 +318,7 @@ add_processor("use item: dance card", function()
 	end
 end)
 
-add_charpane_line(function()
+local function get_dance_card_data()
 	local dance_card_turn = tonumber(ascension["dance card turn"])
 	if dance_card_turn then
 		local turnsleft = dance_card_turn - turnsthisrun()
@@ -332,6 +332,18 @@ add_charpane_line(function()
 			return { name = "Dance card", value = turnsleft, color = color, link = link }
 		end
 	end
+end
+
+add_counter_effect(function()
+	local data = get_dance_card_data()
+	if data then
+		return { title = "Dance card", duration = data.value, imgname = "guildapp", group = "effect" }
+	end
+end)
+
+add_charpane_line(function()
+	if setting_enabled("display counters as effects") then return end
+	return get_dance_card_data()
 end)
 
 add_always_adventure_warning(function(zoneid)

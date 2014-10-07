@@ -985,13 +985,14 @@ mark m_done
 	}
 
 	t.check_hidden_temple = {
-		when = cached_stuff.currently_checked.unlocked_hidden_temple == nil,
+		when = not cached_stuff.unlocked_hidden_temple and cached_stuff.currently_checked.checked_hidden_temple_unlock == nil,
 		task = {
 			message = "check hidden temple",
 			nobuffing = true,
 			action = function()
 				local woodspt = get_page("/woods.php")
-				cached_stuff.currently_checked.unlocked_hidden_temple = woodspt:contains("The Hidden Temple")
+				cached_stuff.currently_checked.checked_hidden_temple_unlock = woodspt:contains("The Hidden Temple")
+				cached_stuff.unlocked_hidden_temple = cached_stuff.currently_checked.checked_hidden_temple_unlock
 				did_action = true
 			end
 		}
@@ -1003,7 +1004,7 @@ mark m_done
 			message = "use spooky temple map",
 			nobuffing = true,
 			action = function()
-				cached_stuff.currently_checked.unlocked_hidden_temple = nil
+				cached_stuff.currently_checked.checked_hidden_temple_unlock = nil
 				set_result(use_item("Spooky Temple map"))
 				local newwoodspt = get_page("/woods.php")
 				did_action = newwoodspt:contains("The Hidden Temple")
@@ -1012,7 +1013,7 @@ mark m_done
 	}
 
 	t.unlock_hidden_temple = {
-		when = not cached_stuff.currently_checked.unlocked_hidden_temple,
+		when = not cached_stuff.unlocked_hidden_temple,
 		task = {
 			message = "unlock hidden temple",
 			action = function()
@@ -1022,7 +1023,7 @@ mark m_done
 	}
 
 	t.unlock_hidden_temple_with_high_ML = {
-		when = not cached_stuff.currently_checked.unlocked_hidden_temple,
+		when = not cached_stuff.unlocked_hidden_temple,
 		task = {
 			message = "unlock hidden temple",
 			action = function()

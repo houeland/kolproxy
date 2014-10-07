@@ -11,7 +11,7 @@ local function make_lookup_table(tbl)
 end
 
 -- TODO: turn ranges at ascension start
-function add_wandering_monster_tracker(label, monster_list, min_offset, max_offset)
+function add_wandering_monster_tracker(label, monster_list, min_offset, max_offset, always_show_f, min_runstart, max_runstart)
 	local monster_table = make_lookup_table(monster_list)
 
 	--- Add a fight processor to check if a monster is in the list
@@ -27,6 +27,13 @@ function add_wandering_monster_tracker(label, monster_list, min_offset, max_offs
 		if next_turn then
 			local turnmin = next_turn - turnsthisrun()
 			local turnmax = turnmin + max_offset - min_offset
+			if turnmax >= 0 then
+				if turnmin < 0 then turnmin = 0 end
+				return { name = label, value = turnmin .. " to " .. turnmax }
+			end
+		elseif always_show_f and always_show_f() then
+			local turnmin = min_runstart - turnsthisrun()
+			local turnmax = max_runstart - turnsthisrun()
 			if turnmax >= 0 then
 				if turnmin < 0 then turnmin = 0 end
 				return { name = label, value = turnmin .. " to " .. turnmax }

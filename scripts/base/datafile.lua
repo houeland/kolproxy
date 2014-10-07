@@ -282,3 +282,18 @@ function maybe_get_zone_data(zone)
 	local data = datafile("zones")[zone]
 	return data
 end
+
+function get_monsterid(name)
+	if type(name) == "number" then
+		return name
+	end
+
+	local data = {
+		lobsterfrogman = 529,
+		["writing desk"] = 405,
+	}
+	if data[name] then
+		return data[name]
+	end
+	error("Unknown zone: " .. tostring(name) .. " (monster IDs are not in data file yet)")
+end

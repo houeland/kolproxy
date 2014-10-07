@@ -694,6 +694,9 @@ function automate_lair_statues(text)
 	end
 
 	if not have_item("stone tablet (Sinister Strumming)") then
+		if not have_item("Richard's star key") then
+			buy_item("Richard's star key")()
+		end
 		if have_item("Richard's star key") then
 			local eq = equipment()
 			local fam = familiarid()
@@ -1239,10 +1242,10 @@ end)
 
 add_always_warning("/lair6.php", function()
 	if tonumber(params.place) == 6 and ascensionpath("Avatar of Boris") and fullness() < estimate_max_fullness() then
-		return "You might want to eat up to fill your remaining stomach space before freeing the king and losing the extra capacity.", "break prism in aob with spare stomach"
+		return "You might want to eat up to fill your remaining stomach space before you free the king and lose the extra capacity.", "break prism in aob with spare stomach"
 	end
 	if tonumber(params.place) == 6 and ascensionpath("Avatar of Sneaky Pete") and drunkenness() < estimate_max_safe_drunkenness() then
-		return "You might want to drink up to fill your remaining liver space before freeing the king and losing the extra capacity.", "break prism in aosp with spare liver"
+		return "You might want to drink up to fill your remaining liver space before you free the king and lose the extra capacity.", "break prism in aosp with spare liver"
 	end
 end)
 

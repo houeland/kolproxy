@@ -725,6 +725,8 @@ function parse_monsters()
 	monsters["cosmetics wraith"].Stats.boss = true
 	monsters["huge ghuol"].Stats.boss = true
 	monsters["knob goblin king"].Stats.boss = true
+	monsters["ancient protector spirit"].Stats.boss = true
+	monsters["giant tardigrade"].Stats.boss = true
 	return monsters
 end
 

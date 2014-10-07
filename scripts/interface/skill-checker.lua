@@ -10,7 +10,7 @@ add_printer("/showplayer.php", function()
 		$('#skillchecker_form').submit();
 	}
 </script>
-<form method="post" action="http://alliancefromhell.com/cgi-bin/hobo/skillChecker.cgi" id="skillchecker_form" style="display: none;">
+<form method="post" action="http://www.houeland.com/kol/skill-checker" id="skillchecker_form" style="display: none;">
 <div><textarea name="skills" rows="10" cols="50" id="skillchecker_skills"></textarea></div>
 <div><input type="submit"/></div>
 </form>

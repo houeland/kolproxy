@@ -44,7 +44,7 @@ function encountered_wandering_copied_monster()
 	day["wandering copied monster"] = tbl
 end
 
-add_charpane_line(function()
+local function get_wandering_data()
 	local tbl = day["wandering copied monster"]
 	if not tbl then return end
 	local remaining = tbl["monsters remaining"]
@@ -53,14 +53,16 @@ add_charpane_line(function()
 		local normal = nil
 		local tooltip = nil
 		local start = tbl["next monster start"]
+		local first = nil
+		local last = nil
 		if not start then
 			compact = "Not started"
 			normal = "Not started"
 			tooltip = string.format("The counter starts when you visit adventure.php. %s of %s remaining.", make_plural(remaining, "copy", "copies"), tbl["display name"])
 		else
 			local t = start - turnsthisrun()
-			local first = t - 1
-			local last = t + 11
+			first = t - 1
+			last = t + 11
 			if first < 0 then
 				first = 0
 			end
@@ -73,8 +75,24 @@ add_charpane_line(function()
 			end
 			tooltip = string.format("%s of %s remaining.", make_plural(remaining, "copy", "copies"), tbl["display name"])
 		end
-		return { normalname = "Wandering", compactname = "Wandering", compactvalue = compact, normalvalue = normal, tooltip = tooltip }
+		return { normalname = "Wandering", compactname = "Wandering", compactvalue = compact, normalvalue = normal, tooltip = tooltip }, { start = start, displayname = tbl["display name"], first = first, last = last }
 	end
+end
+
+add_counter_effect(function()
+	local data, extradata = get_wandering_data()
+	if extradata then
+		if not extradata.start then
+			return { title = extradata.displayname, duration = -1, durationdesc = "", imgname = "reanimator", group = "effect" }
+		else
+			return { title = extradata.displayname, duration = extradata.first, maxduration = extradata.last, imgname = "reanimator", group = "effect" }
+		end
+	end
+end)
+
+add_charpane_line(function()
+	if setting_enabled("display counters as effects") then return end
+	return get_wandering_data()
 end)
 
 -- obtuse angel

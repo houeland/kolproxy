@@ -7,25 +7,6 @@ See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with kolproxy. If not, see <http://www.gnu.org/licenses/>.
 --]]--
 
-register_setting {
-	name = "use custom bleary charpane",
-	description = "Use prettier bleary / ChIT version",
-	group = "charpane",
-	default_level = "standard",
-	parent = "use custom kolproxy charpane",
-	update_charpane = true,
-}
-
-register_setting {
-	server_name = "compacteffects",
-	description = "Use compact effects list",
-	group = "charpane",
-	default_level = "enthusiast",
-	parent = "use custom bleary charpane",
-	update_charpane = true,
-	beta_version = true,
-}
-
 local function chit_progressbar(c, m, color)
 	local pct = math.min(100, c * 100 / m)
 	return string.format([[<div class="progressbox" title="%i / %i"><div class="progressbar" style="background-color: %s; width: %i%%"></div></div>]], c, m, color, pct)
@@ -288,23 +269,23 @@ local function bl_compact_stats_bars(lines)
 
 	table.insert(lines, "<tr>")
 	table.insert(lines, "<td><table><tr>")
-	table.insert(lines, string.format(stat_cells, maximizer_link("Muscle"), "Mus", buffedmuscle(), basemuscle()))
+	table.insert(lines, string.format(stat_cells, maximizer_link("Muscle"), "Mus", display_value(buffedmuscle()), display_value(basemuscle())))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, "<td class='statbar' colspan='2'>" .. stat_line(rawmuscle()) .. "</td>")
 	table.insert(lines, "</tr><tr>")
-	table.insert(lines, string.format(stat_cells, maximizer_link("Mysticality"), "Mys", buffedmysticality(), basemysticality()))
+	table.insert(lines, string.format(stat_cells, maximizer_link("Mysticality"), "Mys", display_value(buffedmysticality()), display_value(basemysticality())))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, "<td class='statbar' colspan='2'>" .. stat_line(rawmysticality()) .. "</td>")
 	table.insert(lines, "</tr><tr>")
-	table.insert(lines, string.format(stat_cells, maximizer_link("Moxie"), "Mox", buffedmoxie(), basemoxie()))
+	table.insert(lines, string.format(stat_cells, maximizer_link("Moxie"), "Mox", display_value(buffedmoxie()), display_value(basemoxie())))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, "<td class='statbar' colspan='2'>" .. stat_line(rawmoxie()) .. "</td>")
 	table.insert(lines, "</tr><tr></table></td><td><table><tr>")
-	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">HP</a></td><td class="info">%s&nbsp/&nbsp;%s</td>]], maximizer_link("Max HP"), cast_cocoon(hp()), cast_cocoon(maxhp())))
+	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">HP</a></td><td class="info">%s&nbsp/&nbsp;%s</td>]], maximizer_link("Max HP"), cast_cocoon(display_value(hp())), cast_cocoon(display_value(maxhp()))))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(hp(), maxhp(), { [0] = "red", [50] = "orange", [75] = "green" })))
 	table.insert(lines, "</tr><tr>")
-	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">MP</a></td><td class="info">%s&nbsp;/&nbsp;%s </td>]], maximizer_link("Max MP"), mp(), maxmp()))
+	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">MP</a></td><td class="info">%s&nbsp;/&nbsp;%s </td>]], maximizer_link("Max MP"), display_value(mp()), display_value(maxmp())))
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(mp(), maxmp(), { [0] = "red", [50] = "orange", [75] = "green" })))
 	table.insert(lines, "</tr><tr>")
@@ -563,25 +544,17 @@ local function make_compact_arrow(duration, upeffect)
 end
 
 function bl_charpane_buff_lines(lines)
-	local buff_colors = {
-		["On the Trail"] = "purple",
-		["Everything Looks Red"] = "red",
-		["Everything Looks Blue"] = "blue",
-		["Everything Looks Yellow"] = "goldenrod",
-	}
 	local bufflines = {}
 
 	local last_buff_type = nil
 
 	for _, x in ipairs(get_sorted_buff_array()) do
+		local trstyle = ""
 		local styleinfo = ""
 		local imgstyleinfo = ""
-		local buff_type = "effect"
+		local buff_type = x.group
 		local shrug_class = "shrug"
-		if x.is_song and setting_enabled("display songs above other effects") then
-			buff_type = "song"
-		elseif x.duration == "&infin;" then
-			buff_type = "intrinsic"
+		if x.duration == "&infin;" then
 			shrug_class = "infinity"
 		end
 
@@ -591,9 +564,11 @@ function bl_charpane_buff_lines(lines)
 		end
 		last_buff_type = buff_type
 
-		if buff_colors[x.title] then
-			styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
-			imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
+		if x.backgroundcolor then
+			trstyle = string.format([[ style="background-color: %s; font-style: italic"]], x.backgroundcolor)
+		elseif x.color then
+			styleinfo = string.format([[ style="color: %s"]], x.color)
+			imgstyleinfo = string.format([[ style="background-color: %s"]], x.color)
 		end
 
 		local strarrow = ""
@@ -603,19 +578,10 @@ function bl_charpane_buff_lines(lines)
 			strarrow = make_strarrow(x.upeffect)
 		end
 
-		local str = string.format([[<tr class="%s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td class='info'><div>%s</div></td><td class='%s'>%s</td><td class='powerup'><span oncontextmenu="return maybe_shrug(&quot;%s&quot;)">%s</span></td></tr>]], buff_type, x.imgname, x.descid, x.title, x.title, shrug_class, display_duration(x.duration), x.title, strarrow)
+		local str = string.format([[<tr class="%s"%s><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td class='info'><div>%s</div></td><td class='%s'>%s</td><td class='powerup'><span oncontextmenu="return maybe_shrug(&quot;%s&quot;)">%s</span></td></tr>]], buff_type, trstyle, x.imgname, x.descid, x.title, x.title, shrug_class, display_duration(x), x.title, strarrow)
 		table.insert(bufflines, str)
 	end
 
-	if pastathrall() and setting_enabled("display counters as effects") then
-		-- TODO: do in buff listing, not here
-		if last_buff_type ~= "intrinsic" then
-			if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
-			table.insert(bufflines, [[<tbody class="intrinsic">]])
-		end
-		local thrall = get_current_pastathrall_info()
-		table.insert(bufflines, string.format([[<tr class="intrinsic"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td><td class='info' colspan='3'><div>Lvl %d %s</div></td></tr>]], thrall.picture, thrall.level, thrall.name))
-	end
 	if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
 	if tonumber(api_flag_config().compacteffects) == 1 then
 		table.insert(lines, [[<table id="chit_effects" class="chit_brick compact nospace">]])

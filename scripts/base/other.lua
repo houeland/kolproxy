@@ -434,7 +434,7 @@ add_automator("all pages", function()
 				function reset_last_checked()
 					new_last_checked = nil
 				end
-				pcall(f)
+				pcall(aa.f)
 				aa.last_checked = new_last_checked
 			end
 		end
@@ -474,14 +474,15 @@ add_ascension_assistance(function() return not picked_up_free_pulls end, functio
 end)
 
 local talked_to_toot = false
-add_ascension_assistance(function() return not talked_to_toot end, function()
-	if level() == 1 then
-		async_get_page("/tutorial.php", { action = "toot" })
-		use_item("letter from King Ralph XI")
-		async_post_page("/galaktik.php", { action = "startquest", pwd = session.pwd })
---		if not ascensionpath("Bees Hate You") then
---			use_item("Newbiesport&trade; tent")
---		end
+add_ascension_assistance(function() return not talked_to_toot and turnsthisrun() <= 10 end, function()
+	async_get_page("/tutorial.php", { action = "toot" })
+	use_item("letter from King Ralph XI")
+	async_post_page("/galaktik.php", { action = "startquest", pwd = session.pwd })
+--	if not ascensionpath("Bees Hate You") then
+--		use_item("Newbiesport&trade; tent")
+--	end
+	if setting_enabled("break hippy stone when ascending") then
+		async_post_page("/campground.php", { smashstone = "Yep.", pwd = session.pwd, confirm = "on" })
 	end
 	talked_to_toot = true
 end)
@@ -521,7 +522,10 @@ function pick_up_continuum_transfunctioner()
 end
 
 add_ascension_assistance(function() return level() >= 2 and not have_item("continuum transfunctioner") end, function()
-	async_post_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker_quest" })
+	async_get_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker_quest" })
+	async_post_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker_quest", preaction = "screwquest" })
+	async_get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_innabox" })
+	async_get_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker_quest" })
 	pick_up_continuum_transfunctioner()
 end)
 

@@ -31,6 +31,7 @@ dont_slime = {
 	"spangly mariachi pants",
 
 	"ring of conflict",
+	"duonoculars",
 
 	"cane%-mail shirt",
 	"pin%-stripe slacks",

@@ -63,24 +63,10 @@ register_setting {
 }
 
 register_setting {
-	name = "enable readventuring automation",
-	description = "Enable re-adventuring automation (set a macro as your autoattack, and click the link to spend multiple turns in a row in the same place)",
-	group = "automation",
-	default_level = "standard",
-}
-
-register_setting {
 	name = "enable turnplaying automation",
-	description = "Enable turn-playing automation scripts (for completing quests in aftercore)",
+	description = "Enable turn-playing automation scripts (for automated zone re-adventuring, aftercore quests, entire ascension, etc.)",
 	group = "automation",
 	default_level = "standard",
-}
-
-register_setting {
-	name = "enable turnplaying automation in-run",
-	description = "Also enable turn-playing automation scripts in-run (e.g. the ascension automation script)",
-	group = "automation",
-	default_level = "detailed",
 }
 
 local setting_groups = {

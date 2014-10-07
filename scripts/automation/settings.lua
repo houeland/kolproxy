@@ -203,6 +203,7 @@ function get_ascension_automation_settings(want_bonus)
 				{ name = "dead guy's watch", check = function() return want_bonus.rollover_adventures end },
 				{ name = "Fuzzy Slippers of Hatred", check = function() return want_bonus.noncombat end },
 				{ name = "Space Trip safety headphones", check = function() return want_bonus.noncombat end },
+				{ name = "duonoculars", check = function() return want_bonus.noncombat end },
 				{ name = "ring of conflict", check = function() return want_bonus.noncombat end },
 				{ name = "Juju Mojo Mask", check = function() return (level() < 13 and not want_bonus.extraplusitems) end },
 				{ name = "plastic vampire fangs", check = function() return (level() < 6 and not want_bonus.extraplusitems) end },

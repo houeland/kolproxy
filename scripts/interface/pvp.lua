@@ -1,3 +1,10 @@
+register_setting {
+	name = "break hippy stone when ascending",
+	description = "Break Hippy Stone when ascending to enable PvP",
+	group = "automation",
+	default_level = "enthusiast",
+}
+
 function automate_pvp_fights(numtimes, stance, attacktype)
 --	local tbl = {}
 	for i = 1, numtimes do

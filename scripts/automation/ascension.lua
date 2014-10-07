@@ -503,7 +503,7 @@ endif
 	local tasks = get_automation_tasks(script, cached_stuff)
 
 	local function can_photocopy()
-		return not ascension_script_option("use fax machine manually") and not cached_stuff.have_faxed_today and have_item("Clan VIP Lounge key") and not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete") and not script.fax_machine_too_old()
+		return not ascension_script_option("use fax machine manually") and not cached_stuff.have_faxed_today and have_item("Clan VIP Lounge key") and not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete") and not fax_machine_is_too_old()
 	end
 
 	local function countif(x)
@@ -604,8 +604,27 @@ endif
 
 	mmj_available = cached_stuff.mox_guild_is_open and (classid() == 3 or classid() == 4 or (classid() == 6 and level() >= 9)) -- TODO: fix
 
+	reset_macro_target()
 	script.bonus_target {}
 	script.set_runawayfrom(nil)
+
+	local raindoh_monster = nil
+	local function check_raindoh()
+		if have_item("Rain-Doh box full of monster") and raindoh_monster == nil then
+			raindoh_monster = retrieve_raindoh_monster()
+		end
+		return raindoh_monster or ""
+	end
+
+	local function have_copied_monster(name)
+		return check_raindoh():contains(name)
+	end
+
+	local function use_copied_monster(name)
+		if check_raindoh():contains(name) then
+			return use_item("Rain-Doh box full of monster")
+		end
+	end
 
 	if level() < 13 then
 		if mainstat_type("Muscle") and (have_intrinsic("Gaze of the Trickster God") or have_intrinsic("Gaze of the Lightning God")) then
@@ -1956,7 +1975,7 @@ endif
 		want_softcore_item("Operation Patriot Shield")
 	end
 	want_softcore_item_oneof { "Sneaky Pete's leather jacket (collar popped)", "Sneaky Pete's leather jacket", "astral shirt" }
-	want_softcore_item("ring of conflict")
+	want_softcore_item_oneof { "duonoculars", "ring of conflict" }
 
 	add_task {
 		when = ascensionstatus() ~= "Hardcore" and
@@ -3005,10 +3024,42 @@ endif
 				message = "make writing desk and wink it",
 				familiar = "Reanimated Reanimator",
 				action = function()
+					add_macro_target("itemcopy", { ["writing desk"] = true })
+					add_macro_target("familiarcopy", { ["writing desk"] = true })
 					script.ensure_buffs {}
 					script.wear {}
 					script.heal_up()
-					stop "TODO: cast rain man, fight a writing desk, wink it with reanimator, copy 1x with rain-doh black box"
+					script.ensure_mp(30)
+					if not have_item("Rain-Doh black box") then
+						stop "TODO: cast rain man, fight a writing desk, wink it with reanimator, and get 1x more copy"
+					end
+					cast_skill("Rain Man")
+					post_page("/choice.php", { pwd = session.pwd, whichchoice = 970, whichmonster = 405, option = 1, choice2 = "and Fight!" })
+					local pt, url = get_page("/fight.php")
+					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_kill_monster)
+					if advagain then
+						did_action = true
+					end
+				end,
+			}
+		}
+
+		add_task {
+			when = have_copied_monster("writing desk") and
+				script.have_familiar("Reanimated Reanimator"), -- and winked writing desk
+			task = {
+				message = "fight copied writing desk",
+				action = function()
+					script.ensure_buffs {}
+					script.wear {}
+					script.heal_up()
+					script.ensure_mp(30)
+					use_copied_monster("writing desk")
+					local pt, url = get_page("/fight.php")
+					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_kill_monster)
+					if advagain then
+						did_action = true
+					end
 				end,
 			}
 		}
@@ -3018,21 +3069,106 @@ endif
 				heavyrains_rain() >= 50 and
 				script.have_familiar("Reanimated Reanimator") and
 				not day["wandering copied monster"] and
-				not have_item("barrel of gunpowder"),
-				-- and not finished sonofa
+				not have_item("barrel of gunpowder") and
+				level() < 12, -- not finished sonofa
 			task = {
 				message = "make lobsterfrogman and wink it",
 				familiar = "Reanimated Reanimator",
 				action = function()
+					add_macro_target("itemcopy", { ["lobsterfrogman"] = true })
+					add_macro_target("familiarcopy", { ["lobsterfrogman"] = true })
 					script.ensure_buffs {}
 					script.wear {}
 					script.heal_up()
-					stop "TODO: cast rain man, fight a lobsterfrogman, wink it with reanimator, copy 1x with rain-doh black box"
+					script.ensure_mp(30)
+					if not have_item("Rain-Doh black box") then
+						stop "TODO: cast rain man, fight a lobsterfrogman, wink it with reanimator, and get 1x more copy"
+					end
+					cast_skill("Rain Man")
+					post_page("/choice.php", { pwd = session.pwd, whichchoice = 970, whichmonster = 529, option = 1, choice2 = "and Fight!" })
+					local pt, url = get_page("/fight.php")
+					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_kill_monster)
+					if advagain then
+						did_action = true
+					end
+				end,
+			}
+		}
+
+		add_task {
+			when = have_copied_monster("lobsterfrogman") and
+				count_item("barrel of gunpowder") == 1,
+			task = {
+				message = "fight copied lobsterfrogman",
+				action = function()
+					script.ensure_buffs {}
+					script.wear {}
+					script.heal_up()
+					script.ensure_mp(30)
+					use_copied_monster("lobsterfrogman")
+					local pt, url = get_page("/fight.php")
+					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_kill_monster)
+					if advagain then
+						did_action = true
+					end
 				end,
 			}
 		}
 
 		add_task(tasks.unlock_hidden_temple_with_high_ML)
+
+		local ninja_items = countif("ninja rope") + countif("ninja crampons") + countif("ninja carabiner")
+
+		add_task {
+			when = have_skill("Rain Man") and
+				heavyrains_rain() >= 50 and
+				have_item("Rain-Doh black box") and
+				ninja_items == 0 and
+				level() < 8, -- not unlocked peak
+			task = {
+				message = "make ninja snowman assassin and copy it",
+				familiar = "Reanimated Reanimator",
+				action = function()
+					add_macro_target("itemcopy", { ["ninja snowman assassin"] = true })
+					script.ensure_buffs {}
+					script.wear {}
+					script.heal_up()
+					script.ensure_mp(30)
+					cast_skill("Rain Man")
+					post_page("/choice.php", { pwd = session.pwd, whichchoice = 970, whichmonster = 1185, option = 1, choice2 = "and Fight!" })
+					local pt, url = get_page("/fight.php")
+					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_kill_monster)
+					if advagain then
+						did_action = true
+					end
+				end,
+			}
+		}
+
+		add_task {
+			when = have_copied_monster("ninja snowman assassin") and
+				ninja_items < 3 and
+				level() < 8, -- not unlocked peak
+			task = {
+				message = "fight copied ninja snowman assassin",
+				action = function()
+					if ninja_items + 1 < 3 then
+						add_macro_target("itemcopy", { ["ninja snowman assassin"] = true })
+					end
+					script.ensure_buffs {}
+					script.wear {}
+					script.heal_up()
+					script.ensure_mp(30)
+					use_copied_monster("ninja snowman assassin")
+					local pt, url = get_page("/fight.php")
+					result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_kill_monster)
+					if advagain then
+						did_action = true
+					end
+				end,
+			}
+		}
+
 	end
 
 	add_task {
@@ -5596,6 +5732,10 @@ ascension_automation_script_href = add_automation_script("automate-ascension", f
 	return do_loop(tonumber(params.whichday))
 end)
 
+local function path_supports_fax_machine()
+	return not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete") and not fax_machine_is_too_old()
+end
+
 local ascension_script_options_tbl = {
 	["stop on imported beer"] = { yes = "stop", no = "drink as fallback booze", default_yes = true },
 	["skip azazel quest"] = { yes = "skip quest", no = "get steel organ" },
@@ -5607,9 +5747,9 @@ local ascension_script_options_tbl = {
 	["train skills manually"] = { yes = "train manually", no = "automate training", when = function() return ascensionpath("Avatar of Jarlsberg") or ascensionpath("Avatar of Sneaky Pete") or ascensionpath("Heavy Rains") end },
 	["100% familiar run"] = { yes = "don't change familiar", no = "automate familiar choice", when = function() return can_change_familiar() end },
 	["overdrink with nightcap"] = { yes = "overdrink automatically", no = "don't automate" },
-	["pull consumables"] = { yes = "pull and consume", no = "don't automate", when = function() return not ascensionstatus("Hardcore") and ascensionpath("Avatar of Sneaky Pete") end, default_yes = true },
+	["pull consumables"] = { yes = "pull and consume", no = "don't automate", when = function() return not ascensionstatus("Hardcore") and (ascensionpath("Avatar of Sneaky Pete") or ascensionpath("Heavy Rains")) end, default_yes = true },
 	["show debug information"] = { yes = "show additional console output", no = "skip debug messages" },
-	["use fax machine manually"] = { yes = "ignore the fax machine", no = "automate" },
+	["use fax machine manually"] = { yes = "ignore the fax machine", no = "automate", when = path_supports_fax_machine },
 	["skip library key"] = { yes = "get library key manually", no = "automate quest normally" },
 	["go for a 2-day SCHR"] = { yes = "yes I'm crazy", no = "no thanks", when = function() return ascensionpath("Heavy Rains") end },
 }
@@ -5702,7 +5842,6 @@ end)
 
 add_printer("/main.php", function()
 	if not setting_enabled("enable turnplaying automation") then return end
-	if not setting_enabled("enable turnplaying automation in-run") then return end
 	if tonumber(status().freedralph) == 1 then
 		text = text:gsub([[title="Bottom Edge".-</table>]], [[%0<table><tr><td><center><a href="]]..custom_aftercore_automation_href { pwd = session.pwd }..[[" style="color: green">{ Setup/run scripts }</a></center></td></tr></table>]])
 		return

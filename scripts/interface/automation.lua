@@ -108,9 +108,9 @@ function turn_automation_decorate_noncombat_page(pt, zoneid, timesleft)
 end
 
 function show_links(match, link)
-	if setting_enabled("enable readventuring automation") then
-		local function newtext(x)
-			return [[
+	if not setting_enabled("enable turnplaying automation") then return end
+	local function newtext(x)
+		return [[
 <script language="javascript">
 function automate_N_turns(url) {
 	N = prompt('Re-adventure how many times?');
@@ -119,9 +119,8 @@ function automate_N_turns(url) {
 	}
 }
 </script><br><a href="javascript:automate_N_turns(']] .. link(x) .. [[')" style="color:green">{ Re-adventure here N times }</a>]]
-		end
-		text = text:gsub("(" .. match .. ")", function(alltext, a, b, c) return alltext .. " " .. newtext(a, b, c) .. "\n" end)
 	end
+	text = text:gsub("(" .. match .. ")", function(alltext, a, b, c) return alltext .. " " .. newtext(a, b, c) .. "\n" end)
 end
 
 local function autohref(z)

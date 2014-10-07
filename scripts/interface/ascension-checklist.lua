@@ -243,6 +243,7 @@ equipment_items = {
 	{ true, { "5-Alarm Saucepan" } },
 
 	{ true, { "monster bait" } },
+	{ true, { "duonoculars" } },
 	{ true, { "ring of conflict" } },
 	{ true, { "star crossbow", "star staff", "star sword" } },
 	{ true, { "star hat" } },

@@ -62,3 +62,12 @@ function retrieve_raindoh_monster()
 	local copied = itempt:match([[with the soul of (.-) in it]])
 	return copied
 end
+
+local counter_effect_tbl = {}
+function add_counter_effect(f)
+	table.insert(counter_effect_tbl, f)
+end
+
+function get_counter_effect_list()
+	return counter_effect_tbl
+end

@@ -1,6 +1,6 @@
 register_setting {
 	name = "show extra notices/show lightsout warning",
-	description = "Add lights out counter, and show a warning if the counter is up",
+	description = "Add warning and countdown for Lights Out adventures",
 	group = "warnings",
 	default_level = "detailed",
 	parent = "enable adventure warnings",
@@ -163,7 +163,15 @@ add_processor("won fight: Stephen Spookyraven", function()
 	ascension["steve quest"] = 7
 end)
 
+add_counter_effect(function()
+	if not lightsout_enabled() then return end
+	local value, lastencounter, liznumber, stevenumber = get_lightsout_info()
+
+	return { title = "Lights Out", duration = value, imgname = "lightning", group = "effect" }
+end)
+
 add_charpane_line(function()
+	if setting_enabled("display counters as effects") then return end
 	if not lightsout_enabled() then return end
 	local value, lastencounter, liznumber, stevenumber = get_lightsout_info()
 
@@ -177,7 +185,6 @@ add_charpane_line(function()
 	if value == 0 then
 		if stevenumber < 7 then
 			table.insert(lines, { name = "Steve", value = make_zone_link(steve_quest[stevenumber + 1]) })
-
 		end
 		if liznumber < 7 then
 			table.insert(lines, { name = "Liz", value = make_zone_link(liz_quest[liznumber + 1]) })

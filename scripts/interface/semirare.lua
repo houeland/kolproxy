@@ -103,6 +103,7 @@ function get_semirare_info()
 end
 
 add_charpane_line(function()
+	if setting_enabled("display counters as effects") then return end
 	local SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info()
 
 	local value = good_numbers[1] and table.concat(good_numbers, ", ") or "?"

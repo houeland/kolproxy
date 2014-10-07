@@ -45,7 +45,7 @@ local rain_monsters = {
 	"gourmet gourami",
 	"giant isopod",
 }
-add_wandering_monster_tracker("Rain monster", rain_monsters, 35, 45)
+add_wandering_monster_tracker("Rain monster", rain_monsters, 35, 45, function() return ascensionpath("Heavy Rains") end, 8, 11)
 
 add_processor("won fight", function()
 	if heavyrains_thunder() ~= nil then

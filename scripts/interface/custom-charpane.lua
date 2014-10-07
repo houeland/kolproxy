@@ -10,9 +10,18 @@
 
 register_setting {
 	name = "use custom kolproxy charpane",
-	description = "Replace character pane with speedy custom kolproxy version",
+	description = "Replace character pane with speedy kolproxy version",
 	group = "charpane",
 	default_level = "standard",
+	update_charpane = true,
+}
+
+register_setting {
+	name = "use custom bleary charpane",
+	description = "Use prettier bleary / ChIT version",
+	group = "charpane",
+	default_level = "standard",
+	parent = "use custom kolproxy charpane",
 	update_charpane = true,
 }
 
@@ -25,12 +34,12 @@ register_setting {
 }
 
 register_setting {
-	name = "display counters as effects",
-	description = "Display turn counters etc. as if they were effects",
+	server_name = "hideefarrows",
+	server_inverted = true,
+	description = "Show effect replenishment arrows",
 	group = "charpane",
-	default_level = "enthusiast",
+	parent = "use custom kolproxy charpane",
 	update_charpane = true,
-	beta_version = true,
 }
 
 register_setting {
@@ -43,12 +52,22 @@ register_setting {
 }
 
 register_setting {
-	server_name = "hideefarrows",
-	server_inverted = true,
-	description = "Show effect replenishment arrows",
+	name = "display counters as effects",
+	description = "Display turn counters etc. as if they were effects",
 	group = "charpane",
+	default_level = "enthusiast",
 	parent = "use custom kolproxy charpane",
 	update_charpane = true,
+	beta_version = true,
+}
+
+register_setting {
+	server_name = "compacteffects",
+	description = "Use compact effects list",
+	group = "charpane",
+	default_level = "enthusiast",
+	update_charpane = true,
+	beta_version = true,
 }
 
 register_setting {
@@ -74,7 +93,17 @@ add_printer("/game.php", function()
 end)
 
 function display_duration(x)
-	local desc = "(" .. display_value(x) .. ")"
+	local d = x.durationdesc or x.duration
+	if d == "" then return d end
+	local desc = display_value(d)
+	if x.maxduration and x.maxduration > x.duration then
+		desc = display_value(d) .. "-" .. display_value(x.maxduration)
+	end
+	if x.backgroundcolor then
+		desc = "[" .. desc .. "]"
+	else
+		desc = "(" .. desc .. ")"
+	end
 	if desc:len() >= 6 then
 		desc = [[<span style="font-size: 80%">]] .. desc .. [[</span>]]
 	end
@@ -140,9 +169,16 @@ function kolproxy_custom_charpane_mode()
 end
 
 local function buff_sort_func(a, b)
-	if setting_enabled("display songs above other effects") then
-		if a.is_song ~= b.is_song then return a.is_song end
+	local group_order = {
+		song = 50,
+		effect = 100,
+		intrinsic = 200,
+		thrall = 250,
+	}
+	if not a.group or not b.group or not group_order[a.group] or not group_order[b.group] then
+		print("DEBUG", tostring(a), tostring(b))
 	end
+	if a.group ~= b.group then return group_order[a.group] < group_order[b.group] end
 	if a.duration ~= b.duration then
 		if type(a.duration) == type(b.duration) then
 			return a.duration < b.duration
@@ -150,6 +186,7 @@ local function buff_sort_func(a, b)
 			return (b.duration == "&infin;")
 		end
 	end
+	if a.special ~= b.special then return a.special end
 	if a.title ~= b.title then return a.title < b.title end
 	if a.imgname ~= b.imgname then return a.imgname < b.imgname end
 	return a.descid < b.descid
@@ -172,112 +209,61 @@ local function is_AT_songname(buffname)
 	return AT_songs[buffname]
 end
 
-function get_sorted_buff_array()
-	local sorting = {}
-	for descid, x in pairs(status().effects) do
-		-- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly. TODO: put workaround in api.lua
-		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid, upeffect = x[4], is_song = is_AT_songname(x[1]) })
+add_counter_effect(function()
+	if pastathrall() then
+		local thrall = get_current_pastathrall_info()
+		return { title = string.format("Lvl %d %s", thrall.level, thrall.name), imgname = thrall.picture, group = "thrall" }
 	end
-	for descid, x in pairs(status().intrinsics) do
-		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid })
-	end
-	table.sort(sorting, buff_sort_func)
-	return sorting
-end
+end)
 
---[==[--
+add_counter_effect(function()
+	local tbl = {}
+	local SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi, lastturn = get_semirare_info(turnsthisrun())
+	for _, x in ipairs(good_numbers or {}) do
+		table.insert(tbl, { title = "Semirare number", duration = x, imgname = "fortune", group = "effect" })
+	end
+	return tbl
+end)
+
+function get_sorted_buff_array()
 	local buff_colors = {
 		["On the Trail"] = "purple",
 		["Everything Looks Red"] = "red",
 		["Everything Looks Blue"] = "blue",
 		["Everything Looks Yellow"] = "goldenrod",
 	}
-	if pastathrall() and setting_enabled("display counters as effects") then
-		-- TODO: do in buff listing, not here
-		if last_buff_type ~= "intrinsic" then
-			if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
-			table.insert(bufflines, [[<tbody class="intrinsic">]])
+	local sorting = {}
+	for descid, x in pairs(status().effects) do
+		-- WORKAROUND: tonumber is a workaround for CDM effects being strings or numbers randomly. TODO: put workaround in api.lua
+		local group = "effect"
+		if setting_enabled("display songs above other effects") and is_AT_songname(x[1]) then
+			group = "song"
 		end
-		local thrall = get_current_pastathrall_info()
-		table.insert(bufflines, string.format([[<tr class="intrinsic"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td><td class='info' colspan='3'><div>Lvl %d %s</div></td></tr>]], thrall.picture, thrall.level, thrall.name))
+		table.insert(sorting, { title = x[1], duration = tonumber(x[2]), imgname = x[3], descid = descid, upeffect = x[4], group = group, color = buff_colors[x[1]] })
 	end
-
-
-function compact_charpane_buff_lines(lines)
-		local curbuffline = nil
-		for _, x in ipairs(get_sorted_buff_array()) do
-			local styleinfo = ""
-			local imgstyleinfo = ""
-			if buff_colors[x.title] then
-				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
-				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
-			end
-			local strarrow = make_strarrow(x.upeffect)
-			local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>%s</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, display_duration(x.duration))
-			if not curbuffline then
-				curbuffline = "<td>" .. strarrow .. "</td>" .. str
+	for descid, x in pairs(status().intrinsics) do
+		local group = "intrinsic"
+		table.insert(sorting, { title = x[1], duration = "&infin;", imgname = x[2], descid = descid, group = group, color = buff_colors[x[1]] })
+	end
+	if setting_enabled("display counters as effects") then
+		for _, tblf in ipairs(get_counter_effect_list()) do
+			local tbl = tblf()
+			if not tbl then
 			else
-				table.insert(bufflines, string.format([[<tr>%s<td>&nbsp;</td>%s<td>%s</td></tr>]], curbuffline, str, strarrow))
-				curbuffline = nil
+				if tbl.title then tbl = { tbl } end
+				for _, x in ipairs(tbl) do
+					x.backgroundcolor = "moccasin"
+					x.descid = ""
+					x.duration = x.duration or ""
+					table.insert(sorting, x)
+				end
 			end
 		end
-		if curbuffline then
-			table.insert(bufflines, string.format([[<tr>%s<td></td><td></td><td></td></tr>]], curbuffline))
-		end
-end
-
-function full_charpane_buff_lines(lines)
-		for _, x in ipairs(get_sorted_buff_array()) do
-			local styleinfo = ""
-			local imgstyleinfo = ""
-			if buff_colors[x.title] then
-				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
-				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
-			end
-			local strarrow = make_strarrow(x.upeffect)
-			local str = string.format([[<tr><td>%s</td><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s %s</font><br></td></tr>]], strarrow, imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_duration(x.duration))
-			table.insert(bufflines, str)
-		end
-end
-
-function bl_charpane_buff_lines(lines)
-	for _, x in ipairs(get_sorted_buff_array()) do
-		local styleinfo = ""
-		local imgstyleinfo = ""
-		local buff_type = "effect"
-		local shrug_class = "shrug"
-		if x.is_song and setting_enabled("display songs above other effects") then
-			buff_type = "song"
-		elseif x.duration == "&infin;" then
-			buff_type = "intrinsic"
-			shrug_class = "infinity"
-		end
-
-		if buff_type ~= last_buff_type then
-			if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
-			table.insert(bufflines, string.format([[<tbody class="%s">]], buff_type))
-		end
-		last_buff_type = buff_type
-
-		if buff_colors[x.title] then
-			styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
-			imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
-		end
-
-		local strarrow = ""
-		if tonumber(api_flag_config().compacteffects) == 1 then
-			strarrow = make_compact_arrow(x.duration, x.upeffect)
-		else
-			strarrow = make_strarrow(x.upeffect)
-		end
-
-		local str = string.format([[<tr class="%s"><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td class='info'><div>%s</div></td><td class='%s'>%s</td><td class='powerup'><span oncontextmenu="return maybe_shrug(&quot;%s&quot;)">%s</span></td></tr>]], buff_type, x.imgname, x.descid, x.title, x.title, shrug_class, display_duration(x.duration), x.title, strarrow)
-		table.insert(bufflines, str)
 	end
 
-	if last_buff_type ~= nil then table.insert(bufflines, "</tbody>") end
+	table.sort(sorting, buff_sort_func)
+	return sorting
 end
---]==]--
 
 function make_strarrow(upeffect)
 	-- TODO: put skillid and itemid in buff table instead of parsing here
@@ -971,7 +957,7 @@ function compact_charpane_buff_lines(lines)
 				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
 			end
 			local strarrow = make_strarrow(x.upeffect)
-			local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>%s</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, display_duration(x.duration))
+			local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>%s</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, display_duration(x))
 			if not curbuffline then
 				curbuffline = "<td>" .. strarrow .. "</td>" .. str
 			else
@@ -991,7 +977,7 @@ function compact_charpane_buff_lines(lines)
 				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
 				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
 			end
-			local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>%s</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, display_duration(x.duration))
+			local str = string.format([[<td title="%s"%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td title="%s"%s>%s</td>]], x.title, imgstyleinfo, x.imgname, x.descid, x.title, x.title, styleinfo, display_duration(x))
 			if not curbuffline then
 				curbuffline = str
 			else
@@ -1029,7 +1015,7 @@ function full_charpane_buff_lines(lines)
 				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
 			end
 			local strarrow = make_strarrow(x.upeffect)
-			local str = string.format([[<tr><td>%s</td><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s %s</font><br></td></tr>]], strarrow, imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_duration(x.duration))
+			local str = string.format([[<tr><td>%s</td><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s %s</font><br></td></tr>]], strarrow, imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_duration(x))
 			table.insert(bufflines, str)
 		end
 	else
@@ -1040,7 +1026,7 @@ function full_charpane_buff_lines(lines)
 				styleinfo = string.format([[ style="color: %s"]], buff_colors[x.title])
 				imgstyleinfo = string.format([[ style="background-color: %s"]], buff_colors[x.title])
 			end
-			local str = string.format([[<tr><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s %s</font><br></td></tr>]], imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_duration(x.duration))
+			local str = string.format([[<tr><td%s><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="width: 25px; height: 25px; cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td valign="center"%s><font size=2>%s %s</font><br></td></tr>]], imgstyleinfo, x.imgname, x.descid, x.title, styleinfo, x.title, display_duration(x))
 			table.insert(bufflines, str)
 		end
 	end
@@ -1200,7 +1186,7 @@ td {
 	font-family: Arial, Helvetica, sans-serif;
 }
 a:link { color: black; }
-a:visited {	color: black; }
+a:visited { color: black; }
 a:active { color: black; }
 .nounder { text-decoration: none; }
 .tiny { font-size: 0.9em; }

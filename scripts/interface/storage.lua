@@ -226,6 +226,7 @@ maybe_pvp_stealable = {
 	"Mace of the Tortoise",
 	"5-Alarm Saucepan",
 	"ring of conflict",
+	"duonoculars",
 	"monster bait",
 	"rice bowl",
 	"tiny plastic skeletal reindeer",
