@@ -456,6 +456,7 @@ end)
 local picked_up_free_pulls = false
 add_ascension_assistance(function() return not picked_up_free_pulls end, function()
 	async_post_page("/campground.php", { action = "telescopelow" })
+	async_post_page("/campground.php", { action = "workshed" })
 	-- TODO: Only at level 1?
 	if not have_item("Clan VIP Lounge key") then
 		freepull_item("Clan VIP Lounge key")
