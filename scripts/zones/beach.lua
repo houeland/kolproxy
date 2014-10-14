@@ -132,6 +132,17 @@ add_warning {
 }
 
 add_warning {
+	message = "You might want to wear a different offhand when not exploring the desert.",
+	type = "extra",
+	when = "ascension",
+	check = function(zoneid)
+		if zoneid == get_zoneid("The Arid, Extra-Dry Desert") then return end
+		if zoneid == get_zoneid("The Oasis") and not have_buff("Ultrahydrated") then return end
+		return have_equipped_item("UV-resistant compass") or have_equipped_item("ornate dowsing rod")
+	end
+}
+
+add_warning {
 	message = "You might want to get Ultrahydrated first (from The Oasis)",
 	type = "extra",
 	when = "ascension",
