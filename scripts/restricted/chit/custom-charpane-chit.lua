@@ -81,8 +81,7 @@ local function guild_link()
 	return guild
 end
 
-
-function bl_charpane_level_lines(lines)
+local function bl_charpane_level_lines(lines)
 	local partial_level, have_level, need_level = level_progress()
 	table.insert(lines, string.format([[<table id='chit_character' class="chit_brick nospace"><tr><th colspan='3'>]]))
 	table.insert(lines, string.format([[<a class=nounder target=mainpane href="charsheet.php"><b>%s</b></a></th></tr>]], playername()))
@@ -135,7 +134,7 @@ function bl_charpane_level_lines(lines)
 ]], need_level - have_level, level() + 1, partial_level * 100))
 end
 
-function bl_path_resources_compact() -- TODO: move to other file and only wrap result in chit_resource
+local function bl_path_resources_compact() -- TODO: move to other file and only wrap result in chit_resource
 	if ascensionpath("Heavy Rains") then
 		local function makespan(amount, name, icon)
 			amount = amount or 0
@@ -152,7 +151,7 @@ function bl_path_resources_compact() -- TODO: move to other file and only wrap r
 	return ""
 end
 
-function bl_charpane_level_lines_compact(lines)
+local function bl_charpane_level_lines_compact(lines)
 	local partial_level, have_level, need_level = level_progress()
 	table.insert(lines, string.format([[<table id='chit_character' class="chit_brick nospace compact">]]))
 --	table.insert(lines, string.format([[<a class=nounder target=mainpane href="charsheet.php"><b>%s</b></a></th></tr>]], playername()))
@@ -198,7 +197,7 @@ local function maximizer_link(bonus)
 	return modifier_maximizer_href { whichbonus = bonus, pwd = session.pwd }
 end
 
-function bl_charpane_mystats_lines(lines)
+local function bl_charpane_mystats_lines(lines)
 	table.insert(lines, [[<table id="chit_stats" class="chit_brick nospace">
 <thead>
 <tr>
@@ -344,8 +343,7 @@ local function bl_compact_stats_panel(lines)
 	table.insert(lines, "</table>")
 end
 
-
-function bl_charpane_zone_lines(lines)
+local function bl_charpane_zone_lines(lines)
 	table.insert(lines, [[<table id="chit_trail" class="chit_brick nospace">]])
 	table.insert(lines, string.format([[<tr><th><a class="visit" target="mainpane" href="%s">Last Adventure</a></th></tr>]], work_around_broken_status_lastadv(lastadventuredata()).container or ""))
 	table.insert(lines, string.format([[<tr><td><a target=mainpane href="%s">%s</a></td></tr>]], lastadventuredata().link, lastadventuredata().name))
@@ -360,7 +358,7 @@ function bl_charpane_zone_lines(lines)
 	table.insert(lines, [[</table>]])
 end
 
-function blpane_familiar_weight()
+local function blpane_familiar_weight()
 	if familiar("Reanimated Reanimator") then
 		return string.format([[<a href="main.php?talktoreanimator=1" target="mainpane">%s</a>]], buffedfamiliarweight())
 	else
@@ -368,7 +366,7 @@ function blpane_familiar_weight()
 	end
 end
 
-function bl_charpane_familiar(lines)
+local function bl_charpane_familiar(lines)
 	table.insert(lines, [[<table id="chit_familiar" class="chit_brick nospace">]])
 	if familiarid() ~= 0 then
 		local fam_equip = maybe_get_itemdata(tonumber(status().equipment.familiarequip) or 0)
@@ -475,7 +473,7 @@ local function bl_charpane_compact_familiar(lines)
 	table.insert(lines, [[</table>]])
 end
 
-function bl_charpane_fam_picker(fams)
+local function bl_charpane_fam_picker(fams)
 	local curfampic = familiarpicture()
 	local current_is_a_fave = false
 	for a, b in pairs(fams) do
@@ -543,7 +541,7 @@ local function make_compact_arrow(duration, upeffect)
 	return ""
 end
 
-function bl_charpane_buff_lines(lines)
+local function bl_charpane_buff_lines(lines)
 	local bufflines = {}
 
 	local last_buff_type = nil
@@ -600,49 +598,11 @@ function bl_charpane_buff_lines(lines)
 	table.insert(lines, [[</table>]])
 end
 
-function charpane_bleary_js()
+local function charpane_bleary_js()
 -- TODO: remove javascript resizing if possible
 	return [[
 <script type="text/javascript">
-//Resize window
-//	$(window).resize(function() {
-//		var pad = 2
-//		var roofOffset = 2
-//		var floorOffset = 2
-//		var roof = $("#chit_roof")
-//		var walls = $("#chit_walls")
-//		var floor = $("#chit_floor")
-//
-//		var roofHeight = roof ? roof.outerHeight(true) : 0
-//		var floorHeight = floor ? floor.outerHeight(true) : 0
-//		var availableHeight = $(document).height() - floorHeight - roofOffset - floorOffset - pad;
-//
-//		if (floor) {
-//			floor.css({ "bottom": floorOffset + "px" });
-//		}
-//
-//		if (roof) {
-//			roof.css({ "top": roofOffset + "px" });
-//			if (!walls || (roofHeight > availableHeight)) {
-//				roof.css("bottom", (floorOffset + floorHeight + pad) + "px");
-//			}
-//		}
-//
-//		if (walls && (roofHeight >= availableHeight)) {
-//			walls.css("bottom", (floorOffset + floorHeight + pad) + "px");
-//		} else if (walls && (roofHeight < availableHeight)) {
-//			walls.css("bottom", (floorOffset + floorHeight + pad) + "px");
-//			if (roof) {
-//				walls.css("top", (roofOffset + roofHeight + pad) + "px");
-//			} else {
-//				walls.css("top", (roofOffset) + "px");
-//			}
-//		}
-//	});
-
 	$(document).ready(function() {
-//		$(window).resize();
-
 //Picker Launchers
 	//use bind for multiple events (KoL uses jQuery 1.3, using multiple events for 'live' was added in jQuery 1.4)
 	//$(".chit_launcher").live("click", function(e) {
@@ -722,6 +682,37 @@ function charpane_bleary_js()
 ]]
 end
 
+local function bl_charpane_modifier_estimate_lines(lines)
+	table.insert(lines, string.format([[<table id="chit_modifiers" class="%s">]], bl_compact() and "chit_brick compact nospace" or "chit_brick nospace"))
+	table.insert(lines, [[<thead><tr><th colspan="2">Modifiers</th></tr></thead><tbody>]])
+	for _, mod_info in ipairs(run_charpane_line_functions()) do
+		if mod_info.compactname == "ML" and bl_compact() then
+			-- ML is already in the above panel
+		else
+			local label = ""
+			if mod_info.link then
+				label = string.format([[<a target="mainpane" href="%s">%%s</a>]], mod_info.link)
+			else
+				label = "%s"
+			end
+			label = string.format(label, bl_compact() and mod_info.compactname or mod_info.normalname or mod_info.name)
+			local tooltip = ""
+			if mod_info.tooltip then
+				tooltip = string.format([[<sup style="font-size: 50%%" title="%s">(?)</sup>]], mod_info.tooltip)
+			end
+			table.insert(lines, string.format([[<tr><td class="label">%s%s</td><td class="info">%s</td></tr>]], label, tooltip, mod_info.value or mod_info.compactvalue or mod_info.normalvalue))
+		end
+	end
+	table.insert(lines, [[</tbody></table>]])
+end
+
+local function bl_charpane_equipment(lines)
+	table.insert(lines, string.format([[<table id="chit_equipment" class="chit_brick compact nospace"><tr><td>]]))
+	table.insert(lines, string.format([[<center style="font-size: 80%%">%s</center>]], get_outfit_slots_line()))
+	table.insert(lines, string.format([[<center style="line-height: 0px">%s%s</center>]], charpane_equipment_line { "hat", "container", "shirt", "weapon", "offhand" }, charpane_equipment_line { "pants", "acc1", "acc2", "acc3", "familiarequip" }))
+	table.insert(lines, [[</td></tr></table>]])
+end
+
 add_interceptor("/charpane.php", function()
 	if not setting_enabled("use custom kolproxy charpane") then return end
 	if not pcall(turnsthisrun) then return end -- in afterlife
@@ -743,46 +734,19 @@ add_interceptor("/charpane.php", function()
 		bl_charpane_level_lines(lines)
 		bl_charpane_mystats_lines(lines)
 	end
+	bl_charpane_equipment(lines)
 	-- TODO: move to new function
 	if setting_enabled("show modifier estimates") then
-		if bl_compact() then
-			table.insert(lines, [[<table id="chit_modifiers" class="chit_brick compact nospace">]])
-		else
-			table.insert(lines, [[<table id="chit_modifiers" class="chit_brick nospace">]])
-		end
-		table.insert(lines, [[<thead><tr><th colspan="2">Modifiers</th></tr></thead><tbody>]])
-		for _, mod_info in ipairs(run_charpane_line_functions()) do
-			if mod_info.compactname == "ML" and bl_compact() then
-				-- ML is already in the above panel
-			else
-				local label = ""
-				if mod_info.link then
-					label = string.format([[<a target="mainpane" href="%s">%%s</a>]], mod_info.link)
-				else
-					label = "%s"
-				end
-				if bl_compact() then
-					label = string.format(label, mod_info.compactname or mod_info.normalname or mod_info.name)
-				else
-					label = string.format(label, mod_info.normalname or mod_info.name)
-				end
-				local tooltip = ""
-				if mod_info.tooltip then
-					tooltip = string.format([[<sup style="font-size: 50%%" title="%s">(?)</sup>]], mod_info.tooltip)
-				end
-				table.insert(lines, string.format([[<tr><td class="label">%s%s</td><td class="info">%s</td></tr>]], label, tooltip, mod_info.value or mod_info.compactvalue or mod_info.normalvalue))
-			end
-		end
-		table.insert(lines, [[</tbody></table>]])
+		bl_charpane_modifier_estimate_lines(lines)
 	end
 	bl_charpane_zone_lines(lines)
-	if not bl_compact() then
+	if bl_compact() then
+		bl_charpane_compact_familiar(lines)
+	else
 		bl_charpane_familiar(lines)
 		if pastathrall() and not setting_enabled("display counters as effects") then
 			bl_charpane_thrall(lines)
 		end
-	else
-		bl_charpane_compact_familiar(lines)
 	end
 	bl_charpane_buff_lines(lines)
 	if not setting_enabled("show modifier estimates") or ascensionstatus("Aftercore") then

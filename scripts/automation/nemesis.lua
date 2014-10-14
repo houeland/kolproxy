@@ -480,7 +480,7 @@ endwhile
 								["rave whistle"] = 1,
 							}
 							if not have_item("rave whistle") then
-								pull_storage_items { "rave whistle" }
+								pull_storage_item("rave whistle")
 							end
 							for name, value in pairs(rave_items) do
 								if have_item(name) then

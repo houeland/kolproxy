@@ -581,7 +581,11 @@ mark m_done
 						use_item("bubblin' crude", 12)
 					end
 					if not have_item("jar of oil") then
-						stop "Need jar of oil"
+						--stop "Need jar of oil"
+						local crude = count_item("bubblin' crude")
+						run_task(t.do_oil_peak())
+						did_action = (count_item("bubblin' crude") > crude)
+						return
 					end
 				elseif cached_stuff.previous_twin_peak_noncombat_option == "Follow the faint sound of music" or cached_stuff.previous_twin_peak_noncombat_option == "Wait -- who's that?" then
 					if estimate_bonus("Combat Initiative") < 40 then

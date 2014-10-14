@@ -856,42 +856,42 @@ function full_charpane_zone_lines(lines)
 	table.insert(lines, [[</center>]])
 end
 
-function compact_charpane_equipment_lines(lines)
-	table.insert(lines, "<center>" .. get_outfit_slots_line() .. "</center>")
-	local function get_equip_line(tbl)
-		local equipstr = ""
-		local eq = equipment()
-		for _, x in pairs(tbl) do
-			if eq[x] then
-				preload_item_api_data(eq[x])
-			end
+function charpane_equipment_line(slots)
+	local equipstr = ""
+	local eq = equipment()
+	for _, x in pairs(slots) do
+		if eq[x] then
+			preload_item_api_data(eq[x])
 		end
-		for _, x in ipairs(tbl) do
-			local pic = "blank"
-			local descid = 0
-			if eq[x] then
-				local isok, thepic, thedescid = pcall(function()
-					local data = item_api_data(eq[x])
-					return data.picture, data.descid
-				end)
-				if isok then
-					pic = thepic
-					descid = thedescid
-				else
-					pic = "nopic"
-					descid = 0
-				end
-			end
-			equipstr = equipstr .. string.format([[<img src="http://images.kingdomofloathing.com/itemimages/%s.gif" width="30" height="30" style="border: solid thin lightgray;" class="hand" onClick="descitem(%d, 0, event)">]], pic, descid)
-		end
-		return equipstr
 	end
-	table.insert(lines, string.format("<center>%s<br>%s</center><br>", get_equip_line { "hat", "container", "shirt", "weapon", "offhand" }, get_equip_line { "pants", "acc1", "acc2", "acc3", "familiarequip" }))
+	local icons = {}
+	for _, x in ipairs(slots) do
+		local pic = "blank"
+		local descid = 0
+		if eq[x] then
+			local isok, thepic, thedescid = pcall(function()
+				local data = item_api_data(eq[x])
+				return data.picture, data.descid
+			end)
+			if isok then
+				pic = thepic
+				descid = thedescid
+			else
+				pic = "nopic"
+				descid = 0
+			end
+		end
+		table.insert(icons, string.format([[<img src="http://images.kingdomofloathing.com/itemimages/%s.gif" width="30" height="30" style="border: solid thin lightgray;" class="hand" onClick="descitem(%d, 0, event)">]], pic, descid))
+	end
+	return string.format([[<span style="white-space: nowrap">%s</span>]], table.concat(icons))
 end
 
 function charpane_familiar_weight_line()
 	if familiar("Reanimated Reanimator") then
 		return string.format([[%s lbs. (<a href="main.php?talktoreanimator=1" target="mainpane">chat</a>)]], buffedfamiliarweight())
+	elseif familiar("Grim Brother") then
+		-- TODO: cache that it's done today
+		return string.format([[%s lbs. (<a href="familiar.php?action=chatgrim&pwd=%s" target="mainpane">talk</a>)]], buffedfamiliarweight(), session.pwd)
 	else
 		return string.format("%s lbs.", buffedfamiliarweight())
 	end
@@ -1088,13 +1088,14 @@ add_interceptor("/charpane.php", function()
 
 	table.insert(lines, "<br>")
 
+	table.insert(lines, "<center>" .. get_outfit_slots_line() .. "</center>")
+	table.insert(lines, string.format("<center>%s%s</center>", charpane_equipment_line { "hat", "container", "shirt", "weapon", "offhand" }, charpane_equipment_line { "pants", "acc1", "acc2", "acc3", "familiarequip" }))
+
 	if tonumber(api_flag_config().swapfam) ~= 1 then
-		compact_charpane_equipment_lines(lines)
 		compact_charpane_familiar_lines(lines, fams)
 		table.insert(lines, "<br>")
 		compact_charpane_buff_lines(lines)
 	else
-		compact_charpane_equipment_lines(lines)
 		compact_charpane_buff_lines(lines)
 		table.insert(lines, "<br>")
 		compact_charpane_familiar_lines(lines, fams)
@@ -1114,10 +1115,10 @@ td {
 	font-size: 0.8em;
 }
 a:link { color: black; }
-a:visited {	color: black; }
+a:visited { color: black; }
 a:active { color: black; }
 .nounder { text-decoration: none; }
-.tiny { font-size: 0.9em; }
+.tiny { font-size: 0.8em; }
 	</style>
 
 ]] .. get_common_js() .. [[
@@ -1191,9 +1192,9 @@ a:active { color: black; }
 .nounder { text-decoration: none; }
 .tiny { font-size: 0.9em; }
 .black {
-   font-weight: bold;
-   color: black;
-   font-size: smaller;
+	font-weight: bold;
+	color: black;
+	font-size: smaller;
 }
 	</style>
 

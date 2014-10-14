@@ -5205,22 +5205,34 @@ use ]] .. get_lair_tower_monster_items()[level] .. [[
 						script.want_familiar "Frumious Bandersnatch"
 						script.wear {}
 						script.heal_up()
-						if estimate_bonus("Monster Level") <= 0 and buffedmoxie() >= 250 and maxhp() >= 150 then
-							local weapondata = equipment().weapon and maybe_get_itemdata(equipment().weapon)
-							if weapondata and weapondata.attack_stat == "Moxie" then
-								local form3ok = false
-								if requires_wand_of_nagamar() and have_item("Wand of Nagamar") then
-									form3ok = true
-								elseif ascensionpath("Avatar of Sneaky Pete") then
-									form3ok = true
-								end
-								if form3ok then
-									script.force_heal_up()
-									script.ensure_mp(100)
-									if hp() == maxhp() and mp() >= 100 then
-										return true
-									end
-								end
+						local can_survive = (buffedmoxie() >= 250 and maxhp() >= 150)
+						local can_kill = false
+						local weapondata = equipment().weapon and maybe_get_itemdata(equipment().weapon)
+						if weapondata and weapondata.attack_stat == "Moxie" then
+							if requires_wand_of_nagamar() and have_item("Wand of Nagamar") then
+								can_kill = true
+							elseif ascensionpath("Avatar of Sneaky Pete") then
+								can_kill = true
+							end
+						end
+						if ascensionpath("Heavy Rains") and have_item("Rain-Doh blue balls") and have_skill("Saucestorm") then
+							script.want_familiar "Warbear Drone"
+							script.maybe_ensure_buffs { "Power Ballad of the Arrowsmith", "Reptilian Fortitude", "Stevedave's Shanty of Superiority" }
+							script.maybe_ensure_buffs { "Patience of the Tortoise", "Seal Clubbing Frenzy", "Mariachi Mood", "Saucemastery" }
+							script.maybe_ensure_buffs { "Disco Fever", "Blubbered Up", "Disco State of Mind" }
+							script.maybe_ensure_buffs { "Astral Shell", "Ghostly Shell" }
+							script.maybe_ensure_buffs { "Empathy", "Leash of Linguini" }
+							script.wear { offhand = "Rain-Doh green lantern" }
+							if maxhp() >= 300 and buffedmoxie() >= 100 then
+								can_survive = true
+								can_kill = true
+							end
+						end
+						if estimate_bonus("Monster Level") <= 0 and can_survive and can_kill then
+							script.force_heal_up()
+							script.ensure_mp(100)
+							if hp() == maxhp() and mp() >= 100 then
+								return true
 							end
 						end
 						return false
@@ -5703,11 +5715,13 @@ local function do_loop(whichday)
 		enable_function_debug_output(true, function(...) do_debug_infoline(...) end)
 	end
 	print("Running ascension automation script...")
-	if autoattack_is_set() then
-		disable_autoattack()
-	end
-	if autoattack_is_set() then
-		stop "Disable your autoattack. The ascension script will handle (most) combats automatically."
+	if ascension_script_option("disable autoattack") then
+		if autoattack_is_set() then
+			disable_autoattack()
+		end
+		if autoattack_is_set() then
+			stop "Disable your autoattack. The ascension script will handle (most) combats automatically."
+		end
 	end
 	cached_stuff.currently_checked = {}
 	local loop = true
@@ -5737,6 +5751,7 @@ local function path_supports_fax_machine()
 end
 
 local ascension_script_options_tbl = {
+	["disable autoattack"] = { yes = "use script macros", no = "use autoattack", default_yes = true, when = function() return autoattack_is_set() end },
 	["stop on imported beer"] = { yes = "stop", no = "drink as fallback booze", default_yes = true },
 	["skip azazel quest"] = { yes = "skip quest", no = "get steel organ" },
 	["manual lvl 9 quest"] = { yes = "stop and do manually", no = "automate" },
@@ -5771,7 +5786,11 @@ function ascension_script_option(name)
 		critical("Unsupported script option: " .. tostring(name))
 	end
 	local opts = ascension["__script.ascension script options"] or {}
-	return opts[name] == "yes"
+	if ascension_script_options_tbl[name].default_yes then
+		return opts[name] ~= "no"
+	else
+		return opts[name] == "yes"
+	end
 end
 
 ascension_automation_setup_href = add_automation_script("setup-ascension-automation", function()

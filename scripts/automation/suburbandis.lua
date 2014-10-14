@@ -6,15 +6,26 @@ add_processor("/fight.php", function()
 	end
 end)
 
-function macro_dis()
+function macro_dis(whichskill)
   return [[
 ]] .. COMMON_MACROSTUFF_START(20, 40) .. [[
 
 ]] .. noodles_action() .. [[
 
-if (monstername Thorax) || (monstername Bat in the Spats)
+if (monstername Bat in the Spats)
   while !times 20
     use clumsiness bark
+  endwhile
+endif
+
+if (monstername Thorax)
+  while !times 20
+    if match "draws back his big fist"
+      use clumsiness bark
+    endif
+    if (!match "draws back his big fist")
+      attack
+    endif
   endwhile
 endif
 
@@ -43,6 +54,12 @@ if (monstername The Thing with No Name)
   endwhile
 endif
 
+if (hasskill ]] .. whichskill .. [[)
+
+  cast ]] .. whichskill .. [[
+
+endif
+
 while !times 5
 ]] .. serpent_action() .. [[
 endwhile
@@ -52,7 +69,7 @@ end
 
 local script = nil
 
-local function automate_dis_zone(zoneid)
+local function automate_dis_zone(zoneid, whichskill)
 	local noncombatchoices = {
 		["Foreshadowing Demon!"] = "Head towards all the trouble",
 		["You Must Choose Your Destruction!"] = "Follow the fists",
@@ -69,7 +86,7 @@ local function automate_dis_zone(zoneid)
 	script.ensure_mp(100)
 	result, resulturl, advagain = autoadventure {
 		zoneid = zoneid,
-		macro = macro_dis,
+		macro = macro_dis(whichskill),
 		noncombatchoices = noncombatchoices,
 	}
 end
@@ -109,13 +126,13 @@ local dis_href = add_automation_script("automate-suburbandis", function()
 		end
 		if not have_item("vanity stone") or not have_item("furious stone") then
 			-- grove: 277
-			automate_dis_zone(277)
+			automate_dis_zone(277, "Torment Plant")
 		elseif not have_item("lecherous stone") or not have_item("jealousy stone") then
 			-- maelstrom: 278
-			automate_dis_zone(278)
+			automate_dis_zone(278, "Pinch Ghost")
 		elseif not have_item("avarice stone") or not have_item("gluttonous stone") then
 			-- glacier: 279
-			automate_dis_zone(279)
+			automate_dis_zone(279, "Tattle")
 		else
 			script.ensure_buffs { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }
 			script.heal_up()

@@ -257,7 +257,7 @@ function get_automation_scripts(cached_stuff)
 		["Artistic Goth Kid"] = { fallback = "Rogue Program" },
 		["Rogue Program"] = { mpregen = true, attack = true, fallback = "Midget Clownfish" },
 		["Jumpsuited Hound Dog"] = { fallback = "Slimeling" },
-		["Frumious Bandersnatch"] = { fallback = "Smiling Rat" },
+		["Frumious Bandersnatch"] = { fallback = "Bloovian Groose" },
 		["Rock Lobster"] = { mpregen = true, attack = true, fallback = "Rogue Program" },
 		["Knob Goblin Organ Grinder"] = { attack = true, fallback = "Llama Lama" },
 		["Midget Clownfish"] = { mpregen = true, attack = true, fallback = "Star Starfish" },
@@ -269,13 +269,15 @@ function get_automation_scripts(cached_stuff)
 		["Exotic Parrot"] = { fallback = "Llama Lama" },
 		["Pair of Stomping Boots"] = { attack = true, fallback = "Slimeling" },
 		["Tickle-Me Emilio"] = { mpregen = true, attack = true, fallback = "Rogue Program" },
-		["Bloovian Groose"] = { fallback = "Rogue Program" },
+		["Bloovian Groose"] = { fallback = "Grim Brother" },
+		["Grim Brother"] = { fallback = "Rogue Program" },
 		["Obtuse Angel"] = { fallback = "Slimeling" },
 		["Reanimated Reanimator"] = { fallback = "Obtuse Angel" },
 		["Reagnimated Gnome"] = { familiarequip = "gnomish housemaid's kgnee", fallback = "Hovering Sombrero" },
 		["Hovering Sombrero"] = { fallback = "(ignore familiar)" },
 		["Angry Jung Man"] = { fallback = "Slimeling" },
 		["Gelatinous Cubeling"] = { fallback = "Slimeling" },
+		["Warbear Drone"] = { attack = true, fallback = "Rogue Program" },
 		["Mad Hatrack with spangly sombrero"] = { id = 82, familiarequip = "spangly sombrero", fallback = "Slimeling even in fist", needsequip = true },
 		["Scarecrow with spangly mariachi pants"] = { id = 152, familiarequip = "spangly mariachi pants", fallback = "Mad Hatrack with spangly sombrero", needsequip = true },
 		["Scarecrow with studded leather boxer shorts"] = { id = 152, familiarequip = "studded leather boxer shorts", needsequip = true, fallback = "Llama Lama" },
@@ -320,14 +322,10 @@ function get_automation_scripts(cached_stuff)
 		end
 		local d = familiar_data[famname]
 		if missing_fams[famname] or (d and d.needsequip and not have_item(d.familiarequip)) then
-			if famname == "Rogue Program" and spleen() < 12 then
-				return raw_want_familiar("Bloovian Groose")
-			else
-				if not familiar_data[famname].fallback or highskill_at_run then
-					critical("No fallback familiar for " .. famname)
-				end
-				return raw_want_familiar(next_famname_input or (d and d.fallback))
+			if not familiar_data[famname].fallback or highskill_at_run then
+				critical("No fallback familiar for " .. famname)
 			end
+			return raw_want_familiar(next_famname_input or (d and d.fallback))
 		end
 		if not d then
 			local df = datafile("familiars")[famname]
@@ -411,6 +409,9 @@ function get_automation_scripts(cached_stuff)
 		elseif (famname == "Slimeling" or famname == "fairy") and not have_gelatinous_cubeling_items() then
 			famname = "Gelatinous Cubeling"
 		end
+		if famname == "Rogue Program" and spleen() < 12 and not script.have_familiar("Rogue Program") then
+			famname = "Bloovian Groose"
+		end
 		if famname == "any" then
 			famname = "Bloovian Groose"
 		end
@@ -423,7 +424,7 @@ function get_automation_scripts(cached_stuff)
 		end
 		if cached_stuff.have_familiars[famname] == nil then
 			print("INFO: checking for familiar", famname)
-			f.want_familiar(famname)
+			switch_familiar(famname)
 			cached_stuff.have_familiars[famname] = (familiar_data[famname].id == familiarid())
 		end
 		return cached_stuff.have_familiars[famname]
@@ -2193,7 +2194,11 @@ endif
 
 		if advs() >= 20 then return end
 
-		if ascensionstatus() ~= "Hardcore" then return end
+		if not ascensionstatus("Hardcore") and ascensionpath("Heavy Rains") then
+			return script.craft_and_drink_quality_booze(5)
+		end
+
+		if not ascensionstatus("Hardcore") then return end
 
 		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
 			if level() >= 6 and get_still_charges() < 2 then
@@ -2261,8 +2266,8 @@ endif
 				table.insert(available_drinks, { ["value"] = value - penalty, ["size"] = d.drunkenness, ["name"] = name, ["amount"] = amount or 1 })
 				local newtodrink, newspace, newturngen = determine_consumable_option(min_space, max_space, available_drinks)
 				table.remove(available_drinks)
-				local old_goodness = space and (turngen / space) or -1
-				local new_goodness = newspace and (newturngen / newspace) or -2
+				local old_goodness = space and (turngen / space) or -2
+				local new_goodness = newspace and (newturngen / newspace) or -1
 				if new_goodness > old_goodness then
 					result, resulturl = parse_result(craftf)
 					have_crafted = true
@@ -3720,15 +3725,8 @@ endif
 				did_action = have_item("Azazel's unicorn")
 			else
 				if count_item("bus pass") < 5 then
-				function macro_backstage()
-					return [[
-]] .. macro_smash_and_graagh .. [[
-
-
-]] .. macro_ppnoodlecannon()
-				end
 					script.bonus_target { "item", "noncombat" }
-					go("sven golly, bus passes: " .. count_item("bus pass"), 243, macro_backstage, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
+					go("sven golly, bus passes: " .. count_item("bus pass"), 243, macro_ppnoodlecannon, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
 				else
 					script.bonus_target { "noncombat" }
 					go("sven golly, getting items", 243, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)

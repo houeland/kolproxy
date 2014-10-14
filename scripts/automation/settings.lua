@@ -302,10 +302,10 @@ function get_ascension_automation_settings(want_bonus)
 			"turtle totem",
 		}
 		tbl.default_equipment.offhand = {
-			"Jarlsberg's pan (Cosmic portal mode)",
-			"Jarlsberg's pan",
-			{ name = "Operation Patriot Shield", check = function() return level() < 13 end },
 			"Bag o' Tricks",
+			"Jarlsberg's pan",
+			"Jarlsberg's pan (Cosmic portal mode)",
+			{ name = "Operation Patriot Shield", check = function() return level() < 13 end },
 			{ name = "A Light that Never Goes Out", check = function() return want_bonus.plusitems end },
 			{ name = "Rain-Doh green lantern", check = function() return not want_bonus.not_casting_spells end },
 			"Operation Patriot Shield",

@@ -76,11 +76,11 @@ aftercore_automation_href = add_automation_script("aftercore-automation", functi
 	automate_aftercore_pulls()
 	automate_aftercore_pulls()
 	automate_aftercore_pulls()
-	pull_storage_items { "antique accordion" }
-	pull_storage_items { "milk of magnesium" }
-	pull_storage_items { "turtle totem" }
-	pull_storage_items { "saucepan" }
-	pull_storage_items { "borrowed time" }
+	pull_storage_item("antique accordion")
+	pull_storage_item("milk of magnesium")
+	pull_storage_item("turtle totem")
+	pull_storage_item("saucepan")
+	pull_storage_item("borrowed time")
 	use_item("borrowed time")
 
 	local function remaining_spleen()
@@ -111,8 +111,8 @@ aftercore_automation_href = add_automation_script("aftercore-automation", functi
 	while remaining_fullness() >= 5 do
 		local f = remaining_fullness()
 		local himeins = { "hot hi mein", "cold hi mein", "stinky hi mein", "spooky hi mein", "sleazy hi mein" }
-		pull_storage_items(himeins)
 		for _, x in ipairs(himeins) do
+			pull_storage_item(x)
 			if have_item(x) and remaining_fullness() >= 5 then
 				script.ensure_buffs { "Got Milk" }
 				script.ensure_buff_turns("Got Milk", remaining_fullness())
@@ -150,7 +150,7 @@ aftercore_automation_href = add_automation_script("aftercore-automation", functi
 		for _, x in ipairs { "Boris's key", "Jarlsberg's key", "Sneaky Pete's key", "digital key", "Richard's star key" } do
 			if have_item(x) then
 				if not have_item("lime") then
-					pull_storage_items { "lime" }
+					pull_storage_item("lime")
 				end
 				cook_items(x, "lime")()
 			end

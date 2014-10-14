@@ -1756,7 +1756,10 @@ endwhile
 ]]
 end
 
-function macro_kill_ns()
+function macro_kill_ns(pt)
+	if script_use_unified_kill_macro() then
+		return macro_kill_monster(pt)
+	end
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 30) .. [[
 
@@ -1851,10 +1854,13 @@ function macro_kill_monster(pt)
 			return monstername() == str
 		end
 		if not pt_monster_name then
+			local monster_name
 			for spantext in pt:gmatch([[<span.-</span>]]) do
 				if spantext:contains("monname") then
-					local monster_name = spantext:match([[<span [^>]*id=['"]monname['"][^>]*>(.-)</span>]]) or monster_name
-					pt_monster_name = monster_name:gsub("^[^ ]* ", "")
+					monster_name = spantext:match([[<span [^>]*id=['"]monname['"][^>]*>(.-)</span>]]) or monster_name
+					if monster_name then
+						pt_monster_name = monster_name:gsub("^[^ ]* ", "")
+					end
 				end
 			end
 		end
@@ -1939,7 +1945,7 @@ cast Saucestorm
 cast Saucestorm
 cast Saucestorm
 
-abort hppercentbelow 50
+abort hppercentbelow 30
 abort mpbelow 50
 
 cast Saucestorm
@@ -1968,7 +1974,7 @@ cast Lunging Thrust-Smack
 cast Lunging Thrust-Smack
 cast Lunging Thrust-Smack
 
-abort hppercentbelow 50
+abort hppercentbelow 30
 abort mpbelow 50
 
 cast Lunging Thrust-Smack
@@ -2009,7 +2015,11 @@ cast Lunging Thrust-Smack
 	elseif monstername("Big Wisnaqua") then
 		return heavy_rains_spell()
 	elseif monstername("The Rain King") then
-		return [[abort heavy rains boss]]
+		if have_equipped_item("Rain-Doh green lantern") then
+			return heavy_rains_spell()
+		else
+			return [[abort heavy rains boss]]
+		end
 	elseif have_skill("Lightning Strike") and heavyrains_lightning() >= 20 and not cfm.Stats.boss then
 		return use_crumbs .. [[
 

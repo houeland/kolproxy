@@ -158,14 +158,6 @@ function drink_item(name)
 	return async_get_page("/inv_booze.php", { pwd = session.pwd, whichitem = get_itemid(name), ajax = 1 })
 end
 
-function pull_storage_items(xs)
-	local pf
-	for _, name in ipairs(xs) do
-		pf = async_post_page("/storage.php", { pwd = session.pwd, action = "pull", ajax = 1, howmany1 = 1, whichitem1 = get_itemid(name) })
-	end
-	return pf
-end
-
 function pull_storage_item(name, qty)
 	return async_post_page("/storage.php", { pwd = session.pwd, action = "pull", ajax = 1, howmany1 = qty or 1, whichitem1 = get_itemid(name) })
 end

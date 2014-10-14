@@ -361,7 +361,7 @@ local cook_key_href = add_automation_script("custom-ascension-checklist-cook-key
 	local whichitem = tonumber(params.whichitem)
 	if whichitem and have_inventory_item(whichitem) then
 		if not have_item("lime") then
-			pull_storage_items { "lime" }
+			pull_storage_item("lime")
 		end
 		return cook_items(whichitem, "lime")()
 	else

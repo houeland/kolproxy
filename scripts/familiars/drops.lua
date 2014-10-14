@@ -46,6 +46,10 @@ local drop_familiars = {
 		message = "dream stuff",
 		short_item_name = "jar",
 	},
+	grimbrother = {
+		message = "finishes an illustrated manuscript with a final flourish",
+		short_item_name = "tale",
+	},
 }
 
 local function counter_name(familiar, info)
@@ -56,9 +60,8 @@ end
 add_printer("/charpane.php", function()
 	local familiar = familiarpicture()
 	local info = drop_familiars[familiar]
-	if info == nil then
-		return
-	end
+	if not info then return end
+
 	local item = get_daily_counter(counter_name(familiar, info))
 
 	local compact = item .. " / " .. 5
