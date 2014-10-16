@@ -60,7 +60,7 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff = do
 		doSERVER_DEBUG "dostateaction"
 		Just jsonobj <- readIORef (latestValidJson_ $ sessionData $ ref)
 		let ai = rawDecodeApiInfo jsonobj
-		statestuff ("character-" ++ (charName ai) ++ ".state.sqlite3") action
+		statestuff ("character-" ++ (charName ai) ++ ".state-json.sqlite3") action
 	luainstancesref <- newIORef $ Data.Map.empty
 	laststoredstateref <- newIORef Nothing
 	processpagestorestatereasonref <- newIORef Nothing

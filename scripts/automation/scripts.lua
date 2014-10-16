@@ -2956,11 +2956,11 @@ endif
 			wear { pants = "Greatest American Pants" }
 			script.get_gap_buff("Super Vision")
 		end
-		if daysthisrun() <= 2 and not ascensionstatus("Hardcore") and not have_buff("Super Vision") then
-			ensure_buffs {}
-			wear {}
-			stop "TODO: Do filthworms [not automated when it's day 2 without super vision]"
-		end
+--		if daysthisrun() <= 2 and not ascensionstatus("Hardcore") and not have_buff("Super Vision") then
+--			ensure_buffs {}
+--			wear {}
+--			stop "TODO: Do filthworms [not automated when it's day 2 without super vision]"
+--		end
 		if have_buff("Filthworm Guard Stench") then
 			go("fight queen", 130, macro_noodlecannon, {}, { "Spirit of Bacon Grease" }, "Hobo Monkey", 30, { equipment = { familiarequip = "sugar shield" } })
 		elseif have_item("filthworm royal guard scent gland") then
