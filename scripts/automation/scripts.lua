@@ -56,14 +56,10 @@ function solve_knapsack(size, datalist)
 	return array, arrayitems
 end
 
-local function is_cursed()
-	return have_buff("Thrice-Cursed") or have_buff("Twice-Cursed") or have_buff("Once-Cursed")
-end
-
 local available_consumable_ignoreids = nil
 function is_ignored_consumable(item)
 	if get_itemid(item) == get_itemid("bag of QWOP") then
-		return not have_skill("Shake It Off") or is_cursed()
+		return not have_skill("Shake It Off") or have_apartment_building_cursed_buff()
 	end
 	if not available_consumable_ignoreids then
 		available_consumable_ignoreids = {}
@@ -835,7 +831,7 @@ function get_automation_scripts(cached_stuff)
 			if maxhp() - hp() >= 70 and have_skill("Cannelloni Cocoon") then
 				ensure_mp(20)
 				cast_skill("Cannelloni Cocoon")
-			elseif have_skill("Shake It Off") and not is_cursed() and maxmp() >= 30 then
+			elseif have_skill("Shake It Off") and not have_apartment_building_cursed_buff() and maxmp() >= 30 then
 				ensure_mp(30)
 				cast_skill("Shake It Off")
 			elseif have_skill("Tongue of the Walrus") then
@@ -882,7 +878,7 @@ function get_automation_scripts(cached_stuff)
 				if challenge == "boris" and hp() / maxhp() >= 0.55 then
 				elseif challenge == "zombie" and hp() / maxhp() >= 0.3 then
 				elseif challenge == "boris" or challenge == "zombie" then
-					if not is_cursed() then
+					if not have_apartment_building_cursed_buff() then
 						use_hottub()
 					end
 					if hp() < maxhp() then
@@ -898,7 +894,7 @@ function get_automation_scripts(cached_stuff)
 							critical "Failed to restore all HP with hot tub!"
 						end
 					end
-				elseif ascensionpath("Avatar of Jarlsberg") and not is_cursed() then
+				elseif ascensionpath("Avatar of Jarlsberg") and not have_apartment_building_cursed_buff() then
 					if hp() / maxhp() <= 0.3 and daysthisrun() == 1 then
 						use_hottub()
 					end
@@ -919,7 +915,7 @@ function get_automation_scripts(cached_stuff)
 
 	function f.force_heal_up()
 		f.heal_up(maxhp())
-		if hp() < maxhp() and not is_cursed() then
+		if hp() < maxhp() and not have_apartment_building_cursed_buff() then
 			use_hottub()
 		end
 		if hp() < maxhp() and challenge ~= "zombie" then
@@ -2050,10 +2046,10 @@ endif
 					did_action = (fullness() == f + 1)
 					return result, resulturl, did_action
 				elseif out_of_advs then
-					if have_item("bag of QWOP") and get_remaining_hottub_uses() >= 2 and not is_cursed() then
+					if have_item("bag of QWOP") and get_remaining_hottub_uses() >= 2 and not have_apartment_building_cursed_buff() then
 						inform "eat bag of qwop"
 						eat_item("bag of QWOP")
-						if have_buff("QWOPped Up") and not is_cursed() then
+						if have_buff("QWOPped Up") and not have_apartment_building_cursed_buff() then
 							use_hottub()
 						end
 						did_action = (fullness() == f + 1)

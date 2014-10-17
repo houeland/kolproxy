@@ -24,6 +24,10 @@ function check_hidden_tavern_access()
 	return have_hidden_tavern_access
 end
 
+function have_apartment_building_cursed_buff()
+	return have_buff("Thrice-Cursed") or have_buff("Twice-Cursed") or have_buff("Once-Cursed")
+end
+
 add_warning {
 	message = "You might want to get Thrice-Cursed first for fighting the boss (by drinking Cursed Punch from The Hidden Tavern).",
 	type = "extra",

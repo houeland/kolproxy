@@ -38,7 +38,7 @@ function pastathrall(name)
 	if id then
 		return pastathrallid() == id
 	else
-		error("Unknow pasta thrall: " .. tostring(name))
+		error("Unknown pasta thrall: " .. tostring(name))
 	end
 end
 
@@ -53,3 +53,12 @@ function estimate_current_pastathrall_bonuses()
 		return make_bonuses_table {}
 	end
 end
+
+add_warning {
+	message = "A Vampieroghi can remove the Thrice-Cursed, Twice-Cursed, and Once-Cursed buffs.",
+	type = "extra",
+	check = function()
+		if not pastathrall("Vampieroghi") then return end
+		return have_apartment_building_cursed_buff()
+	end,
+}

@@ -156,10 +156,6 @@ local function automate_day(whichday)
 	end
 	local max_petehate = max_petelove
 
-	local function is_cursed()
-		return have_buff("Thrice-Cursed") or have_buff("Twice-Cursed") or have_buff("Once-Cursed")
-	end
-
 	challenge = nil
 	if ascensionpath("Way of the Surprising Fist") then
 		challenge = "fist"
@@ -1658,7 +1654,7 @@ endif
 		when = ascensionpath("Avatar of Sneaky Pete") and
 			have_skill("Shake It Off") and
 			have_buff("QWOPped Up") and
-			not is_cursed(),
+			not have_apartment_building_cursed_buff(),
 		task = {
 			message = "shake off qwop",
 			nobuffing = true,

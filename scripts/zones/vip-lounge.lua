@@ -190,7 +190,7 @@ add_warning {
 	type = "extra",
 	check = function()
 		if params.action ~= "hottub" then return end
-		return have_buff("Thrice-Cursed") or have_buff("Twice-Cursed") or have_buff("Once-Cursed")
+		return have_apartment_building_cursed_buff()
 	end,
 }
 

@@ -87,9 +87,8 @@ add_warning {
 	path = "/skills.php",
 	type = "extra",
 	check = function()
-		if tonumber(params.whichskill) == get_skillid("Shake It Off") then
-			return have_buff("Thrice-Cursed") or have_buff("Twice-Cursed") or have_buff("Once-Cursed")
-		end
+		if tonumber(params.whichskill) ~= get_skillid("Shake It Off") then return end
+		return have_apartment_building_cursed_buff()
 	end,
 }
 
@@ -98,9 +97,8 @@ add_warning {
 	path = "/inv_equip.php",
 	type = "extra",
 	check = function()
-		if params.type == "shirt" then
-			return (have_equipped_item("Sneaky Pete's leather jacket (collar popped)") or have_equipped_item("Sneaky Pete's leather jacket")) and (petehate() > 30 or petelove() > 30)
-		end
+		if params.type ~= "shirt" then return end
+		return (have_equipped_item("Sneaky Pete's leather jacket (collar popped)") or have_equipped_item("Sneaky Pete's leather jacket")) and (petehate() > 30 or petelove() > 30)
 	end,
 }
 
