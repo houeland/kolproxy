@@ -3005,6 +3005,18 @@ endif
 
 	if script_want_2_day_SCHR() then
 		add_task {
+			when = not have_item("pool skimmer") and
+				meat() >= 1000,
+			task = {
+				message = "buy pool skimmer",
+				action = function()
+					buy_item("pool skimmer")
+					did_action = have_item("pool skimmer")
+				end,
+			}
+		}
+
+		add_task {
 			prereq = need_encryption_key(),
 			f = script.unlock_cobbs_knob,
 			message = "unlock cobbs knob",
@@ -3123,7 +3135,6 @@ endif
 				level() < 8, -- not unlocked peak
 			task = {
 				message = "make ninja snowman assassin and copy it",
-				familiar = "Reanimated Reanimator",
 				action = function()
 					add_macro_target("itemcopy", { ["ninja snowman assassin"] = true })
 					script.ensure_buffs {}

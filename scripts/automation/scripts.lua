@@ -1204,6 +1204,9 @@ function get_automation_scripts(cached_stuff)
 			if ((mainstat_type("Mysticality") and level() >= 9) or (level() >= 11) or (highskill_at_run and mmj_available)) and level() < 13 and challenge ~= "fist" then
 				table.insert(xs, "Ur-Kel's Aria of Annoyance")
 			end
+			if mainstat_type("Mysticality") and script_want_2_day_SCHR() then
+				table.insert(xs, "Wry Smile")
+			end
 		end
 		if challenge == "fist" and not even_in_fist then
 			local function tabledel(t)
@@ -3740,32 +3743,15 @@ endif
 				result, resulturl = post_page("/pandamonium.php", { action = "mourn", preaction = "observe" })
 				did_action = have_item("Azazel's lollipop")
 			else
-				function macro_laughfloor()
-					return [[
-if monstername imp
-]] .. macro_smash_and_graagh .. [[
-
-
-]] .. macro_ppnoodlecannon() .. [[
-
-  goto m_done
-endif
-
-]] .. macro_noodleserpent() .. [[
-
-mark m_done
-
-]]
-				end
 				if challenge == "fist" then
 					macro_laughfloor = macro_fist
 				end
 				if count_item("imp air") < 5 then
 					script.bonus_target { "item", "combat" }
-					go("mourn, imp air: " .. count_item("imp air"), 242, macro_laughfloor, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
+					go("mourn, imp air: " .. count_item("imp air"), 242, macro_ppnoodlecannon, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
 				else
 					script.bonus_target { "combat" }
-					go("mourn, getting bosses", 242, macro_laughfloor, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)
+					go("mourn, getting bosses", 242, macro_noodleserpent, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "Rogue Program", 35)
 				end
 			end
 		elseif not have_item("Azazel's tutu") then

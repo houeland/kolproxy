@@ -67,7 +67,6 @@ register_setting {
 	group = "charpane",
 	default_level = "enthusiast",
 	update_charpane = true,
-	beta_version = true,
 }
 
 register_setting {

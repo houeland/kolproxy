@@ -1933,6 +1933,10 @@ cast Air Dirty Laundry
 	local function heavy_rains_spell()
 		if have_skill("Saucestorm") then
 			return [[
+if hasskill Curse of Weaksauce
+  cast Curse of Weaksauce
+endif
+
 ]] .. use_crumbs .. [[
 
 ]] .. use_raindoh_flyers .. [[
@@ -2045,7 +2049,6 @@ cast lunging thrust-smack
 cast lunging thrust-smack
 cast lunging thrust-smack
 ]]
---	elseif playerclass("Sauceror") and have_skill("Itchy Curse Finger") and have_skill("Curse of Weaksauce") and not cfm.Stats.staggerimmune then
 	elseif playerclass("Sauceror") and have_skill("Itchy Curse Finger") and have_skill("Curse of Weaksauce") and have_skill("Saucegeyser") then
 		return [[
 cast Curse of Weaksauce

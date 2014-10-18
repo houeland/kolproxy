@@ -586,6 +586,14 @@ local function bl_charpane_buff_lines(lines)
 	else
 		table.insert(lines, [[<table id="chit_effects" class="chit_brick nospace">]])
 	end
+	table.insert(lines, [[
+
+<col class="icon"></col>
+<col class="info"></col>
+<col class="shrug"></col>
+<col class="powerup"></col>
+
+]])
 	if bl_compact() and tonumber(api_flag_config().compacteffects) == 1 then
 	else
 		table.insert(lines, [[<thead>

@@ -621,28 +621,28 @@ padding: 0px;
 #chit_effects.compact {
 	table-layout: fixed;
 }
-#chit_effects.compact td.icon {
+#chit_effects.compact .icon {
 	text-align:left;
 	width:15px;
 	height:15px;
 	padding:1px 2px;
 }
-#chit_effects.compact td.icon img {
+#chit_effects.compact .icon img {
 	border:0px;
 	width:15px;
 	height:15px;
 }
-#chit_effects.compact td.noshrug, #chit_effects.compact td.shrug, #chit_effects.compact td.infinity {
+#chit_effects.compact .noshrug, #chit_effects.compact .shrug, #chit_effects.compact .infinity {
 	font-size: 11px;
 	text-align:right;
 	padding:0px 2px;
 	width:3em;
 }
-#chit_effects.compact td.powerup {
+#chit_effects.compact .powerup {
 	width:15px;
 	text-align:center;
 }
-#chit_effects.compact td.info div {
+#chit_effects.compact .info div {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
