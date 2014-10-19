@@ -82,10 +82,9 @@ local function automate_day(whichday)
 		result = "Tried to perform: " .. tostring(msg)
 		add_error_trace_step(msg)
 		local mpstr = string.format("%s / %s MP", mp(), maxmp())
-		if challenge == "zombie" then
+		if ascensionpath("Zombie Slayer") then
 			mpstr = string.format("%s horde", horde_size())
-		end
-		if ascensionpath("Avatar of Sneaky Pete") then
+		elseif ascensionpath("Avatar of Sneaky Pete") then
 			mpstr = mpstr .. ", " .. petelove() - petehate() .. " love"
 		end
 		local formatted = string.format("[%s] %s (level %s.%02d, %s turns remaining, %s full, %s drunk, %s spleen, %s meat, %s / %s HP, %s)", turnsthisrun(), tostring(msg), level(), level_progress() * 100, advs(), fullness(), drunkenness(), spleen(), meat(), hp(), maxhp(), mpstr)
@@ -868,7 +867,7 @@ endif
 	add_task {
 		when = challenge == "zombie" and horde_size() < 100 and have_skill("Lure Minions") and count_spare_brains() > 0,
 		task = {
-			message = "lure zombies",
+			message = "lure minions",
 			hide_message = true,
 			nobuffing = true,
 			action = function()
@@ -881,7 +880,7 @@ endif
 
 				for _, x in ipairs(options) do
 					if have_item(x.name) then
-						cast_skillid(12002, 1)
+						cast_skill("Lure Minions")
 						async_get_page("/choice.php", { forceoption = 0 })
 						async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 599, option = x.option, quantity = math.min(10, count_spare_brains(), count_item(x.name)) })
 						async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 599, option = 5 })
@@ -2561,7 +2560,7 @@ endif
 	}
 
 	add_task {
-		when = not have_item("seal tooth") and meat() >= 2000,
+		when = not have_item("seal tooth") and challenge ~= "zombie" and meat() >= 2000,
 		task = tasks.get_seal_tooth,
 	}
 

@@ -252,7 +252,15 @@ function get_ascension_automation_settings(want_bonus)
 			},
 			familiarequip = {
 				{ name = "miniature life preserver", check = function() return ascensionpath("Heavy Rains") end },
+				{ name = "bag of many confections", check = function() return familiar("Stocking Mimic") end },
 				"astral pet sweater",
+				{ name = "gnomish housemaid's kgnee", check = function() return familiar("Reagnimated Gnome") end },
+				{ name = "fixed-gear bicycle", check = function() return familiar("Mini-Hipster") end },
+				{ name = "bugged balaclava", check = function() return familiar("Baby Bugged Bugbear") end },
+				{ name = "spangly sombrero", check = function() return familiar("Mad Hatrack") end },
+				{ name = "spangly mariachi pants", check = function() return familiar("Fancypants Scarecrow") end },
+				{ name = "studded leather boxer shorts", check = function() return familiar("Fancypants Scarecrow") end },
+				{ name = "Boss Bat britches", check = function() return familiar("Fancypants Scarecrow") end },
 			}
 		}
 	}
