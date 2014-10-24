@@ -1162,6 +1162,7 @@ endif
 	add_spleen_item_task("groose grease", 4, 0)
 	add_spleen_item_task("agua de vida", 4, 4)
 	add_spleen_item_task("coffee pixie stick", 4, 4)
+	add_spleen_item_task("grim fairy tale", 4, 4)
 
 	add_task {
 		when = estimate_max_spleen() - spleen() >= 4 and have_item("Game Grid token") and level() >= 4,
