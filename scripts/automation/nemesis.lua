@@ -359,7 +359,24 @@ endif
 	end
 end
 
+function try_killing_nemesis()
+	script.bonus_target { "easy combat" }
+	script.ensure_buffs {}
+	script.wear { weapon = "17-alarm Saucepan" }
+	script.ensure_mp(50)
+	fought = false
+	result, resulturl = get_page("/volcanoisland.php", { pwd = session.pwd, action = "tniat" })
+	if locked() then
+		fought = true
+	end
+	result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_noodleserpent)
+	return fought
+end
+
 function automate_S_nemesis_island()
+	if try_killing_nemesis() then
+		return
+	end
 	nemesis_try_sauceror_potions()
 	if have_buff("Slimeform") then
 		stop "TODO: kill nemesis"

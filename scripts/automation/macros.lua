@@ -1933,6 +1933,10 @@ cast Air Dirty Laundry
 	local function heavy_rains_spell()
 		if have_skill("Saucestorm") then
 			return [[
+if hasskill Curse of Weaksauce
+	cast Curse of Weaksauce
+endif
+
 ]] .. use_crumbs .. [[
 
 ]] .. use_raindoh_flyers .. [[

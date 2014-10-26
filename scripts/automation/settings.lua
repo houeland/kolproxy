@@ -172,6 +172,7 @@ function get_ascension_automation_settings(want_bonus)
 			},
 			pants = {
 				{ name = "stinky cheese diaper", check = function() return want_bonus.rollover_adventures end },
+				{ name = "Vicar's Tutu", check = function() return want_bonus.rollover_adventures end },
 				"Pantsgiving",
 				{ name = "stinky cheese diaper", check = function() return not want_bonus.easy_combat end },
 				"Brimstone Boxers",

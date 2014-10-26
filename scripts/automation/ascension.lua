@@ -5218,10 +5218,11 @@ use ]] .. get_lair_tower_monster_items()[level] .. [[
 						if ascensionpath("Heavy Rains") and have_item("Rain-Doh blue balls") and have_skill("Saucestorm") then
 							script.want_familiar "Warbear Drone"
 							script.maybe_ensure_buffs { "Power Ballad of the Arrowsmith", "Reptilian Fortitude", "Stevedave's Shanty of Superiority" }
-							script.maybe_ensure_buffs { "Patience of the Tortoise", "Seal Clubbing Frenzy", "Mariachi Mood", "Saucemastery" }
+							script.maybe_ensure_buffs { "Patience of the Tortoise", "Seal Clubbing Frenzy", "Mariachi Mood", "Saucemastery", "Rage of the Reindeer" }
 							script.maybe_ensure_buffs { "Disco Fever", "Blubbered Up", "Disco State of Mind" }
-							script.maybe_ensure_buffs { "Astral Shell", "Ghostly Shell" }
+							script.maybe_ensure_buffs { "Astral Shell", "Ghostly Shell", "Stiff Upper Lip" }
 							script.maybe_ensure_buffs { "Empathy", "Leash of Linguini" }
+							script.maybe_ensure_buffs { "Puddingskin", "Fishy Fortification" }
 							script.wear { offhand = "Rain-Doh green lantern" }
 							if maxhp() >= 300 and buffedmoxie() >= 100 then
 								can_survive = true
