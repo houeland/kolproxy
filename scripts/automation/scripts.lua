@@ -1744,8 +1744,8 @@ endif
 	function f.coffee_pixie_stick()
 		inform "using coffee pixie stick"
 		async_get_page("/town_wrong.php")
-		async_get_page("/arcade.php", { action = "skeeball", pwd = get_pwd() })
-		async_post_page("/arcade.php", { action = "redeem", whichitem = tostring(get_itemid("coffee pixie stick")), quantity = 1 })
+		async_get_page("/place.php", { whichplace = "arcade", action="arcade_skeeball" })
+		buy_item("coffee pixie stick")
 		if have_item("coffee pixie stick") then
 			local a = advs()
 			set_result(use_item("coffee pixie stick"))
@@ -1763,8 +1763,8 @@ endif
 	function f.finger_cuffs()
 		inform "buying finger cuffs"
 		async_get_page("/town_wrong.php")
-		async_get_page("/arcade.php", { action = "skeeball", pwd = get_pwd() })
-		result, resulturl = post_page("/arcade.php", { action = "redeem", whichitem = get_itemid("finger cuffs"), quantity = 10 })
+		async_get_page("/place.php", { whichplace = "arcade", action="arcade_skeeball" })
+		buy_item("finger cuffs", 10)
 		if count_item("finger cuffs") >= 10 then
 			did_action = true
 			return result, resulturl, did_action
