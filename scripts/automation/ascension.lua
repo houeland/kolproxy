@@ -82,10 +82,9 @@ local function automate_day(whichday)
 		result = "Tried to perform: " .. tostring(msg)
 		add_error_trace_step(msg)
 		local mpstr = string.format("%s / %s MP", mp(), maxmp())
-		if challenge == "zombie" then
+		if ascensionpath("Zombie Slayer") then
 			mpstr = string.format("%s horde", horde_size())
-		end
-		if ascensionpath("Avatar of Sneaky Pete") then
+		elseif ascensionpath("Avatar of Sneaky Pete") then
 			mpstr = mpstr .. ", " .. petelove() - petehate() .. " love"
 		end
 		local formatted = string.format("[%s] %s (level %s.%02d, %s turns remaining, %s full, %s drunk, %s spleen, %s meat, %s / %s HP, %s)", turnsthisrun(), tostring(msg), level(), level_progress() * 100, advs(), fullness(), drunkenness(), spleen(), meat(), hp(), maxhp(), mpstr)
@@ -155,10 +154,6 @@ local function automate_day(whichday)
 		end
 	end
 	local max_petehate = max_petelove
-
-	local function is_cursed()
-		return have_buff("Thrice-Cursed") or have_buff("Twice-Cursed") or have_buff("Once-Cursed")
-	end
 
 	challenge = nil
 	if ascensionpath("Way of the Surprising Fist") then
@@ -872,7 +867,7 @@ endif
 	add_task {
 		when = challenge == "zombie" and horde_size() < 100 and have_skill("Lure Minions") and count_spare_brains() > 0,
 		task = {
-			message = "lure zombies",
+			message = "lure minions",
 			hide_message = true,
 			nobuffing = true,
 			action = function()
@@ -885,7 +880,7 @@ endif
 
 				for _, x in ipairs(options) do
 					if have_item(x.name) then
-						cast_skillid(12002, 1)
+						cast_skill("Lure Minions")
 						async_get_page("/choice.php", { forceoption = 0 })
 						async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 599, option = x.option, quantity = math.min(10, count_spare_brains(), count_item(x.name)) })
 						async_get_page("/choice.php", { pwd = get_pwd(), whichchoice = 599, option = 5 })
@@ -1658,7 +1653,7 @@ endif
 		when = ascensionpath("Avatar of Sneaky Pete") and
 			have_skill("Shake It Off") and
 			have_buff("QWOPped Up") and
-			not is_cursed(),
+			not have_apartment_building_cursed_buff(),
 		task = {
 			message = "shake off qwop",
 			nobuffing = true,
@@ -2565,7 +2560,7 @@ endif
 	}
 
 	add_task {
-		when = not have_item("seal tooth") and meat() >= 2000,
+		when = not have_item("seal tooth") and challenge ~= "zombie" and meat() >= 2000,
 		task = tasks.get_seal_tooth,
 	}
 
@@ -3009,6 +3004,18 @@ endif
 
 	if script_want_2_day_SCHR() then
 		add_task {
+			when = not have_item("pool skimmer") and
+				meat() >= 1000,
+			task = {
+				message = "buy pool skimmer",
+				action = function()
+					buy_item("pool skimmer")
+					did_action = have_item("pool skimmer")
+				end,
+			}
+		}
+
+		add_task {
 			prereq = need_encryption_key(),
 			f = script.unlock_cobbs_knob,
 			message = "unlock cobbs knob",
@@ -3127,7 +3134,6 @@ endif
 				level() < 8, -- not unlocked peak
 			task = {
 				message = "make ninja snowman assassin and copy it",
-				familiar = "Reanimated Reanimator",
 				action = function()
 					add_macro_target("itemcopy", { ["ninja snowman assassin"] = true })
 					script.ensure_buffs {}

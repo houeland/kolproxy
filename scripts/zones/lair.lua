@@ -1247,6 +1247,11 @@ add_always_warning("/lair6.php", function()
 	if tonumber(params.place) == 6 and ascensionpath("Avatar of Sneaky Pete") and drunkenness() < estimate_max_safe_drunkenness() then
 		return "You might want to drink up to fill your remaining liver space before you free the king and lose the extra capacity.", "break prism in aosp with spare liver"
 	end
+	if tonumber(params.place) == 6 and ascensionpath("Heavy Rains") then
+		if (heavyrains_thunder() or 0) >= 20 or (heavyrains_rain() or 0) >= 10 or (heavyrains_lightning() or 0) >= 10 then
+			return "You might want to use up your Heavy Rains resources before you free the king and lose them.", "break prism in hr with spare resources"
+		end
+	end
 end)
 
 add_printer("/lair6.php", function()

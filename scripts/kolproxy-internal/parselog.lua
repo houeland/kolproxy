@@ -30,9 +30,9 @@ local xmeta = { __index = function(t, k)
 			end
 		end
 		t[k] = table.concat(rettbl, " #+# ")
-	elseif k == "timestamp" then
-		local tstring = get_line_text(t.idx, "time")
-		t[k] = time_to_number(tstring)
+--	elseif k == "timestamp" then
+--		local tstring = get_line_text(t.idx, "time")
+--		t[k] = time_to_number(tstring)
 	end
 	return rawget(t, k)
 end }
@@ -169,8 +169,8 @@ local function fix_inventory(inv)
 	return fixed
 end
 
-local last_timestamp = 1
-local last_timestamp_raw = nil
+--local last_timestamp = 1
+--local last_timestamp_raw = nil
 
 -- TODO: fix gained/lost item not being silly about it just being equipped/unequipped
 for _, xidx in ipairs(tbl) do
@@ -350,18 +350,18 @@ for _, xidx in ipairs(tbl) do
 				print(xtbl.statusafter.turnsthisrun, xtbl.title, xtbl.zonename, x.idx)
 			end
 
-			local timestamp
-			do
-				local timestamp_raw = x.timestamp
-				local ts_diff = 0
-				if last_timestamp_raw then
-					ts_diff = math.min(5 * 60, timestamp_raw - last_timestamp_raw)
-				end
-				timestamp = last_timestamp + ts_diff
-				last_timestamp = timestamp
-				last_timestamp_raw = timestamp_raw
-			end
-			xtbl.timestamp = math.floor(timestamp + 0.5)
+--			local timestamp
+--			do
+--				local timestamp_raw = x.timestamp
+--				local ts_diff = 0
+--				if last_timestamp_raw then
+--					ts_diff = math.min(5 * 60, timestamp_raw - last_timestamp_raw)
+--				end
+--				timestamp = last_timestamp + ts_diff
+--				last_timestamp = timestamp
+--				last_timestamp_raw = timestamp_raw
+--			end
+--			xtbl.timestamp = math.floor(timestamp + 0.5)
 
 			table.insert(ret_log_tbl, xtbl)
 		end

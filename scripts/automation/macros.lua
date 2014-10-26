@@ -2049,7 +2049,6 @@ cast lunging thrust-smack
 cast lunging thrust-smack
 cast lunging thrust-smack
 ]]
---	elseif playerclass("Sauceror") and have_skill("Itchy Curse Finger") and have_skill("Curse of Weaksauce") and not cfm.Stats.staggerimmune then
 	elseif playerclass("Sauceror") and have_skill("Itchy Curse Finger") and have_skill("Curse of Weaksauce") and have_skill("Saucegeyser") then
 		return [[
 cast Curse of Weaksauce

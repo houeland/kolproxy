@@ -241,7 +241,11 @@ local function bl_charpane_mystats_lines(lines)
 	table.insert(lines, [[</tbody>]])
 	table.insert(lines, [[<tbody>]])
 	table.insert(lines, chit_progressline("HP", string.format([[<a href="%s">%i</a>&nbsp;/&nbsp;<a href="%s">%i</a>]], script_heal_up_href { pwd = session.pwd }, hp(), script_heal_up_href { pwd = session.pwd, force_heal_up = 1 }, maxhp()), color_progressbar(hp(), maxhp(), "blue", "green")))
-	table.insert(lines, chit_progressline("MP", string.format([[%i&nbsp;/&nbsp;%i]], mp(), maxmp()), color_progressbar(mp(), maxmp(), "blue", "green")))
+	if ascensionpath("Zombie Slayer") then
+		table.insert(lines, chit_progressline("Horde", horde_size(), color_progressbar(0, 100, "blue", "green")))
+	else
+		table.insert(lines, chit_progressline("MP", string.format([[%i&nbsp;/&nbsp;%i]], mp(), maxmp()), color_progressbar(mp(), maxmp(), "blue", "green")))
+	end
 	table.insert(lines, [[</tbody>]])
 	table.insert(lines, [[</table>]])
 	local resources = bl_path_resources_compact()
@@ -284,7 +288,11 @@ local function bl_compact_stats_bars(lines)
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(hp(), maxhp(), { [0] = "red", [50] = "orange", [75] = "green" })))
 	table.insert(lines, "</tr><tr>")
-	table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">MP</a></td><td class="info">%s&nbsp;/&nbsp;%s </td>]], maximizer_link("Max MP"), display_value(mp()), display_value(maxmp())))
+	if ascensionpath("Zombie Slayer") then
+		table.insert(lines, string.format([[<td class="label">Horde</td><td class="info">%s</td>]], horde_size()))
+	else
+		table.insert(lines, string.format([[<td class="label"><a href="%s" target="mainpane">MP</a></td><td class="info">%s&nbsp;/&nbsp;%s</td>]], maximizer_link("Max MP"), display_value(mp()), display_value(maxmp())))
+	end
 	table.insert(lines, "</tr><tr>")
 	table.insert(lines, string.format([[<td class='statbar' colspan='2'>%s</td>]], custom_progressbar(mp(), maxmp(), { [0] = "red", [50] = "orange", [75] = "green" })))
 	table.insert(lines, "</tr><tr>")
@@ -586,6 +594,14 @@ local function bl_charpane_buff_lines(lines)
 	else
 		table.insert(lines, [[<table id="chit_effects" class="chit_brick nospace">]])
 	end
+	table.insert(lines, [[
+
+<col class="icon"></col>
+<col class="info"></col>
+<col class="shrug"></col>
+<col class="powerup"></col>
+
+]])
 	if bl_compact() and tonumber(api_flag_config().compacteffects) == 1 then
 	else
 		table.insert(lines, [[<thead>

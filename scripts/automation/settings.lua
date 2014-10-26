@@ -253,7 +253,15 @@ function get_ascension_automation_settings(want_bonus)
 			},
 			familiarequip = {
 				{ name = "miniature life preserver", check = function() return ascensionpath("Heavy Rains") end },
+				{ name = "bag of many confections", check = function() return familiar("Stocking Mimic") end },
 				"astral pet sweater",
+				{ name = "gnomish housemaid's kgnee", check = function() return familiar("Reagnimated Gnome") end },
+				{ name = "fixed-gear bicycle", check = function() return familiar("Mini-Hipster") end },
+				{ name = "bugged balaclava", check = function() return familiar("Baby Bugged Bugbear") end },
+				{ name = "spangly sombrero", check = function() return familiar("Mad Hatrack") end },
+				{ name = "spangly mariachi pants", check = function() return familiar("Fancypants Scarecrow") end },
+				{ name = "studded leather boxer shorts", check = function() return familiar("Fancypants Scarecrow") end },
+				{ name = "Boss Bat britches", check = function() return familiar("Fancypants Scarecrow") end },
 			}
 		}
 	}
@@ -306,8 +314,10 @@ function get_ascension_automation_settings(want_bonus)
 			"Bag o' Tricks",
 			"Jarlsberg's pan",
 			"Jarlsberg's pan (Cosmic portal mode)",
-			{ name = "Operation Patriot Shield", check = function() return level() < 13 end },
 			{ name = "A Light that Never Goes Out", check = function() return want_bonus.plusitems end },
+			{ name = "Operation Patriot Shield", check = function() return level() < 13 end },
+			{ name = "Rain-Doh green lantern", check = function() return want_bonus.easy_combat end },
+			"pool skimmer",
 			{ name = "Rain-Doh green lantern", check = function() return not want_bonus.not_casting_spells end },
 			"Operation Patriot Shield",
 			"astral shield",
