@@ -2473,13 +2473,16 @@ endif
 			local camppt = get_page("/bigisland.php", { place = "camp", whichcamp = 2 })
 			if camppt:contains("You don't have any quarters on file") then
 				inform "fight hippy boss"
+				script.bonus_target { "easy combat" }
+				ensure_buffs { "Spirit of Bacon Grease", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
+				maybe_ensure_buffs { "Mental A-cue-ity" }
 				fam "Frumious Bandersnatch"
 				f.heal_up()
 				if challenge == "boris" then
 					async_post_page("/campground.php", { action = "telescopehigh" })
 					script.maybe_ensure_buffs { "Billiards Belligerence" }
 					script.ensure_buffs { "Go Get 'Em, Tiger!", "Butt-Rock Hair" }
-					use_hottub()
+					script.force_heal_up()
 					if have_buff("Billiards Belligerence") and have_buff("Starry-Eyed") and hp() / maxhp() >= 0.9 then
 					else
 						stop "TODO: Fight hippy boss in Boris"
@@ -2495,8 +2498,6 @@ endif
 					end
 				end
 				ensure_mp(150)
-				ensure_buffs { "Spirit of Bacon Grease", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
-				maybe_ensure_buffs { "Mental A-cue-ity" }
 				async_get_page("/bigisland.php", { place = "camp", whichcamp = 1 })
 				result, resulturl = async_get_page("/bigisland.php", { action = "bossfight", pwd = get_pwd() })()
 				result, resulturl, did_action = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(25))
@@ -2545,9 +2546,8 @@ endif
 			local junkmanptf = async_get_page("/bigisland.php", { action = "junkman", pwd = get_pwd() })
 			local pyroptf = async_get_page("/bigisland.php", { place = "lighthouse", action = "pyro", pwd = get_pwd() })
 			if concertptf():contains("has already taken the stage") and junkmanptf():contains("next shipment of cars ready") and pyroptf():contains("gave you the big boom today") then
-				inform "pick up padl phone"
-				result, resulturl, advagain = autoadventure { zoneid = 132 }
-				did_action = have_item("PADL Phone")
+				cached_stuff.finished_war_sidequests = true
+				did_action = true
 			else
 				stop "Not done with war sidequests when starting to fight war"
 			end

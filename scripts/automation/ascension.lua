@@ -4794,7 +4794,7 @@ endif
 	}
 
 	add_task {
-		prereq = quest_text("now the Council wants you to finish it") and have_item("PADL Phone"),
+		prereq = quest_text("now the Council wants you to finish it") and cached_stuff.finished_war_sidequests,
 		f = function()
 			if have_item("BitterSweetTarts") and not have_buff("Full of Wist") then
 				use_item("BitterSweetTarts")
