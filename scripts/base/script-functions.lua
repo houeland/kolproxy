@@ -127,7 +127,7 @@ do
 	local function add_raw_adventure_warning(f)
 		localtable.insert(__raw_adventure_warnings, f)
 		__raw_add_warning("/adventure.php", function()
-			return f(tonumber(params.snarfblat))
+			return f(requested_zone_id())
 		end)
 		__raw_add_warning("/mining.php", function()
 			return f("mining")
@@ -145,7 +145,7 @@ do
 	local function add_raw_extra_adventure_warning(f)
 		localtable.insert(__raw_extra_adventure_warnings, f)
 		__raw_add_extra_warning("/adventure.php", function()
-			return f(tonumber(params.snarfblat))
+			return f(requested_zone_id())
 		end)
 		__raw_add_extra_warning("/mining.php", function()
 			return f("mining")
@@ -240,7 +240,7 @@ do
 		local path = tbl.path or "/adventure.php"
 		local function f()
 			if tbl.when == "ascension" and freedralph() then return end
-			local zoneid = tonumber(params.snarfblat)
+			local zoneid = requested_zone_id()
 			if want_zoneids and not want_zoneids[zoneid] then return end
 			local msg = tbl.message
 			local warnid = warnprefix .. "/" .. msg
@@ -686,4 +686,8 @@ function is_twohanded_weapon(item)
 	local data = maybe_get_itemdata(item)
 	local hands = (data or {}).weapon_hands or 0
 	return hands >= 2
+end
+
+function requested_zone_id()
+	return tonumber(params.whichzone) or tonumber(params.snarfblat)
 end

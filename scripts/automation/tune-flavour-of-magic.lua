@@ -44,7 +44,7 @@ end
 add_interceptor("/adventure.php", function()
 	if not setting_enabled("automatically tune flavour of magic") then return end
 	if not have_skill("Flavour of Magic") then return end
-	local zoneid = tonumber(params.snarfblat)
+	local zoneid = requested_zone_id()
 	if not zoneid then return end
 	for _, x in pairs(datafile("zones")) do
 		if zoneid == x.zoneid then

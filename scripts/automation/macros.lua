@@ -1934,7 +1934,7 @@ cast Air Dirty Laundry
 		if have_skill("Saucestorm") then
 			return [[
 if hasskill Curse of Weaksauce
-  cast Curse of Weaksauce
+	cast Curse of Weaksauce
 endif
 
 ]] .. use_crumbs .. [[

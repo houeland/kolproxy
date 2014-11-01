@@ -1,7 +1,7 @@
 -- spooky forest
 
 add_interceptor("/adventure.php", function()
-	if tonumber(params.snarfblat) == get_zoneid("The Spooky Forest") then
+	if requested_zone_id() == get_zoneid("The Spooky Forest") then
 		if session["unlocked hidden temple"] then return end
 		local pt = get_page("/woods.php")
 		session["unlocked hidden temple"] = pt:contains("The Hidden Temple")

@@ -32,7 +32,7 @@ if path == "/fight.php" then
 end
 
 if requestpath == "/adventure.php" then
-	local z = tonumber(params.snarfblat)
+	local z = requested_zone_id()
 	if z then -- TODO: can be slow because it forces API load. Does it still do that?
 		fight.zone = z
 		session["adventure.lastzone"] = z

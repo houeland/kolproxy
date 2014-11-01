@@ -67,10 +67,11 @@ add_warning {
 	path = "/adventure.php",
 	type = "extra",
 	check = function(zoneid)
-		local zone_data = maybe_get_zone_data(zoneid)
-		if zone_data and zone_data.terrain == "outdoor" and get_water_level(zoneid) == 6 then
-			if get_wanderer_turn("Rain monster") and turnsthisrun() >= get_wanderer_turn("Rain monster") then
-				return mp() - 50 >= 0.75 * hp() or mp() >= 100
+		if not ascensionpath("Heavy Rains") then return end
+		if get_wanderer_turn("Rain monster") and turnsthisrun() >= get_wanderer_turn("Rain monster") then
+			if mp() - 50 >= 0.75 * hp() or mp() >= 100 then
+				local zone_data = maybe_get_zone_data(zoneid)
+				return zone_data and zone_data.terrain == "outdoor" and get_water_level(zoneid) == 6
 			end
 		end
 	end,
@@ -81,10 +82,11 @@ add_warning {
 	path = "/adventure.php",
 	type = "warning",
 	check = function(zoneid)
-		local zone_data = maybe_get_zone_data(zoneid)
-		if zone_data and zone_data.terrain == "outdoor" and get_water_level(zoneid) == 6 then
-			if get_wanderer_turn("Rain monster") and turnsthisrun() >= get_wanderer_turn("Rain monster") then
-				return mp() - 50 >= hp()
+		if not ascensionpath("Heavy Rains") then return end
+		if get_wanderer_turn("Rain monster") and turnsthisrun() >= get_wanderer_turn("Rain monster") then
+			if mp() - 50 >= hp() then
+				local zone_data = maybe_get_zone_data(zoneid)
+				return zone_data and zone_data.terrain == "outdoor" and get_water_level(zoneid) == 6
 			end
 		end
 	end,

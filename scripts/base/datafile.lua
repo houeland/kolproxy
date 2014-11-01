@@ -260,20 +260,31 @@ end
 --	return info
 --end
 
-function get_zoneid(name)
-	if type(name) == "number" then
-		return name
+function maybe_get_zoneid(name)
+	if name == nil then
+		return nil
 	end
 
-	local zoneid = (datafile("zones")[name] or {}).zoneid
-	if not zoneid then
-		error("Unknown zone: " .. tostring(name))
+	local t = type(name)
+	if t == "number" then
+		return name
+	elseif t ~= "string" then
+		error("Invalid zoneidid type: " .. t)
 	end
-	return zoneid
+
+	return (datafile("zones")[name] or {}).zoneid
+end
+
+function get_zoneid(name)
+	local id = maybe_get_zoneid(name)
+	if not id then
+		error("No zoneid found for: " .. tostring(name))
+	end
+	return id
 end
 
 function maybe_get_zonename(zone)
-	local id = get_zoneid(zone)
+	local id = maybe_get_zoneid(zone)
 	return zoneid_name_lookup[id]
 end
 

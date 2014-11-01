@@ -79,7 +79,7 @@ add_interceptor("/adventure.php", function()
 	if setting_enabled("automate florist friar planting") then ok = true end
 	if not ok then return end
 	if locked() then return end
-	if tonumber(params.snarfblat) and zone_awaiting_florist_decision(tonumber(params.snarfblat)) then
+	if requested_zone_id() and zone_awaiting_florist_decision(requested_zone_id()) then
 		local want_plants = nil
 		if setting_enabled("automate florist friar planting") then
 			local lastadvzoneid = lastadventurezoneid()
