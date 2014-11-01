@@ -50,6 +50,10 @@ local drop_familiars = {
 		message = "finishes an illustrated manuscript with a final flourish",
 		short_item_name = "tale",
 	},
+	fistturkey = {
+		message = "bottle of booze",
+		short_item_name = "bottle",
+	},
 }
 
 local function counter_name(familiar, info)

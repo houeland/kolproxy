@@ -274,6 +274,7 @@ function get_automation_scripts(cached_stuff)
 		["Angry Jung Man"] = { fallback = "Slimeling" },
 		["Gelatinous Cubeling"] = { fallback = "Slimeling" },
 		["Warbear Drone"] = { attack = true, fallback = "Rogue Program" },
+		["Fist Turkey"] = { fallback = "Bloovian Groose" },
 		["Mad Hatrack with spangly sombrero"] = { id = 82, familiarequip = "spangly sombrero", fallback = "Slimeling even in fist", needsequip = true },
 		["Scarecrow with spangly mariachi pants"] = { id = 152, familiarequip = "spangly mariachi pants", fallback = "Mad Hatrack with spangly sombrero", needsequip = true },
 		["Scarecrow with studded leather boxer shorts"] = { id = 152, familiarequip = "studded leather boxer shorts", needsequip = true, fallback = "Llama Lama" },
@@ -318,7 +319,7 @@ function get_automation_scripts(cached_stuff)
 		end
 		local d = familiar_data[famname]
 		if missing_fams[famname] or (d and d.needsequip and not have_item(d.familiarequip)) then
-			if not familiar_data[famname].fallback or highskill_at_run then
+			if not next_famname_input and not d.fallback then
 				critical("No fallback familiar for " .. famname)
 			end
 			return raw_want_familiar(next_famname_input or (d and d.fallback))
@@ -409,7 +410,7 @@ function get_automation_scripts(cached_stuff)
 			famname = "Bloovian Groose"
 		end
 		if famname == "any" then
-			famname = "Bloovian Groose"
+			famname = "Fist Turkey"
 		end
 		return raw_want_familiar(famname)
 	end
@@ -1204,7 +1205,7 @@ function get_automation_scripts(cached_stuff)
 			if ((mainstat_type("Mysticality") and level() >= 9) or (level() >= 11) or (highskill_at_run and mmj_available)) and level() < 13 and challenge ~= "fist" then
 				table.insert(xs, "Ur-Kel's Aria of Annoyance")
 			end
-			if mainstat_type("Mysticality") and script_want_2_day_SCHR() then
+			if mainstat_type("Mysticality") and script_want_2_day_SCHR() and level() < 13 then
 				table.insert(xs, "Wry Smile")
 			end
 		end
