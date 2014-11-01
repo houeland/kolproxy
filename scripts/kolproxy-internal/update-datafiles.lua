@@ -727,6 +727,7 @@ function parse_monsters()
 	monsters["knob goblin king"].Stats.boss = true
 	monsters["ancient protector spirit"].Stats.boss = true
 	monsters["giant tardigrade"].Stats.boss = true
+	monsters["panicking knott yeti"].Stats.boss = true
 	return monsters
 end
 

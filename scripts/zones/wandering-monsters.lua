@@ -10,7 +10,6 @@ local function make_lookup_table(tbl)
 	return lookup
 end
 
--- TODO: turn ranges at ascension start
 function add_wandering_monster_tracker(label, monster_list, min_offset, max_offset, always_show_f, min_runstart, max_runstart)
 	local monster_table = make_lookup_table(monster_list)
 
