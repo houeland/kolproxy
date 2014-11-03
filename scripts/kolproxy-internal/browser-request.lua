@@ -1,6 +1,8 @@
 function log_time_interval(msg, f) return f() end
 
 local shared_env = {}
+--shared_env._G = shared_env
+shared_env._G_envname = "browser-request shared_env"
 setmetatable(shared_env, { __index = _G })
 do
 	local f, e = loadfile("scripts/base/datafile.lua")
@@ -18,7 +20,7 @@ local function load_wrapped_function(wrapperpath)
 		return f, e
 	end
 	wrapped_env._G = wrapped_env
-
+	wrapped_env._G_envname = "browser-request wrapped_env " .. wrapperpath
 	setmetatable(wrapped_env, { __index = shared_env })
 
 	local f, e = loadfile(wrapperpath)

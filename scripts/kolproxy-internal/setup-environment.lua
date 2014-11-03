@@ -1,5 +1,6 @@
 local g_env = {}
 g_env._G = g_env
+g_env._G_envname = "setup-environment g_env"
 
 function load_script(scriptname)
 	local function add_do_nothing_function(name)

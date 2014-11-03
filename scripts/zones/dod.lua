@@ -102,7 +102,7 @@ end)
 
 add_processor("use item", function()
 -- TODO: unidentified/identified text on inventory.php does not get updated when used through ajax
-	potion = text:match([[<table><tr><td><center><img src="http://images.kingdomofloathing.com/itemimages/exclam.gif" width=30 height=30><br></center>.-You drink the ([a-z]- potion).]])
+	local potion = text:match([[<table><tr><td><center><img src="http://images.kingdomofloathing.com/itemimages/exclam.gif" width=30 height=30><br></center>.-You drink the ([a-z]- potion).]])
 	if potion then
 		local tbl = ascension["zone.dod.potions"] or {}
 		effects = {

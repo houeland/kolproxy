@@ -1108,18 +1108,7 @@ mark m_done
 							result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5), { ["Ed the Undrowning"] = "If you say so..." })
 							while get_result():contains([[<!--WINWINWIN-->]]) and get_result():contains([[fight.php]]) do
 								result, resulturl = get_page("/fight.php")
-								print("DEBUG: fighting ed, getting macro")
-								local mt = macro_noodlegeyser(5)
-								print("DEBUG: fighting ed, macro:", mt, type(mt))
-								local mte = mt
-								for i = 1, 10 do
-									print("DEBUG:.... fighting ed, macro", mte, type(mte))
-									if type(mte) ~= "string" then
-										mte = mte()
-									end
-								end
-								result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", mt)
---								result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
+								result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5))
 							end
 							did_action = have_item("Holy MacGuffin")
 						end

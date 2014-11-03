@@ -473,6 +473,8 @@ function setup_functions()
 	end
 
 	local s_f_env = {}
+--	s_f_env._G = s_f_env
+	s_f_env._G_envname = "api s_f_env"
 	setmetatable(s_f_env, { __index = _G, __newindex = _G })
 	setfenv(setup_functions_raw, s_f_env)
 	setup_functions_raw()

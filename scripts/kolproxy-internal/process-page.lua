@@ -94,8 +94,8 @@ end
 
 local envstoreinfo = loadfile("scripts/kolproxy-internal/setup-environment.lua")()
 
-function dofile(f)
-	load_script("../" .. f)
+function doloadfile(path)
+	load_script("../" .. path)
 end
 
 load_script("base/datafile.lua")

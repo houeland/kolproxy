@@ -1,3 +1,5 @@
+function doloadfile(path) loadfile(path)() end
+
 local chatprinters = {}
 local json_chatprinters = {}
 
@@ -94,8 +96,8 @@ return text
 
 end
 
-dofile("scripts/base/datafile.lua")
-dofile("scripts/base/util.lua")
+doloadfile("scripts/base/datafile.lua")
+doloadfile("scripts/base/util.lua")
 
 function load_file(category, name)
 	function add_json_chat_printer(func)
@@ -107,10 +109,10 @@ function load_file(category, name)
 	function add_chat_trigger() end
 	function add_interceptor() end
 	if category == "chat" then
-		dofile("scripts/"..name)
+		loadfile("scripts/"..name)()
 	end
 end
 
-dofile("scripts/kolproxy-internal/loaders.lua")
+doloadfile("scripts/kolproxy-internal/loaders.lua")
 
 return run_wrapped_function

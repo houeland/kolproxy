@@ -1568,7 +1568,7 @@ function make_gremlin_macro(name, wrongmsg)
 ]]
 	end
 	local use_magnet = [[use molybdenum magnet]]
-	if have_skill("Ambidextrous Funkslinging") then
+	if have_skill("Ambidextrous Funkslinging") and have_item("rock band flyers") then
 		use_magnet = [[use rock band flyers, molybdenum magnet]]
 	end
 	return [[

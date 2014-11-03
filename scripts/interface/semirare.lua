@@ -149,7 +149,7 @@ add_charpane_line(function()
 end)
 
 add_always_adventure_warning(function()
-	SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info(turnsthisrun())
+	local SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info(turnsthisrun())
 
 	if SRnow then
 		if have_item("ten-leaf clover") then
@@ -164,7 +164,7 @@ add_always_adventure_warning(function()
 end)
 
 add_extra_always_adventure_warning(function()
-	SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi, lastturn = get_semirare_info(turnsthisrun())
+	local SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi, lastturn = get_semirare_info(turnsthisrun())
 
 	if not next(good_numbers) and tonumber(SRmin) and tonumber(SRmin) <= 1 and tonumber(SRmax) and tonumber(SRmax) >= 0 then
 		return "The semirare window will start soon (and you do not have fortune cookie numbers).", "semirare-range-" .. tostring(lastturn), "Disable the warning for this semirare window and adventure"

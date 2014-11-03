@@ -112,7 +112,6 @@ add_ascension_adventure_warning(function(zoneid)
 	end
 end)
 
-local office_access = nil
 local function check_dr_awkwards_office_access()
 	if have_item("&quot;I Love Me, Vol. I&quot;") then return true end
 	local pt = get_page("/place.php", { whichplace = "palindome" })
@@ -120,6 +119,7 @@ local function check_dr_awkwards_office_access()
 	return pt:contains("Dr. Awkward's Office")
 end
 
+local office_access = nil
 function have_dr_awkwards_office_access()
 	if not office_access then
 		office_access = check_dr_awkwards_office_access()
@@ -134,6 +134,7 @@ add_ascension_zone_check(386, function()
 end)
 
 add_ascension_adventure_warning(function(zoneid)
+	-- TODO: also incorrectly warns if you adventure in some random place without talisman, and you haven't unlocked office yet
 	if zoneid == "palindome" and requestpath == "/place.php" and params.action == "pal_droffice" then return end
 	if have_item("photograph of God") and have_item("photograph of a dog") and have_item("photograph of a red nugget") and have_item("photograph of an ostrich egg") and have_dr_awkwards_office_access() ~= false then
 		return "You might want to place the photographs in Dr. Awkwards office.", "place palindome photographs"

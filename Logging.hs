@@ -173,7 +173,7 @@ log_chat_messages ref text = (do
 			putStrLn $ "ERROR: handle_msg exception: " ++ show (e :: SomeException)
 			return ())
 
-	let Ok json = decodeStrict $ text
+	let Ok json = decodeStrict $ Data.ByteString.Char8.unpack $ text
 	let Ok (JSArray msglist) = valFromObj "msgs" json
 	mapM_ (\x -> case x of
 		JSObject m -> handle_msg m
@@ -182,6 +182,6 @@ log_chat_messages ref text = (do
 		return (e :: SomeException)
 		doChatLogAction ref $ \db -> do
 			do_db_query_ db "INSERT INTO oldchat(text) VALUES(?);"
-				[Just $ Data.ByteString.Char8.pack $ text]
+				[Just $ text]
 --		putStrLn $ "DEBUG: log_chat_messages exception: " ++ show (e :: SomeException)
 		return ())

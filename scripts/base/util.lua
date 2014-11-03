@@ -1,11 +1,11 @@
 -- TODO: Don't load all of these
-dofile("scripts/base/base-lua-functions.lua")
-dofile("scripts/base/state.lua")
-dofile("scripts/base/kolproxy-core-functions.lua")
-dofile("scripts/base/script-functions.lua")
-dofile("scripts/base/charpane.lua")
-dofile("scripts/base/api.lua")
-dofile("scripts/base/commands.lua")
+doloadfile("scripts/base/base-lua-functions.lua")
+doloadfile("scripts/base/state.lua")
+doloadfile("scripts/base/kolproxy-core-functions.lua")
+doloadfile("scripts/base/script-functions.lua")
+doloadfile("scripts/base/charpane.lua")
+doloadfile("scripts/base/api.lua")
+doloadfile("scripts/base/commands.lua")
 
 -- TODO: redo the rest of this code
 function setup_variables()

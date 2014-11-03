@@ -274,7 +274,7 @@ function get_automation_scripts(cached_stuff)
 		["Angry Jung Man"] = { fallback = "Slimeling" },
 		["Gelatinous Cubeling"] = { fallback = "Slimeling" },
 		["Warbear Drone"] = { attack = true, fallback = "Rogue Program" },
-		["Fist Turkey"] = { fallback = "Bloovian Groose" },
+		["Fist Turkey"] = { attack = true, fallback = "Bloovian Groose" },
 		["Mad Hatrack with spangly sombrero"] = { id = 82, familiarequip = "spangly sombrero", fallback = "Slimeling even in fist", needsequip = true },
 		["Scarecrow with spangly mariachi pants"] = { id = 152, familiarequip = "spangly mariachi pants", fallback = "Mad Hatrack with spangly sombrero", needsequip = true },
 		["Scarecrow with studded leather boxer shorts"] = { id = 152, familiarequip = "studded leather boxer shorts", needsequip = true, fallback = "Llama Lama" },
@@ -409,7 +409,7 @@ function get_automation_scripts(cached_stuff)
 		if famname == "Rogue Program" and spleen() < 12 and not script.have_familiar("Rogue Program") then
 			famname = "Bloovian Groose"
 		end
-		if famname == "any" then
+		if famname == "auto" then
 			if script.have_familiar("Rogue Program") and spleen() < 12 and not have_item("Game Grid token") then
 				famname = "Rogue Program"
 			elseif script.have_familiar("Bloovian Groose") and spleen() < 12 and not have_item("groose grease") then
@@ -2358,7 +2358,7 @@ endif
 		if insults >= 7 and have_item("Cap'm Caronch's Map") then
 			inform "use cap'm's map"
 			ensure_buffs { "Springy Fusilli", "Spirit of Peppermint", "A Few Extra Pounds" }
-			fam "any"
+			fam "auto"
 			f.heal_up()
 			ensure_mp(40)
 			use_item("Cap'm Caronch's Map")
@@ -2541,9 +2541,7 @@ endif
 		wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
 		async_get_page("/bigisland.php", { place = "concert" })
 		async_get_page("/bigisland.php", { action = "junkman", pwd = get_pwd() })
-		if have_item("rock band flyers") then
-			did_action = true
-		else
+		if not have_item("rock band flyers") then
 			inform "check if done with war sidequests"
 			wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
 			async_get_page("/bigisland.php", { place = "concert" })
@@ -2554,11 +2552,10 @@ endif
 			local pyroptf = async_get_page("/bigisland.php", { place = "lighthouse", action = "pyro", pwd = get_pwd() })
 			if concertptf():contains("has already taken the stage") and junkmanptf():contains("next shipment of cars ready") and pyroptf():contains("gave you the big boom today") then
 				cached_stuff.finished_war_sidequests = true
-				did_action = true
-			else
-				stop "Not done with war sidequests when starting to fight war"
 			end
 		end
+		cached_stuff.got_flyers = true
+		did_action = true
 	end
 
 	function f.do_manor_of_spooking()
@@ -3370,7 +3367,7 @@ endif
 			["Don't Hold a Grudge"] = "Declare a thumb war",
 			["Having a Medicine Ball"] = "Gaze deeply into the mirror",
 			["Off the Rack"] = "Take the towel",
-		}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic" }, "any", 35)
+		}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic" }, "auto", 35)
 	end
 
 	function f.do_moxie_powerleveling()
@@ -3484,7 +3481,7 @@ endif
 				stop "Not enough meat for spooky sapling."
 			end
 			script.bonus_target { "noncombat" }
-			go("get parts to unlock hidden temple", "The Spooky Forest", macro_kill_monster, {}, {}, "any", 10, { choice_function = spooky_forest_choice_function })
+			go("get parts to unlock hidden temple", "The Spooky Forest", macro_kill_monster, {}, {}, "auto", 10, { choice_function = spooky_forest_choice_function })
 		end
 		return result, resulturl, did_action
 	end
@@ -3649,7 +3646,7 @@ endif
 				end
 				critical "No suitable tile found for rat cellar"
 			end
-			fam(withfam or "any")
+			fam(withfam or "auto")
 			if macrofunc then
 			elseif familiar("Rogue Program") then
 				macrofunc = macro_stasis
@@ -3735,7 +3732,7 @@ endif
 					go("sven golly, bus passes: " .. count_item("bus pass"), 243, macro_ppnoodlecannon, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
 				else
 					script.bonus_target { "noncombat" }
-					go("sven golly, getting items", 243, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "any", 35)
+					go("sven golly, getting items", 243, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "auto", 35)
 				end
 			end
 		elseif not have_item("Azazel's lollipop") then
@@ -3758,7 +3755,7 @@ endif
 					go("mourn, imp air: " .. count_item("imp air"), 242, macro_ppnoodlecannon, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 35)
 				else
 					script.bonus_target { "combat" }
-					go("mourn, getting bosses", 242, macro_noodleserpent, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "any", 35)
+					go("mourn, getting bosses", 242, macro_noodleserpent, nil, { "Leash of Linguini", "Empathy", "Spirit of Garlic", "A Few Extra Pounds" }, "auto", 35)
 				end
 			end
 		elseif not have_item("Azazel's tutu") then
@@ -3946,7 +3943,7 @@ endif
 				else
 					script.bonus_target { "initiative", "noncombat" }
 					script.maybe_ensure_buffs { "Hustlin'", "Sugar Rush" }
-					go("do crypt alcove", 261, alcove_macro, noncombattbl, { "Butt-Rock Hair", "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Springy Fusilli", "Spirit of Garlic" }, "any", 20)
+					go("do crypt alcove", 261, alcove_macro, noncombattbl, { "Butt-Rock Hair", "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Springy Fusilli", "Spirit of Garlic" }, "auto", 20)
 				end
 			else
 				-- TODO: hustlin pool buff in nonboris?
@@ -3955,14 +3952,14 @@ endif
 				-- TODO: Happy Medium?
 				script.bonus_target { "initiative", "noncombat" }
 				maybe_ensure_buffs { "Sugar Rush" }
-				go("do crypt alcove", 261, (challenge == "fist" and macro_fist or macro_stasis), noncombattbl, { "Butt-Rock Hair", "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Springy Fusilli", "Spirit of Garlic" }, "any", 20)
+				go("do crypt alcove", 261, (challenge == "fist" and macro_fist or macro_stasis), noncombattbl, { "Butt-Rock Hair", "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Springy Fusilli", "Spirit of Garlic" }, "auto", 20)
 			end
 		elseif cyrpt:match("Defiled Cranny") then
 			script.bonus_target { "noncombat", "monster level" }
 			maybe_ensure_buffs { "Mental A-cue-ity", "Ur-Kel's Aria of Annoyance" }
 			go("do crypt cranny", 262, macro_noodlecannon, noncombattbl, { "Spirit of Garlic", "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds", "Ur-Kel's Aria of Annoyance" }, "Baby Bugged Bugbear", 35)
 		elseif cyrpt:match("Defiled Niche") and (not trailed or trailed == "dirty old lihc") then
-			go("do crypt niche", 263, make_cannonsniff_macro("dirty old lihc"), noncombattbl, { "Spirit of Garlic", "Butt-Rock Hair", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "any", 25, { olfact = "dirty old lihc" })
+			go("do crypt niche", 263, make_cannonsniff_macro("dirty old lihc"), noncombattbl, { "Spirit of Garlic", "Butt-Rock Hair", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "auto", 25, { olfact = "dirty old lihc" })
 		elseif cyrpt:match("Defiled Nook") then
 			script.bonus_target { "item", "extraitem" }
 			if challenge == "boris" and not have_buff("Super Vision") and have_item("Greatest American Pants") then
@@ -4011,7 +4008,7 @@ endif
 		local manor = get_page("/manor.php")
 		if not manor:match("Stairs Up") then
 			script.bonus_target { "noncombat" }
-			go("unlock upstairs", 104, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Butt-Rock Hair", "A Few Extra Pounds", "Spirit of Garlic" }, "any", 30, {
+			go("unlock upstairs", 104, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Butt-Rock Hair", "A Few Extra Pounds", "Spirit of Garlic" }, "auto", 30, {
 				choice_function = function(advtitle, choicenum)
 					if advtitle == "Take a Look, it's in a Book!" then
 						return "", 99
@@ -4560,7 +4557,7 @@ endif
 					-- got uri: /ocean.php |  (from /ocean.php), size 2741
 					script.bonus_target { "noncombat" }
 					script.set_runawayfrom { "wacky pirate", "warty pirate", "wealthy pirate", "whiny pirate", "witty pirate" }
-					go("do poop deck", 159, macro_noodlecannon, { ["O Cap'm, My Cap'm"] = "Step away from the helm" }, { "Butt-Rock Hair", "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "any", 35, { equipment = { acc3 = "pirate fledges" } })
+					go("do poop deck", 159, macro_noodlecannon, { ["O Cap'm, My Cap'm"] = "Step away from the helm" }, { "Butt-Rock Hair", "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "auto", 35, { equipment = { acc3 = "pirate fledges" } })
 					if get_result():contains("It's Always Swordfish") then
 						did_action = true
 					end
@@ -4587,7 +4584,7 @@ endif
 							stop("TODO: fight rain-doh copied monster")
 						end
 					else
-						go("get gaudy keys", 160, make_cannonsniff_macro("gaudy pirate"), nil, { "Spirit of Bacon Grease" }, "any", 40, { equipment = { acc3 = "pirate fledges" }, olfact = "gaudy pirate" })
+						go("get gaudy keys", 160, make_cannonsniff_macro("gaudy pirate"), nil, { "Spirit of Bacon Grease" }, "auto", 40, { equipment = { acc3 = "pirate fledges" }, olfact = "gaudy pirate" })
 					end
 				end
 			end

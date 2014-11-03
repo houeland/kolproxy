@@ -10,7 +10,6 @@ import KoL.Api
 import KoL.Http
 import KoL.Util
 import KoL.UtilTypes
-import Control.Applicative
 import Control.Concurrent
 import Control.Exception
 import Control.Monad
@@ -18,7 +17,6 @@ import Data.IORef
 import Data.List (intercalate)
 import Data.Maybe
 import Data.Time
-import Network.CGI (formEncode)
 import Network.URI
 import System.Directory (doesFileExist, createDirectoryIfMissing)
 import System.Environment (getArgs)
@@ -86,9 +84,23 @@ doProcessPage ref uri params = do
 		readMVar mv
 
 doProcessPageChat ref uri params = do
-	xf <- fst <$> internalKolRequest_pipelining ref uri params False
+	mv <- newEmptyMVar
+
+	forkIO_ "proxy:processchat" $ do
+		x <- try $ do
+			(xf, _) <- internalKolRequest_pipelining ref uri params False
+			xf
+		putMVar mv =<< case x of
+			Right (pagetext, effuri, hdrs, code) -> do
+				case uriPath effuri of
+					-- TODO: Make sure they're logged in order!
+					"/newchatmessages.php" -> log_chat_messages ref pagetext
+					_ -> return ()
+				return $ Right (pagetext, effuri, hdrs, code)
+			Left e -> do
+				return $ Left (add_error_message_to_page ("processchat exception: " ++ (show (e :: SomeException))) (Data.ByteString.Char8.pack "{ Kolproxy page processing. }"), mkuri "/error", [], 500)
 	return $ do
-		Right <$> xf
+		readMVar mv
 
 statusfunc ref = do
 	mv <- readIORef $ jsonStatusPageMVarRef_ $ sessionData $ ref
@@ -100,7 +112,6 @@ statusfunc ref = do
 				putWarningStrLn $ "statusfunc exception: " ++ show (e :: SomeException)
 				throwIO e))
 
--- TODO: Redo how scripts are run and used to do chat, make it more similar to normal pages
 kolProxyHandlerChat uri params baseref = do
 	let ref = baseref {
 		processingstuff_ = ProcessingRefStuff {
@@ -109,50 +120,18 @@ kolProxyHandlerChat uri params baseref = do
 			getstatusfunc_ = statusfunc
 		}
 	}
-	Right (text, effuri, _hdrs, _code) <- case uriPath uri of -- TODO: handle Left here?
-		"/submitnewchat.php" -> do
-			let allparams = concat $ catMaybes $ [decodeUrlParams uri, params]
-			let handle_normally msguri msgparams = do
-				y <- join $ (processPage ref) ref msguri msgparams
-				case y of
-					Right (msg, _, _, _) -> do
-						log_chat_messages ref (Data.ByteString.Char8.unpack msg)
-						runSentChatScript ref msg
-					_ -> return ()
-				return y
-			x <- runSendChatScript ref uri allparams
-			case x of
-				Right msg -> do
-					if msg == Data.ByteString.Char8.pack ""
-						then handle_normally uri params
-						else if Data.ByteString.Char8.isPrefixOf (Data.ByteString.Char8.pack "//kolproxy:sendgraf:") msg
-							then do
-								let Just uriparams = decodeUrlParams uri
-								let newgraf = Data.ByteString.Char8.drop 20 msg
-								let newuriparams = map (\(x, y) -> (x, if x == "graf" then Data.ByteString.Char8.unpack newgraf else y)) uriparams
-								let newuri = uri { uriQuery = "?" ++ (formEncode newuriparams) }
-								let newparams = params
---								putDebugStrLn $ "send chat uri: " ++ show newuri
---								putDebugStrLn $ "send chat params: " ++ show newparams
---								putDebugStrLn $ "  want to graf: " ++ show (Data.ByteString.Char8.drop 20 msg)
-								handle_normally newuri newparams
-							else return $ Right (msg, uri, [], 200)
-				Left (msg, trace) -> do
-					putWarningStrLn $ "sendchat error: " ++ (msg ++ "\n" ++ trace)
-					handle_normally uri params
-		_ -> join $ (processPage ref) ref uri params
-	resptext <- case uriPath uri of
-		"/newchatmessages.php" -> do
-			log_chat_messages ref (Data.ByteString.Char8.unpack text)
-			let allparams = concat $ catMaybes $ [decodeUrlParams uri, decodeUrlParams effuri, params]
-			x <- runChatScript ref uri effuri text allparams
-			case x of
-				Right msg -> return msg
-				Left (msg, trace) -> do
-					putWarningStrLn $ "chat error: " ++ (msg ++ "\n" ++ trace)
-					return text
-		_ -> return text
-	makeResponseWithNoExtraHeaders resptext effuri [("Content-Type", "application/json; charset=UTF-8"), ("Cache-Control", "no-cache")]
+	let allparams = concat $ catMaybes $ [decodeUrlParams uri, params]
+	x <- case uriPath uri of
+		"/favicon.ico" -> do
+			Right (x, _, _, _) <- join $ (processPage ref) ref uri params
+			return $ Right x
+		_ -> runChatRequestScript ref uri allparams
+	case x of
+		Right msg -> do
+			makeResponseWithNoExtraHeaders msg uri [("Content-Type", "application/json; charset=UTF-8"), ("Cache-Control", "no-cache")]
+		Left (msg, trace) -> do
+			putWarningStrLn $ "chat error: " ++ (show msg ++ "\n" ++ trace)
+			makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack "") uri [("Cache-Control", "no-cache")]
 
 make_ref baseref = do
 	let ref = baseref {

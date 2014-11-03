@@ -130,10 +130,12 @@ function make_href(url, params)
 	end
 end
 
-
+local strthing_reported = {}
 function run_file_with_environment(filename, orgenv, prefillenv)
 	local env = {}
+	env._G_envname = "kolproxy-core-functions env " .. filename
 	local env_store = {}
+	env_store._G_envname = "kolproxy-core-functions env_store " .. filename
 	-- HACK: API change
 	if not prefillenv.add_printer_raw then
 		prefillenv.add_printer_raw = prefillenv.add_printer
@@ -197,6 +199,16 @@ function run_file_with_environment(filename, orgenv, prefillenv)
 		if v ~= nil then return v end
 		v = _G[k]
 		if v ~= nil then return v end
+		do
+			local strthing = k .. ":" .. filename
+			if not strthing_reported[strthing] then
+				print("DEBUG didn't find variable", k, "for", filename)
+				local f = io.open("strthing-reported.txt", "a+")
+				f:write(strthing.."\n")
+				f:close()
+				strthing_reported[strthing] = true
+			end
+		end
 		return nil
 	end, __newindex = function(t, k, v)
 		if error_on_writing_text_or_url and (k == "text" or k == "url") then

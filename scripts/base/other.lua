@@ -252,7 +252,7 @@ end)
 -- end)
 
 add_printer("/charpane.php", function()
-	ttr = tonumber(text:match("var turnsthisrun = ([0-9]+);"))
+	local ttr = tonumber(text:match("var turnsthisrun = ([0-9]+);"))
 	if not ttr then return end
 	if text:contains("inf_small.gif") then return end
 	if ascensionstatus() ~= "Aftercore" then return end

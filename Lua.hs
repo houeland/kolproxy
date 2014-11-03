@@ -171,7 +171,7 @@ doReadDataFile filename = do
 			putStrLn $ "=== ERROR ==="
 			throwIO $ InternalError $ "Failed to read data file: " ++ filename
 
-get_submit_uri_params _ref method inputuristr params = do
+get_submit_uri_params_DEBUG _ref method inputuristr params = do
 	case parseURIReference inputuristr of
 		Just inputuri -> do
 			case (stripPrefix "/" (uriPath inputuri), uriQuery inputuri) of
@@ -194,8 +194,8 @@ get_submit_uri_params _ref method inputuristr params = do
 				_ -> failLua $ "submit page error: unknown url " ++ (show inputuri)
 		_ -> failLua $ "submit page error: unknown url " ++ (show inputuristr)
 
-async_submit_page ref method inputuristr params = do
-	(final_url, final_params) <- get_submit_uri_params ref method inputuristr params
+async_submit_page_DEBUG ref method inputuristr params = do
+	(final_url, final_params) <- get_submit_uri_params_DEBUG ref method inputuristr params
 	xf <- (processPage ref) ref (mkuri final_url) final_params
 	return xf
 
@@ -370,7 +370,7 @@ show_blocked_page_info ref l = do
 	Lua.pushstring l "/kolproxy-page-loading-blocked"
 	return 2
 
-async_submit_page_func ref l1 = do
+async_submit_page_func_DEBUG ref l1 = do
 	lua_log_line ref "> async_submit_page_func" (return ())
 	shouldstop <- readIORef (blocking_lua_scripting ref)
 	if shouldstop
@@ -385,7 +385,7 @@ async_submit_page_func ref l1 = do
 					one <- peekJustString l1 1
 					two <- peekJustString l1 2
 					params <- parse_keyvalue_luatbl l1 3
-					f <- async_submit_page ref one two params
+					f <- async_submit_page_DEBUG ref one two params
 					lua_log_line ref "< async_submit_page_func requested" (return ())
 					push_function l1 (\l2 -> do
 						ret <- f
@@ -605,6 +605,7 @@ setup_lua_instance level filename setupref = do
 
 		case level of
 			CHAT -> do
+				register_function "kolproxycore_async_submit_page" async_submit_page_func_DEBUG
 				register_function "get_character_name" $ \ref l -> do
 					Lua.pushstring l =<< get_ref_playername ref
 					return 1
@@ -626,7 +627,7 @@ setup_lua_instance level filename setupref = do
 					return 0
 				register_function "get_api_itemid_info" get_api_itemid_info
 				register_function "kolproxycore_enumerate_state" kolproxycore_enumerate_state
-				register_function "kolproxycore_async_submit_page" async_submit_page_func
+				register_function "kolproxycore_async_submit_page" async_submit_page_func_DEBUG
 				register_function "kolproxycore_splituri" $ \_ref l -> do
 					uristr <- peekJustString l 1
 					let uri = mkuri uristr
@@ -636,7 +637,7 @@ setup_lua_instance level filename setupref = do
 			BOTSCRIPT -> do
 				register_function "get_api_itemid_info" get_api_itemid_info
 				register_function "kolproxycore_enumerate_state" kolproxycore_enumerate_state
-				register_function "kolproxycore_async_submit_page" async_submit_page_func
+				register_function "kolproxycore_async_submit_page" async_submit_page_func_DEBUG
 				register_function "kolproxycore_sleep" $ \_ref l -> do
 					delay <- peekJustDouble l 1
 					threadDelay $ round $ delay * 1000000
@@ -757,7 +758,6 @@ runChatScript ref uri effuri pagetext allparams = do
 		Right xs -> Left ("Lua chat call error, return values = " ++ (show xs), "")
 		Left err -> Left err
 
--- TODO: merge send/sent chat scripts
 runSendChatScript ref uri allparams = do
 	let vars = [("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
 	rets <- run_lua_code CHAT "scripts/kolproxy-internal/sendchat.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
@@ -766,9 +766,13 @@ runSendChatScript ref uri allparams = do
 		Right xs -> Left ("Lua chat call error, return values = " ++ (show xs), "")
 		Left err -> Left err
 
-runSentChatScript ref msg = do
-	run_lua_code CHAT "scripts/kolproxy-internal/sentchat.lua" ref (setvars [] msg [])
-	return ()
+runChatRequestScript ref uri allparams = do
+	let vars = [("request_path", uriPath uri), ("request_query", uriQuery uri)]
+	rets <- run_lua_code CHAT "scripts/kolproxy-internal/chat-request.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
+	return $ case rets of
+		Right [Just t] -> Right t
+		Right xs -> Left (Data.ByteString.Char8.pack $ ("Lua chat request call error, return values = " ++ (show xs)), "")
+		Left (err, extra) -> Left (Data.ByteString.Char8.pack $ err, extra)
 
 runBrowserRequestScript ref uri allparams reqtype = do
 	let vars = [("request_path", uriPath uri), ("request_query", uriQuery uri), ("request_type", reqtype)]
