@@ -102,9 +102,11 @@ if cmd then
 	end
 end
 
---get_page("/submitnewchat.php", 
-
---__kolproxy_core_sendgraf(allparams.graf)
+if allparams.graf ~= original_graf then
+	return "//kolproxy:sendgraf:" .. allparams.graf
+else
+	return ""
+end
 
 end
 
