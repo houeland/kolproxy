@@ -165,9 +165,6 @@ function do_daily_visits()
 		dopage("/arcade.php", { action = "plumber" })
 	end
 
-	dopage("/volcanoisland.php", { pwd = pwd, action = "npc" })
-	dopage("/volcanoisland.php", { pwd = pwd, action = "npc2" })
-
 	dopage("/clan_rumpus.php", { preaction = "buychips", whichbag = 1 })
 	dopage("/clan_rumpus.php", { preaction = "buychips", whichbag = 2 })
 	dopage("/clan_rumpus.php", { preaction = "buychips", whichbag = 3 })
@@ -181,7 +178,12 @@ function do_daily_visits()
 	dopage("/clan_rumpus.php", { action = "click", spot = 3 })
 	dopage("/clan_rumpus.php", { action = "click", spot = 4 })
 
+	dopage("/place.php", { whichplace = "desertbeach", action = "db_nukehouse" })
+
 	dopage("/store.php", { whichstore = "h" })
+
+	dopage("/volcanoisland.php", { pwd = pwd, action = "npc" })
+	dopage("/volcanoisland.php", { pwd = pwd, action = "npc2" })
 
 	dopage("/clan_viplounge.php", { action = "swimmingpool" })
 	dopage("/clan_viplounge.php", { preaction = "goswimming", subaction = "screwaround" })

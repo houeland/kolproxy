@@ -3176,6 +3176,16 @@ endif
 			}
 		}
 
+		add_task {
+			when = have_skill("Rain Man") and
+				heavyrains_rain() >= 90,
+			task = {
+				message = "use rain man",
+				action = function()
+					stop "Use rain man on something useful."
+				end,
+			}
+		}
 	end
 
 	add_task {

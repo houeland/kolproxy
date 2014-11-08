@@ -1209,11 +1209,19 @@ mark m_done
 		}
 	end
 
-	t.tasklist_heavyrains_train_skills = {
-		heavyrains_make_train_skill_task("thunder thigh", { "Thunderheart", "Thunderstrike", "Thunder Clap", "Thunder Thighs" }),
-		heavyrains_make_train_skill_task("aquaconda brain", { "Rain Man", "Rain Delay", "Rain Dance" }),
-		heavyrains_make_train_skill_task("lightning milk", { "Sheet Lightning", "Lightning Strike", "Riding the Lightning" }),
-	}
+	if script_want_2_day_SCHR() then
+		t.tasklist_heavyrains_train_skills = {
+			heavyrains_make_train_skill_task("thunder thigh", { "Thunder Clap", "Thunderheart", "Thunderstrike", "Thunder Thighs" }),
+			heavyrains_make_train_skill_task("aquaconda brain", { "Rain Man", "Rain Delay" }),
+			heavyrains_make_train_skill_task("lightning milk", { "Ball Lightning", "Lightning Strike", "Riding the Lightning" }),
+		}
+	else
+		t.tasklist_heavyrains_train_skills = {
+			heavyrains_make_train_skill_task("thunder thigh", { "Thunderheart", "Thunderstrike", "Thunder Clap", "Thunder Thighs" }),
+			heavyrains_make_train_skill_task("aquaconda brain", { "Rain Man", "Rain Delay", "Rain Dance" }),
+			heavyrains_make_train_skill_task("lightning milk", { "Sheet Lightning", "Lightning Strike", "Riding the Lightning" }),
+		}
+	end
 
 	return t
 end

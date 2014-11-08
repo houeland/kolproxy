@@ -1936,6 +1936,9 @@ cast Air Dirty Laundry
 if hasskill Curse of Weaksauce
 	cast Curse of Weaksauce
 endif
+if hasskill Thunderstrike
+	cast Thunderstrike
+endif
 
 ]] .. use_crumbs .. [[
 
@@ -1966,6 +1969,13 @@ cast Saucestorm
 	local function heavy_rains_attack()
 		if have_skill("Lunging Thrust-Smack") then
 			return [[
+if hasskill Curse of Weaksauce
+	cast Curse of Weaksauce
+endif
+if hasskill Thunderstrike
+	cast Thunderstrike
+endif
+
 ]] .. use_crumbs .. [[
 
 ]] .. use_raindoh_flyers .. [[
@@ -2050,8 +2060,21 @@ cast lunging thrust-smack
 cast lunging thrust-smack
 ]]
 	elseif playerclass("Sauceror") and have_skill("Itchy Curse Finger") and have_skill("Curse of Weaksauce") and have_skill("Saucegeyser") then
+-- TODO: merge all banish handling for boris/heavy rains/etc.
 		return [[
 cast Curse of Weaksauce
+
+if (monstername animated mahogany nightstand) || (monstername drunk goat) || (monstername pygmy witch lawyer) || (monstername pygmy orderlies) || (monstername skeletal sommelier) || (monstername possessed laundry press) || (monstername flock of stab-bats) || (monstername tomb asp) || (monstername senile lihc) || (monstername big wheelin' twins)
+	if hasskill Thunder Clap
+		cast Thunder Clap
+	endif
+endif
+
+if (monstername sabre-toothed goat) || (monstername slick lihc) || (monstername mad wino) || (monstername pygmy orderlies) || (monstername plaid ghost) || (monstername taco cat) || (monstername troll twins)
+	if hasskill Talk About Politics
+		cast Talk About Politics
+	endif
+endif
 
 ]] .. use_crumbs .. [[
 

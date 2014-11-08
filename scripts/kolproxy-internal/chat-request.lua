@@ -33,7 +33,8 @@ local sendchat_wrapped = load_wrapped_function("scripts/kolproxy-internal/sendch
 local sentchat_wrapped = load_wrapped_function("scripts/kolproxy-internal/sentchat.lua")
 
 local function show_error(basepage, errortbl)
-	return add_raw_message_to_page(basepage, [[<pre style="color: red">]] .. errortbl.trace .. [[</pre>]])
+	print("CHAT ERROR:", errortbl.trace)
+	return basepage
 end
 
 local function run_wrapped_function_internal(f_env)
