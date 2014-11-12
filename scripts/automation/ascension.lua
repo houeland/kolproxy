@@ -13,12 +13,6 @@ show_spammy_automation_events = true
 
 stop_on_potentially_unwanted_softcore_actions = false
 
-lowskill_fist_run = nil
--- support no healing?
--- support losing init?
-
-highskill_at_run = nil
-
 ignore_buffing_and_outfit = nil
 
 function softcore_stoppable_action(msg)
@@ -593,7 +587,10 @@ endif
 
 	local DD_keys = countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") + count_item("fat loot token")
 	local real_DD_keys = DD_keys
-	if ascensionstatus() ~= "Hardcore" or cached_stuff.completed_daily_dungeon then
+	if cached_stuff.completed_daily_dungeon then
+		DD_keys = 100
+	elseif script_want_2_day_SCHR() then
+	elseif not ascensionstatus("Hardcore") then
 		DD_keys = 100
 	end
 
@@ -3178,7 +3175,7 @@ endif
 
 		add_task {
 			when = have_skill("Rain Man") and
-				heavyrains_rain() >= 90,
+				heavyrains_rain() >= 100,
 			task = {
 				message = "use rain man",
 				action = function()
@@ -4075,20 +4072,6 @@ endif
 		}
 	}
 
-	add_task {
-		when = quest("Am I My Trapper's Keeper?") and
-			(not trailed or trailed == "dairy goat") and
-			highskill_at_run,
-		task = {
-			message = "get milk early in highskill AT",
-			nobuffing = true,
-			action = function()
-				ignore_buffing_and_outfit = false
-				script.do_trapper_quest()
-			end
-		}
-	}
-
 	-- Getting billiard and library key is a high priority due to liver interaction
 	add_task(tasks.find_lady_spookyravens_necklace)
 	add_task(tasks.take_necklace_to_lady_spookyraven)
@@ -4218,7 +4201,7 @@ endif
 		}
 	end
 
-	add_task { prereq = challenge == "fist" and (whichday == 2) and ((not highskill_at_run and advs() < 110) or (advs() < 20 and level() >= 8)), f = function()
+	add_task { prereq = challenge == "fist" and whichday == 2 and advs() < 110, f = function()
 		if drunkenness() < estimate_max_safe_drunkenness() then
 			if have_hippy_outfit() and drunkenness() < estimate_max_safe_drunkenness() then
 				local kitchen = get_page("/campground.php", { action = "inspectkitchen" })
@@ -4706,7 +4689,7 @@ endif
 		message = "level to 11",
 	}
 
-	add_task { prereq = challenge == "fist" and (whichday == 3) and not highskill_at_run and advs() < 100, f = function()
+	add_task { prereq = challenge == "fist" and whichday == 3 and advs() < 100, f = function()
 		if drunkenness() < estimate_max_safe_drunkenness() then
 			if challenge == "fist" then
 				script.wear { hat = "filthy knitted dread sack", pants = "filthy corduroys" }
@@ -4988,7 +4971,7 @@ endif
 	}
 
 	add_task { prereq = true, f = function()
-		if ((advs() < 50 and turnsthisrun() + advs() < 650) or (advs() < 10)) and fullness() >= 12 and drunkenness() >= estimate_max_safe_drunkenness() and not highskill_at_run then
+		if ((advs() < 50 and turnsthisrun() + advs() < 650) or (advs() < 10)) and fullness() >= 12 and drunkenness() >= estimate_max_safe_drunkenness() then
 			stop "TODO: end of day 4. (pvp,) overdrink"
 		elseif level() < 13 then
 			if not ascensionstatus("Hardcore") then

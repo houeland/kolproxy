@@ -2034,7 +2034,7 @@ cast Lunging Thrust-Smack
 		else
 			return [[abort heavy rains boss]]
 		end
-	elseif have_skill("Lightning Strike") and heavyrains_lightning() >= 20 and not cfm.Stats.boss then
+	elseif have_skill("Lightning Strike") and heavyrains_lightning() >= 25 and not cfm.Stats.boss then
 		return use_crumbs .. [[
 
 ]] .. use_raindoh_flyers .. [[

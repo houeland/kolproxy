@@ -95,7 +95,8 @@ doProcessPageChat ref uri params = do
 				case uriPath effuri of
 					-- TODO: Make sure they're logged in order!
 					"/newchatmessages.php" -> log_chat_messages ref pagetext
-					_ -> return ()
+					"/submitnewchat.php" -> log_chat_messages ref pagetext
+					_ -> return () -- TODO: Log this too?
 				return $ Right (pagetext, effuri, hdrs, code)
 			Left e -> do
 				return $ Left (add_error_message_to_page ("processchat exception: " ++ (show (e :: SomeException))) (Data.ByteString.Char8.pack "{ Kolproxy page processing. }"), mkuri "/error", [], 500)

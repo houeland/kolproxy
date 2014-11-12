@@ -415,14 +415,19 @@ function get_automation_scripts(cached_stuff)
 				famname = "Rogue Program"
 			elseif script.have_familiar("Bloovian Groose") and spleen() < 12 and not have_item("groose grease") then
 				famname = "Bloovian Groose"
-			else
+			elseif level() >= 3 then
 				famname = "Fist Turkey"
+			else
+				famname = "Galloping Grill"
 			end
 		end
 		return raw_want_familiar(famname)
 	end
 
 	function f.have_familiar(famname)
+		if not can_change_familiar() or ascension_script_option("100% familiar run") then
+			return false
+		end
 		if not cached_stuff.have_familiars then
 			cached_stuff.have_familiars = {}
 		end
@@ -552,7 +557,7 @@ function get_automation_scripts(cached_stuff)
 -- 			print("burn mp", toburn, hundreds, "level", level())
 			if have_buff("Salamanderenity") and buffturns("Salamanderenity") < hundreds and toburn >= 5 then
 				cast_skillid(65, math.floor(toburn / 5)) -- salamander
-			elseif level() < 7 and (buffturns("The Magical Mojomuscular Melody") < 50 or toburn < 10) and not highskill_at_run then
+			elseif level() < 7 and (buffturns("The Magical Mojomuscular Melody") < 50 or toburn < 10) then
 				cast_skillid(6004, math.floor(toburn / 5)) -- madrigal
 				cast_skillid(6007, math.floor(toburn / 5)) -- mojo
 			elseif buffturns("Leash of Linguini") < hundreds and toburn >= 12 then
@@ -786,7 +791,7 @@ function get_automation_scripts(cached_stuff)
 				if mp() < amount then
 					stop("Failed to reach " .. amount .. " MP using galaktik")
 				end
-			elseif challenge or highskill_at_run then
+			elseif challenge then
 				-- TODO: choose using it earlier if we need a lot of MP, and remember whether it's been used
 				local pt = get_page("/clan_viplounge.php", { action = "shower" })
 				if pt:contains("<option value=5>Hot</option>") then
@@ -796,7 +801,7 @@ function get_automation_scripts(cached_stuff)
 						critical "Failed to restore enough MP with clan shower"
 					end
 					return f.ensure_mp(amount, true)
-				elseif not have_item("tonic water") and not highskill_at_run then
+				elseif not have_item("tonic water") then
 					if not have_item("soda water") then
 						store_buy_item("soda water", "m", 1)
 					end
@@ -1209,7 +1214,7 @@ function get_automation_scripts(cached_stuff)
 			if ascensionpath("Avatar of Sneaky Pete") and meat() >= 5000 and buffedmoxie() < 200 then
 				table.insert(xs, "Butt-Rock Hair")
 			end
-			if ((mainstat_type("Mysticality") and level() >= 9) or (level() >= 11) or (highskill_at_run and mmj_available)) and level() < 13 and challenge ~= "fist" then
+			if ((mainstat_type("Mysticality") and level() >= 9) or (level() >= 11)) and level() < 13 and challenge ~= "fist" then
 				table.insert(xs, "Ur-Kel's Aria of Annoyance")
 			end
 			if mainstat_type("Mysticality") and script_want_2_day_SCHR() and level() < 13 then
@@ -1610,14 +1615,10 @@ endif
 						inform "Pick up SR, make it wines"
 						result, resulturl, advagain = autoadventure { zoneid = 112, ignorewarnings = true }
 						if get_result():contains("In the Still of the Alley") then
-							if not highskill_at_run then
-								store_buy_item("fortune cookie", "m")
-								local old_full = fullness()
-								set_result(eat_item("fortune cookie"))
-								did_action = (fullness() == old_full + 1) or (old_full == estimate_max_fullness())
-							else
-								did_action = true
-							end
+							store_buy_item("fortune cookie", "m")
+							local old_full = fullness()
+							set_result(eat_item("fortune cookie"))
+							did_action = (fullness() == old_full + 1) or (old_full == estimate_max_fullness())
 						else
 							result = add_message_to_page(get_result(), "Tried to pick up wine semirare", nil, "darkorange")
 						end
@@ -1626,14 +1627,10 @@ endif
 						inform "Pick up SR, make it lunchbox"
 						result, resulturl, advagain = autoadventure { zoneid = 114, ignorewarnings = true }
 						if get_result():contains("Lunchboxing") then
-							if not highskill_at_run then
-								store_buy_item("fortune cookie", "m")
-								local old_full = fullness()
-								set_result(eat_item("fortune cookie"))
-								did_action = (fullness() == old_full + 1) or (old_full == estimate_max_fullness())
-							else
-								did_action = true
-							end
+							store_buy_item("fortune cookie", "m")
+							local old_full = fullness()
+							set_result(eat_item("fortune cookie"))
+							did_action = (fullness() == old_full + 1) or (old_full == estimate_max_fullness())
 						else
 							result = add_message_to_page(get_result(), "Tried to pick up lunchbox semirare", nil, "darkorange")
 						end
@@ -1925,8 +1922,6 @@ endif
 		local function space()
 			return estimate_max_fullness() - fullness()
 		end
-
-		if highskill_at_run then return end
 
 		local function eat_fortune_cookie()
 			local f = fullness()
@@ -2485,6 +2480,7 @@ endif
 				ensure_buffs { "Spirit of Bacon Grease", "Astral Shell", "Ghostly Shell", "A Few Extra Pounds" }
 				maybe_ensure_buffs { "Mental A-cue-ity" }
 				fam "Frumious Bandersnatch"
+				f.wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
 				f.heal_up()
 				if challenge == "boris" then
 					async_post_page("/campground.php", { action = "telescopehigh" })
@@ -4082,7 +4078,7 @@ endif
 			go("getting candles", 238, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, { "Scarecrow with Boss Bat britches", "Rogue Program" }, 15)
 		elseif (count_item("hot wing") < 3 or (meat() < 1000 and fullness() < 5)) and not have_item("box of birthday candles") then
 			go("getting hot wings", 238, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "Slimeling even in fist", 20)
---		elseif have_reagent_pastas < 4 and not highskill_at_run and ascensionstatus() == "Hardcore" and challenge ~= "zombie" then
+--		elseif have_reagent_pastas < 4 and ascensionstatus() == "Hardcore" and challenge ~= "zombie" then
 --			go("getting more hellion cubes", 239, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
 		elseif not have_item("dodecagram") then
 			go("getting dodecagram", 239, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling even in fist", 20)
