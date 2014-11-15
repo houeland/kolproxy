@@ -90,8 +90,7 @@ data EnvironmentSettings = EnvironmentSettings {
 	store_ascension_logs_ :: Bool,
 	store_chat_logs_ :: Bool,
 	store_info_logs_ :: Bool,
-	listen_public_ :: Bool,
-	sqlite_fullfsync_ :: Bool
+	listen_public_ :: Bool
 }
 
 data GlobalRefStuff = GlobalRefStuff {
@@ -135,7 +134,6 @@ sessionData ref = sessionData_ $ otherstuff_ $ ref
 logindents ref = logindents_ $ globalstuff_ $ ref
 blocking_lua_scripting ref = blocking_lua_scripting_ $ globalstuff_ $ ref
 listen_public ref = listen_public_ $ environment_settings_ $ globalstuff_ $ ref
-sqlite_fullfsync ref = sqlite_fullfsync_ $ environment_settings_ $ globalstuff_ $ ref
 store_state_in_actionbar ref = store_state_in_actionbar_ $ environment_settings_ $ globalstuff_ $ ref
 store_state_locally ref = store_state_locally_ $ environment_settings_ $ globalstuff_ $ ref
 store_ascension_logs ref = store_ascension_logs_ $ environment_settings_ $ globalstuff_ $ ref

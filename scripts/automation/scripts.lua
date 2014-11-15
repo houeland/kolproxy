@@ -276,12 +276,10 @@ function get_automation_scripts(cached_stuff)
 		["Warbear Drone"] = { attack = true, fallback = "Rogue Program" },
 		["Fist Turkey"] = { attack = true, fallback = "Galloping Grill" },
 		["Galloping Grill"] = { mpregen = true, attack = true, fallback = "Bloovian Groose" },
-		["Mad Hatrack with spangly sombrero"] = { id = 82, familiarequip = "spangly sombrero", fallback = "Slimeling even in fist", needsequip = true },
+		["Mad Hatrack with spangly sombrero"] = { id = 82, familiarequip = "spangly sombrero", fallback = "Slimeling", needsequip = true },
 		["Scarecrow with spangly mariachi pants"] = { id = 152, familiarequip = "spangly mariachi pants", fallback = "Mad Hatrack with spangly sombrero", needsequip = true },
 		["Scarecrow with studded leather boxer shorts"] = { id = 152, familiarequip = "studded leather boxer shorts", needsequip = true, fallback = "Llama Lama" },
-		["Scarecrow with Boss Bat britches"] = { id = 152, familiarequip = "Boss Bat britches", needsequip = true, mpregen = true, fallback = "Rogue Program" },
 		["Jumpsuited Hound Dog for +combat"] = { id = 69, fallback = "Llama Lama" },
-		["Slimeling even in fist"] = { id = 112, f = feed_slimeling, mpregen = true, attack = true, fallback = "Slimeling" },
 	}
 	-- TODO: check when using the id instead
 	for a, b in pairs(familiar_data) do
@@ -394,28 +392,42 @@ function get_automation_scripts(cached_stuff)
 		if not can_change_familiar() or ascension_script_option("100% familiar run") then
 			return {}
 		end
+		local function firstfam(tbl)
+			for _, x in ipairs(tbl) do
+				if script.have_familiar(x) then
+					return x
+				end
+			end
+		end
 		if challenge == "zombie" and famname ~= "Reassembled Blackbird" then
 			famname = "Reagnimated Gnome"
 		end
-		if have_item("spangly mariachi pants") and (famname == "Slimeling" or famname == "Jumpsuited Hound Dog" or famname == "fairy") then
-			famname = "Scarecrow with spangly mariachi pants"
-		elseif have_item("spangly sombrero") and (famname == "Slimeling" or famname == "Jumpsuited Hound Dog" or famname == "fairy") then
-			famname = "Mad Hatrack with spangly sombrero"
+		if famname == "Slimeling" then famname = "fairy" end
+		if famname == "Rogue Program" then famname = "auto" end
+		if famname == "fairy" then
+			if daysthisrun() >= 2 and not have_item("digital key") and not have_item("psychoanalytic jar") and get_daily_counter("familiar.jungman.jar") == 0 and script.have_familiar("Angry Jung Man") then
+				famname = "Angry Jung Man"
+			elseif not have_gelatinous_cubeling_items() and script.have_familiar("Gelatinous Cubeling") then
+				famname = "Gelatinous Cubeling"
+			elseif have_item("spangly mariachi pants") and script.have_familiar("Fancypants Scarecrow") then
+				famname = "Scarecrow with spangly mariachi pants"
+			elseif have_item("spangly sombrero") and script.have_familiar("Mad Hatrack") then
+				famname = "Mad Hatrack with spangly sombrero"
+			elseif level() >= 5 and script.have_familiar("Fist Turkey") then
+				famname = "Fist Turkey"
+			else
+				famname = firstfam { "Slimeling", "Dandy Lion", "Fist Turkey", "Angry Jung Man", "Gelatinous Cubeling", "Reagnimated Gnome", "Blavious Kloop", "Green Pixie", "Piano Cat", "Hippo Ballerina", "Obtuse Angel", "Pair of Stomping Boots", "Peppermint Rhino", "Mechanical Songbird", "Baby Gravy Fairy" } or "auto"
+			end
 		end
-		if (famname == "Slimeling" or famname == "fairy") and daysthisrun() >= 2 and not have_item("digital key") and not have_item("psychoanalytic jar") and get_daily_counter("familiar.jungman.jar") == 0 then
-			famname = "Angry Jung Man"
-		elseif (famname == "Slimeling" or famname == "fairy") and not have_gelatinous_cubeling_items() then
-			famname = "Gelatinous Cubeling"
-		end
-		if famname == "Rogue Program" and spleen() < 12 and not script.have_familiar("Rogue Program") then
-			famname = "Bloovian Groose"
+		if famname == "free turn" then
+			famname = firstfam { "Mini-Hipster", "Artistic Goth Kid" } or "auto"
 		end
 		if famname == "auto" then
-			if script.have_familiar("Rogue Program") and spleen() < 12 and not have_item("Game Grid token") then
+			if spleen() < 12 and not have_item("Game Grid token") and script.have_familiar("Rogue Program") then
 				famname = "Rogue Program"
-			elseif script.have_familiar("Bloovian Groose") and spleen() < 12 and not have_item("groose grease") then
+			elseif spleen() < 12 and not have_item("groose grease") and script.have_familiar("Bloovian Groose") then
 				famname = "Bloovian Groose"
-			elseif level() >= 3 then
+			elseif level() >= 5 and script.have_familiar("Fist Turkey") then
 				famname = "Fist Turkey"
 			else
 				famname = "Galloping Grill"
@@ -434,7 +446,7 @@ function get_automation_scripts(cached_stuff)
 		if cached_stuff.have_familiars[famname] == nil then
 			print("INFO: checking for familiar", famname)
 			switch_familiar(famname)
-			cached_stuff.have_familiars[famname] = (familiar_data[famname].id == familiarid())
+			cached_stuff.have_familiars[famname] = familiar(famname)
 		end
 		return cached_stuff.have_familiars[famname]
 	end
@@ -1448,16 +1460,18 @@ function get_automation_scripts(cached_stuff)
 			f.fold_item("stinky cheese diaper")
 		end
 
-		if want_bonus.easy_combat then
-			f.fold_item("Boris's Helm")
-		elseif want_bonus.monster_level then
-			f.fold_item("Boris's Helm (askew)")
-		end
+		if ascension_script_option("fold +ML equipment") then
+			if want_bonus.easy_combat then
+				f.fold_item("Boris's Helm")
+			elseif want_bonus.monster_level then
+				f.fold_item("Boris's Helm (askew)")
+			end
 
-		if want_bonus.rollover_adventures or want_bonus.easy_combat then
-			f.fold_item("Sneaky Pete's leather jacket")
-		elseif want_bonus.monster_level then
-			f.fold_item("Sneaky Pete's leather jacket (collar popped)")
+			if want_bonus.rollover_adventures or want_bonus.easy_combat then
+				f.fold_item("Sneaky Pete's leather jacket")
+			elseif want_bonus.monster_level then
+				f.fold_item("Sneaky Pete's leather jacket (collar popped)")
+			end
 		end
 
 		-- TODO: put in settings
@@ -2343,7 +2357,7 @@ endif
 				["Ennui is Wasted on the Young"] = "&quot;Since you're bored, you're boring.  I'm outta here.&quot;",
 				["Malice in Chains"] = "Plot a cunning escape",
 				["When Rocks Attack"] = "&quot;Sorry, gotta run.&quot;",
-			}, {}, "Mini-Hipster", 15)
+			}, {}, "free turn", 15)
 			if have_item("Knob Goblin encryption key") then
 				did_action = true
 			end
@@ -2388,7 +2402,7 @@ endif
 			if not have_item("The Big Book of Pirate Insults") then
 				critical "No insult book when doing pirates!"
 			end
-			go("doing barrr: " .. insults .. " insults", 157, macro_barrr, get_barrr_noncombattbl(), { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease", "Ghostly Shell", "Astral Shell", "A Few Extra Pounds", "Leash of Linguini", "Empathy" }, "Slimeling even in fist", 30, { equipment = { hat = "eyepatch", pants = "swashbuckling pants", acc3 = "stuffed shoulder parrot" } })
+			go("doing barrr: " .. insults .. " insults", 157, macro_barrr, get_barrr_noncombattbl(), { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease", "Ghostly Shell", "Astral Shell", "A Few Extra Pounds", "Leash of Linguini", "Empathy" }, "fairy", 30, { equipment = { hat = "eyepatch", pants = "swashbuckling pants", acc3 = "stuffed shoulder parrot" } })
 		end
 	end
 
@@ -2454,7 +2468,7 @@ endif
 			script.bonus_target { "minoritem" }
 		end
 		local kills = (ascension["battlefield.kills.frat boy"] or {}).min or 0
-		go("fight on battlefield: " .. kills .. " hippies killed", 132, macro_kill_monster, nil, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling even in fist", 80, { equipment = { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" } })
+		go("fight on battlefield: " .. kills .. " hippies killed", 132, macro_kill_monster, nil, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "fairy", 80, { equipment = { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" } })
 		if get_result():contains("There are no hippy soldiers left") then
 			local turnins = {
 				"green clay bead",
@@ -2893,7 +2907,7 @@ endif
 			if have_buff("Stone-Faced") or ascensionstatus("Hardcore") then
 				ignore_buffing_and_outfit = true
 				if not have_item("the Nostril of the Serpent") and ascension["zone.hidden temple.placed Nostril of the Serpent"] ~= "yes" then
-					go("unlock hidden city", 280, macro_noodlecannon, {}, {}, "Mini-Hipster", 25, { choice_function = function(advtitle, choicenum, pagetext)
+					go("unlock hidden city", 280, macro_noodlecannon, {}, {}, "free turn", 25, { choice_function = function(advtitle, choicenum, pagetext)
 						if advtitle == "Fitting In" then
 							return "Explore the higher levels"
 						elseif advtitle == "Such Great Heights" then
@@ -2909,7 +2923,7 @@ endif
 						end
 					end })
 				else
-					go("unlock hidden city", 280, macro_noodlecannon, {}, {}, "Mini-Hipster", 25, { choice_function = function(advtitle, choicenum, pagetext)
+					go("unlock hidden city", 280, macro_noodlecannon, {}, {}, "free turn", 25, { choice_function = function(advtitle, choicenum, pagetext)
 						if advtitle == "Fitting In" then
 							return "Poke around the ground floor"
 						elseif advtitle == "Such Great Heights" then
@@ -3531,7 +3545,7 @@ endif
 				["Trespasser"] = "Tackle him",
 				["The Singing Tree"] = "&quot;No singing, thanks.&quot;",
 				["The Baker's Dilemma"] = "&quot;Sorry, I'm busy right now.&quot;",
-			}, {}, "Mini-Hipster", 15)
+			}, {}, "free turn", 15)
 		end
 	end
 
@@ -3563,7 +3577,7 @@ endif
 				["The Entertainer"] = "Introduce them to avant-garde",
 				["Under the Knife"] = "Umm, no thanks.  Seriously.",
 				["Please, Hammer"] = "&quot;Sure, I'll help.&quot;",
-			}, {}, "Mini-Hipster", 15)
+			}, {}, "free turn", 15)
 		end
 	end
 
@@ -4075,15 +4089,15 @@ endif
 		if fullness() + count_item("hellion cube") * 6 + 6 <= estimate_max_fullness() and script_want_reagent_pasta() then
 			go("getting hellion cubes", 239, make_cannonsniff_macro("Hellion"), nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
 		elseif not have_item("box of birthday candles") then
-			go("getting candles", 238, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, { "Scarecrow with Boss Bat britches", "Rogue Program" }, 15)
+			go("getting candles", 238, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "auto", 15)
 		elseif (count_item("hot wing") < 3 or (meat() < 1000 and fullness() < 5)) and not have_item("box of birthday candles") then
-			go("getting hot wings", 238, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "Slimeling even in fist", 20)
+			go("getting hot wings", 238, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "fairy", 20)
 --		elseif have_reagent_pastas < 4 and ascensionstatus() == "Hardcore" and challenge ~= "zombie" then
 --			go("getting more hellion cubes", 239, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
 		elseif not have_item("dodecagram") then
-			go("getting dodecagram", 239, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling even in fist", 20)
+			go("getting dodecagram", 239, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "fairy", 20)
 		elseif not have_item("eldritch butterknife") then
-			go("getting butterknife", 237, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, { "Scarecrow with Boss Bat britches", "Rogue Program" }, 15)
+			go("getting butterknife", 237, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "auto", 15)
 		elseif count_item("hot wing") < 3 then
 			go("getting hot wings", 238, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "Slimeling", 20)
 		else
@@ -4105,7 +4119,7 @@ endif
 				["Trespasser"] = "Tackle him",
 				["The Singing Tree"] = "&quot;No singing, thanks.&quot;",
 				["The Baker's Dilemma"] = "&quot;Sorry, I'm busy right now.&quot;",
-			}, {}, "Mini-Hipster", 25)
+			}, {}, "free turn", 25)
 			if get_result():contains("The Manor in Which You're Accustomed") then
 				did_action = true
 			end
@@ -4729,8 +4743,9 @@ endif
 		if ascensionpath("BIG!") then return end
 		local woodspt = get_page("/woods.php")
 		if woodspt:contains("The Hidden Temple") then return end
+		if not script.have_familiar("Pair of Stomping Boots") then return end
 		fam "Pair of Stomping Boots"
-		if familiarid() ~= familiar_data["Pair of Stomping Boots"].id then
+		if not familiar("Pair of Stomping Boots") then
 			return
 		end
 		ensure_buffs { "Leash of Linguini", "Empathy" }

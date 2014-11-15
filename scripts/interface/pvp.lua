@@ -6,15 +6,15 @@ register_setting {
 }
 
 function automate_pvp_fights(numtimes, stance, attacktype)
---	local tbl = {}
+	local tbl = {}
 	for i = 1, numtimes do
 		local pf = async_post_page("/peevpee.php", { action = "fight", place = "fight", pwd = session.pwd, ranked = 1, stance = stance, attacktype = attacktype })
---		table.insert(tbl, pf)
+		table.insert(tbl, pf)
 	end
---	for i, pf in ipairs(tbl) do
---		pf()
---		print("got result for fight " .. i)
---	end
+	for i, pf in ipairs(tbl) do
+		pf()
+		print("INFO: got result for fight " .. i)
+	end
 end
 
 local automate_pvp_fights_href = add_automation_script("automate-pvp-fights", function()

@@ -233,7 +233,7 @@ add_printer("/clan_viplounge.php", function()
 	local changed = false
 	text = text:gsub([[<tr>.-</tr>]], function(tr)
 		if tr:contains("value=eathotdog") then
-			print(tr)
+			--print(tr)
 			local name = nil
 			local ingredient_name = nil
 			local ingredient_cost = nil

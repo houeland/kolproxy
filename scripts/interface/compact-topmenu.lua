@@ -167,7 +167,7 @@ add_interceptor("/topmenu.php", function()
 	end
 end)
 
-add_processor("/skills.php", function()
+add_processor("/runskillz.php", function()
 	if not setting_enabled("enable most-recently-used list") then return end
 	if params and params.whichskill then
 		local desc = string.format("cast %i %i", tonumber(params.quantity or 1), tonumber(params.whichskill))
@@ -347,7 +347,7 @@ $("#mrulist").change(function() {
 	var sel_opt = $("#mrulist option:selected")
 	var params = JSON.parse(sel_opt.attr("params"))
 	var url = "/inv_use.php"
-	if (params['whichskill']) url = "/skills.php"
+	if (params['whichskill']) url = "/runskillz.php"
 	if (params['whichstore']) url = "/store.php"
 	dojax(url, "GET", sel_opt.attr("text"), params)
 	top.menupane.location = "topmenu.php"

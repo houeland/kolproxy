@@ -582,7 +582,7 @@ function get_common_js()
 			}
 			$.ajax({
 				type: 'GET',
-				url: "/skills.php?whichskill=" + skillid + "&ajax=1&action=Skillz&targetplayer=]] .. playerid() .. [[&quantity=" + quantity + "&pwd=]] .. session.pwd .. [[",
+				url: "/runskillz.php?whichskill=" + skillid + "&ajax=1&action=Skillz&targetplayer=]] .. playerid() .. [[&quantity=" + quantity + "&pwd=]] .. session.pwd .. [[",
 				cache: false,
 				global: false,
 				success: function(out) {

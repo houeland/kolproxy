@@ -201,13 +201,13 @@ function run_file_with_environment(filename, orgenv, prefillenv)
 		if v ~= nil then return v end
 		do
 			local strthing = k .. ":" .. filename
-			if false and not strthing_reported[strthing] then
-				--print("DEBUG didn't find variable", k, "for", filename)
-				local f = io.open("logs/info/DEBUG-strthing-reported.txt", "a+")
-				f:write(strthing.."\n")
-				f:close()
+			if not strthing_reported[strthing] then
+				print("DEBUG didn't find variable", k, "for", filename)
 				strthing_reported[strthing] = true
 			end
+			local f = io.open("logs/info/DEBUG-strthing-reported.txt", "a+")
+			f:write(strthing.."\n")
+			f:close()
 		end
 		return nil
 	end, __newindex = function(t, k, v)

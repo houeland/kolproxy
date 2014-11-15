@@ -57,7 +57,7 @@ add_processor("/choice.php", function()
 	learn_dreadscroll_word(scrawl, "Noncombat scrawl")
 end)
 
-add_processor("/skills.php", function()
+add_processor("/runskillz.php", function()
 	if text:contains("close your eyes and let Deep visions wash over you") then
 		local substr = text:match("close your eyes and let Deep visions wash over you.-center>") or ""
 		local house = substr:match("<b>(.-)</b>")

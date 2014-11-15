@@ -84,10 +84,13 @@ get_sessid ref = cookie_to_sessid $ cookie_ $ connection $ ref
 
 canReadState ref = return $ stateValid_ ref :: IO Bool
 
-create_db fullfsync place filename = do
+create_db place filename = do
 	path <- getDirectoryPath place filename
 	db <- Database.SQLite3Modded.open path
-	when fullfsync $ do_db_query_ db "PRAGMA fullfsync = 1;" []
+	do_db_query_ db "PRAGMA busy_timeout = 1000;" []
+	do_db_query_ db "PRAGMA checkpoint_fullfsync = 1;" []
+	do_db_query_ db "PRAGMA locking_mode = EXCLUSIVE;" []
+	do_db_query_ db "PRAGMA journal_mode = WAL;" []
 	return db
 
 do_db_query db query params = (do

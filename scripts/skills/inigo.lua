@@ -1,6 +1,6 @@
 add_warning {
 	message = "You might want to get a better accordion first.",
-	path = "/skills.php",
+	path = "/runskillz.php",
 	type = "extra",
 	check = function()
 		if tonumber(params.whichskill) == get_skillid("Inigo's Incantation of Inspiration") then

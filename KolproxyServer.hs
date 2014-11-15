@@ -195,7 +195,6 @@ handle_connection globalref recvdata sessionmastermv = do
 make_globalref = do
 	environment_settings <- do
 		listenpublic <- getEnvironmentSetting "KOLPROXY_LISTEN_PUBLIC"
-		envfullfsync <- getEnvironmentSetting "KOLPROXY_SQLITE_FULLFSYNC"
 		actionbarstate <- getEnvironmentSetting "KOLPROXY_STORE_STATE_IN_ACTIONBAR"
 		localstate <- getEnvironmentSetting "KOLPROXY_STORE_STATE_LOCALLY"
 		return $ EnvironmentSettings {
@@ -204,8 +203,7 @@ make_globalref = do
 			store_ascension_logs_ = True,
 			store_chat_logs_ = True,
 			store_info_logs_ = True,
-			listen_public_ = (listenpublic == Just "1"),
-			sqlite_fullfsync_ = (envfullfsync == Just "1")
+			listen_public_ = (listenpublic == Just "1")
 		}
 
 	let openlog filename = do
@@ -221,7 +219,7 @@ make_globalref = do
 	hhttp <- openlog "http-log.txt"
 	shutdown_secret <- get_md5 <$> show <$> (randomIO :: IO Integer)
 
-	chatopendb <- create_db (sqlite_fullfsync_ environment_settings) "sqlite3 chatlog" "chat-log.sqlite3"
+	chatopendb <- create_db "sqlite3 chatlog" "chat-log.sqlite3"
 	do_db_query_ chatopendb "CREATE TABLE IF NOT EXISTS public(mid INTEGER PRIMARY KEY NOT NULL, time INTEGER NOT NULL, channel TEXT NOT NULL, playerid INTEGER NOT NULL, msg TEXT NOT NULL, rawjson TEXT NOT NULL);" []
 	do_db_query_ chatopendb "CREATE TABLE IF NOT EXISTS private(idx INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, time INTEGER NOT NULL, playerid INTEGER NOT NULL, msg TEXT NOT NULL, rawjson TEXT NOT NULL);" []
 	do_db_query_ chatopendb "CREATE TABLE IF NOT EXISTS other(idx INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, time INTEGER NOT NULL, msg TEXT NOT NULL, rawjson TEXT NOT NULL);" []
@@ -312,7 +310,7 @@ runProxyServer r rchat portnum = do
 				Just x -> return (m, x)
 				Nothing -> do
 					putStrLn $ "DB: Opening log database: " ++ filename
-					opendb <- create_db (sqlite_fullfsync _log_fakeref) "sqlite3 log" filename
+					opendb <- create_db "sqlite3 log" filename
 					do_db_query_ opendb "CREATE TABLE IF NOT EXISTS pageloads(idx INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, time TEXT NOT NULL, statusbefore TEXT, statusafter TEXT, statebefore TEXT, stateafter TEXT, sessionid TEXT NOT NULL, requestedurl TEXT NOT NULL, parameters TEXT, retrievedurl TEXT, pagetext TEXT);" []
 					x <- newChan
 					forkIO_ "kps:dblogchan" $ forever $ do
@@ -328,7 +326,7 @@ runProxyServer r rchat portnum = do
 				Just x -> return (m, x)
 				Nothing -> do
 					putStrLn $ "  DB: Opening state database: " ++ filename
-					statedb <- create_db (sqlite_fullfsync _log_fakeref) "state" filename
+					statedb <- create_db "state" filename
 					putStrLn $ "  DB: State database loaded."
 					x <- newChan
 					forkIO_ "kps:dbstatechan" $ forever $ do

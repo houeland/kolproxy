@@ -1688,7 +1688,7 @@ endif
 	}
 
 	add_task {
-		when = have_item("Boris's Helm") and not have_item("Boris's Helm (askew)") and level() >= 3 and level() < 13,
+		when = ascension_script_option("fold +ML equipment") and have_item("Boris's Helm") and not have_item("Boris's Helm (askew)") and level() >= 3 and level() < 13,
 		task = {
 			message = "twist Boris's Helm",
 			nobuffing = true,
@@ -1700,7 +1700,7 @@ endif
 	}
 
 	add_task {
-		when = have_item("Boris's Helm (askew)") and not have_item("Boris's Helm") and level() >= 13,
+		when = ascension_script_option("fold +ML equipment") and have_item("Boris's Helm (askew)") and not have_item("Boris's Helm") and level() >= 13,
 		task = {
 			message = "twist Boris's Helm back",
 			nobuffing = true,
@@ -1712,7 +1712,8 @@ endif
 	}
 
 	add_task {
-		when = have_item("Sneaky Pete's leather jacket") and
+		when = ascension_script_option("fold +ML equipment") and
+			have_item("Sneaky Pete's leather jacket") and
 			not have_item("Sneaky Pete's leather jacket (collar popped)")
 			and level() >= 3 and
 			level() < 13 and
@@ -1728,7 +1729,7 @@ endif
 	}
 
 	add_task {
-		when = have_item("Sneaky Pete's leather jacket (collar popped)") and not have_item("Sneaky Pete's leather jacket") and level() >= 13,
+		when = ascension_script_option("fold +ML equipment") and have_item("Sneaky Pete's leather jacket (collar popped)") and not have_item("Sneaky Pete's leather jacket") and level() >= 13,
 		task = {
 			message = "unpop collar on Sneaky Pete's leather jacket",
 			nobuffing = true,
@@ -3280,24 +3281,16 @@ endif
 	}
 
 	do
-		local larvafam = "Mini-Hipster"
-		local larvamacro = macro_stasis
-		if challenge == "fist" then
-			larvafam = "Knob Goblin Organ Grinder"
-			larvamacro = macro_fist
-		elseif not script.have_familiar("Mini-Hipster") then
-			larvamacro = macro_noodlecannon
-		end
 		add_task {
 			prereq = quest("Looking for a Larva in All the Wrong Places"),
 			message = "find larva",
 			buffs = { "Smooth Movements" },
-			fam = larvafam,
+			fam = "free turn",
 			runawayfrom = { "bar", "spooky mummy", "spooky vampire", "triffid", "warwelf", "wolfman" },
 			minmp = 10,
 			action = adventure {
 				zoneid = 15,
-				macro_function = larvamacro,
+				macro_function = macro_kill_monster,
 				noncombats = {
 					["Arboreal Respite"] = "Explore the stream",
 					["Consciousness of a Stream"] = "March to the marsh",
@@ -3310,7 +3303,7 @@ endif
 		prereq = (challenge == "fist") and level() < 6 and not have_item("tree-holed coin"), -- TODO: make a better check than level to see that we haven't completed temple unlock
 		message = "get tree-holed coin",
 		buffs = { "Smooth Movements" },
-		fam = "Mini-Hipster",
+		fam = "free turn",
 		minmp = 15,
 		action = adventure {
 			zoneid = 15,
@@ -3498,7 +3491,7 @@ endif
 		prereq = (challenge == "fist") and fist_level == 2,
 		message = "get entryway fist scroll",
 		buffs = { "Polka of Plenty" },
-		fam = "Mini-Hipster",
+		fam = "free turn",
 		minmp = 10,
 		action = adventure {
 			zoneid = 30,
@@ -3801,7 +3794,7 @@ endif
 		add_task {
 			prereq = (challenge == "fist") and fist_level == 3,
 			message = "get conservatory fist scroll",
-			fam = "Mini-Hipster",
+			fam = "free turn",
 			minmp = 10,
 			action = adventure {
 				zoneid = 103,
@@ -3812,7 +3805,7 @@ endif
 		add_task {
 			prereq = (challenge == "fist") and fist_level == 4,
 			message = "get slums fist scroll",
-			fam = "Mini-Hipster",
+			fam = "free turn",
 			minmp = 10,
 			action = adventure {
 				zoneid = 248,
@@ -4081,7 +4074,7 @@ endif
 		prereq = (challenge == "fist") and
 			fist_level == 3,
 		message = "get conservatory fist scroll",
-		fam = "Mini-Hipster",
+		fam = "free turn",
 		minmp = 10,
 		action = adventure {
 			zoneid = 103,
@@ -4093,7 +4086,7 @@ endif
 		prereq = (challenge == "fist") and
 			fist_level == 4,
 		message = "get slums fist scroll",
-		fam = "Mini-Hipster",
+		fam = "free turn",
 		minmp = 10,
 		action = adventure {
 			zoneid = 248,
@@ -4295,7 +4288,7 @@ endif
 		prereq = have_reagent_pastas < need_total_reagent_pastas and trailed == "dairy goat",
 		f = function()
 			-- TODO: burrito blessing if available. messed up when it's taken too long! don't craft food/equipment until this is done
-			script.go("get goat cheese for pasta", 271, make_cannonsniff_macro("dairy goat"), nil, { "Heavy Petting", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }, "Slimeling even in fist", 30, { olfact = "dairy goat" })
+			script.go("get goat cheese for pasta", 271, make_cannonsniff_macro("dairy goat"), nil, { "Heavy Petting", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }, "fairy", 30, { olfact = "dairy goat" })
 		end,
 	}
 
@@ -4541,7 +4534,7 @@ endif
 			script.bonus_target { "noncombat", "extranoncombat", "item" }
 
 			if not have_item("S.O.C.K.") then
-				script.go("do airship", 81, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Ur-Kel's Aria of Annoyance", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "Slimeling even in fist", 35, { choice_function = function(advtitle, choicenum)
+				script.go("do airship", 81, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Ur-Kel's Aria of Annoyance", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "fairy", 35, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Random Lack of an Encounter" then
 						if not have_item("model airship") then
 							return "Gallivant down to the head"
@@ -5771,6 +5764,7 @@ local ascension_script_options_tbl = {
 	["use fax machine manually"] = { yes = "ignore the fax machine", no = "automate", when = path_supports_fax_machine },
 	["skip library key"] = { yes = "get library key manually", no = "automate quest normally" },
 	["go for a 2-day SCHR"] = { yes = "yes I'm crazy", no = "no thanks", when = function() return ascensionpath("Heavy Rains") end },
+	["fold +ML equipment"] = { yes = "fold automatically", no = "don't automate", when = function() return not ascensionstatus("Hardcore") end, default_yes = true },
 }
 
 function script_want_library_key()
@@ -5782,7 +5776,7 @@ function script_want_2_day_SCHR()
 end
 
 function script_use_unified_kill_macro()
-	return script_want_2_day_SCHR() or ascensionpath("Heavy Rains")
+	return script_want_2_day_SCHR() or ascensionpath("Heavy Rains") or ascensionpath("Picky")
 end
 
 function ascension_script_option(name)

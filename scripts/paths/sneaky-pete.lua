@@ -84,7 +84,7 @@ end
 
 add_warning {
 	message = "Shake It Off will remove the Thrice-Cursed, Twice-Cursed, and Once-Cursed buffs.",
-	path = "/skills.php",
+	path = "/runskillz.php",
 	type = "extra",
 	check = function()
 		if tonumber(params.whichskill) ~= get_skillid("Shake It Off") then return end

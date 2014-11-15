@@ -484,6 +484,18 @@ end
 function stall_action()
 	local macrolines = {}
 	table.insert(macrolines, conditional_salve_action("goto stall_do_return"))
+	if have_equipped_item("Pantsgiving") then
+		table.insert(macrolines, "if (hasskill Pocket Crumbs)")
+		table.insert(macrolines, "	cast Pocket Crumbs")
+		table.insert(macrolines, "	goto stall_do_return")
+		table.insert(macrolines, "endif")
+	end
+	if have_skill("Curse of Weaksauce") then
+		table.insert(macrolines, "if (hasskill Curse of Weaksauce)")
+		table.insert(macrolines, "	cast Curse of Weaksauce")
+		table.insert(macrolines, "	goto stall_do_return")
+		table.insert(macrolines, "endif")
+	end
 	if have_item("seal tooth") then
 		table.insert(macrolines, "use seal tooth")
 		table.insert(macrolines, "goto stall_do_return")
@@ -2097,6 +2109,48 @@ cast Saucegeyser
 ]]
 	elseif pt:contains("Green Ops Soldier") then
 		return macro_noodlegeyser_raw(5)
+	elseif playerclass("Sauceror") and have_skill("Saucestorm") then
+		local maybe_weaksauce = ""
+		if have_skill("Itchy Curse Finger") and have_skill("Curse of Weaksauce") then
+			maybe_weaksauce = [[
+
+cast Curse of Weaksauce
+
+]]
+		end
+		return maybe_weaksauce .. [[
+
+if (monstername animated mahogany nightstand) || (monstername drunk goat) || (monstername pygmy witch lawyer) || (monstername pygmy orderlies) || (monstername skeletal sommelier) || (monstername possessed laundry press) || (monstername flock of stab-bats) || (monstername tomb asp) || (monstername senile lihc) || (monstername big wheelin' twins)
+	if hasskill Thunder Clap
+		cast Thunder Clap
+	endif
+endif
+
+if (monstername sabre-toothed goat) || (monstername slick lihc) || (monstername mad wino) || (monstername pygmy orderlies) || (monstername plaid ghost) || (monstername taco cat) || (monstername troll twins)
+	if hasskill Talk About Politics
+		cast Talk About Politics
+	endif
+endif
+
+]] .. use_crumbs .. [[
+
+]] .. use_raindoh_flyers .. [[
+
+]] .. use_other .. [[
+
+cast Saucestorm
+cast Saucestorm
+cast Saucestorm
+
+abort hppercentbelow 50
+abort mpbelow 50
+
+cast Saucestorm
+cast Saucestorm
+cast Saucestorm
+cast Saucestorm
+cast Saucestorm
+]]
 	elseif physically_resistant then
 		return macro_noodlecannon_raw
 	else

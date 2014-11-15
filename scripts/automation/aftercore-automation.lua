@@ -144,7 +144,10 @@ aftercore_automation_href = add_automation_script("aftercore-automation", functi
 	set_equipment(eq)
 	text, url = get_page("/main.php")
 	text = add_message_to_page(text, "Done.", "Automation results:")
-	text, url, available_scripts = spend_aftercore_turns()
+	available_scripts = {}
+	if advs() > 0 then
+		text, url, available_scripts = spend_aftercore_turns()
+	end
 	if not locked() then
 		automate_pvp_fights(pvpfights(), 2, "lootwhatever")
 		for _, x in ipairs { "Boris's key", "Jarlsberg's key", "Sneaky Pete's key", "digital key", "Richard's star key" } do

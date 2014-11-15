@@ -406,10 +406,10 @@ function setup_functions()
 
 		function raw_retrieve_skills()
 			if locked() then
-				print("WARNING: raw_retrieve_skills() called while locked ("..tostring(locked())..")")
+				--print("WARNING: raw_retrieve_skills() called while locked ("..tostring(locked())..")")
 				return nil
 			else
-				print "INFO: raw_retrieve_skills() called"
+				--print "INFO: raw_retrieve_skills() called"
 			end
 
 			if session["holiday: feast of boris"] == "yes" then

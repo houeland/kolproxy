@@ -13,7 +13,7 @@ local function check_summons()
 	end
 end
 
-add_processor("/skills.php", function()
+add_processor("/runskillz.php", function()
 	check_summons()
 end)
 

@@ -229,7 +229,7 @@ setup_turnplaying_script {
 -- opt	2	Step away from the helm
 -- opt	3	Show the tropical island volcano lair map to the navigator
 			end
-		elseif quest_text("put a stop to this Nemesis nonsense") then
+		elseif quest_text("put a stop to this Nemesis nonsense") or (quest("Me and My Nemesis") and have_item("secret tropical island volcano lair map")) then
 			if classid() == 1 then -- seal clubber
 				stop "TODO: Automate seal clubber island"
 			elseif classid() == 2 then -- turtle tamer
@@ -366,7 +366,7 @@ function try_killing_nemesis()
 	script.ensure_mp(50)
 	fought = false
 	result, resulturl = get_page("/volcanoisland.php", { pwd = session.pwd, action = "tniat" })
-	if locked() then
+	if locked() or not resulturl:contains("volcanoisland.php") or result:contains([[value="Continue"]]) then
 		fought = true
 	end
 	result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_noodleserpent)

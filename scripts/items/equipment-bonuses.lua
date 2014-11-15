@@ -44,6 +44,7 @@ function parse_modifier_bonuses_page(pt)
 	bonuses.add { ["Combat Initiative"] = tonumber(pt:match([[>([+-][0-9]+)%% Combat Initiative<]])) }
 
 	bonuses.add { ["Adventures per day"] = tonumber(pt:match([[>([+-][0-9]+) Adventure%(s%) per day when equipped.?<]])) }
+	bonuses.add { ["PvP fights per day"] = tonumber(pt:match([[>([+-][0-9]+) PvP fight%(s%) per day when equipped.?<]])) }
 	bonuses.add { ["Familiar Weight"] = tonumber(pt:match([[>([+-][0-9]+) to Familiar Weight<]])) }
 
 	bonuses.add { ["Cold Resistance"] = tonumber(pt:match([[ Cold Resistance %(([+-][0-9]+)%)<]])) }
@@ -174,6 +175,7 @@ local items_to_cache = {
 	["stinky cheese diaper"] = true,
 	["Jekyllin hide belt"] = true,
 	["Grimacite gown"] = true,
+	["depleted Grimacite ninja mask"] = true,
 	["Moonthril Cuirass"] = true,
 	["hairshirt"] = true,
 	["over-the-shoulder Folder Holder"] = true,
