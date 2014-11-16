@@ -124,6 +124,8 @@ function do_daily_visits()
 		"cheap toaster",
 		"cheap toaster",
 		"Chester's bag of candy",
+		"Chroner cross",
+		"Chroner trigger",
 		"creepy voodoo doll",
 		"cursed microwave",
 		"cursed pony keg",
