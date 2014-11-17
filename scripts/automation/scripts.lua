@@ -404,6 +404,9 @@ function get_automation_scripts(cached_stuff)
 		end
 		if famname == "Slimeling" then famname = "fairy" end
 		if famname == "Rogue Program" then famname = "auto" end
+		if famname == "He-Boulder" and not script.have_familiar("He-Boulder") then famname = "auto" end
+		if famname == "Jumpsuited Hound Dog for +combat" and not script.have_familiar("Jumpsuited Hound Dog") then famname = "auto" end
+		if famname == "Jumpsuited Hound Dog" and not script.have_familiar("Jumpsuited Hound Dog") then famname = "fairy" end
 		if famname == "fairy" then
 			if daysthisrun() >= 2 and not have_item("digital key") and not have_item("psychoanalytic jar") and get_daily_counter("familiar.jungman.jar") == 0 and script.have_familiar("Angry Jung Man") then
 				famname = "Angry Jung Man"
@@ -418,6 +421,9 @@ function get_automation_scripts(cached_stuff)
 			else
 				famname = firstfam { "Slimeling", "Dandy Lion", "Fist Turkey", "Angry Jung Man", "Gelatinous Cubeling", "Reagnimated Gnome", "Blavious Kloop", "Green Pixie", "Piano Cat", "Hippo Ballerina", "Obtuse Angel", "Pair of Stomping Boots", "Peppermint Rhino", "Mechanical Songbird", "Baby Gravy Fairy" } or "auto"
 			end
+		end
+		if famname == "leprechaun" then
+			famname = firstfam { "He-Boulder", "Leprechaun" } or "auto"
 		end
 		if famname == "free turn" then
 			famname = firstfam { "Mini-Hipster", "Artistic Goth Kid" } or "auto"

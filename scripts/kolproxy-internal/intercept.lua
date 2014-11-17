@@ -22,7 +22,7 @@ query = requestquery -- temporary workaround for backwards compatibility
 get_player_skills()
 
 function submit_original_request()
-	return raw_async_submit_page(request_type, requestpath, parse_params_raw_input_params())()
+	return raw_async_submit_page(request_type, requestpath, get_allparams_keyvaluetbl())()
 end
 end)
 

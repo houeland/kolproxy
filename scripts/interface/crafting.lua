@@ -235,7 +235,7 @@ add_automation_script("buy-and-cook-fancy", function()
 		use_item("Dramatic&trade; range")
 	end
 	local p = {}
-	for _, x in ipairs(parse_params_raw_input_params()) do
+	for _, x in ipairs(get_allparams_keyvaluetbl()) do
 		if x.key ~= "automation-script" and x.key ~= "ajax" then
 			table.insert(p, x)
 		end
@@ -246,7 +246,7 @@ end)
 -- TODO: make this a printer after redoing parameter handling
 add_automator("/craft.php", function()
 	if text:contains("need a more advanced cooking appliance") then
-		local p = parse_params_raw_input_params()
+		local p = get_allparams_keyvaluetbl()
 		table.insert(p, { key = "automation-script", value = "buy-and-cook-fancy" })
 		text = text:gsub("(need a more advanced cooking appliance.-)(</td>)", function(a, b)
 			return a..[[<p><a href="]]..raw_make_href("/kolproxy-automation-script", p)..[[" style="color: green">{ Buy one and try again (1000 Meat). }</a></p>]]..b
@@ -263,7 +263,7 @@ add_automation_script("buy-and-mix-fancy", function()
 		use_item("Queue Du Coq cocktailcrafting kit")
 	end
 	local p = {}
-	for _, x in ipairs(parse_params_raw_input_params()) do
+	for _, x in ipairs(get_allparams_keyvaluetbl()) do
 		if x.key ~= "automation-script" and x.key ~= "ajax" then
 			table.insert(p, x)
 		end
@@ -274,7 +274,7 @@ end)
 -- TODO: make this a printer after redoing parameter handling
 add_automator("/craft.php", function()
 	if text:contains("cocktail set is not advanced enough to make such a fancy beverage") then
-		local p = parse_params_raw_input_params()
+		local p = get_allparams_keyvaluetbl()
 		table.insert(p, { key = "automation-script", value = "buy-and-mix-fancy" })
 		text = text:gsub("(cocktail set is not advanced enough to make such a fancy.-)(</td>)", function(a, b)
 			return a..[[<p><a href="]]..raw_make_href("/kolproxy-automation-script", p)..[[" style="color: green">{ Buy one and try again (1000 Meat). }</a></p>]]..b

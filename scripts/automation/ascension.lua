@@ -3237,7 +3237,7 @@ endif
 			unlocked_knob(),
 		task = {
 			message = "farm treasury meat",
-			familiar = "He-Boulder",
+			familiar = "leprechaun",
 			action = adventure {
 				zone = "Cobb's Knob Treasury",
 				macro_function = macro_autoattack,
@@ -4441,7 +4441,7 @@ endif
 							["100% Legal"] = "Ask for ore",
 							["See You Next Fall"] = "Give 'im the stick",
 							["More Locker Than Morlock"] = "Get to the choppa' (which is outside)",
-						}, {}, "He-Boulder", 15)
+						}, {}, "auto", 15)
 					else
 						script.bonus_target { "item" }
 						script.ensure_buffs {}
@@ -4465,7 +4465,7 @@ endif
 			message = "get hippy outfit",
 			bonus_target = { "noncombat" },
 			action = function()
-				script.go("get hippy outfit", 26, macro_autoattack, {}, {}, "He-Boulder", 15, { choice_function = function(advtitle, choicenum)
+				script.go("get hippy outfit", 26, macro_autoattack, {}, {}, "auto", 15, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Peace Wants Love" then
 						if not have_item("filthy corduroys") then
 							return "Agree to take his clothes"

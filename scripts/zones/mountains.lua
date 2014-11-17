@@ -509,16 +509,16 @@ local oil_peak_monster = {
 
 local function get_pressure()
 	local questlog_page = get_page("/questlog.php", { which = 1 })
-	local pressure = questlog_page:match([[The pressure is currently [0-9.]+ microbowies per Mercury.]]) or questlog_page:match([[The pressure is very low at this point.]]) or questlog_page:match([[You've lit the fire on Oil Peak.]])
+	local pressure = questlog_page:match([[current pressure: [0-9.]+ &mu;B/Hg]]) or questlog_page:match([[The pressure is very low at this point.]]) or questlog_page:match([[You've lit the fire on Oil Peak.]])
 	if not pressure then
 		async_get_page("/place.php", { whichplace = "highlands", action = "highlands_dude" })
 		questlog_page = get_page("/questlog.php", { which = 1 })
-		pressure = questlog_page:match([[The pressure is currently [0-9.]+ microbowies per Mercury.]]) or questlog_page:match([[The pressure is very low at this point.]]) or questlog_page:match([[You've lit the fire on Oil Peak.]])
+		pressure = questlog_page:match([[current pressure: [0-9.]+ &mu;B/Hg]]) or questlog_page:match([[The pressure is very low at this point.]]) or questlog_page:match([[You've lit the fire on Oil Peak.]])
 	end
 	if pressure then
-		local microbowies = tonumber(pressure:match([[currently ([0-9.]+) microbowies]]))
+		local microbowies = tonumber(pressure:match([[current pressure: ([0-9.]+) &mu;B/Hg]]))
 		if microbowies then
-			pressure = pressure:gsub("Mercury", function(x) return x .. string.format(" (%.0f%%)", microbowies / 3.17) end)
+			pressure = pressure .. string.format(" (%.0f%%)", microbowies / 3.17)
 		end
 	end
 	return pressure

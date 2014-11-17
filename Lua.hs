@@ -679,8 +679,6 @@ setup_lua_instance level filename setupref = do
 
 get_cached_lua_instance_for_code level filename ref runcodebit = do
 	-- TODO! CLOSE LUA INSTANCES!!
-	let make_lsetup = log_time_interval ref ("setup lua instance: " ++ filename ++ "|" ++ show level) $ setup_lua_instance level filename ref
-
 	canread <- canReadState ref
 	-- TODO: Wrap in MVar instead of IORef?
 	insts <- readIORef (luaInstances_ $ sessionData $ ref)
@@ -689,7 +687,9 @@ get_cached_lua_instance_for_code level filename ref runcodebit = do
 		-- TODO: Use a Chan to enforce order?
 		Just existingmv -> withMVar existingmv runcodebit
 		_ -> do
-			either_l_setup <- make_lsetup
+			either_l_setup <- do
+				putStrLn $ "DEBUG: making lua instance: " ++ show (canread, filename, level)
+				log_time_interval ref ("setup lua instance: " ++ filename ++ "|" ++ show level) $ setup_lua_instance level filename ref
 			case either_l_setup of
 				Right l_setup -> do
 					mv_l <- newMVar l_setup
@@ -698,38 +698,40 @@ get_cached_lua_instance_for_code level filename ref runcodebit = do
 					withMVar mv_l runcodebit
 				Left err -> return $ Left err
 
-run_lua_code level filename ref dosetvars = do
-	get_cached_lua_instance_for_code level filename ref $ \l -> do
-		log_time_interval ref "prepare for lua code" $ do
-			top <- Lua.gettop l
-			when (top > 1) $ do
-				putStrLn $ "ERROR: Lua top is " ++ show top
-				Lua.pop l (top - 1)
-			Lua.getglobal l "kolproxy_stored_wrapped_function"
-			void $ dosetvars l
+run_lua_code_ ref l dosetvars = do
+	log_time_interval ref "prepare for lua code" $ do
+		top <- Lua.gettop l
+		when (top > 1) $ do
+			putStrLn $ "ERROR: Lua top is " ++ show top
+			Lua.pop l (top - 1)
+		Lua.getglobal l "kolproxy_stored_wrapped_function"
+		void $ dosetvars l
 
-		moo_two <- log_time_interval ref ("run lua code: " ++ filename) $ Lua.pcall l 1 Lua.multret 1 -- returns on stack=2+
-		log_time_interval ref "retrieving results" $ case moo_two of
-			0 -> do
-				top <- Lua.gettop l
-				rets <- mapM (\x -> do
-					isstring <- Lua.isstring l x
-					if isstring
-						then Just <$> Lua.tobytestring l x
-						else return Nothing) [2..top]
-				Lua.pop l (top - 1)
-				return $ Right rets
-			_ -> do
-				putStrLn $ "lua-call error!"
-				top <- Lua.gettop l
-				putStrLn $ "lua-call error, top = " ++ (show top)
-				err <- Lua.tostring l (-1)
-				putStrLn $ "lua-call error: " ++ err
-				Lua.getglobal l "kolproxy_debug_traceback" -- load traceback on stack=3
-				traceback <- Lua.tostring l 3
-				putStrLn $ "call-traceback: " ++ traceback
-				Lua.pop l (top - 1)
-				return $ Left $ ("error running code (" ++ filename ++ "):\n" ++ err, traceback)
+	moo_two <- log_time_interval ref ("run lua code: " ++ filename) $ Lua.pcall l 1 Lua.multret 1 -- returns on stack=2+
+	log_time_interval ref "retrieving results" $ case moo_two of
+		0 -> do
+			top <- Lua.gettop l
+			rets <- mapM (\x -> do
+				isstring <- Lua.isstring l x
+				if isstring
+					then Just <$> Lua.tobytestring l x
+					else return Nothing) [2..top]
+			Lua.pop l (top - 1)
+			return $ Right rets
+		_ -> do
+			putStrLn $ "lua-call error!"
+			top <- Lua.gettop l
+			putStrLn $ "lua-call error, top = " ++ (show top)
+			err <- Lua.tostring l (-1)
+			putStrLn $ "lua-call error: " ++ err
+			Lua.getglobal l "kolproxy_debug_traceback" -- load traceback on stack=3
+			traceback <- Lua.tostring l 3
+			putStrLn $ "call-traceback: " ++ traceback
+			Lua.pop l (top - 1)
+			return $ Left $ ("error running code (" ++ filename ++ "):\n" ++ err, traceback)
+
+run_lua_code level filename ref dosetvars = do
+	get_cached_lua_instance_for_code level filename ref $ \l -> run_lua_code_ ref l dosetvars
 
 setvars vars text allparams l = do
 	push_table_contents_string_string l vars

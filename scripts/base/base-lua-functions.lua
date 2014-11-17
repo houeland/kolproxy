@@ -123,7 +123,7 @@ local function parse_params_raw(str)
 	end
 end
 
-function parse_params_raw_input_params()
+function get_allparams_keyvaluetbl()
 	return parse_params_raw(input_params)
 end
 

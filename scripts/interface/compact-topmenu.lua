@@ -255,7 +255,7 @@ html, body {
 
 			<div class='abc'><span class='title'><a target='mainpane' href='woods.php'>woods</a> </span><br><a target='mainpane' href='tavern.php'>tavern</a> <a target='mainpane' href='place.php?whichplace=forestvillage&action=fv_untinker'>unt</a><br><a target='mainpane' href='place.php?whichplace=forestvillage&action=fv_friar'>fl</a> <a target='mainpane' href='friars.php'>friars</a> <a target='mainpane' href='bhh.php'>bhh</a> </div>
 
-			<div class='abc a'><span class='title'><a target='_top' href='logout.php'>log out</a></span><br><a target='kolcalendar' href='http://noblesse-oblige.org/calendar/'>cal</a> <a target='koldonate' href='donatepopup.php'>donate</a><br><a target='mainpane' href='adminmail.php'>bug</a> <a href='http://radio.kingdomofloathing.com/' target='kolradio'>radio</a></div>
+			<div class='abc a'><span class='title'><a target='_top' href='logout.php'>log out</a></span><br><a target='kolcalendar' href='http://noblesse-oblige.org/calendar/'>cal</a> <a target='koldonate' href='donatepopup.php'>donate</a><br><a target='mainpane' href='adminmail.php'>bug</a> <a target='mainpane' href='community.php'>comm</a></div>
 		</div>
 	</div>
 </body>
