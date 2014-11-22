@@ -590,6 +590,7 @@ endif
 	if cached_stuff.completed_daily_dungeon then
 		DD_keys = 100
 	elseif script_want_2_day_SCHR() then
+	elseif level() >= 6 and estimate_max_fullness() - fullness() < 4 then
 	elseif not ascensionstatus("Hardcore") then
 		DD_keys = 100
 	end
@@ -4639,7 +4640,7 @@ endif
 			not cached_stuff.tried_pulling_large_box and
 			level() >= 10 and
 			turnsthisrun() >= 300 and
-			real_DD_keys >= 3 and
+			real_DD_keys >= 2 and
 			can_ensure_clover(),
 		task = {
 			message = "considering pulling large box",

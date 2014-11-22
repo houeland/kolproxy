@@ -83,16 +83,16 @@ local function run_wrapped_function_internal(f_env)
 			error("Error downloading page " .. tostring(f_env.request_path) .. ":<br><br>" .. tostring(b))
 		end
 	else
-		return chat_result
+		return chat_result, f_env.request_path
 	end
 end
 
 local function run_wrapped_function(f_env)
 	local ok, pt, url = xpcall(function() return run_wrapped_function_internal(f_env) end, function(e) return { msg = e, trace = debug.traceback(e, 2) } end)
 	if ok then
-		return pt--, url
+		return pt, url, "text/html; charset=UTF-8"
 	else
-		return show_error(f_env.text or "{ No page text. }", pt)--, "/kolproxy-error"
+		return show_error(f_env.text or "{ No page text. }", pt), "/kolproxy-error", "text/html; charset=UTF-8"
 	end
 end
 

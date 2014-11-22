@@ -250,7 +250,7 @@ function cannon_action()
 	elseif ascensionpath("Avatar of Sneaky Pete") then
 		return macro_sneaky_pete_action()
 	end
-	return macro_cast_skill { pastathrall() and "Cannelloni Cannon" or "???", "Saucestorm", "Cannelloni Cannon", "Bawdy Refrain", fury() >= 1 and "Furious Wallop" or "???", "Kneebutt", "Toss", "Clobber", "Ravioli Shurikens" }
+	return macro_cast_skill { pastathrall() and "Cannelloni Cannon" or "???", "Saucestorm", "Cannelloni Cannon", "Bawdy Refrain", fury() >= 1 and "Furious Wallop" or "???", "Saucegeyser", "Kneebutt", "Toss", "Clobber", "Ravioli Shurikens" }
 end
 
 function estimate_elemental_weapon_damage_sum()

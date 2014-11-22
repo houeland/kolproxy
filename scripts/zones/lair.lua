@@ -1296,6 +1296,8 @@ add_printer("/lair6.php", function()
 	elseif ascensionpath("Heavy Rains") then
 		placedescs[6] = "Defeat The Rain King"
 	end
+	placedescs[4] = "(skipped)"
+	placedescs[5] = "(skipped)"
 	local status = "<b>Chamber progress</b><br>"
 	for x, y in ipairs(placedescs) do
 		if y == "(skipped)" then

@@ -27,7 +27,7 @@ function get_automation_tasks(script, cached_stuff)
 					if not have_item(x) then
 						if not have_item("lump of Brituminous coal") then
 							script.ensure_mp(2)
-							cast_skill("Summon Smithsness")()
+							get_page("/campground.php", { preaction = "summonsmithsness", quantity = 1 })
 						end
 						if have_item("lump of Brituminous coal") then
 							if x == "Work is a Four Letter Sword" and not have_item("sword hilt") then

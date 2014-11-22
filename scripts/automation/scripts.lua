@@ -407,6 +407,12 @@ function get_automation_scripts(cached_stuff)
 		if famname == "He-Boulder" and not script.have_familiar("He-Boulder") then famname = "auto" end
 		if famname == "Jumpsuited Hound Dog for +combat" and not script.have_familiar("Jumpsuited Hound Dog") then famname = "auto" end
 		if famname == "Jumpsuited Hound Dog" and not script.have_familiar("Jumpsuited Hound Dog") then famname = "fairy" end
+		if famname == "Exotic Parrot" and not script.have_familiar("Exotic Parrot") then famname = "auto" end
+		if famname == "Knob Goblin Organ Grinder" and not script.have_familiar("Knob Goblin Organ Grinder") then famname = "auto" end
+		if famname == "Frumious Bandersnatch" and not script.have_familiar("Frumious Bandersnatch") then famname = "auto" end
+		if famname == "Baby Bugged Bugbear" and not script.have_familiar("Baby Bugged Bugbear") then famname = "auto" end
+		if famname == "Reassembled Blackbird" and not script.have_familiar("Reassembled Blackbird") then famname = "Reconstituted Crow" end
+		if famname == "Reconstituted Crow" and not script.have_familiar("Reconstituted Crow") then famname = "auto" end
 		if famname == "fairy" then
 			if daysthisrun() >= 2 and not have_item("digital key") and not have_item("psychoanalytic jar") and get_daily_counter("familiar.jungman.jar") == 0 and script.have_familiar("Angry Jung Man") then
 				famname = "Angry Jung Man"
@@ -436,7 +442,7 @@ function get_automation_scripts(cached_stuff)
 			elseif level() >= 5 and script.have_familiar("Fist Turkey") then
 				famname = "Fist Turkey"
 			else
-				famname = "Galloping Grill"
+				famname = firstfam { "Galloping Grill", "Grim Brother", "Bloovian Groose", "Rogue Program", "Midget Clownfish", "Baby Z-Rex", "Smiling Rat", "Blood-Faced Volleyball", "Slimeling", "Dandy Lion", "Fist Turkey", "Angry Jung Man", "Gelatinous Cubeling", "Reagnimated Gnome", "Blavious Kloop", "Green Pixie", "Piano Cat", "Hippo Ballerina", "Obtuse Angel", "Pair of Stomping Boots", "Star Starfish", "Peppermint Rhino", "Mechanical Songbird", "Baby Gravy Fairy" } or "Galloping Grill"
 			end
 		end
 		return raw_want_familiar(famname)
@@ -2843,7 +2849,7 @@ endif
 			end
 			run_task {
 				message = "cut liana at "..x.zone.." (without machete)",
-				fam = "Angry Jung Man",
+				fam = "auto",
 				action = adventure {
 					zone = x.zone,
 					macro_function = macro_noodleserpent,
@@ -2872,7 +2878,7 @@ endif
 					local t = turnsthisrun()
 					run_task {
 						message = "cut liana at " .. x.zone,
-						fam = "Angry Jung Man",
+						fam = "auto",
 						equipment = { weapon = "antique machete" },
 						action = adventure {
 							zone = x.zone,
@@ -2982,7 +2988,7 @@ endif
 --			stop "TODO: Do filthworms [not automated when it's day 2 without super vision]"
 --		end
 		if have_buff("Filthworm Guard Stench") then
-			go("fight queen", 130, macro_noodlecannon, {}, { "Spirit of Bacon Grease" }, "Hobo Monkey", 30, { equipment = { familiarequip = "sugar shield" } })
+			go("fight queen", 130, macro_noodlecannon, {}, { "Spirit of Bacon Grease" }, "leprechaun", 30, { equipment = { familiarequip = "sugar shield" } })
 		elseif have_item("filthworm royal guard scent gland") then
 			inform "using guard stench"
 			set_result(use_item("filthworm royal guard scent gland"))
@@ -3839,7 +3845,7 @@ endif
 			local played = tonumber(session["__script.boss bat turns"]) or 0
 			session["__script.boss bat turns"] = played + 1
 			if played < 4 then
-				go("killing boss bat guardians", 34, macro_noodlecannon, nil, { "Spirit of Garlic", "Leash of Linguini", "Empathy", "Polka of Plenty" }, { --[["Kolproxy Test Fam", --]]"Bloovian Groose", "Hobo Monkey" }, 30)
+				go("killing boss bat guardians", 34, macro_noodlecannon, nil, { "Spirit of Garlic", "Leash of Linguini", "Empathy", "Polka of Plenty" }, "leprechaun", 30)
 			else
 				go("killing boss bat", 34, macro_noodlecannon, nil, { "Spirit of Garlic", "Leash of Linguini", "Empathy", "Polka of Plenty" }, "Knob Goblin Organ Grinder", 35, {
 					finalcheck = function()
