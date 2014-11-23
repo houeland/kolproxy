@@ -135,6 +135,7 @@ function do_daily_visits()
 		"handmade hobby horse",
 		"Idol of Ak'gyxoth",
 		"KoL Con Six Pack",
+		"picky tweezers",
 		"set of jacks",
 		"Taco Dan's Taco Stand Flier",
 		"Trivial Avocations board game",
