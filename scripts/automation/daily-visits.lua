@@ -221,6 +221,7 @@ function do_daily_visits()
 		dopage("/campground.php", { preaction = "summonspencersitems" })
 		dopage("/campground.php", { preaction = "summonaa" })
 		dopage("/campground.php", { preaction = "summonthinknerd" })
+		dopage("/campground.php", { preaction = "summonconfiscators" })
 
 		queue_page_result(cast_skill("Lunch Break"))
 		queue_page_result(cast_skill("Advanced Cocktailcrafting"))
