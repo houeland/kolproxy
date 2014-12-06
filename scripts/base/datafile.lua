@@ -154,10 +154,11 @@ end
 
 function maybe_get_monsterdata(name, image)
 	local realname = nil
-	if image then
-		realname = monster_image_lookup[image]
-	elseif name then
+	if name then
 		realname = monster_name_lookup[name:lower()]
+	end
+	if not realname and image and not image:contains("nopic.gif") then
+		realname = monster_image_lookup[image]
 	end
 	return datafile("monsters")[realname]
 end

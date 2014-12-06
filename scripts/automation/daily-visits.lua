@@ -40,6 +40,34 @@ register_setting {
 	default_level = "detailed",
 }
 
+daily_visits_use_items = {
+	"ball-in-a-cup",
+	"burrowgrub hive",
+	"cheap toaster",
+	"cheap toaster",
+	"cheap toaster",
+	"Chester's bag of candy",
+	"Chroner cross",
+	"Chroner trigger",
+	"creepy voodoo doll",
+	"cursed microwave",
+	"cursed pony keg",
+	"Emblem of Ak'gyxoth",
+	"festive warbear bank",
+	"glass gnoll eye",
+	"handmade hobby horse",
+	"Idol of Ak'gyxoth",
+	"KoL Con Six Pack",
+	"picky tweezers",
+	"set of jacks",
+	"Taco Dan's Taco Stand Flier",
+	"Trivial Avocations board game",
+	"warbear breakfast machine",
+	"warbear soda machine",
+}
+-- TODO? neverending soda
+
+
 function setup_automation_scan_page_results()
 	local extracts = {
 		[[<center><table><tr><td><img src="http://images.kingdomofloathing.com/itemimages/meat.gif" height=30 width=30 alt="Meat"></td><td valign=center>You gain [0-9,]+ Meat.</td></tr></table></center>]],
@@ -117,35 +145,8 @@ function do_daily_visits()
 
 	local pwd = status().pwd
 
-	local possible_daily_items = {
-		"ball-in-a-cup",
-		"burrowgrub hive",
-		"cheap toaster",
-		"cheap toaster",
-		"cheap toaster",
-		"Chester's bag of candy",
-		"Chroner cross",
-		"Chroner trigger",
-		"creepy voodoo doll",
-		"cursed microwave",
-		"cursed pony keg",
-		"Emblem of Ak'gyxoth",
-		"festive warbear bank",
-		"glass gnoll eye",
-		"handmade hobby horse",
-		"Idol of Ak'gyxoth",
-		"KoL Con Six Pack",
-		"picky tweezers",
-		"set of jacks",
-		"Taco Dan's Taco Stand Flier",
-		"Trivial Avocations board game",
-		"warbear breakfast machine",
-		"warbear soda machine",
-	}
-	-- TODO? neverending soda
-
 	local daily_items = {}
-	for _, x in ipairs(possible_daily_items) do
+	for _, x in ipairs(daily_visits_use_items) do
 		if have_item(x) then
 			table.insert(daily_items, x)
 		end
@@ -176,10 +177,12 @@ function do_daily_visits()
 	dopage("/clan_viplounge.php", { action = "klaw" })
 	dopage("/clan_viplounge.php", { action = "klaw" })
 
+	dopage("/clan_rumpus.php", { action = "click", spot = 1 })
 	dopage("/clan_rumpus.php", { action = "click", spot = 3 })
 	dopage("/clan_rumpus.php", { action = "click", spot = 3 })
 	dopage("/clan_rumpus.php", { action = "click", spot = 3 })
 	dopage("/clan_rumpus.php", { action = "click", spot = 4 })
+	dopage("/clan_rumpus.php", { action = "click", spot = 9 })
 
 	dopage("/place.php", { whichplace = "desertbeach", action = "db_nukehouse" })
 

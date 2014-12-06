@@ -207,6 +207,9 @@ aftercore_items_list = {
 	"Jodhpurs of Violence",
 	"Ass-Stompers of Violence",
 	"Novelty Belt Buckle of Violence",
+
+	"Chroner trigger",
+	"Chroner cross",
 }
 
 maybe_pvp_stealable = {
@@ -278,7 +281,7 @@ maybe_pvp_stealable = {
 	"hamethyst necklace",
 	"filigreed hamethyst necklace",
 
-	"spangly mariachi sombrero",
+	"spangly sombrero",
 	"spangly mariachi pants",
 }
 
@@ -306,14 +309,31 @@ function repeat_send_form(targeturl, action, howmany, pwd, itemids)
 	end
 end
 
+local function get_safe_interesting_items()
+	local tbl = {}
+	for _, x in ipairs(aftercore_items_list) do
+		tbl[x] = not can_pvp_steal_item(x)
+	end
+	for _, x in ipairs(maybe_pvp_stealable) do
+		tbl[x] = not can_pvp_steal_item(x)
+	end
+	for _, x in ipairs(daily_visits_use_items) do
+		tbl[x] = not can_pvp_steal_item(x)
+	end
+	local ret = {}
+	for x, y in pairs(tbl) do
+		if y then
+			table.insert(ret, x)
+		end
+	end
+	return ret
+end
+
 local closet_href = add_automation_script("automate-closet", function()
 	local keep_items = {}
-	for _, x in ipairs(aftercore_items_list) do
+	for _, x in ipairs(get_safe_interesting_items()) do
 		keep_items[get_itemid(x)] = true
 	end
--- 	for _, x in ipairs(maybe_pvp_stealable) do
--- 		keep_items[get_itemid(x)] = true
--- 	end
 	for x, y in pairs(inventory()) do
 		if not keep_items[x] then
 			async_post_page("/fillcloset.php", { action = "closetpush", whichitem = x, qty = y, pwd = params.pwd, ajax = 1 })
@@ -334,16 +354,11 @@ function automate_aftercore_pulls()
 	local _, items, _ = retrieve_all_item_locations()
 
 	local itemids = {}
-	for _, x in ipairs(aftercore_items_list) do
+	for _, x in ipairs(get_safe_interesting_items()) do
 		if items[x] then
 			table.insert(itemids, get_itemid(x))
 		end
 	end
--- 	for _, x in ipairs(maybe_pvp_stealable) do
--- 		if items[x] then
--- 			table.insert(itemids, get_itemid(x))
--- 		end
--- 	end
 
 	repeat_send_form("/storage.php", "pull", "1", params.pwd, itemids)
 

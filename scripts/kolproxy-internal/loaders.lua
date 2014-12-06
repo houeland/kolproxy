@@ -109,6 +109,7 @@ load_file("automation", "automation/setup.lua")
 load_file("automation", "automation/daily-visits.lua")
 load_file("automation", "automation/tune-flavour-of-magic.lua")
 load_file("automation", "automation/trick-or-treat.lua")
+load_file("automation", "automation/delete-spookyraven-kmail.lua")
 
 load_file("other", "other/mmg-blocker.lua")
 load_file("other", "adventure-warnings/visit-people-warnings.lua")

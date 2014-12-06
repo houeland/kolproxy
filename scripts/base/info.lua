@@ -71,3 +71,11 @@ end
 function get_counter_effect_list()
 	return counter_effect_tbl
 end
+
+function can_pvp_steal_item(item)
+	local d = get_itemdata(item)
+	if not d then return true end
+	if not d.cantransfer then return false end
+	if (d.sellvalue or 0) == 0 then return false end
+	return true
+end

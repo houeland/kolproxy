@@ -4945,6 +4945,13 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 			end
 		end
 		if optname and not pickchoice then
+			for form in pt:gmatch("<form.-</form>") do
+				if form:match(string.format([[value="%s"]], optname)) then
+					pickchoice = tonumber(form:match([[<input type=hidden name=option value=([0-9])>]]))
+				end
+			end
+		end
+		if optname and not pickchoice then
 			print("ERROR: option " .. tostring(optname) .. " not found for " .. tostring(adventure_title) .. ".")
 		end
 		if pickchoice then

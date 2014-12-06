@@ -2484,6 +2484,24 @@ endif
 
 	-- start of turn-spending things
 
+	local function timer_buff_running_out()
+		for i = 1, 10 do
+			if have_buff("Timer " .. i) and buffturns("Timer " .. i) == 1 then
+				return "Timer " .. i
+			end
+		end
+	end
+	add_task {
+		when = timer_buff_running_out(),
+		task = {
+			message = "timer is running out",
+			nobuffing = true,
+			action = function()
+				stop(timer_buff_running_out() .. " is running out.")
+			end
+		}
+	}
+
 	add_task {
 		when = advs() < want_advs and
 			ascensionpath("Avatar of Sneaky Pete") and

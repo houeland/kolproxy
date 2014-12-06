@@ -270,9 +270,9 @@ function make_strarrow(upeffect)
 		local skillid = tonumber(upeffect:match("skill:([0-9]+)"))
 		local itemid = tonumber(upeffect:match("item:([0-9]+)"))
 		if skillid then
-			return string.format([[<img src="%s" style="cursor: pointer;" class="strarrowskill" onclick="kolproxy_cast_skillid(%d, event.shiftKey)" data-skillid="%d">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", skillid, skillid)
+			return string.format([[<img src="%s" style="cursor: pointer;" class="strarrowskill" data-skillid="%d">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", skillid, skillid)
 		elseif itemid then
-			return string.format([[<img src="%s" style="cursor: pointer;%s" class="strarrowitem" onclick="kolproxy_use_itemid(%d, event.shiftKey)" data-itemid="%d">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", have_item(itemid) and "" or "opacity: 0.5;", itemid, itemid)
+			return string.format([[<img src="%s" style="cursor: pointer;%s" class="strarrowitem" data-itemid="%d">]], "http://images.kingdomofloathing.com/otherimages/bugbear/uparrow.gif", have_item(itemid) and "" or "opacity: 0.5;", itemid, itemid)
 		end
 	end
 	return ""
@@ -580,6 +580,7 @@ function get_common_js()
 				var newquantity = prompt("How many times?")
 				if (newquantity >= 1) quantity = newquantity
 			}
+			if (quantity <= 0) return
 			$.ajax({
 				type: 'GET',
 				url: "/runskillz.php?whichskill=" + skillid + "&ajax=1&action=Skillz&targetplayer=]] .. playerid() .. [[&quantity=" + quantity + "&pwd=]] .. session.pwd .. [[",
@@ -612,8 +613,10 @@ function get_common_js()
 			return false
 		}
 		$(document).ready(function() {
-			$('.strarrowskill').bind('contextmenu', function(e) { e.preventDefault(); kolproxy_cast_skillid($(this).attr("data-skillid"), true) })
-			$('.strarrowitem').bind('contextmenu', function(e) { e.preventDefault(); kolproxy_use_itemid($(this).attr("data-itemid"), true) })
+			$('.strarrowskill').click(function(e) { kolproxy_cast_skillid($(this).attr("data-skillid"), e.shiftKey); return false })
+			$('.strarrowskill').bind('contextmenu', function(e) { kolproxy_cast_skillid($(this).attr("data-skillid"), true); return false })
+			$('.strarrowitem').click(function(e) { kolproxy_use_itemid($(this).attr("data-itemid"), e.shiftKey); return false })
+			$('.strarrowitem').bind('contextmenu', function(e) { kolproxy_use_itemid($(this).attr("data-itemid"), true); return false })
 		})
 	</script>
 

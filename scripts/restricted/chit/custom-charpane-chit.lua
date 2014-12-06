@@ -541,9 +541,9 @@ local function make_compact_arrow(duration, upeffect)
 		local arrowclass = "blup"
 		if duration <= 2 then arrowclass = "blrup" end
 		if skillid then
-			return string.format([[<div style="cursor: pointer;" class="%s" onclick="kolproxy_cast_skillid(%d, event.shiftKey)" data-skillid="%d"></div>]], arrowclass, skillid, skillid)
+			return string.format([[<div style="cursor: pointer;" class="strarrowskill %s" data-skillid="%d"></div>]], arrowclass, skillid)
 		elseif itemid then
-			return string.format([[<div style="cursor: pointer;%s" class="%s" onclick="kolproxy_use_itemid(%d, event.shiftKey)" data-itemid="%d"></div>]], have_item(itemid) and "" or "opacity: 0.5;", arrowclass, itemid, itemid)
+			return string.format([[<div style="cursor: pointer;%s" class="strarrowitem %s" data-itemid="%d"></div>]], have_item(itemid) and "" or "opacity: 0.5;", arrowclass, itemid)
 		end
 	end
 	return ""
@@ -584,7 +584,7 @@ local function bl_charpane_buff_lines(lines)
 			strarrow = make_strarrow(x.upeffect)
 		end
 
-		local str = string.format([[<tr class="%s"%s><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td class='info'><div>%s</div></td><td class='%s'>%s</td><td class='powerup'><span oncontextmenu="return maybe_shrug(&quot;%s&quot;)">%s</span></td></tr>]], buff_type, trstyle, x.imgname, x.descid, x.title, x.title, shrug_class, display_duration(x), x.title, strarrow)
+		local str = string.format([[<tr class="%s"%s><td class='icon'><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" style="cursor: pointer;" onClick='popup_effect("%s");' oncontextmenu="return maybe_shrug(&quot;%s&quot;);"></td><td class='info'><div>%s</div></td><td class='%s'>%s</td><td class='powerup'>%s</td></tr>]], buff_type, trstyle, x.imgname, x.descid, x.title, x.title, shrug_class, display_duration(x), strarrow)
 		table.insert(bufflines, str)
 	end
 

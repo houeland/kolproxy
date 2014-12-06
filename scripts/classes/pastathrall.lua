@@ -56,9 +56,10 @@ end
 
 add_warning {
 	message = "A Vampieroghi can remove the Thrice-Cursed, Twice-Cursed, and Once-Cursed buffs.",
-	type = "extra",
+	type = "warning",
 	check = function()
 		if not pastathrall("Vampieroghi") then return end
+		if pastathralllevel() < 5 then return end
 		return have_apartment_building_cursed_buff()
 	end,
 }
