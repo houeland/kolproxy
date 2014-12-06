@@ -8,6 +8,8 @@ register_setting {
 local function should_delete(x)
 	if tonumber(x.fromid) == 0 and x.fromname == "Lady Spookyraven's Ghost" and x.message:contains("I'd really like to go dancing one last time, and I need your help.") then
 		return true
+	elseif tonumber(x.fromid) == 0 and x.fromname == "Lady Spookyraven's Ghost" and x.message:contains("To the third floor of the Manor!") then
+		return true
 	elseif tonumber(x.fromid) == 0 and x.fromname == "The Loathing Postal Service" and x.message:contains("We found this telegram at the bottom of an old bin of mail.") then
 		return true
 	else

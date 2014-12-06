@@ -199,7 +199,7 @@ function run_file_with_environment(filename, orgenv, prefillenv)
 		if v ~= nil then return v end
 		v = _G[k]
 		if v ~= nil then return v end
-		do
+		if false then
 			local strthing = k .. ":" .. filename
 			if not strthing_reported[strthing] then
 				print("DEBUG didn't find variable", k, "for", filename)
