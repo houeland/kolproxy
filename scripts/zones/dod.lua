@@ -146,7 +146,9 @@ add_printer("/fight.php", function()
 		else
 			value = "{&nbsp;unidentified&nbsp;}"
 		end
-		text = text:gsub([[(<option picurl=exclam [^>]+>]] .. potion .. [[ %([0-9]+%))(</option>)]], "%1 " .. value .. "%2")
+                -- The picurl=exclam does nothing, but it does prevent the
+                -- potion description from showing when funkslinging.
+		text = text:gsub([[(<option [^>]+>]] .. potion .. [[ %([0-9]+%))(</option>)]], "%1 " .. value .. "%2")
 	end
 end)
 
