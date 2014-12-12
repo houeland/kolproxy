@@ -254,11 +254,14 @@ function parse_buffs()
 	for l in io.lines("cache/files/statuseffects.txt") do
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
-		local buffname, usecmd = tbl[2], tbl[5]
+		local buffname, descid, usecmd = tbl[2], tbl[4], tbl[5]
 		local castname = (usecmd or ""):match("^cast 1 ([^|]+)")
 		if buffname and not buffs[buffname] and not blacklist["buff: " .. buffname] then
 			softwarn("missing buff", buffname)
 			buffs[buffname] = {}
+		end
+		if buffname and descid and not blacklist["buff: " .. buffname] then
+			buffs[buffname].descid = descid
 		end
 		if buffname and castname and not blacklist["buff: " .. buffname] then
 			-- Datafile is full of capitalization problems
