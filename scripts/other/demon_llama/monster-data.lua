@@ -101,9 +101,37 @@ function buildCurrentFightMonsterDataCache(for_monster_name, fight_text)
 	end
 
 	local mlresistpercent = math.min(ml * 0.4, 50)
-	monster.Stats.physicalresistpercent = math.max(monster.Stats.Phys or mlresistpercent, mlresistpercent) -- TODO: rename in datafile
-	monster.Stats.Phys = nil
+	monster.Stats.physicalresistpercent = mlresistpercent
 	monster.Stats.elementalresistpercent = mlresistpercent -- TODO: base values should be in datafile!
+	if monster.Stats.Phys then -- TODO: rename in datafile
+		monster.Stats.physicalresistpercent = math.max(monster.Stats.physicalresistpercent, monster.Stats.Phys)
+		monster.Stats.Phys = nil
+	end
+
+	if monstername("one of Doctor Weirdeaux's creations") then
+		--an_head7 = "frog head (block combat items)",
+		--an_head10 = "jellyfish head (sometimes blocks actions)",
+		--an_seg4 = "bee body (dodge attack)",
+		--an_seg5 = "snail body (reflect spells)",
+		--an_seg9 = "elephant body (+50% elemental resistance)",
+		--an_butt10 = "octopus butt (prevent combat skill)",
+		local parts = {}
+		for img in text:gmatch([[adventureimages/(an_.-)%.gif]]) do
+			parts[img] = (parts[img] or 0) + 1
+		end
+		if parts.an_head7 then
+			monster.Stats.blockcombatitems = true
+		end
+		if parts.an_seg5 then
+			monster.Stats.reflectspells = true
+		end
+		if parts.an_butt10 then
+			monster.Stats.preventcombatskill = true
+		end
+		monster.Stats.physicalresistpercent = math.max(monster.Stats.physicalresistpercent, 10)
+		monster.Stats.elementalresistpercent = math.max(monster.Stats.elementalresistpercent, math.min(100, 10 + (parts.an_seg9 or 0) * 50))
+	end
+
 	if ml >= 51 then
 		monster.Stats.stunresistpercent = math.min(100, ml - 50) -- TODO: added to base, should be in datafile!
 	end

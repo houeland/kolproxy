@@ -115,7 +115,10 @@ end
 -- </TODO>: move to different file
 
 function parse_item_bonuses(item)
-	local descid = item_api_data(item).descid
+	local descid = have_item(item) and item_api_data(item).descid or (maybe_get_itemdata(item) or {}).descid
+	if not descid then
+		return {}
+	end
 	local pt = get_page("/desc_item.php", { whichitem = descid })
 	local bonuses = parse_modifier_bonuses_page(pt)
 	return bonuses

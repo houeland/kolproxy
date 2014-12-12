@@ -51,7 +51,10 @@ function maximize_equipment_slot_bonuses(slot, scoref_raw)
 		local name = maybe_get_itemname(itemid)
 		local d = maybe_get_itemdata(itemid)
 		if name and d and d.equipment_slot == slot_type then
-			table.insert(options, { name = name, score = score_item(name), worn = false, itemid = itemid, canwear = can_equip_item(name) })
+			if d.equip_requirements and d.equip_requirements["You may not equip more than one of these at a time"] and have_equipped_item(name) then
+			else
+				table.insert(options, { name = name, score = score_item(name), worn = false, itemid = itemid, canwear = can_equip_item(name) })
+			end
 		end
 	end
 	table.insert(options, { name = "(none)", score = 0, worn = true, wornslot = "zzz1", canwear = true })

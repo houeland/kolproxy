@@ -64,7 +64,7 @@ function estimate_current_familiar_bonuses()
 		return make_bonuses_table { ["Combat Initiative"] = buffedfamiliarweight() * 2 }
 	elseif familiar("Hobo Monkey") then
 		-- SPADE: Is this floored?
-		return make_bonuses_table { ["Meat from Monsters"] = leprechaun_bonus(buffedfamiliarweight() * 1.25), }
+		return make_bonuses_table { ["Meat from Monsters"] = leprechaun_bonus(buffedfamiliarweight() * 1.25) }
 	elseif familiar("Reanimated Reanimator") then
 		return estimate_reanimated_reanimator_bonuses()
 	elseif familiar("Baby Bugged Bugbear") then
@@ -83,12 +83,22 @@ function estimate_current_familiar_bonuses()
 	elseif familiar("Jack-in-the-Box") then
 		-- TODO
 		return make_bonuses_table { ["Item Drops from Monsters"] = "?", ["Stats Per Fight"] = "?" }
+	elseif familiar("Mutant Cactus Bud") then
+		local multiplier = 1.30 - (0.15 * estimate_grimace_darkness())
+		return make_bonuses_table { ["Meat from Monsters"] = leprechaun_bonus(buffedfamiliarweight()) * multiplier }
+	elseif familiar("Mutant Fire Ant") then
+		local multiplier = 1.30 - (0.15 * estimate_grimace_darkness())
+		return make_bonuses_table { ["Item Drops from Monsters"] = fairy_bonus(buffedfamiliarweight()) * multiplier }
 	else
-		-- TODO: grimacite-dependent familiars
 		local bonuses = make_bonuses_table {}
 		if vanilla_fairies[familiarid()] then bonuses.add { ["Item Drops from Monsters"] = fairy_bonus(buffedfamiliarweight()) } end
 		if vanilla_leprechauns[familiarid()] then bonuses.add { ["Meat from Monsters"] = leprechaun_bonus(buffedfamiliarweight()) } end
 		if vanilla_volleyballs[familiarid()] then bonuses.add { ["Stats Per Fight"] = volleyball_bonus(buffedfamiliarweight()) } end
 		return bonuses
 	end
+end
+
+function estimate_grimace_darkness()
+	local gown_ML = estimate_item_equip_bonuses("Grimacite gown")["Monster Level"]
+	return gown_ML / 10
 end

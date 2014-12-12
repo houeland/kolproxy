@@ -199,10 +199,11 @@ function run_file_with_environment(filename, orgenv, prefillenv)
 		if v ~= nil then return v end
 		v = _G[k]
 		if v ~= nil then return v end
-		if false then
+		if true then
 			local strthing = k .. ":" .. filename
 			if not strthing_reported[strthing] then
 				print("DEBUG didn't find variable", k, "for", filename)
+				print("DEBUG:", debug.traceback("missing:" .. strthing))
 				strthing_reported[strthing] = true
 			end
 			local f = io.open("logs/info/DEBUG-strthing-reported.txt", "a+")

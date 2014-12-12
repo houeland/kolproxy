@@ -688,7 +688,7 @@ get_cached_lua_instance_for_code level filename ref runcodebit = do
 		Just existingmv -> withMVar existingmv runcodebit
 		_ -> do
 			either_l_setup <- do
-				--putStrLn $ "DEBUG: making lua instance: " ++ show (canread, filename, level)
+				putStrLn $ "DEBUG: making lua instance: " ++ show (canread, filename, level)
 				log_time_interval ref ("setup lua instance: " ++ filename ++ "|" ++ show level) $ setup_lua_instance level filename ref
 			case either_l_setup of
 				Right l_setup -> do

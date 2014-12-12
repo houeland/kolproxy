@@ -23,17 +23,6 @@ local function should_show_phylum()
 	return familiar("Pair of Stomping Boots") or familiar("Happy Medium") or have_item("DNA extraction syringe")
 end
 
-local function formatStat(name, value, color, tooltip)
-	if not value or value == "" then return "" end
-
-	local toolTipHTML = ""
-	if tooltip then
-		toolTipHTML = "<span class='tooltip'>" .. tooltip .. "</span>"
-	end
-
-	return "<div class='stat' style='color:" .. (color or "black") .. ";'><span style='margin-right:5px;'>" .. name .. ":</span><span>" .. value .. "</span>"..toolTipHTML.."</div>"
-end
-
 local function make_monster_hp_meter(monster, width)
 	local data = monster.Stats
 	if not data then return "" end
@@ -93,19 +82,62 @@ local function formatMonsterStats(monster)
 	else
 		statData = statData .. "<div style='font-size:12px;'>Estimate</div>"
 	end
-	statData = statData .. formatStat("HP", data.ModHP, nil, "Starting HP: " .. (data.HP or "?"))
-	statData = statData .. formatStat("Atk", data.ModAtk, nil, "Starting Atk: " .. (data.Atk or "?"))
-	statData = statData .. formatStat("Def", data.ModDef, nil, "Starting Def: " .. (data.Def or "?"))
-	statData = statData .. formatStat("Meat", data.Meat)
-	statData = statData .. formatStat("Element", data.Element, element_color(data.Element), "Weak against: " .. table.concat({ get_elemental_weaknesses(data.Element) }, ", ") )
-	statData = statData .. formatStat("Init", data.Init)
+
+	local function formatStat(name, value, color, tooltip)
+		if not value or value == "" then return end
+
+		local toolTipHTML = ""
+		if tooltip then
+			toolTipHTML = "<span class='tooltip'>" .. tooltip .. "</span>"
+		end
+
+		statData = statData .. "<div class='stat' style='color:" .. (color or "black") .. ";'><span style='margin-right:5px;'>" .. name .. ":</span><span>" .. value .. "</span>"..toolTipHTML.."</div>"
+	end
+
+	local function formatStatPercent(name, value, color, tooltip)
+		if not value or value == 0 then return end
+		return formatStat(name, value .. "%", color, tooltip)
+	end
+
+	formatStat("HP", data.ModHP, nil, "Starting HP: " .. (data.HP or "?"))
+	formatStat("Atk", data.ModAtk, nil, "Starting Atk: " .. (data.Atk or "?"))
+	formatStat("Def", data.ModDef, nil, "Starting Def: " .. (data.Def or "?"))
+	formatStat("Meat", data.Meat)
+	formatStat("Element", data.Element, element_color(data.Element), "Weak against: " .. table.concat({ get_elemental_weaknesses(data.Element) }, ", ") )
+	formatStat("Init", data.Init)
 
 	if should_show_phylum() and data.Phylum then
 		statData = statData .. [[<div onclick='togglePhylum();' style='cursor:hand;' class='stat'><span style='margin-right:5px;'><span id='phylumToggle'>[+]</span> Phylum:</span><span>]] .. data.Phylum .. [[</span></div>]]
 	end
 
-	statData = statData .. formatStat("PhyRes", data.PhyRes)
-	statData = statData .. formatStat("Watch out for", data.WatchOut)
+	formatStat("Watch out for", data.WatchOut)
+	if (data.physicalresistpercent or 0) ~= 0 or (data.elementalresistpercent or 0) ~= 0 then
+		if data.physicalresistpercent == data.elementalresistpercent then
+			formatStatPercent("Resist", data.physicalresistpercent)
+		else
+			formatStatPercent("Physical resist", data.physicalresistpercent)
+			formatStatPercent("Elemental resist", data.elementalresistpercent)
+		end
+	end
+
+	if data.staggerimmune then
+		formatStatPercent("Stagger resist", 100, "red")
+	elseif data.stunresistpercent then
+		formatStatPercent("Stun resist", data.stunresistpercent)
+	end
+
+	if data.reflectspells then
+		formatStat("Spells", "Reflected")
+	end
+
+	if data.preventcombatskill then
+		formatStat("Skills", "Blocked", "red")
+	end
+
+	if data.blockcombatitems then
+		formatStat("Combat items", "Blocked")
+	end
+
 	statData = statData .. "</div>"
 	return statData
 end
