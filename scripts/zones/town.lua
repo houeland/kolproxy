@@ -36,3 +36,33 @@ add_always_warning("/casino.php", function()
 		return "You do not have a ten-leaf clover to win the big rock.", "no clover for big rock"
 	end
 end)
+
+-- museum
+local ice_house_banished = nil
+add_processor("/museum.php", function()
+	ice_house_banished = nil
+end)
+
+function get_ice_house_banished_monster()
+	if not ice_house_banished then
+		local pt = get_page("/museum.php", { action = "icehouse" })
+		ice_house_banished = pt:match([[perfectly%-preserved (.-), right where you left it]]) or "nothing"
+	end
+	return ice_house_banished
+end
+
+function is_monster_banished(monster)
+	if day["nanorhino banished monster"] == monster then
+		return true
+	elseif get_ice_house_banished_monster() == monster then
+		return true
+	end
+	if have_item("Staff of the Standalone Cheese") then
+		local banished = retrieve_standalone_cheese_banished_monsters()
+		for _, x in ipairs(banished) do
+			if x == monster then
+				return true
+			end
+		end
+	end
+end

@@ -457,8 +457,10 @@ function get_automation_scripts(cached_stuff)
 		end
 		if cached_stuff.have_familiars[famname] == nil then
 			print("INFO: checking for familiar", famname)
+			local old_famid = familiarid()
 			switch_familiar(famname)
 			cached_stuff.have_familiars[famname] = familiar(famname)
+			switch_familiar(old_famid)
 		end
 		return cached_stuff.have_familiars[famname]
 	end
