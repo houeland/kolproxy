@@ -35,6 +35,9 @@ function evaluate_mafiaexpression(expression_input, tbl)
 	elseif checkexpr:contains("KC") then
 		-- Kiss count not supported yet
 		return nil
+	elseif checkexpr:contains("pref(") then
+		-- Unsupported state tracking
+		return nil
 	else
 		print("WARNING: invalid mafiaexpression", expr, checkexpr)
 	end

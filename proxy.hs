@@ -23,7 +23,6 @@ import System.Environment (getArgs)
 import System.IO
 import Text.Regex.TDFA
 import qualified Data.ByteString.Char8
-import qualified Data.Map
 
 get_the_state ref = do
 	cr <- canReadState ref
@@ -60,12 +59,7 @@ doProcessPage ref uri params = do
 
 			state_after <- get_the_state ref
 
-			-- TODO: Make sure this is definitely the very next thing logged. Make a channel for logging and write to it
-			forkIO_ "proxy:logresult" $ (do
-				status_before <- status_before_func
-				status_after <- status_after_func
-				log_page_result ref (Right status_before) log_time state_before uri params effuri pagetext status_after state_after
-				return ()) `catch` (\e -> putErrorStrLn $ "processpage logging exception: " ++ (show (e :: KolproxyException)))
+			log_page_result ref status_before_func log_time state_before uri params effuri pagetext status_after_func state_after
 
 			forkIO_ "proxy:checkserverstate" $ checkServerState ref
 
@@ -225,7 +219,7 @@ kolProxyHandler uri params baseref = do
 				handle_login (pt, effuri, allhdrs, code)
 
 		"/custom-clear-lua-script-cache" -> check_pwd_for $ Just $ do
-			writeIORef (luaInstances_ $ sessionData $ origref) Data.Map.empty
+			reset_lua_instances origref
 			writeIORef (blocking_lua_scripting origref) False
 			makeResponse (Data.ByteString.Char8.pack $ "Cleared Lua script cache.") uri []
 

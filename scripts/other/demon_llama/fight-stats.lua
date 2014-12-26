@@ -91,7 +91,7 @@ local function formatMonsterStats(monster)
 			toolTipHTML = "<span class='tooltip'>" .. tooltip .. "</span>"
 		end
 
-		statData = statData .. "<div class='stat' style='color:" .. (color or "black") .. ";'><span style='margin-right:5px;'>" .. name .. ":</span><span>" .. value .. "</span>"..toolTipHTML.."</div>"
+		statData = statData .. "<div class='stat' style='color:" .. (color or "black") .. ";'><span style='margin-right:5px;'>" .. name .. ":</span><span>" .. display_value(value) .. "</span>"..toolTipHTML.."</div>"
 	end
 
 	local function formatStatPercent(name, value, color, tooltip)
@@ -99,9 +99,9 @@ local function formatMonsterStats(monster)
 		return formatStat(name, value .. "%", color, tooltip)
 	end
 
-	formatStat("HP", data.ModHP, nil, "Starting HP: " .. (data.HP or "?"))
-	formatStat("Atk", data.ModAtk, nil, "Starting Atk: " .. (data.Atk or "?"))
-	formatStat("Def", data.ModDef, nil, "Starting Def: " .. (data.Def or "?"))
+	formatStat("HP", data.ModHP, nil, "Starting HP: " .. display_value(data.HP or "?"))
+	formatStat("Atk", data.ModAtk, nil, "Starting Atk: " .. display_value(data.Atk or "?"))
+	formatStat("Def", data.ModDef, nil, "Starting Def: " .. display_value(data.Def or "?"))
 	formatStat("Meat", data.Meat)
 	formatStat("Element", data.Element, element_color(data.Element), "Weak against: " .. table.concat({ get_elemental_weaknesses(data.Element) }, ", ") )
 	formatStat("Init", data.Init)

@@ -677,26 +677,22 @@ setup_lua_instance level filename setupref = do
 			putStrLn $ "luaload error: " ++ err
 			return $ Left $ ("error " ++ (show errnum) ++ " loading code (" ++ filename ++ "):\n" ++ err, "")
 
-get_cached_lua_instance_for_code level filename ref runcodebit = do
+get_lua_instance_for_code level filename ref = do
 	-- TODO! CLOSE LUA INSTANCES!!
 	canread <- canReadState ref
-	-- TODO: Wrap in MVar instead of IORef?
-	insts <- readIORef (luaInstances_ $ sessionData $ ref)
-	case Data.Map.lookup (canread, filename, level) insts of
-		-- Using MVar to only run one piece of code in an instance at a time, e.g. sequence one processor after another serially.
-		-- TODO: Use a Chan to enforce order?
-		Just existingmv -> withMVar existingmv runcodebit
-		_ -> do
-			either_l_setup <- do
-				putStrLn $ "DEBUG: making lua instance: " ++ show (canread, filename, level)
-				log_time_interval ref ("setup lua instance: " ++ filename ++ "|" ++ show level) $ setup_lua_instance level filename ref
-			case either_l_setup of
-				Right l_setup -> do
-					mv_l <- newMVar l_setup
-					let newinsts = Data.Map.insert (canread, filename, level) mv_l insts
-					writeIORef (luaInstances_ $ sessionData $ ref) newinsts
-					withMVar mv_l runcodebit
-				Left err -> return $ Left err
+	modifyMVar (luaInstances_ $ sessionData $ ref) $ \insts -> do
+		case Data.Map.lookup (canread, filename, level) insts of
+			Just existingmv -> return (insts, Right existingmv)
+			_ -> do
+				either_l_setup <- do
+					putStrLn $ "DEBUG: making lua instance: " ++ show (canread, filename, level)
+					log_time_interval ref ("setup lua instance: " ++ filename ++ "|" ++ show level) $ setup_lua_instance level filename ref
+				case either_l_setup of
+					Right l_setup -> do
+						mv_l <- newMVar l_setup
+						let newinsts = Data.Map.insert (canread, filename, level) mv_l insts
+						return (newinsts, Right mv_l)
+					Left err -> return (insts, Left err)
 
 run_lua_code_ ref l dosetvars filename = do
 	log_time_interval ref "prepare for lua code" $ do
@@ -731,7 +727,10 @@ run_lua_code_ ref l dosetvars filename = do
 			return $ Left $ ("error running code (" ++ filename ++ "):\n" ++ err, traceback)
 
 run_lua_code level filename ref dosetvars = do
-	get_cached_lua_instance_for_code level filename ref $ \l -> run_lua_code_ ref l dosetvars filename
+	runmv <- get_lua_instance_for_code level filename ref
+	case runmv of
+		Right mv -> withMVar mv $ \l -> run_lua_code_ ref l dosetvars filename
+		Left err -> return $ Left err
 
 setvars vars text allparams l = do
 	push_table_contents_string_string l vars
@@ -751,22 +750,6 @@ runProcessScript ref uri effuri pagetext allparams = do
 		Right [Just t] -> Right $ t
 		Right xs -> Left ("Lua process call error, return values = " ++ (show xs), "")
 		Left err -> Left err
-
---runChatScript ref uri effuri pagetext allparams = do
---	let vars = [("path", uriPath effuri), ("query", uriQuery effuri), ("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
---	rets <- run_lua_code CHAT "scripts/kolproxy-internal/chat.lua" ref (setvars vars pagetext allparams)
---	return $ case rets of
---		Right [Just t] -> Right $ t
---		Right xs -> Left ("Lua chat call error, return values = " ++ (show xs), "")
---		Left err -> Left err
-
---runSendChatScript ref uri allparams = do
---	let vars = [("requestpath", uriPath uri), ("requestquery", uriQuery uri)]
---	rets <- run_lua_code CHAT "scripts/kolproxy-internal/sendchat.lua" ref (setvars vars (Data.ByteString.Char8.pack "") allparams)
---	return $ case rets of
---		Right [Just t] -> Right $ t
---		Right xs -> Left ("Lua chat call error, return values = " ++ (show xs), "")
---		Left err -> Left err
 
 runChatRequestScript ref uri allparams = do
 	let vars = [("request_path", uriPath uri), ("request_query", uriQuery uri)]

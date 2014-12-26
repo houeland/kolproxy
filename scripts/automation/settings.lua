@@ -224,7 +224,7 @@ function get_ascension_automation_settings(want_bonus)
 				"over-the-shoulder Folder Holder",
 				"astral ring",
 				"astral mask",
-				{ name = "astral belt", check = function() return (level() >= 7 or (challenge == "fist" and fist_level > 0) or ascensionstatus() ~= "Hardcore") and not want_bonus.easy_combat and level() < 13 end }, -- How early should we wear this?
+				{ name = "astral belt", check = function() return (level() >= 7 or (challenge == "fist" and fist_level > 0) or not ascensionstatus("Hardcore")) and not want_bonus.easy_combat and level() < 13 end }, -- How early should we wear this?
 				{ name = "Loathing Legion necktie", check = function() return level() < 13 end },
 				{ name = "C.A.R.N.I.V.O.R.E. button", check = function() return level() < 13 end },
 				{ name = "frosty halo", check = function() return want_bonus.plusitems and not equipment().weapon end },
@@ -238,7 +238,7 @@ function get_ascension_automation_settings(want_bonus)
 				"Jekyllin hide belt",
 				"Mr. Accessory Jr.",
 				"stinky cheese eye",
-				"Mr. Accessory",
+				{ name = "Mr. Accessory", check = function() return not ascensionstatus("Hardcore") end },
 				"Nickel Gamma of Frugality",
 				{ name = "furry halo", check = function() return not want_bonus.easy_combat and not equipment().weapon end },
 				{ name = "frosty halo", check = function() return not want_bonus.easy_combat and not equipment().weapon end },

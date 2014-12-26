@@ -18,6 +18,7 @@ import Text.Regex.TDFA
 import qualified Data.ByteString.Char8
 import qualified Data.ByteString.Lazy.Char8
 import qualified Data.Digest.Pure.MD5
+import qualified Data.Map
 import qualified Database.SQLite3Modded
 
 
@@ -130,6 +131,9 @@ get_custom_autoload_script_files = do
 debug_do msg x = (x) `catch` (\e -> do
 	putDebugStrLn $ msg ++ " exception: " ++ show (e :: SomeException)
 	throwIO e)
+
+reset_lua_instances ref = do
+	modifyMVar_ (luaInstances_ $ sessionData $ ref) $ \_ -> return Data.Map.empty
 
 putErrorStrLn msg = putStrLn $ "ERROR: " ++ msg
 putWarningStrLn msg = putStrLn $ "WARNING: " ++ msg

@@ -71,7 +71,7 @@ loadState ref = do
 			maybenewst <- takeMVar mv
 			case maybenewst of
 				Right newst -> do
-					writeIORef (luaInstances_ $ sessionData $ ref) Data.Map.empty
+					reset_lua_instances ref
 					writeIORef (stateData_ $ sessionData $ ref) $ Just (newstid, newst)
 					return newst
 				Left err -> do

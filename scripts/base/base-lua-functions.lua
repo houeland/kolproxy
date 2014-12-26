@@ -241,7 +241,31 @@ function display_number_3figs(n)
 	end
 end
 
-display_number = display_number_8k_2M
+function display_number_9k_90k(n)
+	if n >= math.huge then
+		return tostring(n)
+	elseif n < 1000 then
+		if n == math.floor(n) then
+			return string.format("%d", n)
+		else
+			return string.format("%.1f", n)
+		end
+	elseif n < 10*1000 then
+		return string.format("%.1fk", n / 1000)
+	elseif n <= 1000*1000 then
+		return string.format("%.0fk", n / 1000)
+	elseif n <= 10*1000*1000 then
+		return string.format("%.1fM", n / 1000000)
+	elseif n <= 1000*1000*1000 then
+		return string.format("%.0fM", n / 1000000)
+	elseif n <= 10*1000*1000*1000 then
+		return string.format("%.1fG", n / 1000000000)
+	else
+		return string.format("%.0fG", n / 1000000000)
+	end
+end
+
+display_number = display_number_9k_90k
 
 function display_signed_integer(n)
 	if n < 0 then

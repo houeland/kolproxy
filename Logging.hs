@@ -6,14 +6,12 @@ import KoL.UtilTypes
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception
-import Control.Monad
 import Data.IORef
 import Data.Time
 import Network.URI
 import System.IO
 import Text.JSON
 import Text.Printf
-import qualified Data.Map
 import qualified Data.ByteString.Char8
 
 data LogItem = LogItem {
@@ -29,16 +27,10 @@ data LogItem = LogItem {
 	pageText :: Data.ByteString.Char8.ByteString
 }
 
-doLOGGING_DEBUG _ = return ()
--- doLOGGING_DEBUG x = putStrLn $ "LOGGING DEBUG: " ++ x
-
 holdit ref action = writeChan (getlogchan ref) action
 
-print_log_msg ref _file logdetails = do
-	doLOGGING_DEBUG $ "print_log_msg start: " ++ (show $ time $ logdetails) ++ " | " ++ (show $ retrievedUri $ logdetails)
+print_log_msg ref logdetails = do
 	doDbLogAction ref $ \db -> do
-		doLOGGING_DEBUG $ "print_log_msg logaction: " ++ (show $ time $ logdetails) ++ " | " ++ (show $ retrievedUri $ logdetails)
--- 		putStrLn $ "writing to log db."
 		let showstate s = case s of
 			Just (_requestmap, _sessionmap, charmap, ascmap, daymap) -> Data.ByteString.Char8.pack $ show [("character", charmap), ("ascension", ascmap), ("day", daymap)]
 			_ -> throw $ InternalError $ "Invalid state while logging"
@@ -57,8 +49,6 @@ print_log_msg ref _file logdetails = do
 			Data.ByteString.Char8.pack <$> show <$> (parameters $ logdetails),
 			Just $ Data.ByteString.Char8.pack $ show $ retrievedUri $ logdetails,
 			Just $ pageText $ logdetails]
-		doLOGGING_DEBUG $ "print_log_msg logactiondone: " ++ (show $ time $ logdetails) ++ " | " ++ (show $ retrievedUri $ logdetails)
-	doLOGGING_DEBUG $ "print_log_msg alldone: " ++ (show $ time $ logdetails) ++ " | " ++ (show $ retrievedUri $ logdetails)
 
 appendline ref whichh msg = holdit ref $ do
 	hPutStrLn (whichh $ globalstuff_ $ ref) msg
@@ -106,22 +96,14 @@ log_time_interval_http _ref name action = action `catch` (\e -> do
 	putStrLn $ "log_http:" ++ name ++ " exception: " ++ (show (e :: SomeException))
 	throwIO e)
 
-log_page_result ref status_before log_time state_before uri params effuri pagetext status_after state_after = do
-	doLOGGING_DEBUG $ "log_page_result start: " ++ show log_time ++ " | " ++ show effuri
-	(charname, charasc) <- do
-		let getSessState var = do
-			unless (stateValid_ ref) $ do
-				putStrLn $ "State invalid while logging and trying to get session state"
-			Just (_, st) <- readIORef $ state ref
-			let value = case st of
-				(_requestmap, sessionmap, _charmap, _ascmap, _daymap) -> Data.Map.lookup var sessionmap
-			return (value :: Maybe String)
-		Just charname <- getSessState "character"
-		Just charasc <- getSessState "ascension number"
-		return (charname, charasc)
-	let Just sessid = get_sessid ref
-	print_log_msg ref (charname ++ "-" ++ charasc ++ "-detailed.txt") $ LogItem { time = log_time, apiStatusBefore = status_before, apiStatusAfter = status_after, stateBefore = state_before, stateAfter = state_after, sessionId = sessid, requestedUri = uri, parameters = params, retrievedUri = effuri, pageText = pagetext }
-	doLOGGING_DEBUG $ "log_page_result done: " ++ show log_time ++ " | " ++ show effuri
+log_page_result ref status_before_func log_time state_before uri params effuri pagetext status_after_func state_after = do
+	-- TODO: Make sure this is definitely the very next thing logged. Make a channel for logging and write to it
+	forkIO_ "proxy:logresult" $ (do
+		status_before <- Right <$> status_before_func
+		status_after <- status_after_func
+		let Just sessid = get_sessid ref
+		print_log_msg ref $ LogItem { time = log_time, apiStatusBefore = status_before, apiStatusAfter = status_after, stateBefore = state_before, stateAfter = state_after, sessionId = sessid, requestedUri = uri, parameters = params, retrievedUri = effuri, pageText = pagetext }
+		return ()) `catch` (\e -> putErrorStrLn $ "processpage logging exception: " ++ (show (e :: KolproxyException)))
 
 log_chat_messages ref text = (do
 	let integerFromObj name jsobj = case valFromObj name jsobj of
@@ -150,17 +132,14 @@ log_chat_messages ref text = (do
 			_ -> mwhoid
 		case (mtype, mtime, mmsg, mplayerid, mmid, mchannel) of
 			(Ok "public", Ok time, Ok msg, Ok playerid, Ok mid, Ok channel) -> do
---				putStrLn $ "DEBUG chat public: " ++ show (time, playerid, channel, mid)
 				doChatLogAction ref $ \db -> do
 					do_db_query_ db "INSERT OR IGNORE INTO public(mid, time, channel, playerid, msg, rawjson) VALUES(?, ?, ?, ?, ?, ?);"
 						[Just $ Data.ByteString.Char8.pack $ show $ mid, Just $ Data.ByteString.Char8.pack $ show $ time, Just $ Data.ByteString.Char8.pack $ channel, Just $ Data.ByteString.Char8.pack $ show $ playerid, Just $ Data.ByteString.Char8.pack $ msg, Just $ Data.ByteString.Char8.pack $ rawjson]
 			(Ok "private", Ok time, Ok msg, Ok playerid, _, _) -> do
---				putStrLn $ "DEBUG chat private: " ++ show (time, playerid)
 				doChatLogAction ref $ \db -> do
 					do_db_query_ db "INSERT INTO private(time, playerid, msg, rawjson) VALUES(?, ?, ?, ?);"
 						[Just $ Data.ByteString.Char8.pack $ show $ time, Just $ Data.ByteString.Char8.pack $ show $ playerid, Just $ Data.ByteString.Char8.pack $ msg, Just $ Data.ByteString.Char8.pack $ rawjson]
 			(Ok _, Ok time, Ok msg, _, _, _) -> do
---				putStrLn $ "DEBUG chat other: " ++ show (time, oktype)
 				doChatLogAction ref $ \db -> do
 					do_db_query_ db "INSERT INTO other(time, msg, rawjson) VALUES(?, ?, ?);"
 						[Just $ Data.ByteString.Char8.pack $ show $ time, Just $ Data.ByteString.Char8.pack $ msg, Just $ Data.ByteString.Char8.pack $ rawjson]
@@ -183,5 +162,4 @@ log_chat_messages ref text = (do
 		doChatLogAction ref $ \db -> do
 			do_db_query_ db "INSERT INTO oldchat(text) VALUES(?);"
 				[Just $ text]
---		putStrLn $ "DEBUG: log_chat_messages exception: " ++ show (e :: SomeException)
 		return ())

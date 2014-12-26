@@ -125,6 +125,7 @@ load_file("chat", "chat/chat-kolmafia-links.lua")
 load_file("chat", "chat/chat-pvp-announcements.lua")
 
 load_file("chat", "chat/chat-commands.lua")
+load_file("chat", "chat/chat-utils.lua")
 
 -- load_file("interface", "other/itemdrop-decorator.lua")
 
