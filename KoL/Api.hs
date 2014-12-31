@@ -36,6 +36,7 @@ getInventoryCounts ref = do
 
 data ApiInfo = ApiInfo {
 	charName :: String,
+	playerId :: Integer,
 	turnsplayed :: Integer,
 	ascension :: Integer,
 	daysthisrun :: Integer,
@@ -43,7 +44,7 @@ data ApiInfo = ApiInfo {
 }
 
 rawDecodeApiInfo jscomb = do
-		ApiInfo { charName = getstr "name", turnsplayed = getnum "turnsplayed", ascension = getnum "ascensions" + 1, daysthisrun = getnum "daysthisrun", pwd = getstr "pwd" }
+		ApiInfo { charName = getstr "name", playerId = getnum "playerid", turnsplayed = getnum "turnsplayed", ascension = getnum "ascensions" + 1, daysthisrun = getnum "daysthisrun", pwd = getstr "pwd" }
 	where
 		Ok jsobj = valFromObj "status" jscomb
 		getstr what = case valFromObj what jsobj of

@@ -341,7 +341,8 @@ function parse_outfits()
 	local outfits = {}
 	for l in io.lines("cache/files/outfits.txt") do
 		l = remove_line_junk(l)
-		local name, itemlist = l:match([[^[0-9]*	([^	]+)	(.+)$]])
+		local tbl = split_tabbed_line(l)
+		local outfitid, name, avatar, itemlist = tonumber(tbl[1]), tbl[2], tbl[3], tbl[4]
 		if name and itemlist then
 			local items = {}
 			for x in (", "..itemlist):gmatch(", ([^,]+)") do

@@ -42,11 +42,9 @@ data SessionDataType = SessionDataType {
 	latestRawJson_ :: IORef (Maybe (Either SomeException (JSObject JSValue))),
 	latestValidJson_ :: IORef (Maybe (JSObject JSValue)),
 	doDbLogAction_ :: RefType -> (Database.SQLite3Modded.Database -> IO ()) -> IO (),
-	doStateAction_ :: RefType -> (Database.SQLite3Modded.Database -> IO ()) -> IO (),
 	stateData_ :: IORef (Maybe (DiscerningStateIdentifier, StateType)),
 	luaInstances_ :: MVar (Data.Map.Map (Bool, String, LuaScriptType) (MVar Scripting.LuaModded.LuaState)),
 	lastStoredState_ :: IORef (Maybe String),
-	processPageStoreStateReason_ :: IORef (Maybe String),
 	storedStateId_ :: IORef (Integer, Integer),
 	cachedActionbar_ :: IORef (Maybe String)
 }
@@ -102,7 +100,6 @@ data GlobalRefStuff = GlobalRefStuff {
 	h_http_log_ :: Handle,
 	shutdown_secret_ :: String,
 	use_slow_http_ref_ :: IORef Bool,
-	have_logged_in_ref_ :: IORef Bool,
 	lastDatafileUpdate_ :: IORef UTCTime,
 	doChatLogAction_ :: (Database.SQLite3Modded.Database -> IO ()) -> IO (),
 	environment_settings_ :: EnvironmentSettings
@@ -142,7 +139,7 @@ store_info_logs ref = store_info_logs_ $ environment_settings_ $ globalstuff_ $ 
 
 doDbLogAction ref action = (doDbLogAction_ $ sessionData $ ref) ref action
 doChatLogAction ref action = (doChatLogAction_ $ globalstuff_ $ ref) action
-doStateAction ref action = (doStateAction_ $ sessionData $ ref) ref action
+--doStateAction ref action = (doStateAction_ $ sessionData $ ref) ref action
 
 data KolproxyException = UrlMismatchException String URI | NotLoggedInException | InValhallaException | ApiPageException String | HttpRequestException URI SomeException | StateException | InternalError String | LuaError String | NetworkError String
 	deriving (Typeable)

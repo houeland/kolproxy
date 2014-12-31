@@ -705,13 +705,10 @@ local function bl_charpane_modifier_estimate_lines(lines)
 		if mod_info.compactname == "ML" and bl_compact() then
 			-- ML is already in the above panel
 		else
-			local label = ""
+			local label = bl_compact() and mod_info.compactname or mod_info.normalname or mod_info.name
 			if mod_info.link then
-				label = string.format([[<a target="mainpane" href="%s">%%s</a>]], mod_info.link)
-			else
-				label = "%s"
+				label = string.format([[<a target="mainpane" href="%s">%s</a>]], mod_info.link, label)
 			end
-			label = string.format(label, bl_compact() and mod_info.compactname or mod_info.normalname or mod_info.name)
 			local tooltip = ""
 			if mod_info.tooltip then
 				tooltip = string.format([[<sup style="font-size: 50%%" title="%s">(?)</sup>]], mod_info.tooltip)

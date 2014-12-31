@@ -231,6 +231,8 @@ function do_daily_visits()
 		queue_page_result(cast_skill("Advanced Saucecrafting"))
 		queue_page_result(cast_skill("Pastamastery"))
 		queue_page_result(cast_skill("Summon Crimbo Candy"))
+		queue_page_result(cast_skill("Summon Holiday Fun!"))
+		queue_page_result(cast_skill("That's Not a Knife"))
 
 		-- TODO: librams
 -- 		castSkillMax 8103 ref -- summon brickos

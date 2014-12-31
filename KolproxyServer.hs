@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 module KolproxyServer where
 
 import Prelude
@@ -29,7 +27,7 @@ import qualified Data.ByteString.Char8
 import qualified Data.Map
 import qualified Network.Socket
 
-make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff = do
+make_sessionconn globalref kolproxy_direct_connection dblogstuff = do
 	slowconn <- readIORef $ use_slow_http_ref_ $ globalref
 	mkconnthing <- if slowconn
 		then do
@@ -52,13 +50,8 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff = do
 		Just jsonobj <- readIORef (latestValidJson_ $ sessionData $ ref)
 		let ai = rawDecodeApiInfo jsonobj
 		dblogstuff ((charName ai) ++ "-" ++ (show $ ascension ai) ++ ".ascension-log.sqlite3") action
-	let dostateaction ref action = do
-		Just jsonobj <- readIORef (latestValidJson_ $ sessionData $ ref)
-		let ai = rawDecodeApiInfo jsonobj
-		statestuff ("character-" ++ (charName ai) ++ ".state-json.sqlite3") action
 	luainstancesref <- newMVar Data.Map.empty
 	laststoredstateref <- newIORef Nothing
-	processpagestorestatereasonref <- newIORef Nothing
 	storedstateidref <- newIORef (-1, -1)
 	actionbarref <- newIORef Nothing
 	return ServerSessionType {
@@ -71,11 +64,9 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff = do
 			latestRawJson_ = lrjref,
 			latestValidJson_ = lvjref,
 			doDbLogAction_ = dologaction,
-			doStateAction_ = dostateaction,
 			stateData_ = statedata,
 			luaInstances_ = luainstancesref,
 			lastStoredState_ = laststoredstateref,
-			processPageStoreStateReason_ = processpagestorestatereasonref,
 			storedStateId_ = storedstateidref,
 			cachedActionbar_ = actionbarref
 		}
@@ -90,14 +81,14 @@ get_kolproxy_direct_connection_details = do
 	return (kolproxy_direct_connection, fromJust $ parseURI kolproxy_host)
 
 get_sessionconn sessionmaster globalref cookie = do
-	let (sessionmastermv, dblogstuff, statestuff) = sessionmaster
+	let (sessionmastermv, dblogstuff) = sessionmaster
 	let sessid = cookie_to_sessid cookie
 	(kolproxy_direct_connection, kolproxy_hostUri) <- get_kolproxy_direct_connection_details
 	sc <- modifyMVar sessionmastermv $ \m -> do
 		case Data.Map.lookup sessid m of
 			Just x -> return (m, x)
 			Nothing -> do
-				sessionconn <- make_sessionconn globalref kolproxy_direct_connection dblogstuff statestuff
+				sessionconn <- make_sessionconn globalref kolproxy_direct_connection dblogstuff
 				return (Data.Map.insert sessid sessionconn m, sessionconn)
 	return (sc, kolproxy_hostUri)
 
@@ -187,7 +178,6 @@ make_globalref = do
 			Just "1" -> return True
 			Just "0" -> return False
 			_ -> check_for_http10
-	have_logged_in_ref <- newIORef False
 	tnow <- getCurrentTime
 	last_datafile_update_ref <- newIORef $ addUTCTime (fromInteger (-60000)) tnow
 
@@ -201,7 +191,6 @@ make_globalref = do
 		shutdown_secret_ = shutdown_secret,
 		doChatLogAction_ = \action -> writeChan chatlogchan action,
 		use_slow_http_ref_ = use_slow_http_ref,
-		have_logged_in_ref_ = have_logged_in_ref,
 		lastDatafileUpdate_ = last_datafile_update_ref,
 		environment_settings_ = environment_settings
 	}
@@ -252,7 +241,7 @@ handleConnection globalref sessionmaster sock (portnum, mvsequence, mvchat, logc
 					if (lookup "secretkey" =<< maybeparams) == Just (shutdown_secret_ $ globalref)
 						then do
 							writeIORef (use_slow_http_ref_ globalref) ((lookup "enable" =<< maybeparams) /= Just "yes")
-							let (sessionmastermv, _, _) = sessionmaster
+							let (sessionmastermv, _) = sessionmaster
 							modifyMVar_ sessionmastermv $ \_m -> return Data.Map.empty
 							send_html "<html><body>Switched to slower HTTP/1.0 compatibility mode.<br><br><a href=\"/\">Back to login</a>.</body></html>" uri
 						else send_html "<html><body><p style=\"color: darkorange\">Denied.</p></body></html>" uri
@@ -326,22 +315,6 @@ runProxyServer r rchat portnum = do
 					return (Data.Map.insert filename x m, x)
 		writeChan chan action
 
-	statemapmv <- newMVar Data.Map.empty
-	let statestuff filename action = do
-		chan <- modifyMVar statemapmv $ \m -> do
-			case Data.Map.lookup filename m of
-				Just x -> return (m, x)
-				Nothing -> do
-					putStrLn $ "  DB: Opening state database: " ++ filename
-					statedb <- create_db "state" filename
-					putStrLn $ "  DB: State database loaded."
-					x <- newChan
-					forkIO_ "kps:dbstatechan" $ forever $ do
-						chanaction <- readChan x
-						chanaction statedb
-					return (Data.Map.insert filename x m, x)
-		writeChan chan action
-
 	sock <- mklistensocket (listen_public _log_fakeref) portnum
 
 	forkIO_ "kps:updatedatafiles" $ do
@@ -355,7 +328,7 @@ runProxyServer r rchat portnum = do
 		cont <- f
 		when cont $ runLoop f
 
-	debug_do "do_loop" $ runLoop $ handleConnection globalref (sessionmastermv, dblogstuff, statestuff) sock (portnum, mvsequence, mvchat, logchan, dropping_logchan)
+	debug_do "do_loop" $ runLoop $ handleConnection globalref (sessionmastermv, dblogstuff) sock (portnum, mvsequence, mvchat, logchan, dropping_logchan)
 
 	putStrLn "Shutting down."
 
