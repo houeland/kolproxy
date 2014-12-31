@@ -35,8 +35,8 @@ function increase_daily_counter(name, amount)
 	day[name] = get_daily_counter(name) + (amount or 1)
 end
 
-function reset_daily_counter(name)
-	day[name] = nil
+function reset_daily_counter(name, value)
+	day[name] = value
 end
 
 function get_ascension_counter(name)
@@ -47,6 +47,6 @@ function increase_ascension_counter(name, amount)
 	ascension[name] = get_ascension_counter(name) + (amount or 1)
 end
 
-function reset_ascension_counter(name)
-	ascension[name] = nil
+function reset_ascension_counter(name, value)
+	ascension[name] = value
 end

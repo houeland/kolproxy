@@ -83,7 +83,7 @@ add_processor("/clan_viplounge.php", function()
 		increase_daily_counter("zone.vip lounge.deluxe mr klaw")
 	end
 	if text:contains("probably shouldn't play with this machine any more today") then
-		increase_daily_counter("zone.vip lounge.deluxe mr klaw", 3)
+		reset_daily_counter("zone.vip lounge.deluxe mr klaw", 3)
 	end
 end)
 

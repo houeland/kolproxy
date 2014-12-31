@@ -52,6 +52,7 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff = do
 		dblogstuff ((charName ai) ++ "-" ++ (show $ ascension ai) ++ ".ascension-log.sqlite3") action
 	luainstancesref <- newMVar Data.Map.empty
 	laststoredstateref <- newIORef Nothing
+	laststoredtimeref <- newIORef tnow
 	storedstateidref <- newIORef (-1, -1)
 	actionbarref <- newIORef Nothing
 	return ServerSessionType {
@@ -67,6 +68,7 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff = do
 			stateData_ = statedata,
 			luaInstances_ = luainstancesref,
 			lastStoredState_ = laststoredstateref,
+			lastStoredTime_ = laststoredtimeref,
 			storedStateId_ = storedstateidref,
 			cachedActionbar_ = actionbarref
 		}

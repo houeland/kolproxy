@@ -12,6 +12,7 @@ import Control.Monad
 import Data.IORef
 import Data.List
 import Data.Maybe
+import Data.Time
 import Data.Time.Clock.POSIX
 import System.IO.Error (isDoesNotExistError)
 import Text.JSON
@@ -41,11 +42,13 @@ writeStateToFile filename filedata = do
 	basedir <- getBaseDirectory "state"
 	best_effort_atomic_file_write path basedir filedata
 
-registerUpdatedState ref stateset _var = do
+registerUpdatedState ref stateset var = do
 	when (stateset `elem` ["character", "ascension", "day"]) $ do
 		forkIO_ "delayedStoreSettings" $ do
 			threadDelay $ 10 * 1000000
-			storeSettings ref
+			last_store <- readIORef (lastStoredTime_ $ sessionData $ ref)
+			tnow <- getCurrentTime
+			when (diffUTCTime tnow last_store >= 10) $ storeSettings ref
 
 remap_stateset input_stateset input_var = if input_stateset == "fight"
 	then ("day", "fight." ++ input_var)
@@ -221,6 +224,7 @@ writeServerSettings ref = do
 	writeIORef (storedStateId_ $ sessionData $ ref) newstateid
 
 storeSettings ref = when (store_state_in_actionbar ref) $ do
+	writeIORef (lastStoredTime_ $ sessionData $ ref) =<< getCurrentTime
 	Just (_, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
 	let daymap = Data.Map.filterWithKey (\x _y -> not $ isPrefixOf "fight." x) extra_daymap
 	let statedesc = show (charmap, ascmap, daymap)

@@ -45,6 +45,7 @@ data SessionDataType = SessionDataType {
 	stateData_ :: IORef (Maybe (DiscerningStateIdentifier, StateType)),
 	luaInstances_ :: MVar (Data.Map.Map (Bool, String, LuaScriptType) (MVar Scripting.LuaModded.LuaState)),
 	lastStoredState_ :: IORef (Maybe String),
+	lastStoredTime_ :: IORef UTCTime,
 	storedStateId_ :: IORef (Integer, Integer),
 	cachedActionbar_ :: IORef (Maybe String)
 }
