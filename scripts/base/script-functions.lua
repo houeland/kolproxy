@@ -327,8 +327,14 @@ function set_ascension_turn_counter(name, length)
 end
 
 function add_chat_redirect(cmd, msg, href, hrefparams)
-	add_chat_trigger(cmd, function()
-		return [[<span style="color: green">{ ]] .. msg .. [[ }</span><!--js(top.mainpane.location.href=']] .. make_href(href, hrefparams) .. [[')-->]]
+	return add_custom_chat_redirect(cmd, msg, function()
+		return make_href(href, hrefparams)
+	end)
+end
+
+function add_custom_chat_redirect(cmd, msg, f)
+	add_chat_trigger(cmd, function(line)
+		return [[<span style="color: green">{ ]] .. msg .. [[ }</span><!--js(top.mainpane.location.href=']] .. f(line) .. [[')-->]]
 	end)
 end
 

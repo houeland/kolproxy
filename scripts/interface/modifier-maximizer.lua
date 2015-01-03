@@ -219,7 +219,17 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		"Stench Damage",
 	}
 
-	local whichbonus = params.whichbonus or "Item Drops from Monsters"
+	local whichbonus = params.whichbonus
+	if params.fuzzy then
+		for _, x in ipairs(bonuses) do
+			print("DEBUG fuzzy vs", params.fuzzy, x)
+			if x:lower():contains(params.fuzzy:lower()) then
+				whichbonus = x
+				break
+			end
+		end
+	end
+	whichbonus = whichbonus or "Item Drops from Monsters"
 
 	local scoref = function(bonuses)
 		return bonuses[whichbonus]

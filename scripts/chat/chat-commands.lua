@@ -184,3 +184,11 @@ add_chat_command("/stock", "Stocking.", function(line)
 	end
 	return add_store_item(item, amount)()
 end)
+
+add_custom_chat_redirect("/maximizer", "Maximizing...", function(line)
+	print("DEBUG: /maximizer param was [[" .. tostring(line) .."]]")
+	return make_href("/kolproxy-automation-script", { ["automation-script"] = "custom-modifier-maximizer", pwd = sendchat_pwd, fuzzy = line })
+end)
+
+add_chat_alias("/maximize", "/maximizer")
+add_chat_alias("/max", "/maximizer")
