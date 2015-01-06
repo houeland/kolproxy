@@ -374,6 +374,21 @@ local function blpane_familiar_weight()
 	end
 end
 
+local function familiar_info_line(faminfo)
+	local ret = faminfo.info
+	if faminfo.type == "counter" then
+		if faminfo.max then
+			ret = string.format("%d&nbsp;/&nbsp;%d %s", faminfo.count, faminfo.max, faminfo.info)
+		else
+			ret = string.format("%d %s", faminfo.count, faminfo.info)
+		end
+		if faminfo.extra_info then
+			ret = ret .. string.format(" <span class='extrainfo'>(%s)</span>", faminfo.extra_info)
+		end
+	end
+	return ret
+end
+
 local function bl_charpane_familiar(lines)
 	table.insert(lines, [[<table id="chit_familiar" class="chit_brick nospace">]])
 	if familiarid() ~= 0 then
@@ -385,7 +400,13 @@ local function bl_charpane_familiar(lines)
 	<th width="30">&nbsp;</th>
 </tr>]], blpane_familiar_weight(), maybe_get_familiarname(familiarid()) or "?"))
 
-		table.insert(lines, string.format([[<tr><td><a href="familiar.php" target="mainpane"><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" width="30" height="30" class="chit_launcher" rel="chit_pickerfam"></td><td><!-- kolproxy charpane familiar text area --></td>]], familiarpicture()))
+		local famtextinfo = ""
+		local link, title = charpane_familiar_setup_link()
+		if link and title then
+			famtextinfo = string.format([[<div class='faminfo'>(<a href="%s" target="mainpane">%s</a>)</div>]], link, title)
+		end
+
+		table.insert(lines, string.format([[<tr><td><a href="familiar.php" target="mainpane"><img src="http://images.kingdomofloathing.com/itemimages/%s.gif" width="30" height="30" class="chit_launcher" rel="chit_pickerfam"></td><td>%s<!-- kolproxy charpane familiar text area --></td>]], familiarpicture(), famtextinfo))
 		if fam_equip then
 			table.insert(lines, string.format([[<td><img class="chit_launcher" rel="chit_pickerfamequip" src="http://images.kingdomofloathing.com/itemimages/%s.gif"></td></tr>]], fam_equip.picture))
 		else
@@ -401,21 +422,6 @@ local function bl_charpane_familiar(lines)
 		table.insert(lines, [[<center><a href="familiar.php" target="mainpane">No familiar</a></center>]])
 	end
 	table.insert(lines, [[</table>]])
-end
-
-local function familiar_info_line(faminfo)
-	local ret = faminfo.info
-	if faminfo.type == "counter" then
-		if faminfo.max then
-			ret = string.format("%d&nbsp;/&nbsp;%d %s", faminfo.count, faminfo.max, faminfo.info)
-		else
-			ret = string.format("%d %s", faminfo.count, faminfo.info)
-		end
-		if faminfo.extra_info then
-			ret = ret .. string.format(" <span class='extrainfo'>(%s)</span>", faminfo.extra_info)
-		end
-	end
-	return ret
 end
 
 local function compact_motorbike_display()
@@ -462,6 +468,12 @@ local function bl_charpane_compact_familiar(lines)
 			for _, faminfo in ipairs(faminfos) do
 				table.insert(lines,"<div class='faminfo'>" .. familiar_info_line(faminfo) .. "</div>")
 			end
+			table.insert(lines, [[</td></tr>]])
+		end
+		local link, title = charpane_familiar_setup_link()
+		if link and title then
+			table.insert(lines, [[<tr><td colspan='4' class='info'>]])
+			table.insert(lines, string.format([[<div class='faminfo'>(<a href="%s" target="mainpane">%s</a>)</div>]], link, title))
 			table.insert(lines, [[</td></tr>]])
 		end
 	elseif ascensionpath("Avatar of Boris") then

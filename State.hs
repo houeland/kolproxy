@@ -42,7 +42,7 @@ writeStateToFile filename filedata = do
 	basedir <- getBaseDirectory "state"
 	best_effort_atomic_file_write path basedir filedata
 
-registerUpdatedState ref stateset var = do
+registerUpdatedState ref stateset _var = do
 	when (stateset `elem` ["character", "ascension", "day"]) $ do
 		forkIO_ "delayedStoreSettings" $ do
 			threadDelay $ 10 * 1000000

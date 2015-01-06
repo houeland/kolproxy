@@ -152,6 +152,8 @@ function do_daily_visits()
 		end
 	end
 
+	dopage("/place.php", { whichplace = "chateau", action = "chateau_desk" })
+
 	if campground_pt:contains("Humongous Buried Skull") then
 		add_result([[<span style="color: darkorange">Skipped harvesting garden (<b>skulldozer ready</b>).</span>]])
 	elseif campground_pt:contains("wintergarden1.gif") or campground_pt:contains("wintergarden2.gif") then

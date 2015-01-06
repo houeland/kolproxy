@@ -888,12 +888,20 @@ function charpane_equipment_line(slots)
 	return string.format([[<span style="white-space: nowrap">%s</span>]], table.concat(icons))
 end
 
-function charpane_familiar_weight_line()
+function charpane_familiar_setup_link()
 	if familiar("Reanimated Reanimator") then
-		return string.format([[%s lbs. (<a href="main.php?talktoreanimator=1" target="mainpane">chat</a>)]], buffedfamiliarweight())
+		return "main.php?talktoreanimator=1", "chat"
 	elseif familiar("Grim Brother") then
-		-- TODO: cache that it's done today
-		return string.format([[%s lbs. (<a href="familiar.php?action=chatgrim&pwd=%s" target="mainpane">talk</a>)]], buffedfamiliarweight(), session.pwd)
+		return string.format("familiar.php?action=chatgrim&pwd=%s", session.pwd), "talk"
+	elseif familiar("Mini-Crimbot") then
+		return "main.php?action=minicrimbot", "config"
+	end
+end
+
+function charpane_familiar_weight_line()
+	local link, title = charpane_familiar_setup_link()
+	if link and title then
+		return string.format([[%s lbs. (<a href="%s" target="mainpane">%s</a>)]], buffedfamiliarweight(), link, title)
 	else
 		return string.format("%s lbs.", buffedfamiliarweight())
 	end

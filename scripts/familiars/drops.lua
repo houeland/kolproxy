@@ -54,6 +54,11 @@ local drop_familiars = {
 		message = "bottle of booze",
 		short_item_name = "bottle",
 	},
+	galgrill = {
+		message = "little pile of hot ashes falls out of the bottom",
+		short_item_name = "ashes",
+		plural = true,
+	},
 }
 
 local function counter_name(familiar, info)

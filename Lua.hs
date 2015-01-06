@@ -205,7 +205,7 @@ get_lua_instance_for_code level filename ref = do
 			Just existingmv -> return (insts, Right existingmv)
 			_ -> do
 				either_l_setup <- do
-					putStrLn $ "DEBUG: making lua instance: " ++ show (canread, filename, level)
+					putDebugStrLn $ "Making lua instance: " ++ show (canread, filename, level)
 					log_time_interval ref ("setup lua instance: " ++ filename ++ "|" ++ show level) $ setup_lua_instance level filename ref
 				case either_l_setup of
 					Right l_setup -> do

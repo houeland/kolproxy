@@ -34,10 +34,10 @@ end)
 
 local museum_href = add_automation_script("latest-leaderboard", function()
 	local pt = get_page("/museum.php")
-	local highest = 1
+	local highest = nil
 	for xt in pt:gmatch("whichboard=([0-9]+)") do
 		local x = tonumber(xt)
-		if x and x > highest then
+		if x and x > (highest or -1) and x ~= 999 then
 			highest = x
 		end
 	end
@@ -241,7 +241,7 @@ html, body {
 
 			<div class='abc a'><span class='title'><a target='mainpane' href='town_clan.php'>cl</a><span class="sep"></span><a target='mainpane' href='clan_office.php'>an</a> <a target='mainpane' href='clan_log.php?classic=true'>log</a></span><br><a target='mainpane' href='clan_raidlogs.php'>raid</a> <a target='mainpane' href='clan_slimetube.php'>sl</a> <a target='mainpane' href='clan_hobopolis.php'>sew</a><br><a target='mainpane' href='clan_viplounge.php'>VIP</a> <a target='mainpane' href='clan_stash.php'>stash</a> <a target='mainpane' href='clan_whitelist.php'>wl</a></div>
 
-			<div class='abc'><span class='title'><a target='mainpane' href='town.php'>town</a> <a target='mainpane' href='town_wrong.php'>tra</a><span class="sep"></span><a target='mainpane' href='town_right.php'>cks</a></span><br><a target='mainpane' href=']]..museum_href { pwd = session.pwd }..[['>board</a> <a target='mainpane' href='typeii.php'>t2</a> <a target='mainpane' href='guild.php'>guild</a> <br><a target='mainpane' href='manor.php'>ma</a><span class="sep"></span><a target='mainpane' href='manor2.php'>no</a><span class="sep"></span><a target='mainpane' href='manor3.php'>r</a> <a target='mainpane' href='galaktik.php'>doc</a></div>
+			<div class='abc'><span class='title'><a target='mainpane' href='town.php'>town</a> <a target='mainpane' href='town_wrong.php'>tra</a><span class="sep"></span><a target='mainpane' href='town_right.php'>cks</a></span><br><a target='mainpane' href=']]..museum_href { pwd = session.pwd }..[['>boa</a><span class="sep"></span><a target='mainpane' href='museum.php?floor=1&place=leaderboards&whichboard=999'>rds</a> <a target='mainpane' href='guild.php'>guild</a> <br><a target='mainpane' href='manor.php'>ma</a><span class="sep"></span><a target='mainpane' href='manor2.php'>no</a><span class="sep"></span><a target='mainpane' href='manor3.php'>r</a> <a target='mainpane' href='galaktik.php'>doc</a></div>
 
 			<div class='abc a'><span class='title'><a target='mainpane' href='council.php'>council</a> </span><br><a target='mainpane' href='mrstore.php'>mr</a> <a target='mainpane' href='store.php?whichstore=m'>store</a><br><a target='mainpane' href='storage.php?which=5'>hagnk]] .. hagnk_pulls .. [[</a></div>
 
