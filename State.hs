@@ -132,7 +132,7 @@ loadStateFromJson ref jsobj = do
 	putDebugStrLn $ "loadStateFromJson at " ++ (show $ ascension $ ai)
 	let stuff = fromJSObject $ jsobj
 	(stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef $ stateData_ $ sessionData $ ref
-	lstp <- return Nothing -- getState ref "character" "turnsplayed last state change"
+	lstp <- return Nothing -- getState "turnsplayed last state change"
 
 --	timestamp_data = ... "timestamp"
 --	character_data = ... "character-<playerid>"
