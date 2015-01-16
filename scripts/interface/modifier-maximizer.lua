@@ -21,10 +21,15 @@ function maximize_equipment_slot_bonuses(slot, scoref_raw)
 		subtract_modifier_bonuses(bonuses_without_slot_with_synergy, estimate_item_synergy_bonuses(slot_eqitemid, bonuses_without_slot_with_synergy) or {})
 	end
 	local score_without_slot = scoref(bonuses_without_slot_with_synergy)
+	local score_without_bonuses = scoref({})
 
 	local function score_item(name)
+		local item_bonuses = estimate_item_equip_bonuses_uncached(name)
+		if item_bonuses["Smithsness"] == 0 then
+			return scoref(item_bonuses) - score_without_bonuses
+		end
 		local base_bonuses = make_bonuses_table(base_bonuses_without_slot)
-		base_bonuses.add(estimate_item_equip_bonuses_uncached(name))
+		base_bonuses.add(item_bonuses)
 		local synergy_bonuses = estimate_current_synergy(base_bonuses)
 		if slot_eqitemid then
 			subtract_modifier_bonuses(synergy_bonuses, estimate_item_synergy_bonuses(slot_eqitemid, base_bonuses) or {})
@@ -176,14 +181,7 @@ function add_modifier_maximizer_script_link_function(f)
 end
 
 modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", function()
-	local scoref
-	local resultpt
-	local bonuses
-	local whichbonus
-	kolproxy_log_time_interval("DEBUG setup stuff", function()
-
---	local resultpt = ""
-	resultpt = ""
+	local resultpt = ""
 	if params.equip_itemname and params.equip_slot then
 		if params.equip_itemname == "(none)" then
 			resultpt = unequip_slot(params.equip_slot)()
@@ -196,8 +194,7 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		resultpt = use_item(params.use_itemname)()
 	end
 
---	local bonuses = {
-	bonuses = {
+	local bonuses = {
 		"Monsters will be more attracted to you",
 		"Monsters will be less attracted to you",
 		"Item Drops from Monsters",
@@ -227,10 +224,9 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		"Stench Damage",
 	}
 
-	whichbonus = params.whichbonus
+	local whichbonus = params.whichbonus
 	if params.fuzzy then
 		for _, x in ipairs(bonuses) do
-			print("DEBUG fuzzy vs", params.fuzzy, x)
 			if x:lower():contains(params.fuzzy:lower()) then
 				whichbonus = x
 				break
@@ -239,8 +235,7 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 	end
 	whichbonus = whichbonus or "Item Drops from Monsters"
 
---	local scoref = function(bonuses)
-	scoref = function(bonuses)
+	local scoref = function(bonuses)
 		return bonuses[whichbonus]
 	end
 	if whichbonus == "HP & cold/spooky resistance" then
@@ -281,7 +276,6 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		end
 	end
 
-	end) -- DEBUG log time
 	local equipmentlines = {}
 	kolproxy_log_time_interval("DEBUG equipment", function()
 
@@ -307,7 +301,10 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 
 	local suggested_equipment = {}
 	for _, slot in ipairs { "hat", "container", "shirt", "weapon", "offhand", "pants", "acc1", "acc2", "acc3" } do
-		local items, prevscore = maximize_equipment_slot_bonuses(slot, scoref)
+		local items, prevscore = 
+kolproxy_log_time_interval("DEBUG eqslot:" .. slot, function()
+return maximize_equipment_slot_bonuses(slot, scoref)
+end)
 		suggested_equipment[slot] = items[1].itemid
 		suggested_scores[slot] = items[1].score
 		previous_scores[slot] = prevscore
@@ -402,8 +399,6 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 	end
 
 	end) -- DEBUG log time
-	local contents
-	kolproxy_log_time_interval("DEBUG finalize", function()
 
 	local script_links = {}
 	for _, f in ipairs(registered_script_links) do
@@ -418,9 +413,7 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		table.insert(links, string.format([[<a href="%s">%s</a>]], modifier_maximizer_href { pwd = session.pwd, whichbonus = x }, x))
 	end
 
-	contents = make_kol_html_frame("<table><thead><tr><th>slot</th><th>current</th><th>suggested</th></tr></thead><tbody>" .. table.concat(equipmentlines, "\n") .. "</tbody></table><br><table>" .. table.concat(bufflines, "\n") .. "</table><br>" .. table.concat(script_links, "<br>") .. "<br><br>" .. table.concat(links, " | "), "Modifier maximizer (" .. whichbonus .. ")")
-
-	end) -- DEBUG log time
+	local contents = make_kol_html_frame("<table><thead><tr><th>slot</th><th>current</th><th>suggested</th></tr></thead><tbody>" .. table.concat(equipmentlines, "\n") .. "</tbody></table><br><table>" .. table.concat(bufflines, "\n") .. "</table><br>" .. table.concat(script_links, "<br>") .. "<br><br>" .. table.concat(links, " | "), "Modifier maximizer (" .. whichbonus .. ")")
 
 	return [[<html>
 <head>

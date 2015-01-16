@@ -969,6 +969,10 @@ endif
 		stop "Beaten up..."
 	end
 
+	if pastathrall("Vampieroghi") and pastathralllevel() >= 5 and have_apartment_building_cursed_buff() then
+		stop "Vampieroghi pastamancer thrall + hidden city curses is a bad combo, finish it manually."
+	end
+
 	if locked() then
 		stop "Already busy doing something else"
 	end
@@ -2543,12 +2547,15 @@ endif
 		}
 	}
 
-	do
-		local pt, pturl, did_sr = script.check_sr()
-		if pt and pturl then
-			return pt, pturl, did_sr
-		end
-	end
+	add_task {
+		when = script.check_sr_turn,
+		task = {
+			message = "picking up semirare",
+			nobuffing = true,
+			action = script.pick_up_sr,
+		}
+	}
+
 	if not turns_to_next_sr then
 		turns_to_next_sr = 1000000
 	end
@@ -5766,6 +5773,7 @@ local function path_supports_fax_machine()
 	return not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete") and not fax_machine_is_too_old()
 end
 
+-- TODO: stop on semirares option
 local ascension_script_options_tbl = {
 	["disable autoattack"] = { yes = "use script macros", no = "use autoattack", default_yes = true, when = function() return autoattack_is_set() end },
 	["stop on imported beer"] = { yes = "stop", no = "drink as fallback booze", default_yes = true },

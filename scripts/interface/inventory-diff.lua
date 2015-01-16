@@ -38,12 +38,20 @@ local href = add_automation_script("custom-inventory-diff", function()
 	end
 
 	local changes = {}
-	for a, _ in pairs(itemids) do
-		if original_items[a] ~= current_items[a] then
-			table.insert(changes, { itemid = a, amount = (current_items[a] or 0) - (original_items[a] or 0), name = maybe_get_itemname(a) })
+	for itemid, _ in pairs(itemids) do
+		local amount = (current_items[itemid] or 0) - (original_items[itemid] or 0)
+		if amount ~= 0 then
+			local value = estimate_mallsell_profit(itemid, amount) or 0
+			table.insert(changes, { itemid = itemid, amount = amount, name = maybe_get_itemname(itemid) or ("{ itemid: " .. tostring(itemid) .. " }"), value = value })
 		end
 	end
 	table.sort(changes, function(a, b)
+		if math.sign(a.amount) ~= math.sign(b.amount) then
+			return math.sign(a.amount) > math.sign(b.amount)
+		end
+		if a.value ~= b.value then
+			return a.value > b.value
+		end
 		if type(a.name) ~= type(b.name) then
 			return type(a.name) < type(b.name)
 		end
@@ -56,20 +64,16 @@ local href = add_automation_script("custom-inventory-diff", function()
 	local lines = {}
 	local item_sum = 0
 	for _, x in ipairs(changes) do
-		local value = estimate_mallbuy_cost(x.itemid, math.abs(x.amount)) or 0
-		if x.amount < 0 then
-			value = -value
-		end
-		table.insert(lines, string.format("%+dx %s (%s Meat)", x.amount, x.name or ("{ itemid: " .. tostring(x.itemid) .. " }"), display_signed_integer(value)))
-		item_sum = item_sum + value
+		table.insert(lines, string.format("%+dx %s (%s Meat)", x.amount, x.name, display_signed_integer(x.value)))
+		item_sum = item_sum + x.value
 	end
 
+	table.insert(lines, "")
 	table.insert(lines, string.format("Meat value of items: %s Meat", display_signed_integer(item_sum)))
-
 	table.insert(lines, "")
 	local meat_change = meat() - (cached_data.meat or 0)
 	table.insert(lines, string.format("Current Meat: %s (%s)", meat(), display_signed_integer(meat_change)))
 	table.insert(lines, string.format("Combined total: %s Meat", display_signed_integer(item_sum + meat_change)))
 
-	return make_kol_html_frame("Inventory changes this session:<br>" .. table.concat(lines, "<br>"), "Inventory changes (preview)"), requestpath
+	return make_kol_html_frame("Inventory changes this session:<br><br>" .. table.concat(lines, "<br>"), "Inventory changes"), requestpath
 end)

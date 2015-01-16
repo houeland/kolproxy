@@ -104,6 +104,7 @@ load_file("interface", "interface/preview-chat-commands.lua")
 load_file("interface", "interface/improve-typography.lua")
 
 load_file("spading", "spading/encounter-simulator.lua")
+load_file("spading", "spading/meatdrops.lua")
 
 load_file("automation", "automation/setup.lua")
 load_file("automation", "automation/daily-visits.lua")

@@ -82,7 +82,7 @@ log_time_interval ref name action = do
 	time_pre <- getCurrentTime
 	indents <- readIORef (logindents ref)
 	let indent_text = replicate (fromIntegral indents) ':'
-	internal_log_time_msg ref (printf "  [%-35s %s>] %s" (show time_pre) indent_text name)
+	--internal_log_time_msg ref (printf "  [%-35s %s>] %s" (show time_pre) indent_text name)
 	atomicModifyIORef (logindents ref) (\x -> (x + 1, ()))
 	actionresult <- action `catch` (\e -> do
 		putStrLn $ "log:" ++ name ++ " exception: " ++ (show (e :: SomeException))

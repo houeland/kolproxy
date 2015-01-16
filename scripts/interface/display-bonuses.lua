@@ -83,7 +83,7 @@ end
 --	end)
 --end
 
-function estimate_item_synergy_bonuses(item, base_bonuses)
+function __old__estimate_item_synergy_bonuses(item, base_bonuses)
 	if get_itemid(item) == get_itemid("Meat Tenderizer is Murder") then
 		return { ["Muscle %"] = base_bonuses["Smithsness"] * 2 }
 	elseif get_itemid(item) == get_itemid("Ouija Board, Ouija Board") then
@@ -110,6 +110,36 @@ function estimate_item_synergy_bonuses(item, base_bonuses)
 		return { ["Maximum HP"] = base_bonuses["Smithsness"] * 2 }
 	elseif get_itemid(item) == get_itemid("Hand in Glove") then
 		return { ["Monster Level"] = base_bonuses["Smithsness"] * 1 }
+	end
+end
+
+local smithsness_synergy_bonus_itemid_cache = nil
+function estimate_item_synergy_bonuses(item, base_bonuses)
+	if not smithsness_synergy_bonus_itemid_cache then
+		local smithsness_bonuses = {
+			["Meat Tenderizer is Murder"] = { "Muscle %", 2 },
+			["Ouija Board, Ouija Board"] = { "Muscle %", 2 },
+			["Hand that Rocks the Ladle"] = { "Mysticality %", 2 },
+			["Saucepanic"] = { "Mysticality %", 2 },
+			["Frankly Mr. Shank"] = { "Moxie %", 2 },
+			["Shakespeare's Sister's Accordion"] = { "Moxie %", 2 },
+			["Sheila Take a Crossbow"] = { "Combat Initiative", 1 },
+			["Staff of the Headmaster's Victuals"] = nil,
+			["Work is a Four Letter Sword"] = nil,
+			["A Light that Never Goes Out"] = { "Item Drops from Monsters", 1 },
+			["Half a Purse"] = { "Meat from Monsters", 2 },
+			["Hairpiece On Fire"] = { "Maximum MP", 1 },
+			["Vicar's Tutu"] = { "Maximum HP", 2 },
+			["Hand in Glove"] = { "Monster Level", 1 },
+		}
+		smithsness_synergy_bonus_itemid_cache = {}
+		for x, y in pairs(smithsness_bonuses) do
+			smithsness_synergy_bonus_itemid_cache[get_itemid(x)] = y
+		end
+	end
+	local b = smithsness_synergy_bonus_itemid_cache[get_itemid(item)]
+	if b then
+		return { [b[1]] = base_bonuses["Smithsness"] * b[2] }
 	end
 end
 

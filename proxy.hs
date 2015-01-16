@@ -28,7 +28,7 @@ get_the_state ref = do
 	cr <- canReadState ref
 	if cr
 		then do
-			Just (_, y) <- readIORef (state ref)
+			(_, y) <- readIORef (state ref)
 			return $ Just y
 		else return Nothing
 

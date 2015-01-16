@@ -44,7 +44,7 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff = do
 	tnow <- getCurrentTime
 	lrs <- newIORef tnow
 	lrw <- newIORef tnow
-	statedata <- newIORef Nothing
+	statedata <- newIORef (("", -1, -1, ""), (Data.Map.empty, Data.Map.empty, Data.Map.empty, Data.Map.empty, Data.Map.empty))
 	-- TODO: Change this raw API decoding business?
 	let dologaction ref action = do
 		Just jsonobj <- readIORef (latestValidJson_ $ sessionData $ ref)

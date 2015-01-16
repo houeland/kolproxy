@@ -571,6 +571,9 @@ end
 
 function estimate_mallbuy_cost(item, amount)
 	amount = amount or 1
+	if amount < 0 then
+		return -estimate_mallsell_profit(item, -amount)
+	end
 	local d = datafile("mallprices")[maybe_get_itemname(item)] or {}
 	if type(d) ~= "table" and tonumber(d) then return tonumber(d) * amount end -- TODO: support for old datafile, remove in a future version
 	local function try(num)

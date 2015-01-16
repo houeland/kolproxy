@@ -76,6 +76,17 @@ if math then
 			return x
 		end
 	end
+
+	function math.sign(x)
+		x = tonumber(x)
+		if not x then
+			return 0
+		elseif x < 0 then
+			return -1
+		else
+			return 1
+		end
+	end
 end
 
 exported_raw_tostring = tostring

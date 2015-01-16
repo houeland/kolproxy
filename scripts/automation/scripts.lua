@@ -429,7 +429,7 @@ function get_automation_scripts(cached_stuff)
 			end
 		end
 		if famname == "leprechaun" then
-			famname = firstfam { "He-Boulder", "Leprechaun" } or "auto"
+			famname = firstfam { "Hobo Monkey", "Grim Brother", "Bloovian Groose", "Blavious Kloop", "Angry Jung Man", "He-Boulder", "Knob Goblin Organ Grinder", "Leprechaun" } or "auto"
 		end
 		if famname == "free turn" then
 			famname = firstfam { "Mini-Hipster", "Artistic Goth Kid" } or "auto"
@@ -1581,42 +1581,32 @@ function get_automation_scripts(cached_stuff)
 
 	local wear = f.wear
 
-	function f.check_sr()
-		-- Commented out warning when something strange happens.
-		-- Semirares automation sometimes gets screwed up when previous ones are missed, but just continue the ascension instead of requiring manual intervention
-		-- TODO: Handle?
-		-- TODO: just finish fights that happen when an SR was attempted?
-		turns_to_next_sr = nil
-		for a, b in pairs(ascension["fortune cookie numbers"] or {}) do
-			if turnsthisrun() == tonumber(b) then
-				print "  checking for SR"
+	function f.pick_up_sr()
+		print "  checking for SR"
 
-				local ls = ascension["last semirare"] or {}
-				local lastsemi = ls.encounter
-				local lastturn = ls.turn
+		local ls = ascension["last semirare"] or {}
+		local lastsemi = ls.encounter
+		local lastturn = ls.turn
 
-				if (turnsthisrun() < 70) or (lastturn and lastturn + 159 > turnsthisrun()) then
-					print("  skipping impossible SR", b, turnsthisrun(), "last", lastsemi, lastturn)
-				else
-					if challenge == "boris" then
-						if daysthisrun() == 1 and ascensionstatus() ~= "Hardcore" and not lastsemi and count_item("Moon Pie") >= 2 and count_item("milk of magnesium") >= 1 and have_item("Wrecked Generator") and not have_item("tasty tart") then
-							inform "Pick up boris SR, make it tarts"
-							result, resulturl, advagain = autoadventure { zoneid = 113, ignorewarnings = true }
-							did_action = count_item("tasty tart") >= 3
-							return result, resulturl, did_action
-						elseif daysthisrun() == 2 and ascensionstatus() and ascensionstatus() ~= "Hardcore" and lastsemi == "Bad ASCII Art" and fullness() == estimate_max_fullness() then
-							local got_scrolls = false
-							if level() >= 9 and not quest("A Quest, LOL") then
-								got_scrolls = true
-							elseif count_item("334 scroll") >= 2 and have_item("30669 scroll") and have_item("33398 scroll") then
-								got_scrolls = true
-							end
-							if got_scrolls then
-								inform "Pick up boris SR, make it baabaaburan"
-								script.bonus_target { "item" }
-								script.ensure_buffs {}
-								script.wear {}
-								result, resulturl, advagain = autoadventure { zoneid = 280, ignorewarnings = true, macro = [[
+		if challenge == "boris" then
+			if daysthisrun() == 1 and ascensionstatus() ~= "Hardcore" and not lastsemi and count_item("Moon Pie") >= 2 and count_item("milk of magnesium") >= 1 and have_item("Wrecked Generator") and not have_item("tasty tart") then
+				inform "Pick up boris SR, make it tarts"
+				result, resulturl, advagain = autoadventure { zoneid = 113, ignorewarnings = true }
+				did_action = count_item("tasty tart") >= 3
+				return result, resulturl, did_action
+			elseif daysthisrun() == 2 and ascensionstatus() and ascensionstatus() ~= "Hardcore" and lastsemi == "Bad ASCII Art" and fullness() == estimate_max_fullness() then
+				local got_scrolls = false
+				if level() >= 9 and not quest("A Quest, LOL") then
+					got_scrolls = true
+				elseif count_item("334 scroll") >= 2 and have_item("30669 scroll") and have_item("33398 scroll") then
+					got_scrolls = true
+				end
+				if got_scrolls then
+					inform "Pick up boris SR, make it baabaaburan"
+					script.bonus_target { "item" }
+					script.ensure_buffs {}
+					script.wear {}
+					result, resulturl, advagain = autoadventure { zoneid = 280, ignorewarnings = true, macro = [[
 if (monstername baa'baa'bu'ran)
 
 ]] .. macro_softcore_boris() .. [[
@@ -1624,46 +1614,64 @@ if (monstername baa'baa'bu'ran)
 endif
 
 ]] }
-								did_action = count_item("stone wool") >= 2
-								return result, resulturl, did_action
-							end
-						end
-						script.bonus_target { "item" }
-						script.ensure_buffs {}
-						script.wear {}
-						stop "Pick up semirare in Boris"
-					end
-					if lastturn and lastturn + 250 < turnsthisrun() then
--- 						critical "Last semirare was a long time ago"
-						return
-					end
-					print("pick up SR, last semi", lastsemi, lastturn)
-					wear {}
-					if (not lastsemi and not lastturn and turnsthisrun() < 85) or (lastsemi ~= "In the Still of the Alley") then
-						inform "Pick up SR, make it wines"
-						result, resulturl, advagain = autoadventure { zoneid = 112, ignorewarnings = true }
-						if get_result():contains("In the Still of the Alley") then
-							store_buy_item("fortune cookie", "m")
-							local old_full = fullness()
-							set_result(eat_item("fortune cookie"))
-							did_action = (fullness() == old_full + 1) or (old_full == estimate_max_fullness())
-						else
-							result = add_message_to_page(get_result(), "Tried to pick up wine semirare", nil, "darkorange")
-						end
-						return result, resulturl, did_action
-					else
-						inform "Pick up SR, make it lunchbox"
-						result, resulturl, advagain = autoadventure { zoneid = 114, ignorewarnings = true }
-						if get_result():contains("Lunchboxing") then
-							store_buy_item("fortune cookie", "m")
-							local old_full = fullness()
-							set_result(eat_item("fortune cookie"))
-							did_action = (fullness() == old_full + 1) or (old_full == estimate_max_fullness())
-						else
-							result = add_message_to_page(get_result(), "Tried to pick up lunchbox semirare", nil, "darkorange")
-						end
-						return result, resulturl, did_action
-					end
+					did_action = count_item("stone wool") >= 2
+					return result, resulturl, did_action
+				end
+			end
+			script.bonus_target { "item" }
+			script.ensure_buffs {}
+			script.wear {}
+			stop "Pick up semirare in Boris"
+		end
+		if lastturn and lastturn + 250 < turnsthisrun() then
+-- 			critical "Last semirare was a long time ago"
+			return
+		end
+		print("pick up SR, last semi", lastsemi, lastturn)
+		wear {}
+		if (not lastsemi and not lastturn and turnsthisrun() < 85) or (lastsemi ~= "In the Still of the Alley") then
+			inform "Pick up SR, make it wines"
+			result, resulturl, advagain = autoadventure { zoneid = 112, ignorewarnings = true }
+			if get_result():contains("In the Still of the Alley") then
+				store_buy_item("fortune cookie", "m")
+				local old_full = fullness()
+				set_result(eat_item("fortune cookie"))
+				did_action = (fullness() == old_full + 1) or (old_full == estimate_max_fullness())
+			else
+				result = add_message_to_page(get_result(), "Tried to pick up wine semirare", nil, "darkorange")
+			end
+			return result, resulturl, did_action
+		else
+			inform "Pick up SR, make it lunchbox"
+			result, resulturl, advagain = autoadventure { zoneid = 114, ignorewarnings = true }
+			if get_result():contains("Lunchboxing") then
+				store_buy_item("fortune cookie", "m")
+				local old_full = fullness()
+				set_result(eat_item("fortune cookie"))
+				did_action = (fullness() == old_full + 1) or (old_full == estimate_max_fullness())
+			else
+				result = add_message_to_page(get_result(), "Tried to pick up lunchbox semirare", nil, "darkorange")
+			end
+			return result, resulturl, did_action
+		end
+	end
+
+	function f.check_sr_turn()
+		-- Commented out warning when something strange happens.
+		-- Semirares automation sometimes gets screwed up when previous ones are missed, but just continue the ascension instead of requiring manual intervention
+		-- TODO: Handle?
+		-- TODO: just finish fights that happen when an SR was attempted?
+		turns_to_next_sr = nil
+		for a, b in pairs(ascension["fortune cookie numbers"] or {}) do
+			if turnsthisrun() == tonumber(b) then
+				local ls = ascension["last semirare"] or {}
+				local lastsemi = ls.encounter
+				local lastturn = ls.turn
+
+				if (turnsthisrun() < 70) or (lastturn and lastturn + 159 > turnsthisrun()) then
+					print("  skipping impossible SR", b, turnsthisrun(), "last", lastsemi, lastturn)
+				else
+					return true
 				end
 			elseif tonumber(b) >= turnsthisrun() then
 				local turns = tonumber(b) - turnsthisrun()
@@ -1672,28 +1680,6 @@ endif
 				end
 			end
 		end
--- 		do
--- 			local SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info(turnsthisrun())
--- 			if #good_numbers == 0 and turnsthisrun() < 700 then
--- 				if SRmin and SRmin <= 10 then
--- 					critical "Semirare soon, without fortune cookie numbers"
--- 				end
--- 			end
--- 		end
--- 		if not have_numbers then
--- 			if have_item(want_itemname) and not ascension["fortune cookie numbers"] then
--- 				store_buy_item("fortune cookie", "m")
--- 				if not have_item("fortune cookie") then
--- 					critical("Failed to buy a fortune cookie")
--- 				end
--- 				eat_item("fortune cookie")
--- 				eat_item(want_itemname)
--- 				if not ascension["fortune cookie numbers"] then
--- 					critical("Failed to get fortune cookie numbers set")
--- 				end
--- 			end
--- 		end
-		return turns_to_next_sr
 	end
 
 	function f.go(info, zone, macro, noncombattbl, buffslist, famname, minmp, extra)

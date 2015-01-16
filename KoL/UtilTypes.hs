@@ -42,7 +42,7 @@ data SessionDataType = SessionDataType {
 	latestRawJson_ :: IORef (Maybe (Either SomeException (JSObject JSValue))),
 	latestValidJson_ :: IORef (Maybe (JSObject JSValue)),
 	doDbLogAction_ :: RefType -> (Database.SQLite3Modded.Database -> IO ()) -> IO (),
-	stateData_ :: IORef (Maybe (DiscerningStateIdentifier, StateType)),
+	stateData_ :: IORef (DiscerningStateIdentifier, StateType),
 	luaInstances_ :: MVar (Data.Map.Map (Bool, String, LuaScriptType) (MVar Scripting.LuaModded.LuaState)),
 	lastStoredState_ :: IORef (Maybe String),
 	lastStoredTime_ :: IORef UTCTime,

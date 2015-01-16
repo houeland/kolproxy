@@ -42,7 +42,7 @@ local function formatMonsterItems(monster, bonuses)
 	local data = monster.Items
 	if not data then return "" end
 
-	local plusitem = estimate_bonus("Item Drops from Monsters") + bonuses["Item Drops from Monsters"]
+	local plusitem = bonuses["Item Drops from Monsters"]
 
 	local itemdatalist = {}
 	for _, value in ipairs(data) do
@@ -72,7 +72,7 @@ local function formatMonsterItems(monster, bonuses)
 	return "<div style='float:left;'><div style='font-size:12px;'>Drops</div>" .. table.concat(itemdatalist) .. "</div>"
 end
 
-local function formatMonsterStats(monster)
+local function formatMonsterStats(monster, bonuses)
 	local data = monster.Stats
 	if not data then return "" end
 
@@ -102,9 +102,21 @@ local function formatMonsterStats(monster)
 	formatStat("HP", data.ModHP, nil, "Starting HP: " .. display_value(data.HP or "?"))
 	formatStat("Atk", data.ModAtk, nil, "Starting Atk: " .. display_value(data.Atk or "?"))
 	formatStat("Def", data.ModDef, nil, "Starting Def: " .. display_value(data.Def or "?"))
-	formatStat("Meat", data.Meat)
+	local meattooltip = nil
+	if tonumber(data.Meat) then
+		local meat_bonus_percent = bonuses["Meat from Monsters"]
+		local lo, hi = get_possible_fight_meat_minmax(tonumber(data.Meat), meat_bonus_percent)
+		meattooltip = string.format("Drop range: %d to %d", lo, hi)
+	end
+	formatStat("Meat", data.Meat, nil, meattooltip)
 	formatStat("Element", data.Element, element_color(data.Element), "Weak against: " .. table.concat({ get_elemental_weaknesses(data.Element) }, ", ") )
-	formatStat("Init", data.Init)
+	local inittooltip = nil
+	if tonumber(data.Init) and tonumber(data.Atk) then
+		local init = (100 - tonumber(data.Init)) + bonuses["Combat Initiative"]
+		init = init + math.max(0, buffedmainstat() - tonumber(data.Atk)) - compute_monster_initiative_bonus(bonuses["Monster Level"])
+		inittooltip = string.format("%d%% chance to get the jump on monster", init)
+	end
+	formatStat("Init", data.Init, nil, inittooltip)
 
 	if should_show_phylum() and data.Phylum then
 		statData = statData .. [[<div onclick='togglePhylum();' style='cursor:hand;' class='stat'><span style='margin-right:5px;'><span id='phylumToggle'>[+]</span> Phylum:</span><span>]] .. data.Phylum .. [[</span></div>]]
@@ -295,9 +307,9 @@ add_printer("/fight.php", function()
 		local monster = getCurrentFightMonster()
 
 		if monster then
-			local bonuses = estimate_fight_page_bonuses(text)
 			text = text:gsub([[(id=['"]monname['"].-)(</td>)]], function(prefix, suffix)
-				return prefix .. [[<div style='font-size:11px;color:#555;margin-top:5px;'>]] .. formatMonsterStats(monster) .. formatMonsterItems(monster, bonuses) .. [[</div>]] .. suffix
+				local bonuses = estimate_current_bonuses() + estimate_fight_page_bonuses(text)
+				return prefix .. [[<div style='font-size:11px;color:#555;margin-top:5px;'>]] .. formatMonsterStats(monster, bonuses) .. formatMonsterItems(monster, bonuses) .. [[</div>]] .. suffix
 			end)
 
 			if monster.Stats.Phylum then

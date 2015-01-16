@@ -56,7 +56,7 @@ remap_stateset input_stateset input_var = if input_stateset == "fight"
 
 unsetState ref input_stateset input_var = do
 	let (stateset, var) = remap_stateset input_stateset input_var
-	Just (stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
+	(stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
 	let newstate = case stateset of
 		"request" -> (Data.Map.delete var requestmap, sessionmap, charmap, ascmap, daymap)
 		"session" -> (requestmap, Data.Map.delete var sessionmap, charmap, ascmap, daymap)
@@ -64,12 +64,12 @@ unsetState ref input_stateset input_var = do
 		"ascension" -> (requestmap, sessionmap, charmap, Data.Map.delete var ascmap, daymap)
 		"day" -> (requestmap, sessionmap, charmap, ascmap, Data.Map.delete var daymap)
 		_ -> throw $ InternalError $ "Invalid state table type: " ++ stateset
-	writeIORef (state ref) $ Just (stid, newstate)
+	writeIORef (state ref) (stid, newstate)
 	registerUpdatedState ref stateset var
 
 setState ref input_stateset input_var value = do
 	let (stateset, var) = remap_stateset input_stateset input_var
-	Just (stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef $ state ref
+	(stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef $ state ref
 	let newstate = case stateset of
 		"request" -> (Data.Map.insert var value requestmap, sessionmap, charmap, ascmap, daymap)
 		"session" -> (requestmap, Data.Map.insert var value sessionmap, charmap, ascmap, daymap)
@@ -77,12 +77,12 @@ setState ref input_stateset input_var value = do
 		"ascension" -> (requestmap, sessionmap, charmap, Data.Map.insert var value ascmap, daymap)
 		"day" -> (requestmap, sessionmap, charmap, ascmap, Data.Map.insert var value daymap)
 		_ -> throw $ InternalError $ "Invalid state table type: " ++ stateset
-	writeIORef (state ref) $ Just (stid, newstate)
+	writeIORef (state ref) (stid, newstate)
 	registerUpdatedState ref stateset var
 
 getState ref input_stateset input_var = do
 	let (stateset, var) = remap_stateset input_stateset input_var
-	Just (_stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
+	(_stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
 	return $ case stateset of
 		"request" -> Data.Map.lookup var requestmap
 		"session" -> Data.Map.lookup var sessionmap
@@ -92,18 +92,18 @@ getState ref input_stateset input_var = do
 		_ -> throw $ InternalError $ "Invalid state table type: " ++ stateset
 
 uglyhack_resetFightState ref = do
-	Just (_stid, (_requestmap, _sessionmap, _charmap, _ascmap, daymap)) <- readIORef (state ref)
+	(_stid, (_requestmap, _sessionmap, _charmap, _ascmap, daymap)) <- readIORef (state ref)
 	let fight_keys = Data.Map.toList $ Data.Map.filterWithKey (\x _y -> isPrefixOf "fight." x) daymap
 	mapM_ (\(x, _y) -> unsetState ref "day" x) fight_keys
 
 uglyhack_enumerateState ref = do
-	Just (_stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
+	(_stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
 	return [("request", Data.Map.keys requestmap), ("session", Data.Map.keys sessionmap), ("character", Data.Map.keys charmap), ("ascension", Data.Map.keys ascmap), ("day", Data.Map.keys daymap)]
 
 makeStateJSON ref newstateid = do
 	ai <- getApiInfo ref
 
-	Just (_stid, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
+	(_stid, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
 	let daymap = Data.Map.filterWithKey (\x _y -> not $ isPrefixOf "fight." x) extra_daymap
 
 	jsondied <- newIORef False
@@ -129,8 +129,9 @@ makeStateJSON ref newstateid = do
 
 loadStateFromJson ref jsobj = do
 	ai <- getApiInfo ref
+	putDebugStrLn $ "loadStateFromJson at " ++ (show $ ascension $ ai)
 	let stuff = fromJSObject $ jsobj
-	Just (stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef $ stateData_ $ sessionData $ ref
+	(stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef $ stateData_ $ sessionData $ ref
 	lstp <- return Nothing -- getState ref "character" "turnsplayed last state change"
 
 --	timestamp_data = ... "timestamp"
@@ -191,7 +192,7 @@ loadStateFromJson ref jsobj = do
 								else return (["character", "ascension"], (requestmap, sessionmap, storedcharmap, storedascmap, daymap))
 						else return (["character"], (requestmap, sessionmap, storedcharmap, ascmap, daymap))
 				else return (["Nothing"], (requestmap, sessionmap, charmap, ascmap, daymap))
-			writeIORef (stateData_ $ sessionData $ ref) $ Just (stid, newstate)
+			writeIORef (stateData_ $ sessionData $ ref) (stid, newstate)
 			return what
 		else return ["Nothing"]
 
@@ -225,7 +226,7 @@ writeServerSettings ref = do
 
 storeSettings ref = when (store_state_in_actionbar ref) $ do
 	writeIORef (lastStoredTime_ $ sessionData $ ref) =<< getCurrentTime
-	Just (_, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
+	(_, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
 	let daymap = Data.Map.filterWithKey (\x _y -> not $ isPrefixOf "fight." x) extra_daymap
 	let statedesc = show (charmap, ascmap, daymap)
 	laststored <- readIORef (lastStoredState_ $ sessionData $ ref)
@@ -242,16 +243,18 @@ initializeState ref = do
 	let ascmap = Data.Map.empty
 	let daymap = Data.Map.empty
 	let newst = (requestmap, sessionmap, charmap, ascmap, daymap)
-	writeIORef (stateData_ $ sessionData $ ref) $ Just (newstid, newst)
+	writeIORef (stateData_ $ sessionData $ ref) (newstid, newst)
 	return newst
 
 ensureLoadedState ref = do
-	stateval <- readIORef $ stateData_ $ sessionData $ ref
-	case stateval of
-		Just (_, _st) -> return ()
-		_ -> loadSettingsFromServer ref
-	Just (_, st) <- readIORef $ stateData_ $ sessionData $ ref
-	return st
+	stid <- get_stid ref
+	(old_stid, st) <- readIORef $ stateData_ $ sessionData $ ref
+	if old_stid == stid
+		then return st
+		else do
+			loadSettingsFromServer ref
+			(_, st) <- readIORef $ stateData_ $ sessionData $ ref
+			return st
 
 loadSettingsFromServer ref = do
 	initializeState ref
