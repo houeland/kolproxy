@@ -383,6 +383,10 @@ multiuse -> multiuse
 		pagetext = run("won fight", pagetext)
 	end
 
+	if p == "/choice.php" and pagetext:match("<a href=\"adventure%.php%?snarfblat=%d+\">Adventure Again %(.-%)</a>") then
+		pagetext = run("choice adventure finished", pagetext)
+	end
+  
 	pagetext = run(p, pagetext)
 
 	-- TODO: Redo, assistance automation should only run on some pages
