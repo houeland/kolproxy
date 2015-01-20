@@ -1091,7 +1091,7 @@ mark m_done
 			elseif quest_text("Solve the mystery of the Lower Chambers") then
 				local pyramidpt = get_page("/place.php", { whichplace = "pyramid" })
 				if pyramidpt:contains("action=pyramid_state1a") then
-					if turns_to_next_sr < 7 then return end
+					if script.semirare_within_N_turns(7) then return end
 					local minmp = 100
 					if maxmp() >= 200 then
 						minmp = 150

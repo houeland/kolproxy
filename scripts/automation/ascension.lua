@@ -2151,7 +2151,7 @@ endif
 			have_item("Wrecked Generator") and
 			count_item("milk of magnesium") >= 2 and
 			fullness() == 0 and
-			not script.get_turns_until_sr() and
+			not script.know_semirare_numbers() and
 			level() >= 5,
 		task = {
 			message = "eat moon pies and fortune cookie",
@@ -2170,7 +2170,7 @@ endif
 				set_result(eat_item("fortune cookie")())
 				set_result(eat_item("Moon Pie")())
 				set_result(eat_item("Moon Pie")())
-				did_action = script.get_turns_until_sr() and fullness() == 11
+				did_action = script.know_semirare_numbers() and fullness() == 11
 			end
 		}
 	}
@@ -2183,7 +2183,7 @@ endif
 			have_item("Wrecked Generator") and
 			count_item("milk of magnesium") >= 1
 			and fullness() == 11 and
-			not script.get_turns_until_sr() and
+			not script.know_semirare_numbers() and
 			level() >= 5 and
 			count_item("tasty tart") >= 2,
 		task = {
@@ -2200,7 +2200,7 @@ endif
 				set_result(eat_item("fortune cookie")())
 				set_result(eat_item("tasty tart")())
 				set_result(eat_item("tasty tart")())
-				did_action = script.get_turns_until_sr() and fullness() == 14
+				did_action = script.know_semirare_numbers() and fullness() == 14
 			end
 		}
 	}
@@ -2548,17 +2548,13 @@ endif
 	}
 
 	add_task {
-		when = script.check_sr_turn,
+		when = script.semirare_within_N_turns(1),
 		task = {
 			message = "picking up semirare",
 			nobuffing = true,
 			action = script.pick_up_sr,
 		}
 	}
-
-	if not turns_to_next_sr then
-		turns_to_next_sr = 1000000
-	end
 
 	local use_new_faxing = ascensionpath("BIG!") and (script.have_familiar("Obtuse Angel") or script.have_familiar("Reanimated Reanimator"))
 
