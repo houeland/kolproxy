@@ -6,9 +6,18 @@
 -- will also link to the wiki.                                  --
 ------------------------------------------------------------------
 
+register_setting {
+	name = "inline wiki links",
+	description = "Enable item, monster, and adventure names linking to their page on the wiki",
+	group = "other",
+	default_level = "detailed",
+}
+
 local function printer_replace(pattern, substituter)
   return function()
-    text = text:gsub(pattern, substituter)
+    if setting_enabled("inline wiki links") then
+      text = text:gsub(pattern, substituter)
+    end
   end
 end
 
