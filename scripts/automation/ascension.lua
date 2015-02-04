@@ -2486,6 +2486,24 @@ endif
 	add_task(tasks.check_hidden_temple)
 	add_task(tasks.use_spooky_temple_map)
 
+	add_task {
+		when = have_item("rock band flyers") and
+			quest("Make War, Not... Oh, Wait") and
+			basemoxie() >= 70 and
+			basemysticality() >= 70 and
+			have_frat_war_outfit() and
+			(ascension["zone.island.frat arena flyerML"] or 0) >= 11000,
+		task = {
+			message = "turn in rock band flyers",
+			nobuffing = true,
+			action = function()
+				script.wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
+				result, resulturl = get_page("/bigisland.php", { place = "concert" })
+				did_action = not have_item("rock band flyers")
+			end
+		}
+	}
+
 	-- start of turn-spending things
 
 	local function timer_buff_running_out()
@@ -2589,6 +2607,8 @@ endif
 		when = AT_song_duration() > 0 and level() < 5 and (buffturns("The Moxious Madrigal") < 10 or buffturns("The Magical Mojomuscular Melody") < 10) and have_skill("The Moxious Madrigal") and have_skill("The Magical Mojomuscular Melody"),
 		task = tasks.extend_tmm_and_mojo,
 	}
+
+	add_tasklist(tasks.tasklist_ns_lair)
 
 	local function have_check_mirror_intrinsic()
 		for _, i in ipairs { "Slicked-Back Do", "Pompadour", "Cowlick", "Fauxhawk" } do
@@ -2874,7 +2894,7 @@ endif
 			challenge == "boris" and
 			unlocked_beach() and
 			not unlocked_island() and
-			turns_to_next_sr >= 3 and
+			not script.semirare_within_N_turns(3) and
 			meat() >= 1000 and
 			(have_item("Clancy's lute") or clancy_instrumentid() == 3),
 		f = script.get_dinghy,
@@ -4200,7 +4220,7 @@ endif
 			prereq = want_shore() and
 				not unlocked_island() and
 				unlocked_beach() and
-				turns_to_next_sr >= 5 and
+				not script.semirare_within_N_turns(5) and
 				not have_frat_war_outfit(),
 			f = script.get_dinghy,
 			message = "get dinghy",
@@ -4329,7 +4349,7 @@ endif
 	add_task {
 		prereq = want_shore() and
 			not unlocked_island() and
-			turns_to_next_sr >= 5 and
+			not script.semirare_within_N_turns(3) and
 			meat() >= 1000 and
 			unlocked_beach(),
 		f = script.get_dinghy,
@@ -4850,7 +4870,7 @@ endif
 		when = quest("Just Deserts") and
 			can_wear_weapons() and
 			not have_item("UV-resistant compass") and
-			turns_to_next_sr >= 3,
+			not script.semirare_within_N_turns(3),
 		task = tasks.get_uv_compass,
 	}
 
@@ -4881,7 +4901,7 @@ endif
 	}
 
 	add_task {
-		prereq = quest("Gotta Worship Them All") and turns_to_next_sr >= 3,
+		prereq = quest("Gotta Worship Them All") and not script.semirare_within_N_turns(3),
 		f = script.do_gotta_worship_them_all,
 	}
 
@@ -5799,7 +5819,7 @@ function script_want_2_day_SCHR()
 end
 
 function script_use_unified_kill_macro()
-	return script_want_2_day_SCHR() or ascensionpath("Heavy Rains") or ascensionpath("Picky")
+	return script_want_2_day_SCHR() or ascensionpath("Heavy Rains") or ascensionpath("Picky") or ascensionpath("Standard")
 end
 
 function ascension_script_option(name)

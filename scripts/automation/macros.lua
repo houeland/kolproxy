@@ -1740,34 +1740,6 @@ endwhile
 ]]
 end
 
-function macro_softcore_lfm()
-  local maybe_blackbox = [[
-
-if monstername lobsterfrogman
-  use Rain-Doh black box
-endif
-
-]]
-  if count_item("barrel of gunpowder") >= 4 then
-    maybe_blackbox = ""
-  end
-  return [[
-
-]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
-
-]] .. maybe_stun_monster() .. [[
-
-]] .. maybe_blackbox .. [[
-
-]] .. macro_killing_begins() .. [[
-
-while !times 5
-]] .. serpent_action() .. [[
-endwhile
-
-]]
-end
-
 function macro_kill_ns(pt)
 	if script_use_unified_kill_macro() then
 		return macro_kill_monster(pt)

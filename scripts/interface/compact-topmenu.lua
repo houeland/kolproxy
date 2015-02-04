@@ -123,7 +123,7 @@ add_interceptor("/topmenu.php", function()
 	else
 		session["topmenu storage pulls display"] = tostring(ascensionstatus()) .. ":" .. tostring(ascensionpathname())
 	end
-	local lairlink = [[<a target='mainpane' href='lair.php'>lair</a>]]
+	local lairlink = [[<a target='mainpane' href='place.php?whichplace=nstower'>lair</a>]]
 	if ascensionpathid() == 9 then
 		lairlink = [[<a target='mainpane' href='place.php?whichplace=bugbearship'>ship</a>]]
 	end

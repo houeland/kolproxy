@@ -1,5 +1,3 @@
-local damageitem = "divine can of silly string"
-
 add_processor("/fight.php", function()
 	if text:contains(">The Thing with no Name is destroyed. Way to go!<") then
 		ascension["suburbandis.defeated thing with no name"] = "yes"
@@ -43,8 +41,8 @@ endif
 
 if (monstername Terrible Pinch)
   while !times 20
-    use jar full of wind, ]] .. damageitem .. [[
-
+    use jar full of wind
+    cast Saucegeyser
   endwhile
 endif
 
@@ -104,7 +102,6 @@ local dis_href = add_automation_script("automate-suburbandis", function()
 	maybe_pull_item("clumsiness bark", 20)
 	maybe_pull_item("jar full of wind", 20)
 	maybe_pull_item("dangerous jerkcicle", 40)
-	maybe_pull_item(damageitem, 40)
 	script.want_familiar "fairy"
 	equip_item("sea salt scrubs", "shirt")
 	equip_item("ring of conflict", "acc1")

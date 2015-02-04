@@ -3,6 +3,7 @@ __allow_global_writes = true
 function get_automation_tasks(script, cached_stuff)
 	local t = {}
 	local task = t
+	local tasks = t
 
 	t.summon_tomes = {
 		message = "summon tomes",
@@ -1222,6 +1223,111 @@ mark m_done
 			heavyrains_make_train_skill_task("lightning milk", { "Sheet Lightning", "Lightning Strike", "Riding the Lightning" }),
 		}
 	end
+
+	tasks.ns_lair_investigate_contest = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("investigate the weird contest"),
+		task = {
+			message = "sign up for NS lair contest",
+			nobuffing = true,
+			action = function()
+				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_01_contestbooth" })
+				local options = parse_choice_options(result)
+				print("DEBUG ns contest", tostring(options))
+				did_action = false
+			end,
+		}
+	}
+
+	tasks.ns_lair_defeat_other_entrants = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("Defeat the other entrants"),
+		task = {
+			message = "defeat other NS lair contestants",
+			action = function()
+				result, resulturl = get_page("/place.php", { whichplace = "nstower" })
+				for i = 1, 3 do
+					if result:contains("ns_01_crowd" .. i) then
+						result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_01_crowd" .. i })
+						result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_kill_monster)
+						if result:contains([[>You win the fight!<!--WINWINWIN--><]]) then
+							did_action = true
+						end
+						return
+					end
+				end
+			end,
+		}
+	}
+
+	tasks.ns_lair_finish_contest = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("talk to the contest official"),
+		task = {
+			message = "finish NS lair contest",
+			nobuffing = true,
+			action = function()
+				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_01_contestbooth" })
+				did_action = quest_text("Attend your coronation in the courtyard")
+			end,
+		}
+	}
+
+	tasks.ns_lair_attend_coronation = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("Attend your coronation in the courtyard"),
+		task = {
+			message = "attend NS lair coronation",
+			nobuffing = true,
+			action = function()
+				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_02_coronation" })
+				did_action = quest_text("Make your way through the treacherous hedge maze")
+			end,
+		}
+	}
+
+	tasks.ns_lair_navigate_hedge_maze = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("Make your way through the treacherous hedge maze"),
+		task = {
+			message = "navigate NS hedge maze",
+			action = function()
+				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_03_hedgemaze" })
+				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_kill_monster)
+				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, nil, function(advtitle, choicenum, pagetext)
+					return "", 1
+				end)
+				did_action = quest_text("Get through the door at the base")
+			end,
+		}
+	}
+
+	tasks.ns_lair_door = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("Get through the door at the base"),
+		task = {
+			message = "pass NS lair door",
+			nobuffing = true,
+			action = function()
+				result, resulturl = get_page("/place.php", { whichplace = "nstower_door" })
+				did_action = false
+			end,
+		}
+	}
+
+	tasks.ns_lair_ascend_tower = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("Ascend the <"),
+		task = {
+			message = "ascend NS lair tower",
+			action = function()
+				result, resulturl = get_page("/place.php", { whichplace = "nstower" })
+				did_action = false
+			end,
+		}
+	}
+
+	tasks.tasklist_ns_lair = {
+		tasks.ns_lair_investigate_contest,
+		tasks.ns_lair_defeat_other_entrants,
+		tasks.ns_lair_finish_contest,
+		tasks.ns_lair_navigate_hedge_maze,
+		tasks.ns_lair_door,
+		tasks.ns_lair_ascend_tower,
+	}
 
 	return t
 end

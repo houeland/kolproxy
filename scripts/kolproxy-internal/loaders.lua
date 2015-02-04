@@ -1,5 +1,6 @@
 load_file("base", "base/settings-page.lua")
 load_file("base", "base/fight-page.lua")
+load_file("base", "base/choice-page.lua")
 load_file("base", "base/info.lua")
 load_file("base", "base/other.lua")
 load_file("base", "base/mafiaexpression-evaluator.lua")

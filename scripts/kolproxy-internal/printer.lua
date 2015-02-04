@@ -169,11 +169,6 @@ else
 end
 end)
 
--- TODO: Redo!
-if choice_adventure_number or path == "/choice.php" then
-	text = do_choice_page_printing(text, title, adventure_title, choice_adventure_number)
-end
-
 log_time_interval("finish printing", function()
 if path == "/fight.php" then
 	if text:contains("state['fightover'] = true;") or text:contains("<!--WINWINWIN-->") or text:contains("You slink away, dejected and defeated.") then -- TODO: HACK! state fightover only works with combat bar enabled!!
@@ -204,8 +199,6 @@ function doloadfile(f)
 end
 
 load_script("base/util.lua")
-
-load_script("base/choice-page.lua")
 
 envstoreinfo.g_env.setup_functions()
 tostring = envstoreinfo.g_env.tostring

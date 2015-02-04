@@ -113,7 +113,7 @@ function verify_data_fits(correct_data, datafile_data)
 	end
 end
 
-function string.contains(a, b) return a:find(b, 1, true) end
+function string.contains(a, b) return not not a:find(b, 1, true) end
 
 local function split_line_on(what, l)
 	local tbl = {}
@@ -395,7 +395,7 @@ end
 
 function verify_skills(data)
 	local correct_data = {
-		["Summon Sugar Sheets"] = { skillid = 8002, mpcost = 2 },
+		["Summon Sugar Sheets"] = { skillid = 7215, mpcost = 2 },
 		["Leash of Linguini"] = { skillid = 3010, mpcost = 12 },
 		["Patience of the Tortoise"] = { turtle_tamer_shell = false },
 		["Spiky Shell"] = { turtle_tamer_shell = true },
@@ -868,39 +868,46 @@ function verify_recipes(data)
 end
 
 function parse_familiars()
-	local itemid_lookup = {}
-	for n, d in pairs(processed_datafiles["items"]) do
-		itemid_lookup[d.id] = n
+	local function if_nonempty(x)
+		if x and x ~= "" then
+			return x
+		end
 	end
-
 	local familiars = {}
 	for l in io.lines("cache/files/familiars.txt") do
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
-		local famid, name, pic, famtype, larvaitemid, equip = tonumber(tbl[1]), tbl[2], tbl[3], tbl[4], tonumber(tbl[5]), tbl[6]
+		local famid, name, pic, famtype, larvaitem, equip = tonumber(tbl[1]), tbl[2], tbl[3], tbl[4], if_nonempty(tbl[5]), if_nonempty(tbl[6])
 		if pic then
 			pic = pic:gsub("%.gif$", "")
 		end
 		if famid and name then
-			familiars[name] = { famid = famid, familiarpic = pic, familiarequip = equip }
-			if famtype:contains("stat0") then
-				familiars[name].volleyballtype = true
-			end
-			if famtype:contains("item0") then
-				familiars[name].fairytype = true
-			end
-			if famtype:contains("meat0") then
-				familiars[name].leprechauntype = true
-			end
-			if (larvaitemid or 0) > 0 then
-				familiars[name].larvaitem = itemid_lookup[larvaitemid]
-			end
+			familiars[name] = {
+				famid = famid,
+				familiarpic = pic,
+				familiarequip = equip,
+				larvaitem = larvaitem,
+				volleyballtype = famtype:contains("stat0") or nil,
+				fairytype = famtype:contains("item0") or nil,
+				leprechauntype = famtype:contains("meat0") or nil,
+			}
 		end
 	end
 	return familiars
 end
 
 function verify_familiars(data)
+	for x, y in pairs(data) do
+		if y.familiarequip and not processed_datafiles["items"][y.familiarequip] then
+			hardwarn("familiar:familiarequip does not exist", y.familiarequip)
+			data[x].familiarequip = nil
+		end
+		if y.larvaitem and not processed_datafiles["items"][y.larvaitem] then
+			hardwarn("familiar:larvaitem does not exist", y.larvaitem)
+			data[x].larvaitem = nil
+		end
+	end
+
 	local correct_data = {
 		["Frumious Bandersnatch"] = { famid = 105 },
 		["Oily Woim"] = { famid = 168, larvaitem = "woim" },

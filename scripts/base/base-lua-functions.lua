@@ -59,8 +59,16 @@ if table then
 
 	function table.map(tbl, f)
 		local new_tbl = {}
-		for _, x in ipairs(tbl) do
-			table.insert(new_tbl, f(x))
+		for x, y in pairs(tbl) do
+			new_tbl[x] = f(y)
+		end
+		return new_tbl
+	end
+
+	function table.map_keys(tbl, f)
+		local new_tbl = {}
+		for x, y in pairs(tbl) do
+			new_tbl[f(x)] = y
 		end
 		return new_tbl
 	end
