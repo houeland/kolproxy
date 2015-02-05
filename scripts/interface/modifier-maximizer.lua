@@ -238,6 +238,8 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 	local scoref = function(bonuses)
 		return bonuses[whichbonus]
 	end
+
+	print(whichbonus)
 	if whichbonus == "HP & cold/spooky resistance" then
 		scoref = function(bonuses)
 			return estimate_maxhp(bonuses) + bonuses["Spooky Resistance"] * 20 + bonuses["Cold Resistance"] * 20

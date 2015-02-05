@@ -69,7 +69,10 @@ end
 
 function attack_action()
 	return [[
-
+if (hasskill Cadenza)
+	cast Cadenza
+endif
+	
 attack
 
 ]]
@@ -173,7 +176,7 @@ local function using_moxie_weapon()
 	if not equipment().weapon then return false end
 	local itemdata = maybe_get_itemdata(equipment().weapon)
 	if not itemdata then return false end
-	return itemdata.attack_state == "Moxie" or have_equipped_item("Frankly Mr. Shank")
+	return itemdata.attack_state == "Moxie" or have_equipped_item("Frankly Mr. Shank") or itemdata.song_duration ~= nil
 end
 
 function macro_sneaky_pete_action()
@@ -233,12 +236,14 @@ end
 
 local function can_easily_attack_with_moxie_weapon()
 	local cfm = getCurrentFightMonster()
-	if can_kill_with_attack() and using_moxie_weapon() and cfm and cfm.Stats and cfm.Stats.Atk and cfm.Stats.Atk - buffedmoxie() >= 25 then
-		if cfm.Stats.physicalresistpercent and tonumber(cfm.Stats.physicalresistpercent) and tonumber(cfm.Stats.Phys) > 40 then
+	if can_kill_with_attack() and using_moxie_weapon() and cfm and cfm.Stats and cfm.Stats.Atk and buffedmoxie() - cfm.Stats.Atk >= 5 then
+		if cfm.Stats.physicalresistpercent and tonumber(cfm.Stats.physicalresistpercent) and cfm.Stats.Phys and tonumber(cfm.Stats.Phys) > 40 then
 			return false
 		else
 			return true
 		end
+	else
+		return false
 	end
 end
 
@@ -277,6 +282,7 @@ function serpent_action()
 		return macro_sneaky_pete_action()
 	end
 	local skill_list = { "Stringozzi Serpent", "Saucegeyser", "Weapon of the Pastalord", "Saucestorm", "Cannelloni Cannon", "Cone of Zydeco", fury() >= 1 and "Furious Wallop" or "???", "Kneebutt" }
+	print_ascensiondebug("can_easily_attack_with_moxie_weapon(): ",can_easily_attack_with_moxie_weapon())
 	if not maybe_macro_cast_skill(skill_list) and can_easily_attack_with_moxie_weapon() then
 		return attack_action()
 	end
@@ -382,7 +388,7 @@ function maybe_stun_monster(is_dangerous)
 		end
 		if playerclass("Accordion Thief") then
 			cast_if_haveskill("Accordion Bash")
-			if have_equipped_item("Rock and Roll Legend") or have_equipped_item("peace accordion") then
+			if have_equipped_item("Rock and Roll Legend") or have_equipped_item("peace accordion") or have_equipped_item("Shakespeare's Sister's Accordion") then
 				cast_if_haveskill("Cadenza")
 			end
 		end
@@ -392,6 +398,10 @@ function maybe_stun_monster(is_dangerous)
 		if playerclass("Sauceror") and have_skill("Itchy Curse Finger") then
 			cast_if_haveskill("Curse of Weaksauce")
 		end
+		table.insert(macrolines, [[
+			if hasskill Silent Slice
+				cast Silent Slice
+			endif]])
 		table.insert(macrolines, [[
 			if hasskill Pocket Crumbs
 				cast Pocket Crumbs

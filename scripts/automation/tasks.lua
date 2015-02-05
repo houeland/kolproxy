@@ -245,10 +245,11 @@ function get_automation_tasks(script, cached_stuff)
 					message = "do_8bit_realm",
 					familiar = "Stocking Mimic",
 					olfact = "Blooper",
+					bonus_target = { "item" },
 					equipment = { acc1 = "continuum transfunctioner" },
 					action = function()
 						-- TODO: use adventure()
-						script.go("farm pixels for digital key: " .. pixels, 73, macro_8bit_realm, nil, { "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "Ghostly Shell", "Astral Shell", "Leash of Linguini", "Empathy" }, "Stocking Mimic", 15, { olfact = "Blooper", equipment = { acc1 = "continuum transfunctioner" } })
+						script.go("farm pixels for digital key: " .. pixels, 73, macro_8bit_realm, nil, { "Spirit of Garlic", "Ghostly Shell", "Astral Shell", "Leash of Linguini", "Empathy" }, "Stocking Mimic", 15, { olfact = "Blooper", equipment = { acc1 = "continuum transfunctioner" } })
 					end
 				}
 			end
@@ -388,7 +389,7 @@ mark m_done
 				return {
 					message = "get bridge parts (" .. pieces .. ")",
 					familiar = "Slimeling",
-					buffs = { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Leash of Linguini", "Empathy" },
+					buffs = { "Spirit of Garlic", "Leash of Linguini", "Empathy" },
 					bonus_target = { "item" },
 					minmp = 35,
 					action = adventure {
@@ -477,13 +478,11 @@ mark m_done
 				if not have_buff("Super Structure") and have_item("eXtreme mittens") and have_item("eXtreme scarf") and have_item("snowboarder pants") then
 					gear = { hat = "eXtreme scarf", pants = "snowboarder pants", acc3 = "eXtreme mittens" }
 				end
-				gear.hat = first_wearable { "lihc face" }
+				gear.hat = first_wearable { "Hairpiece on Fire", "lihc face" }
 				gear.weapon = first_wearable { "titanium assault umbrella" }
 				gear.acc1 = first_wearable { "sphygmomanometer", "plastic vampire fangs", "bejeweled pledge pin" }
-				gear.acc2 = first_wearable { "glowing red eye" }
-				if count_item("glowing red eye") >= 2 then
-					gear.acc3 = first_wearable { "glowing red eye" }
-				end
+				gear.acc2 = first_wearable { "warbear warscarf", "ghost of a necklace" }
+				gear.acc3 = first_wearable { "glowing red eye", "pirate fledges" }
 				script.wear(gear)
 				script.ensure_buffs { "Reptilian Fortitude", "Power Ballad of the Arrowsmith" }
 				script.force_heal_up()
@@ -1092,7 +1091,7 @@ mark m_done
 			elseif quest_text("Solve the mystery of the Lower Chambers") then
 				local pyramidpt = get_page("/place.php", { whichplace = "pyramid" })
 				if pyramidpt:contains("action=pyramid_state1a") then
-					if script.semirare_within_N_turns(7) then return end
+					if turns_to_next_sr and turns_to_next_sr < 7 then return end
 					local minmp = 100
 					if maxmp() >= 200 then
 						minmp = 150
@@ -1223,7 +1222,8 @@ mark m_done
 			heavyrains_make_train_skill_task("lightning milk", { "Sheet Lightning", "Lightning Strike", "Riding the Lightning" }),
 		}
 	end
-
+--BEGIN NEW NS CONTENT
+	
 	tasks.ns_lair_investigate_contest = {
 		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("investigate the weird contest"),
 		task = {
@@ -1328,7 +1328,10 @@ mark m_done
 		tasks.ns_lair_door,
 		tasks.ns_lair_ascend_tower,
 	}
-
+	
+	
+--END NEW NS CONTENT	
+	
 	return t
 end
 
