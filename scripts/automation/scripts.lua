@@ -980,10 +980,10 @@ function get_automation_scripts(cached_stuff)
 			return f
 		end,
 		["Hippy Stench"] = function()
-				if have_item("handful of pine needles") then
-					return use_item("handful of pine needles")
-				else
-					return use_item("reodorant")
+			if have_item("handful of pine needles") then
+				return use_item("handful of pine needles")
+			else
+				return use_item("reodorant")
 			end
 		end,
 		["Fresh Scent"] = function()
@@ -1685,32 +1685,6 @@ endif
 		end
 	end
 
-	function f.check_sr_turn()
-		-- Commented out warning when something strange happens.
-		-- Semirares automation sometimes gets screwed up when previous ones are missed, but just continue the ascension instead of requiring manual intervention
-		-- TODO: Handle?
-		-- TODO: just finish fights that happen when an SR was attempted?
-		turns_to_next_sr = nil
-		for a, b in pairs(ascension["fortune cookie numbers"] or {}) do
-			if turnsthisrun() == tonumber(b) then
-				local ls = ascension["last semirare"] or {}
-				local lastsemi = ls.encounter
-				local lastturn = ls.turn
-
-				if (turnsthisrun() < 70) or (lastturn and lastturn + 159 > turnsthisrun()) then
-					print("  skipping impossible SR", b, turnsthisrun(), "last", lastsemi, lastturn)
-				else
-					return true
-				end
-			elseif tonumber(b) >= turnsthisrun() then
-				local turns = tonumber(b) - turnsthisrun()
-				if (not turns_to_next_sr) or (turns < turns_to_next_sr) then
-					turns_to_next_sr = turns
-				end
-			end
-		end
-	end
-
 	function f.go(info, zone, macro, noncombattbl, buffslist, famname, minmp, extra)
 		--print("DEBUG: go()", info, famname, minmp)
 		local specialnoncombatfunction = nil
@@ -1874,15 +1848,27 @@ endif
 		return result, resulturl, did_action
 	end
 
-	function f.get_turns_until_sr()
+	local function get_turns_until_sr()
 		local SRnow, good_numbers, all_numbers, SRmin, SRmax, is_first_semi, lastsemi = get_semirare_info(turnsthisrun())
-		--print("DEBUG get_turns_until_sr", get_semirare_info(turnsthisrun()))
 		if good_numbers[1] then
 			return good_numbers[1]
 		end
-		if SRmin and SRmin < 0 and all_numbers[1] then
-			return all_numbers[1]
+		if not SRmin or SRmin <= 0 then
+			for _, x in ipairs(all_numbers) do
+				if x >= 0 then
+					return x
+				end
+			end
 		end
+	end
+
+	function script.know_semirare_numbers()
+		return get_turns_until_sr() ~= nil
+	end
+
+	function script.semirare_within_N_turns(N)
+		local turns_to_sr = get_turns_until_sr()
+		return turns_to_sr and turns_to_sr < N
 	end
 
 	function f.eat_food(out_of_advs, final_consumption)
@@ -1971,11 +1957,11 @@ endif
 			inform "eat fortune cookie"
 			store_buy_item("fortune cookie", "m")
 			set_result(eat_item("fortune cookie")())
-			if not (fullness() == f + 1 and script.get_turns_until_sr() ~= nil) then
-				print("WARNING fortune cookie result:", script.get_turns_until_sr())
+			if not (fullness() == f + 1 and script.know_semirare_numbers()) then
+				print("WARNING fortune cookie result:", get_turns_until_sr())
 				critical "Error getting fortune cookie numbers"
 			end
-			did_action = (fullness() == f + 1 and script.get_turns_until_sr() ~= nil)
+			did_action = (fullness() == f + 1 and script.know_semirare_numbers())
 			return result, resulturl, did_action
 		end
 
@@ -2018,7 +2004,7 @@ endif
 		end
 
 		if ascensionpath("Avatar of Sneaky Pete") and not ascensionstatus("Hardcore") then
-			if (space() % 4) > 0 and script.get_turns_until_sr() == nil and meat() >= 40 then
+			if (space() % 4) > 0 and not script.know_semirare_numbers() and meat() >= 40 then
 				return eat_fortune_cookie()
 			elseif space() >= 4 and level() >= 6 and ascension_script_option("pull consumables") then
 				if not have_item("Jarlsberg's key") then
@@ -2030,7 +2016,7 @@ endif
 		end
 
 		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
-			if space() >= 1 and script.get_turns_until_sr() == nil and meat() >= 40 then
+			if space() >= 1 and not script.know_semirare_numbers() and meat() >= 40 then
 				return eat_fortune_cookie()
 			elseif space() >= 1 and (drunkenness() == estimate_max_safe_drunkenness() or out_of_advs) and advs() < 15 then
 				local max_space = estimate_max_fullness() - fullness()
@@ -2082,7 +2068,7 @@ endif
 		if space() > 0 then
 			if (space() % 6) > 0 then
 				local f = fullness()
-				if script.get_turns_until_sr() == nil and meat() >= 40 then
+				if not script.know_semirare_numbers() and meat() >= 40 then
 					return eat_fortune_cookie()
 				elseif have_item("Ur-Donut") and level() < 4 then
 					inform "eat ur-donut"
@@ -2572,10 +2558,12 @@ endif
 			else
 				if count_item("gauze garter") < 10 and not camppt:contains("You've only got 1 quarter on file, bra.") then
 					inform "buying gauze garters"
-					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("gauze garter"), quantity = 1 })
-					did_action = script.do_battlefield()
+					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("gauze garter"), quantity = count_item("gauze garter" - 10 )})
+					did_action = (count_item("gauze garter") >= 10)
 				else
 					inform "spending remaining quarters"
+					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("superamplified boom box"), quantity = 2 })
+					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("superamplified boom box"), quantity = 1 })
 					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("commemorative war stein"), quantity = 32 })
 					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("commemorative war stein"), quantity = 16 })
 					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("commemorative war stein"), quantity = 8 })
@@ -2583,6 +2571,7 @@ endif
 					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("commemorative war stein"), quantity = 2 })
 					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("commemorative war stein"), quantity = 1 })
 					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("superamplified boom box"), quantity = 1 })
+					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("gauze garter"), quantity = 1 })
 					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("gauze garter"), quantity = 1 })
 					async_post_page("/bigisland.php", { action = "getgear", pwd = get_pwd(), whichcamp = 2, whichitem = get_itemid("sake bomb"), quantity = 1 })
 					local newcamppt = get_page("/bigisland.php", { place = "camp", whichcamp = 2 })
@@ -3088,7 +3077,7 @@ endif
 			end
 			-- TODO: Unify, with per-path buffing
 			if challenge == "boris" then
-			local macro = macro_softcore_boris([[
+				local macro = macro_softcore_boris([[
 
 if monstername lobsterfrogman
   use Rain-Doh black box

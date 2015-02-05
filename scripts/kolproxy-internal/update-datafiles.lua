@@ -884,7 +884,7 @@ function parse_familiars()
 		end
 		if famid and name then
 			familiars[name] = {
-			famid = famid,
+				famid = famid,
 				familiarpic = pic,
 				familiarequip = equip,
 				larvaitem = larvaitem,
