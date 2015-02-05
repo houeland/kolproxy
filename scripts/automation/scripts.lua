@@ -1006,7 +1006,11 @@ function get_automation_scripts(cached_stuff)
 			return f
 		end,
 		["Hippy Stench"] = function()
-			return use_item("handful of pine needles")
+			if have_item("handful of pine needles") then
+				return use_item("handful of pine needles")
+			else
+				return use_item("reodorant")
+			end
 		end,
 		["Fresh Scent"] = function()
 			return use_item("chunk of rock salt")
@@ -2997,21 +3001,8 @@ endif
 	end
 
 	function f.do_sonofa()
-		local macro = macro_noodleserpent
-		if not ascensionstatus("Hardcore") then
-			macro = macro_softcore_lfm
-		end
-		if challenge == "boris" then
-			macro = macro_softcore_boris([[
-
-if monstername lobsterfrogman
-  use Rain-Doh black box
-endif
-
-]])
-			if count_item("barrel of gunpowder") >= 4 then
-				macro = macro_softcore_boris
-			end
+		if count_item("barrel of gunpowder") < 4 then
+			add_macro_target("itemcopy", { ["lobsterfrogman"] = true })
 		end
 		if count_item("barrel of gunpowder") >= 5 then
 			inform "talk to lighthouse guy"
@@ -3030,7 +3021,7 @@ endif
 				end
 				use_item("Rain-Doh box full of monster")
 				local pt, url = get_page("/fight.php")
-				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro)
+				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_kill_monster)
 				if advagain then
 					did_action = true
 				end
@@ -3039,15 +3030,22 @@ endif
 			end
 		else
 			script.bonus_target { "combat" }
-			if not have_buff("Hippy Stench") and have_item("reodorant") then
-				-- TODO: use maybe_ensure_buffs
-				use_item("reodorant")
-			end
+			script.maybe_ensure_buffs { "Hippy Stench" }
 			if ascensionpath("Avatar of Jarlsberg") then
 				script.ensure_buffs { "Coffeesphere" }
 			end
-			-- TODO: Split into hardcore / softcore-copy, and do buffing per-path
+			-- TODO: Unify, with per-path buffing
 			if challenge == "boris" then
+				local macro = macro_softcore_boris([[
+
+if monstername lobsterfrogman
+  use Rain-Doh black box
+endif
+
+]])
+				if count_item("barrel of gunpowder") >= 4 then
+					macro = macro_softcore_boris
+				end
 				script.ensure_buffs {}
 				if have_buff("Song of Battle") and ascensionstatus() == "Hardcore" then
 					go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro_hardcore_boris, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
@@ -3069,7 +3067,7 @@ endif
 					stop "TODO: Do sonofa in zombie"
 				end
 			else
-				go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
+				go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro_kill_monster, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
 			end
 			if have_buff("Beaten Up") then
 				use_hottub()

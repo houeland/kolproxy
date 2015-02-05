@@ -41,7 +41,6 @@ end)
 add_printer("/bigisland.php", function()
 	if have_item("rock band flyers") or have_item("jam band flyers") then
 		local msgs = {}
-		
 		if have_item("rock band flyers") then
 			table.insert(msgs, "{&nbsp;~" .. (ascension["zone.island.frat arena flyerML"] or 0) .. " ML slapped for frat boys.&nbsp;}")
 		end

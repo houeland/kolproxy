@@ -46,7 +46,7 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff = do
 	lrw <- newIORef tnow
 	statedata <- newIORef (("", -1, -1, ""), (Data.Map.empty, Data.Map.empty, Data.Map.empty, Data.Map.empty, Data.Map.empty))
 	-- TODO: Change this raw API decoding business?
-	let dologaction ref action = do
+	let dologaction ref action = when (store_ascension_logs_ $ environment_settings_ $ globalref) $ do
 		Just jsonobj <- readIORef (latestValidJson_ $ sessionData $ ref)
 		let ai = rawDecodeApiInfo jsonobj
 		dblogstuff ((charName ai) ++ "-" ++ (show $ ascension ai) ++ ".ascension-log.sqlite3") action
@@ -137,16 +137,24 @@ handle_kol_request sessionmaster mvsequence mvchat logchan dropping_logchan glob
 
 make_globalref = do
 	environment_settings <- do
-		listenpublic <- getEnvironmentSetting "KOLPROXY_LISTEN_PUBLIC"
-		actionbarstate <- getEnvironmentSetting "KOLPROXY_STORE_STATE_IN_ACTIONBAR"
-		localstate <- getEnvironmentSetting "KOLPROXY_STORE_STATE_LOCALLY"
+		let checkenv defaultvalue setting = do
+			value <- getEnvironmentSetting setting
+			case value of
+				Just "1" -> return True
+				Just "0" -> return False
+				_ -> return defaultvalue
+		listenpublic <- checkenv False "KOLPROXY_LISTEN_PUBLIC"
+		actionbarstate <- checkenv True "KOLPROXY_STORE_STATE_IN_ACTIONBAR"
+		localstate <- checkenv (not listenpublic) "KOLPROXY_STORE_STATE_LOCALLY"
+		launchbrowser <- checkenv (not listenpublic) "KOLPROXY_LAUNCH_BROWSER"
 		return $ EnvironmentSettings {
-			store_state_in_actionbar_ = (actionbarstate /= Just "0"),
-			store_state_locally_ = (localstate /= Just "0"),
-			store_ascension_logs_ = True,
-			store_chat_logs_ = True,
-			store_info_logs_ = True,
-			listen_public_ = (listenpublic == Just "1")
+			store_state_in_actionbar_ = actionbarstate,
+			store_state_locally_ = localstate,
+			store_ascension_logs_ = not listenpublic,
+			store_chat_logs_ = not listenpublic,
+			store_info_logs_ = not listenpublic,
+			listen_public_ = listenpublic,
+			launch_browser_ = launchbrowser
 		}
 
 	let openlog filename = do
@@ -319,12 +327,8 @@ runProxyServer r rchat portnum = do
 
 	sock <- mklistensocket (listen_public _log_fakeref) portnum
 
-	forkIO_ "kps:updatedatafiles" $ do
-		update_data_files
-	forkIO_ "kps:launchkolproxy" $ do
-		envlaunch <- getEnvironmentSetting "KOLPROXY_LAUNCH_BROWSER"
-		when (envlaunch /= Just "0") $ do
-			platform_launch portnum
+	forkIO_ "kps:updatedatafiles" $ update_data_files
+	when (launch_browser_ $ environment_settings_ $ globalref) $ forkIO_ "kps:launchkolproxy" $ platform_launch portnum
 
 	let runLoop f = do
 		cont <- f

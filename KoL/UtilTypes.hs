@@ -89,7 +89,8 @@ data EnvironmentSettings = EnvironmentSettings {
 	store_ascension_logs_ :: Bool,
 	store_chat_logs_ :: Bool,
 	store_info_logs_ :: Bool,
-	listen_public_ :: Bool
+	listen_public_ :: Bool,
+	launch_browser_ :: Bool
 }
 
 data GlobalRefStuff = GlobalRefStuff {

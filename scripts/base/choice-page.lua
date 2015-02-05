@@ -156,7 +156,7 @@ end
 
 if found_function == false and adventure_title ~= nil and adventure_title ~= "Results:" then
 	print("add_choice_text(\""..adventure_title.."\", { -- choice adventure number: " .. tostring(choice_adventure_number))
-	for x in text:gmatch([[<input class=button type=submit value="([^"]-)">]]) do
+	for x, y in pairs(parse_choice_options(text)) do
 		print([[	["]]..x..[["] = { text = "" },]])
 	end
 	print("})")
@@ -165,3 +165,17 @@ end
 return text
 
 end
+
+function parse_choice_options(pt)
+	local options = {}
+	for nr, title in pt:gmatch([[<input type=hidden name=option value=([0-9])><input class=button type=submit value="([^>]+)">]]) do
+		options[title] = tonumber(nr)
+	end
+	return options
+end
+
+add_printer("all pages", function()
+	if choice_adventure_number or path == "/choice.php" then
+		text = do_choice_page_printing(text, title, adventure_title, choice_adventure_number)
+	end
+end)
