@@ -1217,7 +1217,7 @@ function get_automation_scripts(cached_stuff)
 			end
 			if want_bonus.plusinitiative then
 				table.insert(xs, "Living Fast")
-				table.insert(xs, "Soul Rotation")
+				table.insert(xs, "Soulerskates")
 				table.insert(xs, "Cletus's Canticle of Celerity")
 				table.insert(xs, "Springy Fusilli")
 				table.insert(xs, "Suspicious Gaze")
@@ -3737,13 +3737,13 @@ endif
 			else
 				script.bonus_target { "stinky_damage" }
 				if count_item("bus pass") < 5 then
-					table.insert(script.bonus_target, "item")
+					script.bonus_target { "stinky_damage", "item" }
 					if not ((count_item("sponge cake") + count_item("comfy pillow") + count_item("booze-soaked cherry")) >= 2 and (count_item("gin-soaked blotter paper") + count_item("giant marshmallow") + count_item("beer-scented teddy bear")) >= 2) then
-						table.insert(script.bonus_target, "noncombat")
+						script.bonus_target { "stinky_damage", "item" , "noncombat" }
 					end
 					go("sven golly, bus passes: " .. count_item("bus pass"), 243, macro_ppnoodlecannon, nil, {}, {}, 35)
 				else
-					table.insert(script.bonus_target, "noncombat")
+					script.bonus_target { "stinky_damage", "noncombat" }
 					go("sven golly, getting items", 243, macro_noodlecannon, nil, {}, {}, 35)
 				end
 			end
@@ -3764,13 +3764,13 @@ endif
 					macro_laughfloor = macro_fist
 				end
 				if count_item("imp air") < 5 then
-					table.insert(script.bonus_target, "item")
+					script.bonus_target { "stinky_damage", "item" }
 					if not have_item("observational glasses") then
-						table.insert(script.bonus_target, "combat")
+						script.bonus_target { "stinky_damage", "item" , "combat" }
 					end
 					go("mourn, imp air: " .. count_item("imp air"), 242, macro_ppnoodlecannon, nil, {}, {}, 35)
 				else
-					table.insert(script.bonus_target, "combat")
+					script.bonus_target { "stinky_damage" , "combat" }
 					go("mourn, getting bosses", 242, macro_noodleserpent, nil, {}, {}, 35)
 				end
 			end
