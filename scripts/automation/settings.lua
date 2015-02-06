@@ -57,50 +57,46 @@ function get_ascension_automation_settings(want_bonus)
 			"Ye Olde Bawdy Limerick",
 			"crate of firebombs",
 		},
-		use_except_one = {
-			"large box",
-		},
+		use_except_one = {},
 		sell_items = {
 			"baconstone", "hamethyst", "porquoise",
 			"meat stack", "dense meat stack",
-			"magicalness-in-a-can", "concentrated magicalness pill",
-			"moxie weed", "giant moxie weed",
-			"strongness elixir", "enchanted barbell",
+			"moxie weed", "giant moxie weed", "magicalness-in-a-can",
+			"strongness elixir", "enchanted barbell", "concentrated magicalness pill",
 			"bit-o-cactus", "handful of moss", "suntan lotion of moxiousness", "ancient protein powder",
 			"Mad Train wine",
 			"ironic jogging shorts",
-			"spooky shrunken head", "bowl of cottage cheese",
+			"spooky shrunken head", 
 			"fat stacks of cash",
-			"rat appendix", "batgut", "catgut", "bat guano", "bat wing",
-			"Imp Ale", "hot katana blade", "demon skin", "cast",
+			"cat appendix", "batgut", "catgut", "bat guano", "bat wing",
+			"Imp Ale", "hot katana blade", "demon skin",
 			"8-ball",
 			"gator skin", "decaying goldfish liver", "sewer nuggets", "bottle of sewage schnapps",
-			"ghuol ears", "lihc eye", "smart skull", "ghuol egg", "ghuol guolash", "cranberries",
+			"ghuol ears", "lihc eye", "smart skull", "ghuol egg", "ghuol guolash",
 			"grouchy restless spirit",
 			"stone of eXtreme power",
 			"cocoa eggshell fragment",
-			"towel", "cardboard wakizashi",
+			"cardboard wakizashi",
 			"phat turquoise bead", "beach glass bead", "clay peace-sign bead",
 			"sunken chest", "pirate pelvis",
 			"ballroom blintz", "royal jelly", "unidentified jerky", "mind flayer corpse",
 			"procrastination potion", "probability potion",
 			"drab sonata",
-			"cat appendix",
 			"baby killer bee",
 			"rocky raccoon", "Tuesday's ruby",
 			"tip jar", "barrrnacle", "grumpy old man charrrm", "tarrrnish charrrm", "all-purpose cleaner", "rum barrel charrrm", "cannonball charrrm", "copper ha'penny charrrm", "booty chest charrrm", "silver tongue charrrm",
 			"empty Cloaca-Cola bottle", "valuable trinket",
-			"enormous belt buckle",
 			"flimsy clipboard", "stolen office supplies",
 			"awful poetry journal", "furry fur",
 			"commemorative war stein",
 			"photoprotoneutron torpedo", "chaos butterfly",
-			"ketchup hound", "guitar pick",
+			"ketchup hound", "guitar pick", "original G", 
+			"leathery bat skin", "leathery cat skin", "leathery rat skin",
+			"yeti fur",
 		},
 		sell_except_one = {
-			"yeti fur",
-			"leathery bat skin", "leathery cat skin", "leathery rat skin",
-			"metallic A", "original G",
+			"bowl of cottage cheese",
+			"metallic A", "ruby W", "lowercase N", "heavy D"
 			"Feng Shui for Big Dumb Idiots", "decorative fountain", "windchimes"
 		},
 		default_equipment = {
@@ -237,6 +233,7 @@ function get_ascension_automation_settings(want_bonus)
 				{ name = "Fuzzy Slippers of Hatred", check = function() return want_bonus.noncombat end },
 				{ name = "Space Trip safety headphones", check = function() return want_bonus.noncombat end },
 				{ name = "duonoculars", check = function() return want_bonus.noncombat end },
+				{ name = "Bram's choker", check = function() return want_bonus.noncombat end },
 				{ name = "portable cassette player", check = function() return want_bonus.combat end },
 				{ name = "ring of conflict", check = function() return want_bonus.noncombat end },
 				{ name = "Juju Mojo Mask", check = function() return (level() < 13 and not want_bonus.extraplusitems) end },
@@ -281,6 +278,8 @@ function get_ascension_automation_settings(want_bonus)
 				"sphygmomanometer",
 				"bejeweled pledge pin",
 				"pirate fledges",
+				{ name = "Bram's choker", check = function() return not want_bonus.combat end },
+				"warbear warscarf",
 				"Bonerdagon necklace",
 				"Codpiece of the Goblin King",
 				"baconstone pendant",
@@ -319,6 +318,7 @@ function get_ascension_automation_settings(want_bonus)
 	if tbl.should_wear_weapons then
 		tbl.default_equipment.weapon = {
 			"Trusty",
+			{ name = "iFlail", check = function() return not want_bonus.combat end },
 			{ name = "Staff of Simmering Hatred", check = function() return not want_bonus.not_casting_spells end },
 			{ name = "Staff of the Walk-In Freezer", check = function() return not want_bonus.not_casting_spells end },
 			{ name = "Staff of the Woodfire", check = function() return not want_bonus.not_casting_spells end },
@@ -363,6 +363,13 @@ function get_ascension_automation_settings(want_bonus)
 			"turtle totem",
 		}
 		tbl.default_equipment.offhand = {
+			{ name = "iFlail", check = function() return not want_bonus.combat end },
+			{ name = "Hand that Rocks the Ladle", check = function() return playerclass("Pastamancer") end },
+			{ name = "Saucepanic", check = function() return playerclass("Sauceror") end },
+			{ name = "Frankly Mr. Shank", check = function() return playerclass("Disco Bandit") end },
+			{ name = "Meat Tenderizer is Murder", check = function() return playerclass("Seal Clubber") end },
+			"Sheila Take a Crossbow",
+			"Work is a Four Letter Sword",
 			"Bag o' Tricks",
 			{ name = "A Light that Never Goes Out", check = function() return want_bonus.plusitems end },
 			"Jarlsberg's pan",
@@ -403,7 +410,7 @@ function get_ascension_automation_settings(want_bonus)
 		return itemname
 	end
 
-	if tbl.canwear_itemname("powdered wig") then
+	if not ascensionpath("Standard") and tbl.canwear_itemname("powdered wig") then
 		table.insert(tbl.sell_items, "Van der Graaf helmet")
 	end
 	if have_item("pirate fledges") then

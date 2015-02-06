@@ -505,7 +505,7 @@ function get_automation_scripts(cached_stuff)
 				want_bonus.stinky_damage = true
 			elseif t == "hot_damage" then
 				want_bonus.hot = true
-			elseif t == "cold" then
+			elseif t == "cold_damage" then
 				want_bonus.cold_damage = true
 			elseif t == "sleaze_damage" then
 				want_bonus.sleaze_damage = true
@@ -1568,7 +1568,7 @@ function get_automation_scripts(cached_stuff)
 					if itemname and a == "weapon" and tbl.offhand and is_twohanded_weapon(itemname) then
 					elseif itemname and not do_not_wear[itemname] then
 						neweq[a] = get_itemid(itemname)
-						do_not_wear[itemname] = true
+						if not ( a == "weapon" and count_item(itemname) > 1) then do_not_wear[itemname] = true end
 						if halos[itemname] or a == "weapon" or a == "offhand" then
 							for h in pairs(halos) do
 								do_not_wear[h] = true
