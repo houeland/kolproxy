@@ -96,8 +96,8 @@ function get_ascension_automation_settings(want_bonus)
 		},
 		sell_except_one = {
 			"bowl of cottage cheese",
-			"metallic A", "ruby W", "lowercase N", "heavy D"
-			"Feng Shui for Big Dumb Idiots", "decorative fountain", "windchimes"
+			"metallic A", "ruby W", "lowercase N", "heavy D",
+			"Feng Shui for Big Dumb Idiots", "decorative fountain", "windchimes",
 		},
 		default_equipment = {
 			hat = {
