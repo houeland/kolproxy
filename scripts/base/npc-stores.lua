@@ -48,8 +48,8 @@ function buy_hermit_item(item, quantity)
 end
 
 function check_buying_from_knob_dispensary()
-	local pt = get_page("/submitnewchat.php", { graf = "/buy Knob Goblin seltzer", pwd = session.pwd })
-	if pt:contains("whichstore=k") then
+	local pt = get_page("/submitnewchat.php", { graf = "/buy knob goblin seltzer", pwd = session.pwd })
+	if pt:contains("Knob Goblin seltzer") then
 		return true
 	elseif pt:contains("not sure") then
 		return false

@@ -207,28 +207,9 @@ setup_turnplaying_script {
 	end,
 	adventuring = function()
 		if quest_text("found a map to the secret tropical island") then
-			result = "do tropical island"
-			-- wear stuff
-			equip_item("pirate fledges", 2)
-			equip_item("ring of conflict", 3)
-			-- adventure repeatedly
-			for i = 1, 100 do
-				-- buff up
-				if not have_buff("The Sonata of Sneakiness") then
-					cast_skillid(6015, 2) -- sonata of sneakiness
-				end
-				if not have_buff("Smooth Movements") then
-					cast_skillid(5017, 2) -- smooth moves
-				end
-				result, resulturl, advagain = autoadventure { zoneid = 159, macro = automation_macro }
-				if not advagain then
-					break
-				end
--- choice	O Cap'm, My Cap'm	189
--- opt	1	Front the meat and take the wheel
--- opt	2	Step away from the helm
--- opt	3	Show the tropical island volcano lair map to the navigator
-			end
+			set_result(use_item("secret tropical island volcano lair map"))
+			refresh_quest()
+			advagain = not quest_text("found a map to the secret tropical island")
 		elseif quest_text("put a stop to this Nemesis nonsense") or (quest("Me and My Nemesis") and have_item("secret tropical island volcano lair map")) then
 			if classid() == 1 then -- seal clubber
 				stop "TODO: Automate seal clubber island"
@@ -252,7 +233,7 @@ setup_turnplaying_script {
 -- equip weapon Greek Pasta of Peril
 -- "proxy:/volcanoisland.php?pwd=a412cd1e0a0d040806269162e564fcb1&action=tniat"  Nothing
 -- "proxy:/volcanomaze.php?"  Nothing
-			elseif classid() == 4 then -- sauceror
+			elseif playerclass("Sauceror") then -- sauceror
 				automate_S_nemesis_island()
 			elseif classid() == 5 then -- disco bandit
 				automate_DB_nemesis_island()
@@ -380,6 +361,9 @@ function automate_S_nemesis_island()
 	nemesis_try_sauceror_potions()
 	if have_buff("Slimeform") then
 		stop "TODO: kill nemesis"
+	end
+	if not have_item("bottle of G&uuml;-Gone") then
+		get_page("/volcanoisland.php", { pwd = session.pwd, action = "npc" })
 	end
 	get_page("/account.php", { action = "autoattack", whichattack = 0, ajax = 1, pwd = session.pwd }) -- unset autoattack, bleh
 	script.bonus_target { "easy combat" }

@@ -1225,13 +1225,20 @@ mark m_done
 	end
 
 	tasks.ns_lair_investigate_contest = {
-		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("investigate the weird contest"),
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and (quest_text("investigate the weird contest") or quest_text("not yet entered")),
 		task = {
 			message = "sign up for NS lair contest",
 			nobuffing = true,
 			action = function()
 				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_01_contestbooth" })
 				local options = parse_choice_options(result)
+				if options["Enter the Fastest Adventurer contest"] then
+					--...maximize init...
+				elseif options["Enter the Smoothest Adventurer contest"] then
+					--...maximize moxie...
+				elseif options["Enter the Stinkiest Adventurer contest"] then
+					--...maximixe stinky...
+				end
 				print("DEBUG ns contest", tostring(options))
 				did_action = false
 			end,
@@ -1288,8 +1295,8 @@ mark m_done
 			message = "navigate NS hedge maze",
 			action = function()
 				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_03_hedgemaze" })
-				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_kill_monster)
-				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, nil, function(advtitle, choicenum, pagetext)
+				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_kill_monster, nil, function(advtitle, choicenum, pagetext)
+					print("DEBUG advtitle choicenum", advtitle, choicenum)
 					return "", 1
 				end)
 				did_action = quest_text("Get through the door at the base")
@@ -1309,13 +1316,183 @@ mark m_done
 		}
 	}
 
-	tasks.ns_lair_ascend_tower = {
-		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("Ascend the <"),
+	local tower_page = nil
+	local function at_tower_level(idx)
+		if not tower_page then
+			tower_page = get_page("/place.php", { whichplace = "nstower" })
+		end
+		return tower_page:contains("Tower Level " .. idx)
+	end
+
+	tasks.ns_lair_wall_of_skin = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("Ascend the <") and at_tower_level(1),
 		task = {
-			message = "ascend NS lair tower",
+			message = "pass wall of skin",
 			action = function()
+				script.want_familiar("Warbear Drone")
+				script.wear {
+					offhand = first_wearable { "hot plate" },
+					famequip = first_wearable { "ant hoe", "ant pick", "ant pitchfork", "ant rake", "ant sickle" },
+					acc1 = first_wearable { "hippy protest button" },
+					acc2 = first_wearable { "bottle opener belt buckle" },
+				}
+				script.maybe_ensure_buffs { "Spiky Shell", "Jalape&ntilde;o Saucesphere", "Scarysauce", "Psalm of Pointiness" }
 				result, resulturl = get_page("/place.php", { whichplace = "nstower" })
 				did_action = false
+			end,
+		}
+	}
+
+	tasks.ns_lair_wall_of_meat = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and (quest_text("Ascend the <") or quest_text("Defeat the wall of meat")) and at_tower_level(2),
+		task = {
+			message = "pass wall of meat",
+			action = function()
+				script.want_familiar("leprechaun")
+				script.wear {}
+				script.ensure_buffs { "Polka of Plenty", "Disco Leer" }
+				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_06_monster2" })
+				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_kill_monster)
+				did_action = advagain
+			end,
+		}
+	}
+
+	tasks.ns_lair_wall_of_bones = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and
+			(quest_text("Ascend the <") or quest_text("Defeat the wall of bones")) and
+			at_tower_level(3) and
+			have_item("electric boning knife"),
+		task = {
+			message = "pass wall of bones",
+			action = function()
+				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_07_monster3" })
+				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", [[use electric boning knife]])
+				did_action = advagain
+			end,
+		}
+	}
+
+	tasks.ns_lair_get_boning_knife = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and
+			(quest_text("Ascend the <") or quest_text("Defeat the wall of bones")) and
+			at_tower_level(3) and
+			not have_item("electric boning knife"),
+		task = {
+			message = "get electric boning knife",
+			bonus_target = { "noncombat", "item" },
+			action = adventure {
+				zone = "The Castle in the Clouds in the Sky (Ground Floor)",
+				macro_function = macro_kill_monster,
+				noncombats = {
+					["There's No Ability Like Possibility"] = "Go out the Way You Came In",
+					["Putting Off Is Off-Putting"] = "Get out of this Junk",
+					["Huzzah!"] = "Seek the Egress Anon",
+				}
+			}
+		}
+	}
+
+	tasks.ns_lair_tower_mirror = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("Continue climbing") and at_tower_level(4),
+		task = {
+			message = "look in tower mirror",
+			action = function()
+				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_08_monster4" })
+				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, {
+					["The Mirror in the Tower has the View that is True"] = "Gaze into the mirror...",
+				})
+				did_action = advagain
+			end,
+		}
+	}
+
+	tasks.ns_lair_defeat_shadow = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("Continue your ascent") and at_tower_level(5),
+		task = {
+			message = "defeat your shadow",
+			action = function()
+				script.bonus_target { "easy combat" }
+				set_mcd(0)
+				script.want_familiar("Frumious Bandersnatch")
+				script.ensure_buffs { "Go Get 'Em, Tiger!" }
+				script.wear { hat = first_wearable { "double-ice cap" } }
+				local use_garter = "use gauze garter"
+				if have_skill("Ambidextrous Funkslinging") and count_item("gauze garter") >= 8 then
+					script.heal_up()
+					use_garter = "use gauze garter, gauze garter"
+				elseif count_item("gauze garter") >= 8 and (have_item("Rain-Doh indigo cup") or have_item("double-ice cap")) then
+					if maxhp() < 300 then
+						script.wear { hat = first_wearable { "double-ice cap" }, acc1 = first_wearable { "bejeweled pledge pin" }, acc2 = first_wearable { "plastic vampire fangs" }, acc1 = first_wearable { "sphygmomanometer" } }
+					end
+					if maxhp() < 300 then
+						script.maybe_ensure_buffs { "Standard Issue Bravery", "Starry-Eyed", "Puddingskin" }
+					end
+					script.force_heal_up()
+					if hp() < 300 and not have_equipped_item("double-ice cap") then
+						stop "Kill your shadow"
+					end
+				else
+					stop "Kill your shadow"
+				end
+				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_09_monster5" })
+				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", [[
+]] .. COMMON_MACROSTUFF_START(20, 5) .. [[
+
+
+]] .. use_garter .. [[
+
+
+if hasskill Saucy Salve
+	cast Saucy Salve
+endif
+
+
+]] .. use_garter .. [[
+
+
+if hascombatitem Rain-Doh indigo cup
+	use Rain-Doh indigo cup
+endif
+
+
+]] .. use_garter .. [[
+
+
+]] .. use_garter .. [[
+
+
+]] .. use_garter .. [[
+
+
+]])
+				did_action = advagain
+			end,
+		}
+	}
+
+	tasks.ns_lair_confront_ns = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("Confront the ") and quest_text("Naughty Sorceress"),
+		task = {
+			message = "confront the naughty sorceress",
+			action = function()
+				script.bonus_target { "easy combat" }
+				set_mcd(0)
+				script.want_familiar("Frumious Bandersnatch")
+				script.ensure_buffs { "Go Get 'Em, Tiger!" }
+				did_action = advagain
+			end,
+		}
+	}
+
+	tasks.ns_lair_confront_ns = {
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("Free King Ralph from his prism"),
+		task = {
+			message = "free king ralph",
+			action = function()
+				set_result(get_page("/place.php", { whichplace = "nstower" }))
+				result = add_message_to_page(get_result(), "<p>Finished, free the king!</p>", "Ascension script:")
+				result_status.finished()
 			end,
 		}
 	}
@@ -1324,9 +1501,15 @@ mark m_done
 		tasks.ns_lair_investigate_contest,
 		tasks.ns_lair_defeat_other_entrants,
 		tasks.ns_lair_finish_contest,
+		tasks.ns_lair_attend_coronation,
 		tasks.ns_lair_navigate_hedge_maze,
 		tasks.ns_lair_door,
-		tasks.ns_lair_ascend_tower,
+		tasks.ns_lair_wall_of_skin,
+		tasks.ns_lair_wall_of_meat,
+		tasks.ns_lair_wall_of_bones,
+		tasks.ns_lair_get_boning_knife,
+		tasks.ns_lair_tower_mirror,
+		tasks.ns_lair_confront_ns,
 	}
 
 	return t

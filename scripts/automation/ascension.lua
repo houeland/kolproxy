@@ -53,6 +53,12 @@ function print_ascensiondebug(...)
 	end
 end
 
+result_status = {
+	finished = function()
+		finished = true
+	end
+}
+
 local function automate_day(whichday)
 	reset_error_trace_steps()
 	finished = false
@@ -2057,91 +2063,6 @@ endif
 			end
 		}
 	}
-
-	-- TODO: make into separate tasks
-	if quest("The Final Ultimate Epic Final Conflict") and quest_text("You've come to an odd junction in the cave leading to the Sorceress' Lair") then
-		if not have_item("stone tablet (Really Evil Rhythm)") and have_item("skeleton key") and quest_text("solve a really convoluted and contrived puzzle involving a cloud of gas") then
-			inform "do skeleton key"
-			script.maybe_ensure_buffs { "A Few Extra Pounds" }
-			while true do
-				if hp() <= 60 and hp() < maxhp() then
-					script.heal_up()
-				end
-				local before_hp = hp()
-				async_post_page("/lair2.php", { prepreaction = "skel" })
-				if have_item("stone tablet (Really Evil Rhythm)") or hp() >= before_hp then
-					break
-				end
-			end
-			if have_item("stone tablet (Really Evil Rhythm)") then
-				did_action = true
-			end
-		elseif countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") < 3 and not have_item("makeshift SCUBA gear") then
-			-- TODO: if not enough fat loot tokens, and no wand, hmm(?)
-			inform "trading for legend keys"
-			for _, x in ipairs { "Boris's key", "Jarlsberg's key", "Sneaky Pete's key" } do
-				if not have_item(x) then
-					shop_buy_item(x, "damachine")
-				end
-			end
-			if countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") >= 3 then
-				did_action = true
-			end
-		else
-			inform "pass lair statues"
-			if challenge == "fist" then
-				script.ensure_buffs { "Earthen Fist" }
-			end
-			while not have_item("stolen accordion") do
-				result, resulturl, advagain = script.buy_use_chewing_gum()
-				if not advagain then
-					critical "Failed to use chewing gum"
-				end
-			end
-
-			if ascensionstatus("Softcore") then
-				local maximum_lair_items_missing = 6
-				if requires_wand_of_nagamar() and not have_wand_or_parts() then
-					maximum_lair_items_missing = maximum_lair_items_missing + 1
-				end
-				if not have_item("star hat") then
-					maximum_lair_items_missing = maximum_lair_items_missing + 1
-				end
-				if can_wear_weapons() and not have_item("star crossbow") and not have_item("star staff") and not have_item("star sword") then
-					maximum_lair_items_missing = maximum_lair_items_missing + 1
-				end
-				for i = 1, 6 do
-					local item = get_lair_tower_monster_items()[i]
-					if item and have_item(item) then
-						maximum_lair_items_missing = maximum_lair_items_missing - 1
-					end
-				end
-				print("DEBUG pulls missing", pullsleft(), maximum_lair_items_missing)
-				if (pullsleft() or 0) >= maximum_lair_items_missing and (pullsleft() or 0) >= 3 then
-					pull_in_softcore("star hat")
-					if can_wear_weapons() and not have_item("star crossbow") and not have_item("star staff") and not have_item("star sword") then
-						pull_in_softcore("star crossbow")
-					end
-				end
-			end
-			result, resulturl = get_page("/lair2.php", { action = "statues" })
-			local missing_stuff = automate_lair_statues(result)
-			if missing_stuff and table.concat(missing_stuff, ", "):contains("smith a stone banjo") then
-				automate_smithing_stone_banjo()
-				result, resulturl = get_page("/lair2.php", { action = "statues" })
-				missing_stuff = automate_lair_statues(result)
-			end
-			if missing_stuff then
-				result, resulturl = get_page("/lair2.php")
-				result = add_message_to_page(get_result(), "TODO: finish lair<br><br>" .. table.concat(missing_stuff, ", "), nil, "darkorange")
-				did_action = false
-				finished = true
-			else
-				did_action = true
-			end
-		end
-		return result, resulturl, did_action
-	end
 
 	add_task {
 		when = challenge == "boris" and
@@ -5697,20 +5618,6 @@ use gauze garter
 				end
 			end)
 		end
-		did_action = not locked()
-	end
-
-	if locked() == "choice" and playerclass("Turtle Tamer") then
-		-- TODO: only trigger when there's only one choice
-		local ctr = 0
-		result, resulturl = get_page("/choice.php")
-		result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, nil, function(advtitle, choicenum, pt)
-			if ctr < 10 then
-				ctr = ctr + 1
-				print("AUTOMATION: guessing this is a turtle taming choice adventure, picking option 1")
-				return "", 1
-			end
-		end)
 		did_action = not locked()
 	end
 

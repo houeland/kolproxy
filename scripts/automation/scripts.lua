@@ -1590,8 +1590,6 @@ function get_automation_scripts(cached_stuff)
 	local wear = f.wear
 
 	function f.pick_up_sr()
-		print "  checking for SR"
-
 		local ls = ascension["last semirare"] or {}
 		local lastsemi = ls.encounter
 		local lastturn = ls.turn
@@ -1631,13 +1629,9 @@ endif
 			script.wear {}
 			stop "Pick up semirare in Boris"
 		end
-		if lastturn and lastturn + 250 < turnsthisrun() then
--- 			critical "Last semirare was a long time ago"
-			return
-		end
 		print("pick up SR, last semi", lastsemi, lastturn)
 		wear {}
-		if (not lastsemi and not lastturn and turnsthisrun() < 85) or (lastsemi ~= "In the Still of the Alley") then
+		if lastsemi ~= "In the Still of the Alley" then
 			inform "Pick up SR, make it wines"
 			result, resulturl, advagain = autoadventure { zoneid = 112, ignorewarnings = true }
 			if get_result():contains("In the Still of the Alley") then
@@ -4929,6 +4923,15 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 		end
 		if optname and not pickchoice then
 			print("ERROR: option " .. tostring(optname) .. " not found for " .. tostring(adventure_title) .. ".")
+		end
+		if not pickchoice then
+			local possiblities = {}
+			for nr in pt:gmatch([[<input type=hidden name=option value=([0-9])>]]) do
+				table.insert(possibilities, tonumber(nr))
+			end
+			if possibilities[1] and not possibilities[2] then
+				pickchoice = possibilities[1]
+			end
 		end
 		if pickchoice then
 			local pt, url = post_page("/choice.php", { pwd = session.pwd, whichchoice = choice_adventure_number, option = pickchoice })
