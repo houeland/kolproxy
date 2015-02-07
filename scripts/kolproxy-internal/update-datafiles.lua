@@ -873,6 +873,7 @@ function parse_familiars()
 			return x
 		end
 	end
+
 	local familiars = {}
 	for l in io.lines("cache/files/familiars.txt") do
 		l = remove_line_junk(l)
@@ -907,7 +908,6 @@ function verify_familiars(data)
 			data[x].larvaitem = nil
 		end
 	end
-
 	local correct_data = {
 		["Frumious Bandersnatch"] = { famid = 105 },
 		["Oily Woim"] = { famid = 168, larvaitem = "woim" },

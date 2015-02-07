@@ -1,18 +1,6 @@
 __allow_global_writes = true
-
--- TODO FIX LIST
-
--- TMM and butt-rock hair are moxie-specific, as are boss items picked up. get mainstat item from goblin king?
--- script IDing dod potions automatically
-
--- cast libram summons
-
--- handle organ grinding
-
 show_spammy_automation_events = true
-
 stop_on_potentially_unwanted_softcore_actions = false
-
 ignore_buffing_and_outfit = nil
 
 function softcore_stoppable_action(msg)
@@ -739,7 +727,7 @@ endif
 	}
 
 	add_task {
-		when = not cached_stuff.gotten_drink_me_potion,
+		when = have_item("Clan VIP Lounge key") and not cached_stuff.gotten_drink_me_potion,
 		task = {
 			message = "picking up drink me potion",
 			nobuffing = true,
@@ -777,6 +765,7 @@ endif
 			not have_skill("Ambidextrous Funkslinging") and
 			not have_item("double-ice cap") and
 			count_item("shard of double-ice") < 5 and
+			have_item("Clan VIP Lounge key") and 
 			not cached_stuff.taken_april_shower,
 		task = {
 			message = "taking april shower",
@@ -1960,16 +1949,16 @@ endif
 	end
 	want_scboris_item = want_softcore_item
 
-	want_softcore_item("Rain-Doh indigo cup", "can of Rain-Doh")
-	want_softcore_item("Juju Mojo Mask")
+	if not ascensionpath("Standard") then want_softcore_item("Rain-Doh indigo cup", "can of Rain-Doh") end
+	if not ascensionpath("Picky") and not ascensionpath("Standard") then want_softcore_item("Juju Mojo Mask") end
 	if can_wear_weapons() then
 		want_softcore_item("Thor's Pliers")
 	end
-	want_softcore_item_oneof { "Loathing Legion necktie", "Loathing Legion abacus", "Loathing Legion can opener", "Loathing Legion chainsaw", "Loathing Legion corkscrew", "Loathing Legion defibrillator", "Loathing Legion double prism", "Loathing Legion electric knife", "Loathing Legion hammer", "Loathing Legion helicopter", "Loathing Legion jackhammer", "Loathing Legion kitchen sink", "Loathing Legion knife", "Loathing Legion many-purpose hook", "Loathing Legion moondial", "Loathing Legion pizza stone", "Loathing Legion rollerblades", "Loathing Legion tape measure", "Loathing Legion tattoo needle", "Loathing Legion universal screwdriver" }
+	if not ascensionpath("Picky") and not ascensionpath("Standard") then want_softcore_item_oneof { "Loathing Legion necktie", "Loathing Legion abacus", "Loathing Legion can opener", "Loathing Legion chainsaw", "Loathing Legion corkscrew", "Loathing Legion defibrillator", "Loathing Legion double prism", "Loathing Legion electric knife", "Loathing Legion hammer", "Loathing Legion helicopter", "Loathing Legion jackhammer", "Loathing Legion kitchen sink", "Loathing Legion knife", "Loathing Legion many-purpose hook", "Loathing Legion moondial", "Loathing Legion pizza stone", "Loathing Legion rollerblades", "Loathing Legion tape measure", "Loathing Legion tattoo needle", "Loathing Legion universal screwdriver" } end
 	want_softcore_item_oneof { "over-the-shoulder Folder Holder", "plastic vampire fangs" }
-	want_softcore_item_oneof { "stinky cheese diaper", "stinky cheese wheel", "stinky cheese eye", "Staff of Queso Escusado", "stinky cheese sword" }
+	if not ascensionpath("Picky") and not ascensionpath("Standard") then want_softcore_item_oneof { "stinky cheese diaper", "stinky cheese wheel", "stinky cheese eye", "Staff of Queso Escusado", "stinky cheese sword" } end
 	want_softcore_item_oneof { "Greatest American Pants", "Pantsgiving" }
-	want_softcore_item_oneof { "Boris's Helm (askew)", "Boris's Helm", "Spooky Putty mitre" }
+	if not ascensionpath("Standard") then want_softcore_item_oneof { "Boris's Helm (askew)", "Boris's Helm", "Spooky Putty mitre" } end
 	if can_change_familiar() then
 		want_softcore_item_oneof { "Buddy Bjorn", "Camp Scout backpack" }
 	else
@@ -2495,6 +2484,10 @@ endif
 		}
 	}
 
+	if not turns_to_next_sr then
+		turns_to_next_sr = 1000000
+	end
+
 	local use_new_faxing = ascensionpath("BIG!") and (script.have_familiar("Obtuse Angel") or script.have_familiar("Reanimated Reanimator"))
 
 	add_task {
@@ -2530,7 +2523,7 @@ endif
 	}
 
 	add_tasklist(tasks.tasklist_ns_lair)
-
+	
 	local function have_check_mirror_intrinsic()
 		for _, i in ipairs { "Slicked-Back Do", "Pompadour", "Cowlick", "Fauxhawk" } do
 			if have_intrinsic(i) then return true end
@@ -2552,9 +2545,7 @@ endif
 		}
 	}
 	local function add_faxing_task(target, checker, want_reanimator)
-		if not script.have_familiar("Obtuse Angel") then
-			want_reanimator = true
-		end
+		want_reanimator = want_reanimator or ((not ascensionpath("Picky") and not ascensionpath("Standard")) or not script.have_familiar("Obtuse Angel"))
 		if not script.have_familiar("Reanimated Reanimator") then
 			want_reanimator = false
 		end
@@ -3985,7 +3976,7 @@ endif
 			buffs = { "Glittering Eyelashes", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy", "A Few Extra Pounds", "Reptilian Fortitude", "Astral Shell", "Ghostly Shell" },
 			minmp = 20,
 			olfact = "morbid skull",
-			bonus_target = { "easy combat" },
+			bonus_target = { "easy combat", "item" },
 			action = adventure {
 				zoneid = 302,
 				macro_function = function() return make_cannonsniff_macro("morbid skull") end,
@@ -4115,17 +4106,17 @@ endif
 			level() < 11 and
 			ascension["zone.manor.quartet song"] ~= "Sono Un Amante Non Un Combattente",
 		f = function()
-			script.bonus_target { "noncombat" }
+			script.bonus_target { "noncombat", "stinky_damage" }
 			if mainstat_type("Moxie") then
 				script.go("set song (moxie)", 109, macro_noodlecannon, {
 					["Curtains"] = "Watch the dancers",
 					["Strung-Up Quartet"] = "&quot;Play 'Sono Un Amanten Non Un Combattente'&quot;",
-				}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic" }, "Slimeling", 25)
+				}, {}, {}, 25)
 			else
 				script.go("set song (non-moxie)", 109, macro_noodlecannon, {
 					["Curtains"] = "Pay no attention to the stuff in front of the curtain",
 					["Strung-Up Quartet"] = "&quot;Play 'Sono Un Amanten Non Un Combattente'&quot;",
-				}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Garlic" }, "Llama Lama", 25)
+				}, {}, {}, 25)
 			end
 		end,
 		message = "ballroom song",
@@ -4189,7 +4180,7 @@ endif
 		f = function()
 			-- TODO: Should do this before level 9 to avoid noncombats!
 			script.bonus_target { "combat", "controlled damage" }
-			script.go("yellow raying hippy", 26, make_yellowray_macro("hippy"), {}, { "Musk of the Moose", "Carlweather's Cantata of Confrontation" }, "He-Boulder", 15, { choice_function = function(advtitle, choicenum)
+			script.go("yellow raying hippy", 26, make_yellowray_macro("hippy"), {}, {}, "He-Boulder", 15, { choice_function = function(advtitle, choicenum)
 				if advtitle == "Peace Wants Love" then
 					if not have_item("filthy corduroys") then
 						return "Agree to take his clothes"
@@ -4216,8 +4207,8 @@ endif
 			challenge ~= "jarlsberg" and
 			level() >= 9,
 		f = function()
-			script.bonus_target { "noncombat" }
-			script.go("getting hippy outfit", 26, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "He-Boulder", 15, { choice_function = function(advtitle, choicenum)
+			script.bonus_target { "noncombat", "sleaze_damage" }
+			script.go("getting hippy outfit", 26, macro_noodlecannon, {}, {}, "He-Boulder", 15, { choice_function = function(advtitle, choicenum)
 				if advtitle == "Peace Wants Love" then
 					if not have_item("filthy corduroys") then
 						return "Agree to take his clothes"
@@ -4251,7 +4242,8 @@ endif
 		prereq = have_reagent_pastas < need_total_reagent_pastas and trailed == "dairy goat",
 		f = function()
 			-- TODO: burrito blessing if available. messed up when it's taken too long! don't craft food/equipment until this is done
-			script.go("get goat cheese for pasta", 271, make_cannonsniff_macro("dairy goat"), nil, { "Heavy Petting", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }, "fairy", 30, { olfact = "dairy goat" })
+			script.bonus_target { "item", "extraitem" }
+			script.go("get goat cheese for pasta", 271, make_cannonsniff_macro("dairy goat"), nil, {}, {}, 30, { olfact = "dairy goat" })
 		end,
 	}
 
@@ -4428,7 +4420,7 @@ endif
 			message = "get hippy outfit",
 			bonus_target = { "noncombat" },
 			action = function()
-				script.go("get hippy outfit", 26, macro_autoattack, {}, {}, "auto", 15, { choice_function = function(advtitle, choicenum)
+				script.go("get hippy outfit", 26, macro_autoattack, {}, {}, {}, 15, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Peace Wants Love" then
 						if not have_item("filthy corduroys") then
 							return "Agree to take his clothes"
@@ -4490,14 +4482,15 @@ endif
 						did_action = true
 					end
 				else
-					script.go("get enchanted bean", 33, macro_autoattack, nil, { "Leash of Linguini" }, "Slimeling", 5)
+					script.bonus_target { "item", "extraitem" }
+					script.go("get enchanted bean", 33, macro_autoattack, nil, {}, {}, 5)
 				end
 				return result, resulturl, did_action
 			end
-			script.bonus_target { "noncombat", "extranoncombat", "item" }
+			script.bonus_target { "noncombat", "extranoncombat", "item", "stinky_damage" }
 
 			if not have_item("S.O.C.K.") then
-				script.go("do airship", 81, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Ur-Kel's Aria of Annoyance", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "fairy", 35, { choice_function = function(advtitle, choicenum)
+				script.go("do airship", 81, macro_noodlecannon, {}, { "Ur-Kel's Aria of Annoyance" }, {}, 35, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Random Lack of an Encounter" then
 						if not have_item("model airship") then
 							return "Gallivant down to the head"
@@ -4533,7 +4526,8 @@ endif
 			if have_item("BitterSweetTarts") and not have_buff("Full of Wist") then
 				use_item("BitterSweetTarts")
 			end
-			script.go("do hits astronomers", 83, make_cannonsniff_macro("Astronomer"), nil, { "Spirit of Peppermint", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 60, { olfact = "Astronomer" })
+			script.bonus_target { "item", "extraitem", "cold_damage" }
+			script.go("do hits astronomers", 83, make_cannonsniff_macro("Astronomer"), nil, {}, {}, 60, { olfact = "Astronomer" })
 		end,
 	}
 
@@ -4590,49 +4584,6 @@ endif
 					pull_in_softcore("jar of psychoses (The Crackpot Mystic)")
 					did_action = have_item("jar of psychoses (The Crackpot Mystic)")
 				else
-					did_action = true
-				end
-			end
-		}
-	}
-
-	add_task {
-		when = ascensionstatus("Softcore") and
-			not ascensionpath("Bees Hate You") and
-			not cached_stuff.tried_pulling_large_box and
-			level() >= 10 and
-			turnsthisrun() >= 300 and
-			real_DD_keys >= 2 and
-			can_ensure_clover(),
-		task = {
-			message = "considering pulling large box",
-			nobuffing = true,
-			action = function()
-				cached_stuff.tried_pulling_large_box = true
-				local want = true
-				local dodstatus = get_dod_potion_status()
-				if next(dodstatus) then
-					want = false
-				end
-				for _, x in ipairs(dod_potion_types) do
-					if have_item(x) then
-						want = false
-					end
-				end
-				if have_item("small box") or have_item("large box") or have_item("blessed large box") then
-					want = false
-				end
-				if want and (pullsleft() or 0) >= 5 and ensure_clover() then
-					pull_in_softcore("large box")
-					meatpaste_items("large box", "ten-leaf clover")
-					use_item("blessed large box")
-					for _, x in ipairs(dod_potion_types) do
-						if have_item(x) then
-							did_action = true
-						end
-					end
-				else
-					print("  skipping attempt")
 					did_action = true
 				end
 			end
@@ -4721,12 +4672,12 @@ endif
 		f = function()
 			-- TODO: get what's needed from hippy store first
 			use_dancecard()
-			script.bonus_target { "noncombat" }
+			script.bonus_target { "noncombat", "item", "sleaze_damage" }
 			script.go("start war", 131, macro_noodlecannon, {
 				["Bait and Switch"] = "Wake the cadet up and fight him",
 				["Blockin' Out the Scenery"] = "The Lookout Tower",
 				["The Thin Tie-Dyed Line"] = "The Rations Yurt",
-			}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 30, { equipment = { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" } })
+			}, {}, {}, 30, { equipment = { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" } })
 			if get_result():match("Begun, this frat war has.") then
 				did_action = true
 			end
@@ -4945,8 +4896,8 @@ endif
 				if have_item("plus sign") and meat() < 1000 then
 					stop "Need 1k meat for oracle"
 				end
-				script.bonus_target { "noncombat" }
-				script.go("do > sign", 226, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic" }, "Slimeling", 25, { choice_function = function(advtitle, choicenum)
+				script.bonus_target { "noncombat", "item", "stinky_damage" }
+				script.go("do > sign", 226, macro_noodlecannon, {}, {}, {}, 25, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Typographical Clutter" then
 						if not have_item("plus sign") then
 							return "The big apostrophe"
@@ -5782,11 +5733,11 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 				nochecked = ""
 			end
 			if y.default_yes then
-				table.insert(setting_buttons, string.format([[%s: <input type="radio" name="%s" value="yes"%s>%s]], x, x, yeschecked, y.yes))
-				table.insert(setting_buttons, string.format([[| %s<input type="radio" name="%s" value="no"%s><br>]], y.no, x, nochecked))
+				table.insert(setting_buttons, string.format([[<tr><td>%s: </td><td><input type="radio" name="%s" value="yes"%s>%s</td>]], x, x, yeschecked, y.yes))
+				table.insert(setting_buttons, string.format([[<td><input type="radio" name="%s" value="no"%s>%s</td></tr>]], x, nochecked, y.no))
 			else
-				table.insert(setting_buttons, string.format([[%s: <input type="radio" name="%s" value="no"%s>%s]], x, x, nochecked, y.no))
-				table.insert(setting_buttons, string.format([[| %s<input type="radio" name="%s" value="yes"%s><br>]], y.yes, x, yeschecked))
+				table.insert(setting_buttons, string.format([[<tr><td>%s: </td><td><input type="radio" name="%s" value="no"%s>%s</td>]], x, x, nochecked, y.no))
+				table.insert(setting_buttons, string.format([[<td><input type="radio" name="%s" value="yes"%s>%s</td></tr]], x, yeschecked, y.yes))
 			end
 		end
 	end
@@ -5799,8 +5750,16 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 <input type="hidden" name="pwd" value="]]..session.pwd..[[">
 <input type="hidden" name="confirm" value="yes">
 <input type="hidden" name="automation-script" value="setup-ascension-automation">
+<style type="text/css">
+.tftable {font-size:12px;width:100%;border-width: 1px;border-color: black;border-collapse: collapse;caption-side: bottom}
+.tftable td {font-size:12px;border-width: 1px;padding: 8px;border-style: solid;border-color: black;}
+table.tftable tr:hover td {border-style: solid;border-width: 3px;border-color: green}
+</style>
+
+<table class="tftable" border="1">
+<caption><input type="submit"></caption>
 ]] .. table.concat(setting_buttons, "\n") .. [[
-<input type="submit">
+</table>
 </form>
 </body>
 </html>]]
