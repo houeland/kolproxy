@@ -176,6 +176,13 @@ local function using_moxie_weapon()
 	return itemdata.attack_state == "Moxie" or have_equipped_item("Frankly Mr. Shank")
 end
 
+local function using_muscle_weapon()
+	if not equipment().weapon then return false end
+	local itemdata = maybe_get_itemdata(equipment().weapon)
+	if not itemdata then return false end
+	return itemdata.attack_state ~= "Moxie"
+end
+
 function macro_sneaky_pete_action()
 	local weapondata = equipment().weapon and maybe_get_itemdata(equipment().weapon)
 	if weapondata and weapondata.attack_stat == "Muscle" then
@@ -231,24 +238,29 @@ local function can_kill_with_attack()
 	return not have_buff("QWOPped Up")
 end
 
-local function can_easily_attack_with_moxie_weapon()
+local function can_easily_attack_with_weapon()
+	if not can_kill_with_attack() then return false end
 	local cfm = getCurrentFightMonster()
-	if can_kill_with_attack() and using_moxie_weapon() and cfm and cfm.Stats and cfm.Stats.Atk and cfm.Stats.Atk - buffedmoxie() >= 25 then
-		if cfm.Stats.physicalresistpercent and tonumber(cfm.Stats.physicalresistpercent) and tonumber(cfm.Stats.Phys) > 40 then
-			return false
-		else
-			return true
-		end
+	if not (cfm and cfm.Stats and cfm.Stats.Atk) then return false end
+	if cfm.Stats.physicalresistpercent and tonumber(cfm.Stats.physicalresistpercent) and tonumber(cfm.Stats.Phys) > 40 then return false end
+	if using_moxie_weapon() and buffedmoxie() - cfm.Stats.Atk >= 25 then
+		return true
+	elseif using_muscle_weapon() and buffedmuscle() - cfm.Stats.Atk >= 25 and buffedmoxie() - cfm.Stats.Atk >= -25 then
+		return true
+	else
+		return false
 	end
 end
 
 function cannon_action()
 	if can_kill_with_attack() and have_skill("Crab Claw Technique") and using_accordion() and not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } then
 		return attack_action()
-	elseif not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } and can_easily_attack_with_moxie_weapon() then
+	elseif not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } and can_easily_attack_with_weapon() then
 		return attack_action()
 	elseif ascensionpath("Avatar of Sneaky Pete") then
 		return macro_sneaky_pete_action()
+	elseif mp() <= 20 and can_easily_attack_with_weapon() then
+		return attack_action()
 	end
 	return macro_cast_skill { pastathrall() and "Cannelloni Cannon" or "???", "Saucestorm", "Cannelloni Cannon", "Bawdy Refrain", fury() >= 1 and "Furious Wallop" or "???", "Saucegeyser", "Kneebutt", "Toss", "Clobber", "Ravioli Shurikens" }
 end
@@ -277,7 +289,7 @@ function serpent_action()
 		return macro_sneaky_pete_action()
 	end
 	local skill_list = { "Stringozzi Serpent", "Saucegeyser", "Weapon of the Pastalord", "Saucestorm", "Cannelloni Cannon", "Cone of Zydeco", fury() >= 1 and "Furious Wallop" or "???", "Kneebutt" }
-	if not maybe_macro_cast_skill(skill_list) and can_easily_attack_with_moxie_weapon() then
+	if not maybe_macro_cast_skill(skill_list) and can_easily_attack_with_weapon() then
 		return attack_action()
 	end
 	return macro_cast_skill(skill_list)
@@ -459,7 +471,7 @@ endif
 end
 
 function stasis_action()
-	if classid() == 5 then
+	if playerclass("Disco Bandit") then
 		return [[
 
 	cast Suckerpunch
@@ -1861,11 +1873,18 @@ function macro_kill_monster(pt)
 	local monster_damage = estimate_current_monster_fight_damage(cfm, bonuses)
 	local physically_resistant = tonumber(cfm.Stats.physicalresistpercent) and tonumber(cfm.Stats.physicalresistpercent) >= 67
 	macro_kill_monster_text = pt
-	local use_crumbs = ""
+
+	local use_initial_tbl = {}
 	if have_equipped_item("Pantsgiving") then
-		use_crumbs = "cast Pocket Crumbs"
+		table.insert(use_initial_tbl, "cast Pocket Crumbs")
 	end
-	local use_raindoh_flyers = ""
+	if (cfm.Stats.stunresistpercent or 0) <= 20 then
+		table.insert(use_initial_tbl, [[
+if hasskill Summon Love Gnats
+	cast Summon Love Gnats
+endif]])
+	end
+
 	local raindoh_flyers_list = {}
 	if macro_target.itemcopy and macro_target.itemcopy[monstername()] and have_item("Rain-Doh black box") then
 		table.insert(raindoh_flyers_list, "Rain-Doh black box")
@@ -1880,37 +1899,44 @@ function macro_kill_monster(pt)
 		table.insert(raindoh_flyers_list, "Rain-Doh blue balls")
 	end
 	if have_skill("Ambidextrous Funkslinging") and raindoh_flyers_list[2] then
-		use_raindoh_flyers = string.format("use %s, %s", raindoh_flyers_list[1], raindoh_flyers_list[2])
+		table.insert(use_initial_tbl, string.format("use %s, %s", raindoh_flyers_list[1], raindoh_flyers_list[2]))
 	elseif raindoh_flyers_list[1] then
-		use_raindoh_flyers = string.format("use %s", raindoh_flyers_list[1])
+		table.insert(use_initial_tbl, string.format("use %s", raindoh_flyers_list[1]))
 	end
 
-	local use_other = ""
 	if macro_target.familiarcopy and macro_target.familiarcopy[monstername()] and familiar("Reanimated Reanimator") then
-		use_other = [[
-
+		table.insert(use_initial_tbl, [[
 if hasskill Wink at
 	cast Wink at
-endif
+endif]])
+	end
 
-]]
+	if (cfm.Stats.stunresistpercent or 0) <= 20 then
+		table.insert(use_initial_tbl, [[
+if hasskill Summon Love Stinkbug
+	cast Summon Love Stinkbug
+endif]])
+	end
+
+	if not cfm.Stats.staggerimmune then
+		table.insert(use_initial_tbl, [[
+if hasskill Summon Love Mosquito
+	cast Summon Love Mosquito
+endif]])
 	end
 
 	if have_equipped_item("Thor's Pliers") and not cfm.Stats.staggerimmune then
-		use_other = use_other .. [[
-
-cast Ply Reality
-
-]]
+		table.insert(use_initial_tbl, "cast Ply Reality")
 	end
 
 	if have_equipped_item("Pantsgiving") and not cfm.Stats.staggerimmune then
-		use_other = use_other .. [[
-
-cast Air Dirty Laundry
-
-]]
+		table.insert(use_initial_tbl, "cast Air Dirty Laundry")
 	end
+
+	use_initial_stuff = table.concat(use_initial_tbl, [[
+
+
+]])
 
 	print_ascensiondebug("macro_kill", monstername(), script_want_2_day_SCHR(), playerclass("Seal Clubber"), not pt:contains("Procrastination Giant"), using_club(), not physically_resistant, use_crumbs, use_raindoh_flyers)
 
@@ -1924,11 +1950,7 @@ if hasskill Thunderstrike
 	cast Thunderstrike
 endif
 
-]] .. use_crumbs .. [[
-
-]] .. use_raindoh_flyers .. [[
-
-]] .. use_other .. [[
+]] .. use_initial_stuff .. [[
 
 cast Saucestorm
 cast Saucestorm
@@ -1960,11 +1982,7 @@ if hasskill Thunderstrike
 	cast Thunderstrike
 endif
 
-]] .. use_crumbs .. [[
-
-]] .. use_raindoh_flyers .. [[
-
-]] .. use_other .. [[
+]] .. use_initial_stuff .. [[
 
 cast Lunging Thrust-Smack
 cast Lunging Thrust-Smack
@@ -2019,20 +2037,12 @@ cast Lunging Thrust-Smack
 			return [[abort heavy rains boss]]
 		end
 	elseif have_skill("Lightning Strike") and heavyrains_lightning() >= 25 and not cfm.Stats.boss then
-		return use_crumbs .. [[
-
-]] .. use_raindoh_flyers .. [[
-
-]] .. use_other .. [[
+		return use_initial_stuff .. [[
 
 cast Lightning Strike
 ]]
 	elseif script_want_2_day_SCHR() and playerclass("Seal Clubber") and not pt:contains("Procrastination Giant") and (using_club() or equipment().weapon == get_itemid("Thor's Pliers")) and not physically_resistant and have_skill("Lunging Thrust-Smack") then
-		return use_crumbs .. [[
-
-]] .. use_raindoh_flyers .. [[
-
-]] .. use_other .. [[
+		return use_initial_stuff .. [[
 
 cast lunging thrust-smack
 cast lunging thrust-smack
@@ -2060,11 +2070,7 @@ if (monstername sabre-toothed goat) || (monstername slick lihc) || (monstername 
 	endif
 endif
 
-]] .. use_crumbs .. [[
-
-]] .. use_raindoh_flyers .. [[
-
-]] .. use_other .. [[
+]] .. use_initial_stuff .. [[
 
 cast Saucegeyser
 cast Saucegeyser
@@ -2104,11 +2110,7 @@ if (monstername sabre-toothed goat) || (monstername slick lihc) || (monstername 
 	endif
 endif
 
-]] .. use_crumbs .. [[
-
-]] .. use_raindoh_flyers .. [[
-
-]] .. use_other .. [[
+]] .. use_initial_stuff .. [[
 
 cast Saucestorm
 cast Saucestorm
@@ -2124,8 +2126,30 @@ cast Saucestorm
 cast Saucestorm
 ]]
 	elseif physically_resistant then
-		return macro_noodlecannon_raw
+		return [[
+]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
+
+]] .. use_initial_stuff .. [[
+
+]] .. conditional_salve_action() .. [[
+
+while !times 11
+
+]] .. cannon_action() .. [[
+
+endwhile]]
 	else
-		return macro_noodleserpent_raw
+		return [[
+]] .. COMMON_MACROSTUFF_START(20, 40) .. [[
+
+]] .. use_initial_stuff .. [[
+
+]] .. conditional_salve_action() .. [[
+
+while !times 7
+
+]] .. serpent_action() .. [[
+
+endwhile]]
 	end
 end

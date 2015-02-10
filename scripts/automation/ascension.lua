@@ -452,6 +452,7 @@ endif
 		cached_stuff.gotten_guild_challenge = true
 	end
 
+	cached_stuff.currently_checked.kgs_available = cached_stuff.currently_checked.kgs_available or cached_stuff.remember_kgs_available
 	if cached_stuff.currently_checked.kgs_available == nil then
 		cached_stuff.currently_checked.kgs_available = check_buying_from_knob_dispensary()
 	end
@@ -601,7 +602,7 @@ endif
 		DD_keys = 100
 	end
 
-	mmj_available = cached_stuff.mox_guild_is_open and (classid() == 3 or classid() == 4 or (classid() == 6 and level() >= 9)) -- TODO: fix
+	mmj_available = cached_stuff.mox_guild_is_open and (playerclass("Pastamancer") or playerclass("Sauceror") or (playerclass("Accordion Thief") and level() >= 9)) -- TODO: fix
 
 	reset_macro_target()
 	script.bonus_target {}
@@ -3189,6 +3190,8 @@ endif
 			after_action = function()
 				cached_stuff.currently_checked.kgs_available = nil
 				did_action = get_result():contains("FARQUAR")
+				cached_stuff.currently_checked.kgs_available = true -- DEBUG HACK REMOVE ME!
+				cached_stuff.remember_kgs_available = true -- DEBUG HACK REMOVE ME!
 			end
 		}
 	}

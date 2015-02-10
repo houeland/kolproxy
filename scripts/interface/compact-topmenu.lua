@@ -188,6 +188,7 @@ add_processor("/multiuse.php", function()
 	stack_mrulist_command(desc, params)
 end)
 
+-- TODO: convert to shop.php(?)
 add_processor("/store.php", function()
 	if not setting_enabled("enable most-recently-used list") then return end
 	if params and params.whichitem then
@@ -243,7 +244,7 @@ html, body {
 
 			<div class='abc'><span class='title'><a target='mainpane' href='town.php'>town</a> <a target='mainpane' href='town_wrong.php'>tra</a><span class="sep"></span><a target='mainpane' href='town_right.php'>cks</a></span><br><a target='mainpane' href=']]..museum_href { pwd = session.pwd }..[['>boa</a><span class="sep"></span><a target='mainpane' href='museum.php?floor=1&place=leaderboards&whichboard=999'>rds</a> <a target='mainpane' href='guild.php'>guild</a> <br><a target='mainpane' href='manor.php'>ma</a><span class="sep"></span><a target='mainpane' href='manor2.php'>no</a><span class="sep"></span><a target='mainpane' href='manor3.php'>r</a> <a target='mainpane' href='galaktik.php'>doc</a></div>
 
-			<div class='abc a'><span class='title'><a target='mainpane' href='council.php'>council</a> </span><br><a target='mainpane' href='mrstore.php'>mr</a> <a target='mainpane' href='store.php?whichstore=m'>store</a><br><a target='mainpane' href='storage.php?which=5'>hagnk]] .. hagnk_pulls .. [[</a></div>
+			<div class='abc a'><span class='title'><a target='mainpane' href='council.php'>council</a> </span><br><a target='mainpane' href='mrstore.php'>mr</a> <a target='mainpane' href='shop.php?whichshop=generalstore'>store</a><br><a target='mainpane' href='storage.php?which=5'>hagnk]] .. hagnk_pulls .. [[</a></div>
 
 			<div class='abc'><span class='title'><a target='mainpane' href='place.php?whichplace=plains'>plains</a> </span><br><a target='mainpane' href='cobbsknob.php'>kn</a><span class="sep"></span><a target='mainpane' href='cobbsknob.php?action=tolabs'>ob</a> <a target='mainpane' href='bathole.php'>bat</a><br><a target='mainpane' href='crypt.php'>cyr</a> <a target='mainpane' href='place.php?whichplace=beanstalk'>sta</a><span class="sep"></span><a target='mainpane' href='place.php?whichplace=giantcastle'>lk</a></div>
 
@@ -397,7 +398,7 @@ $("#mrulist").change(function() {
   <div class='abc'>
     <span class='title'><a target='mainpane' href='council.php'>council</a> <a target='mainpane' href='peevpee.php'>pvp</a></span>
     <div class='child'>
-      <a target='mainpane' href='mrstore.php'>mr</a> <a target='mainpane' href='store.php?whichstore=m'>store</a><br>
+      <a target='mainpane' href='mrstore.php'>mr</a> <a target='mainpane' href='shop.php?whichshop=generalstore'>store</a><br>
       <a target='mainpane' href='place.php?whichplace=forestvillage&action=fv_friar'>florist</a>
       <a target='mainpane' href='bhh.php'>bhh</a>
       <a target='mainpane' href='campground.php?action=telescopelow'>scope</a>

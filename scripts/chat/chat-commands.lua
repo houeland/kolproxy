@@ -136,7 +136,7 @@ local function match_item(line)
 	return item
 end
 
-local function match_amount_and_item(line)
+local function parse_name_and_amount(line)
 	local amount, pattern = line:match("^%s*(%d+)%s+(.*)$")
 	if not amount then
 		pattern = line:match("^%s*%*%s+(.*)$")
@@ -148,6 +148,11 @@ local function match_amount_and_item(line)
 		amount = 1
 		pattern = line
 	end
+	return pattern:gsub("^%s*", ""), amount
+end
+
+local function match_amount_and_item(line)
+	local pattern, amount = parse_name_and_amount(line)
 	item, err = match_item(pattern)
 	if not item then
 		return item, err
@@ -192,3 +197,59 @@ end)
 
 add_chat_alias("/maximize", "/maximizer")
 add_chat_alias("/max", "/maximizer")
+
+function fuzzy_matching_results(input, options)
+	input = input:lower()
+	local exact = {}
+	local atstart_or_acronymed = {}
+	local substring = {}
+	for _, o in pairs(options) do
+		local find_pos = o:lower():find(input)
+		local o_acronym = o:lower():gsub("[%s]*([^%s])[^%s]*", "%1")
+		if input == o then
+			table.insert(exact, o)
+		elseif find_pos == 1 then
+			table.insert(atstart_or_acronymed, o)
+		elseif input == o_acronym then
+			table.insert(atstart_or_acronymed, o)
+		elseif find_pos then
+			table.insert(substring, o)
+		end
+	end
+	local function check_unique(tbl)
+		if not tbl[2] then
+			return tbl[1]
+		else
+			return nil, tbl
+		end
+	end
+	if exact[1] then
+		return exact[1]
+	elseif atstart_or_acronymed[1] then
+		return check_unique(atstart_or_acronymed)
+	elseif substring[1] then
+		return check_unique(substring)
+	else
+		return nil, nil
+	end
+end
+
+add_chat_command("/kpbuy", "Trying...", function(line)
+	local pattern, amount = parse_name_and_amount(line)
+
+	local possible = {}
+	for _, i in pairs(datafile("stores")) do
+		for n, _ in pairs(i) do
+			table.insert(possible, n)
+		end
+	end
+
+	local chosen, options = fuzzy_matching_results(pattern, possible)
+	if chosen then
+		return buy_item(chosen, amount)()
+	elseif options then
+		return usage_error("Too many matches found, be more specific: " .. table.concat(options, ", "))
+	else
+		return usage_error("Hmmm, not sure what you're trying to buy.")
+	end
+end)

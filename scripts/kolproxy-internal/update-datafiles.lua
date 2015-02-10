@@ -268,6 +268,7 @@ function parse_buffs()
 			if not processed_datafiles["skills"][castname] then
 				for x, y in pairs(processed_datafiles["skills"]) do
 					if x:lower() == castname:lower() then
+						softwarn("statuseffects:", castname, "should be", x)
 						castname = x
 					end
 				end
@@ -557,10 +558,17 @@ function parse_items()
 	local fixed_items = {}
 
 	for x, y in pairs(items) do
-		fixed_items[x:gsub([["]], [[&quot;]])] = y
+		fixed_name = x:gsub([["]], [[&quot;]])
+		if x ~= fixed_name then
+			softwarn("statuseffects:item", x, "should be", fixed_name)
+		end
+		fixed_items[fixed_name] = y
 	end
 
-	fixed_items["stolen accordion"].song_duration = 5 -- HACK: datafile is broken
+	if fixed_items["stolen accordion"].song_duration ~= 5 then
+		softwarn("statuseffects:stolen accordion should have song duration 5")
+		fixed_items["stolen accordion"].song_duration = 5 -- HACK: datafile is broken
+	end
 
 	return fixed_items
 end
@@ -1110,7 +1118,7 @@ function parse_zones()
 		local tbl = split_tabbed_line(l)
 		local zoneurl, attributes, name = tbl[2], tbl[3], tbl[4]
 		if zoneurl and name then
-			zones[name] = { 
+			zones[name] = {
 				zoneid = tonumber(zoneurl:match("adventure=([0-9]*)")),
 				stat = tonumber(attributes:match("Stat:%s(%w+)")),
 				terrain = attributes:match("Env:%s(%w+)"),
@@ -1165,6 +1173,37 @@ function verify_zones(data)
 	return verify_data_fits(correct_data, data)
 end
 
+function parse_stores()
+	local stores = {}
+	for l in io.lines("cache/files/npcstores.txt") do
+		l = remove_line_junk(l)
+		local tbl = split_tabbed_line(l)
+		local _storename, whichshop, itemname = tbl[1], tbl[2], tbl[3]
+		-- Store names are currently just inconsistent nonsense in the datafiles
+		if whichshop and itemname then
+			stores[whichshop] = stores[whichshop] or {}
+			stores[whichshop][itemname] = true
+		end
+	end
+	return stores
+end
+
+function verify_stores(data)
+	for a, b in pairs(data) do
+		for x, _ in pairs(b) do
+			if not processed_datafiles["items"][x] then
+				hardwarn("stores:unknown item", x, a)
+				b[x] = nil
+			end
+		end
+	end
+	local correct_data = {
+		["generalstore"] = { ["fortune cookie"] = true, ["Ben-Gal&trade; Balm"] = true },
+		["gnoll"] = { ["empty meat tank"] = true },
+	}
+	return verify_data_fits(correct_data, data)
+end
+
 function parse_choice_spoilers()
 	local jsonlines = {}
 	local found_adv_options = false
@@ -1203,48 +1242,43 @@ function verify_choice_spoilers(data)
 	end
 end
 
-function process(datafile_list)
-	for _, datafile in ipairs(datafile_list) do
-		local filename = datafile:gsub(" ", "-")
-		local loadf = _G["parse_"..datafile:gsub(" ", "_")]
-		local verifyf = _G["verify_"..datafile:gsub(" ", "_")]
-		local dataok, data = pcall(loadf)
-		if dataok then
-			local verifyok, verified = pcall(verifyf, data)
-			if verifyok and verified then
-				local json = tojson(verified)
-				local fobj = io.open("cache/data/" .. filename .. ".json", "w")
-				fobj:write(json)
-				fobj:close()
-				processed_datafiles[datafile] = verified
-			else
-				error_count_hard = error_count_hard + 1
-				print("WARNING: verifying " .. tostring(filename) .. " data file failed (" .. tostring(verified) .. ").")
-			end
+function process(filename, loadf, verifyf)
+	local dataok, data = pcall(loadf)
+	if dataok then
+		local verifyok, verified = pcall(verifyf, data)
+		if verifyok and verified then
+			local json = tojson(verified)
+			local fobj = io.open("cache/data/" .. filename .. ".json", "w")
+			fobj:write(json)
+			fobj:close()
+			processed_datafiles[filename] = verified
 		else
-			error_count_critical = error_count_critical + 1
-			print("ERROR: parsing " .. tostring(filename) .. " data file failed (" .. tostring(data) .. ").")
+			error_count_hard = error_count_hard + 1
+			print("WARNING: verifying " .. tostring(filename) .. " data file failed (" .. tostring(verified) .. ").")
 		end
+	else
+		error_count_critical = error_count_critical + 1
+		print("ERROR: parsing " .. tostring(filename) .. " data file failed (" .. tostring(data) .. ").")
 	end
 end
 
-process {
-	"choice spoilers",
-	"skills",
-	"buffs",
-	"passives",
-	"items",
-	"outfits",
-	"hatrack",
-	"recipes",
-	"familiars",
-	"enthroned familiars", -- TODO: merge with familiars
-	"monsters",
-	"faxbot monsters",
-	"semirares",
-	"mallprices",
-	"consumables",
-	"zones",
-}
+process("choice-spoilers", parse_choice_spoilers, verify_choice_spoilers)
+process("skills", parse_skills, verify_skills)
+process("buffs", parse_buffs, verify_buffs)
+process("passives", parse_passives, verify_passives)
+process("items", parse_items, verify_items)
+process("outfits", parse_outfits, verify_outfits)
+process("hatrack", parse_hatrack, verify_hatrack)
+process("recipes", parse_recipes, verify_recipes)
+process("familiars", parse_familiars, verify_familiars)
+process("enthroned-familiars", parse_enthroned_familiars, verify_enthroned_familiars) -- TODO: merge with familiars
+process("monsters", parse_monsters, verify_monsters)
+process("faxbot-monsters", parse_faxbot_monsters, verify_faxbot_monsters)
+process("semirares", parse_semirares, verify_semirares)
+process("mallprices", parse_mallprices, verify_mallprices)
+process("consumables", parse_consumables, verify_consumables)
+process("zones", parse_zones, verify_zones)
+process("stores", parse_stores, verify_stores)
+
 
 print(string.format("INFO: %d errors, %d warnings displayed, %d notices ignored (expected with current data files: 0 errors, 0 warnings displayed, and fewer than 1000 notices ignored)", error_count_critical, error_count_hard, error_count_soft))

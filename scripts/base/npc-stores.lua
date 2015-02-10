@@ -13,6 +13,13 @@ function buy_itemname(name, input_amount)
 			return async_get_page(urlpath, urlparams)
 		end
 	end
+	-- DEBUG WORKAROUND WHILE KOL IS BROKEN --
+	for whichshop, items in pairs(datafile("stores")) do
+		if items[name] then
+			return raw_shop_buy_item({ [name] = amount }, whichshop)[1]
+		end
+	end
+	-- DEBUG WORKAROUND WHILE KOL IS BROKEN --
 	return function() return [[{ /buy ]] .. amount .. " " .. name .. [[ failed. }]] end
 end
 
@@ -51,9 +58,11 @@ function check_buying_from_knob_dispensary()
 	local pt = get_page("/submitnewchat.php", { graf = "/buy knob goblin seltzer", pwd = session.pwd })
 	if pt:contains("Knob Goblin seltzer") then
 		return true
-	elseif pt:contains("not sure") then
-		return false
+--	elseif pt:contains("not sure") then
+--		return false
 	end
+	pt = get_page("/shop.php", { whichshop = "knobdisp" })
+	return not pt:contains("Can't get here yet")
 end
 
 function shop_scan_item_rows(whichshop)
@@ -82,7 +91,7 @@ local function shop_buy_many_items(itemlist, whichshop)
 			print("  itemrows:", itemrows)
 			print("WARNING: couldn't find row for item", x)
 		end
-		table.insert(ptfs, async_post_page("/shop.php", { pwd = session.pwd, whichshop = whichshop, action = "buyitem", whichrow = itemrows[x], quantity = y }))
+		table.insert(ptfs, async_post_page("/shop.php", { pwd = session.pwd, whichshop = whichshop, action = "buyitem", whichrow = itemrows[x], quantity = y, ajax = 1 }))
 	end
 	return ptfs
 end

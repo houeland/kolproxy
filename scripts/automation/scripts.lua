@@ -768,7 +768,8 @@ function get_automation_scripts(cached_stuff)
 					return f.ensure_mp(amount, true)
 				end
 			end
-			if session["__script.used all free rests"] ~= "yes" and not ascensionpath("Avatar of Jarlsberg") then
+			local have_chateau = true -- TODO: check
+			if not have_chateau and session["__script.used all free rests"] ~= "yes" then
 				local camppt = get_page("/campground.php")
 				local restlink = camppt:match([[<a href="campground.php%?action=rest">.-</a>]])
 				if restlink:contains("free.gif") then
@@ -784,14 +785,14 @@ function get_automation_scripts(cached_stuff)
 					session["__script.used all free rests"] = "yes"
 					return f.ensure_mp(amount, true)
 				end
-			elseif (classid() == 3 or classid() == 4) and (session["__script.opened myst guild store"] == "yes" or level() >= 8) and challenge ~= "fist" and not have_item("magical mystery juice") then
+			elseif (playerclass("Pastamancer") or playerclass("Sauceror")) and (session["__script.opened myst guild store"] == "yes" or level() >= 8) and challenge ~= "fist" and not have_item("magical mystery juice") then
 				store_buy_item("magical mystery juice", "2")
 				if have_item("magical mystery juice") then
 					return f.ensure_mp(amount, true)
 				else
 					critical "Failed to buy MMJ as myst"
 				end
-			elseif classid() == 6 and level() >= 9 and challenge ~= "fist" and not have_item("magical mystery juice") then
+			elseif playerclass("Accordion Thief") and level() >= 9 and challenge ~= "fist" and not have_item("magical mystery juice") then
 				store_buy_item("magical mystery juice", "2")
 				if have_item("magical mystery juice") then
 					return f.ensure_mp(amount, true)
@@ -4925,7 +4926,7 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 			print("ERROR: option " .. tostring(optname) .. " not found for " .. tostring(adventure_title) .. ".")
 		end
 		if not pickchoice then
-			local possiblities = {}
+			local possibilities = {}
 			for nr in pt:gmatch([[<input type=hidden name=option value=([0-9])>]]) do
 				table.insert(possibilities, tonumber(nr))
 			end

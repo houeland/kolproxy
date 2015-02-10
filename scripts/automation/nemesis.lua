@@ -211,31 +211,26 @@ setup_turnplaying_script {
 			refresh_quest()
 			advagain = not quest_text("found a map to the secret tropical island")
 		elseif quest_text("put a stop to this Nemesis nonsense") or (quest("Me and My Nemesis") and have_item("secret tropical island volcano lair map")) then
-			if classid() == 1 then -- seal clubber
+			if playerclass("Seal Clubber") then
 				stop "TODO: Automate seal clubber island"
-			elseif classid() == 2 then -- turtle tamer
+			elseif playerclass("Turtle Tamer") then
 				automate_TT_nemesis_island()
-			elseif classid() == 3 then -- pastamancer
+			elseif playerclass("Pastamancer") then
 				if not have_item("encoded cult documents") then
 					get_page("/volcanoisland.php", { pwd = session.pwd, action = "npc" })
 				end
 				stop "TODO: Automate pastamancer island"
--- "proxy:/volcanoisland.php?pwd=a412cd1e0a0d040806269162e564fcb1&action=tuba"  Nothing (get info)
--- "proxy:/volcanoisland.php?pwd=a412cd1e0a0d040806269162e564fcb1&action=tuba"  Nothing
--- "proxy:/adventure.php?snarfblat=217"
--- collect 5 cult memo, use "cult memo"
--- use "decoded cult documents"
--- use spirit in volcano combat until ...
--- equip accessory "spaghetti cult robe"
--- "proxy:/volcanoisland.php?pwd=a412cd1e0a0d040806269162e564fcb1&action=tniat"  Nothing
--- "proxy:/adventure.php?snarfblat=221"
--- repeat until... boss fight, Angelhair Culottes
--- equip weapon Greek Pasta of Peril
--- "proxy:/volcanoisland.php?pwd=a412cd1e0a0d040806269162e564fcb1&action=tniat"  Nothing
--- "proxy:/volcanomaze.php?"  Nothing
-			elseif playerclass("Sauceror") then -- sauceror
+				-- farm and use 5 "cult memo" if don't have skill, use "decoded cult documents"
+				-- cast thrall
+				-- use fatten-item if available
+				-- fight until heavy if not
+				-- fight with heavy thrall
+				-- equip "spaghetti cult robe", go to lair
+				-- equip "Greek Pasta of Peril", do lair and maze
+				-- kill boss, cast noodles a lot
+			elseif playerclass("Sauceror") then
 				automate_S_nemesis_island()
-			elseif classid() == 5 then -- disco bandit
+			elseif playerclass("Disco Bandit") then
 				automate_DB_nemesis_island()
 				result, resulturl = text, url
 			elseif playerclass("Accordion Thief") then

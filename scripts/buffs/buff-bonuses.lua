@@ -1,4 +1,5 @@
 function parse_buff_bonuses(buffname)
+	if not kolproxycore_async_submit_page then return end
 	local descid = nil
 	for a, b in pairs(status().effects) do
 		if b[1] == buffname then
