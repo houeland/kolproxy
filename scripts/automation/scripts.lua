@@ -5113,3 +5113,14 @@ function fax_machine_is_too_old()
 	end
 	return too_old
 end
+
+function have_lovebugs()
+	local pt = submitnewchat("/autoattack? summon love mosquito"):gsub("<", "&lt")
+	return pt:contains("Summon Love Mosquito")
+end
+
+function have_chateau_mantegna()
+	local pt = get_page("/place.php", { whichplace = "chateau" })
+	return pt:contains("Chateau Mantegna")
+end
+

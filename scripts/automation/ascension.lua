@@ -2913,6 +2913,8 @@ endif
 			inform("vamping out: " .. mainstat_type())
 			vamp_out(mainstat_type())
 			did_action = true
+		elseif script.have_chateau_mantegna() then
+			stop "TODO: rest at mantegna"
 		else
 			use_dancecard()
 			return do_powerleveling_sub()
