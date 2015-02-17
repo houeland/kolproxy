@@ -2488,6 +2488,17 @@ endif
 	}
 
 	add_task {
+		when = script.semirare_within_N_turns(1) and not ascension_script_option("automate semi-rares"),
+		task = {
+			message = "possible semirare next turn",
+			nobuffing = true,
+			action = function()
+				stop "Pick up semirare manually (or enable semi-rare automation in ascension script options)"
+			end
+		}
+	}
+
+	add_task {
 		when = script.semirare_within_N_turns(1),
 		task = {
 			message = "picking up semirare",
@@ -5720,6 +5731,7 @@ local ascension_script_options_tbl = {
 	["skip library key"] = { yes = "get library key manually", no = "automate quest normally" },
 	["go for a 2-day SCHR"] = { yes = "yes I'm crazy", no = "no thanks", when = function() return ascensionpath("Heavy Rains") end },
 	["fold +ML equipment"] = { yes = "fold automatically", no = "don't automate", when = function() return not ascensionstatus("Hardcore") end, default_yes = true },
+	["automate semi-rares"] = { yes = "yes, and eat fortune cookie", no = "no, stop on semirares", default_yes = true },
 }
 
 function script_want_library_key()

@@ -2042,7 +2042,7 @@ endif
 		if space() > 0 then
 			if (space() % 6) > 0 then
 				local f = fullness()
-				if not script.know_semirare_numbers() and meat() >= 40 then
+				if not script.know_semirare_numbers() and meat() >= 40 and ascension_script_option("automate semi-rares") then
 					return eat_fortune_cookie()
 				elseif have_item("Ur-Donut") and level() < 4 then
 					inform "eat ur-donut"

@@ -1,31 +1,30 @@
 ------------------------------------------------------------------
--- This script will add some convenient links to the official   --
--- KoL wiki. Description popup windows will have the name of    --
--- whatever is being described link to the wiki (while also     --
--- closing the popup window), and monster and adventure names   --
--- will also link to the wiki.                                  --
+-- This script adds some convenient links to the KoL wiki.      --
+-- Description popup windows link the name of whatever is being --
+-- described to the wiki (while also closing the popup window), --
+-- and monster and adventure names also link to the wiki.       --
 ------------------------------------------------------------------
 
 register_setting {
-	name = "inline wiki links",
-	description = "Enable item, monster, and adventure names linking to their page on the wiki",
+	name = "show The KoL Wiki links",
+	description = "Enable item, monster, and adventure names linking to their page on The KoL Wiki.",
 	group = "other",
-	default_level = "detailed",
+	default_level = "enthusiast",
 }
 
 local function printer_replace(pattern, substituter)
-  return function()
-    if setting_enabled("inline wiki links") then
-      text = text:gsub(pattern, substituter)
-    end
-  end
+	return function()
+		if setting_enabled("show The KoL Wiki links") then
+			text = text:gsub(pattern, substituter)
+		end
+	end
 end
 
 local function link_substitution_function(extra)
-  extra = extra or ""
-  return function(pre, name, post)
-    return pre .. [[<a href="http://kol.coldfront.net/thekolwiki/index.php/Special:Search?search=]] .. name .. [[&go=Go" target="_blank"]] .. extra .. ">" .. name .. "</a>" .. post
-  end
+	extra = extra or ""
+	return function(pre, name, post)
+		return pre .. [[<a href="http://kol.coldfront.net/thekolwiki/index.php/Special:Search?search=]] .. name .. [[&go=Go" target="_blank"]] .. extra .. ">" .. name .. "</a>" .. post
+	end
 end
 
 local link_substitution_close = link_substitution_function([[ onclick="window.close();"]])

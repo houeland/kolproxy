@@ -242,7 +242,7 @@ local function can_easily_attack_with_weapon()
 	if not can_kill_with_attack() then return false end
 	local cfm = getCurrentFightMonster()
 	if not (cfm and cfm.Stats and cfm.Stats.Atk) then return false end
-	if cfm.Stats.physicalresistpercent and tonumber(cfm.Stats.physicalresistpercent) and tonumber(cfm.Stats.Phys) > 40 then return false end
+	if cfm.Stats.physicalresistpercent and tonumber(cfm.Stats.physicalresistpercent) and tonumber(cfm.Stats.physicalresistpercent) > 40 then return false end
 	if using_moxie_weapon() and buffedmoxie() - cfm.Stats.Atk >= 25 then
 		return true
 	elseif using_muscle_weapon() and buffedmuscle() - cfm.Stats.Atk >= 25 and buffedmoxie() - cfm.Stats.Atk >= -25 then
