@@ -59,6 +59,10 @@ local drop_familiars = {
 		short_item_name = "ashes",
 		plural = true,
 	},
+	goldmonkey = {
+		message = "dislodging some golden dandruff",
+		short_item_name = "gold",
+	},
 }
 
 local function counter_name(familiar, info)
