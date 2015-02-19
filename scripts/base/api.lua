@@ -57,22 +57,24 @@ function setup_functions()
 		end
 
 		local player_classid_names = {
-			"Seal Clubber",
-			"Turtle Tamer",
-			"Pastamancer",
-			"Sauceror",
-			"Disco Bandit",
-			"Accordion Thief",
-			nil, nil, nil, nil,
-			"Avatar of Boris",
-			"Zombie Master",
-			nil,
-			"Avatar of Jarlsberg",
-			"Avatar of Sneaky Pete",
+			"Seal Clubber", -- 1
+			"Turtle Tamer", -- 2
+			"Pastamancer", -- 3
+			"Sauceror", -- 4
+			"Disco Bandit", -- 5
+			"Accordion Thief", -- 6
+			nil, nil, nil, nil, -- 7, 8, 9, 10
+			"Avatar of Boris", -- 11
+			"Zombie Master", -- 12
+			nil, -- 13
+			"Avatar of Jarlsberg", -- 14
+			"Avatar of Sneaky Pete", -- 15
+			nil, -- 16
+			"Ed", -- 17
 		}
 		function classid() return tonumber(status().class) end
-		function playerclassname()
-			return player_classid_names[classid()] or ("{classid:" .. classid() .. "}")
+		function maybe_playerclassname()
+			return player_classid_names[classid()]
 		end
 		function playerclass(check)
 			for i = 1, 100 do

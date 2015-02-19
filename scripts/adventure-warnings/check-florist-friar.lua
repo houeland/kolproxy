@@ -84,7 +84,7 @@ add_interceptor("/adventure.php", function()
 		if setting_enabled("automate florist friar planting") then
 			local lastadvzoneid = lastadventurezoneid()
 			local stored_state = ascension["automation.florist friar.automatic planting"] or {}
-			want_plants = stored_state[tostring(lastadvzoneid)] or {}
+			want_plants = stored_state[tostring(lastadvzoneid)]
 		end
 		if want_plants then
 			plant_florist_plants(want_plants)

@@ -20,7 +20,7 @@ function get_automation_tasks(script, cached_stuff)
 			}
 			if moonsign_area("Degrassi Knoll") then
 				local want_items = {}
-				if want_smith_weapons[playerclassname()] and not have_item("Thor's Pliers") then table.insert(want_items, want_smith_weapons[playerclassname()]) end
+				if want_smith_weapons[maybe_playerclassname()] and not have_item("Thor's Pliers") then table.insert(want_items, want_smith_weapons[maybe_playerclassname()]) end
 				table.insert(want_items, "A Light that Never Goes Out")
 				table.insert(want_items, "Hairpiece On Fire")
 				table.insert(want_items, "Vicar's Tutu")

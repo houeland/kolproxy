@@ -2246,7 +2246,8 @@ endif
 	local function ready_to_end_day()
 		return level() >= 5 and
 			(level() < 13 or quest("Make War, Not... Oh, Wait") or quest("The Rain on the Plains is Mainly Garbage") or quest_text("Quest for the Holy MacGuffin")) and
-			advs() <= 20
+			advs() <= 20 and
+			turnsthisrun() >= 120
 	end
 
 	local function want_molotov_soda()
@@ -5783,7 +5784,7 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 		path_is_ok = false
 	end
 	if not path_is_ok then
-		path_support_text = string.format([[<p style="color: darkorange">You are currently in %s (%s). This is not a well supported path for the ascension script.</p>]], pathdesc, playerclassname())
+		path_support_text = string.format([[<p style="color: darkorange">You are currently in %s (%s). This is not a well supported path for the ascension script.</p>]], pathdesc, maybe_playerclassname() or "?")
 	else
 		path_support_text = string.format([[<p>You are currently in %s.</p>]], pathdesc)
 	end

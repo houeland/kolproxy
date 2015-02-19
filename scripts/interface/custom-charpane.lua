@@ -387,14 +387,14 @@ end
 
 function classdesc()
 	if kolproxy_custom_charpane_mode() ~= "compact" then
-		return playerclassname() or "?"
+		return maybe_playerclassname() or "?"
 	else
-		return get_initials(playerclassname()) or "?"
+		return get_initials(maybe_playerclassname()) or "?"
 	end
 end
 
 function classdesc_compact()
-	return get_initials(playerclassname()) or "?"
+	return get_initials(maybe_playerclassname()) or "?"
 end
 
 function classpathdesc()

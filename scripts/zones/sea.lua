@@ -65,6 +65,7 @@ add_processor("/runskillz.php", function()
 	end
 end)
 
+-- TODO: change to "use item: ..."
 add_processor("/inv_use.php", function()
 	if text:contains("You roll the bone, over and over, and every time it hits the ground, it bounces straight") then
 		local substr = text:match("You roll the bone, over and over, and every time it hits the ground, it bounces straight .+ You get so weirded out") or ""

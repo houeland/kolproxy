@@ -67,7 +67,7 @@ local function parse_page(x, xtbl)
 	local advrestitle = pt:match([[<td style="color: white;" align=center bgcolor=blue><b>[a-zA-Z]* Results:</b></td></tr><tr><td style="padding: 5px; border: 1px solid blue;"><center><table><tr><td><center><b>([^<]*)</b>]])
 	local title = monstername or advrestitle or pagetitle
 
-	for _, u in ipairs { "/inv_eat.php", "/inv_booze.php", "/inv_use.php", "/multiuse.php" } do
+	for _, u in ipairs { "/inv_eat.php", "/inv_booze.php", "/inv_spleen.php", "/inv_use.php", "/multiuse.php" } do
 		-- TODO: support non-ajax pageloads that result in inventory.php
 		if x.retrievedurl:contains(u) then
 			local whichitem = tonumber(x.allparams.whichitem)

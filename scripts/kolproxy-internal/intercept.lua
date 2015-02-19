@@ -34,7 +34,7 @@ for _, x in ipairs(interceptors[requestpath] or {}) do
 	end
 end
 
-if requestpath == "/inv_use.php" then
+if requestpath == "/inv_use.php" or requestpath == "/inv_spleen.php" then
 	local n = maybe_get_itemname(tonumber(params.whichitem))
 	if n then
 		for _, x in ipairs(interceptors["use item"] or {}) do

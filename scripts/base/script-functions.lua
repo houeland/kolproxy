@@ -490,27 +490,22 @@ function estimate_max_fullness()
 		mf = 10
 	elseif ascensionpath("Avatar of Sneaky Pete") then
 		mf = 5
+	elseif ascensionpath("Actually Ed the Undying") then
+		mf = 0
 	end
-	if have_skill("Stomach of Steel") then
-		mf = mf + 5
-	end
-	if have_skill("Legendary Appetite") then
-		mf = mf + 5
-	end
-	if have_skill("Insatiable Hunger") then
-		mf = mf + 5
-	end
-	if have_skill("Ravenous Pounce") then
-		mf = mf + 5
-	end
-	if have_skill("Lunch Like a King") then
-		mf = mf + 5
-	end
-	if have_skill("Gluttony") then
-		mf = mf + 2
-	end
-	if have_skill("Pride") then
-		mf = mf - 1
+	local stomach_skills = {
+		["Stomach of Steel"] = 5,
+		["Legendary Appetite"] = 5,
+		["Insatiable Hunger"] = 5,
+		["Ravenous Pounce"] = 5,
+		["Lunch Like a King"] = 5,
+		["Gluttony"] = 2,
+		["Pride"] = -1,
+	}
+	for skill, amount in pairs(stomach_skills) do
+		if have_skill(skill) then
+			mf = mf + amount
+		end
 	end
 	if session["active feast of boris bonus fullness today"] == "yes" then
 		mf = mf + 15
@@ -533,28 +528,43 @@ function estimate_max_safe_drunkenness()
 		dlimit = 10
 	elseif ascensionpath("Avatar of Sneaky Pete") then
 		dlimit = 20
+	elseif ascensionpath("Actually Ed the Undying") then
+		dlimit = 0
 	end
 
-	if have_skill("Liver of Steel") then
-		dlimit = dlimit + 5
-	end
-	if have_skill("Nightcap") then
-		dlimit = dlimit + 5
-	end
-	if have_skill("Hard Drinker") then
-		dlimit = dlimit + 10
-	end
-	if have_skill("Hollow Leg") then
-		dlimit = dlimit + 1
+	local liver_skills = {
+		["Liver of Steel"] = 5,
+		["Nightcap"] = 5,
+		["Hard Drinker"] = 10,
+		["Hollow Leg"] = 1,
+	}
+	for skill, amount in pairs(liver_skills) do
+		if have_skill(skill) then
+			dlimit = dlimit + amount
+		end
 	end
 
-	return dlimit - 1
+	return math.max(0, dlimit - 1)
 end
 
 function estimate_max_spleen()
 	local ms = 15
-	if have_skill("Spleen of Steel") then
-		ms = ms + 5
+	if ascensionpath("Actually Ed the Undying") then
+		ms = 5
+	end
+	local spleen_skills = {
+		["Spleen of Steel"] = 5,
+		["Extra Spleen"] = 5,
+		["Another Extra Spleen"] = 5,
+		["Yet Another Extra Spleen"] = 5,
+		["Still Another Extra Spleen"] = 5,
+		["Just One More Extra Spleen"] = 5,
+		["Okay Seriously, This is the Last Spleen"] = 5,
+	}
+	for skill, amount in pairs(spleen_skills) do
+		if have_skill(skill) then
+			ms = ms + amount
+		end
 	end
 	return ms
 end
@@ -662,7 +672,9 @@ function sneaky_pete_motorcycle_upgrades()
 end
 
 function have_unlocked_beach()
+	-- TODO: Load page and check instead? When would it invalidate cached result?
 	if ascensionpath("Avatar of Sneaky Pete") and sneaky_pete_motorcycle_upgrades()["Gas Tank"] == "Large Capacity Tank" then return true end
+	if ascensionpath("Actually Ed the Undying") then return true end
 	return have_item("bitchin' meatcar") or have_item("Desert Bus pass") or have_item("pumpkin carriage") or have_item("tin lizzie")
 end
 unlocked_beach = have_unlocked_beach

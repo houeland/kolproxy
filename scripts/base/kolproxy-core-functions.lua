@@ -362,9 +362,11 @@ multiuse -> multiuse
   GET multiuse.php whichitem=ITEMID action=useitem ajax=1 quantity=N pwd=PWD -> multiuse.php whichitem=ITEMID action=useitem ajax=1 quantity=N pwd=PWD
 
   POST multiuse.php [action=useitem pwd=PWD quantity=N whichitem=ITEMID] -> multiuse.php
+
+new inv_spleen
 --]]
 
-	if (requestpath == "/inv_use.php") or (p == "/multiuse.php" and params.action == "useitem") then
+	if (requestpath == "/inv_use.php") or (requestpath == "/inv_spleen.php") or (p == "/multiuse.php" and params.action == "useitem") then
 		item_image = nil
 		item_name = maybe_get_itemname(tonumber(params.whichitem))
 		if item_name then

@@ -133,6 +133,8 @@ function get_ascension_automation_settings(want_bonus)
 				"cornuthaum",
 				"Knob Goblin elite helm",
 				"mariachi hat",
+				"Hollandaise helmet",
+				"ravioli hat",
 				"helmet turtle",
 				"snorkel",
 			},
@@ -292,6 +294,7 @@ function get_ascension_automation_settings(want_bonus)
 			"Shakespeare's Sister's Accordion",
 			"right bear arm",
 			{ name = "Staff of the Headmaster's Victuals", check = function() return not want_bonus.not_casting_spells end },
+			7961, -- "Staff of Ed", pathed version
 			"alarm accordion",
 			"peace accordion",
 			"Squeezebox of the Ages",
@@ -349,6 +352,8 @@ function get_ascension_automation_settings(want_bonus)
 					itemname = x.name
 				end
 			end
+		elseif type(x) == "number" then
+			itemname = x
 		end
 		return itemname
 	end

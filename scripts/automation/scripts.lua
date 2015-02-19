@@ -1191,6 +1191,12 @@ function get_automation_scripts(cached_stuff)
 			if want_bonus.jarlsberg_sphere and have_skill(want_bonus.jarlsberg_sphere) then
 				table.insert(xs, want_bonus.jarlsberg_sphere)
 			end
+		elseif ascensionpath("Actually Ed the Undying") then
+			table.insert(xs, "Prayer of Seshat")
+			table.insert(xs, "Wisdom of Thoth")
+			table.insert(xs, "Power of Heka")
+			table.insert(xs, "Hide of Sobek")
+			table.insert(xs, "Bounty of Renenutet")
 		end
 		if not even_in_fist and not ignore_buffing_and_outfit then
 			if want_bonus.plusitems then
@@ -1218,6 +1224,7 @@ function get_automation_scripts(cached_stuff)
 				table.insert(xs, "Brooding")
 				table.insert(xs, "Smooth Movements")
 				table.insert(xs, "The Sonata of Sneakiness")
+				table.insert(xs, "Shelter of Shed")
 				if sneaky_pete_motorcycle_upgrades()["Muffler"] == "Extra-Quiet Muffler" then
 					table.insert(xs, "Muffled")
 				end
