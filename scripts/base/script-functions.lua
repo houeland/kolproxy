@@ -501,6 +501,7 @@ function estimate_max_fullness()
 		["Lunch Like a King"] = 5,
 		["Gluttony"] = 2,
 		["Pride"] = -1,
+		["Replacement Stomach"] = 5,
 	}
 	for skill, amount in pairs(stomach_skills) do
 		if have_skill(skill) then
@@ -537,6 +538,7 @@ function estimate_max_safe_drunkenness()
 		["Nightcap"] = 5,
 		["Hard Drinker"] = 10,
 		["Hollow Leg"] = 1,
+		["Replacement Liver"] = 5,
 	}
 	for skill, amount in pairs(liver_skills) do
 		if have_skill(skill) then

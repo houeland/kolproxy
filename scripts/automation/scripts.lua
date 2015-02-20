@@ -961,7 +961,7 @@ function get_automation_scripts(cached_stuff)
 		if hp() < maxhp() and challenge ~= "zombie" then
 			post_page("/galaktik.php", { action = "curehp", pwd = get_pwd(), quantity = maxhp() - hp() })
 			if hp() < maxhp() then
-				stop("Failed to reach full HP using galaktik")
+				stop("Failed to reach full HP")
 			end
 		end
 	end
