@@ -147,6 +147,7 @@ function get_ascension_automation_settings(want_bonus)
 				"Misty Robe",
 				"Rain-Doh red wings",
 				"Camp Scout backpack",
+				"Time Bandit Time Towel",
 				"barskin cloak",
 				"giant gym membership card",
 			},

@@ -1197,6 +1197,7 @@ function get_automation_scripts(cached_stuff)
 			table.insert(xs, "Power of Heka")
 			table.insert(xs, "Hide of Sobek")
 			table.insert(xs, "Bounty of Renenutet")
+			table.insert(xs, "Purr of the Feline")
 		end
 		if not even_in_fist and not ignore_buffing_and_outfit then
 			if want_bonus.plusitems then

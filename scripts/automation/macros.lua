@@ -262,7 +262,7 @@ function cannon_action()
 	elseif mp() <= 20 and can_easily_attack_with_weapon() then
 		return attack_action()
 	end
-	return macro_cast_skill { pastathrall() and "Cannelloni Cannon" or "???", "Saucestorm", "Cannelloni Cannon", "Bawdy Refrain", fury() >= 1 and "Furious Wallop" or "???", "Saucegeyser", "Kneebutt", "Toss", "Clobber", "Ravioli Shurikens", "Fist of the Mummy", "Mild Curse" }
+	return macro_cast_skill { pastathrall() and "Cannelloni Cannon" or "???", "Saucestorm", "Cannelloni Cannon", "Bawdy Refrain", fury() >= 1 and "Furious Wallop" or "???", "Saucegeyser", "Kneebutt", "Toss", "Clobber", "Ravioli Shurikens", "Roar of the Lion", "Fist of the Mummy", "Mild Curse" }
 end
 
 function estimate_elemental_weapon_damage_sum()
@@ -292,7 +292,7 @@ function serpent_action()
 	if not maybe_macro_cast_skill(skill_list) and can_easily_attack_with_weapon() then
 		return attack_action()
 	end
-	return macro_cast_skill(skill_list) or cannon_action()
+	return maybe_macro_cast_skill(skill_list) or cannon_action()
 end
 
 function geyser_action()

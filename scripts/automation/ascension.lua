@@ -2925,7 +2925,7 @@ endif
 			inform("vamping out: " .. mainstat_type())
 			vamp_out(mainstat_type())
 			did_action = true
-		elseif script.have_chateau_mantegna() then
+		elseif have_chateau_mantegna() then
 			stop "TODO: rest at mantegna"
 		else
 			use_dancecard()
@@ -4843,10 +4843,7 @@ endif
 		f = script.do_gotta_worship_them_all,
 	}
 
-	add_task {
-		when = quest("There Can Be Only One Topping") and (level() >= 11 and not quest_text("Your first step is to find the Black Market")),
-		task = tasks.there_can_be_only_one_topping,
-	}
+	add_tasklist(tasks.tasklist_there_can_be_only_one_topping)
 
 	add_task {
 		prereq = have_item("ancient amulet") and have_item("Eye of Ed") and have_item("Staff of Fats"),

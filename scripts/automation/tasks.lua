@@ -652,31 +652,73 @@ mark m_done
 		}
 	end
 
-	function t.there_can_be_only_one_topping()
-		if ascension_script_option("manual lvl 9 quest") then
-			stop "STOPPED: Ascension script option set to do lvl 9 quest manually"
-		end
-		if quest_text("Find a way across") or quest_text("Finish building a bridge across") then
-			return t.do_orc_chasm()
-		elseif quest_text("Speak to the Highland Lord") or quest_text("Go see the Highland Lord") then
-			return {
-				message = "visit highland lord",
-				action = function()
-					get_page("/place.php", { whichplace = "highlands", action = "highlands_dude" })
-					refresh_quest()
-					did_action = not (quest_text("Speak to the Highland Lord") or quest_text("Go see the Highland Lord"))
-				end
-			}
-		elseif quest_text("* Oil Peak") then
-			return t.do_oil_peak()
-		elseif quest_text("* A-boo Peak") then
-			return t.do_aboo_peak()
-		elseif quest_text("* Twin Peak") then
-			return t.do_twin_peak()
-		else
-			stop "TODO: handle only one topping quest"
-		end
+	local function want_lvl_9_quest()
+		return level() >= 11 and not quest_text("Black Market")
 	end
+
+	t.manual_lvl_9_quest = {
+		when = quest("There Can Be Only One Topping") and
+			want_lvl_9_quest() and
+			ascension_script_option("manual lvl 9 quest"),
+		task = {
+			message = "do lvl 9 quest manually",
+			nobuffing = true,
+			action = function()
+				stop "STOPPED: Ascension script option set to do lvl 9 quest manually"
+			end,
+		}
+	}
+
+	t.find_way_across_bridge = {
+		when = quest("There Can Be Only One Topping") and
+			want_lvl_9_quest() and
+			(quest_text("Find a way across") or quest_text("Finish building a bridge across")),
+		task = t.do_orc_chasm,
+	}
+
+	t.visit_highland_lord = {
+		when = quest("There Can Be Only One Topping") and
+			want_lvl_9_quest() and
+			(quest_text("Speak to the Highland Lord") or quest_text("Go see the Highland Lord")),
+		task = {
+			message = "visit highland lord",
+			action = function()
+				get_page("/place.php", { whichplace = "highlands", action = "highlands_dude" })
+				refresh_quest()
+				did_action = not (quest_text("Speak to the Highland Lord") or quest_text("Go see the Highland Lord"))
+			end
+		}
+	}
+
+	t.light_oil_peak = {
+		when = quest("There Can Be Only One Topping") and
+			want_lvl_9_quest() and
+			quest_text("* Oil Peak"),
+		task = t.do_oil_peak,
+	}
+
+	t.light_aboo_peak = {
+		when = quest("There Can Be Only One Topping") and
+			want_lvl_9_quest() and
+			quest_text("* A-boo Peak"),
+		task = t.do_aboo_peak,
+	}
+
+	t.light_twin_peak = {
+		when = quest("There Can Be Only One Topping") and
+			want_lvl_9_quest() and
+			quest_text("* Twin Peak"),
+		task = t.do_twin_peak,
+	}
+
+	t.tasklist_there_can_be_only_one_topping = {
+		t.manual_lvl_9_quest,
+		t.find_way_across_bridge,
+		t.visit_highland_lord,
+		t.light_oil_peak,
+		t.light_aboo_peak,
+		t.light_twin_peak,
+	}
 
 	t.do_daily_dungeon = {
 		message = "do daily dungeon",
