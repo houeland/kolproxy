@@ -12,6 +12,8 @@ local function should_delete(x)
 		return true
 	elseif tonumber(x.fromid) == 0 and x.fromname == "The Loathing Postal Service" and x.message:contains("We found this telegram at the bottom of an old bin of mail.") then
 		return true
+	elseif tonumber(x.fromid) == 0 and x.fromname == "The Loathing Postal Service" and x.message:contains("One of my agents found a copy of a telegram in the Council's fileroom") then
+		return true
 	else
 		return false
 	end

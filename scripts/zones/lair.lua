@@ -214,7 +214,18 @@ function get_lair_tower_monster_items()
 end
 
 function requires_wand_of_nagamar()
-	return not ascensionpath("Bees Hate You") and not ascensionpath("Avatar of Boris") and not ascensionpath("Bugbear Invasion") and not ascensionpath("Zombie Slayer") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("KOLHS") and not ascensionpath("Avatar of Sneaky Pete") and not ascensionpath("Heavy Rains")
+	local paths_without_wand = {
+		["Bees Hate You"] = true,
+		["Avatar of Boris"] = true,
+		["Bugbear Invasion"] = true,
+		["Zombie Slayer"] = true,
+		["Avatar of Jarlsberg"] = true,
+		["KOLHS"] = true,
+		["Avatar of Sneaky Pete"] = true,
+		["Heavy Rains"] = true,
+		["Actually Ed the Undying"] = true,
+	}
+	return not paths_without_wand[ascensionpathname()]
 end
 
 add_automator("/campground.php", function()

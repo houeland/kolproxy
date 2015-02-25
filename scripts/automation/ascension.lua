@@ -592,16 +592,6 @@ endif
 		end
 	end
 
-	local DD_keys = countif("Boris's key") + countif("Jarlsberg's key") + countif("Sneaky Pete's key") + count_item("fat loot token")
-	local real_DD_keys = DD_keys
-	if cached_stuff.completed_daily_dungeon then
-		DD_keys = 100
-	elseif script_want_2_day_SCHR() then
-	elseif level() >= 6 and estimate_max_fullness() - fullness() < 4 then
-	elseif not ascensionstatus("Hardcore") then
-		DD_keys = 100
-	end
-
 	mmj_available = cached_stuff.mox_guild_is_open and (playerclass("Pastamancer") or playerclass("Sauceror") or (playerclass("Accordion Thief") and level() >= 9)) -- TODO: fix
 
 	reset_macro_target()
@@ -1807,7 +1797,7 @@ endif
 	end
 
 	add_task {
-		when = not have_item("digital key") and count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel")) >= 30,
+		when = want_digital_key() and count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel")) >= 30,
 		task = tasks.make_digital_key,
 	}
 
@@ -2954,7 +2944,7 @@ endif
 	end
 
 	add_task {
-		when = not have_item("digital key") and trailed == "Blooper",
+		when = want_digital_key() and trailed == "Blooper",
 		task = tasks.do_8bit_realm,
 	}
 
@@ -3884,7 +3874,7 @@ endif
 	}
 
 	add_task {
-		when = not have_item("digital key") and
+		when = want_digital_key() and
 			ascensionstatus("Hardcore") and
 			not script.have_familiar("Angry Jung Man") and
 			have_skill("Transcendent Olfaction") and
@@ -3923,7 +3913,7 @@ endif
 	}
 
 	add_task {
-		when = not have_item("digital key") and
+		when = want_digital_key() and
 			ascensionstatus("Hardcore") and
 			not script.have_familiar("Angry Jung Man") and
 			have_item("Staff of the Standalone Cheese") and
@@ -3993,7 +3983,7 @@ endif
 
 	local pixel_count = count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel"))
 	add_task {
-		when = not have_item("digital key") and
+		when = want_digital_key() and
 			cached_stuff.campground_psychoses == "mystic" and
 			pixel_count < 30,
 		task = {
@@ -4026,7 +4016,7 @@ endif
 	}
 
 	add_task {
-		when = not have_item("digital key") and
+		when = want_digital_key() and
 			(have_item("psychoanalytic jar") or have_item("jar of psychoses (The Crackpot Mystic)")) and
 			advs() >= 40 and
 			not trailed,
@@ -4114,7 +4104,7 @@ endif
 	}
 
 	add_task {
-		when = DD_keys < 3 and (have_gelatinous_cubeling_items() or not script.have_familiar("Gelatinous Cubeling")) and not cached_stuff.done_daily_dungeon,
+		when = want_legend_keys() and (have_gelatinous_cubeling_items() or not script.have_familiar("Gelatinous Cubeling")) and not cached_stuff.done_daily_dungeon,
 		task = tasks.do_daily_dungeon,
 	}
 
@@ -4467,12 +4457,12 @@ endif
 	add_task(tasks.unlock_hidden_temple)
 
 	add_task {
-		when = DD_keys < 3 and not cached_stuff.done_daily_dungeon,
+		when = want_legend_keys() and not cached_stuff.done_daily_dungeon,
 		task = tasks.do_daily_dungeon,
 	}
 
 	add_task {
-		when = not have_item("digital key") and
+		when = want_digital_key() and
 			ascensionstatus("Hardcore") and
 			not script.have_familiar("Angry Jung Man") and
 			not trailed,
@@ -4540,21 +4530,6 @@ endif
 	}
 
 	add_task {
-		prereq =
-			count_item("star chart") < 3 and
-			(can_wear_weapons() or count_item("star chart") < 2) and
-			not have_item("Richard's star key") and
-			(not trailed or trailed == "Astronomer") and
-			have_item("steam-powered model rocketship") and ascensionstatus() == "Hardcore",
-		f = function()
-			if have_item("BitterSweetTarts") and not have_buff("Full of Wist") then
-				use_item("BitterSweetTarts")
-			end
-			script.go("do hits astronomers", 83, make_cannonsniff_macro("Astronomer"), nil, { "Spirit of Peppermint", "Fat Leon's Phat Loot Lyric", "Heavy Petting", "Peeled Eyeballs", "Leash of Linguini", "Empathy" }, "Slimeling", 60, { olfact = "Astronomer" })
-		end,
-	}
-
-	add_task {
 		when = not ascensionstatus("Aftercore") and
 			level() >= 10 and
 			requires_wand_of_nagamar() and
@@ -4589,7 +4564,7 @@ endif
 	}
 
 	add_task {
-		when = not have_item("digital key") and
+		when = want_digital_key() and
 			ascensionstatus("Softcore") and
 			not script.have_familiar("Angry Jung Man") and
 			not cached_stuff.tried_pulling_mystic_jar and
@@ -4607,49 +4582,6 @@ endif
 					pull_in_softcore("jar of psychoses (The Crackpot Mystic)")
 					did_action = have_item("jar of psychoses (The Crackpot Mystic)")
 				else
-					did_action = true
-				end
-			end
-		}
-	}
-
-	add_task {
-		when = ascensionstatus("Softcore") and
-			not ascensionpath("Bees Hate You") and
-			not cached_stuff.tried_pulling_large_box and
-			level() >= 10 and
-			turnsthisrun() >= 300 and
-			real_DD_keys >= 2 and
-			can_ensure_clover(),
-		task = {
-			message = "considering pulling large box",
-			nobuffing = true,
-			action = function()
-				cached_stuff.tried_pulling_large_box = true
-				local want = true
-				local dodstatus = get_dod_potion_status()
-				if next(dodstatus) then
-					want = false
-				end
-				for _, x in ipairs(dod_potion_types) do
-					if have_item(x) then
-						want = false
-					end
-				end
-				if have_item("small box") or have_item("large box") or have_item("blessed large box") then
-					want = false
-				end
-				if want and (pullsleft() or 0) >= 5 and ensure_clover() then
-					pull_in_softcore("large box")
-					meatpaste_items("large box", "ten-leaf clover")
-					use_item("blessed large box")
-					for _, x in ipairs(dod_potion_types) do
-						if have_item(x) then
-							did_action = true
-						end
-					end
-				else
-					print("  skipping attempt")
 					did_action = true
 				end
 			end
@@ -4907,28 +4839,15 @@ endif
 	}
 
 	add_task {
-		prereq = not have_item("Richard's star key") and
-			trailed ~= "Astronomer" and
+		prereq = want_star_key() and
 			ascensionstatus("Hardcore"),
 		f = script.make_star_key,
 	}
 
--- 	add_task {
--- 		prereq = not (
--- 			have_item("pine wand") or
--- 			have_item("ebony wand") or
--- 			have_item("hexagonal wand") or
--- 			have_item("aluminum wand") or
--- 			have_item("marble wand")
--- 		) and meat() >= 5000 and challenge ~= "fist",
--- 		f = script.get_dod_wand,
--- 	}
-
 	add_task {
-		prereq = not have_item("Richard's star key") and
-			have_item("steam-powered model rocketship") and
-			ascensionstatus("Softcore"),
-		f = script.make_star_key_only,
+		prereq = want_star_key() and
+			have_item("steam-powered model rocketship"),
+		f = script.make_star_key,
 	}
 
 	add_task {
@@ -5767,7 +5686,7 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 		return get_page("/main.php")
 	end
 
-	local ok_paths = { [0] = true, ["Avatar of Boris"] = true, [10] = true, ["Avatar of Jarlsberg"] = true, ["BIG!"] = true, ["Avatar of Sneaky Pete"] = true, ["Heavy Rains"] = true }
+	local ok_paths = { [0] = true, ["Avatar of Boris"] = true, [10] = true, ["Avatar of Jarlsberg"] = true, ["BIG!"] = true, ["Avatar of Sneaky Pete"] = true, ["Heavy Rains"] = true, ["Actually Ed the Undying"] = false }
 -- ["Way of the Surprising Fist"] = true -- needs updates
 	local path_support_text = ""
 	local pathdesc = string.format([[%s %s]], ascensionstatus(), ascensionpathname())

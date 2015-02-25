@@ -135,16 +135,22 @@ local function bl_charpane_level_lines(lines)
 end
 
 local function bl_path_resources_compact() -- TODO: move to other file and only wrap result in chit_resource
+	local function makespan(amount, name, icon)
+		amount = amount or 0
+		return string.format([[<span title="%d %s" style="white-space: nowrap"><img src="http://images.kingdomofloathing.com/itemimages/%s">%d</span>]], amount, name, icon, amount)
+	end
 	if ascensionpath("Heavy Rains") then
-		local function makespan(amount, name, icon)
-			amount = amount or 0
-			return string.format([[<span title="%d %s" style="white-space: nowrap"><img src="http://images.kingdomofloathing.com/itemimages/%s">%d</span>]], amount, name, icon, amount)
-		end
 		return [[
 <div class="chit_resource"><div>
 	]] .. makespan(heavyrains_thunder(), "thunder", "echo.gif") .. [[
 	]] .. makespan(heavyrains_rain(), "rain", "familiar31.gif") .. [[
 	]] .. makespan(heavyrains_lightning(), "lightning", "cloudlightning.gif") .. [[
+</div></div>
+]]
+	elseif ascensionpath("Actually Ed the Undying") then
+		return [[
+<div class="chit_resource"><div>
+	]] .. makespan(count_item("Ka coin"), "Ka", "kacoin.gif") .. [[
 </div></div>
 ]]
 	end

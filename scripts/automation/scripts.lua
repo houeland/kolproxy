@@ -414,7 +414,7 @@ function get_automation_scripts(cached_stuff)
 		if famname == "Reassembled Blackbird" and not script.have_familiar("Reassembled Blackbird") then famname = "Reconstituted Crow" end
 		if famname == "Reconstituted Crow" and not script.have_familiar("Reconstituted Crow") then famname = "auto" end
 		if famname == "fairy" then
-			if daysthisrun() >= 2 and not have_item("digital key") and not have_item("psychoanalytic jar") and get_daily_counter("familiar.jungman.jar") == 0 and script.have_familiar("Angry Jung Man") then
+			if daysthisrun() >= 2 and want_digital_key() and not have_item("psychoanalytic jar") and get_daily_counter("familiar.jungman.jar") == 0 and script.have_familiar("Angry Jung Man") then
 				famname = "Angry Jung Man"
 			elseif not have_gelatinous_cubeling_items() and script.have_familiar("Gelatinous Cubeling") then
 				famname = "Gelatinous Cubeling"
@@ -958,7 +958,7 @@ function get_automation_scripts(cached_stuff)
 		if hp() < maxhp() and not have_apartment_building_cursed_buff() then
 			use_hottub()
 		end
-		if hp() < maxhp() and challenge ~= "zombie" then
+		if hp() < maxhp() and challenge ~= "zombie" and not ascensionpath("Actually Ed the Undying") then
 			post_page("/galaktik.php", { action = "curehp", pwd = get_pwd(), quantity = maxhp() - hp() })
 			if hp() < maxhp() then
 				stop("Failed to reach full HP")
@@ -3573,54 +3573,7 @@ endif
 	end
 
 	function f.make_star_key()
-		local got_enough = false
-		if count_item("star chart") >= 3 or ((challenge == "fist" or challenge == "boris") and count_item("star chart") >= 2) then
-			if count_item("star") >= 8+5 and count_item("line") >= 7+3 then
-				sparestars = count_item("star") - 8 - 5
-				sparelines = count_item("line") - 7 - 3
-				if sparestars >= 5 and sparelines >= 6 then
-					got_enough = true
-				elseif sparestars >= 6 and sparelines >= 5 then
-					got_enough = true
-				elseif sparestars >= 7 and sparelines >= 4 then
-					got_enough = true
-				elseif challenge == "fist" then
-					got_enough = true
-				end
-			end
-		end
-		if got_enough then
-			inform "make star stuff"
-			if not have_item("Richard's star key") then
-				shop_buy_item("Richard's star key", "starchart")
-			end
-			if not have_item("star hat") then
-				shop_buy_item("star hat", "starchart")
-			end
-			if not have_item("star crossbow") and not have_item("star staff") and not have_item("star sword") and can_wear_weapons() then
-				if count_item("star") >= 5 and count_item("line") >= 6 then
-					shop_buy_item("star crossbow", "starchart")
-				elseif count_item("star") >= 6 and count_item("line") >= 5 then
-					shop_buy_item("star staff", "starchart")
-				elseif count_item("star") >= 7 and count_item("line") >= 4 then
-					shop_buy_item("star sword", "starchart")
-				end
-			end
-			if have_item("Richard's star key") and have_item("star hat") and (have_item("star crossbow") or have_item("star staff") or have_item("star sword") or not can_wear_weapons()) then
-				did_action = true
-			end
-		else
-			if trailed and trailed == "Astronomer" then
-				stop("Trailing " .. trailed .. " when finishing hits")
-			end
-			script.bonus_target { "item", "extraitem" }
-			go("finish hits", 83, macro_noodlecannon, {}, { "Spirit of Peppermint", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }, "Slimeling", 40)
-		end
-		return result, resulturl, did_action
-	end
-
-	function f.make_star_key_only()
-		if count_item("star") >= 8 and count_item("line") >= 7 then
+		if count_item("star") >= 8 and count_item("line") >= 7 and (have_item("star chart") or not ascenstatus("Hardcore")) then
 			inform "buying star key"
 			if not have_item("star chart") then
 				pull_in_softcore("star chart")
@@ -3630,7 +3583,7 @@ endif
 			return
 		end
 		script.bonus_target { "item", "extraitem" }
-		go("collect stars and lines", 83, macro_noodlecannon, {}, { "Spirit of Peppermint", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }, "Slimeling", 40)
+		go("farm star key", 83, macro_noodlecannon, {}, { "Spirit of Peppermint", "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }, "Slimeling", 40)
 		return result, resulturl, did_action
 	end
 
@@ -4835,7 +4788,7 @@ function vamp_out(targetstat)
 end
 
 function can_change_familiar()
-	return not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete")
+	return not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete") and not ascensionpath("Actually Ed the Undying")
 end
 
 function have_gelatinous_cubeling_items()
@@ -4908,6 +4861,9 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 			optname, pickchoice = specialnoncombatfunction(adventure_title, choice_adventure_number, pt)
 		elseif noncombatchoices then
 			optname = noncombatchoices[adventure_title]
+		end
+		if not optname and adventure_title == "Like a Bat Into Hell" then
+			optname = "Go right back to the fight!"
 		end
 		if optname and not pickchoice then
 			for nr, title in pt:gmatch([[<input type=hidden name=option value=([0-9])><input class=button type=submit value="([^>]+)">]]) do
@@ -5132,3 +5088,27 @@ function have_chateau_mantegna()
 	return pt:contains("Chateau Mantegna")
 end
 
+local function path_does_not_have_lair()
+	return ascensionpath("Bugbear Invasion") and ascensionpath("Actually Ed the Undying")
+end
+
+function want_digital_key()
+	if path_does_not_have_lair() then return false end
+	return not have_item("digital key")
+end
+
+function want_star_key()
+	if path_does_not_have_lair() then return false end
+	return not have_item("Richard's star key")
+end
+
+function want_legend_keys()
+	if path_does_not_have_lair() then return false end
+	local available = count_item("fat loot token")
+	for _, x in ipairs { "Boris's key", "Jarlsberg's key", "Sneaky Pete's key" } do
+		if have_item(x) then
+			available = available + 1
+		end
+	end
+	return available < 3
+end

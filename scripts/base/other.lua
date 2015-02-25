@@ -503,8 +503,7 @@ add_use_item_ascension_assistance("carton of astral energy drinks")
 
 add_use_item_ascension_assistance("telegram from Lady Spookyraven")
 add_use_item_ascension_assistance("Letter for Melvign the Gnome")
---add_use_item_ascension_assistance("letter to Ed the Undying")
-add_use_item_ascension_assistance(7959)
+add_use_item_ascension_assistance("letter to Ed the Undying")
 
 add_use_item_ascension_assistance("evil eye")
 

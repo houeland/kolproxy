@@ -281,7 +281,7 @@ endif
 	elseif ascensionpath("Avatar of Sneaky Pete") and estimate_elemental_weapon_damage_sum() >= 10 then
 		return attack_action()
 	end
-	return macro_cast_skill { pastathrall() and "Cannelloni Cannon" or "???", "Saucestorm", "Cannelloni Cannon", "Bawdy Refrain" }
+	return macro_cast_skill { pastathrall() and "Cannelloni Cannon" or "???", "Saucestorm", "Cannelloni Cannon", "Bawdy Refrain", "Fist of the Mummy" }
 end
 
 function serpent_action()
