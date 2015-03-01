@@ -658,7 +658,6 @@ mark m_done
 
 	t.manual_lvl_9_quest = {
 		when = quest("There Can Be Only One Topping") and
-			want_lvl_9_quest() and
 			ascension_script_option("manual lvl 9 quest"),
 		task = {
 			message = "do lvl 9 quest manually",
@@ -671,7 +670,6 @@ mark m_done
 
 	t.find_way_across_bridge = {
 		when = quest("There Can Be Only One Topping") and
-			want_lvl_9_quest() and
 			(quest_text("Find a way across") or quest_text("Finish building a bridge across")),
 		task = t.do_orc_chasm,
 	}
@@ -972,7 +970,7 @@ mark m_done
 		when = script_want_library_key() and
 			not have_item("Spookyraven library key") and
 			have_item("Spookyraven billiards room key") and
-			drunkenness() <= 12 and drunkenness() >= 5,
+			drunkenness() <= 12 and drunkenness() >= 4,
 		task = {
 			message = "get library key",
 			familiar = "Slimeling",
@@ -1527,7 +1525,7 @@ endif
 		}
 	}
 
-	tasks.ns_lair_confront_ns = {
+	tasks.ns_lair_free_king = {
 		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("Free King Ralph from his prism"),
 		task = {
 			message = "free king ralph",
@@ -1552,7 +1550,64 @@ endif
 		tasks.ns_lair_get_boning_knife,
 		tasks.ns_lair_tower_mirror,
 		tasks.ns_lair_confront_ns,
+		tasks.ns_lair_free_king,
 	}
+
+	local function want_more_ka()
+		for _, skill in ipairs { "Upgraded Legs", "Extra Spleen", "Another Extra Spleen", "Yet Another Extra Spleen", "Replacement Liver", "Replacement Stomach", "Still Another Extra Spleen" } do
+			if not have_skill(skill) then
+				if count_item("Ka coin") >= 30 then
+					stop("TODO: buy skill: " .. skill)
+				end
+				return true
+			end
+		end
+	end
+
+	local function cache_wrapper(f)
+		cached_stuff.cache_wrapper = cached_stuff.cache_wrapper or {}
+		local key = debug.callsitedesc()
+		if cached_stuff.cache_wrapper[key] == nil then
+			cached_stuff.cache_wrapper[key] = f()
+		end
+		return cached_stuff.cache_wrapper[key]
+	end
+
+	tasks.ed_farm_ka_at_government_lab = {
+		when = want_more_ka() and have_skill("Fist of the Mummy") and cache_wrapper(have_conspiracy_island),
+		task = {
+			message = "farm ka at government lab",
+			minmp = 10,
+			equipment = { acc1 = first_wearable { "Personal Ventilation Unit" } },
+			action = adventure {
+				zone = "The Secret Government Laboratory",
+				macro_function = macro_kill_monster,
+			}
+		},
+	}
+
+	tasks.ed_use_map_page = {
+		when = quest_text("Search for the MacGuffin in the Warehouse") and
+			not have_item("Holy MacGuffin") and
+			have_item("warehouse map page") and
+			have_item("warehouse inventory page"),
+		task = maketask_use_item("warehouse map page"),
+	}
+
+	tasks.ed_search_warehouse = {
+		when = quest_text("Search for the MacGuffin in the Warehouse") and
+			not have_item("Holy MacGuffin"),
+		task = {
+			message = "search for macguffin",
+			minmp = 35,
+			action = adventure {
+				zone = "The Secret Council Warehouse",
+				macro_function = macro_kill_monster,
+			}
+		},
+	}
+
+	tasks.tasklist_actually_ed_the_undying = { tasks.ed_farm_ka_at_government_lab, tasks.ed_use_map_page, tasks.ed_search_warehouse }
 
 	return t
 end

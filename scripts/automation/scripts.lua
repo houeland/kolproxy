@@ -2839,10 +2839,10 @@ endif
 					zone = x.zone,
 					macro_function = macro_noodleserpent,
 					choice_function = function(advtitle, choicenum, pagetext)
+						if x.zone == "A Massive Ziggurat" then
+							cached_stuff.unlocked_massive_ziggurat = true
+						end
 						if advtitle == x.choice then
-							if x.zone == "A Massive Ziggurat" then
-								cached_stuff.unlocked_massive_ziggurat = true
-							end
 							if pagetext:contains(x.option) then
 								return x.option
 							else
@@ -4804,20 +4804,19 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 	if zoneid and zoneid ~= "?" then
 		zoneid = get_zoneid(zoneid)
 	end
-	if url:contains("/fight.php") then
+	local function handle_fight(pt, url)
 		local advagain = nil
 		if pt:contains([[>You win the fight!<!--WINWINWIN--><]]) then
 			advagain = true
 		elseif pt:contains([[state['fightover'] = true;]]) or true then -- HACK: doesn't get set with combat bar disabled
 			if pt:contains("You lose.") then
 				advagain = false
-			elseif zoneid and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
+			elseif zoneid and pt:match([[<a href="adventure.php%?snarfblat=[0-9]*">Adventure Again]]) then
 				advagain = true
 			end
 		end
 		if advagain and locked() and pt:contains("choice.php") then
-			local pt, url = post_page("/choice.php", { pwd = session.pwd })
-			return handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
+			return post_page("/choice.php", { pwd = session.pwd })
 		end
 		if advagain == nil then
 			if macro then
@@ -4827,17 +4826,14 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 						macrotext = macrotext(pt)
 					end
 				end
-				local pt, url = post_page("/fight.php", { action = "macro", macrotext = macrotext })
--- 				print("recurse with macro")
-				if not pt then print("DEBUG: recurse with macro -> handle_adventure_result(nil)") end
-				return handle_adventure_result(pt, url, zoneid, nil, noncombatchoices, specialnoncombatfunction)
+				return post_page("/fight.php", { action = "macro", macrotext = macrotext })
 			else
-				print("fight.php unhandled url", url)
+				stop "in an unexpected fight with no macro to use"
 			end
 		end
--- 		print("return1 p u a", pt:len(), url, advagain)
-		return pt, url, advagain
-	elseif url:contains("/choice.php") then
+		return nil, pt, url, advagain
+	end
+	local function handle_choice(pt, url)
 		local advagain = nil
 		local adventure_title
 		local found_results = false
@@ -4851,10 +4847,9 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 		adventure_title = (adventure_title or ""):gsub(" %(#[0-9]*%)$", "")
 		if found_results and zoneid and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
 			advagain = true
-			return pt, url, advagain
+			return nil, pt, url, advagain
 		end
-		local choice_adventure_number = tonumber(pt:match([[<input type=hidden name=whichchoice value=([0-9]+)>]]))
---~ 		print("choice", adventure_title, choice_adventure_number)
+		local choice_adventure_number = tonumber(pt:match([[name=whichchoice value=([0-9]+)]]))
 		local pickchoice = nil
 		local optname = nil
 		if specialnoncombatfunction then
@@ -4865,62 +4860,67 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 		if not optname and adventure_title == "Like a Bat Into Hell" then
 			optname = "Go right back to the fight!"
 		end
+
+		local options = parse_choice_options(pt)
 		if optname and not pickchoice then
-			for nr, title in pt:gmatch([[<input type=hidden name=option value=([0-9])><input class=button type=submit value="([^>]+)">]]) do
-				if title == optname then
-					pickchoice = tonumber(nr)
-				end
-			end
+			pickchoice = options[optname]
 		end
-		if optname and not pickchoice then
-			for nr, title in pt:gmatch([[<input type=hidden name=option value=([0-9])><input class=button type=submit value="([^>]-) %[]]) do
-				if title == optname then
-					pickchoice = tonumber(nr)
-				end
-			end
-		end
-		if optname and not pickchoice then
-			for form in pt:gmatch("<form.-</form>") do
-				if form:match(string.format([[value="%s"]], optname)) then
-					pickchoice = tonumber(form:match([[<input type=hidden name=option value=([0-9])>]]))
-				end
-			end
-		end
+
 		if optname and not pickchoice then
 			print("ERROR: option " .. tostring(optname) .. " not found for " .. tostring(adventure_title) .. ".")
 		end
 		if not pickchoice then
 			local possibilities = {}
-			for nr in pt:gmatch([[<input type=hidden name=option value=([0-9])>]]) do
-				table.insert(possibilities, tonumber(nr))
+			for _, nr in pairs(options) do
+				table.insert(possibilities, nr)
 			end
 			if possibilities[1] and not possibilities[2] then
 				pickchoice = possibilities[1]
 			end
 		end
 		if pickchoice then
-			local pt, url = post_page("/choice.php", { pwd = session.pwd, whichchoice = choice_adventure_number, option = pickchoice })
--- 			print("choice ->", url)
-			if not pt then print("DEBUG: choice -> handle_adventure_result(nil)") end
-			return handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
+			return post_page("/choice.php", { pwd = session.pwd, whichchoice = choice_adventure_number, option = pickchoice })
 		else
 			print("choice", adventure_title, choice_adventure_number)
-			for nr, title in pt:gmatch([[<input type=hidden name=option value=([0-9])><input class=button type=submit value="([^>]+)">]]) do
+			for title, nr in pairs(options) do
 				print("opt", nr, title)
 			end
--- 			print("return3 p u a", pt:len(), url, advagain)
-			return pt, url, false
+			return nil, pt, url, false
 		end
-	else
+	end
+	local function handle_other(pt, url)
 		local advagain = false
 		if zoneid and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
 			advagain = true
 -- 		else
 -- 			print("non-fight non-choice unhandled url", url)
 		end
--- 		print("return4 p u a", pt:len(), url, advagain)
-		return pt, url, advagain
+		return nil, pt, url, advagain
 	end
+	local function dispatch(pt, url)
+		if url:contains("/fight.php") then
+			return handle_fight(pt, url)
+		elseif url:contains("/choice.php") then
+			return handle_choice(pt, url)
+		else
+			return handle_other(pt, url)
+		end
+	end
+	local times = 0
+	local function handle(pt, url)
+		times = times + 1
+		print("DEBUG", url, "times", times)
+		if times >= 20 then
+			return pt, url, false
+		end
+		local a, b, c, d = dispatch(pt, url)
+		if a then
+			return handle(a, b)
+		else
+			return b, c, d
+		end
+	end
+	return handle(pt, url)
 end
 
 function autoadventure(tbl)
@@ -5079,8 +5079,8 @@ function fax_machine_is_too_old()
 end
 
 function have_lovebugs()
-	local pt = submitnewchat("/autoattack? summon love mosquito"):gsub("<", "&lt")
-	return pt:contains("Summon Love Mosquito")
+	local pt = submitnewchat("/autoattack? summon love gnats")
+	return pt:contains("Summon Love Gnats")
 end
 
 function have_chateau_mantegna()
@@ -5088,8 +5088,13 @@ function have_chateau_mantegna()
 	return pt:contains("Chateau Mantegna")
 end
 
+function have_conspiracy_island()
+	local pt = get_page("/place.php", { whichplace = "airport_spooky", intro = 1 })
+	return pt:contains("Secret Government Lab")
+end
+
 local function path_does_not_have_lair()
-	return ascensionpath("Bugbear Invasion") and ascensionpath("Actually Ed the Undying")
+	return ascensionpath("Bugbear Invasion") or ascensionpath("Actually Ed the Undying")
 end
 
 function want_digital_key()

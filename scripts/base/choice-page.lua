@@ -168,8 +168,24 @@ end
 
 function parse_choice_options(pt)
 	local options = {}
-	for nr, title in pt:gmatch([[<input type=hidden name=option value=([0-9])><input class=button type=submit value="([^>]+)">]]) do
-		options[title] = tonumber(nr)
+	for form in pt:gmatch("<form.-</form>") do
+		local titles = {}
+		local numbers = {}
+		for input in form:gmatch("<input[^>]+>") do
+			local title = input:match([[value="([^>]+)"]])
+			local number = tonumber(input:match([[value=([0-9]+)]]))
+			if title and input:contains("submit") then
+				table.insert(titles, title)
+			end
+			if number and input:contains("option") then
+				table.insert(numbers, number)
+			end
+		end
+		for _, title in ipairs(titles) do
+			for _, number in ipairs(numbers) do
+				options[title] = number
+			end
+		end
 	end
 	return options
 end

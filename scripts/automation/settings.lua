@@ -342,7 +342,7 @@ function get_ascension_automation_settings(want_bonus)
 	end
 	function tbl.canwear_itemname(x)
 		local itemname = nil
-		if type(x) == "string" then
+		if type(x) == "string" or type(x) == "number" then
 			if have_item(x) and can_equip_item(x) then
 				itemname = x
 			end
@@ -353,8 +353,6 @@ function get_ascension_automation_settings(want_bonus)
 					itemname = x.name
 				end
 			end
-		elseif type(x) == "number" then
-			itemname = x
 		end
 		return itemname
 	end

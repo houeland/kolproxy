@@ -1,6 +1,6 @@
 function COMMON_MACROSTUFF_START(rounds, hplevel)
 	local mname = fight["currently fighting"] and fight["currently fighting"].name or "?"
-	if session["__script.cannot restore HP"] then
+	if session["__script.cannot restore HP"] or ascensionpath("Actually Ed the Undying") then
 		hplevel = 0
 	elseif mname == "Green Ops Soldier" then
 		hplevel = 10

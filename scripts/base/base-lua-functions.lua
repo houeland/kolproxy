@@ -97,6 +97,13 @@ if math then
 	end
 end
 
+if debug then
+	function debug.callsitedesc()
+		local dgi = debug.getinfo(3)
+		return dgi.short_src .. ":" .. dgi.currentline
+	end
+end
+
 exported_raw_tostring = tostring
 local raw_tostring = tostring
 

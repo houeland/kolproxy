@@ -19,13 +19,20 @@ local function autoattack_macro_id()
 end
 
 function spend_aftercore_turns()
+	local function buffvalue(name)
+		if have_buff(name) then
+			return 10000
+		else
+			return 0
+		end
+	end
 	local priorities = {
-		["automate-nemesis"] = 10,
-		["automate-a-quest-lol"] = 50,
-		["automate-nemesis-island"] = 100,
-		["automate-felonia"] = 1000,
-		["automate-suburbandis"] = 1500,
-		["automate-spaaace"] = 2000,
+		["automate-nemesis"] = 10000,
+		["automate-a-quest-lol"] = 7000,
+		["automate-nemesis-island"] = 5000,
+		["automate-felonia"] = 2000,
+		["automate-suburbandis"] = 1500 + buffvalue("Dis Abled"),
+		["automate-spaaace"] = 1000 + buffvalue("Transpondent"),
 	}
 	if advs() < 150 then
 		priorities["automate-nemesis"] = nil
@@ -40,7 +47,7 @@ function spend_aftercore_turns()
 			fs[x] = y.f
 		end
 	end
-	table.sort(available_scripts, function(a, b) return priorities[a] < priorities[b] end)
+	table.sort(available_scripts, function(a, b) return priorities[a] > priorities[b] end)
 
 	if #available_scripts >= 1 then
 		local x = available_scripts[1]
