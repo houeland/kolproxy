@@ -280,49 +280,31 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 	kolproxy_log_time_interval("DEBUG equipment", function()
 
 	local previous_scores = {}
-	local suggested_scores = {}
 --	local item_in_outfit = {}
 --	local chosen_outfit_score = 0
-	local function add(slottitle, itemid, where)
-		local item = { name = "(none)", score = 0 }
-		local extra = ""
-		if itemid then
-			item = { name = maybe_get_itemname(itemid), score = suggested_scores[where] or 0 }
---			if item_in_outfit[itemid] then
---				extra = string.format("[outfit score: %+d]", chosen_outfit_score)
---			end
-		end
-		if equipment()[where] == itemid then
-			table.insert(equipmentlines, string.format([[<tr style="color: gray"><td>%s</td><td>%s (%+d)</td><td>%s (%+d)</td><td>%s</td></tr>]], slottitle, item.name, item.score, item.name, item.score, extra))
-		else
-			table.insert(equipmentlines, string.format([[<tr><td>%s</td><td style="color: gray">%s (%+d)</td><td><a href="%s" style="color: green">%s</a> (%+d)</td><td>%s</td></tr>]], slottitle, maybe_get_itemname(equipment()[where]) or "", previous_scores[where], modifier_maximizer_href { pwd = session.pwd, whichbonus = params.whichbonus, equip_itemname = item.name, equip_slot = where }, item.name, item.score, extra))
-		end
-	end
 
-	local suggested_equipment = {}
+	local slot_alternatives = {}
+	local slot_suggestion = {}
 	for _, slot in ipairs { "hat", "container", "shirt", "weapon", "offhand", "pants", "acc1", "acc2", "acc3" } do
 		local items, prevscore = 
 kolproxy_log_time_interval("DEBUG eqslot:" .. slot, function()
 return maximize_equipment_slot_bonuses(slot, scoref)
 end)
-		suggested_equipment[slot] = items[1].itemid
-		suggested_scores[slot] = items[1].score
+		slot_alternatives[slot] = items
+		slot_suggestion[slot] = items[1]
 		previous_scores[slot] = prevscore
 	end
 
---	if suggested_equipment.weapon and suggested_equipment.offhand and is_twohanded_weapon(suggested_equipment.weapon) then
---		local 2h_weapon_score = score_equiment_replacement(scoref, suggested_equipment.weapon, equipment().weapon, equipment().offhand)
---		local offhand_score = score_item(scoref, suggested_equipment.offhand)
---		local items = maximize_equipment_slot_bonuses("weapon", scoref)
---		for _, x in ipairs(items) do
---			if not x.itemid or not is_twohanded_weapon(x.itemid) then
---				if x.score + offhand_score >= weapon_score then
---					suggested_equipment.weapon = x.itemid
---				end
---				break
---			end
---		end
---	end
+	if slot_suggestion.weapon and slot_suggestion.offhand and is_twohanded_weapon(slot_suggestion.weapon.itemid) then
+		for _, x in ipairs(slot_alternatives.weapon) do
+			if not x.itemid or not is_twohanded_weapon(x.itemid) then
+				if x.score + slot_suggestion.offhand.score >= slot_suggestion.weapon.score then
+					slot_suggestion.weapon = x
+				end
+				break
+			end
+		end
+	end
 
 --	local best_outfit_items = {}
 --	local best_outfit_score = 0
@@ -361,12 +343,27 @@ end)
 --		item_in_outfit[get_itemid(x)] = true
 --	end
 
-	if suggested_equipment.weapon and is_twohanded_weapon(suggested_equipment.weapon) then
-		suggested_equipment.offhand = nil
+	if slot_suggestion.weapon and is_twohanded_weapon(slot_suggestion.weapon.itemid) then
+		slot_suggestion.offhand = nil
+	end
+
+	local function add_line(slottitle, item, where)
+		item = item or { name = "(none)", score = 0 }
+		local extra = ""
+--		if item then
+--			if item_in_outfit[itemid] then
+--				extra = string.format("[outfit score: %+d]", chosen_outfit_score)
+--			end
+--		end
+		if equipment()[where] == item.itemid then
+			table.insert(equipmentlines, string.format([[<tr style="color: gray"><td>%s</td><td>%s (%+d)</td><td>%s (%+d)</td><td>%s</td></tr>]], slottitle, item.name, item.score, item.name, item.score, extra))
+		else
+			table.insert(equipmentlines, string.format([[<tr><td>%s</td><td style="color: gray">%s (%+d)</td><td><a href="%s" style="color: green">%s</a> (%+d)</td><td>%s</td></tr>]], slottitle, maybe_get_itemname(equipment()[where]) or "", previous_scores[where], modifier_maximizer_href { pwd = session.pwd, whichbonus = params.whichbonus, equip_itemname = item.name, equip_slot = where }, item.name, item.score, extra))
+		end
 	end
 
 	for _, slot in ipairs { "hat", "container", "shirt", "weapon", "offhand", "pants", "acc1", "acc2", "acc3" } do
-		add(slot, suggested_equipment[slot], slot)
+		add_line(slot, slot_suggestion[slot], slot)
 	end
 
 	end) -- DEBUG log time
