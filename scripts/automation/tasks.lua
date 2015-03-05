@@ -1520,7 +1520,8 @@ endif
 				set_mcd(0)
 				script.want_familiar("Frumious Bandersnatch")
 				script.ensure_buffs { "Go Get 'Em, Tiger!" }
-				did_action = advagain
+				stop "TODO: kill NS"
+				did_action = false
 			end,
 		}
 	}

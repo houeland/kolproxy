@@ -71,7 +71,7 @@ local function printwarning(msg, ...)
 end
 
 local function hardwarn(msg, ...)
-	printwarning("WARNING: downloaded data files inconsistent, " .. tostring(msg), ...)
+	--printwarning("WARNING: downloaded data files inconsistent, " .. tostring(msg), ...)
 	error_count_hard = error_count_hard + 1
 end
 
@@ -722,11 +722,13 @@ function parse_monsters()
 	for l in io.lines("cache/files/monsters.txt") do
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
-		local name, image, stats = tbl[1], tbl[2], tbl[3]
+		local name, id, image, stats = tbl[1], tonumber(tbl[2]), tbl[3], tbl[4]
+		if id == 0 then id = nil end
 		if image == "" then image = nil end
 		__parse_monster_debug = tojson(tbl)
 		if not l:match("^#") and name and stats then
 			--print("DEBUG parsing monster", name)
+			table.remove(tbl, 1)
 			table.remove(tbl, 1)
 			table.remove(tbl, 1)
 			table.remove(tbl, 1)
@@ -1293,4 +1295,10 @@ process("zones", parse_zones, verify_zones)
 process("stores", parse_stores, verify_stores)
 
 
-print(string.format("INFO: %d errors, %d warnings displayed, %d notices ignored (expected with current data files: 0 errors, 0 warnings displayed, and fewer than 1000 notices ignored)", error_count_critical, error_count_hard, error_count_soft))
+local prefix = "INFO"
+if error_count_critical > 0 then
+	prefix = "ERROR"
+elseif error_count_hard >= 20 or error_count_soft >= 500 then
+	prefix = "WARNING"
+end
+print(string.format("%s: %d errors, %d warnings, %d notices (expected: 0 errors, fewer then 20 warnings, and fewer than 500 notices)", prefix, error_count_critical, error_count_hard, error_count_soft))

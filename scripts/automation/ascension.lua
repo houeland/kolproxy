@@ -1973,7 +1973,9 @@ endif
 	if can_wear_weapons() and not have_item("Jarlsberg's pan (Cosmic portal mode)") and not have_item("Jarlsberg's pan") then
 		want_softcore_item("Operation Patriot Shield")
 	end
-	want_softcore_item_oneof { "Sneaky Pete's leather jacket (collar popped)", "Sneaky Pete's leather jacket", "astral shirt" }
+	if can_equip_item("Sneaky Pete's leather jacket (collar popped)") then
+		want_softcore_item_oneof { "Sneaky Pete's leather jacket (collar popped)", "Sneaky Pete's leather jacket", "astral shirt" }
+	end
 	want_softcore_item_oneof { "duonoculars", "ring of conflict" }
 
 	add_task {

@@ -1308,6 +1308,7 @@ function get_automation_scripts(cached_stuff)
 			end
 			table.insert(xs, "Pride of the Puffin")
 			table.insert(xs, "Ur-Kel's Aria of Annoyance")
+			table.insert(xs, "Blessing of Serqet")
 		elseif level() >= 13 and have_buff("Ur-Kel's Aria of Annoyance") and not want_buffs["Ur-Kel's Aria of Annoyance"] then
 			shrug_buff("Ur-Kel's Aria of Annoyance")
 			set_mcd(0) -- HACK: don't want this to be done here!
@@ -2813,7 +2814,7 @@ endif
 					end,
 				}
 			}
-		elseif not can_wear_weapons() then
+		else
 			local remaining = remaining_hidden_city_liana_zones()
 			remaining["A Massive Ziggurat"] = nil
 			local function findplace(name)
@@ -2833,11 +2834,12 @@ endif
 				critical("Kill lianas without machete")
 			end
 			run_task {
-				message = "cut liana at "..x.zone.." (without machete)",
+				message = "cut liana at "..x.zone,
 				fam = "auto",
+				equipment = { weapon = first_wearable { "antique machete" } },
 				action = adventure {
 					zone = x.zone,
-					macro_function = macro_noodleserpent,
+					macro_function = macro_kill_monster,
 					choice_function = function(advtitle, choicenum, pagetext)
 						if x.zone == "A Massive Ziggurat" then
 							cached_stuff.unlocked_massive_ziggurat = true
@@ -2854,41 +2856,6 @@ endif
 			}
 			if get_result():contains("New Area Unlocked") then
 				did_action = true
-			end
-		else
-			-- TODO: Merge with code above
-			for _, x in ipairs(places) do
-				for i = 1, 5 do
-					did_action = false
-					local t = turnsthisrun()
-					run_task {
-						message = "cut liana at " .. x.zone,
-						fam = "auto",
-						equipment = { weapon = "antique machete" },
-						action = adventure {
-							zone = x.zone,
-							choice_function = function(advtitle, choicenum, pagetext)
-								if advtitle == x.choice then
-									if pagetext:contains(x.option) then
-										return x.option
-									else
-										return x.fallback
-									end
-								end
-							end,
-						}
-					}
-					if get_result():contains("New Area Unlocked") then
-					elseif not did_action or turnsthisrun() ~= t then
-						critical "Failed to cut liana for free"
-					end
-				end
-			end
-			citypt = get_page("/place.php", { whichplace = "hiddencity" })
-			if citypt:contains("Hidden Apartment Building") and citypt:contains("Hidden Hospital") and citypt:contains("Hidden Office Building") and citypt:contains("Hidden Bowling Alley") then
-				did_action = true
-			else
-				did_action = false
 			end
 		end
 	end
@@ -4477,6 +4444,7 @@ endif
 	end
 
 	function f.do_never_odd_or_even_quest()
+		print("DEBUG do never odd")
 		if not have_item("Talisman o' Nam") then
 			if not have_item("pirate fledges") then
 				if have_item("ball polish") then
@@ -4562,7 +4530,7 @@ endif
 				script.bonus_target { "easy combat" }
 				fam "Knob Goblin Organ Grinder"
 				script.ensure_buffs { "A Few Extra Pounds", "Spirit of Garlic" }
-				script.wear { acc3 = "Mega Gem", acc2 = "Talisman o' Nam" }
+				script.wear { acc3 = first_wearable { "Mega Gem" }, acc2 = "Talisman o' Nam" }
 				script.ensure_mp(60)
 				script.heal_up()
 				result, resulturl = get_page("/place.php", { whichplace = "palindome", action = "pal_droffice" })
@@ -4827,8 +4795,8 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 					end
 				end
 				return post_page("/fight.php", { action = "macro", macrotext = macrotext })
-			else
-				stop "in an unexpected fight with no macro to use"
+--			else
+--				stop "in an unexpected fight with no macro to use"
 			end
 		end
 		return nil, pt, url, advagain
@@ -4858,6 +4826,7 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 			optname = noncombatchoices[adventure_title]
 		end
 		if not optname and adventure_title == "Like a Bat Into Hell" then
+			print("INFO: UNDYING!")
 			optname = "Go right back to the fight!"
 		end
 
@@ -4909,7 +4878,6 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 	local times = 0
 	local function handle(pt, url)
 		times = times + 1
-		print("DEBUG", url, "times", times)
 		if times >= 20 then
 			return pt, url, false
 		end

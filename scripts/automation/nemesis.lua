@@ -21,7 +21,7 @@ setup_turnplaying_script {
 			critical "Class not supported for nemesis script."
 		end
 
-		local need_items = { "clown whip", "clownskin buckler", "ring of conflict" }
+		local need_items = { "clown whip", "clownskin buckler", "ring of conflict", "tenderizing hammer" }
 		if not have_item(required_items.lew) then
 			table.insert(need_items, required_items.ew)
 		end
@@ -80,7 +80,7 @@ setup_turnplaying_script {
 			refresh_quest()
 			advagain = not quest_text("you must defeat Beelzebozo")
 		elseif not have_item(required_items.lew) and have_item(required_items.ew) and have_item(required_items.extra) then
-			smith_items(required_items.ew, required_items.extra)
+			set_result(smith_items(required_items.ew, required_items.extra))
 			if not have_item(required_items.lew) then
 				smith_items(required_items.ew, required_items.extra)
 			end

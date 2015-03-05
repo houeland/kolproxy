@@ -165,6 +165,9 @@ add_processor("/choice.php", function()
 	if text:contains("folder") and text:contains("holder") then
 		clear_cached_item_bonuses("over-the-shoulder Folder Holder")
 	end
+	if text:contains("Adjust your 'Edpiece") or text:contains("Cool jewels") then
+		clear_cached_item_bonuses("The Crown of Ed the Undying")
+	end
 end)
 
 add_processor("/inventory.php", function()
@@ -190,6 +193,7 @@ local items_to_cache = {
 	["Crown of Thrones"] = true,
 	["Buddy Bjorn"] = true,
 	["Sword of Procedural Generation"] = true,
+	["The Crown of Ed the Undying"] = true,
 }
 
 add_automator("all pages", function()
