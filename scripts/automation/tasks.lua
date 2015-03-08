@@ -1661,7 +1661,8 @@ endif
 			message = "release servant",
 			nobuffing = true,
 			action = function()
-				stop "TODO: release servant"
+				result, resulturl = get_page("/place.php", { whichplace = "edbase", action = "edbase_door" })
+				stop("TODO: release servant", result)
 			end
 		}
 	}

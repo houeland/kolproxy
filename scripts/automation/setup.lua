@@ -46,12 +46,14 @@ function run_automation_script(f, pwdsrc, scriptname)
 	local stopped_err = false
 	local critical_err = false
 	local errmsg = nil
+	local stop_pagetext = nil
 	function critical(e)
 		errmsg = e
 		critical_err = true
 		error(e, 2)
 	end
-	function stop(e)
+	function stop(e, pagetext)
+		stop_pagetext = pagetext
 		errmsg = e
 		stopped_err = true
 		error(e, 2)
@@ -113,6 +115,10 @@ function run_automation_script(f, pwdsrc, scriptname)
 				print("Finished: " .. errmsg)
 				print(e.trace)
 				return [[<script>top.charpane.location = "charpane.php"</script>]] .. "Finished: " .. errmsg .. "</pre>", requestpath
+			elseif stop_pagetext then
+				result = stop_pagetext
+				result = add_message_to_page(result, errmsg, "Ascension script:")
+				return result, requestpath
 			else
 				print("Manual intervention required: " .. errmsg)
 				print(e.trace)
