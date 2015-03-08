@@ -31,6 +31,14 @@ register_setting {
 }
 
 register_setting {
+	name = "automate costly tasks",
+	description = "Automatically complete tasks that consume resources as well",
+	group = "automation",
+	default_level = "detailed",
+	parent = "automate simple tasks",
+}
+
+register_setting {
 	name = "enable adventure warnings",
 	description = "Enable important adventure warnings about semirares, not having enough meat, already having an outfit, etc.",
 	group = "warnings",

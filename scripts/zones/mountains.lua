@@ -531,3 +531,17 @@ add_automator("/fight.php", function()
 		text = text:gsub("<!%-%-WINWINWIN%-%->", function(x) return x .. [[<p style="color: green">{ ]] .. (pressure or "Unknown pressure.") .. [[ }</p>]] end)
 	end
 end)
+
+add_automator("use item: A-Boo clue", function()
+	if not setting_enabled("automate costly tasks") then return end
+	if not have_item("ten-leaf clover") then
+		local accumulbanish, accumuldmg = predict_aboo_peak_banish()
+		if accumulbanish >= 30 then
+			text, url = autoadventure { zoneid = get_zoneid("A-Boo Peak"), specialnoncombatfunction = function(advtitle, choicenum)
+				if advtitle == "The Horror..." then
+					return "", 1
+				end
+			end }
+		end
+	end
+end)
