@@ -454,7 +454,9 @@ endif
 		cached_stuff.gotten_guild_challenge = true
 	end
 
-	cached_stuff.currently_checked.kgs_available = cached_stuff.currently_checked.kgs_available or cached_stuff.remember_kgs_available
+	if cached_stuff.remember_kgs_available then
+		cached_stuff.currently_checked.kgs_available = true
+	end
 	if cached_stuff.currently_checked.kgs_available == nil then
 		cached_stuff.currently_checked.kgs_available = check_buying_from_knob_dispensary()
 	end

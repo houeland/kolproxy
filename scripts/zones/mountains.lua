@@ -287,19 +287,19 @@ end)
 
 -- goatlet
 
--- add_choice_text("Between a Rock and Some Other Rocks", { -- choice adventure number: 162
--- 	["Help the miners clear the rocks away"] = "Unlock the goatlet",
--- 	["Screw these rocks, I'm gonna roll out"] = { leave_noturn = true },
--- })
+function add_on_the_trail_warning(zone, monster)
+	add_warning {
+		message = "You are on the trail of another monster when you might want to sniff a " .. monster .. ".",
+		type = "warning",
+		zone = zone,
+		check = function()
+			if not have_buff("On the Trail") then return end
+			return retrieve_trailed_monster() ~= monster
+		end,
+	}
+end
 
-add_ascension_zone_check(271, function()
-	if have_buff("On the Trail") then
-		local trailed = retrieve_trailed_monster()
-		if trailed ~= "dairy goat" then
-			return "You are trailing '" .. tostring(trailed) .. "' when you might want to sniff a dairy goat."
-		end
-	end
-end)
+add_on_the_trail_warning("The Goatlet", "dairy goat")
 
 -- extreme slope
 
