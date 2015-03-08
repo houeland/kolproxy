@@ -2330,6 +2330,46 @@ endif
 		end
 	end
 
+	function script.use_spleen()
+		if ascension_script_option("eat manually") then return end
+		local function space()
+			return estimate_max_spleen() - spleen()
+		end
+
+		local spleen_item_list = {
+			{ name = "steel-scented air freshener", size = 5, level = 0 },
+			{ name = "mummified beef haunch", size = 5, level = 0 },
+			{ name = "astral energy drink", size = 8, level = 11 },
+			{ name = "not-a-pipe", size = 4, level = 4 },
+			{ name = "glimmering roc feather", size = 4, level = 4 },
+			{ name = "groose grease", size = 4, level = 0 },
+			{ name = "agua de vida", size = 4, level = 4 },
+			{ name = "coffee pixie stick", size = 4, level = 4 },
+			{ name = "grim fairy tale", size = 4, level = 0 },
+		}
+
+		local function can_use_spleen(x)
+			if x.name == "astral energy drink" then
+			elseif have_item("astral energy drink") then
+				if spleen() + x.size + 8 > estimate_max_spleen() then
+					return false
+				elseif advs() >= 15 then
+					return false
+				end
+			end
+			return space() >= x.size and level() >= x.level
+		end
+
+		for _, x in ipairs(spleen_item_list) do
+			local c = count_item(x.name)
+			if c >= 1 and can_use_spleen(x) then
+				result, resulturl = use_item(x.name)()
+				did_action = count_item(x.name) < c
+				return result, resulturl, did_action
+			end
+		end
+	end
+
 	function f.get_photocopied_monster()
 		if have_item("photocopied monster") then
 			local itempt = get_page("/desc_item.php", { whichitem = "835898159" })
@@ -4229,6 +4269,17 @@ endif
 	end
 
 	function f.find_black_market()
+		local woods = get_page("/woods.php")
+		if woods:contains("Black Market") then
+			cached_stuff.found_black_market = true
+		else
+			local woods2 = get_page("/place.php", { whichplace = "woods" })
+			cached_stuff.found_black_market = woods2:contains("Black Market")
+		end
+		if cached_stuff.found_black_market then
+			did_action = true
+			return
+		end
 		use_dancecard()
 		if have_item("broken wings") and have_item("sunken eyes") then
 			meatpaste_items("broken wings", "sunken eyes")()
@@ -4817,7 +4868,7 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 			advagain = true
 			return nil, pt, url, advagain
 		end
-		local choice_adventure_number = tonumber(pt:match([[name=whichchoice value=([0-9]+)]]))
+		local choice_adventure_number = tonumber(pt:match([[name="?whichchoice"? value="?([0-9]+)"?]]))
 		local pickchoice = nil
 		local optname = nil
 		if specialnoncombatfunction then

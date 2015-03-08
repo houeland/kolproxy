@@ -176,8 +176,8 @@ function parse_choice_options(pt)
 		local titles = {}
 		local numbers = {}
 		for input in form:gmatch("<input[^>]+>") do
-			local title = input:match([[value="([^>]+)"]])
-			local number = tonumber(input:match([[value=([0-9]+)]]))
+			local title = input:match([[value="(.-)"]])
+			local number = tonumber(input:match([[value="?([0-9]+)"?]]))
 			if title and input:contains("submit") then
 				table.insert(titles, title)
 			end

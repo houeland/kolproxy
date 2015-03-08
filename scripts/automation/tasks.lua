@@ -1554,13 +1554,25 @@ endif
 		tasks.ns_lair_free_king,
 	}
 
-	local function want_more_ka()
-		for _, skill in ipairs { "Upgraded Legs", "Extra Spleen", "Another Extra Spleen", "Yet Another Extra Spleen", "Replacement Liver", "Replacement Stomach", "Still Another Extra Spleen" } do
+	local ka_skills = {
+		"Extra Spleen",
+		"Another Extra Spleen",
+		"Yet Another Extra Spleen",
+		"Replacement Liver",
+		"Replacement Stomach",
+		"Still Another Extra Spleen",
+		"Just One More Extra Spleen",
+		"Okay Seriously, This is the Last Spleen",
+		"Upgraded Legs",
+		"More Legs",
+		"Elemental Wards",
+		"More Elemental Wards",
+	}
+
+	local function want_ka_skill()
+		for _, skill in ipairs(ka_skills) do
 			if not have_skill(skill) then
-				if count_item("Ka coin") >= 30 then
-					stop("TODO: buy skill: " .. skill)
-				end
-				return true
+				return skill
 			end
 		end
 	end
@@ -1574,8 +1586,142 @@ endif
 		return cached_stuff.cache_wrapper[key]
 	end
 
+	local function parse_ed_skills_page(pt)
+		local skills = {}
+		for tr in pt:gmatch("<tr.-</tr>") do
+			local name = tr:match([[<td class="skp"><b>(.-)</b></td>]])
+			local pwd = tr:match([[name="pwd" value="(.-)"]])
+			local skillid = tonumber(tr:match([[name="skillid" value="(.-)"]]))
+			local option = tonumber(tr:match([[name="option" value="(.-)"]]))
+			local whichchoice = tonumber(tr:match([[name="whichchoice" value="(.-)"]]))
+			if name then
+				skills[name] = { pwd = pwd, skillid = skillid, option = option, whichchoice = whichchoice }
+			end
+		end
+		return skills
+	end
+
+	local ed_skills = {
+		"Fist of the Mummy",
+		"Prayer of Seshat",
+		"Wisdom of Thoth",
+		"Power of Heka",
+		"Hide of Sobek",
+		"Blessing of Serqet",
+		"Shelter of Shed",
+		"Bounty of Renenutet",
+		"Howl of the Jackal",
+		"Roar of the Lion",
+		"Storm of the Scarab",
+		"Purr of the Feline",
+		"Lash of the Cobra",
+		"Wrath of Ra",
+		"Curse of the Marshmallow",
+		"Curse of Indecision",
+		"Curse of Yuck",
+		"Curse of Heredity",
+		"Curse of Fortune",
+		"Curse of Vacation",
+		"Curse of Stench",
+	}
+
+	local function get_ed_skill(whichplace, action, want_skills)
+		local pt = get_page("/place.php", { whichplace = whichplace, action = action })
+		local skilldata = parse_ed_skills_page(pt)
+		local learned = nil
+		for _, skill in ipairs(want_skills) do
+			if not have_skill(skill) then
+				print("INFO: getting skill: " .. skill)
+				set_result(post_page("/choice.php", skilldata[skill]))
+				learned = skill
+				break
+			end
+		end
+		if locked() == "choice" then
+			local pt, pturl = get_page("/choice.php")
+			handle_adventure_result(pt, pturl, "?", nil, { ["Underworld Body Shop"] = "Back to the Underworld" })
+		end
+		return learned
+	end
+
+	tasks.ed_memorize_page = {
+		when = can_memorize_page,
+		task = {
+			message = "memorize page",
+			nobuffing = true,
+			action = function()
+				did_action = get_ed_skill("edbase", "edbase_book", ed_skills)
+			end
+		}
+	}
+
+	tasks.ed_release_servant = {
+		when = can_release_servant,
+		task = {
+			message = "release servant",
+			nobuffing = true,
+			action = function()
+				stop "TODO: release servant"
+			end
+		}
+	}
+
+	local function go_to_underworld()
+		return (adventure {
+			zone = "The Secret Government Laboratory",
+			macro_function = [[
+cast Mild Curse
+repeat
+]],
+			noncombats = { ["Like a Bat Into Hell"] = "Enter Underworld" },
+		})()
+	end
+
+	local function return_from_underworld()
+		local pt, pturl = get_page("/place.php", { whichplace = "edunder", action = "edunder_leave" })
+		result, resulturl, did_action = handle_adventure_result(pt, pturl, "?", macro_kill_monster, { ["Like a Bat out of Hell"] = "Return to the fight!" })
+	end
+
+	tasks.ed_buy_beef_haunch = {
+		when = not have_item("mummified beef haunch") and count_item("Ka coin") >= 15 and spleen() + 5 <= estimate_max_spleen(),
+		task = {
+			message = "buy mummified beef haunch",
+			minmp = 10,
+			equipment = { acc1 = first_wearable { "Personal Ventilation Unit" } },
+			action = function()
+				go_to_underworld()
+				buy_item("mummified beef haunch")()
+				if not have_item("mummified beef haunch") then
+					critical "Failed to buy mummified beef haunch"
+				end
+				return_from_underworld()
+			end
+		},
+	}
+
+	tasks.ed_buy_skill = {
+		when = want_ka_skill() and count_item("Ka coin") >= 30,
+		task = {
+			message = "buy body augmentation",
+			minmp = 10,
+			equipment = { acc1 = first_wearable { "Personal Ventilation Unit" } },
+			action = function()
+				go_to_underworld()
+				learned = get_ed_skill("edunder", "edunder_bodyshop", ka_skills)
+				if not learned then
+					critical "Failed to buy body augmentation!"
+				end
+				return_from_underworld()
+				clear_cached_skills()
+				reset_pageload_cache()
+				did_action = have_skill(learned)
+				print("DEBUG learned", learned, have_skill(learned))
+			end
+		},
+	}
+
 	tasks.ed_farm_ka_at_government_lab = {
-		when = want_more_ka() and have_skill("Fist of the Mummy") and cache_wrapper(have_conspiracy_island),
+		when = want_ka_skill() and count_item("Ka coin") < 30 and have_skill("Fist of the Mummy") and cache_wrapper(have_conspiracy_island),
 		task = {
 			message = "farm ka at government lab",
 			minmp = 10,
@@ -1608,7 +1754,15 @@ endif
 		},
 	}
 
-	tasks.tasklist_actually_ed_the_undying = { tasks.ed_farm_ka_at_government_lab, tasks.ed_use_map_page, tasks.ed_search_warehouse }
+	tasks.tasklist_actually_ed_the_undying = {
+		tasks.ed_memorize_page,
+		tasks.ed_release_servant,
+		tasks.ed_buy_beef_haunch,
+		tasks.ed_buy_skill,
+		tasks.ed_farm_ka_at_government_lab,
+		tasks.ed_use_map_page,
+		tasks.ed_search_warehouse,
+	}
 
 	return t
 end

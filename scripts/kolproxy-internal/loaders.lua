@@ -190,6 +190,7 @@ load_file("other", "paths/moonsigns.lua")
 load_file("other", "paths/jarlsberg.lua")
 load_file("other", "paths/sneaky-pete.lua")
 load_file("other", "paths/heavy-rains.lua")
+load_file("other", "paths/ed.lua")
 
 load_file("interface", "interface/charpane.lua")
 

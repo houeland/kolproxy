@@ -416,6 +416,7 @@ function setup_functions()
 			local cs = get_page("/charsheet.php")
 			local skills_text = cs:match("<p>Skills:</b>.-(<a onClick.-)</td>")
 			if not skills_text then
+				--print "WARNING: raw_retrieve_skills() with invalid page"
 				return nil
 			end
 			local skills = {}
@@ -427,7 +428,7 @@ function setup_functions()
 
 		function have_cached_data() -- TODO: check anything else that's cached?
 			return get_cached_item("cached_get_player_skills", function()
-				return session["cached player skills"]
+				return session["cached player skills.ascensionpathid"]
 			end)
 		end
 
@@ -436,21 +437,21 @@ function setup_functions()
 				local cached_skills = session["cached player skills"]
 				local cached_skills_storedid = session["cached player skills.storedid"]
 				local currentid = ascensionpathid() .. "/" .. ascensionstatus()
-				if not cached_skills or cached_skills_storedid ~= currentid then
-					if kolproxycore_async_submit_page and not cannot_set_state then
-						cached_skills = raw_retrieve_skills()
-						session["cached player skills"] = cached_skills
-						session["cached player skills.storedid"] = currentid
-					else
-						cached_skills = nil
+				if cached_skills_storedid ~= currentid then
+					if kolproxycore_async_submit_page and not cannot_set_state and not locked() then
+						local skills = raw_retrieve_skills()
+						if skills then
+							cached_skills = skills
+							session["cached player skills"] = skills
+							session["cached player skills.storedid"] = currentid
+						end
 					end
 				end
 				return cached_skills
 			end)
 		end
 		function clear_cached_skills()
-			session["cached player skills"] = nil
-			session["cached player skills.ascensionpathid"] = nil
+			session["cached player skills.storedid"] = nil
 		end
 		function have_skill(name)
 			if not name or name == "" then
