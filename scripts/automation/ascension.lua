@@ -2798,9 +2798,6 @@ endif
 
 	if ascensionstatus() ~= "Aftercore" then -- TODO: redo
 		script.use_and_sell_items()
-		if did_action then
-			return result, resulturl, did_action
-		end
 	end
 
 	need_total_reagent_pastas = 4 * 2
@@ -3621,11 +3618,6 @@ endif
 			end
 			did_action = true
 		end,
-	}
-
-	add_task {
-		when = level() < 6 and (challenge ~= "fist" or fist_level >= 3) and challenge ~= "boris" and challenge ~= "zombie" and challenge ~= "jarlsberg" and not ascensionpath("Class Act II: A Class For Pigs") and ascensionstatus() == "Hardcore" and not ascensionpath("Avatar of Sneaky Pete"),
-		task = tasks.do_sewerleveling,
 	}
 
 	add_task {
@@ -4652,15 +4644,9 @@ endif
 	}
 
 	add_task {
-		prereq = level() < 10,
-		f = do_powerleveling,
-		message = "level to 10",
-	}
-
-	add_task {
 		prereq = level() < 11,
 		f = do_powerleveling,
-		message = "level to 11",
+		message = "level up",
 	}
 
 	add_task {
@@ -4964,8 +4950,10 @@ endif
 			end
 			x.olfact = nil
 
-			if arrowed_possible and x.minmp < 60 then
+			if arrowed_possible and (x.minmp or 0) < 60 then
 				x.minmp = 60
+			elseif maxmp() >= 100 and (x.minmp or 0) < 40 then
+				x.minmp = 40
 			end
 
 			x.familiar = x.familiar or x.fam

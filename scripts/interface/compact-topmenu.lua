@@ -246,7 +246,7 @@ html, body {
 
 			<div class='abc a'><span class='title'><a target='mainpane' href='council.php'>council</a> </span><br><a target='mainpane' href='mrstore.php'>mr</a> <a target='mainpane' href='shop.php?whichshop=generalstore'>store</a><br><a target='mainpane' href='storage.php?which=5'>hagnk]] .. hagnk_pulls .. [[</a></div>
 
-			<div class='abc'><span class='title'><a target='mainpane' href='place.php?whichplace=plains'>plains</a> </span><br><a target='mainpane' href='cobbsknob.php'>kn</a><span class="sep"></span><a target='mainpane' href='cobbsknob.php?action=tolabs'>ob</a> <a target='mainpane' href='bathole.php'>bat</a><br><a target='mainpane' href='crypt.php'>cyr</a> <a target='mainpane' href='place.php?whichplace=beanstalk'>sta</a><span class="sep"></span><a target='mainpane' href='place.php?whichplace=giantcastle'>lk</a></div>
+			<div class='abc'><span class='title'><a target='mainpane' href='place.php?whichplace=plains'>plains</a> </span><br><a target='mainpane' href='cobbsknob.php'>kn</a><span class="sep"></span><a target='mainpane' href='cobbsknob.php?action=tolabs'>ob</a> <a target='mainpane' href='place.php?whichplace=bathole'>bat</a><br><a target='mainpane' href='crypt.php'>cyr</a> <a target='mainpane' href='place.php?whichplace=beanstalk'>sta</a><span class="sep"></span><a target='mainpane' href='place.php?whichplace=giantcastle'>lk</a></div>
 
 			<div class='abc a'><span class='title'><a target='mainpane' href='mountains.php'>mount</a> <a target='mainpane' href='peevpee.php'>pvp</a></span><br><a target='mainpane' href='place.php?whichplace=mclargehuge'>mcl</a> <a target='mainpane' href='place.php?whichplace=highlands'>high</a> <a target='mainpane' href='cave.php'>cave</a><br><a target='mainpane' href='da.php'>da</a> <a target='mainpane' href='hermit.php'>hermit</a></div>
 
@@ -409,7 +409,7 @@ $("#mrulist").change(function() {
     <span class='title'><a target='mainpane' href='place.php?whichplace=plains'>plains</a></span>
     <div class='child'>
       <a target='mainpane' href='cobbsknob.php' class="l5">knob</a> <a target='mainpane' href='cobbsknob.php?action=tolabs' class="l5">2</a>
-      <a target='mainpane' class="l4" href='bathole.php'>bat</a><br>
+      <a target='mainpane' class="l4" href='place.php?whichplace=bathole'>bat</a><br>
       <a target='mainpane' href='crypt.php' class="l7">cyr</a> <a target='mainpane' href='place.php?whichplace=beanstalk' class="l10">stalk</a> <a target='mainpane' href='place.php?whichplace=giantcastle' class="l10">castle</a>
     </div>
   </div>
