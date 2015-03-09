@@ -132,3 +132,5 @@ add_warning {
 	zone = "The Defiled Alcove",
 	check = function() return not have_buff("Springy Fusilli") and have_skill("Springy Fusilli") end,
 }
+
+add_on_the_trail_warning("The Defiled Niche", "dirty old lihc")

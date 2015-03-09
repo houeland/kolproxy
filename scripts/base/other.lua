@@ -818,3 +818,15 @@ add_automator("/manor3.php", function()
 		end)
 	end
 end)
+
+function add_on_the_trail_warning(zone, monster)
+	add_warning {
+		message = "You are on the trail of another monster when you might want to sniff a " .. monster .. ".",
+		type = "warning",
+		zone = zone,
+		check = function()
+			if not have_buff("On the Trail") then return end
+			return retrieve_trailed_monster() ~= monster
+		end,
+	}
+end
