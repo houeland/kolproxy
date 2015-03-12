@@ -4834,12 +4834,17 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 				advagain = false
 			elseif zoneid and pt:match([[<a href="adventure.php%?snarfblat=[0-9]*">Adventure Again]]) then
 				advagain = true
+			elseif pt:contains("You have been defeated, for now.") then
+				advagain = false
 			end
 		end
 		if advagain ~= nil then
 			already_ran_macro = false
 		end
-		if advagain and locked() and pt:contains("choice.php") then
+		if advagain ~= nil and locked() and pt:contains("choice.php") then
+			return post_page("/choice.php", { pwd = session.pwd })
+		end
+		if locked() == "choice" then
 			return post_page("/choice.php", { pwd = session.pwd })
 		end
 		if advagain == nil and not already_ran_macro then

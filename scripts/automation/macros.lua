@@ -1913,7 +1913,7 @@ if hasskill Wink at
 endif]])
 	end
 
-	if (cfm.Stats.stunresistpercent or 0) <= 20 then
+	if (cfm.Stats.stunresistpercent or 0) <= 20 and false then
 		table.insert(use_initial_tbl, [[
 if hasskill Summon Love Stinkbug
 	cast Summon Love Stinkbug
