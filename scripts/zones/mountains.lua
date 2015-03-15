@@ -173,7 +173,7 @@ end
 
 add_automator("/mining.php", function()
 	if not session["trapper.ore"] and not session["trapper.visited"] then
-		get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
+		get_place("mclargehuge", "trappercabin")
 		session["trapper.visited"] = true
 	end
 end)
@@ -453,7 +453,7 @@ local function get_hauntedness()
 		hauntedness = "No longer haunted."
 	end
 	if not hauntedness then
-		async_get_page("/place.php", { whichplace = "highlands", action = "highlands_dude" })
+		async_get_place("highlands", "highlands_dude")
 		questlog_page = get_page("/questlog.php", { which = 7 })
 		hauntedness = questlog_page:match([[currently [0-9%%]+ haunted]])
 	end
@@ -499,7 +499,7 @@ local function get_pressure()
 	local questlog_page = get_page("/questlog.php", { which = 1 })
 	local pressure = questlog_page:match([[current pressure: [0-9.]+ &mu;B/Hg]]) or questlog_page:match([[The pressure is very low at this point.]]) or questlog_page:match([[You've lit the fire on Oil Peak.]])
 	if not pressure then
-		async_get_page("/place.php", { whichplace = "highlands", action = "highlands_dude" })
+		async_get_place("highlands", "highlands_dude")
 		questlog_page = get_page("/questlog.php", { which = 1 })
 		pressure = questlog_page:match([[current pressure: [0-9.]+ &mu;B/Hg]]) or questlog_page:match([[The pressure is very low at this point.]]) or questlog_page:match([[You've lit the fire on Oil Peak.]])
 	end

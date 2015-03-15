@@ -1048,7 +1048,7 @@ function get_automation_scripts(cached_stuff)
 			if not have_item("tobiko marble soda") then
 				script.ensure_mp(5)
 				set_result(cast_skill("Summon Alice's Army Cards"))
-				get_page("/place.php", { whichplace = "forestvillage" })
+				get_place("forestvillage")
 				get_page("/gamestore.php")
 				get_page("/gamestore.php", { place = "cashier" })
 				async_post_page("/gamestore.php", { action = "buysnack", whichsnack = get_itemid("tobiko marble soda") })
@@ -1754,7 +1754,7 @@ endif
 	function f.coffee_pixie_stick()
 		inform "using coffee pixie stick"
 		async_get_page("/town_wrong.php")
-		async_get_page("/place.php", { whichplace = "arcade", action = "arcade_skeeball" })
+		async_get_place("arcade", "arcade_skeeball")
 		buy_item("coffee pixie stick")
 		if have_item("coffee pixie stick") then
 			local a = advs()
@@ -1773,7 +1773,7 @@ endif
 	function f.finger_cuffs()
 		inform "buying finger cuffs"
 		async_get_page("/town_wrong.php")
-		async_get_page("/place.php", { whichplace = "arcade", action = "arcade_skeeball" })
+		async_get_place("arcade", "arcade_skeeball")
 		buy_item("finger cuffs", 10)
 		if count_item("finger cuffs") >= 10 then
 			did_action = true
@@ -2633,7 +2633,7 @@ endif
 			}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic" }, "Slimeling", 30)
 		elseif quest_text("Investigate the cellar") then
 			inform "investigating spookyraven cellar"
-			get_page("/place.php", { whichplace = "manor4", action = "manor4_chamberwall" })
+			get_place("manor4", "manor4_chamberwall")
 			refresh_quest()
 			did_action = not quest_text("Investigate the cellar")
 		elseif quest_text("Read the list of ingredients") then
@@ -2662,7 +2662,7 @@ endif
 			}
 		elseif quest_text("Use the explosive on the") then
 			inform "exploding suspicious masonry"
-			get_page("/place.php", { whichplace = "manor4", action = "manor4_chamberwall_label" })
+			get_place("manor4", "manor4_chamberwall_label")
 			refresh_quest()
 			did_action = not quest_text("Use the explosive on the")
 		elseif quest_text("Gather the mortar-dissolving ingredients") then
@@ -2699,7 +2699,7 @@ endif
 			stop "TODO: have all ingredients for spookyraven?"
 		elseif quest_text("Take the mortar-dissolving ingredients back") then
 			inform "dissolving suspicious masonry"
-			get_page("/place.php", { whichplace = "manor4", action = "manor4_chamberwall_label" })
+			get_place("manor4", "manor4_chamberwall_label")
 			refresh_quest()
 			did_action = not quest_text("Take the mortar-dissolving ingredients back")
 		elseif quest_text("confront Lord Spookyraven") then
@@ -2711,13 +2711,13 @@ endif
 			ensure_mp(50)
 			if get_lowest_resistance_level() >= 1 then
 				-- TODO: check resistance instead
-				local pt, url = get_page("/place.php", { whichplace = "manor4", action = "manor4_chamberboss" })
+				local pt, url = get_place("manor4", "manor4_chamberboss")
 				result, resulturl, did_action = handle_adventure_result(pt, url, "?", macro_spookyraven)
 			elseif meat() >= 3000 then
 				script.ensure_buffs { "Red Door Syndrome" }
 				did_action = have_buff("Red Door Syndrome")
 			else
-				local pt = get_page("/place.php", { whichplace = "manor4" })
+				local pt = get_place("manor4")
 				stop("TODO: Beat Lord Spookyraven", pt)
 			end
 		else
@@ -2740,7 +2740,7 @@ endif
 			{ zone = "An Overgrown Shrine (Southeast)", choice = "Fire When Ready", option = "Place your head in the impression", fallback = "Back off", sphere = "scorched" },
 			{ zone = "An Overgrown Shrine (Northeast)", choice = "Air Apparent", option = "Place your head in the impression", fallback = "Leave the altar", sphere = "crackling" },
 		}
-		local citypt = get_page("/place.php", { whichplace = "hiddencity" })
+		local citypt = get_place("hiddencity")
 		script.prepare_physically_resistant()
 		if count_item("stone triangle") >= 4 then
 			return run_task {
@@ -2754,7 +2754,7 @@ endif
 			}
 		elseif have_item("book of matches") and not citypt:contains("Hidden Tavern") then
 			use_item("book of matches")
-			citypt = get_page("/place.php", { whichplace = "hiddencity" })
+			citypt = get_place("hiddencity")
 			did_action = citypt:contains("Hidden Tavern")
 		elseif citypt:contains("Hidden Apartment Building") and citypt:contains("Hidden Hospital") and citypt:contains("Hidden Office Building") and citypt:contains("Hidden Bowling Alley") then
 			local spherecount = count_item("scorched stone sphere") + count_item("moss-covered stone sphere") + count_item("crackling stone sphere") + count_item("dripping stone sphere")
@@ -3189,11 +3189,11 @@ endif
 		-- TODO: redo logic
 		if quest_text("Take Groar's fur to") then
 			inform "taking groar's fur to trapper"
-			async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
+			async_get_place("mclargehuge", "trappercabin")
 			refresh_quest()
 			did_action = not quest_text("Take Groar's fur to")
 		elseif quest_text("ready to ascend to the Icy Peak") or quest_text("close to figuring out what's going on at the Icy Peak") or quest_text("have slain Groar") or quest_text("for the source of all this chaos") or quest_text("and see what's up!") then
-			async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
+			async_get_place("mclargehuge", "trappercabin")
 			refresh_quest()
 			if not quest_text("ready to ascend to the Icy Peak") and not quest_text("close to figuring out what's going on at the Icy Peak") and not quest_text("for the source of all this chaos") and not quest_text("and see what's up!") then
 				did_action = true
@@ -3215,7 +3215,7 @@ endif
 					script.maybe_ensure_buffs { "Red Door Syndrome" }
 				end
 				inform "exploring the icy peak"
-				local pt, url = get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak2" })
+				local pt, url = get_place("mclargehuge", "cloudypeak2")
 				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_noodlecannon)
 				did_action = advagain
 				if not did_action and pt:contains("get back into your warm clothes") and not cached_stuff.missing_cold_resistance_for_icy_peak then
@@ -3226,12 +3226,12 @@ endif
 			end
 		elseif ascensionpath("Avatar of Sneaky Pete") and sneaky_pete_motorcycle_upgrades()["Tires"] == "Snow Tires" then
 			inform "ascending cloudy peak with snow tires"
-			get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak" })
+			get_place("mclargehuge", "cloudypeak")
 			refresh_quest()
 			did_action = quest_text("ready to ascend to the Icy Peak") or quest_text("close to figuring out what's going on at the Icy Peak") or quest_text("have slain Groar") or quest_text("for the source of all this chaos") or quest_text("and see what's up!")
 		elseif quest_text("3 wedges of goat cheese") then
 			maybe_pull_in_casual("goat cheese", 3)
-			get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
+			get_place("mclargehuge", "trappercabin")
 			refresh_quest()
 			if not quest_text("3 wedges of goat cheese") then
 				did_action = true
@@ -3315,7 +3315,7 @@ endif
 			if have_item("ninja rope") and have_item("ninja crampons") and have_item("ninja carabiner") then
 				script.ensure_buffs { "Elemental Saucesphere", "Astral Shell" }
 			end
-			get_page("/place.php", { whichplace = "mclargehuge", action = "cloudypeak" })
+			get_place("mclargehuge", "cloudypeak")
 			refresh_quest()
 			if not quest_text("like you to investigate the summit") and not quest_text("Find your way to the Icy Peak") then
 				did_action = true
@@ -3355,7 +3355,7 @@ endif
 				end
 			end
 		elseif not cached_stuff.checked_trappercabin then
-			async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
+			async_get_place("mclargehuge", "trappercabin")
 			refresh_quest()
 			cached_stuff.checked_trappercabin = true
 			did_action = true
@@ -3739,7 +3739,7 @@ endif
 
 	function f.do_boss_bat(macrofunc, extra_mp)
 		ignore_buffing_and_outfit = false
-		local batholept = get_page("/place.php", { whichplace = "bathole" })
+		local batholept = get_place("bathole")
 		if not batholept:match("Boss") then
 			script.bonus_target { "item" }
 			maybe_pull_in_casual("sonar-in-a-biscuit")
@@ -3843,7 +3843,7 @@ endif
 			do_degrassi_untinker_quest()
 			local rf = async_get_page("/guild.php", { place = "paco" }) -- TODO: need the topmenu refreshed from this
 			use_item("Degrassi Knoll shopping list")
-			local b = get_page("/place.php", { whichplace = "desertbeach" })
+			local b = get_place("desertbeach")
 			did_action = b:contains("The Shore")
 			result, resulturl = rf()
 		end
@@ -4281,7 +4281,7 @@ endif
 		if woods:contains("Black Market") then
 			cached_stuff.found_black_market = true
 		else
-			local woods2 = get_page("/place.php", { whichplace = "woods" })
+			local woods2 = get_place("woods")
 			cached_stuff.found_black_market = woods2:contains("Black Market")
 		end
 		if cached_stuff.found_black_market then
@@ -4389,7 +4389,7 @@ endif
 			did_action = not have_item("desert sightseeing pamphlet")
 			return
 		end
-		local beachpt = get_page("/place.php", { whichplace = "desertbeach" })
+		local beachpt = get_place("desertbeach")
 		if not beachpt:contains("Gnasir") then
 			set_result(run_task {
 				message = "find gnasir",
@@ -4402,7 +4402,7 @@ endif
 				}
 			})
 			if not did_action and not locked() then
-				local beachpt = get_page("/place.php", { whichplace = "desertbeach" })
+				local beachpt = get_place("desertbeach")
 				did_action = beachpt:contains("Gnasir")
 			end
 			return
@@ -4425,7 +4425,7 @@ endif
 		local original_count = need_count
 
 		local function give_to_gnasir()
-			get_page("/place.php", { whichplace = "desertbeach", action = "db_gnasir" })
+			get_place("desertbeach", "db_gnasir")
 			result, resulturl = post_page("/choice.php", { pwd = session.pwd, whichchoice = 805, option = 2 })
 			async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 805, option = 1 })
 			update_tracker()
@@ -4592,12 +4592,12 @@ endif
 				script.wear { acc3 = first_wearable { "Mega Gem" }, acc2 = "Talisman o' Nam" }
 				script.ensure_mp(60)
 				script.heal_up()
-				result, resulturl = get_page("/place.php", { whichplace = "palindome", action = "pal_droffice" })
+				result, resulturl = get_place("palindome", "pal_droffice")
 				result, resulturl = handle_adventure_result(get_result(), resulturl, "?", macro_noodleserpent, { ["Dr. Awkward"] = "War, sir, is raw!" })
 				did_action = have_item("Staff of Fats")
 			elseif quest_text("wet stunt nut stew") and have_item("wet stunt nut stew") then
 				inform "getting mega gem"
-				result, resulturl = get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" })
+				result, resulturl = get_place("palindome", "pal_mroffice")
 				did_action = have_item("Mega Gem")
 			elseif quest_text("wet stunt nut stew") and have_item("stunt nuts") and have_item("wet stew") then
 				inform "cooking wet stunt nut stew"
@@ -4629,19 +4629,19 @@ endif
 				}, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 40)
 			elseif quest_text("Mr. Alarm") then
 				inform "talking to Mr. Alarm"
-				set_result(get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" }))
+				set_result(get_place("palindome", "pal_mroffice"))
 				refresh_quest()
 				did_action = quest_text("wet stunt nut stew") or have_item("Mega Gem")
 			else
-				local pt = get_page("/place.php", { whichplace = "palindome" })
+				local pt = get_place("palindome")
 				if pt:contains("Mr. Alarm") then
 					stop "TODO: Already found Mr. Alarm"
 				end
 				if have_item("photograph of God") and have_item("photograph of a dog") and have_item("photograph of a red nugget") and have_item("photograph of an ostrich egg") then
-					local pt = get_page("/place.php", { whichplace = "palindome" })
+					local pt = get_place("palindome")
 					if pt:contains("Dr. Awkward's Office") then
 						inform "placing palindome photos"
-						get_page("/place.php", { whichplace = "palindome", action = "pal_droffice" })
+						get_place("palindome", "pal_droffice")
 						result, resulturl = post_page("/choice.php", { pwd = session.pwd, whichchoice = 872, option = 1, photo1 = get_itemid("photograph of God"), photo2 = get_itemid("photograph of a red nugget"), photo3 = get_itemid("photograph of a dog"), photo4 = get_itemid("photograph of an ostrich egg") })
 						use_hottub()
 						did_action = have_item("&quot;2 Love Me, Vol. 2&quot;")
@@ -4788,11 +4788,11 @@ function get_faxbot_command(monstername)
 end
 
 function do_degrassi_untinker_quest()
-	async_get_page("/place.php", { whichplace = "forestvillage" })
-	async_get_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker_quest" })
+	async_get_place("forestvillage")
+	async_get_place("forestvillage", "fv_untinker_quest")
 	async_post_page("/place.php", { whichplace = "forestvillage", preaction = "screwquest", action = "fv_untinker_quest" })
-	async_get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_innabox" })
-	async_get_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker" })
+	async_get_place("knoll_friendly", "dk_innabox")
+	async_get_place("forestvillage", "fv_untinker")
 end
 
 function get_charpane_quest_status()
@@ -5136,7 +5136,7 @@ function have_lovebugs()
 end
 
 function have_chateau_mantegna()
-	local pt = get_page("/place.php", { whichplace = "chateau" })
+	local pt = get_place("chateau")
 	return pt:contains("Chateau Mantegna")
 end
 

@@ -3,7 +3,7 @@ function can_memorize_page()
 	if not ascensionpath("Actually Ed the Undying") then return end
 	if last_cached_memorize ~= level() and not locked() then
 		last_cached_memorize = level()
-		get_page("/place.php", { whichplace = "edbase", action = "edbase_book" })
+		get_place("edbase", "edbase_book")
 	end
 	return session["cache ed can memorize pages"]
 end
@@ -18,7 +18,7 @@ function can_release_servant()
 	if not ascensionpath("Actually Ed the Undying") then return end
 	if last_cached_release ~= level() and not locked() then
 		last_cached_release = level()
-		get_page("/place.php", { whichplace = "edbase", action = "edbase_door" })
+		get_place("edbase", "edbase_door")
 	end
 	return session["cache ed can release servant"]
 end

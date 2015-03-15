@@ -211,7 +211,7 @@ local space_href = setup_turnplaying_script {
 				local rewards = { 0, 0, 0, 0, 1, 0, 0, 0, 0 }
 				local best_option = solve_porko(pegs, rewards)
 				result, resulturl = get_page("/choice.php", { whichchoice = 540, pwd = session.pwd, option = best_option })
-				result, resulturl = get_page("/place.php", { whichplace = "spaaacegrimace" })
+				result, resulturl = get_place("spaaacegrimace")
 			end
 			advagain = false
 		end

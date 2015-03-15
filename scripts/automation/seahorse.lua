@@ -355,7 +355,7 @@ local violence_href = setup_turnplaying_script {
 		if not visited_old_man then
 			inform "visiting old man"
 			set_result(async_get_page("/oldman.php"))
-			set_result(async_get_page("/place.php", { whichplace = "sea_oldman", action = "oldman_oldman" }))
+			set_result(async_get_place("sea_oldman", "oldman_oldman"))
 			visited_old_man = true
 			advagain = true
 		elseif not found_castle then

@@ -49,9 +49,9 @@ mad_tea_party_href = add_automation_script("custom-choose-mad-tea-party-hat", fu
 			if not have_buff("Down the Rabbit Hole") then
 				use_item("&quot;DRINK ME&quot; potion")()
 			end
-			async_get_page("/place.php", { whichplace = "plains" })
-			async_get_page("/place.php", { whichplace = "rabbithole" })
-			get_page("/place.php", { whichplace = "rabbithole", action = "rabbithole_teaparty" })
+			async_get_place("plains")
+			async_get_place("rabbithole")
+			get_place("rabbithole", "rabbithole_teaparty")
 			pt, pturl = post_page("/choice.php", { pwd = session.pwd, whichchoice = 441, option = 1 })
 		end
 		set_equipment(eq)

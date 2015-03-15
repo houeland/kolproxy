@@ -345,7 +345,7 @@ mark m_done
 	end
 
 	function t.do_orc_chasm()
-		local pt, pturl = get_page("/place.php", { whichplace = "orc_chasm" })
+		local pt, pturl = get_place("orc_chasm")
 		local pieces = tonumber(pt:match("action=bridge([0-9]*)"))
 		if not pieces and ascensionpath("Actually Ed the Undying") then
 			stop("TODO: Defeat troll", pt)
@@ -405,7 +405,7 @@ mark m_done
 				message = "check bridge",
 				nobuffing = true,
 				action = function()
-					pt = get_page("/place.php", { whichplace = "orc_chasm" })
+					pt = get_place("orc_chasm")
 					pieces = tonumber(pt:match("action=bridge([0-9]*)"))
 					if not pieces then
 						did_action = true
@@ -688,7 +688,7 @@ mark m_done
 		task = {
 			message = "visit highland lord",
 			action = function()
-				get_page("/place.php", { whichplace = "highlands", action = "highlands_dude" })
+				get_place("highlands", "highlands_dude")
 				refresh_quest()
 				did_action = not (quest_text("Speak to the Highland Lord") or quest_text("Go see the Highland Lord"))
 			end
@@ -1016,7 +1016,7 @@ mark m_done
 			message = "Take the necklace to Lady Spookyraven",
 			nobuffing = true,
 			action = function()
-				get_page("/place.php", { whichplace = "manor1", action = "manor1_ladys" })
+				get_place("manor1", "manor1_ladys")
 				refresh_quest()
 				did_action = not quest_text("Take the necklace to Lady Spookyraven")
 			end,
@@ -1029,7 +1029,7 @@ mark m_done
 			message = "Go see Lady Spookyraven",
 			nobuffing = true,
 			action = function()
-				get_page("/place.php", { whichplace = "manor2", action = "manor2_ladys" })
+				get_place("manor2", "manor2_ladys")
 				refresh_quest()
 				did_action = not quest_text("Go see Lady Spookyraven") and not quest_text("Go back to")
 			end,
@@ -1096,7 +1096,7 @@ mark m_done
 			message = "Use Staff of Ed",
 			nobuffing = true,
 			action = function()
-				get_page("/place.php", { whichplace = "desertbeach", action = "db_pyramid1" })
+				get_place("desertbeach", "db_pyramid1")
 				refresh_quest()
 				did_action = quest("A Pyramid Scheme")
 			end,
@@ -1140,7 +1140,7 @@ mark m_done
 					end,
 				}
 			elseif quest_text("Solve the mystery of the Lower Chambers") then
-				local pyramidpt = get_page("/place.php", { whichplace = "pyramid" })
+				local pyramidpt = get_place("pyramid")
 				if pyramidpt:contains("action=pyramid_state1a") then
 					if script.semirare_within_N_turns(7) then return end
 					local minmp = 100
@@ -1155,7 +1155,7 @@ mark m_done
 						familiar = "Frumious Bandersnatch",
 						bonus_target = { "easy combat" },
 						action = function()
-							result, resulturl = get_page("/place.php", { whichplace = "pyramid", action = "pyramid_state1a" })
+							result, resulturl = get_place("pyramid", "pyramid_state1a")
 							result, resulturl, advagain = handle_adventure_result(get_result(), resulturl, "?", macro_noodlegeyser(5), { ["Ed the Undrowning"] = "If you say so..." })
 							while get_result():contains([[<!--WINWINWIN-->]]) and get_result():contains([[fight.php]]) do
 								result, resulturl = get_page("/fight.php")
@@ -1209,7 +1209,7 @@ mark m_done
 						message = "using pyramid control room",
 						nobuffing = true,
 						action = function()
-							get_page("/place.php", { whichplace = "pyramid", action = "pyramid_control" })
+							get_place("pyramid", "pyramid_control")
 							if first_action == "turn" then
 								if have_item("crumbling wooden wheel") then
 									post_page("/choice.php", { pwd = session.pwd, whichchoice = 929, option = 1 }) -- use wheel
@@ -1219,7 +1219,7 @@ mark m_done
 							elseif first_action == "head down" then
 								post_page("/choice.php", { pwd = session.pwd, whichchoice = 929, option = 5 }) -- head down
 							end
-							local new_pyramidpt = get_page("/place.php", { whichplace = "pyramid" })
+							local new_pyramidpt = get_place("pyramid")
 							if new_pyramidpt:contains("action=pyramid_state1a") then
 								did_action = true
 							else
@@ -1280,7 +1280,7 @@ mark m_done
 			message = "sign up for NS lair contest",
 			nobuffing = true,
 			action = function()
-				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_01_contestbooth" })
+				result, resulturl = get_place("nstower", "ns_01_contestbooth")
 				local options = parse_choice_options(result)
 				if options["Enter the Fastest Adventurer contest"] then
 					--...maximize init...
@@ -1300,7 +1300,7 @@ mark m_done
 		task = {
 			message = "defeat other NS lair contestants",
 			action = function()
-				result, resulturl = get_page("/place.php", { whichplace = "nstower" })
+				result, resulturl = get_place("nstower")
 				for i = 1, 3 do
 					if result:contains("ns_01_crowd" .. i) then
 						result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_01_crowd" .. i })
@@ -1321,7 +1321,7 @@ mark m_done
 			message = "finish NS lair contest",
 			nobuffing = true,
 			action = function()
-				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_01_contestbooth" })
+				result, resulturl = get_place("nstower", "ns_01_contestbooth")
 				did_action = quest_text("Attend your coronation in the courtyard")
 			end,
 		}
@@ -1333,7 +1333,7 @@ mark m_done
 			message = "attend NS lair coronation",
 			nobuffing = true,
 			action = function()
-				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_02_coronation" })
+				result, resulturl = get_place("nstower", "ns_02_coronation")
 				did_action = quest_text("Make your way through the treacherous hedge maze")
 			end,
 		}
@@ -1344,7 +1344,7 @@ mark m_done
 		task = {
 			message = "navigate NS hedge maze",
 			action = function()
-				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_03_hedgemaze" })
+				result, resulturl = get_place("nstower", "ns_03_hedgemaze")
 				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_kill_monster, nil, function(advtitle, choicenum, pagetext)
 					print("DEBUG advtitle choicenum", advtitle, choicenum)
 					return "", 1
@@ -1360,7 +1360,7 @@ mark m_done
 			message = "pass NS lair door",
 			nobuffing = true,
 			action = function()
-				result, resulturl = get_page("/place.php", { whichplace = "nstower_door" })
+				result, resulturl = get_place("nstower_door")
 				did_action = false
 			end,
 		}
@@ -1369,7 +1369,7 @@ mark m_done
 	local tower_page = nil
 	local function at_tower_level(idx)
 		if not tower_page then
-			tower_page = get_page("/place.php", { whichplace = "nstower" })
+			tower_page = get_place("nstower")
 		end
 		return tower_page:contains("Tower Level " .. idx)
 	end
@@ -1387,7 +1387,7 @@ mark m_done
 					acc2 = first_wearable { "bottle opener belt buckle" },
 				}
 				script.maybe_ensure_buffs { "Spiky Shell", "Jalape&ntilde;o Saucesphere", "Scarysauce", "Psalm of Pointiness" }
-				result, resulturl = get_page("/place.php", { whichplace = "nstower" })
+				result, resulturl = get_place("nstower")
 				did_action = false
 			end,
 		}
@@ -1401,7 +1401,7 @@ mark m_done
 				script.want_familiar("leprechaun")
 				script.wear {}
 				script.ensure_buffs { "Polka of Plenty", "Disco Leer" }
-				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_06_monster2" })
+				result, resulturl = get_place("nstower", "ns_06_monster2")
 				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_kill_monster)
 				did_action = advagain
 			end,
@@ -1416,7 +1416,7 @@ mark m_done
 		task = {
 			message = "pass wall of bones",
 			action = function()
-				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_07_monster3" })
+				result, resulturl = get_place("nstower", "ns_07_monster3")
 				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", [[use electric boning knife]])
 				did_action = advagain
 			end,
@@ -1448,7 +1448,7 @@ mark m_done
 		task = {
 			message = "look in tower mirror",
 			action = function()
-				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_08_monster4" })
+				result, resulturl = get_place("nstower", "ns_08_monster4")
 				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, {
 					["The Mirror in the Tower has the View that is True"] = "Gaze into the mirror...",
 				})
@@ -1485,7 +1485,7 @@ mark m_done
 				else
 					stop "Kill your shadow"
 				end
-				result, resulturl = get_page("/place.php", { whichplace = "nstower", action = "ns_09_monster5" })
+				result, resulturl = get_place("nstower", "ns_09_monster5")
 				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", [[
 ]] .. COMMON_MACROSTUFF_START(20, 5) .. [[
 
@@ -1541,7 +1541,7 @@ endif
 		task = {
 			message = "free king ralph",
 			action = function()
-				set_result(get_page("/place.php", { whichplace = "nstower" }))
+				set_result(get_place("nstower"))
 				result = add_message_to_page(get_result(), "<p>Finished, free the king!</p>", "Ascension script:")
 				result_status.finished()
 			end,
@@ -1672,7 +1672,7 @@ endif
 			message = "release servant",
 			nobuffing = true,
 			action = function()
-				result, resulturl = get_page("/place.php", { whichplace = "edbase", action = "edbase_door" })
+				result, resulturl = get_place("edbase", "edbase_door")
 				stop("TODO: release servant", result)
 			end
 		}
@@ -1690,7 +1690,7 @@ repeat
 	end
 
 	local function return_from_underworld()
-		local pt, pturl = get_page("/place.php", { whichplace = "edunder", action = "edunder_leave" })
+		local pt, pturl = get_place("edunder", "edunder_leave")
 		result, resulturl, did_action = handle_adventure_result(pt, pturl, "?", macro_kill_monster, { ["Like a Bat out of Hell"] = "Return to the fight!" })
 	end
 

@@ -448,7 +448,7 @@ end)
 add_ascension_assistance(function() return true end, function()
 	async_get_page("/council.php")
 	if level() == 8 then
-		async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
+		async_get_place("mclargehuge", "trappercabin")
 	end
 end)
 
@@ -512,7 +512,7 @@ add_ascension_assistance(function() return have_item("Knob Goblin encryption key
 end)
 
 add_ascension_assistance(function() return have_item("Lady Spookyraven's necklace") end, function()
-	get_page("/place.php", { whichplace = "manor1", action = "manor1_ladys" })
+	get_place("manor1", "manor1_ladys")
 end)
 
 function pick_up_continuum_transfunctioner()
@@ -524,10 +524,10 @@ function pick_up_continuum_transfunctioner()
 end
 
 add_ascension_assistance(function() return level() >= 2 and not have_item("continuum transfunctioner") end, function()
-	async_get_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker_quest" })
+	async_get_place("forestvillage", "fv_untinker_quest")
 	async_post_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker_quest", preaction = "screwquest" })
-	async_get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_innabox" })
-	async_get_page("/place.php", { whichplace = "forestvillage", action = "fv_untinker_quest" })
+	async_get_place("knoll_friendly", "dk_innabox")
+	async_get_place("forestvillage", "fv_untinker_quest")
 	pick_up_continuum_transfunctioner()
 end)
 
@@ -544,7 +544,7 @@ add_use_item_ascension_assistance("hermit script")
 
 add_ascension_assistance(function() return have_item("&quot;2 Love Me, Vol. 2&quot;") end, function()
 	use_item("&quot;2 Love Me, Vol. 2&quot;")
-	async_get_page("/place.php", { whichplace = "palindome", action = "pal_mroffice" })
+	async_get_place("palindome", "pal_mroffice")
 end)
 
 local hermit_items_href = add_automation_script("get-hermit-items", function()

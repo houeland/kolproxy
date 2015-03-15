@@ -76,7 +76,7 @@ end
 function do_wolfgame()
 	local pt, pturl = get_page("/fight.php")
 	if not pturl:contains("fight.php") and hp() == maxhp() then
-		pt, pturl = get_page("/place.php", { whichplace = "ioty2014_wolf", action = "wolf_houserun" })
+		pt, pturl = get_place("ioty2014_wolf", "wolf_houserun")
 	end
 	if not pturl:contains("fight.php") then
 		return pt, pturl

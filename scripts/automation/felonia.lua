@@ -15,7 +15,7 @@ local felonia_href = setup_turnplaying_script {
 	end,
 	adventuring = function()
 		advagain = false
-		result, resulturl = get_page("/place.php", { whichplace = "knoll_friendly", action = "dk_mayor" })
+		result, resulturl = get_place("knoll_friendly", "dk_mayor")
 		refresh_quest()
 		if result ~= dk_mayor_last then
 			dk_mayor_last = result

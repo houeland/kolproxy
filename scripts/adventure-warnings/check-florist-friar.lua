@@ -22,7 +22,7 @@ function zone_awaiting_florist_decision(zone)
 		return
 	elseif have_friar == nil then
 		print("INFO: checking for friar")
-		pt = get_page("/place.php", { whichplace = "forestvillage", action = "fv_friar" })
+		pt = get_place("forestvillage", "fv_friar")
 		if pt:contains("The Florist Friar's Cottage") then
 			have_friar = true
 		elseif pt:contains("Forest Village") then
@@ -38,7 +38,7 @@ function zone_awaiting_florist_decision(zone)
 		local noplants = 0
 		if not pt then
 			print("INFO: checking friar for plants")
-			pt = get_page("/place.php", { whichplace = "forestvillage", action = "fv_friar" })
+			pt = get_place("forestvillage", "fv_friar")
 		end
 		for x in pt:gmatch([[title="No Plant"]]) do
 			noplants = noplants + 1
@@ -95,7 +95,7 @@ add_interceptor("/adventure.php", function()
 end)
 
 function check_current_available_florist_friar_plants(friarpt)
-	friarpt = friarpt or get_page("/place.php", { whichplace = "forestvillage", action = "fv_friar" })
+	friarpt = friarpt or get_place("forestvillage", "fv_friar")
 --	local plantedtext = friarpt:match("Currently planted.+")
 --	local planted = {}
 --	for x in plantedtext:gmatch([[<img src="http://images.kingdomofloathing.com/otherimages/friarplants/(.-)%.gif"]]) do
@@ -117,7 +117,7 @@ local configure_friar_href = add_automation_script("custom-configure-florist-fri
 	local lastadvzoneid = lastadventurezoneid()
 	local prefilltext = ""
 	if lastadv.name and lastadvzoneid then
-		local friarpt = get_page("/place.php", { whichplace = "forestvillage", action = "fv_friar" })
+		local friarpt = get_place("forestvillage", "fv_friar")
 		local available_plant_types = {}
 		for x in friarpt:gmatch([[name="plant" value="([0-9]+)"]]) do
 			table.insert(available_plant_types, tonumber(x))

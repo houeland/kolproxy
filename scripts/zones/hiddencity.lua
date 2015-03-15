@@ -77,7 +77,7 @@ local places = {
 }
 
 function remaining_hidden_city_liana_zones()
-	local citypt = get_page("/place.php", { whichplace = "hiddencity" })
+	local citypt = get_place("hiddencity")
 	local remaining = {}
 	for _, x in ipairs(places) do
 		if not x.unlockzone or not citypt:contains(x.unlockzone) then

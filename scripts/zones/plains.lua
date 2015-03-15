@@ -114,7 +114,7 @@ end)
 
 local function check_dr_awkwards_office_access()
 	if have_item("&quot;I Love Me, Vol. I&quot;") then return true end
-	local pt = get_page("/place.php", { whichplace = "palindome" })
+	local pt = get_place("palindome")
 	if not pt:contains("The Palindome") then return nil end
 	return pt:contains("Dr. Awkward's Office")
 end

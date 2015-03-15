@@ -2572,12 +2572,12 @@ endif
 	end
 
 	add_faxing_task("ninja snowman assassin", function()
-		local mc = get_page("/place.php", { whichplace = "mclargehuge" })
+		local mc = get_place("mclargehuge")
 		return not mc:contains("/peak.gif") and not have_item("ninja rope") and not have_item("ninja crampons") and not have_item("ninja carabiner")
 	end, false)
 
 	add_faxing_task("smut orc pervert", function()
-		local oc = get_page("/place.php", { whichplace = "orc_chasm" })
+		local oc = get_place("orc_chasm")
 		return oc:contains("nobridge.gif") and not have_item("smut orc keepsake box") and false
 	end, true)
 
@@ -2596,7 +2596,7 @@ endif
 				get_page("/choice.php", { forceoption = 0 })
 				post_page("/choice.php", { pwd = session.pwd, whichchoice = 570, option = 1 })
 				get_page("/da.php")
-				get_page("/place.php", { whichplace = "faqdungeon" })
+				get_place("faqdungeon")
 				result, resulturl, did_action = (adventure { zoneid = 319 })()
 				get_page("/choice.php", { forceoption = 0 })
 				use_item("dungeoneering kit")()
@@ -2713,7 +2713,7 @@ endif
 		task = {
 			message = "clancy fight luter",
 			action = function()
-				local pt, url = get_page("/place.php", { whichplace = "plains", action = "lutersgrave" })
+				local pt, url = get_place("plains", "lutersgrave")
 				result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_softcore_boris)
 				did_action = have_item("Clancy's lute")
 			end
@@ -3958,7 +3958,7 @@ endif
 			message = "remove consumed by fear buff",
 			nobuffing = true,
 			action = function()
-				get_page("/place.php", { whichplace = "junggate_3", action = "mystic_face" })
+				get_place("junggate_3", "mystic_face")
 				did_action = not have_buff("Consumed by Fear")
 			end
 		}
@@ -4328,7 +4328,7 @@ endif
 			message = "trapper quest in boris",
 			nobuffing = true,
 			action = function()
-				async_get_page("/place.php", { whichplace = "mclargehuge", action = "trappercabin" })
+				async_get_place("mclargehuge", "trappercabin")
 				refresh_quest()
 				if not quest("Am I My Trapper's Keeper?") then
 					did_action = true
@@ -4702,7 +4702,7 @@ endif
 			message = "unlock pyramid",
 			nobuffing = true,
 			action = function()
-				get_page("/place.php", { whichplace = "desertbeach", action = "db_pyramid1" })
+				get_place("desertbeach", "db_pyramid1")
 				refresh_quest()
 				if not quest_text("found the little pyramid") then
 					did_action = true
