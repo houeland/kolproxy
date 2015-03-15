@@ -42,7 +42,7 @@ add_choice_text("No Visible Means of Support", {
 })
 
 add_ascension_zone_check(50, function()
-	if ascensionstatus() == "Softcore" and not have_item("wet stunt nut stew") then
+	if ascensionstatus("Softcore") and not have_item("wet stunt nut stew") then
 		return "You might want to use pulls to make wet stunt nut stew before visiting Mr. Alarm"
 	end
 end)

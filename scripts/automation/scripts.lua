@@ -666,7 +666,7 @@ function get_automation_scripts(cached_stuff)
 			end
 		end
 
-		if challenge ~= "fist" and ((ascensionstatus() == "Hardcore" and meat() < 14000) or meat() < 7000) then
+		if challenge ~= "fist" and ((ascensionstatus("Hardcore") and meat() < 14000) or meat() < 7000) then
 			local sell_items = get_ascension_automation_settings().sell_items
 			local sell_except_one = get_ascension_automation_settings().sell_except_one
 			for s in table.values(sell_items) do
@@ -878,7 +878,7 @@ function get_automation_scripts(cached_stuff)
 			elseif have_skill("Tongue of the Walrus") then
 				ensure_mp(10)
 				cast_skill("Tongue of the Walrus")
-			elseif challenge == "boris" and have_item("your father's MacGuffin diary") and (hp() < 200 or hp() / maxhp() < 0.5 or ascensionstatus() == "Hardcore") then
+			elseif challenge == "boris" and have_item("your father's MacGuffin diary") and (hp() < 200 or hp() / maxhp() < 0.5 or ascensionstatus("Hardcore")) then
 				ensure_mp(10)
 				cast_skillid(11031, 10)
 			elseif challenge == "zombie" then
@@ -1608,12 +1608,12 @@ function get_automation_scripts(cached_stuff)
 		local lastturn = ls.turn
 
 		if challenge == "boris" then
-			if daysthisrun() == 1 and ascensionstatus() ~= "Hardcore" and not lastsemi and count_item("Moon Pie") >= 2 and count_item("milk of magnesium") >= 1 and have_item("Wrecked Generator") and not have_item("tasty tart") then
+			if daysthisrun() == 1 and not ascensionstatus("Hardcore") and not lastsemi and count_item("Moon Pie") >= 2 and count_item("milk of magnesium") >= 1 and have_item("Wrecked Generator") and not have_item("tasty tart") then
 				inform "Pick up boris SR, make it tarts"
 				result, resulturl, advagain = autoadventure { zoneid = 113, ignorewarnings = true }
 				did_action = count_item("tasty tart") >= 3
 				return result, resulturl, did_action
-			elseif daysthisrun() == 2 and ascensionstatus() and ascensionstatus() ~= "Hardcore" and lastsemi == "Bad ASCII Art" and fullness() == estimate_max_fullness() then
+			elseif daysthisrun() == 2 and ascensionstatus() and not ascensionstatus("Hardcore") and lastsemi == "Bad ASCII Art" and fullness() == estimate_max_fullness() then
 				local got_scrolls = false
 				if level() >= 9 and not quest("A Quest, LOL") then
 					got_scrolls = true
@@ -2710,15 +2710,22 @@ endif
 			use_hottub()
 			ensure_mp(50)
 			if get_lowest_resistance_level() >= 1 then
-				-- TODO: check resistance instead
 				local pt, url = get_place("manor4", "manor4_chamberboss")
 				result, resulturl, did_action = handle_adventure_result(pt, url, "?", macro_spookyraven)
-			elseif meat() >= 3000 then
-				script.ensure_buffs { "Red Door Syndrome" }
-				did_action = have_buff("Red Door Syndrome")
+				if not did_action then
+					refresh_quest()
+					did_action = not quest_text("confront Lord Spookyraven")
+				end
 			else
-				local pt = get_place("manor4")
-				stop("TODO: Beat Lord Spookyraven", pt)
+				if meat() >= 3000 then
+					script.ensure_buffs { "Red Door Syndrome" }
+				end
+				if get_lowest_resistance_level() >= 1 then
+					did_action = true
+				else
+					local pt = get_place("manor4")
+					stop("TODO: Beat Lord Spookyraven", pt)
+				end
 			end
 		else
 			stop "TODO: nothing to do for spookyraven manor?"
@@ -3073,7 +3080,7 @@ endif
 					macro = macro_softcore_boris
 				end
 				script.ensure_buffs {}
-				if have_buff("Song of Battle") and ascensionstatus() == "Hardcore" then
+				if have_buff("Song of Battle") and ascensionstatus("Hardcore") then
 					go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro_hardcore_boris, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
 				elseif have_buff("Song of Battle") and have_item("Rain-Doh black box") then
 					go("do sonofa beach, " .. make_plural(count_item("barrel of gunpowder"), "barrel", "barrels"), 136, macro, {}, { "Spirit of Bacon Grease", "Musk of the Moose", "Carlweather's Cantata of Confrontation", "Heavy Petting", "Leash of Linguini", "Empathy" }, "Jumpsuited Hound Dog for +combat", 50, { equipment = { familiarequip = "sugar shield" } })
@@ -3131,7 +3138,7 @@ endif
 		end
 		local i, z, m = get_gremlin_data()
 		if z then
-			if ascensionstatus() ~= "Hardcore" then
+			if not ascensionstatus("Hardcore") then
 				if not have_buff("Super Structure") and have_item("Greatest American Pants") then
 					wear { pants = "Greatest American Pants" }
 					script.get_gap_buff("Super Structure")
@@ -4047,7 +4054,7 @@ endif
 			go("getting candles", 238, zone_stasis_macro, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Astral Shell", "Ghostly Shell", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "auto", 15)
 		elseif (count_item("hot wing") < 3 or (meat() < 1000 and fullness() < 5)) and not have_item("box of birthday candles") then
 			go("getting hot wings", 238, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "A Few Extra Pounds" }, "fairy", 20)
---		elseif have_reagent_pastas < 4 and ascensionstatus() == "Hardcore" and challenge ~= "zombie" then
+--		elseif have_reagent_pastas < 4 and ascensionstatus("Hardcore") and challenge ~= "zombie" then
 --			go("getting more hellion cubes", 239, macro_noodlecannon, nil, { "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "Slimeling", 20, { olfact = "Hellion" })
 		elseif not have_item("dodecagram") then
 			go("getting dodecagram", 239, macro_noodlecannon, nil, { "Smooth Movements", "The Sonata of Sneakiness", "Leash of Linguini", "Empathy", "Butt-Rock Hair", "Spirit of Garlic", "Fat Leon's Phat Loot Lyric", "A Few Extra Pounds" }, "fairy", 20)

@@ -267,7 +267,7 @@ end)
 
 add_printer("/place.php", function()
 	if params.whichplace ~= "spaaacegrimace" then return end
-	if not setting_enabled("enable turnplaying automation") or ascensionstatus() ~= "Aftercore" then return end
+	if not setting_enabled("enable turnplaying automation") or not ascensionstatus("Aftercore") then return end
 	if text:contains("Step right up and try your luck at Porko") then
 		text = text:gsub([[(</table></center>)(</body>)]], function(a, b)
 			return a .. [[

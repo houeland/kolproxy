@@ -175,7 +175,7 @@ local function automate_day(whichday)
 	elseif ascensionpath("Avatar of Boris") then
 		-- TODO: pull third wine bottle
 		challenge = "boris"
-		if ascensionstatus() == "Hardcore" then
+		if ascensionstatus("Hardcore") then
 			macro_softcore_boris = macro_hardcore_boris
 		end
 		macro_softcore = macro_softcore_boris
@@ -205,7 +205,7 @@ endif
 ]]
 		end
 		elemental_damage_action = boris_action
-		if ascensionstatus() == "Hardcore" or fullness() >= 10 then
+		if ascensionstatus("Hardcore") or fullness() >= 10 then
 			function elemental_damage_action()
 				return [[
 
@@ -226,10 +226,10 @@ cast Heroic Belch
 				return macro_softcore_boris()
 			elseif name == "Hellion" then
 				return macro_softcore_boris()
-			elseif name == "Astronomer" and ascensionstatus() == "Hardcore" then
+			elseif name == "Astronomer" and ascensionstatus("Hardcore") then
 				return macro_softcore_boris()
 			elseif name == "gaudy pirate" then
-				if not have_item("gaudy key") and not have_item("snakehead charrrm") and not have_item("Talisman o' Nam") and ascensionstatus() ~= "Hardcore" then
+				if not have_item("gaudy key") and not have_item("snakehead charrrm") and not have_item("Talisman o' Nam") and not ascensionstatus("Hardcore") then
 					if have_item("Rain-Doh black box") then
 						return macro_softcore_boris([[
 
@@ -251,7 +251,7 @@ endif
 		end
 	elseif ascensionpath("Zombie Slayer") then
 		challenge = "zombie"
-		if ascensionstatus() == "Hardcore" then
+		if ascensionstatus("Hardcore") then
 			macro_softcore_boris = macro_hardcore_boris
 		end
 		boris_action = function()
@@ -302,7 +302,7 @@ endif
 	elseif ascensionpath("Avatar of Jarlsberg") then
 		-- TODO: pull third wine bottle
 		challenge = "jarlsberg"
-		if ascensionstatus() == "Hardcore" then
+		if ascensionstatus("Hardcore") then
 			macro_softcore_boris = macro_hardcore_boris
 		end
 		macro_softcore = macro_softcore_boris
@@ -424,10 +424,10 @@ endif
 				return macro_softcore_boris()
 			elseif name == "Hellion" then
 				return macro_softcore_boris()
-			elseif name == "Astronomer" and ascensionstatus() == "Hardcore" then
+			elseif name == "Astronomer" and ascensionstatus("Hardcore") then
 				return macro_softcore_boris()
 			elseif name == "gaudy pirate" then
-				if not have_item("gaudy key") and not have_item("snakehead charrrm") and not have_item("Talisman o' Nam") and ascensionstatus() ~= "Hardcore" then
+				if not have_item("gaudy key") and not have_item("snakehead charrrm") and not have_item("Talisman o' Nam") and not ascensionstatus("Hardcore") then
 					if have_item("Rain-Doh black box") then
 						return macro_softcore_boris([[
 
@@ -1610,7 +1610,7 @@ endif
 	}
 
 	add_task {
-		when = challenge == "boris" and ascensionstatus() ~= "Hardcore" and meat() >= 3000 and buffturns("Go Get 'Em, Tiger!") < 10,
+		when = challenge == "boris" and not ascensionstatus("Hardcore") and meat() >= 3000 and buffturns("Go Get 'Em, Tiger!") < 10,
 		task = {
 			message = "use ben-gal",
 			nobuffing = true,
@@ -1622,7 +1622,7 @@ endif
 	}
 
 	add_task {
-		when = challenge == "boris" and have_skill("Pep Talk") and ((level() >= 3 and ascensionstatus() ~= "Hardcore") or level() >= 7) and level() < 13 and not have_intrinsic("Overconfident"),
+		when = challenge == "boris" and have_skill("Pep Talk") and ((level() >= 3 and not ascensionstatus("Hardcore")) or level() >= 7) and level() < 13 and not have_intrinsic("Overconfident"),
 		task = {
 			message = "use pep talk",
 			nobuffing = true,
@@ -1923,7 +1923,7 @@ endif
 	want_softcore_item_oneof { "duonoculars", "ring of conflict" }
 
 	add_task {
-		when = ascensionstatus() ~= "Hardcore" and
+		when = not ascensionstatus("Hardcore") and
 			moonsign_area() == "Gnomish Gnomad Camp" and
 			not unlocked_beach(),
 		task = {
@@ -1945,7 +1945,7 @@ endif
 	}
 
 	add_task {
-		when = ascensionstatus() ~= "Hardcore" and moonsign_area() == "Gnomish Gnomad Camp" and not have_skill("Torso Awaregness") and meat() >= 10000,
+		when = not ascensionstatus("Hardcore") and moonsign_area() == "Gnomish Gnomad Camp" and not have_skill("Torso Awaregness") and meat() >= 10000,
 		task = {
 			message = "learn Torso Awaregness",
 			nobuffing = true,
@@ -1957,7 +1957,7 @@ endif
 	}
 
 	add_task {
-		when = ascensionstatus() ~= "Hardcore" and moonsign_area() == "Gnomish Gnomad Camp" and not have_skill("Powers of Observatiogn") and meat() >= 10000,
+		when = not ascensionstatus("Hardcore") and moonsign_area() == "Gnomish Gnomad Camp" and not have_skill("Powers of Observatiogn") and meat() >= 10000,
 		task = {
 			message = "learn Powers of Observatiogn",
 			nobuffing = true,
@@ -2007,7 +2007,7 @@ endif
 	add_task {
 		when = challenge == "boris" and
 			daysthisrun() == 1 and
-			ascensionstatus() ~= "Hardcore" and
+			not ascensionstatus("Hardcore") and
 			count_item("Moon Pie") >= 4 and
 			have_item("Wrecked Generator") and
 			count_item("milk of magnesium") >= 2 and
@@ -2039,7 +2039,7 @@ endif
 	add_task {
 		when = challenge == "boris" and
 			daysthisrun() == 1 and
-			ascensionstatus() ~= "Hardcore" and
+			not ascensionstatus("Hardcore") and
 			count_item("Moon Pie") >= 2 and
 			have_item("Wrecked Generator") and
 			count_item("milk of magnesium") >= 1
@@ -2069,7 +2069,7 @@ endif
 	add_task {
 		when = challenge == "boris" and
 			daysthisrun() == 1 and
-			ascensionstatus() ~= "Hardcore" and
+			not ascensionstatus("Hardcore") and
 			count_item("Moon Pie") >= 2 and
 			have_item("Wrecked Generator") and
 			count_item("milk of magnesium") >= 1 and
@@ -2148,7 +2148,7 @@ endif
 
 	add_task {
 		when = challenge == "zombie" and
-			ascensionstatus() == "Hardcore" and
+			ascensionstatus("Hardcore") and
 			have_skill("Neurogourmet") and
 			(have_item("hunter brain") or have_item("boss brain")) and
 			fullness() < estimate_max_fullness() and
@@ -2166,7 +2166,7 @@ endif
 
 	add_task {
 		when = challenge == "zombie" and
-			ascensionstatus() == "Hardcore" and
+			ascensionstatus("Hardcore") and
 			have_skill("Neurogourmet") and
 			have_skill("Stomach of Steel") and
 			have_item("good brain") and
@@ -2645,7 +2645,7 @@ endif
 		task = {
 			message = "kill goblin king",
 			action = function()
-				if ascensionstatus() == "Hardcore" then
+				if ascensionstatus("Hardcore") then
 					stop "TODO: Kill goblin king in HCBoris"
 				end
 				if challenge == "boris" then
@@ -2799,13 +2799,13 @@ endif
 		return script.finger_cuffs()
 	end
 
-	if ascensionstatus() ~= "Aftercore" then -- TODO: redo
+	if not ascensionstatus("Aftercore") then -- TODO: redo
 		script.use_and_sell_items()
 	end
 
 	need_total_reagent_pastas = 4 * 2
 	have_reagent_pastas = 2 + count_item("hellion cube") + count_item("goat cheese") + count_item("Hell ramen") + count_item("Hell broth") + count_item("fettucini Inconnu") + count_item("fancy schmancy cheese sauce")
-	if ascensionstatus() ~= "Hardcore" then
+	if not ascensionstatus("Hardcore") then
 		have_reagent_pastas = 100
 	elseif fullness() > 9 then
 		have_reagent_pastas = have_reagent_pastas + 2
@@ -4353,7 +4353,7 @@ endif
 						end
 					end
 					ignore_buffing_and_outfit = false
-					if (daysthisrun() == 1 or ascensionstatus() == "Hardcore") and have_skill("Banishing Shout") then
+					if (daysthisrun() == 1 or ascensionstatus("Hardcore")) and have_skill("Banishing Shout") then
 						script.bonus_target { "item", "extraitem" }
 						script.go("farming mountain men", 270, macro_softcore_boris, {
 							["A Flat Miner"] = "Hijack the Meat vein",

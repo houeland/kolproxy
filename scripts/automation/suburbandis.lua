@@ -148,6 +148,6 @@ local dis_href = add_automation_script("automate-suburbandis", function()
 end)
 
 add_printer("/suburbandis.php", function()
-	if not setting_enabled("enable turnplaying automation") or ascensionstatus() ~= "Aftercore" then return end
+	if not setting_enabled("enable turnplaying automation") or not ascensionstatus("Aftercore") then return end
 	text = text:gsub([[(</table></center>)(</body>)]], [[%1<center><a href="]]..dis_href { pwd = session.pwd }..[[" style="color: green">{ Automate Dis }</a></center>%2]])
 end)

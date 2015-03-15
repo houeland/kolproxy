@@ -4,7 +4,7 @@ local minelayout_href = add_automation_script("automate-spading-mine-layouts", f
 	equip_item("miner's pants")
 	equip_item("hippy medical kit", 1)
 	local eq = equipment()
-	if ascensionstatus() ~= "Aftercore" then
+	if not ascensionstatus("Aftercore") then
 		text, url = "Not in aftercore.", requestpath
 	elseif eq.hat ~= get_itemid("miner's helmet") or eq.weapon ~= get_itemid("7-Foot Dwarven mattock") or eq.pants ~= get_itemid("miner's pants") then
 		text, url = "Couldn't equip mining outfit.", requestpath
@@ -57,7 +57,7 @@ local minelayout_href = add_automation_script("automate-spading-mine-layouts", f
 end)
 
 add_printer("/main.php", function()
-	if ascensionstatus() == "Aftercore" then
+	if ascensionstatus("Aftercore") then
 		local links = {
 			{ title = "Mine layout spading", url = minelayout_href { pwd = session.pwd } },
 		}

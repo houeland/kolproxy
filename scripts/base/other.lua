@@ -255,7 +255,7 @@ add_printer("/charpane.php", function()
 	local ttr = tonumber(text:match("var turnsthisrun = ([0-9]+);"))
 	if not ttr then return end
 	if text:contains("inf_small.gif") then return end
-	if ascensionstatus() ~= "Aftercore" then return end
+	if not ascensionstatus("Aftercore") then return end
 	local href = "http://kol.obeliks.de" .. raw_make_href("/buffbot/buff", {
 		{ key = "style", value = "kol" },
 -- 		{ key = "style", value = "kolproxy" },

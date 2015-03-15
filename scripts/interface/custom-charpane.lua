@@ -366,9 +366,9 @@ end
 -- TODO: charpane-specific names, or move to a more generic file
 function pathdesc()
 	local prefix = ""
-	if ascensionstatus() == "Hardcore" then
+	if ascensionstatus("Hardcore") then
 		prefix = "HC"
-	elseif ascensionstatus() == "Softcore" then
+	elseif ascensionstatus("Softcore") then
 		prefix = "SC"
 	end
 	if moonsign() == "Bad Moon" then
@@ -727,7 +727,7 @@ function compact_charpane_level_lines(lines)
 	table.insert(lines, string.format([[Base: <b>%s</b> / <b>%s</b> / <b>%s</b><br>]], format_integer(basemuscle()), format_integer(basemysticality()), format_integer(basemoxie())))
 	table.insert(lines, string.format([[Organs: <b>%s</b> / <b>%s</b> / <b>%s</b><br>]], estimate_max_fullness() - fullness(), estimate_max_safe_drunkenness() - drunkenness(), estimate_max_spleen() - spleen()))
 --	table.insert(lines, string.format([[Organs: <b>%s</b>/%s, <b>%s</b>/%s, <b>%s</b>/%s<br>]], fullness(), estimate_max_fullness(), drunkenness(), estimate_max_safe_drunkenness(), spleen(), estimate_max_spleen()))
-	if ascensionstatus() == "Aftercore" then
+	if ascensionstatus("Aftercore") then
 		table.insert(lines, [[<center><a href="]] .. make_optimize_diet_href() .. [[" target="mainpane" style="color: green">{ Optimize diet }</a></center><br>]])
 	else
 		table.insert(lines, "")
@@ -764,7 +764,7 @@ function full_charpane_level_lines(lines)
 	add_organ_line({ "Inebriety:", "Temulency:", "Tipsiness:" }, drunkenness() .. " / " .. estimate_max_safe_drunkenness())
 	add_organ_line({ "Melancholy:", "Moroseness:", "Spleen:" }, spleen() .. " / " .. estimate_max_spleen())
 	table.insert(lines, [[</table>]])
-	if ascensionstatus() == "Aftercore" then
+	if ascensionstatus("Aftercore") then
 		table.insert(lines, [[<center><font size="2"><a href="]] .. make_optimize_diet_href() .. [[" target="mainpane" style="color: green">{ Optimize diet }</a></font></center>]])
 	end
 end
@@ -1002,7 +1002,7 @@ function compact_charpane_buff_lines(lines)
 
 	table.insert(lines, [[<center><table>]] .. table.concat(bufflines) .. [[</table></center>]])
 
-	if ascensionstatus() == "Aftercore" then
+	if ascensionstatus("Aftercore") then
 		table.insert(lines, [[<center><a href="]]..make_get_buffs_href()..[[" target="mainpane" style="color: green">{ Get buffs }</a></center>]])
 	end
 end
@@ -1044,7 +1044,7 @@ function full_charpane_buff_lines(lines)
 	table.insert(lines, [[<br>]])
 	table.insert(lines, [[<center><table>]] .. table.concat(bufflines) .. [[</table></center>]])
 
-	if ascensionstatus() == "Aftercore" then
+	if ascensionstatus("Aftercore") then
 		table.insert(lines, [[<center><a href="]]..make_get_buffs_href()..[[" target="mainpane" style="color: green">{ Get buffs }</a></center>]])
 	end
 end

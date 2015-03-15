@@ -91,7 +91,7 @@ end
 
 function drink_booze_warning(potency_f, quantity)
 	local potency = nil
-	if ascensionstatus() == "Aftercore" or have_skill("The Ode to Booze") then
+	if ascensionstatus("Aftercore") or have_skill("The Ode to Booze") then
 		if not have_buff("Ode to Booze") then
 			return "You do not have Ode to Booze active.", "drinking without ode"
 		end
@@ -237,7 +237,7 @@ end)
 add_always_warning("/cafe.php", function()
 	if params.action ~= "CONSUME!" or tonumber(params.cafeid) ~= 1 then return end
 	-- Chez Snotee
-	if ascensionstatus() == "Aftercore" or (have_buff("Got Milk") or have_item("milk of magnesium") or (have_item("glass of goat's milk") and (classid() == 4 or have_skill("Advanced Saucecrafting")))) then
+	if ascensionstatus("Aftercore") or (have_buff("Got Milk") or have_item("milk of magnesium") or (have_item("glass of goat's milk") and (classid() == 4 or have_skill("Advanced Saucecrafting")))) then
 		if not have_buff("Got Milk") then
 			return "You do not have Got Milk active.", "eating without Got Milk"
 		end

@@ -27,7 +27,7 @@ local automate_zone_href = add_automation_script("automate-zone", function()
 --		autochoices["Don't Hold a Grudge"] = "Declare a thumb war"
 --		autochoices["Having a Medicine Ball"] = "Gaze deeply into the mirror"
 --		autochoices["Out in the Garden"] = "None of the above"
---		if ascensionstatus() == "Aftercore" then
+--		if ascensionstatus("Aftercore") then
 --			autochoices["Disgustin' Junction"] = "Head down the tunnel"
 --			autochoices["The Former or the Ladder"] = "Take the tunnel"
 --			autochoices["Somewhat Higher and Mostly Dry"] = "Head down the dark tunnel"
