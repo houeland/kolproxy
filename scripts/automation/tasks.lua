@@ -347,6 +347,9 @@ mark m_done
 	function t.do_orc_chasm()
 		local pt, pturl = get_page("/place.php", { whichplace = "orc_chasm" })
 		local pieces = tonumber(pt:match("action=bridge([0-9]*)"))
+		if not pieces and ascensionpath("Actually Ed the Undying") then
+			stop("TODO: Defeat troll", pt)
+		end
 		if not pieces then
 			critical "Couldn't determine bridge status"
 		end
@@ -494,6 +497,10 @@ mark m_done
 			end
 			if predict_aboo_peak_banish() < 30 and have_skill("Check Mirror") and not have_intrinsic("Slicked-Back Do") then
 				cast_check_mirror_for_intrinsic("Slicked-Back Do")
+			end
+			if predict_aboo_peak_banish() < 30 then
+				local scoref = get_modifier_maximizer_score_function("HP & cold/spooky resistance")
+				automatically_maximize_equipment_for_score_function(scoref)
 			end
 			if predict_aboo_peak_banish() < 30 then
 				stop "TODO: Buff up and finish A-Boo Peak clues (couldn't banish 30%)"
@@ -1061,21 +1068,24 @@ mark m_done
 		when = not cached_stuff.unlocked_hidden_temple,
 		task = {
 			message = "unlock hidden temple",
+			bonus_target = { "noncombat" },
 			action = function()
-				script.unlock_hidden_temple()
-			end
-		}
-	}
-
-	t.unlock_hidden_temple_with_high_ML = {
-		when = not cached_stuff.unlocked_hidden_temple,
-		task = {
-			message = "unlock hidden temple",
-			action = function()
-				if zone_awaiting_florist_decision("The Spooky Forest") then
-					plant_florist_plants { 1, 10, 9 }
+				if script_want_2_day_SCHR() then
+					if zone_awaiting_florist_decision("The Spooky Forest") then
+						plant_florist_plants { 1, 10, 9 }
+					end
 				end
-				script.unlock_hidden_temple()
+				if have_item("Spooky Temple map") and have_item("Spooky-Gro fertilizer") and have_item("spooky sapling") then
+					inform "use spooky temple map"
+					set_result(use_item("Spooky Temple map"))
+					local newwoodspt = get_page("/woods.php")
+					did_action = newwoodspt:contains("The Hidden Temple")
+				else
+					if meat() < 100 then
+						stop "Not enough meat for spooky sapling."
+					end
+					go("get parts to unlock hidden temple", "The Spooky Forest", macro_kill_monster, {}, {}, "auto", 10, { choice_function = spooky_forest_choice_function })
+				end
 			end
 		}
 	}
@@ -1570,6 +1580,7 @@ endif
 	}
 
 	local function want_ka_skill()
+		if ascension_script_option("train skills manually") then return end
 		for _, skill in ipairs(ka_skills) do
 			if not have_skill(skill) then
 				return skill
@@ -1645,7 +1656,7 @@ endif
 	end
 
 	tasks.ed_memorize_page = {
-		when = can_memorize_page,
+		when = can_memorize_page() and not ascension_script_option("train skills manually"),
 		task = {
 			message = "memorize page",
 			nobuffing = true,
@@ -1683,8 +1694,13 @@ repeat
 		result, resulturl, did_action = handle_adventure_result(pt, pturl, "?", macro_kill_monster, { ["Like a Bat out of Hell"] = "Return to the fight!" })
 	end
 
+	local function want_beef_haunch()
+		if ascension_script_option("eat manually") then return end
+		return not have_item("mummified beef haunch") and spleen() + 5 <= estimate_max_spleen()
+	end
+
 	tasks.ed_buy_beef_haunch = {
-		when = not have_item("mummified beef haunch") and count_item("Ka coin") >= 15 and spleen() + 5 <= estimate_max_spleen(),
+		when = want_beef_haunch() and count_item("Ka coin") >= 20,
 		task = {
 			message = "buy mummified beef haunch",
 			minmp = 10,
@@ -1692,6 +1708,9 @@ repeat
 			action = function()
 				go_to_underworld()
 				buy_item("mummified beef haunch")()
+				buy_item("talisman of Renenutet")()
+				buy_item("talisman of Renenutet")()
+				buy_item("talisman of Renenutet")()
 				if not have_item("mummified beef haunch") then
 					critical "Failed to buy mummified beef haunch"
 				end
@@ -1721,8 +1740,16 @@ repeat
 		},
 	}
 
+	local function want_ka()
+		if want_ka_skill() and count_item("Ka coin") < 30 then
+			return true
+		elseif want_beef_haunch() and count_item("Ka coin") < 20 and advs() < 30 then
+			return true
+		end
+	end
+
 	tasks.ed_farm_ka_at_government_lab = {
-		when = want_ka_skill() and count_item("Ka coin") < 30 and have_skill("Fist of the Mummy") and cache_wrapper(have_conspiracy_island),
+		when = want_ka() and have_skill("Fist of the Mummy") and cache_wrapper(have_conspiracy_island),
 		task = {
 			message = "farm ka at government lab",
 			minmp = 10,

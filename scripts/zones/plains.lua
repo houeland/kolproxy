@@ -54,12 +54,12 @@ add_choice_text("No sir, away!  A papaya war is on!", {
 })
 
 add_choice_text("Do Geese See God?", { -- choice adventure number: 129
-	["Buy the photograph (500 meat)"] = { get_item = "photograph of God", good_choice = true },
+	["Buy the photograph (500 meat)"] = { getitem = "photograph of God", good_choice = true },
 	["Politely decline"] = { leave_noturn = true },
 })
 
 add_choice_text("Rod Nevada, Vendor", { -- choice adventure number: 130
-	["Accept (500 Meat)"] = { get_item = "photograph of a red nugget", good_choice = true },
+	["Accept (500 Meat)"] = { getitem = "photograph of a red nugget", good_choice = true },
 	["Decline"] =  { leave_noturn = true },
 })
 

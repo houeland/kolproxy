@@ -544,6 +544,9 @@ endif
 		if not can_yellow_ray() then
 			return false
 		end
+		if have_skill("Wrath of Ra") then
+			return true
+		end
 		if script.have_familiar("He-Boulder") then
 			return true
 		end
@@ -1712,7 +1715,7 @@ endif
 				return
 			end
 			if not have_item(item) then
-				critical("Failed to pull " .. tostring(item))
+				stop("Failed to pull " .. tostring(item), result)
 			end
 		end
 	end
@@ -3040,7 +3043,7 @@ endif
 			}
 		}
 
-		add_task(tasks.unlock_hidden_temple_with_high_ML)
+		add_task(tasks.unlock_hidden_temple)
 
 		local ninja_items = countif("ninja rope") + countif("ninja crampons") + countif("ninja carabiner")
 
@@ -4421,7 +4424,7 @@ endif
 	}
 
 	add_task {
-		prereq = quest("The Rain on the Plains is Mainly Garbage") or (level() >= 10 and not have_item("steam-powered model rocketship") and ascensionstatus() == "Hardcore"),
+		prereq = quest("The Rain on the Plains is Mainly Garbage") or (level() >= 10 and not have_item("steam-powered model rocketship") and ascensionstatus("Hardcore")),
 		f = function()
 			if have_item("BitterSweetTarts") and not have_buff("Full of Wist") then
 				use_item("BitterSweetTarts")
@@ -4462,7 +4465,7 @@ endif
 				end
 			elseif quest("The Rain on the Plains is Mainly Garbage") then
 				script.do_castle()
-			elseif not have_item("steam-powered model rocketship") and ascensionstatus() == "Hardcore" then
+			elseif not have_item("steam-powered model rocketship") and ascensionstatus("Hardcore") then
 				script.unlock_hits()
 			end
 		end,
@@ -4602,7 +4605,8 @@ endif
 			basemoxie() >= 70 and
 			basemysticality() >= 70 and
 			have_frat_war_outfit() and
-			not have_buff("Musk of the Moose"),
+			not have_buff("Musk of the Moose") and
+			have_item("Talisman o' Nam"),
 		f = function()
 			-- TODO: get what's needed from hippy store first
 			use_dancecard()
@@ -5302,7 +5306,7 @@ add_printer("/main.php", function()
 
 		local rows = {}
 		for _, x in ipairs(links) do
-			local alink = [[<a href="]]..ascension_automation_script_href { pwd = session.pwd, whichday = x.whichday }..[[" style="color: green">{ Automate ascension]]..x.titleday..[[ }</a>]]
+			local alink = [[<a href="]]..ascension_automation_script_href { pwd = session.pwd, whichday = x.whichday }..[[" style="color: green" onclick="this.style.color = 'gray'">{ Automate ascension]]..x.titleday..[[ }</a>]]
 			if x.whichday == daysthisrun() then
 				alink = [[&rarr; ]] .. alink .. [[ &larr;]]
 			end

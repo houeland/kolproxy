@@ -53,7 +53,12 @@ function run_automation_script(f, pwdsrc, scriptname)
 		error(e, 2)
 	end
 	function stop(e, pagetext)
-		stop_pagetext = pagetext
+		if pagetext then
+			stop_pagetext = pagetext
+			if type(stop_pagetext) ~= "string" then
+				stop_pagetext = stop_pagetext()
+			end
+		end
 		errmsg = e
 		stopped_err = true
 		error(e, 2)

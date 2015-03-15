@@ -123,6 +123,7 @@ function get_ascension_automation_settings(want_bonus)
 				"reinforced beaded headband",
 				{ name = "beer helmet", check = function() return (not want_bonus.extraplusitems) end },
 				"Jarlsberg's hat",
+				"giant yellow hat",
 				"fuzzy busby",
 				"worn tophat",
 				"fuzzy earmuffs",

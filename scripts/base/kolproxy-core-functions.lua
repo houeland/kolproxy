@@ -1,3 +1,7 @@
+function show_dev_info()
+	return get_current_kolproxy_version():contains("dev")
+end
+
 function raw_async_submit_page(rqtype, rqpath, rqparams)
 	local f = kolproxycore_async_submit_page(rqtype, rqpath, rqparams)
 	return function()
@@ -110,6 +114,9 @@ function get_page(url, params) return async_get_page(url, params)() end
 
 function post_page(url, params) return async_post_page(url, params)() end
 
+function async_get_place(whichplace, action) return async_get_page("/place.php", { whichplace = whichplace, action = action }) end
+
+function get_place(whichplace, action) return async_get_place(whichplace, action)() end
 
 
 function make_href(url, params)

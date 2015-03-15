@@ -370,13 +370,18 @@ function get_resistance_levels()
 	local charpage = get_page("/charsheet.php")
 	local resists = {}
 	for _, x in pairs(get_element_names()) do
-		resists[x] = tonumber(charpage:match([[<td align=right>]]..x..[[ Protection:</td><td><b>[^>()]+%(([0-9]+)%)</b></td>]]))
+		resists[x] = tonumber(charpage:match([[<td align=right>]]..x..[[ Protection:</td><td><b>[^>()]+%(([0-9]+)%)</b></td>]])) or 0
 	end
 	return resists
 end
 
 function get_resistance_level(elem)
-	return get_resistance_levels()[elem] or 0
+	return get_resistance_levels()[elem]
+end
+
+function get_lowest_resistance_level()
+	local resists = get_resistance_levels()
+	return math.min(resists.Cold, resists.Hot, resists.Sleaze, resists.Spooky, resists.Stench)
 end
 
 function get_elemental_weaknesses(element)

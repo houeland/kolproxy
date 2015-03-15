@@ -264,7 +264,8 @@ function cannon_action()
 	end
 	local cfm = getCurrentFightMonster()
 	local elem = cfm and cfm.Stats and cfm.Stats.Element
-	return macro_cast_skill { pastathrall() and "Cannelloni Cannon" or "???", "Saucestorm", "Cannelloni Cannon", "Bawdy Refrain", fury() >= 1 and "Furious Wallop" or "???", "Saucegeyser", "Kneebutt", "Toss", "Clobber", "Ravioli Shurikens", not elem and "Roar of the Lion" or "???", "Fist of the Mummy", "Mild Curse" }
+	local can_use_undying = times_used_undying() < 2
+	return macro_cast_skill { pastathrall() and "Cannelloni Cannon" or "???", "Saucestorm", "Cannelloni Cannon", "Bawdy Refrain", fury() >= 1 and "Furious Wallop" or "???", "Saucegeyser", "Kneebutt", "Toss", "Clobber", "Ravioli Shurikens", can_use_undying and "Fist of the Mummy" or "???", elem ~= "Hot" and "Roar of the Lion" or "???", can_use_undying and "Mild Curse" or "???" }
 end
 
 function estimate_elemental_weapon_damage_sum()
@@ -1353,6 +1354,12 @@ local function use_if_have_item(x)
 end
 
 function make_yellowray_macro(name)
+	if script_use_unified_kill_macro() then
+		return function(pt)
+			add_macro_target("yellowraypatternmatch", name)
+			return macro_kill_monster(pt)
+		end
+	end
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 50) .. [[
 sub stall
@@ -1367,22 +1374,22 @@ sub do_yellowray
 
 ]] .. use_if_have_item("unbearable light") .. [[
 
-  while !times 15
+while !times 15
 	if match "yellow eye"
-	  cast Point at your opponent
-	  goto yellowray_done
+		cast Point at your opponent
+		goto yellowray_done
 	endif
 	call stall
-  endwhile
-  mark yellowray_done
+endwhile
+mark yellowray_done
 endsub
 
 if monstername ]] .. name .. [[
 
 ]] .. maybe_stun_monster() .. [[
 
-  call do_yellowray
-  goto m_done
+	call do_yellowray
+	goto m_done
 endif
 
 ]] .. maybe_stun_monster() .. [[
@@ -1414,9 +1421,9 @@ while !times 11
 endwhile
 
 if monstername mobile armored sweat lodge
-  while !times 5
+	while !times 5
 ]] .. cannon_action() .. [[
-  endwhile
+	endwhile
 endif
 
 ]]
@@ -1842,6 +1849,70 @@ function add_macro_target(a, b)
 	macro_target[a] = b or true
 end
 
+local function want_generic_banish(name, priority)
+	-- TODO: mahogany nightstand
+	-- TODO: handle grouping, pick first-encountered
+	local monsters = {
+		["Bullet Bill"] = 1,
+		["chatty pirate"] = 1,
+		["crusty pirate"] = 2,
+		["bookbat"] = 1,
+		["slick lihc"] = 1,
+		["senile lihc"] = 2,
+		["sabre-toothed goat"] = 1,
+		["drunk goat"] = 2,
+		["Mismatched Twins"] = 1,
+		["Creepy Ginger Twin"] = 2,
+		["Protagonist"] = 1,
+		["Procrastination Giant"] = 1,
+		["Flock of Stab-bats"] = 1,
+		["Taco Cat"] = 2,
+		["coaltergeist"] = 1,
+		["possessed laundry press"] = 1,
+		["plaid ghost"] = 2,
+		["skeletal sommelier"] = 1,
+		["mad wino"] = 2,
+		["pygmy orderlies"] = 1,
+		["pygmy witch nurse"] = 2,
+		["pygmy witch lawyer"] = 1,
+		["tomb asp"] = 1,
+		["A.M.C. gremlin"] = 1,
+		["warehouse janitor"] = 1,
+		["Knob Goblin Harem Guard"] = 1,
+		["Knob Goblin Madam"] = 2,
+	}
+	return name and monsters[name] == (priority or 1)
+end
+
+local function want_super_pickpocket(name)
+	local monsters = {
+		["larval filthworm"] = true,
+		["filthworm drone"] = true,
+		["filthworm royal guard"] = true,
+		["elephant (meatcar?) topiary animal"] = true,
+		["spider (duck?) topiary animal"] = true,
+		["bearpig topiary animal"] = true,
+	}
+	return name and monsters[name]
+end
+
+local function want_super_itemdrop(name)
+	local monsters = {
+		["mountain man"] = true,
+		["cleanly pirate"] = not have_item("rigging shampoo"),
+		["creamy pirate"] = not have_item("ball polish"),
+		["curmudgeonly pirate"] = not have_item("mizzenmast mop"),
+		["possessed wine rack"] = true,
+		["cabinet of Dr. Limpieza"] = true,
+		["warehouse clerk"] = count_item("warehouse inventory page") <= 1,
+		["warehouse guard"] = count_item("warehouse map page") <= 1,
+		["larval filthworm"] = true,
+		["filthworm drone"] = true,
+		["filthworm royal guard"] = true,
+	}
+	return name and monsters[name]
+end
+
 macro_kill_monster_text = ""
 function macro_kill_monster(pt)
 	pt = pt or ""
@@ -1887,6 +1958,16 @@ if hasskill Summon Love Gnats
 endif]])
 	end
 
+	if macro_target.yellowraypatternmatch and monstername():lower():contains(macro_target.yellowraypatternmatch:lower()) then
+		if have_skill("Wrath of Ra") then
+			table.insert(use_initial_tbl, [[cast Wrath of Ra]])
+		end
+	end
+
+	if have_skill("Curse of Vacation") and want_generic_banish(monstername()) then
+		table.insert(use_initial_tbl, [[cast Curse of Vacation]])
+	end
+
 	local raindoh_flyers_list = {}
 	if macro_target.itemcopy and macro_target.itemcopy[monstername()] and have_item("Rain-Doh black box") then
 		table.insert(raindoh_flyers_list, "Rain-Doh black box")
@@ -1913,7 +1994,18 @@ if hasskill Wink at
 endif]])
 	end
 
-	if (cfm.Stats.stunresistpercent or 0) <= 20 and false then
+	if have_skill("Lash of the Cobra") and want_super_pickpocket(monstername()) then
+		table.insert(use_initial_tbl, [[cast Lash of the Cobra]])
+	end
+
+	if have_item("talisman of Renenutet") and want_super_itemdrop(monstername()) then
+		table.insert(use_initial_tbl, [[use talisman of Renenutet]])
+		used_undying()
+		used_undying()
+		used_undying()
+	end
+
+	if false and (cfm.Stats.stunresistpercent or 0) <= 20 then
 		table.insert(use_initial_tbl, [[
 if hasskill Summon Love Stinkbug
 	cast Summon Love Stinkbug

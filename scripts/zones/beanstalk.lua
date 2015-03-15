@@ -34,6 +34,13 @@ add_warning {
 	end
 }
 
+-- TODO: only a good choice if you don't have one
+add_choice_text("Home on the Free Range", { -- choice adventure number: 1026
+	["Look under the bed"] = { text = "Get 3-4 mostly useless candy items" },
+	["Investigate the noisy drawer"] = { getitem = "electric boning knife", good_choice = true },
+	["Leave through a vent"] = { leave_noturn = true },
+})
+
 -- hole in the sky
 
 add_itemdrop_counter("star chart", function(c)

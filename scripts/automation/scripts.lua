@@ -487,27 +487,29 @@ function get_automation_scripts(cached_stuff)
 		-- Checked in reverse order, to let first item have highest priority by overriding previous choices
 		for t_i = #targets, 1, -1 do
 			local t = targets[t_i]
-			if t == "item" then
+			if t == "item" or t == "extraitem" or t == "minoritem" then
 				want_bonus.clancy_item = "Clancy's lute"
-				want_bonus.plusitems = true
-				if have_skill("Song of Fortune") then
-					want_bonus.boris_song = "Song of Fortune"
-				elseif have_skill("Song of Accompaniment") then
-					want_bonus.boris_song = "Song of Accompaniment"
-				end
-			elseif t == "extraitem" then
-				want_bonus.extraplusitems = true
-			elseif t == "minoritem" then
 				want_bonus.minoritem = true
-				want_bonus.clancy_item = "Clancy's lute"
-			elseif t == "extranoncombat" then
-				want_bonus.extranoncombat = true
-			elseif t == "noncombat" then
+				if t == "item" or t == "extraitem" then
+					want_bonus.plusitems = true
+					if have_skill("Song of Fortune") then
+						want_bonus.boris_song = "Song of Fortune"
+					elseif have_skill("Song of Accompaniment") then
+						want_bonus.boris_song = "Song of Accompaniment"
+					end
+				end
+				if t == "extraitem" then
+					want_bonus.extraplusitems = true
+				end
+			elseif t == "noncombat" or t == "extranoncombat" then
 				want_bonus.noncombat = true
 				if have_skill("Song of Solitude") then
 					want_bonus.boris_song = "Song of Solitude"
 				end
 				want_bonus.jarlsberg_sphere = "Chocolatesphere"
+				if t == "extranoncombat" then
+					want_bonus.extranoncombat = true
+				end
 			elseif t == "combat" then
 				want_bonus.combat = true
 				if have_skill("Song of Battle") then
@@ -1194,9 +1196,11 @@ function get_automation_scripts(cached_stuff)
 			table.insert(xs, "Prayer of Seshat")
 			table.insert(xs, "Wisdom of Thoth")
 			table.insert(xs, "Power of Heka")
-			table.insert(xs, "Hide of Sobek")
-			table.insert(xs, "Bounty of Renenutet")
-			table.insert(xs, "Purr of the Feline")
+			if not ascensionstatus("Hardcore") or mp() >= 75 then
+				table.insert(xs, "Hide of Sobek")
+				table.insert(xs, "Bounty of Renenutet")
+				table.insert(xs, "Purr of the Feline")
+			end
 		end
 		if not even_in_fist and not ignore_buffing_and_outfit then
 			if want_bonus.plusitems then
@@ -2003,17 +2007,7 @@ endif
 			if space() >= 1 and not script.know_semirare_numbers() and meat() >= 40 then
 				return eat_fortune_cookie()
 			elseif space() >= 1 and (drunkenness() == estimate_max_safe_drunkenness() or out_of_advs) and advs() < 15 then
-				local max_space = estimate_max_fullness() - fullness()
-				local min_space = 1
-				local available_foods = get_available_foods(1)
-				local toeat, space, turngen = determine_consumable_option(min_space, max_space, available_foods)
-				if space then
-					print("eat_food():", space)
-					for _, x in ipairs(toeat) do
-						set_result(eat_item(x))
-						did_action = true
-					end
-				end
+				eat_quality_minspace_maxspace(1, 1, space())
 				result, resulturl = get_result()
 				return result, resulturl, did_action
 			end
@@ -2045,9 +2039,27 @@ endif
 				return result, resulturl, did_action
 			end
 		end
-		if ascensionstatus() ~= "Hardcore" then return end
 
 		if not can_eat_normal_food() then return end
+
+		local function eat_quality_minspace_maxspace(quality, min_space, max_space)
+			local available_foods = get_available_foods(quality)
+			local toeat, space, turngen = determine_consumable_option(min_space, max_space, available_foods)
+			if space then
+				print("eat_food():", space)
+				for _, x in ipairs(toeat) do
+					set_result(eat_item(x))
+					did_action = true
+				end
+			end
+		end
+
+		if have_item("Pantsgiving") and space() == 1 and have_buff("Got Milk") then
+			eat_quality_minspace_maxspace(3, 1, 1)
+			return
+		end
+
+		if not ascensionstatus("Hardcore") then return end
 
 		if space() > 0 then
 			if (space() % 6) > 0 then
@@ -2213,7 +2225,9 @@ endif
 			return script.craft_and_drink_quality_booze(5)
 		end
 
-		if not ascensionstatus("Hardcore") then return end
+		if not ascensionstatus("Hardcore") then
+			return script.craft_and_drink_quality_booze(11, 1000)
+		end
 
 		if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") then
 			if level() >= 6 and get_still_charges() < 2 then
@@ -2251,7 +2265,7 @@ endif
 		return script.craft_and_drink_quality_booze(2)
 	end
 
-	function f.craft_and_drink_quality_booze(minquality)
+	function f.craft_and_drink_quality_booze(minquality, min_space)
 --[[--
 			if not have_item("coconut shell") and not have_item("little paper umbrella") and not have_item("magical ice cubes") then
 				ensure_mp(10)
@@ -2267,7 +2281,7 @@ endif
 		end
 
 		local max_space = estimate_max_safe_drunkenness() - drunkenness()
-		local min_space = math.min(max_space, 3)
+		min_space = math.min(max_space, min_space or 3)
 		local available_drinks = get_available_drinks(minquality)
 		local todrink, space, turngen = determine_consumable_option(min_space, max_space, available_drinks)
 
@@ -2695,7 +2709,7 @@ endif
 			fam "Frumious Bandersnatch"
 			use_hottub()
 			ensure_mp(50)
-			if have_buff("Astral Shell") or challenge == "boris" or have_buff("Red Door Syndrome") then
+			if get_lowest_resistance_level() >= 1 then
 				-- TODO: check resistance instead
 				local pt, url = get_page("/place.php", { whichplace = "manor4", action = "manor4_chamberboss" })
 				result, resulturl, did_action = handle_adventure_result(pt, url, "?", macro_spookyraven)
@@ -2703,7 +2717,8 @@ endif
 				script.ensure_buffs { "Red Door Syndrome" }
 				did_action = have_buff("Red Door Syndrome")
 			else
-				stop "TODO: Beat Lord Spookyraven"
+				local pt = get_page("/place.php", { whichplace = "manor4" })
+				stop("TODO: Beat Lord Spookyraven", pt)
 			end
 		else
 			stop "TODO: nothing to do for spookyraven manor?"
@@ -3480,22 +3495,6 @@ endif
 		return result, resulturl, did_action
 	end
 
-	function f.unlock_hidden_temple()
-		if have_item("Spooky Temple map") and have_item("Spooky-Gro fertilizer") and have_item("spooky sapling") then
-			inform "use spooky temple map"
-			set_result(use_item("Spooky Temple map"))
-			local newwoodspt = get_page("/woods.php")
-			did_action = newwoodspt:contains("The Hidden Temple")
-		else
-			if meat() < 100 then
-				stop "Not enough meat for spooky sapling."
-			end
-			script.bonus_target { "noncombat" }
-			go("get parts to unlock hidden temple", "The Spooky Forest", macro_kill_monster, {}, {}, "auto", 10, { choice_function = spooky_forest_choice_function })
-		end
-		return result, resulturl, did_action
-	end
-
 	function f.knob_goblin_king_with_cake(killmacro)
 		if have_item("Knob cake") then
 			inform "fight king in guard outfit"
@@ -3632,6 +3631,10 @@ endif
 			})
 			if get_result():contains("You close the valve") or get_result():contains("Go back to the Typical Tavern Cellar") then
 				did_action = true
+			end
+			if not did_action then
+				refresh_quest()
+				did_action = not quest_text("Bart Ender wants you to head down") and not quest_text("find the source of the rats")
 			end
 		else
 			inform "do guild, talk to bartender"
@@ -4057,7 +4060,7 @@ endif
 			async_post_page("/friars.php", { pwd = get_pwd(), action = "ritual" })
 			async_get_page("/pandamonium.php")
 			refresh_quest()
-			did_action = not quest("Trial By Friar") and quest_text("this is Azazel in Hell")
+			did_action = not quest("Trial By Friar")
 		end
 		return result, resulturl, did_action
 	end
@@ -4124,14 +4127,17 @@ endif
 
 	function f.unlock_top_floor()
 		go("unlock top floor", 323, macro_noodleserpent, {}, { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
+			-- TODO: This can just be a regular table?
 			if advtitle == "There's No Ability Like Possibility" then
 				return "Go out the Way You Came In"
 			elseif advtitle == "Putting Off Is Off-Putting" then
 				return "Get out of this Junk"
 			elseif advtitle == "Huzzah!" then
 				return "Seek the Egress Anon"
+			elseif advtitle == "Home on the Free Range" then
+				return "Investigate the noisy drawer"
 			end
-		end})
+		end })
 		if get_result():contains("ground floor is lit much better than the basement") then
 			did_action = true
 		end
@@ -4241,6 +4247,7 @@ endif
 					return "Pick a Fight"
 				end
 			elseif advtitle == "Keep On Turnin' the Wheel in the Sky" then
+				did_action = true
 				return "Spin That Wheel, Giants Get Real"
 			end
 		end })
@@ -4364,7 +4371,7 @@ endif
 		if have_item("forged identification documents") and not have_item("your father's MacGuffin diary") then
 			result, resulturl = script.take_shore_trip()
 		end
-		if have_item("your father's MacGuffin diary") then
+		if have_item("your father's MacGuffin diary") or have_item("copy of a jerk adventurer's father's diary") then
 			result, resulturl = get_page("/diary.php", { whichpage = "1" })
 			did_action = true
 		end
@@ -4820,6 +4827,19 @@ function buy_shore_inc_item(item)
 	return shop_buy_item(item, "shore")
 end
 
+local undying_ctr = 0
+function used_undying()
+	undying_ctr = undying_ctr + 1
+end
+
+function reset_undying()
+	undying_ctr = 0
+end
+
+function times_used_undying()
+	return undying_ctr
+end
+
 function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, specialnoncombatfunction)
 	if zoneid and zoneid ~= "?" then
 		zoneid = get_zoneid(zoneid)
@@ -4829,6 +4849,7 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 		local advagain = nil
 		if pt:contains([[>You win the fight!<!--WINWINWIN--><]]) then
 			advagain = true
+			reset_undying()
 		elseif pt:contains([[state['fightover'] = true;]]) or true then -- HACK: doesn't get set with combat bar disabled
 			if pt:contains("You lose.") then
 				advagain = false
@@ -4888,7 +4909,8 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 			optname = noncombatchoices[adventure_title]
 		end
 		if not optname and adventure_title == "Like a Bat Into Hell" then
-			print("INFO: UNDYING!")
+			used_undying()
+			print("INFO: UNDYING!", times_used_undying())
 			optname = "Go right back to the fight!"
 		end
 

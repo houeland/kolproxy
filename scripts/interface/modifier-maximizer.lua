@@ -180,54 +180,40 @@ function add_modifier_maximizer_script_link_function(f)
 	table.insert(registered_script_links, f)
 end
 
-modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", function()
-	local resultpt = ""
-	if params.equip_itemname and params.equip_slot then
-		if params.equip_itemname == "(none)" then
-			resultpt = unequip_slot(params.equip_slot)()
-		else
-			resultpt = equip_item(params.equip_itemname, params.equip_slot)()
-		end
-	elseif params.cast_skillname then
-		resultpt = cast_skill(params.cast_skillname)()
-	elseif params.use_itemname then
-		resultpt = use_item(params.use_itemname)()
-	end
+local score_function_bonuses = {
+	"Monsters will be more attracted to you",
+	"Monsters will be less attracted to you",
+	"Item Drops from Monsters",
+	"Monster Level",
+	"Combat Initiative",
+	"Meat from Monsters",
+	"HP & cold/spooky resistance",
+	"Familiar Weight",
+	"Max HP",
+	"Muscle",
+	"Mysticality",
+	"Moxie",
+	"Adventures per day",
+	"PvP fights per day",
+	"All resistances",
+	"Cold Resistance",
+	"Hot Resistance",
+	"Sleaze Resistance",
+	"Spooky Resistance",
+	"Stench Resistance",
+	"Slime Resistance",
+	"All weapon damage",
+	"Cold Damage",
+	"Hot Damage",
+	"Sleaze Damage",
+	"Spooky Damage",
+	"Stench Damage",
+}
 
-	local bonuses = {
-		"Monsters will be more attracted to you",
-		"Monsters will be less attracted to you",
-		"Item Drops from Monsters",
-		"Monster Level",
-		"Combat Initiative",
-		"Meat from Monsters",
-		"HP & cold/spooky resistance",
-		"Familiar Weight",
-		"Max HP",
-		"Muscle",
-		"Mysticality",
-		"Moxie",
-		"Adventures per day",
-		"PvP fights per day",
-		"All resistances",
-		"Cold Resistance",
-		"Hot Resistance",
-		"Sleaze Resistance",
-		"Spooky Resistance",
-		"Stench Resistance",
-		"Slime Resistance",
-		"All weapon damage",
-		"Cold Damage",
-		"Hot Damage",
-		"Sleaze Damage",
-		"Spooky Damage",
-		"Stench Damage",
-	}
-
-	local whichbonus = params.whichbonus
-	if params.fuzzy then
-		for _, x in ipairs(bonuses) do
-			if x:lower():contains(params.fuzzy:lower()) then
+function get_modifier_maximizer_score_function(whichbonus, fuzzy)
+	if fuzzy then
+		for _, x in ipairs(score_function_bonuses) do
+			if x:lower():contains(fuzzy:lower()) then
 				whichbonus = x
 				break
 			end
@@ -275,10 +261,10 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 			return bonuses["Weapon Damage"] + bonuses["Weapon Damage %"] / 2 + bonuses["Cold Damage"] + bonuses["Hot Damage"] + bonuses["Sleaze Damage"] + bonuses["Spooky Damage"] + bonuses["Stench Damage"]
 		end
 	end
+	return scoref, whichbonus
+end
 
-	local equipmentlines = {}
-	kolproxy_log_time_interval("DEBUG equipment", function()
-
+function get_modifier_maximizer_equipment_suggestions(scoref)
 	local previous_scores = {}
 --	local item_in_outfit = {}
 --	local chosen_outfit_score = 0
@@ -346,6 +332,52 @@ end)
 	if slot_suggestion.weapon and is_twohanded_weapon(slot_suggestion.weapon.itemid) then
 		slot_suggestion.offhand = nil
 	end
+	return slot_suggestion, slot_alternatives, previous_scores
+end
+
+function automatically_maximize_equipment_for_score_function(scoref)
+	local function pick_best()
+		local suggestions = get_modifier_maximizer_equipment_suggestions(scoref)
+		local best_itemid = nil
+		local best_slot = nil
+		local best_score = -1000000
+		for x, y in pairs(suggestions) do
+			if y.score > best_score and not y.worn then
+				best_score = y.score
+				best_itemid = y.itemid
+				best_slot = x
+			end
+		end
+		return best_itemid, best_slot
+	end
+	for i = 1, 100 do
+		local itemid, slot = pick_best(scoref)
+		if not itemid then break end
+		print("DEBUG: choosing equipment", slot, maybe_get_itemname(itemid))
+		equip_item(itemid, slot)
+	end
+end
+
+modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", function()
+	local resultpt = ""
+	if params.equip_itemname and params.equip_slot then
+		if params.equip_itemname == "(none)" then
+			resultpt = unequip_slot(params.equip_slot)()
+		else
+			resultpt = equip_item(params.equip_itemname, params.equip_slot)()
+		end
+	elseif params.cast_skillname then
+		resultpt = cast_skill(params.cast_skillname)()
+	elseif params.use_itemname then
+		resultpt = use_item(params.use_itemname)()
+	end
+
+	local scoref, whichbonus = get_modifier_maximizer_score_function(params.whichbonus, params.fuzzy)
+
+	local equipmentlines = {}
+	kolproxy_log_time_interval("DEBUG equipment", function()
+
+	local slot_suggestion, slot_alternatives, previous_scores = get_modifier_maximizer_equipment_suggestions(scoref)
 
 	local function add_line(slottitle, item, where)
 		item = item or { name = "(none)", score = 0 }
@@ -406,7 +438,7 @@ end)
 	end
 
 	local links = {}
-	for _, x in ipairs(bonuses) do
+	for _, x in ipairs(score_function_bonuses) do
 		table.insert(links, string.format([[<a href="%s">%s</a>]], modifier_maximizer_href { pwd = session.pwd, whichbonus = x }, x))
 	end
 

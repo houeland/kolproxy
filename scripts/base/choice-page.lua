@@ -158,7 +158,7 @@ elseif choice_adventure_number ~= nil then
 	end
 end
 
-if false and found_function == false and adventure_title ~= nil and adventure_title ~= "Results:" then
+if show_dev_info() and found_function == false and adventure_title ~= nil and adventure_title ~= "Results:" then
 	print("add_choice_text(\""..adventure_title.."\", { -- choice adventure number: " .. tostring(choice_adventure_number))
 	for x, y in pairs(parse_choice_options(text)) do
 		print([[	["]]..x..[["] = { text = "" },]])
@@ -180,6 +180,10 @@ function parse_choice_options(pt)
 			local number = tonumber(input:match([[value="?([0-9]+)"?]]))
 			if title and input:contains("submit") then
 				table.insert(titles, title)
+				local simpletitle = title:gsub(" %[.*%]$", "")
+				if simpletitle ~= title then
+					table.insert(titles, simpletitle)
+				end
 			end
 			if number and input:contains("option") then
 				table.insert(numbers, number)
