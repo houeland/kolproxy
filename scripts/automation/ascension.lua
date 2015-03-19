@@ -2189,31 +2189,6 @@ endif
 			turnsthisrun() >= 120
 	end
 
-	local function want_molotov_soda()
-		local remaining = estimate_max_spleen() - spleen()
-		if remaining < 3 then return false end
-		if have_item("astral energy drink") and level() >= 11 then return false end
-		if have_item("astral energy drink") and remaining < 8 + 3 then return false end
-		return true
-	end
-
-	add_task {
-		when = ready_to_end_day() and
-			ascensionpath("Avatar of Sneaky Pete") and
-			have_item("molotov soda") and
-			level() >= 2 and
-			want_molotov_soda(),
-		task = {
-			message = "use molotov soda",
-			nobuffing = true,
-			action = function()
-				local s = spleen()
-				set_result(use_item("molotov soda"))
-				did_action = spleen() > s
-			end
-		}
-	}
-
 	add_task {
 		when = ready_to_end_day() and
 			ascensionpath("Avatar of Sneaky Pete") and
@@ -2864,13 +2839,23 @@ endif
 
 	function do_powerleveling()
 		if have_item("plastic vampire fangs") and not day["vamped out.isabella"] and not cached_stuff.tried_vamping_out then
+			inform "vamping out"
 			cached_stuff.tried_vamping_out = true
 			script.wear { acc1 = "plastic vampire fangs" }
 			inform("vamping out: " .. mainstat_type())
 			vamp_out(mainstat_type())
 			did_action = true
 		elseif have_chateau_mantegna() then
-			stop "TODO: rest at mantegna"
+			local pt = get_place("chateau", "chateau_nightstand3")
+			local substats = pt:match("giving you some (.-) substats when you rest")
+			if substats == mainstat_type() then
+				inform "resting at mantegna"
+				local oldstat = rawmainstat()
+				result, resulturl = get_place("chateau", "chateau_restbox")
+				did_action = rawmainstat() > oldstat
+			else
+				stop("TODO: rest at mantegna", pt)
+			end
 		else
 			use_dancecard()
 			return do_powerleveling_sub()
@@ -4447,6 +4432,7 @@ endif
 			script.bonus_target { "noncombat", "extranoncombat", "item" }
 
 			if not have_item("S.O.C.K.") then
+				async_get_place("beanstalk")
 				script.go("do airship", 81, macro_noodlecannon, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Ur-Kel's Aria of Annoyance", "Spirit of Garlic", "Leash of Linguini", "Empathy" }, "fairy", 35, { choice_function = function(advtitle, choicenum)
 					if advtitle == "Random Lack of an Encounter" then
 						if not have_item("model airship") then
@@ -4818,6 +4804,18 @@ endif
 		prereq = level() < 13,
 		f = do_powerleveling,
 		message = "level to 13",
+	}
+
+	add_task {
+		when = ascensionpath("Actually Ed the Undying") and council_text:contains("It’s time to take the Holy MacGuffin home"),
+		task = {
+			message = "finished run",
+			nobuffing = true,
+			action = function()
+				result, resulturl = get_place("edbase", "edbase_altar")
+				stop("Finished ascension", result)
+			end
+		}
 	}
 
 	add_task { prereq = true, f = function()

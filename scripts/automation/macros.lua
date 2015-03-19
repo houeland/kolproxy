@@ -323,7 +323,7 @@ cast Peel Out
 		end
 		return macro_sneaky_pete_action()
 	end
-	return macro_cast_skill { "Saucegeyser", "Weapon of the Pastalord" }
+	return maybe_macro_cast_skill { "Saucegeyser", "Weapon of the Pastalord" } or serpent_action()
 end
 
 function shieldbutt_action()
@@ -1996,9 +1996,7 @@ endif]])
 
 	if have_skill("Lash of the Cobra") and want_super_pickpocket(monstername()) then
 		table.insert(use_initial_tbl, [[cast Lash of the Cobra]])
-	end
-
-	if have_item("talisman of Renenutet") and want_super_itemdrop(monstername()) then
+	elseif have_item("talisman of Renenutet") and want_super_itemdrop(monstername()) then
 		table.insert(use_initial_tbl, [[use talisman of Renenutet]])
 		used_undying()
 		used_undying()

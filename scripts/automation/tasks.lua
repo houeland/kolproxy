@@ -348,7 +348,9 @@ mark m_done
 		local pt, pturl = get_place("orc_chasm")
 		local pieces = tonumber(pt:match("action=bridge([0-9]*)"))
 		if not pieces and ascensionpath("Actually Ed the Undying") then
-			stop("TODO: Defeat troll", pt)
+			result, resulturl = get_place("orc_chasm", "bridge_done")
+			result, resulturl, did_action = handle_adventure_result(result, resulturl, "?", macro_kill_monster)
+			return
 		end
 		if not pieces then
 			critical "Couldn't determine bridge status"
@@ -441,14 +443,15 @@ mark m_done
 			bonus_target = { "monster level" },
 			minmp = 60,
 			action = function()
-				local ml = estimate_bonus("Monster Level")
-				if ml < 50 then
+				if estimate_bonus("Monster Level") < 50 then
 					script.maybe_ensure_buffs { "Pride of the Puffin" }
-					ml = estimate_bonus("Monster Level")
 				end
-				if ml < 20 then
+				if estimate_bonus("Monster Level") < 50 then
+					script.maximize("Monster Level")
+				end
+				if estimate_bonus("Monster Level") < 20 then
 					stop "Not enough +ML for Oil Peak (want 20+ for automation)"
-				elseif not ascensionstatus("Hardcore") and ml < 50 and ascensionpathid() == 0 then
+				elseif not ascensionstatus("Hardcore") and estimate_bonus("Monster Level") < 50 and ascensionpathid() == 0 then
 					-- TODO: Trigger this if script options set to go fast
 					stop "Not enough +ML for Oil Peak (want 50+ for SCNP automation)"
 				end
@@ -466,15 +469,20 @@ mark m_done
 			if ascensionpath("Avatar of Sneaky Pete") and ascensionstatus("Hardcore") and basemuscle() < 70 then
 				return
 			end
-			if not have_buff("Super Structure") and have_item("Greatest American Pants") then
-				script.wear { pants = "Greatest American Pants" }
-				script.get_gap_buff("Super Structure")
+			script.ensure_buffs { "Go Get 'Em, Tiger!", "Astral Shell", "Elemental Saucesphere", "Scarysauce" }
+			if predict_aboo_peak_banish() < 30 then
+				if not have_buff("Super Structure") and have_item("Greatest American Pants") then
+					script.wear { pants = "Greatest American Pants" }
+					script.get_gap_buff("Super Structure")
+				end
+				if not have_buff("Well-Oiled") and have_item("Oil of Parrrlay") then
+					use_item("Oil of Parrrlay")
+				end
+				script.force_heal_up()
 			end
-			if not have_buff("Well-Oiled") and have_item("Oil of Parrrlay") then
-				use_item("Oil of Parrrlay")
+			if predict_aboo_peak_banish() < 30 then
+				script.maybe_ensure_buffs { "Red Door Syndrome" }
 			end
-			script.ensure_buffs { "Go Get 'Em, Tiger!", "Red Door Syndrome", "Astral Shell", "Elemental Saucesphere", "Scarysauce" }
-			script.force_heal_up()
 			if predict_aboo_peak_banish() < 30 then
 				local gear = {}
 				if not have_buff("Super Structure") and have_item("eXtreme mittens") and have_item("eXtreme scarf") and have_item("snowboarder pants") then
@@ -499,8 +507,7 @@ mark m_done
 				cast_check_mirror_for_intrinsic("Slicked-Back Do")
 			end
 			if predict_aboo_peak_banish() < 30 then
-				local scoref = get_modifier_maximizer_score_function("HP & cold/spooky resistance")
-				automatically_maximize_equipment_for_score_function(scoref)
+				script.maximize("HP & cold/spooky resistance")
 			end
 			if predict_aboo_peak_banish() < 30 then
 				stop "TODO: Buff up and finish A-Boo Peak clues (couldn't banish 30%)"
@@ -563,11 +570,14 @@ mark m_done
 			minmp = 50,
 			action = function()
 				if not cached_stuff.previous_twin_peak_noncombat_option then
+					if get_resistance_level("Stench") < 4 then
+						script.want_familiar "Exotic Parrot"
+					end
 					if get_resistance_level("Stench") < 4 and not have_buff("Red Door Syndrome") then
 						script.ensure_buffs { "Red Door Syndrome" }
 					end
 					if get_resistance_level("Stench") < 4 then
-						script.want_familiar "Exotic Parrot"
+						script.maximize("Stench Resistance")
 					end
 					if get_resistance_level("Stench") < 4 then
 						stop "Need 4+ stench resistance"
@@ -580,6 +590,9 @@ mark m_done
 					end
 					if estimate_twin_peak_effective_plusitem() < 50 then
 						script.maybe_ensure_buffs { "Brother Flying Burrito's Blessing" }
+					end
+					if estimate_twin_peak_effective_plusitem() < 50 then
+						script.maximize("Item Drops from Monsters")
 					end
 					if estimate_twin_peak_effective_plusitem() < 50 then
 						stop "Need 50%+ item drops from monsters"
@@ -631,6 +644,7 @@ mark m_done
 							print(advtitle, choicenum)
 							print("AUTOMATION: assume it's OK and move on, twin peak is buggy")
 							set_result(pagetext)
+							force_advagain = true
 							--stop "Failed to make default-progress in Twin Peak"
 						else
 							else_defaulted_count = else_defaulted_count + 1
@@ -1084,7 +1098,7 @@ mark m_done
 					if meat() < 100 then
 						stop "Not enough meat for spooky sapling."
 					end
-					go("get parts to unlock hidden temple", "The Spooky Forest", macro_kill_monster, {}, {}, "auto", 10, { choice_function = spooky_forest_choice_function })
+					script.go("get parts to unlock hidden temple", "The Spooky Forest", macro_kill_monster, {}, {}, "auto", 10, { choice_function = spooky_forest_choice_function })
 				end
 			end
 		}
@@ -1530,7 +1544,8 @@ endif
 				set_mcd(0)
 				script.want_familiar("Frumious Bandersnatch")
 				script.ensure_buffs { "Go Get 'Em, Tiger!" }
-				stop "TODO: kill NS"
+				result, resulturl = get_place("nstower")
+				stop("TODO: kill NS", result)
 				did_action = false
 			end,
 		}
@@ -1690,6 +1705,7 @@ repeat
 	end
 
 	local function return_from_underworld()
+		used_undying()
 		local pt, pturl = get_place("edunder", "edunder_leave")
 		result, resulturl, did_action = handle_adventure_result(pt, pturl, "?", macro_kill_monster, { ["Like a Bat out of Hell"] = "Return to the fight!" })
 	end

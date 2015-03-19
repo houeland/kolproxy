@@ -577,7 +577,7 @@ function verify_items(data)
 		["water purification pills"] = { drunkenness = 3 },
 		["beastly paste"] = { spleen = 4 },
 		["leather chaps"] = { equip_requirements = { Moxie = 65 } },
-		[6256] = { name = "dried gelatinous cube" },
+		["dried gelatinous cube"] = { id = 6256 },
 		["flaming pink shirt"] = { equipment_slot = "shirt" },
 		["mayfly bait necklace"] = { equip_bonuses = { ["Item Drops from Monsters"] = 10, ["Meat from Monsters"] = 10 } },
 		["Jarlsberg's pan (Cosmic portal mode)"] = { equip_bonuses = { ["Food Drops from Monsters"] = 50 } },
@@ -589,15 +589,17 @@ function verify_items(data)
 		["Shakespeare's Sister's Accordion"] = { equip_bonuses = { ["Smithsness"] = 5 } },
 		["Rock and Roll Legend"] = { equip_bonuses = { ["Moxie"] = 7 } },
 		["Sneaky Pete's basket"] = { attack_stat = "Moxie" },
+		["Staff of Fats"] = { id = 2268 },
+		["Spookyraven library key"] = { id = 7302 },
 	}
-	local compare_data = {}
 	local return_data = {}
 	for x, y in pairs(data) do
-		compare_data[x] = y
-		compare_data[y.name] = y
-		return_data[y.name] = y
+		if y.id == 7964 then -- Ed's Staff of Fats
+		elseif not return_data[y.name] or y.id > return_data[y.name].id then
+			return_data[y.name] = y
+		end
 	end
-	if verify_data_fits(correct_data, compare_data) then
+	if verify_data_fits(correct_data, return_data) then
 		return return_data
 	end
 end

@@ -2007,7 +2007,7 @@ endif
 			if space() >= 1 and not script.know_semirare_numbers() and meat() >= 40 then
 				return eat_fortune_cookie()
 			elseif space() >= 1 and (drunkenness() == estimate_max_safe_drunkenness() or out_of_advs) and advs() < 15 then
-				eat_quality_minspace_maxspace(1, 1, space())
+				script.eat_quality_minspace_maxspace(1, 1, space())
 				result, resulturl = get_result()
 				return result, resulturl, did_action
 			end
@@ -2042,20 +2042,8 @@ endif
 
 		if not can_eat_normal_food() then return end
 
-		local function eat_quality_minspace_maxspace(quality, min_space, max_space)
-			local available_foods = get_available_foods(quality)
-			local toeat, space, turngen = determine_consumable_option(min_space, max_space, available_foods)
-			if space then
-				print("eat_food():", space)
-				for _, x in ipairs(toeat) do
-					set_result(eat_item(x))
-					did_action = true
-				end
-			end
-		end
-
 		if have_item("Pantsgiving") and space() == 1 and have_buff("Got Milk") then
-			eat_quality_minspace_maxspace(3, 1, 1)
+			script.eat_quality_minspace_maxspace(3, 1, 1)
 			return
 		end
 
@@ -2265,7 +2253,19 @@ endif
 		return script.craft_and_drink_quality_booze(2)
 	end
 
-	function f.craft_and_drink_quality_booze(minquality, min_space)
+	function script.eat_quality_minspace_maxspace(quality, min_space, max_space)
+		local available_foods = get_available_foods(quality)
+		local toeat, space, turngen = determine_consumable_option(min_space, max_space, available_foods)
+		if space then
+			print("eat_food():", space)
+			for _, x in ipairs(toeat) do
+				set_result(eat_item(x))
+				did_action = true
+			end
+		end
+	end
+
+	function f.craft_and_drink_quality_booze(minquality, min_space, max_space)
 --[[--
 			if not have_item("coconut shell") and not have_item("little paper umbrella") and not have_item("magical ice cubes") then
 				ensure_mp(10)
@@ -2280,7 +2280,7 @@ endif
 			stop "Script would drink imported beer. Drink something else manually instead, or run again to proceed."
 		end
 
-		local max_space = estimate_max_safe_drunkenness() - drunkenness()
+		max_space = max_space or (estimate_max_safe_drunkenness() - drunkenness())
 		min_space = math.min(max_space, min_space or 3)
 		local available_drinks = get_available_drinks(minquality)
 		local todrink, space, turngen = determine_consumable_option(min_space, max_space, available_drinks)
@@ -2298,8 +2298,9 @@ endif
 				local old_goodness = space and (turngen / space) or -2
 				local new_goodness = newspace and (newturngen / newspace) or -1
 				if new_goodness > old_goodness then
+					local c = count_item(name)
 					result, resulturl = parse_result(craftf)
-					have_crafted = true
+					have_crafted = count_item(name) > c
 					available_drinks = get_available_drinks(minquality)
 					todrink, space, turngen = determine_consumable_option(min_space, max_space, available_drinks)
 					if turngen ~= newturngen or not have_item(name) then
@@ -2309,7 +2310,12 @@ endif
 			end
 		end
 
+		local loop_workaround = 0
 		local function try_crafting_improvements()
+			loop_workaround = loop_workaround + 1
+			if loop_workaround >= 10 then
+				return
+			end
 			have_crafted = false
 			try_craft(have_item("handful of Smithereens"), "Paint A Vulgar Pitcher", 0, function() store_buy_item("plain old beer", "v") return craft_item("Paint A Vulgar Pitcher") end)
 			try_craft(have_item("pumpkin"), "pumpkin beer", 0, function() store_buy_item("fermenting powder", "m") return mix_items("pumpkin", "fermenting powder") end, 3)
@@ -2320,7 +2326,7 @@ endif
 					local charges = get_still_charges()
 					local craftableSHCs = get_maximum_craftable_SHCs(charges, true)
 					print("debug charges SHCs", charges, tojson(craftableSHCs))
-					if craftableSHCs[1] then
+					if craftableSHCs[1] and not have_item(craftableSHCs[1]) then
 						unequip_cocktailcrafting_garnish()
 						try_craft(true, craftableSHCs[1], 0, function() script.ensure_cocktailcrafting_kit() return table.concat(automate_crafting_cocktail(craftableSHCs[1])) end)
 					elseif charges < 2 and count_item("Typical Tavern swill") >= 2 and count_item("Typical Tavern swill") <= 3 then
@@ -2361,6 +2367,7 @@ endif
 			{ name = "agua de vida", size = 4, level = 4 },
 			{ name = "coffee pixie stick", size = 4, level = 4 },
 			{ name = "grim fairy tale", size = 4, level = 0 },
+			{ name = "molotov soda", size = 3, level = 2 },
 		}
 
 		local function can_use_spleen(x)
@@ -2741,7 +2748,7 @@ endif
 	function f.do_hidden_city()
 		-- TODO: Remove redundant information, put in zones/hiddencity.lua
 		local places = {
-			{ zone = "A Massive Ziggurat", choice = "Legend of the Temple in the Hidden City", option = "Leave" },
+			{ zone = "A Massive Ziggurat", choice = "Legend of the Temple in the Hidden City", option = "Leave", choice2 = "Temple of the Legend in the Hidden City" },
 			{ zone = "An Overgrown Shrine (Southwest)", choice = "Water You Dune", option = "Place your head in the impression", fallback = "Back away", sphere = "dripping" },
 			{ zone = "An Overgrown Shrine (Northwest)", choice = "Earthbound and Down", option = "Place your head in the impression", fallback = "Step away from the altar", sphere = "moss-covered" },
 			{ zone = "An Overgrown Shrine (Southeast)", choice = "Fire When Ready", option = "Place your head in the impression", fallback = "Back off", sphere = "scorched" },
@@ -2756,7 +2763,10 @@ endif
 				action = adventure {
 					zone = "A Massive Ziggurat",
 					macro_function = macro_noodlegeyser(5),
-					noncombats = { ["Legend of the Temple in the Hidden City"] = "Open the door" },
+					noncombats = {
+						["Legend of the Temple in the Hidden City"] = "Open the door",
+						["Temple of the Legend in the Hidden City"] = "Open the door",
+					},
 				}
 			}
 		elseif have_item("book of matches") and not citypt:contains("Hidden Tavern") then
@@ -2907,7 +2917,7 @@ endif
 						if x.zone == "A Massive Ziggurat" then
 							cached_stuff.unlocked_massive_ziggurat = true
 						end
-						if advtitle == x.choice then
+						if advtitle == x.choice or (x.choice2 and advtitle == x.choice2) then
 							if pagetext:contains(x.option) then
 								return x.option
 							else
@@ -4222,6 +4232,7 @@ endif
 		end
 
 		script.bonus_target { "noncombat", "item" }
+		local did_action_override = false
 		go("finish castle quest", 324, macro_noodleserpent, {}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 50, { equipment = top_outfit, choice_function = function(advtitle, choicenum)
 			if advtitle == "Copper Feel" then
 				if not have_item("steam-powered model rocketship") then
@@ -4254,11 +4265,13 @@ endif
 					return "Pick a Fight"
 				end
 			elseif advtitle == "Keep On Turnin' the Wheel in the Sky" then
-				did_action = true
+				did_action_override = true
 				return "Spin That Wheel, Giants Get Real"
 			end
 		end })
 		if not did_action and get_result():contains("they should stay cleaned up") then
+			did_action = true
+		elseif did_action_override then
 			did_action = true
 		end
 	end
@@ -4779,6 +4792,11 @@ endif
 			wear {}
 			return result, resulturl, did_action
 		end
+	end
+
+	function script.maximize(target)
+		local scoref = get_modifier_maximizer_score_function(target)
+		automatically_maximize_equipment_for_score_function(scoref)
 	end
 
 	return f
