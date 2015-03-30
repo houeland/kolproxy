@@ -431,11 +431,12 @@ add_automator("all pages", function()
 			if aa.last_checked ~= level() and not locked() and aa.checkf() then
 				activated = true
 				local new_last_checked = level()
-				function reset_last_checked()
-					new_last_checked = nil
+				local ok, result = pcall(aa.f)
+				if ok and result then
+					aa.last_checked = nil
+				else
+					aa.last_checked = new_last_checked
 				end
-				pcall(aa.f)
-				aa.last_checked = new_last_checked
 			end
 		end
 		if not activated then break end

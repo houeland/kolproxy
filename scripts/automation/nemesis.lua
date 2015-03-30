@@ -9,6 +9,21 @@ local required_items_perclass = {
 	{ lew = "Squeezebox of the Ages", ew = "Rock and Roll Legend", extra = "golden reeds", door = { "dirty hobo gloves", "insanely spicy jumping bean burrito" } },
 }
 
+local rerun_workaround_counter = 0
+local rerun_turn = nil
+
+local function rerun_check()
+	if turnsplayed() ~= rerun_turn then
+		rerun_workaround_counter = 0
+		return true
+	elseif rerun_workaround_counter < 10 then
+		rerun_workaround_counter = rerun_workaround_counter + 1
+		return true
+	else
+		return false
+	end
+end
+
 setup_turnplaying_script {
 	name = "automate-nemesis",
 	description = "Automate Nemesis quest (first part)",
@@ -172,9 +187,13 @@ setup_turnplaying_script {
 				["The Singing Tree"] = "&quot;No singing, thanks.&quot;",
 				["The Baker's Dilemma"] = "&quot;Sorry, I'm busy right now.&quot;",
 			} }
+		elseif rerun_check() then
+			advagain = true
 		else
 			stop "TODO: Wait for nemesis assassins??? Or missing guild quest? Or missing nemesis quest?"
 		end
+	elseif rerun_check() then
+		advagain = true
 	else
 		stop "TODO: Next quest step???"
 	end
@@ -246,7 +265,7 @@ setup_turnplaying_script {
 
 function nemesis_try_sauceror_potions()
 	if have_buff("Slimeform") then
-		return
+		return true
 	end
 	local goal_potions = {
 		["vial of amber slime"] = { "vial of yellow slime", "vial of orange slime" },
@@ -271,7 +290,7 @@ function nemesis_try_sauceror_potions()
 		if not known_potion_effects[x] then
 			if have_item(x) then
 				local bl = buffslist()
-				use_item(x)
+				use_item(x)()
 				for a, b in pairs(buffslist()) do
 					if b > (bl[a] or 0) then
 						print("potion effect", x, "=", a)
@@ -290,6 +309,7 @@ function nemesis_try_sauceror_potions()
 			end
 		end
 	end
+	return false
 end
 
 function automate_TT_nemesis_island()
@@ -342,20 +362,49 @@ function try_killing_nemesis()
 	script.ensure_mp(50)
 	fought = false
 	result, resulturl = get_page("/volcanoisland.php", { pwd = session.pwd, action = "tniat" })
+	print("DEBUG: lock url cont", locked(), resulturl, result:contains([[value="Continue"]]))
 	if locked() or not resulturl:contains("volcanoisland.php") or result:contains([[value="Continue"]]) then
 		fought = true
 	end
 	result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_noodleserpent)
+	print("DEBUG: lock url advagain", locked(), resulturl, advagain)
+	if result:contains([[value="Continue"]]) then
+		result, resulturl = get_page("/volcanomaze.php", { start = 1 })
+		automate_volcanomaze()
+		script.ensure_buffs { "Jalape&ntilde;o Saucesphere", "Elemental Saucesphere", "Antibiotic Saucesphere", "Scarysauce" }
+		script.ensure_mp(100)
+		script.heal_up()
+		local buffs = 0
+		for _, x in ipairs { "Jalape&ntilde;o Saucesphere", "Elemental Saucesphere", "Antibiotic Saucesphere" } do
+			if have_buff(x) then
+				buffs = buffs + 1
+			end
+		end
+		if buffs >= 2 then
+			result, resulturl = get_page("/volcanomaze.php", { move = "6,6" })
+			result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_noodleserpent)
+			advagain = false
+		end
+	end
 	return fought
 end
 
 function automate_S_nemesis_island()
 	if try_killing_nemesis() then
+		print("DEBUG: killing nemesis...")
 		return
+	end
+	if locked() then
+		print("DEBUG: locked nemesis")
+		return
+	end
+	if have_buff("Slimeform") then
+		critical "TODO: kill nemesis"
 	end
 	nemesis_try_sauceror_potions()
 	if have_buff("Slimeform") then
-		stop "TODO: kill nemesis"
+		advagain = true
+		return
 	end
 	if not have_item("bottle of G&uuml;-Gone") then
 		get_page("/volcanoisland.php", { pwd = session.pwd, action = "npc" })

@@ -498,7 +498,8 @@ volcano_solutions[6] = [[
 7, 6
 ]]
 
-local href = add_automation_script("automate-volcanomaze", function()
+
+function automate_volcanomaze()
 	text, url = "Solving volcano puzzle", requestpath
 	volcano = get_page("/volcanomaze.php")
 	platforms = {}
@@ -557,7 +558,9 @@ local href = add_automation_script("automate-volcanomaze", function()
 		text = "Swim back to shore first to enable solving"
 	end
 	return text, url
-end)
+end
+
+local href = add_automation_script("automate-volcanomaze", automate_volcanomaze)
 
 add_printer("/volcanomaze.php", function()
 	text = text:gsub([[value="Swim Back to Shore".->]], [[%0<br><a href="]].. href { pwd = session.pwd } ..[[" style="color:green">{ solve }</a>]])

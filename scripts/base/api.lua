@@ -138,6 +138,7 @@ function setup_functions()
 		function hp() return math.min(tonumber(status().hp), maxhp()) end
 		function mp() return math.min(tonumber(status().mp), maxmp()) end
 		function turnsthisrun() return tonumber(status().turnsthisrun) end
+		function turnsplayed() return tonumber(status().turnsplayed) end
 		function familiarid() return tonumber(status().familiar) end
 		function familiarpicture() return status().familiarpic end
 		function familiar(name)
@@ -227,7 +228,14 @@ function setup_functions()
 			end
 			return status().sign
 		end
-		function freedralph() return tonumber(status().freedralph) == 1 end
+		function finished_mainquest()
+			-- TODO: Should be defeated NS, not freed ralph
+			if ascensionpath("Actually Ed the Undying") then
+				return have_item(7965) -- Holy MacGuffin in Ed
+			else
+				return tonumber(status().freedralph) == 1
+			end
+		end
 		function moonsign_area(name)
 			if name then
 				-- TODO: validate
@@ -263,13 +271,14 @@ function setup_functions()
 		function drunkenness() return tonumber(status().drunk) end
 		function spleen() return tonumber(status().spleen) end
 		function ascensionstatus(check)
+			-- TODO: remove or change values
 			if check then
-				if check ~= "Aftercore" and check ~= "Hardcore" and check ~= "Softcore" then
+				if check ~= "Aftercore" and check ~= "Hardcore" and check ~= "Softcore" and check ~= "Casual" then
 					error("Invalid ascensionstatus check: " .. tostring(check))
 				end
 				return check == ascensionstatus()
 			end
-			if tonumber(status().freedralph) == 1 then
+			if finished_mainquest() and not ascensionpath("Actually Ed the Undying") then
 				return "Aftercore"
 			elseif tonumber(status().casual) == 1 then
 				return "Aftercore"
@@ -281,6 +290,7 @@ function setup_functions()
 				return "Aftercore"
 			end
 		end
+		function have_mall_access() return ascensionstatus("Aftercore") end
 		function mcd() return tonumber(status().mcd) end
 		function maxmcd()
 			if moonsign_area("Little Canadia") then

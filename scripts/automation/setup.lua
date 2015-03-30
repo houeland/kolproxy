@@ -47,17 +47,19 @@ function run_automation_script(f, pwdsrc, scriptname)
 	local critical_err = false
 	local errmsg = nil
 	local stop_pagetext = nil
+	local stop_automation_skiplink = nil
 	function critical(e)
 		errmsg = e
 		critical_err = true
 		error(e, 2)
 	end
-	function stop(e, pagetext)
+	function stop(e, pagetext, skiplink)
 		if pagetext then
 			stop_pagetext = pagetext
 			if type(stop_pagetext) ~= "string" then
 				stop_pagetext = stop_pagetext()
 			end
+			stop_automation_skiplink = skiplink
 		end
 		errmsg = e
 		stopped_err = true
@@ -123,12 +125,15 @@ function run_automation_script(f, pwdsrc, scriptname)
 			elseif stop_pagetext then
 				result = stop_pagetext
 				result = add_message_to_page(result, errmsg, "Ascension script:")
+				if stop_automation_skiplink then
+					result = add_message_to_page(result, stop_automation_skiplink, "Automation stopped:", "darkorange")
+				end
 				return result, requestpath
 			else
 				print("Manual intervention required: " .. errmsg)
 				print(e.trace)
 				local runagain_href = make_href("/kolproxy-automation-script", params)
-				result = [[<script>top.charpane.location = "charpane.php"</script>Manual intervention required: ]] .. errmsg .. [[<br><br>Fix this and run the script again to continue automating.<br><br><a href="]]..runagain_href..[[" style="color: green">{ I have fixed it, run the script again now! }</a>]]
+				result = [[<script>top.charpane.location = "charpane.php"</script>Manual intervention required: ]] .. errmsg .. [[<br><br>Fix this and run the script again to continue automating.<br><br><a href="]]..runagain_href..[[" style="color: green" onclick="this.style.color = 'gray'">{ I have fixed it, run the script again now! }</a>]]
 				local steptrace = get_error_trace_steps()
 				if next(steptrace) then
 					result = add_message_to_page(get_result(), "While trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt>" .. automation_skiplink, "Automation stopped:", "darkorange")

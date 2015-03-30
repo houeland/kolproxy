@@ -137,7 +137,7 @@ function get_lightsout_info()
 	local liznumber = ascension["liz quest"] or 0
 	local stevenumber = ascension["steve quest"] or 0
 	local function lightsout_turns_remaining()
-		local played = tonumber(status().turnsplayed) or 0
+		local played = turnsplayed() or 0
 		return (37 - played % 37) % 37
 	end
 	local counter = lightsout_turns_remaining()

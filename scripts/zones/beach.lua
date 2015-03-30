@@ -117,9 +117,9 @@ end)
 
 add_ascension_assistance(function() return have_item("desert sightseeing pamphlet") end, function()
 	local c = count_item("desert sightseeing pamphlet")
-	use_item("desert sightseeing pamphlet")
+	use_item("desert sightseeing pamphlet")()
 	if count_item("desert sightseeing pamphlet") < c then
-		reset_last_checked()
+		return true
 	end
 end)
 

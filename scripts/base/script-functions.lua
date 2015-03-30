@@ -239,7 +239,7 @@ do
 		-- TODO: default trigger on place.php with params.action
 		local path = tbl.path or "/adventure.php"
 		local function f()
-			if tbl.when == "ascension" and freedralph() then return end
+			if tbl.when == "ascension" and finished_mainquest() then return end
 			local zoneid = requested_zone_id()
 			if want_zoneids and not want_zoneids[zoneid] then return end
 			local msg = tbl.message
@@ -312,6 +312,11 @@ do
 				end
 				local ret = [[$.ajax({ url: '/kolproxy-automation-script', cache: false, data: { ]]..table.concat(data, ", ")..[[ }, global: false, ]]..extra_params..[[ })]]
 				return ret
+			elseif tbl.ahref_description then
+				local desc = tbl.ahref_description
+				tbl.ahref_description = nil
+				tbl.pwd = session.pwd
+				return string.format([[<a href="%s" style="color: green" onclick="this.style.color = 'gray'">{ %s }</a>]], localmake_href("/kolproxy-automation-script", tbl), desc)
 			else
 				return localmake_href("/kolproxy-automation-script", tbl)
 			end

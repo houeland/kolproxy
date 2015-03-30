@@ -380,12 +380,12 @@ mark m_done
 						did_action = have_item("snow boards")
 					end
 				}
-			elseif ascensionstatus("Softcore") then
+			elseif ascensionstatus("Softcore") and not skipped_pull("smut orc keepsake box") then
 				return {
 					message = "pull keepsake box",
 					nobuffing = true,
 					action = function()
-						pull_in_softcore("smut orc keepsake box")
+						pull_in_softcore("smut orc keepsake box", true)
 						did_action = have_item("smut orc keepsake box")
 					end
 				}
@@ -1545,6 +1545,11 @@ endif
 				script.want_familiar("Frumious Bandersnatch")
 				script.ensure_buffs { "Go Get 'Em, Tiger!" }
 				result, resulturl = get_place("nstower")
+				if ascensionpath("Actually Ed the Undying") then
+					result, resulturl = get_place("nstower", "ns_10_sorcfight")
+					result, resulturl, did_action = handle_adventure_result(result, resulturl, "?", macro_kill_monster)
+					return
+				end
 				stop("TODO: kill NS", result)
 				did_action = false
 			end,
@@ -1727,6 +1732,16 @@ repeat
 				buy_item("talisman of Renenutet")()
 				buy_item("talisman of Renenutet")()
 				buy_item("talisman of Renenutet")()
+				if count_item("linen bandages") < 5 then
+					buy_item("linen bandages")()
+				end
+				if count_item("linen bandages") < 25 and count_item("Ka coin") >= 50 then
+					buy_item("linen bandages")()
+					buy_item("linen bandages")()
+					buy_item("linen bandages")()
+					buy_item("linen bandages")()
+					buy_item("linen bandages")()
+				end
 				if not have_item("mummified beef haunch") then
 					critical "Failed to buy mummified beef haunch"
 				end

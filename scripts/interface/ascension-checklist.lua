@@ -1,5 +1,4 @@
 function ascension_checklist_get_questitem_text()
-	if not freedralph() then return "" end
 	ordered_items = {}
 	local quest_items = {}
 	table.insert(quest_items, { name = "map to Vanya's Castle", link = "Remember to kill Vanya's Creature [map to Vanya's Castle]" })

@@ -265,7 +265,29 @@ function cannon_action()
 	local cfm = getCurrentFightMonster()
 	local elem = cfm and cfm.Stats and cfm.Stats.Element
 	local can_use_undying = times_used_undying() < 2
-	return macro_cast_skill { pastathrall() and "Cannelloni Cannon" or "???", "Saucestorm", "Cannelloni Cannon", "Bawdy Refrain", fury() >= 1 and "Furious Wallop" or "???", "Saucegeyser", "Kneebutt", "Toss", "Clobber", "Ravioli Shurikens", can_use_undying and "Fist of the Mummy" or "???", elem ~= "Hot" and "Roar of the Lion" or "???", can_use_undying and "Mild Curse" or "???" }
+	local prefer_big_spell = cfm and cfm.Stats and (tonumber(cfm.Stats.HP) or 0) >= 500
+	if prefer_big_spell then
+		local skill = maybe_macro_cast_skill {
+			"Saucegeyser",
+			elem ~= "Hot" and "Roar of the Lion" or "???",
+		}
+		if skill then return skill end
+	end
+	return macro_cast_skill {
+		pastathrall() and "Cannelloni Cannon" or "???",
+		"Saucestorm",
+		"Cannelloni Cannon",
+		"Bawdy Refrain",
+		fury() >= 1 and "Furious Wallop" or "???",
+		"Saucegeyser",
+		"Kneebutt",
+		"Toss",
+		"Clobber",
+		"Ravioli Shurikens",
+		can_use_undying and "Fist of the Mummy" or "???",
+		elem ~= "Hot" and "Roar of the Lion" or "???",
+		can_use_undying and "Mild Curse" or "???",
+	}
 end
 
 function estimate_elemental_weapon_damage_sum()
@@ -1960,6 +1982,7 @@ endif]])
 
 	if macro_target.yellowraypatternmatch and monstername():lower():contains(macro_target.yellowraypatternmatch:lower()) then
 		if have_skill("Wrath of Ra") then
+			print("INFO: Wrath of Ra!")
 			table.insert(use_initial_tbl, [[cast Wrath of Ra]])
 		end
 	end
@@ -1970,9 +1993,11 @@ endif]])
 
 	local raindoh_flyers_list = {}
 	if macro_target.itemcopy and macro_target.itemcopy[monstername()] and have_item("Rain-Doh black box") then
+		print("INFO: Rain-Doh black box!")
 		table.insert(raindoh_flyers_list, "Rain-Doh black box")
 	end
 	if have_item("rock band flyers") then
+		print("INFO: rock band flyers!")
 		table.insert(raindoh_flyers_list, "rock band flyers")
 	end
 	if have_item("Rain-Doh indigo cup") then
@@ -1995,8 +2020,10 @@ endif]])
 	end
 
 	if have_skill("Lash of the Cobra") and want_super_pickpocket(monstername()) then
+		print("INFO: Lash of the Cobra!")
 		table.insert(use_initial_tbl, [[cast Lash of the Cobra]])
 	elseif have_item("talisman of Renenutet") and want_super_itemdrop(monstername()) then
+		print("INFO: talisman of Renenutet!")
 		table.insert(use_initial_tbl, [[use talisman of Renenutet]])
 		used_undying()
 		used_undying()
@@ -2014,6 +2041,9 @@ endif]])
 		table.insert(use_initial_tbl, [[
 if hasskill Summon Love Mosquito
 	cast Summon Love Mosquito
+endif
+if hasskill Summon Love Scarabs
+	cast Summon Love Scarabs
 endif]])
 	end
 

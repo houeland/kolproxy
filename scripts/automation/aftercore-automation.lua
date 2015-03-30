@@ -210,16 +210,16 @@ Pick macro to use for automation scripts:<br>
 end)
 
 add_printer("/main.php", function()
-	if tonumber(status().freedralph) == 0 then return end
+	if not finished_mainquest() then return end
 	if not setting_enabled("enable turnplaying automation") then return end
 
 	local rows = {}
 
 	if autoattack_macro_id() then
-		local alink = [[<a href="]]..aftercore_automation_href { pwd = session.pwd }..[[" style="color: green">{ Make aftercore go away }</a>]]
+		local alink = aftercore_automation_href { ahref_description = "Make aftercore go away" }
 		table.insert(rows, [[<tr><td><center>]] .. alink .. [[</center></td></tr>]])
 	else
-		local alink = [[<a href="]]..setup_aftercore_automation_href { pwd = session.pwd }..[[" style="color: green">{ Setup aftercore automation }</a>]]
+		local alink = setup_aftercore_automation_href { ahref_description = "Setup aftercore automation" }
 		table.insert(rows, [[<tr><td><center>]] .. alink .. [[</center></td></tr>]])
 	end
 

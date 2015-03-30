@@ -21,7 +21,7 @@ function softcore_stoppable_action(msg)
 	end
 end
 
-local cached_stuff = {}
+local cached_stuff = { currently_checked = {} }
 
 local function write_log_line(msg)
 	local f = io.open(string.format("logs/scripts/scripted-ascension-log-%s-%s.txt", playername(), current_ascension_number()), "a+")
@@ -123,6 +123,59 @@ local function automate_day(whichday)
 		return not have_item("Knob Goblin encryption key") and not unlocked_knob()
 	end
 
+	local function have_frat_war_outfit()
+		return have_item("beer helmet") and have_item("distressed denim pants") and have_item("bejeweled pledge pin")
+	end
+
+	local function have_miners_outfit()
+		return have_item("miner's helmet") and have_item("7-Foot Dwarven mattock") and have_item("miner's pants")
+	end
+
+	local council_text = async_get_page("/council.php")
+	local questlog_page = async_get_page("/questlog.php", { which = 7 })
+	council_text = council_text()
+	questlog_page = questlog_page()
+
+	function refresh_quest()
+		questlog_page = get_page("/questlog.php", { which = 7 })
+	end
+
+	function quest(name)
+		return questlog_page:contains([[<b>]] .. name .. [[</b>]])
+	end
+	function quest_text(name)
+		return questlog_page:contains(name)
+	end
+	function quest_get_raw_questlog_page()
+		return questlog_page
+	end
+
+	local function can_photocopy()
+		return not ascension_script_option("use fax machine manually") and not cached_stuff.have_faxed_today and have_item("Clan VIP Lounge key") and not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete") and not fax_machine_is_too_old()
+	end
+
+	local function ensure_empty_config_table(t)
+		local n = next(t)
+		if n then
+			error("Config table not empty, contains key: " .. tostring(n))
+		end
+	end
+	function adventure(t)
+		return function()
+			local pt, pturl, advagain = autoadventure { zoneid = get_zoneid(t.zone or t.zoneid), macro = t.macro_function, noncombatchoices = t.noncombats, specialnoncombatfunction = t.choice_function, ignorewarnings = true }
+			t.zone = nil
+			t.zoneid = nil
+			t.macro_function = nil
+			t.noncombats = nil
+			t.choice_function = nil
+			ensure_empty_config_table(t)
+			return pt, pturl, advagain
+		end
+	end
+
+	local script = get_automation_scripts(cached_stuff)
+	local tasks = get_automation_tasks(script, cached_stuff)
+
 	-- TODO: do these properly
 	local function started_war()
 		return quest("Make War, Not... Oh, Wait")
@@ -132,8 +185,40 @@ local function automate_day(whichday)
 		return not quest("Make War, Not... Oh, Wait")
 	end
 
+	function ready_for_lvl12_war()
+		if not quest("Make War, Not... Oh, Wait") then return false end
+		if not have_frat_war_outfit() or basemoxie() < 70 or basemysticality() < 70 then return false end
+		return true
+	end
+
+	function doing_lvl12_war()
+		if not ready_for_lvl12_war() then return false end
+		if cached_stuff.currently_checked.island_expanded_for_war == nil then
+			local pt = get_page("/island.php")
+			local pt2 = get_page("/bigisland.php", { place = "concert" })
+			cached_stuff.currently_checked.island_expanded_for_war = pt:contains("Mysterious Island Arena") or pt2:contains("Mysterious Island Arena")
+		end
+		return cached_stuff.currently_checked.island_expanded_for_war
+	end
+
 	local function completed_filthworms()
-		return have_item("heart of the filthworm queen")
+		if have_item("heart of the filthworm queen") then return true end
+		if not doing_lvl12_war() then return end
+		if cached_stuff.currently_checked.island_filthworms_completed == nil then
+			script.wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
+			local pt = get_page("/bigisland.php", { place = "orchard", action = "stand", pwd = session.pwd })
+			cached_stuff.currently_checked.filthworms_completed = pt:contains("bowl of rye sprouts")
+		end
+		return cached_stuff.currently_checked.filthworms_completed
+	end
+
+	local function found_dr_awkward()
+		if cached_stuff.currently_checked.found_dr_awkward == nil then
+			script.wear { acc1 = "Talisman o' Nam" }
+			local pt = get_place("palindome")
+			cached_stuff.currently_checked.found_dr_awkward = pt:contains("Dr. Awkward")
+		end
+		return cached_stuff.currently_checked.found_dr_awkward
 	end
 
 	local function completed_sonofa_beach()
@@ -459,51 +544,6 @@ endif
 	end
 	if cached_stuff.currently_checked.kgs_available == nil then
 		cached_stuff.currently_checked.kgs_available = check_buying_from_knob_dispensary()
-	end
-
-	local function ensure_empty_config_table(t)
-		local n = next(t)
-		if n then
-			error("Config table not empty, contains key: " .. tostring(n))
-		end
-	end
-	function adventure(t)
-		return function()
-			local pt, pturl, advagain = autoadventure { zoneid = get_zoneid(t.zone or t.zoneid), macro = t.macro_function, noncombatchoices = t.noncombats, specialnoncombatfunction = t.choice_function, ignorewarnings = true }
-			t.zone = nil
-			t.zoneid = nil
-			t.macro_function = nil
-			t.noncombats = nil
-			t.choice_function = nil
-			ensure_empty_config_table(t)
-			return pt, pturl, advagain
-		end
-	end
-
-	local council_text = async_get_page("/council.php")
-	local questlog_page = async_get_page("/questlog.php", { which = 7 })
-	council_text = council_text()
-	questlog_page = questlog_page()
-
-	function refresh_quest()
-		questlog_page = get_page("/questlog.php", { which = 7 })
-	end
-
-	function quest(name)
-		return questlog_page:contains([[<b>]] .. name .. [[</b>]])
-	end
-	function quest_text(name)
-		return questlog_page:contains(name)
-	end
-	function quest_get_raw_questlog_page()
-		return questlog_page
-	end
-
-	local script = get_automation_scripts(cached_stuff)
-	local tasks = get_automation_tasks(script, cached_stuff)
-
-	local function can_photocopy()
-		return not ascension_script_option("use fax machine manually") and not cached_stuff.have_faxed_today and have_item("Clan VIP Lounge key") and not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete") and not fax_machine_is_too_old()
 	end
 
 	local function countif(x)
@@ -1003,14 +1043,6 @@ endif
 		if have_buff("Temporary Amnesia") then
 			stop "Temporary amnesia..."
 		end
-	end
-
-	local function have_frat_war_outfit()
-		return have_item("beer helmet") and have_item("distressed denim pants") and have_item("bejeweled pledge pin")
-	end
-
-	local function have_miners_outfit()
-		return have_item("miner's helmet") and have_item("7-Foot Dwarven mattock") and have_item("miner's pants")
 	end
 
 	add_task {
@@ -1708,14 +1740,22 @@ endif
 		set_result(pull_storage_item(name, amount))
 	end
 
-	function pull_in_softcore(item)
+	function skipped_pull(item)
+		return skipping_taskids["pull item:"..item]
+	end
+
+	function pull_in_softcore(item, skippable)
 		if not have_item(item) and not ascensionstatus("Hardcore") then
 			ascension_automation_pull_item(item)
 			if ascension_script_option("ignore automatic pulls") then
 				return
 			end
 			if not have_item(item) then
-				stop("Failed to pull " .. tostring(item), result)
+				local skiplink = nil
+				if skippable then
+					skiplink = ascension_automation_script_href { ahref_description = "Don't pull this", skip_taskid = "pull item:"..item }
+				end
+				stop("Failed to pull " .. tostring(item), result, skiplink)
 			end
 		end
 	end
@@ -2846,14 +2886,15 @@ endif
 			vamp_out(mainstat_type())
 			did_action = true
 		elseif have_chateau_mantegna() then
-			local pt = get_place("chateau", "chateau_nightstand3")
-			local substats = pt:match("giving you some (.-) substats when you rest")
+			local pt = get_place("chateau", "chateau_nightstand")
+			local substats = pt:match("some (.-) substats when you rest")
 			if substats == mainstat_type() then
 				inform "resting at mantegna"
 				local oldstat = rawmainstat()
 				result, resulturl = get_place("chateau", "chateau_restbox")
 				did_action = rawmainstat() > oldstat
 			else
+				print("DEBUG: detected mantegna substats as: " .. tostring(substats))
 				stop("TODO: rest at mantegna", pt)
 			end
 		else
@@ -4177,7 +4218,9 @@ endif
 	}
 
 	add_task {
-		prereq = have_buff("Ultrahydrated") and quest("Just Deserts"),
+		prereq = have_buff("Ultrahydrated") and
+			quest("Just Deserts") and
+			(not can_wear_weapons() or have_item("UV-resistant compass")),
 		f = script.do_oasis_and_desert,
 		message = "ultrahydrated",
 	}
@@ -4396,6 +4439,12 @@ endif
 	}
 
 	add_task {
+		prereq = not have_item("pirate fledges") and
+			unlocked_fcle(),
+		f = script.get_pirate_fledges,
+	}
+
+	add_task {
 		when = want_digital_key() and
 			ascensionstatus("Hardcore") and
 			not script.have_familiar("Angry Jung Man") and
@@ -4591,10 +4640,10 @@ endif
 			basemoxie() >= 70 and
 			basemysticality() >= 70 and
 			have_frat_war_outfit() and
-			not have_buff("Musk of the Moose") and
 			have_item("Talisman o' Nam"),
 		f = function()
 			-- TODO: get what's needed from hippy store first
+			cached_stuff.currently_checked.island_expanded_for_war = nil
 			use_dancecard()
 			script.bonus_target { "noncombat" }
 			script.go("start war", 131, macro_noodlecannon, {
@@ -4620,17 +4669,24 @@ endif
 
 	add_task {
 		prereq = quest_text("now the Council wants you to finish it") and cached_stuff.finished_war_sidequests,
-		f = function()
-			if have_item("BitterSweetTarts") and not have_buff("Full of Wist") then
-				use_item("BitterSweetTarts")
-			end
-			script.do_battlefield()
-		end
+		f = script.do_battlefield,
 	}
 
 	add_task {
 		prereq = quest_text("now the Council wants you to finish it") and not have_item("rock band flyers") and not cached_stuff.got_flyers,
 		f = script.get_flyers,
+	}
+
+	add_task {
+		prereq = doing_lvl12_war() and
+			completed_filthworms() and
+			completed_gremlins() and
+			completed_sonofa_beach() and
+			completed_arena(),
+		f = function()
+			script.check_if_done_with_war_sidequests()
+			did_action = cached_stuff.finished_war_sidequests
+		end,
 	}
 
 	add_task {
@@ -4640,32 +4696,27 @@ endif
 	}
 
 	add_task {
-		prereq = (challenge == "fist" or challenge == "boris") and basemysticality() < 60,
-		f = script.do_mysticality_powerleveling,
+		prereq = not have_item("Talisman o' Nam") and
+			level() >= 11 and
+			have_item("pirate fledges") and
+			basemysticality() >= 60,
+		f = script.get_talisman_o_nam,
 	}
 
 	add_task {
-		prereq = quest("Never Odd Or Even") and basemysticality() >= 60,
+		prereq = quest("Never Odd Or Even") and have_item("Talisman o' Nam") and basemysticality() >= 60,
 		f = script.do_never_odd_or_even_quest,
 	}
 
 	add_task {
-		prereq = quest_text("the Quest for the Holy MacGuffin") and not have_item("Talisman o' Nam") and basemysticality() >= 60,
-		f = script.do_never_odd_or_even_quest,
-	}
-
-	local function need_staff_of_fats()
-		return not have_item("Staff of Fats") and not have_item("Staff of Ed") and not have_item("Staff of Ed, almost")
-	end
-
-	add_task {
-		prereq = quest_text("the Quest for the Holy MacGuffin") and need_staff_of_fats() and basemysticality() >= 60,
-		f = script.do_never_odd_or_even_quest,
-	}
-
-	add_task {
-		prereq = (challenge == "fist") and basemysticality() < 65 and level() >= 11,
-		f = script.do_mysticality_powerleveling,
+		when = have_item("Talisman o' Nam") and basemysticality() >= 60 and not found_dr_awkward(),
+		task = {
+			message = "do palindome (workaround for KoL not having any quest set)",
+			action = function()
+				cached_stuff.currently_checked.found_dr_awkward = nil
+				script.do_palindome()
+			end
+		}
 	}
 
 	add_task {
@@ -4721,8 +4772,8 @@ endif
 	}
 
 	add_task {
-		prereq = not have_item("Talisman o' Nam"),
-		f = script.do_never_odd_or_even_quest,
+		prereq = level() >= 11 and not have_item("Talisman o' Nam") and basemysticality() < 60,
+		f = script.do_mysticality_powerleveling,
 	}
 
 	add_task {
@@ -4744,33 +4795,19 @@ endif
 	add_tasklist(tasks.tasklist_pyramid_quest)
 
 	add_task {
-		prereq = quest("Make War, Not... Oh, Wait") and
-			basemoxie() >= 70 and
-			basemysticality() >= 70 and
-			have_frat_war_outfit(),
-		f = function()
-			if not completed_filthworms() then
-				if have_item("Polka Pop") and not have_buff("Polka Face") then
-					use_item("Polka Pop")
-				end
-				-- TODO: increase priority with stench buffs up
-				script.do_filthworms()
-			elseif not completed_gremlins() then
-				script.do_junkyard()
-			elseif not completed_sonofa_beach() then
-				script.do_sonofa()
-			elseif not completed_arena() then
-				inform "turn in rock band flyers"
-				script.wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
-				result, resulturl = get_page("/bigisland.php", { place = "concert" })
-				if not have_item("rock band flyers") then
-					did_action = true
-				end
-			else
-				script.get_flyers()
-				did_action = cached_stuff.finished_war_sidequests
-			end
-		end,
+		-- TODO: increase priority with stench buffs up
+		prereq = doing_lvl12_war() and not completed_filthworms(),
+		f = script.do_filthworms,
+	}
+
+	add_task {
+		prereq = doing_lvl12_war() and not completed_gremlins(),
+		f = script.do_junkyard,
+	}
+
+	add_task {
+		prereq = doing_lvl12_war() and not completed_sonofa_beach(),
+		f = script.do_sonofa,
 	}
 
 	add_task {
@@ -4798,6 +4835,18 @@ endif
 		prereq = level() < 12,
 		f = do_powerleveling,
 		message = "level to 12",
+	}
+
+	add_task {
+		prereq = doing_lvl12_war() and not completed_arena(),
+		f = function()
+			inform "turn in rock band flyers"
+			script.wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
+			result, resulturl = get_page("/bigisland.php", { place = "concert" })
+			if not have_item("rock band flyers") then
+				did_action = true
+			end
+		end,
 	}
 
 	add_task {
@@ -5035,7 +5084,8 @@ endif
 		end
 		if triggered then
 			print_ascensiondebug("triggering task", taskid_lookup[x])
-			skiplink = [[<a href="]]..ascension_automation_script_href { pwd = session.pwd, skip_taskid = taskid_lookup[x] }..[[">{ Skip it }</a>]]
+--			skiplink = [[<a href="]]..ascension_automation_script_href { pwd = session.pwd, skip_taskid = taskid_lookup[x] }..[[">{ Skip it }</a>]]
+			skiplink = ascension_automation_script_href { ahref_description = "Skip it", skip_taskid = taskid_lookup[x] }
 			set_automation_skiplink(skiplink)
 			while type(task) == "function" do
 				task = task()
@@ -5173,7 +5223,7 @@ end
 -- TODO: stop on semirares option
 local ascension_script_options_tbl = {
 	["disable autoattack"] = { yes = "use script macros", no = "use autoattack", default_yes = true, when = function() return autoattack_is_set() end },
-	["stop on imported beer"] = { yes = "stop", no = "drink as fallback booze", default_yes = true },
+	["automate whenever possible"] = { yes = "automate", no = "stop if there's no good action available", default_yes = true },
 	["skip azazel quest"] = { yes = "skip quest", no = "get steel organ" },
 	["manual lvl 9 quest"] = { yes = "stop and do manually", no = "automate" },
 	["manual castle quest"] = { yes = "stop and do manually", no = "automate" },
@@ -5284,7 +5334,7 @@ end)
 
 add_printer("/main.php", function()
 	if not setting_enabled("enable turnplaying automation") then return end
-	if tonumber(status().freedralph) == 1 and not ascensionpath("Actually Ed the Undying") then
+	if finished_mainquest() then
 		text = text:gsub([[title="Bottom Edge".-</table>]], [[%0<table><tr><td><center><a href="]]..custom_aftercore_automation_href { pwd = session.pwd }..[[" style="color: green">{ Setup/run scripts }</a></center></td></tr></table>]])
 		return
 	end
@@ -5304,7 +5354,8 @@ add_printer("/main.php", function()
 
 		local rows = {}
 		for _, x in ipairs(links) do
-			local alink = [[<a href="]]..ascension_automation_script_href { pwd = session.pwd, whichday = x.whichday }..[[" style="color: green" onclick="this.style.color = 'gray'">{ Automate ascension]]..x.titleday..[[ }</a>]]
+--local alink = [[<a href="]]..ascension_automation_script_href { pwd = session.pwd, whichday = x.whichday }..[[" style="color: green" onclick="this.style.color = 'gray'">{ Automate ascension]]..x.titleday..[[ }</a>]]
+			local alink = ascension_automation_script_href { ahref_description = "Automate ascension" .. x.titleday, whichday = x.whichday }
 			if x.whichday == daysthisrun() then
 				alink = [[&rarr; ]] .. alink .. [[ &larr;]]
 			end
@@ -5313,7 +5364,8 @@ add_printer("/main.php", function()
 		text = text:gsub([[title="Bottom Edge".-</table>]], [[%0<table>]] .. table.concat(rows) .. [[</table>]])
 	else
 		local rows = {}
-		local alink = [[<a href="]]..ascension_automation_setup_href { pwd = session.pwd }..[[" style="color: green">{ Setup ascension automation }</a>]]
+--		local alink = [[<a href="]]..ascension_automation_setup_href { ahref_title =  }..[[" style="color: green">{ Setup ascension automation }</a>]]
+		local alink = ascension_automation_setup_href { ahref_description = "Setup ascension automation" }
 		table.insert(rows, [[<tr><td><center>]] .. alink .. [[</center></td></tr>]])
 		text = text:gsub([[title="Bottom Edge".-</table>]], [[%0<table>]] .. table.concat(rows) .. [[</table>]])
 	end
