@@ -3832,9 +3832,13 @@ endif
 			local played = tonumber(session["__script.boss bat turns"]) or 0
 			session["__script.boss bat turns"] = played + 1
 			if played < 4 then
-				go("killing boss bat guardians", 34, macro_noodlecannon, nil, { "Spirit of Garlic", "Leash of Linguini", "Empathy", "Polka of Plenty" }, "leprechaun", 30)
+				script.go("killing boss bat guardians", 34, macro_noodlecannon, nil, { "Spirit of Garlic", "Leash of Linguini", "Empathy", "Polka of Plenty" }, "leprechaun", 30)
+				if ascensionpath("Actually Ed the Undying") and played == 0 then
+					-- WORKAROUND: Somehow tries to go here too early in Ed
+					did_action = true
+				end
 			else
-				go("killing boss bat", 34, macro_noodlecannon, nil, { "Spirit of Garlic", "Leash of Linguini", "Empathy", "Polka of Plenty" }, "Knob Goblin Organ Grinder", 35, {
+				script.go("killing boss bat", 34, macro_noodlecannon, nil, { "Spirit of Garlic", "Leash of Linguini", "Empathy", "Polka of Plenty" }, "Knob Goblin Organ Grinder", 35, {
 					finalcheck = function()
 						set_mcd(4) -- TODO: moxie-specific
 					end
@@ -4593,7 +4597,7 @@ endif
 		elseif count_item("snakehead charrrm") >= 2 then
 			inform "pasting talisman"
 			use_item("snakehead charrrm")
-			did_action = have_item("Talisman o' Nam")
+			did_action = have_item("Talisman o' Namsilat")
 		elseif have_item("gaudy key") then
 			inform "using gaudy key"
 			local charms = count_item("snakehead charrrm")
@@ -4619,7 +4623,7 @@ endif
 	function script.do_never_odd_or_even_quest()
 		if not have_item("pirate fledges") then
 			return script.get_pirate_fledges()
-		elseif not have_item("Talisman o' Nam") then
+		elseif not have_item("Talisman o' Namsilat") then
 			return script.get_talisman_o_nam()
 		else
 			return script.do_palindome()
@@ -4628,8 +4632,8 @@ endif
 
 	function script.do_palindome()
 		-- WORKAROUND: doesn't appear until plains is loaded
-		if not have_equipped_item("Talisman o' Nam") then
-			wear { acc3 = "Talisman o' Nam" }
+		if not have_equipped_item("Talisman o' Namsilat") then
+			wear { acc3 = "Talisman o' Namsilat" }
 			async_get_page("/plains.php")
 		end
 		if have_item("&quot;I Love Me, Vol. I&quot;") then
@@ -4645,7 +4649,7 @@ endif
 			script.bonus_target { "easy combat" }
 			fam "Knob Goblin Organ Grinder"
 			script.ensure_buffs { "A Few Extra Pounds", "Spirit of Garlic" }
-			script.wear { acc3 = first_wearable { "Mega Gem" }, acc2 = "Talisman o' Nam" }
+			script.wear { acc3 = first_wearable { "Mega Gem" }, acc2 = "Talisman o' Namsilat" }
 			script.ensure_mp(60)
 			script.heal_up()
 			result, resulturl = get_place("palindome", "pal_droffice")
@@ -4675,7 +4679,7 @@ endif
 				["Rod Nevada, Vendor"] = "Accept (500 Meat)",
 				["Do Geese See God?"] = "Buy the photograph (500 meat)",
 				["A Pre-War Dresser Drawer, Pa!"] = "Ignawer the drawer",
-			}, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 40, { equipment = { acc3 = "Talisman o' Nam" } })
+			}, { "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 40, { equipment = { acc3 = "Talisman o' Namsilat" } })
 		elseif quest_text("wet stunt nut stew") and have_item("stunt nuts") then
 			script.bonus_target { "combat", "item" }
 			go("find wet stunt nut stew ingredients", 100, macro_noodleserpent, {
@@ -4717,7 +4721,7 @@ endif
 				["Rod Nevada, Vendor"] = "Accept (500 Meat)",
 				["Do Geese See God?"] = "Buy the photograph (500 meat)",
 				["A Pre-War Dresser Drawer, Pa!"] = "Ignawer the drawer",
-			}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 40, { equipment = { acc3 = "Talisman o' Nam" } })
+			}, { "Smooth Movements", "The Sonata of Sneakiness", "Fat Leon's Phat Loot Lyric", "Spirit of Bacon Grease" }, "Slimeling", 40, { equipment = { acc3 = "Talisman o' Namsilat" } })
 		end
 	end
 

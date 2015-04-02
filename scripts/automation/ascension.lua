@@ -214,7 +214,7 @@ local function automate_day(whichday)
 
 	local function found_dr_awkward()
 		if cached_stuff.currently_checked.found_dr_awkward == nil then
-			script.wear { acc1 = "Talisman o' Nam" }
+			script.wear { acc1 = "Talisman o' Namsilat" }
 			local pt = get_place("palindome")
 			cached_stuff.currently_checked.found_dr_awkward = pt:contains("Dr. Awkward")
 		end
@@ -314,7 +314,7 @@ cast Heroic Belch
 			elseif name == "Astronomer" and ascensionstatus("Hardcore") then
 				return macro_softcore_boris()
 			elseif name == "gaudy pirate" then
-				if not have_item("gaudy key") and not have_item("snakehead charrrm") and not have_item("Talisman o' Nam") and not ascensionstatus("Hardcore") then
+				if not have_item("gaudy key") and not have_item("snakehead charrrm") and not have_item("Talisman o' Namsilat") and not ascensionstatus("Hardcore") then
 					if have_item("Rain-Doh black box") then
 						return macro_softcore_boris([[
 
@@ -512,7 +512,7 @@ endif
 			elseif name == "Astronomer" and ascensionstatus("Hardcore") then
 				return macro_softcore_boris()
 			elseif name == "gaudy pirate" then
-				if not have_item("gaudy key") and not have_item("snakehead charrrm") and not have_item("Talisman o' Nam") and not ascensionstatus("Hardcore") then
+				if not have_item("gaudy key") and not have_item("snakehead charrrm") and not have_item("Talisman o' Namsilat") and not ascensionstatus("Hardcore") then
 					if have_item("Rain-Doh black box") then
 						return macro_softcore_boris([[
 
@@ -4640,7 +4640,7 @@ endif
 			basemoxie() >= 70 and
 			basemysticality() >= 70 and
 			have_frat_war_outfit() and
-			have_item("Talisman o' Nam"),
+			have_item("Talisman o' Namsilat"),
 		f = function()
 			-- TODO: get what's needed from hippy store first
 			cached_stuff.currently_checked.island_expanded_for_war = nil
@@ -4696,7 +4696,7 @@ endif
 	}
 
 	add_task {
-		prereq = not have_item("Talisman o' Nam") and
+		prereq = not have_item("Talisman o' Namsilat") and
 			level() >= 11 and
 			have_item("pirate fledges") and
 			basemysticality() >= 60,
@@ -4704,12 +4704,12 @@ endif
 	}
 
 	add_task {
-		prereq = quest("Never Odd Or Even") and have_item("Talisman o' Nam") and basemysticality() >= 60,
+		prereq = quest("Never Odd Or Even") and have_item("Talisman o' Namsilat") and basemysticality() >= 60,
 		f = script.do_never_odd_or_even_quest,
 	}
 
 	add_task {
-		when = have_item("Talisman o' Nam") and basemysticality() >= 60 and not found_dr_awkward(),
+		when = have_item("Talisman o' Namsilat") and basemysticality() >= 60 and not found_dr_awkward(),
 		task = {
 			message = "do palindome (workaround for KoL not having any quest set)",
 			action = function()
@@ -4772,7 +4772,7 @@ endif
 	}
 
 	add_task {
-		prereq = level() >= 11 and not have_item("Talisman o' Nam") and basemysticality() < 60,
+		prereq = level() >= 11 and not have_item("Talisman o' Namsilat") and basemysticality() < 60,
 		f = script.do_mysticality_powerleveling,
 	}
 
@@ -4856,7 +4856,15 @@ endif
 	}
 
 	add_task {
-		when = ascensionpath("Actually Ed the Undying") and council_text:contains("It’s time to take the Holy MacGuffin home"),
+		when = function()
+			if not ascensionpath("Actually Ed the Undying") then return end
+			for i = 1, 5 do
+				if council_text:contains("It’s time to take the Holy MacGuffin home") then
+					return true
+				end
+				council_text = get_page("/council.php")
+			end
+		end,
 		task = {
 			message = "finished run",
 			nobuffing = true,

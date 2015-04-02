@@ -284,7 +284,7 @@ end)
 -- belowdecks
 
 add_ascension_zone_check(160, function()
-	if have_buff("On the Trail") and not have_item("Talisman o' Nam") and count_item("snakehead charrrm") + count_item("gaudy key") < 2 then
+	if have_buff("On the Trail") and not have_item("Talisman o' Namsilat") and count_item("snakehead charrrm") + count_item("gaudy key") < 2 then
 		local trailed = retrieve_trailed_monster()
 		if trailed ~= "gaudy pirate" then
 			return "You are on the trail of '" .. tostring(trailed) .. "' when you might want to sniff a gaudy pirate."

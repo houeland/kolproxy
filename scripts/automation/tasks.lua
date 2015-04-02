@@ -1663,6 +1663,10 @@ endif
 		for _, skill in ipairs(want_skills) do
 			if not have_skill(skill) then
 				print("INFO: getting skill: " .. skill)
+				if not skilldata[skill] then
+					result = pt
+					critical("Could not get skill: " + skill)
+				end
 				set_result(post_page("/choice.php", skilldata[skill]))
 				learned = skill
 				break

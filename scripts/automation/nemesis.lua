@@ -424,6 +424,9 @@ repeat
 	end
 	local pt, url = get_page("/volcanoisland.php", { pwd = session.pwd, action = "tuba" })
 	result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_nemesis_sauceror)
+	if result:contains([[several of the slimes take notice of you and begin to quiver agitatedly]]) then
+		advagain = true
+	end
 end
 
 function automate_DB_nemesis_island()
