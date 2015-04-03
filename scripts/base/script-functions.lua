@@ -65,31 +65,30 @@ do
 		end
 		if warntype == "extra" then
 			-- TODO: redo these local tables with warnings, at least give them paths, or preferably reuse normal stuff
-			if path == "/adventure.php" then
-				localtable.insert(__raw_extra_adventure_warnings, f)
-			end
 			for _, p in ipairs(path) do
+				if p == "/adventure.php" then
+					localtable.insert(__raw_extra_adventure_warnings, f)
+				end
 				__raw_add_extra_warning(p, f)
 			end
 		elseif warntype == "warning" then
-			if path == "/adventure.php" then
-				localtable.insert(__raw_adventure_warnings, f)
-			end
 			for _, p in ipairs(path) do
+				if p == "/adventure.php" then
+					localtable.insert(__raw_adventure_warnings, f)
+				end
 				__raw_add_warning(p, f)
 			end
 		elseif warntype == "notice" then
-			if path == "/adventure.php" then
-				localtable.insert(__raw_adventure_notices, f)
-			end
 			for _, p in ipairs(path) do
+				if p == "/adventure.php" then
+					localtable.insert(__raw_adventure_notices, f)
+				end
 				__raw_add_notice(p, f)
 			end
 		else
 			error("Invalid warning severity: " .. tostring(warntype))
 		end
 	end
-
 
 	function add_ascension_warning(filename, f)
 		add_warning_internal("warning", filename, function()
@@ -223,23 +222,31 @@ do
 
 	function add_warning(tbl)
 		-- TODO: deprecate some of these
-		check_supported_table_values(tbl, {}, { "message", "check", "severity", "zone", "when", "idgenerator", "path" })
+		check_supported_table_values(tbl, {}, { "message", "check", "severity", "zone", "when", "idgenerator", "path", "whichplace" })
 		local warnprefix = "everywhere"
 		local want_zoneids = nil
 		if tbl.zone then
-			want_zoneids = {}
-			if type(tbl.zone) ~= "table" then
+			if type(tbl.zone) == "string" then
 				tbl.zone = { tbl.zone }
 			end
 			warnprefix = table.concat(tbl.zone, ",")
+			want_zoneids = {}
 			for _, z in ipairs(tbl.zone) do
 				want_zoneids[get_zoneid(z)] = true
 			end
 		end
-		-- TODO: default trigger on place.php with params.action
-		local path = tbl.path or "/adventure.php"
+		local path = nil
+		if tbl.whichplace then
+			path = { "/place.php" }
+		elseif tbl.path then
+			path = tbl.path
+		else
+			path = { "/adventure.php", "/mining.php", "/cellar.php", "/place.php" }
+		end
 		local function f()
 			if tbl.when == "ascension" and finished_mainquest() then return end
+			if not tbl.path and requestpath == "/place.php" and not params.action then return end
+			if tbl.whichplace and params.whichplace ~= tbl.whichplace then return end
 			local zoneid = requested_zone_id()
 			if want_zoneids and not want_zoneids[zoneid] then return end
 			local msg = tbl.message

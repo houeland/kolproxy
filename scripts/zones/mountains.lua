@@ -533,3 +533,17 @@ add_automator("use item: A-Boo clue", function()
 		end
 	end
 end)
+
+-- chateau
+
+add_warning {
+	message = "Are you sure? You have no free rests left.",
+	whichplace = "chateau",
+	type = "extra",
+	check = function()
+		if not params.action then return end
+		if not params.action:contains("_rest") then return end
+		local pt = get_place("chateau")
+		return not pt:contains("restlabelfree")
+	end,
+}
