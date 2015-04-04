@@ -34,6 +34,7 @@ add_choice_text("More Locker Than Morlock", { -- choice adventure number: 556
 add_warning {
 	message = "You already have the mining outfit.",
 	type = "warning",
+	when = "ascension",
 	zone = "Itznotyerzitz Mine",
 	check = function()
 		return not ascensionstatus("Aftercore") and have_item("7-Foot Dwarven mattock") and have_item("miner's helmet") and have_item("miner's pants")
@@ -315,6 +316,18 @@ add_choice_text("Duffel on the Double", {
 	["Open the bag"] = "Get a piece of eXtreme Cold-Weather Gear",
 	["Scram"] = { leave_noturn = true },
 })
+
+-- ninja snowmen
+
+add_warning {
+	message = "You need to have +combat% to encounter ninja snowman assassins.",
+	type = "warning",
+	when = "ascension",
+	zone = "Lair of the Ninja Snowmen",
+	check = function()
+		return estimate_bonus("Monsters will be more attracted to you") <= 0
+	end,
+}
 
 -- orc chasm
 
