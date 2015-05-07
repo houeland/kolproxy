@@ -386,7 +386,7 @@ mark m_done
 					nobuffing = true,
 					action = function()
 						pull_in_softcore("smut orc keepsake box", true)
-						did_action = have_item("smut orc keepsake box")
+						did_action = have_item("smut orc keepsake box") or ascension_script_option("automate whenever possible")
 					end
 				}
 			else
@@ -478,7 +478,9 @@ mark m_done
 				if not have_buff("Well-Oiled") and have_item("Oil of Parrrlay") then
 					use_item("Oil of Parrrlay")
 				end
-				script.force_heal_up()
+				if predict_aboo_peak_banish(maxhp()) >= 30 then
+					script.force_heal_up()
+				end
 			end
 			if predict_aboo_peak_banish() < 30 then
 				script.maybe_ensure_buffs { "Red Door Syndrome" }
@@ -497,17 +499,27 @@ mark m_done
 				end
 				script.wear(gear)
 				script.ensure_buffs { "Reptilian Fortitude", "Power Ballad of the Arrowsmith" }
-				script.force_heal_up()
+				if predict_aboo_peak_banish(maxhp()) >= 30 then
+					script.force_heal_up()
+				end
 			end
 			if predict_aboo_peak_banish() < 30 then
 				script.maybe_ensure_buffs { "Oiled-Up", "Standard Issue Bravery", "Starry-Eyed", "Puddingskin", "Protection from Bad Stuff", "Truly Gritty" }
-				script.force_heal_up()
+				if predict_aboo_peak_banish(maxhp()) >= 30 then
+					script.force_heal_up()
+				end
 			end
 			if predict_aboo_peak_banish() < 30 and have_skill("Check Mirror") and not have_intrinsic("Slicked-Back Do") then
 				cast_check_mirror_for_intrinsic("Slicked-Back Do")
+				if predict_aboo_peak_banish(maxhp()) >= 30 then
+					script.force_heal_up()
+				end
 			end
 			if predict_aboo_peak_banish() < 30 then
 				script.maximize("HP & cold/spooky resistance")
+				if predict_aboo_peak_banish(maxhp()) >= 30 then
+					script.force_heal_up()
+				end
 			end
 			if predict_aboo_peak_banish() < 30 then
 				stop "TODO: Buff up and finish A-Boo Peak clues (couldn't banish 30%)"
@@ -1665,7 +1677,7 @@ endif
 				print("INFO: getting skill: " .. skill)
 				if not skilldata[skill] then
 					result = pt
-					critical("Could not get skill: " + skill)
+					critical("Could not get skill: " .. skill)
 				end
 				set_result(post_page("/choice.php", skilldata[skill]))
 				learned = skill
@@ -1697,6 +1709,13 @@ endif
 			nobuffing = true,
 			action = function()
 				result, resulturl = get_place("edbase", "edbase_door")
+				for _, sid in ipairs { 6, 1, 2, 3 } do
+					result, resulturl = post_page("/choice.php", { whichchoice = 1053, option = 3, pwd = session.pwd, sid = sid })
+					if not can_release_servant() and not result:contains("That servant already works for you") then
+						did_action = true
+						return
+					end
+				end
 				stop("TODO: release servant", result)
 			end
 		}
@@ -1738,6 +1757,9 @@ repeat
 				buy_item("talisman of Renenutet")()
 				if count_item("linen bandages") < 5 then
 					buy_item("linen bandages")()
+				end
+				if count_item("talisman of Horus") < 3 and count_item("Ka coin") >= 25 then
+					buy_item("talisman of Horus")()
 				end
 				if count_item("linen bandages") < 25 and count_item("Ka coin") >= 50 then
 					buy_item("linen bandages")()
@@ -1785,15 +1807,20 @@ repeat
 
 	tasks.ed_farm_ka_at_government_lab = {
 		when = want_ka() and have_skill("Fist of the Mummy") and cache_wrapper(have_conspiracy_island),
-		task = {
-			message = "farm ka at government lab",
-			minmp = 10,
-			equipment = { acc1 = first_wearable { "Personal Ventilation Unit" } },
-			action = adventure {
-				zone = "The Secret Government Laboratory",
-				macro_function = macro_kill_monster,
+		task = function()
+			if zone_awaiting_florist_decision("The Secret Government Laboratory") then
+				plant_florist_plants { 20, 11, 15 }
+			end
+			return {
+				message = "farm ka at government lab",
+				minmp = 10,
+				equipment = { acc1 = first_wearable { "Personal Ventilation Unit" } },
+				action = adventure {
+					zone = "The Secret Government Laboratory",
+					macro_function = macro_kill_monster,
+				}
 			}
-		},
+		end,
 	}
 
 	tasks.ed_use_map_page = {

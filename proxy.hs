@@ -102,7 +102,7 @@ statusfunc ref = do
 		case x of
 			Right r -> return r
 			Left err -> throwIO err) `catch` (\e -> do
-				putWarningStrLn $ "statusfunc exception: " ++ show (e :: SomeException)
+				putDebugStrLn $ "statusfunc exception: " ++ show (e :: SomeException)
 				throwIO e))
 
 kolProxyHandlerChat uri params baseref = do

@@ -3,8 +3,9 @@ function buy_itemname(name, input_amount)
 	assert(type(name) == "string")
 	get_itemid(name)
 	local amount = input_amount or 1
+--	local buy_name = input_name:gsub([[&quot;]], [["]])
 	local pt = get_page("/submitnewchat.php", { graf = "/buy " .. amount .. " " .. name, pwd = session.pwd })
-	if pt:contains("Purchasing " .. amount .. " ") then
+	if pt:contains("Purchasing " .. amount .. " ") and pt:contains(name) then
 		local url = pt:match([[dojax%('(.-)'%)]])
 		if url then
 			local urlpath, urlquery = kolproxycore_splituri("/" .. url)
@@ -13,13 +14,17 @@ function buy_itemname(name, input_amount)
 			return async_get_page(urlpath, urlparams)
 		end
 	end
-	-- DEBUG WORKAROUND WHILE KOL IS BROKEN --
+	-- WORKAROUND FOR KOL BEING BROKEN --
 	for whichshop, items in pairs(datafile("stores")) do
 		if items[name] then
-			return raw_shop_buy_item({ [name] = amount }, whichshop)[1]
+			local c = count_item(name)
+			local shoppt = raw_shop_buy_item({ [name] = amount }, whichshop)[1]()
+			if count_item(name) > c then
+				return function() return shoppt end
+			end
 		end
 	end
-	-- DEBUG WORKAROUND WHILE KOL IS BROKEN --
+	-- WORKAROUND FOR KOL BEING BROKEN --
 	return function() return [[{ /buy ]] .. amount .. " " .. name .. [[ failed. }]] end
 end
 
@@ -87,9 +92,9 @@ local function shop_buy_many_items(itemlist, whichshop)
 	local ptfs = {}
 	for x, y in pairs(itemlist) do
 		if not itemrows[x] then
-			print("WARNING: couldn't find row for item", x)
+			print("WARNING: couldn't find row for item", x, "in", whichshop)
 			print("  itemrows:", itemrows)
-			print("WARNING: couldn't find row for item", x)
+			print("WARNING: couldn't find row for item", x, "in", whichshop)
 		end
 		table.insert(ptfs, async_post_page("/shop.php", { pwd = session.pwd, whichshop = whichshop, action = "buyitem", whichrow = itemrows[x], quantity = y, ajax = 1 }))
 	end

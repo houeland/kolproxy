@@ -90,6 +90,8 @@ aftercore_automation_href = add_automation_script("aftercore-automation", functi
 	pull_storage_item("borrowed time")
 	use_item("borrowed time")
 
+	async_get_page("/campground.php", { action = "garden", pwd = session.pwd })
+
 	local function remaining_spleen()
 		return estimate_max_spleen() - spleen()
 	end
@@ -168,6 +170,8 @@ aftercore_automation_href = add_automation_script("aftercore-automation", functi
 	end
 	if not locked() and not available_scripts[1] then
 		if advs() > 0 then
+			script.wear {}
+			script.ensure_buffs {}
 			set_autoattack_id(autoattack_macro_id())
 			text, url = run_castle_turns(advs(), familiarid())
 		end

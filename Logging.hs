@@ -144,7 +144,7 @@ log_chat_messages ref text = (do
 					do_db_query_ db "INSERT INTO other(time, msg, rawjson) VALUES(?, ?, ?);"
 						[Just $ Data.ByteString.Char8.pack $ show $ time, Just $ Data.ByteString.Char8.pack $ msg, Just $ Data.ByteString.Char8.pack $ rawjson]
 			_ -> do
-				putStrLn $ "WARNING: unrecognized chat type"
+				putDebugStrLn $ "unrecognized chat type: " ++ show (mtype, mtime, mplayerid, mmid, mchannel)
 				doChatLogAction ref $ \db -> do
 					do_db_query_ db "INSERT INTO unrecognized(rawjson) VALUES(?);"
 						[Just $ Data.ByteString.Char8.pack $ rawjson]
@@ -156,7 +156,7 @@ log_chat_messages ref text = (do
 	let Ok (JSArray msglist) = valFromObj "msgs" json
 	mapM_ (\x -> case x of
 		JSObject m -> handle_msg m
-		_ -> putStrLn $ "WARNING: unrecognized chat message") msglist
+		_ -> putDebugStrLn $ "unrecognized chat format") msglist
 	return ()) `catch` (\e -> do
 		return (e :: SomeException)
 		doChatLogAction ref $ \db -> do

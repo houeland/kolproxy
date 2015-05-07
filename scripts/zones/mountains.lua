@@ -390,8 +390,9 @@ add_processor("/choice.php", function()
 	end
 end)
 
-function predict_aboo_peak_banish()
-	local resists = get_resistance_levels()
+function predict_aboo_peak_banish(testhp, resists)
+	local testhp = testhp or hp()
+	local resists = resists or get_resistance_levels()
 	local accumuldmg = { Cold = 0, Spooky = 0 }
 	local accumulbanish = 0
 	local nextbanish = 2
@@ -404,7 +405,7 @@ function predict_aboo_peak_banish()
 		if beatenup then
 			local dmgtext = markup_damagetext(accumuldmg)
 			table.insert(msglines, string.format("Failed: %d (%s + %s)", accumuldmg.Cold + accumuldmg.Spooky, dmgtext.Cold, dmgtext.Spooky))
-		elseif accumuldmg.Cold + accumuldmg.Spooky < hp() then
+		elseif accumuldmg.Cold + accumuldmg.Spooky < testhp then
 			accumulbanish = accumulbanish + nextbanish
 			nextbanish = nextbanish + 2
 			local dmgtext = markup_damagetext(accumuldmg)

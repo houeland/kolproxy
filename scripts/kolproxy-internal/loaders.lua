@@ -47,6 +47,7 @@ load_file("skill", "skills/summons.lua")
 load_file("skill", "skills/inigo.lua")
 load_file("skill", "skills/pastamancer-spells.lua")
 load_file("skill", "skills/sauceror-spells.lua")
+load_file("skill", "skills/ed-spells.lua")
 
 load_file("familiar", "familiars/butt-away.lua")
 load_file("familiar", "familiars/llama.lua")

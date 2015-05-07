@@ -23,7 +23,7 @@ import qualified Database.SQLite3Modded
 
 
 
-kolproxy_version_number = "3.48-alpha"
+kolproxy_version_number = "3.49-dev"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 
@@ -138,4 +138,6 @@ reset_lua_instances ref = do
 putErrorStrLn msg = putStrLn $ "ERROR: " ++ msg
 putWarningStrLn msg = putStrLn $ "WARNING: " ++ msg
 putInfoStrLn msg = putStrLn $ "INFO: " ++ msg
-putDebugStrLn msg = putStrLn $ "DEBUG: " ++ msg
+putDebugStrLn msg = if kolproxy_version_number =~ "-dev"
+	then putStrLn $ "DEBUG: " ++ msg
+	else return ()

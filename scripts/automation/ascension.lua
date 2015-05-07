@@ -204,7 +204,8 @@ local function automate_day(whichday)
 	local function completed_filthworms()
 		if have_item("heart of the filthworm queen") then return true end
 		if not doing_lvl12_war() then return end
-		if cached_stuff.currently_checked.island_filthworms_completed == nil then
+		if cached_stuff.currently_checked.filthworms_completed == nil then
+			print "INFO: checking if filthworms are completed"
 			script.wear { hat = "beer helmet", pants = "distressed denim pants", acc3 = "bejeweled pledge pin" }
 			local pt = get_page("/bigisland.php", { place = "orchard", action = "stand", pwd = session.pwd })
 			cached_stuff.currently_checked.filthworms_completed = pt:contains("bowl of rye sprouts")
@@ -1745,12 +1746,16 @@ endif
 	end
 
 	function pull_in_softcore(item, skippable)
+		if ascension_script_option("ignore automatic pulls") then
+			return
+		end
 		if not have_item(item) and not ascensionstatus("Hardcore") then
 			ascension_automation_pull_item(item)
-			if ascension_script_option("ignore automatic pulls") then
-				return
-			end
 			if not have_item(item) then
+				if skippable and ascension_script_option("automate whenever possible") then
+					skipping_taskids["pull item:"..item] = true
+					return
+				end
 				local skiplink = nil
 				if skippable then
 					skiplink = ascension_automation_script_href { ahref_description = "Don't pull this", skip_taskid = "pull item:"..item }
@@ -1761,22 +1766,22 @@ endif
 	end
 
 	function maybe_pull_in_softcore(item)
+		if ascension_script_option("ignore automatic pulls") then
+			return
+		end
 		if not have_item(item) and not ascensionstatus("Hardcore") then
 			ascension_automation_pull_item(item)
-			if ascension_script_option("ignore automatic pulls") then
-				return
-			end
 		end
 	end
 
 	function maybe_pull_in_casual(item, amount)
+		if ascension_script_option("ignore automatic pulls") then
+			return
+		end
 		amount = amount or 1
 		if count_item(item) >= amount then return end
 		if ascensionstatus("Aftercore") or (not ascensionstatus("Hardcore") and ascensionpath("Slow and Steady")) then
 			ascension_automation_pull_item(item, amount - count_item(item))
-			if ascension_script_option("ignore automatic pulls") then
-				return
-			end
 		end
 	end
 
@@ -2364,6 +2369,23 @@ endif
 	add_task(tasks.use_spooky_temple_map)
 
 	add_task {
+		when = not cached_stuff.currently_checked.wearing_equipment,
+		task = {
+			message = "putting on equipment",
+			nobuffing = true,
+			action = function()
+				cached_stuff.currently_checked.wearing_equipment = true
+				if not next(equipment()) then
+					script.wear {}
+				end
+				did_action = true
+			end
+		}
+	}
+
+	-- start of turn-spending things
+
+	add_task {
 		when = have_item("rock band flyers") and
 			quest("Make War, Not... Oh, Wait") and
 			basemoxie() >= 70 and
@@ -2380,8 +2402,6 @@ endif
 			end
 		}
 	}
-
-	-- start of turn-spending things
 
 	local function timer_buff_running_out()
 		for i = 1, 10 do
@@ -2877,6 +2897,25 @@ endif
 		use_dancecard = script.do_moxie_use_dancecard
 	end
 
+	function mantegna_resting_is_free()
+		local pt = get_place("chateau")
+		return pt:contains("restlabelfree")
+	end
+
+	function do_mantegna_resting()
+		local pt = get_place("chateau", "chateau_nightstand")
+		local substats = pt:match("some (.-) substats when you rest")
+		if substats == mainstat_type() then
+			inform "resting at mantegna"
+			local oldstat = rawmainstat()
+			result, resulturl = get_place("chateau", "chateau_restbox")
+			did_action = rawmainstat() > oldstat
+		else
+			print("DEBUG: detected mantegna substats as: " .. tostring(substats))
+			stop("TODO: rest at mantegna", pt)
+		end
+	end
+
 	function do_powerleveling()
 		if have_item("plastic vampire fangs") and not day["vamped out.isabella"] and not cached_stuff.tried_vamping_out then
 			inform "vamping out"
@@ -2886,17 +2925,7 @@ endif
 			vamp_out(mainstat_type())
 			did_action = true
 		elseif have_chateau_mantegna() then
-			local pt = get_place("chateau", "chateau_nightstand")
-			local substats = pt:match("some (.-) substats when you rest")
-			if substats == mainstat_type() then
-				inform "resting at mantegna"
-				local oldstat = rawmainstat()
-				result, resulturl = get_place("chateau", "chateau_restbox")
-				did_action = rawmainstat() > oldstat
-			else
-				print("DEBUG: detected mantegna substats as: " .. tostring(substats))
-				stop("TODO: rest at mantegna", pt)
-			end
+			do_mantegna_resting()
 		else
 			use_dancecard()
 			return do_powerleveling_sub()
@@ -4344,7 +4373,13 @@ endif
 				elseif quest_text("wants you to defeat Old Don Rickets") then
 					script.beat_ibp()
 				else
-					critical "Unexpected quest status while trying to unlock fcle. Didn't find the map quickly enough?"
+					local wasted_advs = ascension["__script.extra turns spent in barrr looking for map"] or 0
+					if wasted_advs < 5 or (ascension_script_option("automate whenever possible") and wasted_advs < 25) then
+						ascension["__script.extra turns spent in barrr looking for map"] = wasted_advs + 1
+						script.do_barrr(insults)
+					else
+						critical "Unexpected quest status while trying to unlock fcle. Didn't find the map quickly enough?"
+					end
 				end
 			end
 		end,
@@ -5009,9 +5044,9 @@ endif
 			end
 			x.olfact = nil
 
-			if arrowed_possible and (x.minmp or 0) < 60 then
+			if arrowed_possible and x.minmp < 60 then
 				x.minmp = 60
-			elseif maxmp() >= 100 and (x.minmp or 0) < 40 then
+			elseif maxmp() >= 100 and x.minmp < 40 then
 				x.minmp = 40
 			end
 
@@ -5038,13 +5073,13 @@ endif
 				script.wear(towear)
 			end
 
-			if x.minmp then
+			if x.minmp > 0 then
 				if mp() < x.minmp then
 					infoline("ensuring " .. x.minmp .. " MP to fight")
 				end
 				script.ensure_mp(x.minmp)
-				x.minmp = nil
 			end
+			x.minmp = nil
 
 			if x.finalcheck then
 				x.finalcheck()

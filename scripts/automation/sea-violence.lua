@@ -37,6 +37,7 @@ local violence_href = setup_turnplaying_script {
 		maybe_pull_item("Mer-kin gladiator mask", 1)
 		maybe_pull_item("Mer-kin gladiator tailpiece", 1)
 		maybe_pull_item("crayon shavings", 10)
+		maybe_pull_item("Rain-Doh green lantern", 1)
 	end,
 	autoinform = false,
 	adventuring = function()

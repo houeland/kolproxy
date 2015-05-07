@@ -76,6 +76,20 @@ function run_automation_script(f, pwdsrc, scriptname)
 		table.insert(error_trace_steps, tostring(msg))
 	end
 
+	local function add_charpane_refresh(pt)
+		if not pt:contains("charpane.php") then
+			if pt:contains("</head>") then
+				pt = pt:gsub("</head>", [[
+<script>top.charpane.location = "charpane.php"</script>
+%0
+]])
+			else
+				pt = [[<script>top.charpane.location = "charpane.php"</script>]] .. pt
+			end
+		end
+		return pt
+	end
+
 	local ok, text, url = xpcall(f, function(e) return { msg = e, trace = debug.traceback(e) } end)
 	if ok then
 		if url == "json" then
@@ -92,12 +106,7 @@ function run_automation_script(f, pwdsrc, scriptname)
 </html>
 ]]
 		end
-		if not text:contains("charpane.php") then
-			text = text:gsub("</head>", [[
-<script>top.charpane.location = "charpane.php"</script>
-%0
-]])
-		end
+		text = add_charpane_refresh(text)
 		return text, (url or resulturl)
 	else
 		local e = text
@@ -106,9 +115,9 @@ function run_automation_script(f, pwdsrc, scriptname)
 			print(e.trace)
 			result = get_result()
 			if result == "??? No action found ???" or result == "??? No automation done ???" then
-				result = [[<script>top.charpane.location = "charpane.php"</script><p style="color: darkorange">]] .. "Something unexpected happened: " .. errmsg .. "<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>"
+				result = [[<p style="color: darkorange">]] .. "Something unexpected happened: " .. errmsg .. "<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>"
 			else
-				result = [[<script>top.charpane.location = "charpane.php"</script>]] .. add_message_to_page(result, "<pre>Something unexpected happened: " .. errmsg .. "</pre><br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>", nil, "darkorange")
+				result = add_message_to_page(result, "<pre>Something unexpected happened: " .. errmsg .. "</pre><br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>", nil, "darkorange")
 			end
 			local steptrace = get_error_trace_steps()
 			if next(steptrace) then
@@ -116,18 +125,22 @@ function run_automation_script(f, pwdsrc, scriptname)
 			elseif automation_skiplink ~= "" then
 				result = add_message_to_page(get_result(), automation_skiplink, "Automation stopped:", "darkorange")
 			end
+			result = add_charpane_refresh(result)
 			return result, requestpath
 		elseif stopped_err then
 			if errmsg:match("End of day.-then done") then -- TODO: redo this
 				print("Finished: " .. errmsg)
 				print(e.trace)
-				return [[<script>top.charpane.location = "charpane.php"</script>]] .. "Finished: " .. errmsg .. "</pre>", requestpath
+				result = "Finished: " .. errmsg
+				result = add_charpane_refresh(result)
+				return result, requestpath
 			elseif stop_pagetext then
 				result = stop_pagetext
 				result = add_message_to_page(result, errmsg, "Ascension script:")
 				if stop_automation_skiplink then
 					result = add_message_to_page(result, stop_automation_skiplink, "Automation stopped:", "darkorange")
 				end
+				result = add_charpane_refresh(result)
 				return result, requestpath
 			else
 				print("Manual intervention required: " .. errmsg)
@@ -140,6 +153,7 @@ function run_automation_script(f, pwdsrc, scriptname)
 				elseif automation_skiplink ~= "" then
 					result = add_message_to_page(get_result(), automation_skiplink, "Automation stopped:", "darkorange")
 				end
+				result = add_charpane_refresh(result)
 				return result, requestpath
 			end
 		else
@@ -248,9 +262,9 @@ end)
 function maybe_pull_item(name, input_amount)
 	local amount = input_amount or 1
 	if count_item(name) < amount then
-		pull_storage_item(name, amount - count_item(name))
+		local ptf = pull_storage_item(name, amount - count_item(name))
 		if input_amount and count_item(name) < input_amount then
-			critical("Couldn't pull " .. tostring(amount) .. "x " .. tostring(name))
+			stop("Couldn't pull " .. tostring(amount) .. "x " .. tostring(name), ptf)
 		end
 	end
 end

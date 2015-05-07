@@ -17,7 +17,6 @@ import Data.List
 import Data.Maybe
 import Network.HTTP.Base (urlEncodeVars)
 import Network.URI
---import Network.CGI
 import System.IO.Error (isUserError, ioeGetErrorString)
 import Text.JSON
 import Text.XML.Light
@@ -294,13 +293,14 @@ push_simplexmldata l xmlval = do
 	Lua.settable l (-3)
 
 push_function l1 f identifier = do
+	-- TODO: Switch to putError if this is changed to not happen regularly (e.g. when not logged in)
 	let f_final l2 = (catchJust (\e -> if isUserError e then Just e else Nothing)
 		(f l2)
 		(\e -> do
-			putStrLn $ "ERROR: Lua.hs IOerror in " ++ identifier ++ ": " ++ ioeGetErrorString e
+			putDebugStrLn $ "Lua.hs IOerror in " ++ identifier ++ ": " ++ ioeGetErrorString e
 			Lua.pushstring l2 $ "Haskell exception in " ++ identifier ++ " (" ++ ioeGetErrorString e ++ ")"
 			return (-1))) `catch` (\e -> do
-				putStrLn $ "ERROR: Lua.hs error in " ++ identifier ++ ": " ++ (show e)
+				putDebugStrLn $ "Lua.hs error in " ++ identifier ++ ": " ++ (show e)
 				Lua.pushstring l2 $ "Haskell exception in " ++ identifier ++ ": " ++ show (e :: SomeException)
 				return (-1))
 

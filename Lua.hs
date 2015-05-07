@@ -45,6 +45,7 @@ setup_lua_instance level filename setupref = do
 			return 1
 
 		register_function "get_status_info" $ \ref l -> do
+			-- TODO: This fails when not logged in. Maybe not throw exception?
 			push_jsvalue l =<< KoL.Api.getCharStatusObj ref
 			return 1
 

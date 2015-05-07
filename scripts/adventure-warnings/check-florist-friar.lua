@@ -21,7 +21,7 @@ function zone_awaiting_florist_decision(zone)
 	if have_friar == false then
 		return
 	elseif have_friar == nil then
-		print("INFO: checking for friar")
+		print_debug("INFO: checking for friar")
 		pt = get_place("forestvillage", "fv_friar")
 		if pt:contains("The Florist Friar's Cottage") then
 			have_friar = true

@@ -131,7 +131,7 @@ end
 local function get_exploration_outfit()
 	local towear = {
 		hat = first_wearable { "Mer-kin sneakmask" },
-		back = first_wearable { "old SCUBA tank" },
+		container = first_wearable { "old SCUBA tank" },
 		shirt = first_wearable { "sea salt scrubs" },
 	}
 	if not expertly_trained() then
@@ -247,10 +247,10 @@ function automate_sea_find_currents()
 					elseif m == "Mer-kin burglar" then
 						return "Sneak into the camouflaged tent"
 					end
-				else
+				elseif advtitle and advtitle:contains(" Intent") then
 					local option = (session["zones.sea.outpost camp last choice option"] or 0) + 1
 					session["zones.sea.outpost camp last choice option"] = option
-					print("Choosing option", option, "at", advtitle)
+					print("DEBUG: Exploring outpost, going to option", option, "at", advtitle)
 					return "", option
 				end
 			end

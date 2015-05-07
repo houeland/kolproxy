@@ -745,6 +745,7 @@ function get_automation_scripts(cached_stuff)
 				["black cherry soda"] = 11,
 				["Knob Goblin seltzer"] = 12,
 				["tiny house"] = 24,
+				["Doc Galaktik's Invigorating Tonic"] = 11,
 			}
 			local function useit(item)
 				local c = count_item(item)
@@ -814,11 +815,6 @@ function get_automation_scripts(cached_stuff)
 				else
 					critical "Failed to buy black cherry soda"
 				end
-			elseif (challenge == "boris" or challenge == "jarlsberg") and need <= 60 then
-				post_page("/galaktik.php", { action = "curemp", pwd = get_pwd(), quantity = need })
-				if mp() < amount then
-					stop("Failed to reach " .. amount .. " MP using galaktik")
-				end
 			elseif challenge then
 				-- TODO: choose using it earlier if we need a lot of MP, and remember whether it's been used
 				local pt = get_page("/clan_viplounge.php", { action = "shower" })
@@ -843,13 +839,18 @@ function get_automation_scripts(cached_stuff)
 				stop "Trying to use galaktik to restore mp at level 8+"
 			elseif need > 50 then
 				stop "Trying to use galaktik to restore more than 50 MP"
+			elseif maxmp() - mp() >= 20 and mantegna_resting_is_free() then
+				print_ascensiondebug("resting at mantegna")
+				do_mantegna_resting()
 			else
 				if show_spammy_automation_events then
 					print("  restoring " .. tostring(need) .. " MP with galaktik")
 				end
-				post_page("/galaktik.php", { action = "curemp", pwd = get_pwd(), quantity = need })
-				if mp() < amount then
-					stop("Failed to reach " .. amount .. " MP using galaktik")
+				buy_item("Doc Galaktik's Invigorating Tonic")
+				if have_item("Doc Galaktik's Invigorating Tonic") then
+					return f.ensure_mp(amount, true)
+				else
+					critical "Failed to buy Doc Galaktik's Invigorating Tonic"
 				end
 			end
 		end
@@ -914,7 +915,7 @@ function get_automation_scripts(cached_stuff)
 				if show_spammy_automation_events then
 					print("  restored hp:", oldhp, "to", hp(), "max is", maxhp())
 				end
-				return f.heal_up()
+				return script.heal_up(specified_target)
 			else
 				if challenge == "boris" and hp() / maxhp() >= 0.55 then
 				elseif challenge == "zombie" and hp() / maxhp() >= 0.3 then
@@ -968,7 +969,7 @@ function get_automation_scripts(cached_stuff)
 			use_hottub()
 		end
 		if hp() < maxhp() and challenge ~= "zombie" then
-			post_page("/galaktik.php", { action = "curehp", pwd = get_pwd(), quantity = maxhp() - hp() })
+--			post_page("/galaktik.php", { action = "curehp", pwd = get_pwd(), quantity = maxhp() - hp() })
 			if hp() < maxhp() then
 				stop("Failed to reach full HP")
 			end
@@ -1222,6 +1223,7 @@ function get_automation_scripts(cached_stuff)
 					end
 					table.insert(xs, "Peeled Eyeballs")
 				end
+				table.insert(xs, "Bounty of Renenutet")
 			elseif level() <= 4 then
 				table.insert(xs, "The Moxious Madrigal")
 				table.insert(xs, "The Magical Mojomuscular Melody")
@@ -1250,6 +1252,9 @@ function get_automation_scripts(cached_stuff)
 			if want_bonus.combat then
 				if sneaky_pete_motorcycle_upgrades()["Muffler"] == "Extra-Loud Muffler" then
 					table.insert(xs, "Unmuffled")
+				end
+				if have_item("talisman of Horus") then
+					table.insert(xs, "Taunt of Horus")
 				end
 			end
 			if mainstat_type("Mysticality") and level() >= 6 then
@@ -1660,6 +1665,8 @@ endif
 				local old_full = fullness()
 				set_result(eat_item("fortune cookie"))
 				did_action = (fullness() == old_full + 1) or (old_full == estimate_max_fullness())
+			elseif resulturl:contains("fight.php") then
+				result, resulturl, did_action = handle_adventure_result(result, resulturl, "?", macro_kill_monster)
 			else
 				result = add_message_to_page(get_result(), "Tried to pick up wine semirare", nil, "darkorange")
 			end
@@ -1672,6 +1679,8 @@ endif
 				local old_full = fullness()
 				set_result(eat_item("fortune cookie"))
 				did_action = (fullness() == old_full + 1) or (old_full == estimate_max_fullness())
+			elseif resulturl:contains("fight.php") then
+				result, resulturl, did_action = handle_adventure_result(result, resulturl, "?", macro_kill_monster)
 			else
 				result = add_message_to_page(get_result(), "Tried to pick up lunchbox semirare", nil, "darkorange")
 			end
@@ -2340,7 +2349,7 @@ endif
 					end
 				end
 			end
-			try_craft(meat() >= 100, "overpriced &quot;imported&quot; beer", 0, function() warn_imported_beer() return raw_store_buy_item("overpriced &quot;imported&quot; beer", "v") end)
+			try_craft(meat() >= 100, "overpriced &quot;imported&quot; beer", 0, function() warn_imported_beer() return buy_item("overpriced &quot;imported&quot; beer") end)
 			if have_crafted then return try_crafting_improvements() end
 		end
 
@@ -2438,8 +2447,8 @@ endif
 			use_item("Cap'm Caronch's Map")
 			local pt, url = get_page("/fight.php")
 			result, resulturl, did_action = handle_adventure_result(pt, url, "?", macro_noodlecannon)
-		elseif insults >= 7 and not have_item("Cap'm Caronch's Map") then
-			stop "Handle: 7 insults and no map?"
+--		elseif insults >= 7 and not have_item("Cap'm Caronch's Map") then
+--			stop "Handle: 7 insults and no map?"
 		else
 -- 			print("map", have_item("Cap'm Caronch's Map"), "insults", insults)
 			local function get_barrr_noncombattbl()
@@ -2633,6 +2642,7 @@ endif
 		local junkmanptf = async_get_page("/bigisland.php", { action = "junkman", pwd = get_pwd() })
 		local pyroptf = async_get_page("/bigisland.php", { place = "lighthouse", action = "pyro", pwd = get_pwd() })
 		if concertptf():contains("has already taken the stage") and junkmanptf():contains("next shipment of cars ready") and pyroptf():contains("gave you the big boom today") then
+			print("INFO: war sidequests are completed")
 			cached_stuff.finished_war_sidequests = true
 		end
 		did_action = true
@@ -3011,6 +3021,7 @@ endif
 	end
 
 	function f.do_filthworms()
+		cached_stuff.currently_checked.filthworms_completed = nil
 		script.bonus_target { "item", "extraitem" }
 		if have_item("Polka Pop") and not have_buff("Polka Face") then
 			use_item("Polka Pop")
@@ -3624,7 +3635,7 @@ endif
 	end
 
 	function f.make_star_key()
-		if count_item("star") >= 8 and count_item("line") >= 7 and (have_item("star chart") or not ascenstatus("Hardcore")) then
+		if count_item("star") >= 8 and count_item("line") >= 7 and (have_item("star chart") or not ascensionstatus("Hardcore")) then
 			inform "buying star key"
 			if not have_item("star chart") then
 				pull_in_softcore("star chart")
@@ -4174,8 +4185,7 @@ endif
 	end
 
 	function f.unlock_top_floor()
-		go("unlock top floor", 323, macro_noodleserpent, {}, { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
-			-- TODO: This can just be a regular table?
+		script.go("unlock top floor", 323, macro_noodleserpent, {}, { "Fat Leon's Phat Loot Lyric", "Spirit of Garlic", "Butt-Rock Hair" }, "Slimeling", 40, { choice_function = function(advtitle, choicenum)
 			if advtitle == "There's No Ability Like Possibility" then
 				return "Go out the Way You Came In"
 			elseif advtitle == "Putting Off Is Off-Putting" then
@@ -4183,7 +4193,11 @@ endif
 			elseif advtitle == "Huzzah!" then
 				return "Seek the Egress Anon"
 			elseif advtitle == "Home on the Free Range" then
-				return "Investigate the noisy drawer"
+				if have_item("electric boning knife") then
+					return "Leave through a vent"
+				else
+					return "Investigate the noisy drawer"
+				end
 			end
 		end })
 		if get_result():contains("ground floor is lit much better than the basement") then
@@ -4588,6 +4602,9 @@ endif
 			-- got uri: /ocean.php | ?intro=1 (from /choice.php), size 2100
 			-- posting page /ocean.php params: Just [("lon","22"),("lat","62")]
 			-- got uri: /ocean.php |  (from /ocean.php), size 2741
+			if not quest("Merry-Go-Ron") then
+				critical "Attempting to unlock belowdecks before knowing about talisman"
+			end
 			script.bonus_target { "noncombat" }
 			script.set_runawayfrom { "wacky pirate", "warty pirate", "wealthy pirate", "whiny pirate", "witty pirate" }
 			go("do poop deck", 159, macro_noodlecannon, { ["O Cap'm, My Cap'm"] = "Step away from the helm" }, { "Butt-Rock Hair", "Smooth Movements", "The Sonata of Sneakiness", "Spirit of Bacon Grease" }, "auto", 35, { equipment = { acc3 = "pirate fledges" } })

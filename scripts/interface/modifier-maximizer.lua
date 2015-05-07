@@ -284,7 +284,7 @@ end)
 	if slot_suggestion.weapon and slot_suggestion.offhand and is_twohanded_weapon(slot_suggestion.weapon.itemid) then
 		for _, x in ipairs(slot_alternatives.weapon) do
 			if not x.itemid or not is_twohanded_weapon(x.itemid) then
-				if x.score + slot_suggestion.offhand.score >= slot_suggestion.weapon.score then
+				if x.score + slot_suggestion.offhand.score > slot_suggestion.weapon.score then
 					slot_suggestion.weapon = x
 				end
 				break
@@ -329,7 +329,7 @@ end)
 --		item_in_outfit[get_itemid(x)] = true
 --	end
 
-	if slot_suggestion.weapon and is_twohanded_weapon(slot_suggestion.weapon.itemid) then
+	if slot_suggestion.weapon and slot_suggestion.weapon.itemid and is_twohanded_weapon(slot_suggestion.weapon.itemid) then
 		slot_suggestion.offhand = nil
 	end
 	return slot_suggestion, slot_alternatives, previous_scores
@@ -399,6 +399,7 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 	end
 
 	end) -- DEBUG log time
+
 	local bufflines = {}
 	kolproxy_log_time_interval("DEBUG skills", function()
 

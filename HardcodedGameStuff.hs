@@ -11,8 +11,8 @@ import Data.Time.Clock
 import System.Directory
 import qualified Data.ByteString.Char8
 
--- TODO: gradual slowing
 update_data_files = do
+	-- TODO: gradual slowing
 	t <- getCurrentTime
 	(should_refresh, difftime) <- do
 		file_exists <- doesFileExist "cache/data/last_update"
@@ -86,7 +86,7 @@ download_data_files = do
 			putDebugStrLn $ "exception downloading datafile: " ++ x ++ ": " ++ show (e :: SomeException)
 			return ())
 
-	mapM_ (\x -> dldatafile ("http://svn.code.sf.net/p/kolmafia/code/src/data/" ++ x)) ["adventures.txt", "classskills.txt", "concoctions.txt", "combats.txt", "encounters.txt", "equipment.txt", "familiars.txt", "foldgroups.txt", "fullness.txt", "inebriety.txt", "items.txt", "modifiers.txt", "monsters.txt", "npcstores.txt", "outfits.txt", "spleenhit.txt", "statuseffects.txt", "zapgroups.txt"]
+	mapM_ (\x -> dldatafile ("http://svn.code.sf.net/p/kolmafia/code/src/data/" ++ x)) ["adventures.txt", "classskills.txt", "coinmasters.txt", "concoctions.txt", "combats.txt", "encounters.txt", "equipment.txt", "familiars.txt", "foldgroups.txt", "fullness.txt", "inebriety.txt", "items.txt", "modifiers.txt", "monsters.txt", "npcstores.txt", "outfits.txt", "spleenhit.txt", "statuseffects.txt", "zapgroups.txt"]
 
 	dldatafile "http://www.hogsofdestiny.com/faxbot/faxbot.xml"
 

@@ -1179,14 +1179,26 @@ end
 
 function parse_stores()
 	local stores = {}
+	local function process(whichshop, itemname)
+		if whichshop and itemname then
+			stores[whichshop] = stores[whichshop] or {}
+			stores[whichshop][itemname] = true
+		end
+	end
 	for l in io.lines("cache/files/npcstores.txt") do
 		l = remove_line_junk(l)
 		local tbl = split_tabbed_line(l)
 		local _storename, whichshop, itemname = tbl[1], tbl[2], tbl[3]
-		-- Store names are currently just inconsistent nonsense in the datafiles
-		if whichshop and itemname then
-			stores[whichshop] = stores[whichshop] or {}
-			stores[whichshop][itemname] = true
+		-- Store names are currently inconsistent in the datafiles
+		process(whichshop, itemname)
+	end
+	for l in io.lines("cache/files/coinmasters.txt") do
+		l = remove_line_junk(l)
+		local tbl = split_tabbed_line(l)
+		local storename, itemname = tbl[1], tbl[4]
+		-- coinmaster.txt doesn't contain whichshop value and is only barely useful
+		if storename == "Everything Under the World" then
+			process("edunder_shopshop", itemname)
 		end
 	end
 	return stores
@@ -1204,6 +1216,8 @@ function verify_stores(data)
 	local correct_data = {
 		["generalstore"] = { ["fortune cookie"] = true, ["Ben-Gal&trade; Balm"] = true },
 		["gnoll"] = { ["empty meat tank"] = true },
+		["edunder_shopshop"] = { ["mummified beef haunch"] = true },
+		["bartender"] = { ["overpriced &quot;imported&quot; beer"] = true },
 	}
 	return verify_data_fits(correct_data, data)
 end

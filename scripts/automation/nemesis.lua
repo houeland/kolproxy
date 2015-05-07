@@ -361,9 +361,13 @@ function try_killing_nemesis()
 	script.wear { weapon = "17-alarm Saucepan" }
 	script.ensure_mp(50)
 	fought = false
+	local had_slimeform = have_buff("Slimeform")
 	result, resulturl = get_page("/volcanoisland.php", { pwd = session.pwd, action = "tniat" })
 	print("DEBUG: lock url cont", locked(), resulturl, result:contains([[value="Continue"]]))
 	if locked() or not resulturl:contains("volcanoisland.php") or result:contains([[value="Continue"]]) then
+		fought = true
+	end
+	if had_slimeform and not have_buff("Slimeform") then
 		fought = true
 	end
 	result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_noodleserpent)

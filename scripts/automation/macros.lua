@@ -244,12 +244,18 @@ local function can_easily_attack_with_weapon()
 	if not (cfm and cfm.Stats and cfm.Stats.Atk) then return false end
 	if cfm.Stats.physicalresistpercent and tonumber(cfm.Stats.physicalresistpercent) and tonumber(cfm.Stats.physicalresistpercent) > 40 then return false end
 	if using_moxie_weapon() and buffedmoxie() - cfm.Stats.Atk >= 25 then
+		print_ascensiondebug("easy moxie attack", buffedmoxie(), tojson(cfm.Stats))
 		return true
 	elseif using_muscle_weapon() and buffedmuscle() - cfm.Stats.Atk >= 25 and buffedmoxie() - cfm.Stats.Atk >= -25 then
+		print_ascensiondebug("easy muscle attack", buffedmuscle(), tojson(cfm.Stats))
 		return true
 	else
 		return false
 	end
+end
+
+local function cannot_use_undying()
+	return ascensionpath("Actually Ed the Undying") and times_used_undying() >= 2
 end
 
 function cannon_action()
@@ -264,8 +270,8 @@ function cannon_action()
 	end
 	local cfm = getCurrentFightMonster()
 	local elem = cfm and cfm.Stats and cfm.Stats.Element
-	local can_use_undying = times_used_undying() < 2
-	local prefer_big_spell = cfm and cfm.Stats and (tonumber(cfm.Stats.HP) or 0) >= 500
+	local tough_opponent = cfm and cfm.Stats and (tonumber(cfm.Stats.HP) or 0) >= 500
+	local prefer_big_spell = tough_opponent or cannot_use_undying()
 	if prefer_big_spell then
 		local skill = maybe_macro_cast_skill {
 			"Saucegeyser",
@@ -284,9 +290,10 @@ function cannon_action()
 		"Toss",
 		"Clobber",
 		"Ravioli Shurikens",
-		can_use_undying and "Fist of the Mummy" or "???",
+		not cannot_use_undying() and "Fist of the Mummy" or "???",
 		elem ~= "Hot" and "Roar of the Lion" or "???",
-		can_use_undying and "Mild Curse" or "???",
+		elem ~= "Spooky" and "Howl of the Jackal" or "???",
+		not cannot_use_undying() and "Mild Curse" or "???",
 	}
 end
 
@@ -1914,6 +1921,8 @@ local function want_super_pickpocket(name)
 		["elephant (meatcar?) topiary animal"] = true,
 		["spider (duck?) topiary animal"] = true,
 		["bearpig topiary animal"] = true,
+		["warehouse clerk"] = count_item("warehouse inventory page") <= 1,
+		["warehouse guard"] = count_item("warehouse map page") <= 1,
 	}
 	return name and monsters[name]
 end
@@ -1982,7 +1991,7 @@ endif]])
 
 	if macro_target.yellowraypatternmatch and monstername():lower():contains(macro_target.yellowraypatternmatch:lower()) then
 		if have_skill("Wrath of Ra") then
-			print("INFO: Wrath of Ra!")
+			print_ascensiondebug("macro: using Wrath of Ra!")
 			table.insert(use_initial_tbl, [[cast Wrath of Ra]])
 		end
 	end
@@ -1991,13 +2000,35 @@ endif]])
 		table.insert(use_initial_tbl, [[cast Curse of Vacation]])
 	end
 
+	local really_want_to_kill = false
+	if cannot_use_undying() then really_want_to_kill = true end
 	local raindoh_flyers_list = {}
 	if macro_target.itemcopy and macro_target.itemcopy[monstername()] and have_item("Rain-Doh black box") then
-		print("INFO: Rain-Doh black box!")
+		print_ascensiondebug("macro: using Rain-Doh black box!")
 		table.insert(raindoh_flyers_list, "Rain-Doh black box")
 	end
-	if have_item("rock band flyers") then
-		print("INFO: rock band flyers!")
+	if macro_target.familiarcopy and macro_target.familiarcopy[monstername()] and familiar("Reanimated Reanimator") then
+		table.insert(use_initial_tbl, [[
+if hasskill Wink at
+	cast Wink at
+endif]])
+		really_want_to_kill = true
+	end
+
+	if have_skill("Lash of the Cobra") and want_super_pickpocket(monstername()) then
+		print_ascensiondebug("macro: using Lash of the Cobra!")
+		table.insert(use_initial_tbl, [[cast Lash of the Cobra]])
+	elseif have_item("talisman of Renenutet") and want_super_itemdrop(monstername()) then
+		print_ascensiondebug("macro: using talisman of Renenutet!")
+		table.insert(use_initial_tbl, [[use talisman of Renenutet]])
+		used_undying() -- Fake undying as workaround to trigger big spells
+		used_undying()
+		used_undying()
+		really_want_to_kill = true
+	end
+
+	if have_item("rock band flyers") and not really_want_to_kill then
+		print_ascensiondebug("macro: using rock band flyers!")
 		table.insert(raindoh_flyers_list, "rock band flyers")
 	end
 	if have_item("Rain-Doh indigo cup") then
@@ -2010,24 +2041,6 @@ endif]])
 		table.insert(use_initial_tbl, string.format("use %s, %s", raindoh_flyers_list[1], raindoh_flyers_list[2]))
 	elseif raindoh_flyers_list[1] then
 		table.insert(use_initial_tbl, string.format("use %s", raindoh_flyers_list[1]))
-	end
-
-	if macro_target.familiarcopy and macro_target.familiarcopy[monstername()] and familiar("Reanimated Reanimator") then
-		table.insert(use_initial_tbl, [[
-if hasskill Wink at
-	cast Wink at
-endif]])
-	end
-
-	if have_skill("Lash of the Cobra") and want_super_pickpocket(monstername()) then
-		print("INFO: Lash of the Cobra!")
-		table.insert(use_initial_tbl, [[cast Lash of the Cobra]])
-	elseif have_item("talisman of Renenutet") and want_super_itemdrop(monstername()) then
-		print("INFO: talisman of Renenutet!")
-		table.insert(use_initial_tbl, [[use talisman of Renenutet]])
-		used_undying()
-		used_undying()
-		used_undying()
 	end
 
 	if false and (cfm.Stats.stunresistpercent or 0) <= 20 then

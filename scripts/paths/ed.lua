@@ -40,3 +40,5 @@ add_warning {
 	check = can_release_servant,
 }
 
+--http://127.0.0.1:18781/place.php?whichplace=edbase&action=edbase_door
+--<p><b>Busy Servant</b>: <img src=http://images.kingdomofloathing.com/itemimages/edserv6.gif>Mekhotep, the Priest (lvl. 20, 422 XP)
