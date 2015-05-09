@@ -204,6 +204,7 @@ function get_ascension_automation_settings(want_bonus)
 				"old sweatpants",
 			},
 			accessories = {
+				{ name = "special sauce glove", check = function() return playerclass("Sauceror") and not have_skill("Spirit of Rigatoni") end },
 				{ name = "fudgecycle", check = function() return want_bonus.rollover_adventures end },
 				{ name = "gold wedding ring", check = function() return want_bonus.rollover_adventures end },
 				{ name = "dead guy's watch", check = function() return want_bonus.rollover_adventures end },

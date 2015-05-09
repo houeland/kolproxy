@@ -633,6 +633,18 @@ function estimate_mallsell_profit(item, amount)
 	end
 end
 
+function can_equip_chefstaves()
+	if have_skill("Spirit of Rigatoni") then
+		return true
+	elseif playerclass("Sauceror") and have_equipped_item("special sauce glove") then
+		return true
+	elseif playerclass("Avatar of Jarlsberg") then
+		return true
+	else
+		return false
+	end
+end
+
 function can_equip_item(item)
 	local itemdata = maybe_get_itemdata(item)
 	if not itemdata then return true end
@@ -656,6 +668,9 @@ function can_equip_item(item)
 		return false
 	end
 	if itemdata.equipment_slot == "shirt" and not have_skill("Torso Awaregness") then
+		return false
+	end
+	if itemdata.equipment_slot == "weapon" and (itemdata.weapon_type or ""):contains("chefstaff") and not can_equip_chefstaves() then
 		return false
 	end
 	return true
