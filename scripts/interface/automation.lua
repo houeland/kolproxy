@@ -99,9 +99,11 @@ function turn_automation_decorate_noncombat_page(pt, zoneid, timesleft)
 	end
 	if adventure_title then
 		adventure_title = adventure_title:gsub(" %(#[0-9]*%)$", "")
-		pt = pt:gsub([[<input class=button type=submit value=".-">]], function(x)
+		pt = pt:gsub([[<input.->]], function(x)
 			local val = x:match([[value="(.-)"]])
-			return x .. string.format([[<br><a href="%s" style="color:green">{ Automate: %s &rarr; %s }</a>]], automate_zone_href { pwd = session.pwd, zoneid = zoneid, numtimes = timesleft, noncombattitle = adventure_title, noncombatoption = val }, adventure_title, val)
+			if val and x:contains("type=submit") then
+				return x .. string.format([[<br><a href="%s" style="color:green">{ Automate: %s &rarr; %s }</a>]], automate_zone_href { pwd = session.pwd, zoneid = zoneid, numtimes = timesleft, noncombattitle = adventure_title, noncombatoption = val }, adventure_title, val)
+			end
 		end)
 	end
 	return pt
@@ -112,13 +114,14 @@ function show_links(match, link)
 	local function newtext(x)
 		return [[
 <script language="javascript">
-function automate_N_turns(url) {
+function automate_N_turns(link, url) {
 	N = prompt('Re-adventure how many times?');
 	if (N > 0) {
+		link.style.color = 'gray'
 		top.mainpane.location.href = (url + "&numtimes=" + N);
 	}
 }
-</script><br><a href="javascript:automate_N_turns(']] .. link(x) .. [[')" style="color:green">{ Re-adventure here N times }</a>]]
+</script><br><a href="#" onclick="automate_N_turns(this, ']] .. link(x) .. [[')" style="color:green">{ Re-adventure here N times }</a>]]
 	end
 	text = text:gsub("(" .. match .. ")", function(alltext, a, b, c) return alltext .. " " .. newtext(a, b, c) .. "\n" end)
 end

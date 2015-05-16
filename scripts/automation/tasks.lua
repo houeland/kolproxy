@@ -1348,6 +1348,8 @@ mark m_done
 			nobuffing = true,
 			action = function()
 				result, resulturl = get_place("nstower", "ns_01_contestbooth")
+				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?")
+				refresh_quest()
 				did_action = quest_text("Attend your coronation in the courtyard")
 			end,
 		}
@@ -1360,7 +1362,9 @@ mark m_done
 			nobuffing = true,
 			action = function()
 				result, resulturl = get_place("nstower", "ns_02_coronation")
-				did_action = quest_text("Make your way through the treacherous hedge maze")
+				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?")
+				refresh_quest()
+				did_action = not quest_text("Attend your coronation in the courtyard")
 			end,
 		}
 	}
@@ -1375,7 +1379,8 @@ mark m_done
 					print("DEBUG advtitle choicenum", advtitle, choicenum)
 					return "", 1
 				end)
-				did_action = quest_text("Get through the door at the base")
+				refresh_quest()
+				did_action = not quest_text("Make your way through the treacherous hedge maze")
 			end,
 		}
 	}
@@ -1387,7 +1392,29 @@ mark m_done
 			nobuffing = true,
 			action = function()
 				result, resulturl = get_place("nstower_door")
-				did_action = false
+				local buy_keys = {
+					ns_lock1 = "Boris's key",
+					ns_lock2 = "Jarlsberg's key",
+					ns_lock3 = "Sneaky Pete's key",
+				}
+				for _, lock in ipairs { "ns_lock1", "ns_lock2", "ns_lock3", "ns_lock4", "ns_lock5", "ns_lock6" } do
+					if result:contains(lock) then
+						local function try_lock()
+							result, resulturl = get_place("nstower_door", lock)
+							local pt = get_place("nstower_door")
+							return not pt:contains(lock)
+						end
+						did_action = try_lock()
+						if not did_action and buy_keys[lock] then
+							buy_item(buy_keys[lock])
+							did_action = try_lock()
+						end
+						return
+					end
+				end
+				result, resulturl = get_place("nstower_door", "ns_doorknob")
+				refresh_quest()
+				did_action = not quest_text("Get through the door at the base")
 			end,
 		}
 	}
@@ -1413,6 +1440,7 @@ mark m_done
 					acc2 = first_wearable { "bottle opener belt buckle" },
 				}
 				script.maybe_ensure_buffs { "Spiky Shell", "Jalape&ntilde;o Saucesphere", "Scarysauce", "Psalm of Pointiness" }
+				script.ensure_mp(80)
 				result, resulturl = get_place("nstower")
 				did_action = false
 			end,
@@ -1427,6 +1455,7 @@ mark m_done
 				script.want_familiar("leprechaun")
 				script.wear {}
 				script.ensure_buffs { "Polka of Plenty", "Disco Leer" }
+				script.ensure_mp(120)
 				result, resulturl = get_place("nstower", "ns_06_monster2")
 				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_kill_monster)
 				did_action = advagain
@@ -1464,6 +1493,7 @@ mark m_done
 					["There's No Ability Like Possibility"] = "Go out the Way You Came In",
 					["Putting Off Is Off-Putting"] = "Get out of this Junk",
 					["Huzzah!"] = "Seek the Egress Anon",
+					["Home on the Free Range"] = "Investigate the noisy drawer",
 				}
 			}
 		}
@@ -1478,7 +1508,7 @@ mark m_done
 				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, {
 					["The Mirror in the Tower has the View that is True"] = "Gaze into the mirror...",
 				})
-				did_action = advagain
+				did_action = have_intrinsic("Confidence!")
 			end,
 		}
 	}
@@ -1542,7 +1572,10 @@ endif
 
 
 ]])
-				did_action = advagain
+				if not locked() then
+					refresh_quest()
+					did_action = not (quest_text("Continue your ascent") and at_tower_level(5))
+				end
 			end,
 		}
 	}
@@ -1592,6 +1625,7 @@ endif
 		tasks.ns_lair_wall_of_bones,
 		tasks.ns_lair_get_boning_knife,
 		tasks.ns_lair_tower_mirror,
+		tasks.ns_lair_defeat_shadow,
 		tasks.ns_lair_confront_ns,
 		tasks.ns_lair_free_king,
 	}

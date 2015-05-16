@@ -261,8 +261,6 @@ end
 function cannon_action()
 	if can_kill_with_attack() and have_skill("Crab Claw Technique") and using_accordion() and not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } then
 		return attack_action()
-	elseif not maybe_macro_cast_skill { "Cannelloni Cannon", "Saucestorm" } and can_easily_attack_with_weapon() then
-		return attack_action()
 	elseif ascensionpath("Avatar of Sneaky Pete") then
 		return macro_sneaky_pete_action()
 	elseif mp() <= 20 and can_easily_attack_with_weapon() then
@@ -279,12 +277,19 @@ function cannon_action()
 		}
 		if skill then return skill end
 	end
-	return macro_cast_skill {
+	local good_skill = maybe_macro_cast_skill {
+		(pastathrall() and have_equipped_item("Hand that Rocks the Ladle")) and "Utensil Twist" or "???",
 		pastathrall() and "Cannelloni Cannon" or "???",
 		"Saucestorm",
 		"Cannelloni Cannon",
-		"Bawdy Refrain",
 		fury() >= 1 and "Furious Wallop" or "???",
+	}
+	if good_skill then return good_skill end
+	if can_easily_attack_with_weapon() then
+		return attack_action()
+	end
+	return macro_cast_skill {
+		"Bawdy Refrain",
 		"Saucegeyser",
 		"Kneebutt",
 		"Toss",
@@ -2270,10 +2275,18 @@ cast Saucestorm
 
 while !times 11
 
-]] .. cannon_action() .. [[
+]] .. elemental_damage_action() .. [[
 
 endwhile]]
 	else
+		local action = ""
+		if level() >= 9 and meat() >= 1000 then
+			action = serpent_action()
+		else
+			action = cannon_action()
+		end
+		local actionstr = action:gsub("^%s*", ""):gsub("%s*$", "")
+		print_ascensiondebug("macro action:", actionstr)
 		return [[
 ]] .. COMMON_MACROSTUFF_START(20, 40) .. [[
 
@@ -2283,7 +2296,7 @@ endwhile]]
 
 while !times 7
 
-]] .. serpent_action() .. [[
+]] .. action .. [[
 
 endwhile]]
 	end

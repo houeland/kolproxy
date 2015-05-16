@@ -235,18 +235,7 @@ setup_turnplaying_script {
 			elseif playerclass("Turtle Tamer") then
 				automate_TT_nemesis_island()
 			elseif playerclass("Pastamancer") then
-				if not have_item("encoded cult documents") then
-					get_page("/volcanoisland.php", { pwd = session.pwd, action = "npc" })
-				end
-				stop "TODO: Automate pastamancer island"
-				-- farm and use 5 "cult memo" if don't have skill, use "decoded cult documents"
-				-- cast thrall
-				-- use fatten-item if available
-				-- fight until heavy if not
-				-- fight with heavy thrall
-				-- equip "spaghetti cult robe", go to lair
-				-- equip "Greek Pasta of Peril", do lair and maze
-				-- kill boss, cast noodles a lot
+				automate_P_nemesis_island()
 			elseif playerclass("Sauceror") then
 				automate_S_nemesis_island()
 			elseif playerclass("Disco Bandit") then
@@ -355,7 +344,78 @@ endif
 	end
 end
 
-function try_killing_nemesis()
+function try_killing_P_nemesis()
+	script.bonus_target { "easy combat" }
+	script.ensure_buffs {}
+	script.wear { weapon = "Greek Pasta of Peril" }
+	script.ensure_mp(50)
+	fought = false
+	local had_cult_robe = have_equipped_item("spaghetti cult robe")
+	result, resulturl = get_page("/volcanoisland.php", { pwd = session.pwd, action = "tniat" })
+	print("DEBUG: lock url cont", locked(), resulturl, result:contains([[value="Continue"]]))
+	if locked() or not resulturl:contains("volcanoisland.php") or result:contains([[value="Continue"]]) then
+		fought = true
+	end
+	if had_cult_robe and not have_equipped_item("spaghetti cult robe") then
+		fought = true
+	end
+	result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_noodleserpent)
+	print("DEBUG: lock url advagain", locked(), resulturl, advagain)
+	if result:contains([[value="Continue"]]) then
+		result, resulturl = get_page("/volcanomaze.php", { start = 1 })
+		automate_volcanomaze()
+		script.ensure_buffs {}
+		script.heal_up()
+		script.ensure_mp(100)
+		result, resulturl = get_page("/volcanomaze.php")
+		advagain = false
+	end
+	return fought
+end
+
+function automate_P_nemesis_island()
+	if not have_item("encoded cult documents") then
+		get_page("/volcanoisland.php", { pwd = session.pwd, action = "npc" })
+	end
+	if try_killing_P_nemesis() then
+		print("DEBUG: killing nemesis...")
+		return
+	end
+	stop "TODO: Automate pastamancer island"
+end
+
+				-- farm and use 5 "cult memo" if don't have skill, use "decoded cult documents"
+				-- cast thrall
+				-- use fatten-item if available
+				-- fight until heavy if not
+				-- fight with heavy thrall
+				-- equip "spaghetti cult robe", go to lair
+				-- equip "Greek Pasta of Peril", do lair and maze
+				-- kill boss, cast noodles a lot
+function automation_step(tbl)
+end
+
+automation_step {
+	provides = {
+	},
+	requires = {
+	},
+	action = function()
+	end,
+}
+
+--need disguise
+--  fight with thrall
+--  need thrall lvl X
+--    use fatten-item if available
+--    need thrall
+--      need skill
+--        need docs
+--          use pages
+--            need pages
+--              farm pages
+
+function try_killing_S_nemesis()
 	script.bonus_target { "easy combat" }
 	script.ensure_buffs {}
 	script.wear { weapon = "17-alarm Saucepan" }
@@ -394,7 +454,7 @@ function try_killing_nemesis()
 end
 
 function automate_S_nemesis_island()
-	if try_killing_nemesis() then
+	if try_killing_S_nemesis() then
 		print("DEBUG: killing nemesis...")
 		return
 	end

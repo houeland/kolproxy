@@ -33,7 +33,7 @@ add_printer("/clan_viplounge.php", function()
 			table.insert(messages, string.format([[<span style="color: green">{ A Pool Table (%s left today) }</span>]], make_plural(uses_left, "use", "uses")))
 		end
 	end
-	local hot_tub_text = text:match([[title="(A Relaxing Hot Tub.-)"]])
+	local hot_tub_text = text:match([[title="(A Relaxing Hot Tub.-)"]]) or ""
 	if hot_tub_text:contains("no uses left") then
 		table.insert(messages, string.format([[<span style="color: gray">{ %s }</span>]], hot_tub_text))
 	else
@@ -42,7 +42,6 @@ add_printer("/clan_viplounge.php", function()
 	text = text:gsub([[<p><Center><A href="clan_hall.php">Back to Clan Hall]], [[<p><center>]] .. table.concat(messages, "<br>") .. [[</center></p>%0]])
 end)
 
--- TODO: combine in single setting?
 add_automator("/clan_viplounge.php", function()
 	if text:contains("April Shower") and session["clan vip shower available"] == nil then
 		local pt = get_page("/clan_viplounge.php", { action = "shower" })

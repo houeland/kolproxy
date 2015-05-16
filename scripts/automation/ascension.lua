@@ -107,10 +107,6 @@ local function automate_day(whichday)
 	end
 	do_debug_infoline = infoline
 
-	local function can_yellow_ray()
-		return not have_buff("Everything Looks Yellow")
-	end
-
 	local function want_shore()
 		return not unlocked_island() and not have_item("skeleton") and not ascensionpath("Avatar of Sneaky Pete")
 	end
@@ -582,7 +578,7 @@ endif
 	end
 
 	local function ensure_yellow_ray()
-		if not can_yellow_ray() then
+		if have_buff("Everything Looks Yellow") then
 			return false
 		end
 		if have_skill("Wrath of Ra") then
@@ -2897,11 +2893,6 @@ endif
 		use_dancecard = script.do_moxie_use_dancecard
 	end
 
-	function mantegna_resting_is_free()
-		local pt = get_place("chateau")
-		return pt:contains("restlabelfree")
-	end
-
 	function do_mantegna_resting()
 		local pt = get_place("chateau", "chateau_nightstand")
 		local substats = pt:match("some (.-) substats when you rest")
@@ -3643,7 +3634,7 @@ endif
 			challenge == "fist" and
 			not have_harem_outfit() and
 			unlocked_knob() and
-			can_yellow_ray(),
+			not have_buff("Everything Looks Yellow"),
 		f = function()
 			script.go("yellow raying harem girl", 259, make_yellowray_macro("harem girl"), {}, {}, "He-Boulder", 15)
 		end,
@@ -4160,7 +4151,7 @@ endif
 
 		add_task {
 			prereq = not have_hippy_outfit() and
-				can_yellow_ray(),
+				not have_buff("Everything Looks Yellow"),
 			f = function()
 				-- TODO: want +combat%
 				script.go("yellow raying hippy", 26, make_yellowray_macro("hippy"), {}, {}, "He-Boulder", 15)
@@ -4220,7 +4211,7 @@ endif
 
 	add_task {
 		prereq = not have_hippy_outfit() and
-			can_yellow_ray() and
+			not have_buff("Everything Looks Yellow") and
 			unlocked_island() and
 			challenge ~= "boris" and
 			challenge ~= "zombie" and
@@ -4663,10 +4654,36 @@ endif
 	}
 
 	add_task {
-		prereq = quest("Make War, Not... Oh, Wait") and not have_frat_war_outfit() and (challenge == "boris" or ascensionpath("Avatar of Sneaky Pete")),
-		f = function()
-			stop "TODO: Get frat war outfit"
-		end,
+		when = quest("Make War, Not... Oh, Wait") and
+			not have_frat_war_outfit() and
+			not have_buff("Everything Looks Yellow") and
+			can_wear_weapons() and
+			ascension_script_option("automate whenever possible"),
+		task = {
+			message = "get frat war outfit",
+			bonus_target = { "noncombat", "item" },
+			equipment = {
+				hat = first_wearable { "Orcish baseball cap" },
+				weapon = first_wearable { "homoerotic frat-paddle" },
+				pants = first_wearable { "Orcish cargo shorts" },
+			},
+			action = adventure {
+				zoneid = 135,
+				macro_function = macro_kill_monster,
+			}
+		}
+	}
+
+	add_task {
+		when = quest("Make War, Not... Oh, Wait") and
+			not have_frat_war_outfit() and
+			not have_buff("Everything Looks Yellow"),
+		task = {
+			message = "get frat war outfit",
+			action = function()
+				stop "TODO: Get frat war outfit"
+			end,
+		}
 	}
 
 	-- TODO: started late if the offstats are weak

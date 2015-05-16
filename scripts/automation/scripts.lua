@@ -787,6 +787,9 @@ function get_automation_scripts(cached_stuff)
 					session["__script.used all free rests"] = "yes"
 					return f.ensure_mp(amount, true)
 				end
+			elseif maxmp() - mp() >= 40 and mantegna_resting_is_free() and meat() <= 3000 then
+				print_ascensiondebug("resting at mantegna")
+				do_mantegna_resting()
 			elseif (playerclass("Pastamancer") or playerclass("Sauceror")) and (session["__script.opened myst guild store"] == "yes" or level() >= 8) and challenge ~= "fist" and not have_item("magical mystery juice") then
 				store_buy_item("magical mystery juice", "2")
 				if have_item("magical mystery juice") then
@@ -5059,6 +5062,11 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 	return handle(pt, url)
 end
 
+function automate_fight()
+	result, resulturl = get_page("/fight.php")
+	return handle_adventure_result(result, resulturl, "?", macro_kill_monster)
+end
+
 function autoadventure(tbl)
 	check_supported_table_values(tbl, { "ignorewarnings", "noncombatchoices", "specialnoncombatfunction" }, { "zoneid", "macro" })
 --	if not tbl.ignorewarnings and setting_enabled("enable adventure warnings") then
@@ -5252,4 +5260,9 @@ function want_legend_keys()
 		end
 	end
 	return available < 3
+end
+
+function mantegna_resting_is_free()
+	local pt = get_place("chateau")
+	return pt:contains("restlabelfree")
 end
