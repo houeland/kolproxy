@@ -431,6 +431,9 @@ function try_killing_S_nemesis()
 		fought = true
 	end
 	result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_noodleserpent)
+	if fought then
+		advagain = true
+	end
 	print("DEBUG: lock url advagain", locked(), resulturl, advagain)
 	if result:contains([[value="Continue"]]) then
 		result, resulturl = get_page("/volcanomaze.php", { start = 1 })

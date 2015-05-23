@@ -22,6 +22,7 @@ function softcore_stoppable_action(msg)
 end
 
 local cached_stuff = { currently_checked = {} }
+ascension_script_cached_stuff = cached_stuff
 
 local function write_log_line(msg)
 	local f = io.open(string.format("logs/scripts/scripted-ascension-log-%s-%s.txt", playername(), current_ascension_number()), "a+")
@@ -2897,13 +2898,12 @@ endif
 		local pt = get_place("chateau", "chateau_nightstand")
 		local substats = pt:match("some (.-) substats when you rest")
 		if substats == mainstat_type() then
-			inform "resting at mantegna"
 			local oldstat = rawmainstat()
 			result, resulturl = get_place("chateau", "chateau_restbox")
 			did_action = rawmainstat() > oldstat
 		else
 			print("DEBUG: detected mantegna substats as: " .. tostring(substats))
-			stop("TODO: rest at mantegna", pt)
+			stop("TODO: wanted to rest at mantegna, but don't have the mainstat-appropriate nightstand item for powerleveling. Either buy the right nightstand item and run the script again, or powerlevel/restore MP manually.", pt)
 		end
 	end
 
@@ -2916,6 +2916,7 @@ endif
 			vamp_out(mainstat_type())
 			did_action = true
 		elseif have_chateau_mantegna() then
+			inform "powerleveling by resting at mantegna"
 			do_mantegna_resting()
 		else
 			use_dancecard()
@@ -3592,7 +3593,7 @@ endif
 			can_photocopy(),
 		f = function()
 			if script.get_photocopied_monster() ~= "Knob Goblin Elite Guard Captain" then
-				inform "get KGE captain from faxbot"
+				inform "get KGE captain fax"
 				script.get_faxbot_fax("Knob Goblin Elite Guard Captain")
 			else
 				inform "fight KGE captain"
@@ -3880,7 +3881,7 @@ endif
 			action = function()
 				if script.get_photocopied_monster() ~= "Blooper" then
 					print("photocopied:", script.get_photocopied_monster())
-					inform "get blooper from faxbot"
+					inform "get blooper fax"
 					script.get_faxbot_fax("Blooper")
 				else
 					if not have_item("continuum transfunctioner") then
@@ -4811,15 +4812,25 @@ endif
 	}
 
 	add_task {
-		prereq = have_item("ancient amulet") and have_item("Eye of Ed") and have_item("Staff of Fats"),
+		prereq = have_item(2180) and have_item(2286) and have_item(2268), -- non-Ed versions of ancient amulet, Eye of Ed, Staff of Fats
 		f = function()
 			inform "paste staff of ed"
-			meatpaste_items("Eye of Ed", "ancient amulet")
-			meatpaste_items("headpiece of the Staff of Ed", "Staff of Fats")
-			if have_item("Staff of Ed") then
-				async_get_page("/beach.php", { action = "woodencity" })
-				did_action = true
-			end
+			meatpaste_items(2286, 2180)
+			meatpaste_items("headpiece of the Staff of Ed", 2268)
+			did_action = have_item(2325) -- Staff of Ed
+		end,
+	}
+
+	add_task {
+		prereq = not quest("A Pyramid Scheme") and
+			have_item(2325) and -- Staff of Ed
+			not cached_stuff.currently_checked.unlocked_pyramid,
+		f = function()
+			inform "unlock pyramid"
+			result, resulturl = get_place("pyramid")
+			refresh_quest()
+			cached_stuff.currently_checked.unlocked_pyramid = true
+			did_action = true
 		end,
 	}
 
@@ -4863,14 +4874,7 @@ endif
 	}
 
 	add_task {
-		prereq = want_star_key() and
-			ascensionstatus("Hardcore"),
-		f = script.make_star_key,
-	}
-
-	add_task {
-		prereq = want_star_key() and
-			have_item("steam-powered model rocketship"),
+		prereq = want_star_key(),
 		f = script.make_star_key,
 	}
 
@@ -5067,7 +5071,7 @@ endif
 				x.minmp = 40
 			end
 
-			x.familiar = x.familiar or x.fam
+			x.familiar = x.familiar or x.fam or "auto"
 			if x.familiar then
 				-- TODO: unequip fam?
 				local famt = script.want_familiar(x.familiar)
@@ -5227,6 +5231,35 @@ endif
 
 	if not did_action and not finished then
 		result = add_message_to_page(get_result(), "Automation stopped while trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt><br>" .. skiplink, "Automation stopped:", "darkorange")
+	end
+
+	if locked() then
+		print("DEBUG: locked at end of turn, did_action was", did_action)
+		did_action = false
+	end
+
+	if locked() and ascensionpath("One Crazy Random Summer") and ascension_script_option("automate whenever possible") then
+		local mname = get_monstername_from_fight_page(result)
+		print_ascensiondebug("OCRS locked", locked(), mname)
+		if mname and (mname:contains("untouchable") or mname:contains("annoying")) then
+			local untouchable_runaways = day["__script.OCRS runaways"] or 0
+			print_ascensiondebug("OCRS runaway, already ran away today: ", untouchable_runaways)
+			if untouchable_runaways <= 30 then
+				day["__script.OCRS runaways"] = untouchable_runaways + 1
+				result, resulturl = handle_adventure_result(result, resulturl, "?", [[
+
+runaway
+runaway
+runaway
+runaway
+runaway
+
+]])
+				if not locked() then
+					did_action = true
+				end
+			end
+		end
 	end
 
 	return result, resulturl, did_action

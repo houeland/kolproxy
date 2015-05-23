@@ -7,6 +7,18 @@ doloadfile("scripts/base/charpane.lua")
 doloadfile("scripts/base/api.lua")
 doloadfile("scripts/base/commands.lua")
 
+local function parse_fight_vars(text)
+	local monster_name = nil
+	local monster_name_tag = nil
+	for spantext in text:gmatch([[<span.-</span>]]) do
+		if spantext:contains("monname") then
+			monster_name = spantext:match([[<span [^>]*id=['"]monname['"][^>]*>(.-)</span>]]) or monster_name
+			monster_name_tag = spantext:match([[<span [^>]*id=['"]monname['"][^>]*>.-</span>]]) or monster_name_tag
+		end
+	end
+	return monster_name, monster_name_tag
+end
+
 -- TODO: redo the rest of this code
 function setup_variables()
 	if path == "/charpane.php" then
@@ -20,15 +32,8 @@ function setup_variables()
 	end
 
 	if path == "/fight.php" then
-		monster_name = nil
-		monster_name_tag = nil
-		for spantext in text:gmatch([[<span.-</span>]]) do
-			if spantext:contains("monname") then
-				monster_name = spantext:match([[<span [^>]*id=['"]monname['"][^>]*>(.-)</span>]]) or monster_name
-				monster_name_tag = spantext:match([[<span [^>]*id=['"]monname['"][^>]*>.-</span>]]) or monster_name_tag
-			end
-		end
 		adventure_zone = tonumber(fight.zone)
+		monster_name, monster_name_tag = parse_fight_vars(text)
 		if not query:contains("ireallymeanit") then
 			encounter_source = "other"
 		elseif text:contains("hear a wolf whistle from behind you") then
@@ -55,10 +60,7 @@ function setup_variables()
 	adventure_result = text:match([[<td style="color: white;" align=center bgcolor=blue.-><b>Adventure Results:</b></td></tr><tr><td style="padding: 5px; border: 1px solid blue;"><center><table><tr><td><center><b>(.-)</b>]])
 end
 
-function monstername(name)
-	if name then
-		return name == monstername()
-	end
+local function monstername_from_vars(monster_name, monster_name_tag)
 	if monster_name then
 		if monster_name_tag and monster_name_tag:contains([[id="monname"]]) then
 			return monster_name
@@ -69,6 +71,19 @@ function monstername(name)
 	end
 end
 
+function monstername(name)
+	if name then
+		return name == monstername()
+	end
+	return monstername_from_vars(monster_name, monster_name_tag)
+end
+
 function raw_monstername()
 	return monster_name
+end
+
+function get_monstername_from_fight_page(fight_text)
+	fight_text = fight_text or get_page("/fight.php")
+	local monster_name, monster_name_tag = parse_fight_vars(fight_text)
+	return monstername_from_vars(monster_name, monster_name_tag)
 end

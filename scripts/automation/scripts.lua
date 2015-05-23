@@ -429,21 +429,26 @@ function get_automation_scripts(cached_stuff)
 			end
 		end
 		if famname == "leprechaun" then
-			famname = firstfam { "Hobo Monkey", "Grim Brother", "Bloovian Groose", "Blavious Kloop", "Angry Jung Man", "He-Boulder", "Knob Goblin Organ Grinder", "Leprechaun" } or "auto"
+			famname = firstfam { "Hobo Monkey", "Golden Monkey", "Grim Brother", "Bloovian Groose", "Blavious Kloop", "Angry Jung Man", "He-Boulder", "Knob Goblin Organ Grinder", "Leprechaun" } or "auto"
 		end
 		if famname == "free turn" then
 			famname = firstfam { "Mini-Hipster", "Artistic Goth Kid" } or "auto"
 		end
-		if famname == "auto" then
-			if spleen() < 12 and not have_item("Game Grid token") and script.have_familiar("Rogue Program") then
-				famname = "Rogue Program"
-			elseif spleen() < 12 and not have_item("groose grease") and script.have_familiar("Bloovian Groose") then
-				famname = "Bloovian Groose"
-			elseif level() >= 5 and script.have_familiar("Fist Turkey") then
-				famname = "Fist Turkey"
-			else
-				famname = firstfam { "Galloping Grill", "Grim Brother", "Bloovian Groose", "Rogue Program", "Midget Clownfish", "Baby Z-Rex", "Smiling Rat", "Blood-Faced Volleyball", "Slimeling", "Dandy Lion", "Fist Turkey", "Angry Jung Man", "Gelatinous Cubeling", "Reagnimated Gnome", "Blavious Kloop", "Green Pixie", "Piano Cat", "Hippo Ballerina", "Obtuse Angel", "Pair of Stomping Boots", "Star Starfish", "Peppermint Rhino", "Mechanical Songbird", "Baby Gravy Fairy" } or "Galloping Grill"
+		local function spleen_to_fill()
+			local s = estimate_max_spleen() - spleen()
+			for _, i in ipairs { "not-a-pipe", "glimmering roc feather", "groose grease", "agua de vida", "coffee pixie stick", "grim fairy tale", "powdered gold" } do
+				s = s - count_item(i) * 4
 			end
+			return s
+		end
+		if famname == "auto" and spleen_to_fill() >= 4 then
+			famname = firstfam { "Golden Monkey", "Grim Brother", "Bloovian Groose", "Rogue Program" } or "auto"
+		end
+		if famname == "auto" and level() >= 5 then
+			famname = firstfam { "Fist Turkey" } or "auto"
+		end
+		if famname == "auto" then
+			famname = firstfam { "Galloping Grill", "Golden Monkey", "Grim Brother", "Bloovian Groose", "Rogue Program", "Midget Clownfish", "Baby Z-Rex", "Smiling Rat", "Blood-Faced Volleyball", "Slimeling", "Dandy Lion", "Fist Turkey", "Angry Jung Man", "Gelatinous Cubeling", "Reagnimated Gnome", "Blavious Kloop", "Green Pixie", "Piano Cat", "Hippo Ballerina", "Obtuse Angel", "Pair of Stomping Boots", "Star Starfish", "Peppermint Rhino", "Mechanical Songbird", "Baby Gravy Fairy" } or "Galloping Grill"
 		end
 		return raw_want_familiar(famname)
 	end
@@ -788,7 +793,7 @@ function get_automation_scripts(cached_stuff)
 					return f.ensure_mp(amount, true)
 				end
 			elseif maxmp() - mp() >= 40 and mantegna_resting_is_free() and meat() <= 3000 then
-				print_ascensiondebug("resting at mantegna")
+				inform "restoring MP by resting at mantegna"
 				do_mantegna_resting()
 			elseif (playerclass("Pastamancer") or playerclass("Sauceror")) and (session["__script.opened myst guild store"] == "yes" or level() >= 8) and challenge ~= "fist" and not have_item("magical mystery juice") then
 				store_buy_item("magical mystery juice", "2")
@@ -843,7 +848,7 @@ function get_automation_scripts(cached_stuff)
 			elseif need > 50 then
 				stop "Trying to use galaktik to restore more than 50 MP"
 			elseif maxmp() - mp() >= 20 and mantegna_resting_is_free() then
-				print_ascensiondebug("resting at mantegna")
+				inform "restoring MP by resting at mantegna"
 				do_mantegna_resting()
 			else
 				if show_spammy_automation_events then
@@ -1262,6 +1267,11 @@ function get_automation_scripts(cached_stuff)
 			end
 			if mainstat_type("Mysticality") and level() >= 6 then
 				table.insert(xs, "A Few Extra Pounds")
+			end
+			if meat() >= 10000 then
+				table.insert(xs, "Ghostly Shell")
+				table.insert(xs, "Astral Shell")
+				table.insert(xs, "Reptilian Fortitude")
 			end
 			if level() >= 6 then
 				table.insert(xs, "Leash of Linguini")
@@ -2383,6 +2393,7 @@ endif
 			{ name = "agua de vida", size = 4, level = 4 },
 			{ name = "coffee pixie stick", size = 4, level = 4 },
 			{ name = "grim fairy tale", size = 4, level = 0 },
+			{ name = "powdered gold", size = 4, level = 0 },
 			{ name = "molotov soda", size = 3, level = 2 },
 		}
 
@@ -4752,7 +4763,7 @@ endif
 				local t = os.date("*t")
 				return t.hour * 3600 + t.min * 60 + t.sec
 			end
-			async_get_page("/submitnewchat.php", { pwd = get_pwd(), graf = ("/msg FaxBot "..code) })
+			async_get_page("/submitnewchat.php", { pwd = get_pwd(), graf = ("/msg faustbot "..code) })
 			local tstart = timestamp()
 			for i = 1, 100 do
 				local pt = get_page("/clan_log.php")
@@ -4762,7 +4773,7 @@ endif
 						async_get_page("/clan_viplounge.php", { preaction = "receivefax" })
 						break
 					elseif i > 50 then
-						critical "Error when checking clan log for faxbot"
+						critical "Error when checking clan log for faxed monster"
 					end
 				elseif faxedtext:contains(target) then
 					async_get_page("/clan_viplounge.php", { preaction = "receivefax" })
@@ -4787,7 +4798,7 @@ endif
 			try_getting_faxbot_monster(target, code)
 		end
 		if f.get_photocopied_monster() ~= target then
-			stop("Didn't get "..target.." from faxbot")
+			stop("Didn't get "..target.." fax")
 		end
 	end
 
@@ -4954,6 +4965,10 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 		end
 		if locked() == "choice" then
 			return post_page("/choice.php", { pwd = session.pwd })
+		end
+		if advagain and locked() == "fight" and pt:contains("clingy") then
+			advagain = nil
+			already_ran_macro = false
 		end
 		if advagain == nil and not already_ran_macro then
 			if macro then
@@ -5213,11 +5228,13 @@ function bjornify(fam)
 end
 
 local too_old = nil
+local too_old_checked_state = nil
 function fax_machine_is_too_old()
-	-- TODO: use common cache, reset on path change
-	if too_old == nil then
+	-- TODO: use common state cache
+	if too_old_checked_state ~= state_identifier() then
 		local faxpt = get_page("/clan_viplounge.php", { action = "faxmachine" })
-		too_old = faxpt:contains("clan thing is too old to be used on this path")
+		too_old = not faxpt:contains("Receive a Fax") or faxpt:contains("clan thing is too old to be used on this path")
+		too_old_checked_state = state_identifier()
 	end
 	return too_old
 end
@@ -5235,6 +5252,11 @@ end
 function have_conspiracy_island()
 	local pt = get_page("/place.php", { whichplace = "airport_spooky", intro = 1 })
 	return pt:contains("Secret Government Lab")
+end
+
+function have_dinseylandfill()
+	local pt = get_page("/place.php", { whichplace = "airport_stench", intro = 1 })
+	return pt:contains("Barf Mountain")
 end
 
 local function path_does_not_have_lair()

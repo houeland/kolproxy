@@ -123,7 +123,7 @@ function set_equipment(tbl)
 		end
 	end
 	for a, b in pairs(eq) do
-		if b ~= get_itemid(tbl[a]) then
+		if not tbl[a] or b ~= get_itemid(tbl[a]) then
 			error("Wearing " .. tostring(a) .. ":" .. tostring(b) .. " after trying to wear " .. getnamedesc(tbl[a]))
 		end
 	end

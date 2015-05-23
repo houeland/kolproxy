@@ -96,6 +96,9 @@ local function formatMonsterStats(monster, bonuses)
 
 	local function formatStatPercent(name, value, color, tooltip)
 		if not value or value == 0 then return end
+		if not color and value >= 90 then
+			color = "red"
+		end
 		return formatStat(name, value .. "%", color, tooltip)
 	end
 
@@ -125,7 +128,7 @@ local function formatMonsterStats(monster, bonuses)
 	formatStat("Watch out for", data.WatchOut)
 	if (data.physicalresistpercent or 0) ~= 0 or (data.elementalresistpercent or 0) ~= 0 then
 		if data.physicalresistpercent == data.elementalresistpercent then
-			formatStatPercent("Resist", data.physicalresistpercent)
+			formatStatPercent("Resist", data.physicalresistpercent, nil, "Reduces physical and elemental damage")
 		else
 			formatStatPercent("Physical resist", data.physicalresistpercent)
 			formatStatPercent("Elemental resist", data.elementalresistpercent)
@@ -133,21 +136,21 @@ local function formatMonsterStats(monster, bonuses)
 	end
 
 	if data.staggerimmune then
-		formatStatPercent("Stagger resist", 100, "red")
+		formatStatPercent("Stagger resist", 100, nil, "Monster is immune to stun and stagger effects and will attack every round")
 	elseif data.stunresistpercent then
-		formatStatPercent("Stun resist", data.stunresistpercent)
+		formatStatPercent("Stun resist", data.stunresistpercent, nil, "Chance each round to break out of stuns early")
 	end
 
 	if data.reflectspells then
-		formatStat("Spells", "Reflected")
+		formatStat("Spells", "Reflected", "red", "Spells cast will damage the player instead of the monster")
 	end
 
 	if data.preventcombatskill then
-		formatStat("Skills", "Blocked", "red")
+		formatStat("Skills", "Blocked", "red", "Any skills used will be blocked by the monster and do nothing")
 	end
 
 	if data.blockcombatitems then
-		formatStat("Combat items", "Blocked")
+		formatStat("Combat items", "Blocked", "red", "Any combat items used will be blocked by the monster and do nothing")
 	end
 
 	statData = statData .. "</div>"

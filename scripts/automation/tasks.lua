@@ -1435,14 +1435,15 @@ mark m_done
 				script.want_familiar("Warbear Drone")
 				script.wear {
 					offhand = first_wearable { "hot plate" },
-					famequip = first_wearable { "ant hoe", "ant pick", "ant pitchfork", "ant rake", "ant sickle" },
+					familiarequip = first_wearable { "ant hoe", "ant pick", "ant pitchfork", "ant rake", "ant sickle" },
 					acc1 = first_wearable { "hippy protest button" },
 					acc2 = first_wearable { "bottle opener belt buckle" },
 				}
 				script.maybe_ensure_buffs { "Spiky Shell", "Jalape&ntilde;o Saucesphere", "Scarysauce", "Psalm of Pointiness" }
 				script.ensure_mp(80)
+				script.heal_up()
 				result, resulturl = get_place("nstower")
-				did_action = false
+				stop("TODO: kill wall of skin", result)
 			end,
 		}
 	}
@@ -1456,6 +1457,7 @@ mark m_done
 				script.wear {}
 				script.ensure_buffs { "Polka of Plenty", "Disco Leer" }
 				script.ensure_mp(120)
+				script.heal_up()
 				result, resulturl = get_place("nstower", "ns_06_monster2")
 				result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_kill_monster)
 				did_action = advagain
@@ -1756,8 +1758,14 @@ endif
 	}
 
 	local function go_to_underworld()
+		local zone = "A Maze of Sewer Tunnels"
+		if cache_wrapper(have_conspiracy_island) then
+			zone = "The Secret Government Laboratory"
+		elseif cache_wrapper(have_dinseylandfill) then
+			zone = "Pirates of the Garbage Barges"
+		end
 		return (adventure {
-			zone = "The Secret Government Laboratory",
+			zone = zone,
 			macro_function = [[
 cast Mild Curse
 repeat
@@ -1851,6 +1859,26 @@ repeat
 				equipment = { acc1 = first_wearable { "Personal Ventilation Unit" } },
 				action = adventure {
 					zone = "The Secret Government Laboratory",
+					macro_function = macro_kill_monster,
+				}
+			}
+		end,
+	}
+
+	tasks.ed_farm_ka_at_government_lab = {
+		when = want_ka() and
+			have_skill("Fist of the Mummy") and
+			not cache_wrapper(have_conspiracy_island) and
+			cache_wrapper(have_dinseylandfill),
+		task = function()
+			if zone_awaiting_florist_decision("Pirates of the Garbage Barges") then
+				plant_florist_plants { 20, 11, 15 }
+			end
+			return {
+				message = "farm ka at garbage barges",
+				minmp = 10,
+				action = adventure {
+					zone = "Pirates of the Garbage Barges",
 					macro_function = macro_kill_monster,
 				}
 			}

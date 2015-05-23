@@ -80,8 +80,28 @@ function buildCurrentFightMonsterDataCache(for_monster_name, fight_text)
 		end
 	end
 
-	if not monster then return nil end
-	monster = table.copy(monster)
+	local monster_modifiers = {}
+
+	if ascensionpath("One Crazy Random Summer") then
+--		print("OCRS", for_monster_name)
+		while not monster and for_monster_name do
+			local prefix, remaining = for_monster_name:match("^([^ ]+) (.+)$")
+			if prefix and remaining then
+--				print("OCRS prefix", [["]] .. prefix .. [["]], "and", remaining)
+				table.insert(monster_modifiers, prefix)
+				for_monster_name = remaining
+				monster = maybe_get_monsterdata(for_monster_name)
+			else
+				break
+			end
+		end
+	end
+	monster_modifiers = table.concat(monster_modifiers, " ")
+
+	monster = table.copy(monster or {})
+
+	monster.Stats = monster.Stats or {}
+	monster.Items = monster.Items or {}
 
 	local modifiers = estimate_current_bonuses() + estimate_fight_page_bonuses(fight_text)
 	local ml = modifiers["Monster Level"]
@@ -92,7 +112,7 @@ function buildCurrentFightMonsterDataCache(for_monster_name, fight_text)
 		Def = true,
 	}
 
-	for a, b in pairs(monster.Stats or {}) do
+	for a, b in pairs(monster.Stats) do
 		if ml_increases[a] and tonumber(b) then
 			monster.Stats[a] = math.max(tonumber(b) + ml, 1)
 		elseif type(b) == "string" and b:match("^mafiaexpression:%[.*%]$") then
@@ -100,13 +120,34 @@ function buildCurrentFightMonsterDataCache(for_monster_name, fight_text)
 		end
 	end
 
-	local mlresistpercent = math.min(ml * 0.4, 50)
-	monster.Stats.physicalresistpercent = mlresistpercent
-	monster.Stats.elementalresistpercent = mlresistpercent -- TODO: base values should be in datafile!
+	-- TODO: base value should be in datafile!
+	monster.Stats.stunresistpercent = nil
+	monster.Stats.physicalresistpercent = nil
+	monster.Stats.elementalresistpercent = nil
+
+	local function update_resist(what, value)
+		if monster.Stats[what] then
+			monster.Stats[what] = math.max(monster.Stats[what], value)
+		else
+			monster.Stats[what] = value
+		end
+	end
+
 	if monster.Stats.Phys then -- TODO: rename in datafile
-		monster.Stats.physicalresistpercent = math.max(monster.Stats.physicalresistpercent, monster.Stats.Phys)
+		update_resist("physicalresistpercent", monster.Stats.Phys)
 		monster.Stats.Phys = nil
 	end
+
+	if monster_stat_data[for_monster_name] then
+		for x, y in pairs(monster_stat_data[for_monster_name]) do
+			monster.Stats[x] = y
+		end
+	end
+
+	-- Note: these go negative iff ML < 0 *AND* the monster didn't have any resistance value set earlier
+	local mlresistpercent = math.min(ml * 0.4, 50)
+	update_resist("physicalresistpercent", mlresistpercent)
+	update_resist("elementalresistpercent", mlresistpercent)
 
 	if monstername("one of Doctor Weirdeaux's creations") then
 		--an_head7 = "frog head (block combat items)",
@@ -128,15 +169,26 @@ function buildCurrentFightMonsterDataCache(for_monster_name, fight_text)
 		if parts.an_butt10 then
 			monster.Stats.preventcombatskill = true
 		end
-		monster.Stats.physicalresistpercent = math.max(monster.Stats.physicalresistpercent, 10)
-		monster.Stats.elementalresistpercent = math.max(monster.Stats.elementalresistpercent, math.min(100, 10 + (parts.an_seg9 or 0) * 50))
+		update_resist("physicalresistpercent", 10)
+		update_resist("elementalresistpercent", math.min(100, 10 + (parts.an_seg9 or 0) * 50))
 	end
 
 	if ml >= 51 then
-		monster.Stats.stunresistpercent = math.min(100, ml - 50) -- TODO: added to base, should be in datafile!
+		local mlstunresistpercent = math.min(100, ml - 50)
+		update_resist("stunresistpercent", mlstunresistpercent)
 	end
 	if ml >= 151 then
 		monster.Stats.staggerimmune = true
+	end
+
+	if monster_modifiers:contains("unstoppable") then
+		update_resist("stunresistpercent", 100)
+		monster.Stats.staggerimmune = true
+	end
+
+	if monster_modifiers:contains("untouchable") then
+		update_resist("physicalresistpercent", 100)
+		update_resist("elementalresistpercent", 100)
 	end
 
 	--In a bees hate you, monster's with b in their names get increased by 20% per b

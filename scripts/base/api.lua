@@ -442,18 +442,21 @@ function setup_functions()
 			end)
 		end
 
+		function state_identifier()
+			return current_ascension_number() .. "/" .. ascensionpathid() .. "/" .. ascensionstatus()
+		end
+
 		function get_player_skills()
 			return get_cached_item("cached_get_player_skills", function()
 				local cached_skills = session["cached player skills"]
 				local cached_skills_storedid = session["cached player skills.storedid"]
-				local currentid = ascensionpathid() .. "/" .. ascensionstatus()
-				if cached_skills_storedid ~= currentid then
+				if cached_skills_storedid ~= state_identifier() then
 					if kolproxycore_async_submit_page and not cannot_set_state and not locked() then
 						local skills = raw_retrieve_skills()
 						if skills then
 							cached_skills = skills
 							session["cached player skills"] = skills
-							session["cached player skills.storedid"] = currentid
+							session["cached player skills.storedid"] = state_identifier()
 						end
 					end
 				end

@@ -33,11 +33,13 @@ add_printer("/clan_viplounge.php", function()
 			table.insert(messages, string.format([[<span style="color: green">{ A Pool Table (%s left today) }</span>]], make_plural(uses_left, "use", "uses")))
 		end
 	end
-	local hot_tub_text = text:match([[title="(A Relaxing Hot Tub.-)"]]) or ""
-	if hot_tub_text:contains("no uses left") then
-		table.insert(messages, string.format([[<span style="color: gray">{ %s }</span>]], hot_tub_text))
-	else
-		table.insert(messages, string.format([[<span style="color: green">{ %s }</span>]], hot_tub_text))
+	local hot_tub_text = text:match([[title="(A Relaxing Hot Tub.-)"]])
+	if hot_tub_text then
+		if hot_tub_text:contains("no uses left") then
+			table.insert(messages, string.format([[<span style="color: gray">{ %s }</span>]], hot_tub_text))
+		else
+			table.insert(messages, string.format([[<span style="color: green">{ %s }</span>]], hot_tub_text))
+		end
 	end
 	text = text:gsub([[<p><Center><A href="clan_hall.php">Back to Clan Hall]], [[<p><center>]] .. table.concat(messages, "<br>") .. [[</center></p>%0]])
 end)
@@ -147,8 +149,8 @@ local faxbot_href = add_automation_script("get-faxbot-monster", function()
 		for _, c in ipairs(faxbot_monsters_datafile.order) do
 			local x = faxbot_monsters_datafile.categories[c][cmd]
 			if x then
-				async_get_page("/submitnewchat.php", { graf = "/msg FaxBot " .. cmd, pwd = params.pwd })
-				return string.format("Getting %s from FaxBot.", describe_faxbot_option(x))
+				async_get_page("/submitnewchat.php", { graf = "/msg faustbot " .. cmd, pwd = params.pwd })
+				return string.format("Getting %s from faustbot.", describe_faxbot_option(x))
 			end
 		end
 		-- TODO: Use darkorange frame? Never actually happens without authenticated but still invalid requests anyway.
@@ -161,7 +163,7 @@ end)
 
 add_printer("/clan_viplounge.php", function()
 	local faxbot_monsters_datafile = datafile("faxbot monsters")
-	text = text:gsub([[<input class=button type=submit value="Receive a Fax"></form>]], function(x)
+	text = text:gsub([[<input class=button type=submit value="Receive a Fax">.-</form>]], function(x)
 		local optgroups = {}
 		for _, c in ipairs(faxbot_monsters_datafile.order) do
 			local optorder = {}
@@ -179,7 +181,7 @@ add_printer("/clan_viplounge.php", function()
 			end
 			table.insert(optgroups, string.format([[<optgroup label="%s">%s</optgroup>]], c, table.concat(opts)))
 		end
-		return x .. [[<hr><form action="]] .. faxbot_href {} .. [[" method="post"><input type=hidden name=pwd value="]]..session.pwd..[["><span style="color: green;">{ Choose monster: }</span> <select name="faxcommand"><option value="">-- nothing --</option>]] .. table.concat(optgroups) .. [[</select> <input class="button" type="submit" value="Get from FaxBot"></form>]]
+		return x .. [[<hr><form action="]] .. faxbot_href {} .. [[" method="post"><input type=hidden name=pwd value="]]..session.pwd..[["><span style="color: green;">{ Choose monster: }</span> <select name="faxcommand"><option value="">-- nothing --</option>]] .. table.concat(optgroups) .. [[</select> <input class="button" type="submit" value="Get fax"></form>]]
 	end)
 end)
 
