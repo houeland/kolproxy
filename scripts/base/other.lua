@@ -493,7 +493,7 @@ local function add_use_item_ascension_assistance(itemname)
 		local c = count_item(itemname)
 		use_item(itemname)()
 		if count_item(itemname) < c then
-			reset_last_checked()
+			return true
 		end
 	end)
 end
@@ -507,6 +507,7 @@ add_use_item_ascension_assistance("Letter for Melvign the Gnome")
 add_use_item_ascension_assistance("letter to Ed the Undying")
 
 add_use_item_ascension_assistance("evil eye")
+add_use_item_ascension_assistance("desert sightseeing pamphlet")
 
 add_ascension_assistance(function() return have_item("Knob Goblin encryption key") and have_item("Cobb's Knob map") and not ascensionpath("Bees Hate You") end, function()
 	use_item("Cobb's Knob map")
