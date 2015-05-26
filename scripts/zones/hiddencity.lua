@@ -1,9 +1,9 @@
 local places = {
-		["346"] = "northwest",
-		["347"] = "southwest",
-		["348"] = "northast",
-		["349"] = "southeast",
-		["350"] = "ziggurat",
+		["346"] = "An Overgrown Shrine (Northwest)",
+		["347"] = "An Overgrown Shrine (Southwest)",
+		["348"] = "An Overgrown Shrine (Northeast)",
+		["349"] = "An Overgrown Shrine (Southeast)",
+		["350"] = "A Massive Ziggurat",
 	}
 
 add_warning {
@@ -73,6 +73,17 @@ add_warning {
 		return have_mcclusky_file_items()
 	end
 }
+
+function remaining_hidden_city_liana_zones()
+	local remaining = {}
+	for _, zone in pairs(places) do
+		val = get_ascension_counter("zone.hiddencity." .. zone .. ".liana.kills")
+		if not val or val < 3 then
+			remaining[zone] = true
+		end
+	end
+	return remaining
+end
 
 add_processor("/fight.php", function()
 	if text:contains("dense liana") and text:contains("<!--WINWINWIN-->") then
