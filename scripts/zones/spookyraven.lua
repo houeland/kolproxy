@@ -222,73 +222,50 @@ end)
 
 -- bedroom
 
-add_choice_text("One Nightstand", function()
-	if text:contains("fine mahogany nightstand") then
-		if have_equipped_item("Lord Spookyraven's spectacles") then
-			return {
-				["Check the top drawer"] = "Get coin purse",
-				["Check the bottom drawer"] = "Fight nightstand",
-				["Look under the nightstand"] = "Get spookyraven skill item",
-			}
-		else
-			return {
-				["Check the top drawer"] = "Get coin purse",
-				["Check the bottom drawer"] = "Fight nightstand",
-				["Look under the nightstand"] = { text = "If wearing spectacles, get spookyraven skill item", disabled = true },
-			}
-		end
-	elseif text:contains("ornately carved nightstand") then
-		if have_item("Lord Spookyraven's spectacles") then
-			return {
-				["Open the top drawer"] = "Gain meat",
-				["Open the bottom drawer"] = "Gain mysticality",
-				["Look behind the nightstand"] = { getitem = "Lord Spookyraven's spectacles", disabled = true },
-				["Look under the nightstand"] = { getitem = "disposable instant camera", good_choice = not have_item("disposable instant camera") },
-			}
-		else
-			return {
-				["Open the top drawer"] = "Gain meat",
-				["Open the bottom drawer"] = "Gain mysticality",
-				["Look behind the nightstand"] = { getitem = "Lord Spookyraven's spectacles", good_choice = true },
-				["Look under the nightstand"] = { getitem = "disposable instant camera" },
-			}
-		end
-	elseif text:contains("simple white nightstand") then
-		return {
-			["Look in the top drawer"] = "Get wallet",
-			["Look in the bottom drawer"] = "Gain muscle",
-			["Kick it and see what happens"] = "Fight nightstand",
-		}
-	elseif text:contains("simple wooden nightstand") then
-		if have_item("Spookyraven ballroom key") then
-			return {
-				["Check the top drawer"] = "Gain moxie",
-				["Check the bottom drawer"] = { getitem = "Spookyraven ballroom key", disabled = true },
-				["Investigate the jewelry"] = "Fight mistress",
-			}
-		elseif ascension["zone.manor.unlocked ballroom key"] == "yes" then
-			return {
-				["Check the top drawer"] = "Gain moxie",
-				["Check the bottom drawer"] = { getitem = "Spookyraven ballroom key", good_choice = true },
-				["Investigate the jewelry"] = "Fight mistress",
-			}
-		else
-			return {
-				["Check the top drawer"] = { text = "Gain moxie and unlock ballroom key", good_choice = true },
-				["Check the bottom drawer"] = "When unlocked, get ballroom key",
-				["Investigate the jewelry"] = "Fight mistress",
-			}
-		end
-	end
-end)
+add_choice_text("One Mahogany Nightstand", {
+	["Check the top drawer"] = function() return (not ascension["spookyraven.halfmemo obtained"]) and "Get either 'half of a memo' or 'old coin purse'" or { getitem = "old coin purse" } end,
+	["Check the bottom drawer"] = { text = "Take damage", disabled = true },
+	["Look under the nightstand"] = function() return have_equipped_item("Lord Spookyraven's spectacles") and "Start Spookyraven skill quest" or "Need Lord Spookyraven's spectacles equipped" end,
+	["Use a ghost key"] = { getmeatmin = 900, getmeatmax = 1100 },
+	["Ignore it"] = "Nothing",
+})
 
-add_printer("/manor2.php", function()
-	if not have_item("Spookyraven ballroom key") then
-		brkeytext = [[<span style="color: darkorange">Ballroom key still taped under drawer</span>]]
-		if ascension["zone.manor.unlocked ballroom key"] == "yes" then
-			brkeytext = [[<span style="color: green">Ballroom key available</span>]]
-		end
-		text = text:gsub([[(<td width=100 height=100>)(<A href="adventure.php%?snarfblat=108">.-)(</td>)]], [[%1<div style="position: relative;"><div style="position: absolute; left: -105px; width: 100px; height: 100px;"><table style="height: 100px; vertical-align: middle; text-align: right;"><tr><td>]] .. brkeytext .. [[</td></tr></table></div>%2</div>%3]], 1)
+add_choice_text("One Ornate Nightstand", {
+	["Open the top drawer"] = { getmeatmin = 400, getmeatmax = 600 },
+	["Open the bottom drawer"] = "Gain 50-200 mysticality",
+	["Look behind the nightstand"] = function() return not have_item("Lord Spookyraven's spectacles") and { text = "Get spectacles", good_choice = true } or { text = "Nothing", disabled = true } end,
+	["Look under the nightstand"] = function() return { getitem = "disposable instant camera", good_choice = not have_item("disposable instant camera") } end,
+	["Use a ghost key"] = "Gain 200 mysticality",
+	["Ignore it"] = "Nothing",
+})
+
+add_choice_text("One Rustic Nightstand", {
+	["Check the top drawer"] = "Gain 50-200 moxie",
+	["Check the bottom drawer"] = "Get grouchy restless spirit or nothing",
+	["Investigate the jewelry"] = "Fight remains of a jilted mistress",
+	["Use a ghost key"] = "Gain 200 moxie",
+	["Ignore it"] = "Nothing",
+})
+
+add_choice_text("One Elegant Nightstand", {
+	["Open the single drawer"] = function() return (ascension["spookyraven.bedroom.gown obtained"]) and "Nothing" or { text = "Get quest item", good_choice = true } end,
+	["Break a leg (off of the nightstand)"] = { getitem = "elegant nightstick" },
+	["Use a ghost key"] = "Gain 100 all stats",
+	["Ignore it"] = "Nothing",
+})
+
+add_choice_text("One Simple Nightstand", {
+	["Check the top drawer"] = { getitem = "old leather wallet" },
+	["Check the bottom drawer"] = "Gain 50-200 muscle",
+	["Use a ghost key"] = "Gain 200 muscle",
+	["Ignore it"] = "Nothing",
+})
+
+add_processor("/choice.php", function()
+	if text:contains("You open the elegant drawer of the elegant nightstand") or text:contains("ephemeral elegance residue") then
+		ascension["spookyraven.bedroom.gown obtained"] = true
+	elseif (text:contains("You open the drawer and find a scrap of paper") or have_item("half of a memo")) then
+		ascension["spookyraven.halfmemo obtained"] = true
 	end
 end)
 
