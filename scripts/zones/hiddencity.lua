@@ -74,21 +74,12 @@ add_warning {
 	end
 }
 
---TODO: automation shouldn't rely so heavily on the particulars of this table
-local places_for_automation = {
-	{ zone = "A Massive Ziggurat", choice = "Legend of the Temple in the Hidden City", option = "Leave" },
-	{ zone = "An Overgrown Shrine (Southwest)", unlockzone = "The Hidden Hospital", choice = "Water You Dune", option = "Place your head in the impression", fallback = "Back away", sphere = "dripping" },
-	{ zone = "An Overgrown Shrine (Northwest)", unlockzone = "The Hidden Apartment Building", choice = "Earthbound and Down", option = "Place your head in the impression", fallback = "Step away from the altar", sphere = "moss-covered" },
-	{ zone = "An Overgrown Shrine (Southeast)", unlockzone = "The Hidden Bowling Alley", choice = "Fire When Ready", option = "Place your head in the impression", fallback = "Back off", sphere = "scorched" },
-	{ zone = "An Overgrown Shrine (Northeast)", unlockzone = "The Hidden Office Building", choice = "Air Apparent", option = "Place your head in the impression", fallback = "Leave the altar", sphere = "crackling" },
-}
-
 function remaining_hidden_city_liana_zones()
-	local citypt = get_place("hiddencity")
 	local remaining = {}
-	for _, x in ipairs(places_for_automation) do
-		if not x.unlockzone or not citypt:contains(x.unlockzone) then
-			remaining[x.zone] = true
+	for _, zone in pairs(places) do
+		val = get_ascension_counter("zone.hiddencity." .. zone .. ".liana.kills")
+		if not val or val < 3 then
+			remaining[zone] = true
 		end
 	end
 	return remaining
