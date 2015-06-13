@@ -33,7 +33,8 @@ end
 
 if requestpath == "/adventure.php" then
 	local z = requested_zone_id()
-	if z then -- TODO: can be slow because it forces API load. Does it still do that?
+	if z then
+		-- TODO: can be slow because it forces API load. Does it still do that?
 		fight.zone = z
 		session["adventure.lastzone"] = z
 	end

@@ -55,16 +55,16 @@ add_printer("/fight.php", function()
 		awesome_monsters["spider gremlin"] = "molybdenum pliers"
 		awesome_monsters["vegetable gremlin"] = "molybdenum screwdriver"
 	elseif fight["gremlin.has tool"] ~= "no" then
-		if adventure_zone == 182 then
+		if adventure_zone("Next to that Barrel with Something Burning in it") then
 			awesome_monsters["batwinged gremlin"] = "molybdenum hammer"
 			drop_uncertainty["batwinged gremlin"] = true
-		elseif adventure_zone == 184 then
+		elseif adventure_zone("Over Where the Old Tires Are") then
 			awesome_monsters["erudite gremlin"] = "molybdenum crescent wrench"
 			drop_uncertainty["erudite gremlin"] = true
-		elseif adventure_zone == 183 then
+		elseif adventure_zone("Near an Abandoned Refrigerator") then
 			awesome_monsters["spider gremlin"] = "molybdenum pliers"
 			drop_uncertainty["spider gremlin"] = true
-		elseif adventure_zone == 185 then
+		elseif adventure_zone("Out by that Rusted-Out Car") then
 			awesome_monsters["vegetable gremlin"] = "molybdenum screwdriver"
 			drop_uncertainty["vegetable gremlin"] = true
 		end

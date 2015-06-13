@@ -43,36 +43,29 @@ function parse_evilometer()
 		local pagetext = use_item("Evilometer")()
 		local evilometer = {}
 		for zonename, amount in pagetext:gmatch(">([A-Za-z ]*): <b>([0-9]*)</b>") do
-			evilometer[zonename] = tonumber(amount)
+			evilometer["The Defiled " .. zonename] = tonumber(amount)
 		end
-		if evilometer["Alcove"] then
+		if evilometer["The Defiled Alcove"] then
 			return evilometer
 		end
 	end
 end
 
-local crypt_zone_names = {
-	[261] = "Alcove",
-	[262] = "Cranny",
-	[263] = "Niche",
-	[264] = "Nook",
-}
-
 local function add_zone_info(evilometer)
-	local function add_zone_info(zoneinfo, zoneid, leftoffset)
+	local function add_zone_info(zoneinfo, zone, leftoffset)
 		local evilstring = ""
-		if evilometer then
-			evilstring = [[Evil: ]] .. evilometer[crypt_zone_names[zoneid]] .. [[</br>]]
+		if evilometer and evilometer[zone] then
+			evilstring = [[Evil: ]] .. evilometer[zone] .. [[</br>]]
 		end
 		local tablestring = [[<table style="height: 100px; vertical-align: middle;"><tr><td><span style="color: green">]] .. zoneinfo .. [[</span></td></tr></table>]]
 		text = text:gsub([[(<td width=[0-9]* height=[0-9]*>)(<A href="adventure.php%?snarfblat=]]..zoneid..[[".-)(</td>)]], function(tdbegin, contents, tdend)
 			return tdbegin .. [[<div style="position: relative;"><div style="position: absolute; left: ]] .. leftoffset .. [[; top: 65px; width: 100px; height: 100px;">]] .. evilstring .. tablestring .. [[</div>]] .. contents .. [[</div>]] .. tdend
 		end)
 	end
-	add_zone_info("Drops evil eyes (+item%)", 264, "-105px")
-	add_zone_info("Dirty old lich (olfaction, banishing)", 263, "155px")
-	add_zone_info("Swarm of whelps (+ML, +noncombat%)", 262, "-105px")
-	add_zone_info("Modern zmobie (+initiative%, +noncombat% to skip and reroll)", 261, "155px")
+	add_zone_info("Drops evil eyes (+item%)", "The Defiled Nook", "-105px")
+	add_zone_info("Dirty old lich (olfaction, banishing)", "The Defiled Niche", "155px")
+	add_zone_info("Swarm of whelps (+ML, +noncombat%)", "The Defiled Cranny", "-105px")
+	add_zone_info("Modern zmobie (+initiative%, +noncombat% to skip and reroll)", "The Defiled Alcove", "155px")
 end
 
 add_automator("/crypt.php", function()
@@ -85,11 +78,14 @@ add_automator("/fight.php", function()
 	if not setting_enabled("show extra warnings") then return end
 	if text:contains([[<a href="crypt.php">Go back to ]]) then
 		local evilometer = parse_evilometer()
-		if evilometer and adventure_zone and crypt_zone_names[adventure_zone] then
-			text = text:gsub("(Evilometer.-)(<)", function(a, b)
-				return a .. [[<br><span style="color: green">{ Evil remaining here: ]] .. evilometer[crypt_zone_names[adventure_zone]] .. [[ }</span>]] .. b
-			end)
-		end
+		if not evilometer then return end
+		local crypt_zone = get_adventure_zoneid() and maybe_get_zonename(get_adventure_zoneid())
+		if not crypt_zone then return end
+		local evil_remaining = evilometer[crypt_zone]
+		if not evil_remaining then return end
+		text = text:gsub("(Evilometer.-)(<)", function(a, b)
+			return a .. [[<br><span style="color: green">{ Evil remaining here: ]] .. evil_remaining .. [[ }</span>]] .. b
+		end)
 	end
 end)
 
@@ -108,7 +104,7 @@ add_warning {
 	if zoneid and zoneid >= 261 and zoneid <= 264 then
 		local evilometer = parse_evilometer()
 			if evilometer then
-				local evil_here = evilometer[crypt_zone_names[zoneid]]
+				local evil_here = evilometer[maybe_get_zonename(zoneid)]
 				if evil_here <= 25 then
 					return "The boss is ready to be fought in this zone.", "crypt boss ready zone-" .. zoneid
 				elseif evil_here == 26 then

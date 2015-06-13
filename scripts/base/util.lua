@@ -19,6 +19,16 @@ local function parse_fight_vars(text)
 	return monster_name, monster_name_tag
 end
 
+function get_adventure_zoneid()
+	if path == "/fight.php" then
+		return tonumber(fight.zone)
+	end
+end
+
+function adventure_zone(zone)
+	return get_zoneid(zone) == get_adventure_zoneid()
+end
+
 -- TODO: redo the rest of this code
 function setup_variables()
 	if path == "/charpane.php" then
@@ -32,7 +42,6 @@ function setup_variables()
 	end
 
 	if path == "/fight.php" then
-		adventure_zone = tonumber(fight.zone)
 		monster_name, monster_name_tag = parse_fight_vars(text)
 		if not query:contains("ireallymeanit") then
 			encounter_source = "other"

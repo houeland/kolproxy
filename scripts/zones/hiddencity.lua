@@ -1,22 +1,20 @@
-local places = {
-		["346"] = "An Overgrown Shrine (Northwest)",
-		["347"] = "An Overgrown Shrine (Southwest)",
-		["348"] = "An Overgrown Shrine (Northeast)",
-		["349"] = "An Overgrown Shrine (Southeast)",
-		["350"] = "A Massive Ziggurat",
-	}
+local liana_places = {
+	"An Overgrown Shrine (Northwest)",
+	"An Overgrown Shrine (Southwest)",
+	"An Overgrown Shrine (Northeast)",
+	"An Overgrown Shrine (Southeast)",
+	"A Massive Ziggurat",
+}
 
 add_warning {
 	message = "You can equip an antique machete to cut away dense lianas without taking a turn (found in The Hidden Park).",
 	type = "warning",
 	when = "ascension",
-	zone = { "An Overgrown Shrine (Northwest)", "An Overgrown Shrine (Southwest)", "An Overgrown Shrine (Northeast)", "An Overgrown Shrine (Southeast)", "A Massive Ziggurat" },
+	zone = liana_places,
 	check = function(zoneid)
 		if not can_wear_weapons() then return end
 		if have_equipped_item("antique machete") or have_equipped_item("machetito") or have_equipped_item("muculent machete") or have_equipped_item("papier-m&acirc;ch&eacute;te") then return end
-		if get_ascension_counter("zone.hiddencity." .. places[tostring(zoneid)] .. ".liana.kills") < 3 then
-			return true
-		end
+		return remaining_hidden_city_liana_zones()[maybe_get_zonename(zoneid)]
 	end
 }
 
@@ -76,18 +74,14 @@ add_warning {
 
 function remaining_hidden_city_liana_zones()
 	local remaining = {}
-	for _, zone in pairs(places) do
-		val = get_ascension_counter("zone.hiddencity." .. zone .. ".liana.kills")
-		if not val or val < 3 then
+	for _, zone in ipairs(liana_places) do
+		if get_ascension_counter("zone.hiddencity." .. get_zoneid(zone) .. ".liana.kills") < 3 then
 			remaining[zone] = true
 		end
 	end
 	return remaining
 end
 
-add_processor("/fight.php", function()
-	if text:contains("dense liana") and text:contains("<!--WINWINWIN-->") then
-		zone = text:gmatch("snarfblat=(%d%d%d)")()
-		increase_ascension_counter("zone.hiddencity." .. places[zone] .. ".liana.kills")
-	end
+add_processor("won fight: dense liana", function()
+	increase_ascension_counter("zone.hiddencity." .. tostring(get_adventure_zoneid()) .. ".liana.kills")
 end)
