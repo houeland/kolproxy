@@ -69,7 +69,7 @@ add_printer("/bigisland.php", function()
 	if params.place == "camp" and text:contains([[value="turnin"]]) then
 		local junk_href = turn_in_war_items_href { pwd = session.pwd, campid = tonumber(params.whichcamp), what = "junk" }
 		local all_href = turn_in_war_items_href { pwd = session.pwd, campid = tonumber(params.whichcamp), what = "all" }
-		text = text:gsub([["Turn it in"></form>]], [[%0<p><a href="]] .. junk_href .. [[" style="color:green">{ Turn in junk }</a><a href="]] .. all_href .. [[" style="color:green">{ Turn in all }</a></p>]])
+		text = text:gsub([["Turn it in"></form>]], [[%0<p><a href="]] .. junk_href .. [[" style="color: green">{ Turn in junk }</a><a href="]] .. all_href .. [[" style="color: green">{ Turn in all }</a></p>]])
 	end
 end)
 

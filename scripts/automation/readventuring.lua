@@ -81,7 +81,7 @@ function turn_automation_decorate_noncombat_page(pt, zoneid, timesleft)
 		pt = pt:gsub([[<input.->]], function(x)
 			local val = x:match([[value="(.-)"]])
 			if val and x:contains("type=submit") then
-				return x .. string.format([[<br><a href="%s" style="color:green">{ Automate: %s &rarr; %s }</a>]], automate_zone_href { pwd = session.pwd, zoneid = zoneid, numtimes = timesleft, noncombattitle = adventure_title, noncombatoption = val }, adventure_title, val)
+				return x .. string.format([[<br><a href="%s" style="color: green">{ Automate: %s &rarr; %s }</a>]], automate_zone_href { pwd = session.pwd, zoneid = zoneid, numtimes = timesleft, noncombattitle = adventure_title, noncombatoption = val }, adventure_title, val)
 			end
 		end)
 	end
@@ -100,7 +100,7 @@ function automate_N_turns(link, url) {
 		top.mainpane.location.href = (url + "&numtimes=" + N);
 	}
 }
-</script><br><a href="#" onclick="automate_N_turns(this, ']] .. link(x) .. [[')" style="color:green">{ Re-adventure here N times }</a>]]
+</script><br><a href="#" onclick="automate_N_turns(this, ']] .. link(x) .. [[')" style="color: green">{ Re-adventure here N times }</a>]]
 	end
 	text = text:gsub("(" .. match .. ")", function(alltext, a, b, c) return alltext .. " " .. newtext(a, b, c) .. "\n" end)
 end

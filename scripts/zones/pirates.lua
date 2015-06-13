@@ -270,9 +270,9 @@ add_printer("/ocean.php", function()
 		document.getElementById('lat').value = lat;
 	}
 	</script>
-	<a href="javascript:setlocation(56, 14)" style="color:green">{ Gain muscle }</a>
-	<a href="javascript:setlocation(44, 45)" style="color:green">{ Gain mysticality }</a>
-	<a href="javascript:setlocation(22, 62)" style="color:green">{ Gain moxie }</a>]])
+	<a href="javascript:setlocation(56, 14)" style="color: green">{ Gain muscle }</a>
+	<a href="javascript:setlocation(44, 45)" style="color: green">{ Gain mysticality }</a>
+	<a href="javascript:setlocation(22, 62)" style="color: green">{ Gain moxie }</a>]])
 end)
 
 add_always_zone_check(159, function()

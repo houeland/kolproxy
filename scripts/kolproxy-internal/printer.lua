@@ -112,7 +112,7 @@ mods["/main.php"] = {
 }
 
 mods["/charsheet.php"] = {
-	[ [[>Ascensions:</a></td><td><b>[0-9,.]-</b>]] ] = [[%0 <a href="custom-logs?pwd=]] .. pwd .. [[" style="color:green">{ View logs }</a>]]
+	[ [[>Ascensions:</a></td><td><b>[0-9,.]-</b>]] ] = [[%0 <a href="custom-logs?pwd=]] .. pwd .. [[" style="color: green">{ View logs }</a>]]
 }
 
 mods["/loggedout.php"] = {

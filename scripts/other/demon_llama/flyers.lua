@@ -33,7 +33,7 @@ add_printer("/fight.php", function()
 				completion = round_down((ascension["zone.island.hippy arena flyerML"] or 0) / 100, 1)
 				whichband = "jam band"
 			end
-			return flyertext:gsub([[(You slap a flyer up on your opponent.-)(<)]], [[%1 <span style="color:green">{&nbsp;Advertised ~]] .. completion .. [[%% for ]]..whichband..[[.&nbsp;}</span>%2]])
+			return flyertext:gsub([[(You slap a flyer up on your opponent.-)(<)]], [[%1 <span style="color: green">{&nbsp;Advertised ~]] .. completion .. [[%% for ]]..whichband..[[.&nbsp;}</span>%2]])
 		end)
 	end
 end)
@@ -47,7 +47,7 @@ add_printer("/bigisland.php", function()
 		if have_item("jam band flyers") then
 			table.insert(msgs, "{&nbsp;~" .. (ascension["zone.island.hippy arena flyerML"] or 0) .. " ML slapped for hippies.&nbsp;}")
 		end
-		text = text:gsub([[<p><Center>]], [[<p style="color:green;text-align:center;">]] .. table.concat(msgs, "<br>\n") .. [[</p>%0]])
+		text = text:gsub([[<p><Center>]], [[<p style="color: green;text-align:center;">]] .. table.concat(msgs, "<br>\n") .. [[</p>%0]])
 	end
 end)
 
@@ -55,6 +55,6 @@ add_printer("/inventory.php", function()
 	local fratMLCompleted = ascension["zone.island.frat arena flyerML"] or 0
 	local hippyMLCompleted = ascension["zone.island.hippy arena flyerML"] or 0
 	
-	text = text:gsub([[rock band flyers]], [[%0&nbsp;]]..[[<span style="color:green;" >{&nbsp;]]..fratMLCompleted..[[ ML slapped&nbsp;}</span>]])
-	text = text:gsub([[jam band flyers]], [[%0&nbsp;]]..[[<span style="color:green;" >{&nbsp;]]..hippyMLCompleted..[[ ML slapped&nbsp;}</span>]])
+	text = text:gsub([[rock band flyers]], [[%0&nbsp;]]..[[<span style="color: green;" >{&nbsp;]]..fratMLCompleted..[[ ML slapped&nbsp;}</span>]])
+	text = text:gsub([[jam band flyers]], [[%0&nbsp;]]..[[<span style="color: green;" >{&nbsp;]]..hippyMLCompleted..[[ ML slapped&nbsp;}</span>]])
 end)

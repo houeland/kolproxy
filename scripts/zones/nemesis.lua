@@ -563,7 +563,7 @@ end
 local href = add_automation_script("automate-volcanomaze", automate_volcanomaze)
 
 add_printer("/volcanomaze.php", function()
-	text = text:gsub([[value="Swim Back to Shore".->]], [[%0<br><a href="]].. href { pwd = session.pwd } ..[[" style="color:green">{ solve }</a>]])
+	text = text:gsub([[value="Swim Back to Shore".->]], [[%0<br><a href="]].. href { pwd = session.pwd } ..[[" style="color: green">{ solve }</a>]])
 end)
 
 add_printer("/fight.php", function()

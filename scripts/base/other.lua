@@ -577,9 +577,9 @@ end)
 
 add_printer("/hermit.php", function()
 	if text:contains("Hermit Permit required") then
-		text = text:gsub("permits and forms.<p>", [[%0<a href="]] .. hermit_permit_href { pwd = session.pwd } .. [[" style="color:green">{ Get permit }</a><p>]])
+		text = text:gsub("permits and forms.<p>", [[%0<a href="]] .. hermit_permit_href { pwd = session.pwd } .. [[" style="color: green">{ Get permit }</a><p>]])
 	elseif text:contains("don't have anything worthless enough") then
-		text = text:gsub("worthless enough for him to want to trade for it.<P>", [[%0<a href="]] .. hermit_trinket_href { pwd = session.pwd } .. [[" style="color:green">{ Get trinket }</a><p>]])
+		text = text:gsub("worthless enough for him to want to trade for it.<P>", [[%0<a href="]] .. hermit_trinket_href { pwd = session.pwd } .. [[" style="color: green">{ Get trinket }</a><p>]])
 	end
 end)
 
@@ -609,7 +609,7 @@ end)
 add_printer("/da.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 	if params.place == "gate1" and text:contains("You can learn 30 more skills") then
-		text = text:gsub("You can learn 30 more skills.", [[%0</p><p><a href="]] .. learn_all_boris_skills_href { pwd = session.pwd } .. [[" style="color:green">{ Learn all Boris skills. }</a>]])
+		text = text:gsub("You can learn 30 more skills.", [[%0</p><p><a href="]] .. learn_all_boris_skills_href { pwd = session.pwd } .. [[" style="color: green">{ Learn all Boris skills. }</a>]])
 	end
 end)
 
@@ -624,7 +624,7 @@ end)
 add_printer("/jarlskills.php", function()
 	if not setting_enabled("automate simple tasks") then return end
 	if text:contains("You have 32 skill points to spend.") then
-		text = text:gsub("You have 32 skill points to spend.", [[%0</p><p><a href="]] .. learn_all_jarlsberg_skills_href { pwd = session.pwd } .. [[" style="color:green">{ Learn all Jarlsberg skills. }</a>]])
+		text = text:gsub("You have 32 skill points to spend.", [[%0</p><p><a href="]] .. learn_all_jarlsberg_skills_href { pwd = session.pwd } .. [[" style="color: green">{ Learn all Jarlsberg skills. }</a>]])
 	end
 end)
 

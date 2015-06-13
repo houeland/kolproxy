@@ -72,7 +72,7 @@ function print_charpane_lines(text)
 
 		local style = ""
 		if y.color then
-			style = [[ style="color:]] .. y.color .. [["]]
+			style = [[ style="color: ]] .. y.color .. [["]]
 		end
 
 		if y.tooltip then
@@ -106,7 +106,7 @@ function print_charpane_lines(text)
 			local ct_value = "<b>" .. value .. "</b>"
 			local style = ""
 			if y.color then
-				style = [[ style="color:]] .. y.color .. [["]]
+				style = [[ style="color: ]] .. y.color .. [["]]
 			end
 			if y.link then
 				ct_pre = [[<a target="mainpane" href="]] .. y.link .. [["]] .. style .. [[>]] .. name .. [[</a>]]
@@ -148,7 +148,7 @@ function print_charpane_lines(text)
 			local ct = "<td align=right>" .. name .. ":</td><td align=left><b>" .. value .. "</b></td>"
 			local style = ""
 			if y["color"] then
-				style = " style=\"color:" .. y["color"] .. "\""
+				style = [[ style="color: ]] .. y["color"] .. [["]]
 			end
 			if y.link then
 				ct = [[<td align=right><a target="mainpane" href="]] .. y["link"] .. [["]] .. style .. [[>]] .. name .. [[</a>:</td><td align=left><a target="mainpane" href="]] .. y["link"] .. [["]] .. style .. [[><b>]] .. value .. [[</b></a></td>]]
@@ -167,7 +167,7 @@ function print_charpane_lines(text)
 			local nt = [[<font size="2">]] .. name .. ": <b>" .. value .. "</b></font>"
 			local style = ""
 			if y.color then
-				style = [[ style="color:]] .. y.color .. [["]]
+				style = [[ style="color: ]] .. y.color .. [["]]
 			end
 			if y.link then
 				nt = [[<font size="2"><a target="mainpane" href="]] .. y.link .. [["]] .. style .. [[>]] .. name .. [[: <b>]] .. value .. [[</b></a></font>]]

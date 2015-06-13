@@ -32,7 +32,7 @@ local automate_tiles_href = add_automation_script("automate-tiles", function()
 end)
 
 add_printer("/tiles.php", function()
-	text = text:gsub([[(<td class='cell'><a class=nounder href='tiles.php%?action=jump&whichtile=8'><img src="http://images.kingdomofloathing.com/itemimages/tilep.gif" width=30 height=30 border=0 alt='Tile labeled "P"'></a></td><td></td></tr><tr><td><img src='http://images.kingdomofloathing.com/itemimages/rightarrow.gif' alt='You are currently standing on this row'></td><td colspan=9 align=center>)%(start%)]], [[%1<a href="]] .. automate_tiles_href { pwd = session.pwd } .. [[" style="color:green">{ solve }</a>]])
+	text = text:gsub([[(<td class='cell'><a class=nounder href='tiles.php%?action=jump&whichtile=8'><img src="http://images.kingdomofloathing.com/itemimages/tilep.gif" width=30 height=30 border=0 alt='Tile labeled "P"'></a></td><td></td></tr><tr><td><img src='http://images.kingdomofloathing.com/itemimages/rightarrow.gif' alt='You are currently standing on this row'></td><td colspan=9 align=center>)%(start%)]], [[%1<a href="]] .. automate_tiles_href { pwd = session.pwd } .. [[" style="color: green">{ solve }</a>]])
 end)
 
 add_choice_text("No Visible Means of Support", {

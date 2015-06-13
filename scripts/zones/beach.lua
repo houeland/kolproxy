@@ -98,7 +98,7 @@ end
 add_automator("/fight.php", function()
 	if text:contains(">Desert exploration <b>+") then
 		local explored = get_desert_exploration()
-		text = text:gsub(">Desert exploration <b>%+[0-9]*%%</b>", [[%0 <span style="color:green">{&nbsp;]] .. tostring(explored) .. [[%% explored&nbsp;}</span>]])
+		text = text:gsub(">Desert exploration <b>%+[0-9]*%%</b>", [[%0 <span style="color: green">{&nbsp;]] .. tostring(explored) .. [[%% explored&nbsp;}</span>]])
 	end
 end)
 

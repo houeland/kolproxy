@@ -30,7 +30,7 @@ function automate_N_times(url) {
 		top.mainpane.location.href = (url + "&numtimes=" + N);
 	}
 }
-</script><br><a href="javascript:automate_N_times('/kolproxy-automation-script?pwd=]] .. session.pwd .. [[&automation-script=automate-dungeonfist')" style="color:green">{ Automate Dungeon Fist (]] .. make_plural(count_item("Game Grid token"), "token", "tokens") .. [[ available) }</a>]]
+</script><br><a href="javascript:automate_N_times('/kolproxy-automation-script?pwd=]] .. session.pwd .. [[&automation-script=automate-dungeonfist')" style="color: green">{ Automate Dungeon Fist (]] .. make_plural(count_item("Game Grid token"), "token", "tokens") .. [[ available) }</a>]]
 	end
 	text = text:gsub("(<a href=town_wrong.php>Back [^<]+</a>)", function(alltext, a, b, c) return alltext .. " " .. newtext(a, b, c) .. "\n" end)
 end)

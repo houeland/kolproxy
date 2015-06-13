@@ -128,7 +128,7 @@ add_automator("/clan_viplounge.php", function()
 			if have_item("photocopied monster") then
 				local itempt = get_page("/desc_item.php", { whichitem = "835898159" })
 				local copied = itempt:match([[blurry likeness of [a-zA-Z]* (.-) on it.]])
-				text = text:gsub([[You acquire an item: <b>photocopied monster</b>]], [[%0 <span style="color:green">{ ]] .. copied .. [[ }</span>]])
+				text = text:gsub([[You acquire an item: <b>photocopied monster</b>]], [[%0 <span style="color: green">{ ]] .. copied .. [[ }</span>]])
 			end
 		end
 	end

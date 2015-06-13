@@ -23,7 +23,7 @@ add_printer("/inventory.php", function()
 	text = text:gsub([[(<b class="ircm">)(.-)(</b>&nbsp;<span>[^<]*</span>)]], function(pre, itemname, post)
 		-- Support both inventory images turned on and off
 		if itemname:contains("glob of Blank-Out") then
-			return pre .. itemname .. post .. [[ <font style="color:green;">]] .. get_remaining_uses_message() .. [[</font>]]
+			return pre .. itemname .. post .. [[ <font style="color: green;">]] .. get_remaining_uses_message() .. [[</font>]]
 		else
 			return false
 		end

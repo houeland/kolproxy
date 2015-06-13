@@ -346,7 +346,7 @@ end)
 add_printer("/closet.php", function()
 	local pwd = text:match[[name="pwd" *value="(%x-)"]]
 	if pwd then
-		text = text:gsub([[%[Fill Your Closet%]</a>]], [[%0 <a href="]].. closet_href { pwd = pwd } ..[[" style="color:green">{ Closet some items }</a>]])
+		text = text:gsub([[%[Fill Your Closet%]</a>]], [[%0 <a href="]].. closet_href { pwd = pwd } ..[[" style="color: green">{ Closet some items }</a>]])
 	end
 end)
 
@@ -370,7 +370,7 @@ local pull_href = add_automation_script("automate-aftercore-pulls", automate_aft
 add_printer("/storage.php", function()
 	local pwd = text:match[[name=pwd value='(%x-)']]
 	if pwd then
-		text = text:gsub([[<input type=submit class=button value="Take all your stuff out of Hagnk's">]], [[<center><a href="]].. pull_href { pwd = pwd } ..[[" style="color:green">{ Pull some items }</a></center><p>%0]])
+		text = text:gsub([[<input type=submit class=button value="Take all your stuff out of Hagnk's">]], [[<center><a href="]].. pull_href { pwd = pwd } ..[[" style="color: green">{ Pull some items }</a></center><p>%0]])
 	end
 end)
 
