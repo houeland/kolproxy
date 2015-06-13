@@ -203,6 +203,8 @@ __allow_global_writes = true
 
 local script_cached_stuff = {}
 
+script = {}
+
 function get_automation_scripts(cached_stuff)
 	if not get_pwd then
 		function get_pwd() return session.pwd end
@@ -2115,7 +2117,7 @@ endif
 						eat_item("Hell ramen")
 						eat_item("fettucini Inconnu")
 						eat_item("fettucini Inconnu")
-						did_action = (fullness() >= 12)
+						did_action = (fullness() >= f)
 						return result, resulturl, did_action
 					elseif have_item("milk of magnesium") then
 						inform "using milk"
@@ -2137,7 +2139,7 @@ endif
 						eat_item("Hell ramen")
 						eat_item("fettucini Inconnu")
 						eat_item("fettucini Inconnu")
-						did_action = (fullness() >= 12)
+						did_action = (fullness() >= f)
 						return result, resulturl, did_action
 					end
 				elseif have_skill("Advanced Saucecrafting") and have_skill("Pastamastery") then
@@ -4470,7 +4472,7 @@ endif
 		end
 		local beachpt = get_place("desertbeach")
 		if not beachpt:contains("Gnasir") then
-			set_result(run_task {
+			run_task {
 				message = "find gnasir",
 				minmp = 70,
 				equipment = { offhand = can_wear_weapons() and "UV-resistant compass" or nil },
@@ -4479,7 +4481,7 @@ endif
 					macro_function = macro_noodleserpent,
 					noncombats = { ["A Sietch in Time"] = "Whoops." },
 				}
-			})
+			}
 			if not did_action and not locked() then
 				local beachpt = get_place("desertbeach")
 				did_action = beachpt:contains("Gnasir")
@@ -4942,6 +4944,9 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 	if zoneid and zoneid ~= "?" then
 		zoneid = get_zoneid(zoneid)
 	end
+	local function can_adventure_again(pt)
+		return zoneid and pt:match([[<a href="adventure.php%?snarfblat=[0-9]*">Adventure Again]])
+	end
 	local already_ran_macro = false
 	local function handle_fight(pt, url)
 		local advagain = nil
@@ -4951,7 +4956,7 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 		elseif pt:contains([[state['fightover'] = true;]]) or true then -- HACK: doesn't get set with combat bar disabled
 			if pt:contains("You lose.") then
 				advagain = false
-			elseif zoneid and pt:match([[<a href="adventure.php%?snarfblat=[0-9]*">Adventure Again]]) then
+			elseif can_adventure_again(pt) then
 				advagain = true
 			elseif pt:contains("You have been defeated, for now.") then
 				advagain = false
@@ -4998,7 +5003,7 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 			end
 		end
 		adventure_title = (adventure_title or ""):gsub(" %(#[0-9]*%)$", "")
-		if found_results and zoneid and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
+		if found_results and can_adventure_again(pt) then
 			advagain = true
 			return nil, pt, url, advagain
 		end
@@ -5045,7 +5050,7 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 	end
 	local function handle_other(pt, url)
 		local advagain = false
-		if zoneid and pt:contains([[<a href="adventure.php?snarfblat=]]..zoneid..[[">Adventure Again]]) then
+		if can_adventure_again(pt) then
 			advagain = true
 -- 		else
 -- 			print("non-fight non-choice unhandled url", url)

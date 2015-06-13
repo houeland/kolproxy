@@ -1516,7 +1516,9 @@ mark m_done
 	}
 
 	tasks.ns_lair_defeat_shadow = {
-		when = quest("The Ultimate Final Epic Conflict of the Ages") and quest_text("Continue your ascent") and at_tower_level(5),
+		when = quest("The Ultimate Final Epic Conflict of the Ages") and
+			(quest_text("Continue your ascent") or quest_text("Defeat your shadow")) and
+			at_tower_level(5),
 		task = {
 			message = "defeat your shadow",
 			action = function()

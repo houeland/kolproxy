@@ -15,6 +15,7 @@ local rerun_turn = nil
 local function rerun_check()
 	if turnsplayed() ~= rerun_turn then
 		rerun_workaround_counter = 0
+		rerun_turn = turnsplayed()
 		return true
 	elseif rerun_workaround_counter < 10 then
 		rerun_workaround_counter = rerun_workaround_counter + 1
@@ -193,6 +194,7 @@ setup_turnplaying_script {
 			stop "TODO: Wait for nemesis assassins??? Or missing guild quest? Or missing nemesis quest?"
 		end
 	elseif rerun_check() then
+		inform "nothing to do, trying again"
 		advagain = true
 	else
 		stop "TODO: Next quest step???"
@@ -500,6 +502,34 @@ function automate_DB_nemesis_island()
 			text = "automate DB island!"
 			local pwd = session.pwd
 			get_page("/account.php", { action = "autoattack", whichattack = "0", ajax = "1", pwd = pwd }) -- unset autoattack, bleh
+
+	local npcpt = get_page("/volcanoisland.php", { pwd = session.pwd, action = "npc" })
+	if npcpt:contains("I saw you got inside,") then
+		script.bonus_target { "easy combat" }
+		script.ensure_buffs {}
+		script.wear { weapon = "Shagadelic Disco Banjo" }
+		script.ensure_mp(50)
+		result, resulturl = get_page("/volcanoisland.php", { pwd = session.pwd, action = "tniat" })
+		local fought = false
+		print("DEBUG: lock url cont", locked(), resulturl, result:contains([[value="Continue"]]))
+		if locked() or not resulturl:contains("volcanoisland.php") or result:contains([[value="Continue"]]) then
+			fought = true
+		end
+		result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_noodleserpent)
+		print("DEBUG: lock url advagain", locked(), resulturl, advagain)
+		if result:contains([[value="Continue"]]) then
+			result, resulturl = get_page("/volcanomaze.php", { start = 1 })
+			automate_volcanomaze()
+			script.ensure_buffs {}
+			script.heal_up()
+			script.ensure_mp(100)
+			result, resulturl = get_page("/volcanomaze.php")
+			advagain = false
+		end
+		text = result
+		return
+	end
+
 			local skillnames = { "Break It On Down", "Pop and Lock It", "Run Like the Wind" }
 			if have_skill("Gothy Handwave") then
 				if have_skill("Break It On Down") and have_skill("Pop and Lock It") and have_skill("Run Like the Wind") then

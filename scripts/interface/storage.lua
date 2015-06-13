@@ -373,3 +373,20 @@ add_printer("/storage.php", function()
 		text = text:gsub([[<input type=submit class=button value="Take all your stuff out of Hagnk's">]], [[<center><a href="]].. pull_href { pwd = pwd } ..[[" style="color:green">{ Pull some items }</a></center><p>%0]])
 	end
 end)
+
+local cached_storage_items = nil
+local cached_storage_state_id = nil
+function get_cached_storage_items()
+	if cached_storage_state_id ~= state_identifier() then
+		cached_storage_items = nil
+		cached_storage_state_id = state_identifier()
+	end
+	if not cached_storage_items then
+		cached_storage_items = retrieve_storage_items()
+	end
+	return cached_storage_items
+end
+
+function could_have_item_in_storage(item)
+	return get_cached_storage_items()[get_itemname(item)]
+end

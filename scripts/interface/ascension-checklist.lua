@@ -70,6 +70,10 @@ local function do_retrieve_items(what)
 	return items
 end
 
+function retrieve_storage_items()
+	return do_retrieve_items("storage")
+end
+
 function retrieve_all_item_locations()
 	return do_retrieve_items("inventory"), do_retrieve_items("storage"), do_retrieve_items("closet")
 end

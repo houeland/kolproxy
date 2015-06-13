@@ -653,17 +653,17 @@ local function parse_monster_stats(stats, monster_debug_line)
 				end
 			end
 		end
-		if not name or not value then
-			if stats:sub(i, i) == " " then
-				softwarn("monsters.txt:malformed line", monster_debug_line)
-			else
-				error_count_hard = error_count_hard + 1
-				print("WARNING: failed to parse monster stat", stats:sub(i))
-				print("DEBUG: ", monster_debug_line)
-				return statstbl
-			end
-		else
+		if name and value then
 			statstbl[name] = value
+		elseif stats:sub(i, i) == " " then
+			softwarn("monsters.txt:malformed line", monster_debug_line)
+		elseif stats:contains("DUMMY") then
+			return statstbl
+		else
+			error_count_hard = error_count_hard + 1
+			print("WARNING: failed to parse monster stat", stats:sub(i))
+			print("DEBUG: ", monster_debug_line)
+			return statstbl
 		end
 		i = pos
 	end
