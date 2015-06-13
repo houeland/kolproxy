@@ -115,14 +115,6 @@ add_ascension_assistance(function() return count_item("worm-riding manual page")
 	async_post_page("/choice.php", { pwd = session.pwd, whichchoice = 805, option = 1 })
 end)
 
-add_ascension_assistance(function() return have_item("desert sightseeing pamphlet") end, function()
-	local c = count_item("desert sightseeing pamphlet")
-	use_item("desert sightseeing pamphlet")()
-	if count_item("desert sightseeing pamphlet") < c then
-		return true
-	end
-end)
-
 add_warning {
 	message = "You might want to equip an UV-resistant compass to aid in desert exploration (from The Shore, Inc.)",
 	type = "warning",

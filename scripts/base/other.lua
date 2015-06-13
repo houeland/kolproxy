@@ -493,7 +493,7 @@ local function add_use_item_ascension_assistance(itemname)
 		local c = count_item(itemname)
 		use_item(itemname)()
 		if count_item(itemname) < c then
-			reset_last_checked()
+			return true
 		end
 	end)
 end
@@ -507,6 +507,7 @@ add_use_item_ascension_assistance("Letter for Melvign the Gnome")
 add_use_item_ascension_assistance("letter to Ed the Undying")
 
 add_use_item_ascension_assistance("evil eye")
+add_use_item_ascension_assistance("desert sightseeing pamphlet")
 
 add_ascension_assistance(function() return have_item("Knob Goblin encryption key") and have_item("Cobb's Knob map") and not ascensionpath("Bees Hate You") end, function()
 	use_item("Cobb's Knob map")
@@ -548,7 +549,15 @@ add_ascension_assistance(function() return have_item("&quot;2 Love Me, Vol. 2&qu
 	async_get_place("palindome", "pal_mroffice")
 end)
 
-local hermit_items_href = add_automation_script("get-hermit-items", function()
+local hermit_permit_href = add_automation_script("get-hermit-permit", function ()
+	if not have_item("hermit permit") then
+		store_buy_item("hermit permit", "m")
+		text, url = get_page("/hermit.php")
+	end
+	return text, url
+end)
+
+local hermit_trinket_href = add_automation_script("get-hermit-trinket", function()
 	local function get_trinket()
 		if not have_item("worthless trinket") and not have_item("worthless gewgaw") and not have_item("worthless knick-knack") then
 			print "  getting worthless item"
@@ -563,16 +572,14 @@ local hermit_items_href = add_automation_script("get-hermit-items", function()
 	end
 	get_trinket()
 	text, url = get_page("/hermit.php")
-	if text:contains("out of Permits") and not have_item("hermit permit") then
-		store_buy_item("hermit permit", "m")
-		text, url = get_page("/hermit.php")
-	end
 	return text, url
 end)
 
 add_printer("/hermit.php", function()
-	if text:contains("don't have anything worthless enough") then
-		text = text:gsub("worthless enough for him to want to trade for it.<P>", [[%0<a href="]] .. hermit_items_href { pwd = session.pwd } .. [[" style="color:green">{ Get trinket and/or permit }</a><p>]])
+	if text:contains("Hermit Permit required") then
+		text = text:gsub("permits and forms.<p>", [[%0<a href="]] .. hermit_permit_href { pwd = session.pwd } .. [[" style="color:green">{ Get permit }</a><p>]])
+	elseif text:contains("don't have anything worthless enough") then
+		text = text:gsub("worthless enough for him to want to trade for it.<P>", [[%0<a href="]] .. hermit_trinket_href { pwd = session.pwd } .. [[" style="color:green">{ Get trinket }</a><p>]])
 	end
 end)
 

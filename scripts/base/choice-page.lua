@@ -2,6 +2,11 @@ local function build_spoiler(input, to)
 	local disable = false
 	local is_good = false
 	local spoiler = ""
+	
+	if type(to) == "function" then
+		ok, to = pcall(to)
+	end
+	
 	if type(to) == "string" then
 		spoiler = to
 	elseif type(to) == "table" then
