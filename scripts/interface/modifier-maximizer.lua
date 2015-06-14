@@ -13,7 +13,7 @@ function maximize_equipment_slot_bonuses(slot, scoref_raw)
 	local base_bonuses_without_slot = estimate_modifier_bonuses_base()
 	local slot_eqitemid = equipment()[slot]
 	if slot_eqitemid then
-		subtract_modifier_bonuses(base_bonuses_without_slot, estimate_item_equip_bonuses_uncached(slot_eqitemid))
+		subtract_modifier_bonuses(base_bonuses_without_slot, estimate_item_equip_bonuses(slot_eqitemid))
 	end
 	local bonuses_without_slot_with_synergy = make_bonuses_table(base_bonuses_without_slot)
 	bonuses_without_slot_with_synergy.add(estimate_current_synergy(base_bonuses_without_slot))
@@ -24,7 +24,7 @@ function maximize_equipment_slot_bonuses(slot, scoref_raw)
 	local score_without_bonuses = scoref({})
 
 	local function score_item(name)
-		local item_bonuses = estimate_item_equip_bonuses_uncached(name)
+		local item_bonuses = estimate_item_equip_bonuses(name)
 		if item_bonuses["Smithsness"] == 0 then
 			return scoref(item_bonuses) - score_without_bonuses
 		end

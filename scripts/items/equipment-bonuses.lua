@@ -194,6 +194,7 @@ local items_to_cache = {
 	["Buddy Bjorn"] = true,
 	["Sword of Procedural Generation"] = true,
 	["The Crown of Ed the Undying"] = true,
+	["World's Best Adventurer sash"] = true,
 }
 
 add_automator("all pages", function()
