@@ -521,6 +521,9 @@ function parse_items()
 					items[itemid].equip_requirements = items[itemid].equip_requirements or {}
 					items[itemid].equip_requirements["You may not equip more than one of these at a time"] = true
 				end
+				if bonuslist:match("Class:") then
+					items[itemid].class = bonuslist:match([[Class: "(.-)"]])
+				end
 			else
 				hardwarn("modifiers:item does not exist", name)
 			end
@@ -591,10 +594,20 @@ function verify_items(data)
 		["Sneaky Pete's basket"] = { attack_stat = "Moxie" },
 		["Staff of Fats"] = { id = 2268 },
 		["Spookyraven library key"] = { id = 7302 },
+		["Galapagosian Cuisses"] = { class = "Turtle Tamer" },
+	}
+	local known_classes = {
+		["Seal Clubber"] = true,
+		["Turtle Tamer"] = true,
+		["Pastamancer"] = true,
+		["Sauceror"] = true,
+		["Disco Bandit"] = true,
+		["Accordion Thief"] = true,
 	}
 	local return_data = {}
 	for x, y in pairs(data) do
-		if y.id == 7964 then -- Ed's Staff of Fats
+		if y.class and not known_classes[y.class] then
+		elseif y.id == 7964 then -- Ed's Staff of Fats
 		elseif not return_data[y.name] or y.id > return_data[y.name].id then
 			return_data[y.name] = y
 		end

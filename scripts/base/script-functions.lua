@@ -673,6 +673,9 @@ function can_equip_item(item)
 	if itemdata.equipment_slot == "weapon" and (itemdata.weapon_type or ""):contains("chefstaff") and not can_equip_chefstaves() then
 		return false
 	end
+	if itemdata.class and not playerclass(itemdata.class) then
+		return false
+	end
 	return true
 end
 

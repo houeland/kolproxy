@@ -374,6 +374,15 @@ add_printer("/storage.php", function()
 	end
 end)
 
+function retrieve_storage_items()
+	local storage = {}
+	local json = get_page("/api.php", { what = "storage", ["for"] = "Kolproxy by Eleron (from Lua script)", format = "json" })
+	for x, y in pairs(json_to_table(json)) do
+		storage[tonumber(x)] = y
+	end
+	return storage
+end
+
 local cached_storage_items = nil
 local cached_storage_state_id = nil
 function get_cached_storage_items()
@@ -388,5 +397,5 @@ function get_cached_storage_items()
 end
 
 function could_have_item_in_storage(item)
-	return get_cached_storage_items()[get_itemname(item)]
+	return get_cached_storage_items()[get_itemid(item)]
 end

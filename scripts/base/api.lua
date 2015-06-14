@@ -287,6 +287,7 @@ function setup_functions()
 			end
 		end
 		function have_mall_access() return ascensionstatus("Aftercore") end
+		function have_storage_access() return ascensionstatus("Aftercore") end
 		function mcd() return tonumber(status().mcd) end
 		function maxmcd()
 			if moonsign_area("Little Canadia") then
