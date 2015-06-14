@@ -82,7 +82,7 @@ function buildCurrentFightMonsterDataCache(for_monster_name, fight_text)
 
 	local monster_modifiers = {}
 
-	if ascensionpath("One Crazy Random Summer") then
+	if has_monster_modifiers() then
 --		print("OCRS", for_monster_name)
 		while not monster and for_monster_name do
 			local prefix, remaining = for_monster_name:match("^([^ ]+) (.+)$")
@@ -194,7 +194,7 @@ function buildCurrentFightMonsterDataCache(for_monster_name, fight_text)
 	--In a bees hate you, monster's with b in their names get increased by 20% per b
 	--This is AFTER ML is applied
 	if ascensionpath("Bees Hate You") then
-		monster.Stats = beesIncreaser(monstername(), monster.Stats)
+		monster.Stats = beesIncreaser(get_monstername(), monster.Stats)
 	end
 
 	local item = modifiers["Item Drops from Monsters"]

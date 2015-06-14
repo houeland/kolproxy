@@ -321,8 +321,8 @@ add_printer("/fight.php", function()
 			end
 
 			if ascensionpath("Bees Hate You") then
-				local boldedName = monstername():gsub("[bB]", [[<span style="font-weight: bold; color: orange;">%0</span>]])
-				text = text:gsub(monstername(), boldedName)
+				local boldedName = get_monstername():gsub("[bB]", [[<span style="font-weight: bold; color: orange;">%0</span>]])
+				text = text:gsub(get_monstername(), boldedName)
 			end
 		end
 	end

@@ -98,14 +98,30 @@ local gremlin_messages = {
 	["vegetable gremlin"] = "it was just the regular, metal, stabby kind of screwdriver",
 }
 
+local function get_gremlin()
+	for x, _ in pairs(gremlins) do
+		if monstername(x) then
+			return x
+		end
+	end
+end
+
+local function gremlin_message()
+	return gremlin_messages[get_gremlin()]
+end
+
+local function is_gremlin()
+	return get_gremlin() ~= nil
+end
+
 add_processor("/fight.php", function()
-	if gremlins[monstername()] then
+	if is_gremlin() then
 		for _, x in ipairs { "a bombing run", "random junk", "fibula", "picks a" } do
 			if text:contains(x) then
 				fight["gremlin.has tool"] = "no"
 			end
 		end
-		if text:contains("whips out a") and text:contains(gremlin_messages[monstername()]) then
+		if text:contains("whips out a") and text:contains(gremlin_message()) then
 			fight["gremlin.has tool"] = "yes"
 			for x in text:gmatch("var onturn = ([0-9]+);") do
 				fight["gremlin.tool round"] = tonumber(x)
@@ -115,7 +131,7 @@ add_processor("/fight.php", function()
 end)
 
 add_printer("/fight.php", function()
-	if gremlins[monstername()] and fight["gremlin.has tool"] == "yes" then
+	if is_gremlin() and fight["gremlin.has tool"] == "yes" then
 		local fightround = nil
 		for x in text:gmatch("var onturn = ([0-9]+);") do
 			fightround = tonumber(x)
@@ -285,6 +301,15 @@ local war_hippies = {
 	["The Big Wisniewski"] = true,
 }
 
+local function is_war_hippy()
+	for x, _ in pairs(war_hippies) do
+		if monstername(x) then
+			return true
+		end
+	end
+	return false
+end
+
 local frat_warriors = {
 	["Beer Bongadier"] = true,
 	["Sorority Nurse"] = true,
@@ -312,6 +337,15 @@ local frat_warriors = {
 	["Next-Generation Frat Boy"] = true,
 	["The Man"] = true,
 }
+
+local function is_frat_warrior()
+	for x, _ in pairs(frat_warriors) do
+		if monstername(x) then
+			return true
+		end
+	end
+	return false
+end
 
 local frat_kill_messages = {
 	["You see one of your frat brothers take out an M.C. Escher drawing"] = 1,
@@ -394,7 +428,7 @@ local hippy_kill_messages = {
 
 add_processor("/fight.php", function()
 	if text:contains("<!--WINWINWIN-->") then
-		if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Frat Uniform%)%)</a>]]) or war_hippies[monstername()] then
+		if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Frat Uniform%)%)</a>]]) or is_war_hippy() then
 			local amount = 1
 			for msg, kills in pairs(frat_kill_messages) do
 				if text:contains(msg) then
@@ -402,12 +436,12 @@ add_processor("/fight.php", function()
 				end
 			end
 			local minamount = 0
-			if war_hippies[monstername()] then
+			if is_war_hippy() then
 				minamount = 1
 			end
 			increase_battlefield_kill_counter("frat boy", amount, minamount)
 		end
-		if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Hippy Uniform%)%)</a>]]) or frat_warriors[monstername()] then
+		if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Hippy Uniform%)%)</a>]]) or is_frat_warrior() then
 			local amount = 1
 			for msg, kills in pairs(hippy_kill_messages) do
 				if text:contains(msg) then
@@ -415,7 +449,7 @@ add_processor("/fight.php", function()
 				end
 			end
 			local minamount = 0
-			if frat_warriors[monstername()] then
+			if is_frat_warrior() then
 				minamount = 1
 			end
 			increase_battlefield_kill_counter("hippy", amount, minamount)
@@ -424,7 +458,7 @@ add_processor("/fight.php", function()
 end)
 
 add_printer("/fight.php", function()
-	if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Frat Uniform%)%)</a>]]) or war_hippies[monstername()] then
+	if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Frat Uniform%)%)</a>]]) or war_hippies[get_monstername()] then
 		killrange = ascension["battlefield.kills.frat boy"] or {}
 		min_value = killrange.min or 0
 		max_value = killrange.max or 0
@@ -435,7 +469,7 @@ add_printer("/fight.php", function()
 		end
 		text = text:gsub("You win the fight!<!%-%-WINWINWIN%-%->", "%0 <span style=\"color: green\">{ " .. printstr .. ". }</span>")
 	end
-	if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Hippy Uniform%)%)</a>]]) or frat_warriors[monstername()] then
+	if text:match([[<a href="adventure.php%?snarfblat=[0-9]+">Adventure Again %(The Battlefield %(Hippy Uniform%)%)</a>]]) or frat_warriors[get_monstername()] then
 		killrange = ascension["battlefield.kills.hippy"] or {}
 		min_value = killrange.min or 0
 		max_value = killrange.max or 0

@@ -89,7 +89,7 @@ function setup_functions()
 
 		-- WARNING: Values can be out of date unless you load charpane.php. This is a KoL/CDM bug.
 
-		local function get_mainstat()
+		function get_mainstat_type()
 			-- WORKAROUND: Missing from API. Use correct values for known classes, otherwise guess that it's the highest one
 			local cid = classid()
 			if cid == 1 or cid == 2 or cid == 11 or cid == 12 then
@@ -110,11 +110,7 @@ function setup_functions()
 		end
 
 		function mainstat_type(which)
-			if which then
-				return get_mainstat() == which
-			else
-				return get_mainstat()
-			end
+			return get_mainstat_type() == which
 		end
 
 -- 		function level() return tonumber(status().level) end -- doesn't update when it should and was also just bugged before, KoL/CDM bug
@@ -190,7 +186,7 @@ function setup_functions()
 				Mysticality = buffedmysticality(),
 				Moxie = buffedmoxie(),
 			}
-			return stats[mainstat_type()]
+			return stats[get_mainstat_type()]
 		end
 		function basemainstat()
 			local stats = {
@@ -198,7 +194,7 @@ function setup_functions()
 				Mysticality = basemysticality(),
 				Moxie = basemoxie(),
 			}
-			return stats[mainstat_type()]
+			return stats[get_mainstat_type()]
 		end
 		function rawmainstat()
 			local stats = {
@@ -206,7 +202,7 @@ function setup_functions()
 				Mysticality = rawmysticality(),
 				Moxie = rawmoxie(),
 			}
-			return stats[mainstat_type()]
+			return stats[get_mainstat_type()]
 		end
 		function lastadventuredata() return status().lastadv end
 		function lastadventurezoneid()

@@ -304,8 +304,8 @@ function run_functions(p, pagetext, run)
 
 	if p == "/fight.php" then
 		if newly_started_fight then
-			if monstername() then
-				pagetext = run("start fight:" .. monstername(), pagetext)
+			if get_monstername() then
+				pagetext = run("start fight:" .. get_monstername(), pagetext)
 			end
 			pagetext = run("start fight", pagetext)
 		end
@@ -385,7 +385,7 @@ new inv_spleen
 	end
 
 	if p == "/fight.php" and pagetext:contains(">You win the fight!<!--WINWINWIN--><") then
-		local mn = monstername()
+		local mn = get_monstername()
 		if mn then
 			pagetext = run("won fight: " .. mn, pagetext)
 		end

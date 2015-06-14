@@ -2924,7 +2924,9 @@ endif
 			}
 		else
 			local remaining = remaining_hidden_city_liana_zones()
-			remaining["A Massive Ziggurat"] = nil
+			for _, x in ipairs(cached_stuff.completed_lianas or {}) do
+				remaining[x] = nil
+			end
 			local function findplace(name)
 				for _, x in ipairs(places) do
 					if x.zone == name then
@@ -2933,13 +2935,11 @@ endif
 				end
 			end
 			local x
-			if not cached_stuff.unlocked_massive_ziggurat then
-				x = findplace("A Massive Ziggurat")
-			elseif next(remaining) then
+			if next(remaining) then
 				x = findplace(next(remaining))
 			end
 			if not x then
-				critical("Kill lianas without machete")
+				critical("No place to kill lianas")
 			end
 			run_task {
 				message = "cut liana at "..x.zone,
@@ -2949,9 +2949,8 @@ endif
 					zone = x.zone,
 					macro_function = macro_kill_monster,
 					choice_function = function(advtitle, choicenum, pagetext)
-						if x.zone == "A Massive Ziggurat" then
-							cached_stuff.unlocked_massive_ziggurat = true
-						end
+						cached_stuff.completed_lianas = cached_stuff.completed_lianas or {}
+						table.insert(cached_stuff.completed_lianas, x.zone)
 						if advtitle == x.choice or (x.choice2 and advtitle == x.choice2) then
 							if pagetext:contains(x.option) then
 								return x.option
@@ -4416,7 +4415,7 @@ endif
 			Mysticality = "Tropical Paradise Island Getaway",
 			Moxie = "Large Donkey Mountain Ski Resort",
 		}
-		result, resulturl, advagain = autoadventure { zoneid = 355, noncombatchoices = { ["Welcome to The Shore, Inc."] = choices[mainstat_type()] } }
+		result, resulturl, advagain = autoadventure { zoneid = 355, noncombatchoices = { ["Welcome to The Shore, Inc."] = choices[get_mainstat_type()] } }
 		return result, resulturl, advagain
 	end
 

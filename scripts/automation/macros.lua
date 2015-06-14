@@ -1956,7 +1956,7 @@ function macro_kill_monster(pt)
 	local function monstername(str)
 		-- WORKAROUND: Regular functionality not currently available while automating
 		if str then
-			return monstername() == str
+			return get_monstername() == str
 		end
 		if not pt_monster_name then
 			local monster_name
@@ -1974,7 +1974,7 @@ function macro_kill_monster(pt)
 	local cfm = getCurrentFightMonster()
 	if not cfm or not cfm.Stats or not cfm.Stats.Atk then
 		print_ascensiondebug("macro_kill generation", "cfm incomplete when generating combat macro", tostring(cfm))
-		print_ascensiondebug("macro_kill generation", "monster", monstername())
+		print_ascensiondebug("macro_kill generation", "monster", get_monstername())
 		return macro_noodleserpent_raw
 	end
 	local bonuses = estimate_current_bonuses()
@@ -1994,25 +1994,25 @@ if hasskill Summon Love Gnats
 endif]])
 	end
 
-	if macro_target.yellowraypatternmatch and monstername():lower():contains(macro_target.yellowraypatternmatch:lower()) then
+	if macro_target.yellowraypatternmatch and get_monstername():lower():contains(macro_target.yellowraypatternmatch:lower()) then
 		if have_skill("Wrath of Ra") then
 			print_ascensiondebug("macro: using Wrath of Ra!")
 			table.insert(use_initial_tbl, [[cast Wrath of Ra]])
 		end
 	end
 
-	if have_skill("Curse of Vacation") and want_generic_banish(monstername()) then
+	if have_skill("Curse of Vacation") and want_generic_banish(get_monstername()) then
 		table.insert(use_initial_tbl, [[cast Curse of Vacation]])
 	end
 
 	local really_want_to_kill = false
 	if cannot_use_undying() then really_want_to_kill = true end
 	local raindoh_flyers_list = {}
-	if macro_target.itemcopy and macro_target.itemcopy[monstername()] and have_item("Rain-Doh black box") then
+	if macro_target.itemcopy and macro_target.itemcopy[get_monstername()] and have_item("Rain-Doh black box") then
 		print_ascensiondebug("macro: using Rain-Doh black box!")
 		table.insert(raindoh_flyers_list, "Rain-Doh black box")
 	end
-	if macro_target.familiarcopy and macro_target.familiarcopy[monstername()] and familiar("Reanimated Reanimator") then
+	if macro_target.familiarcopy and macro_target.familiarcopy[get_monstername()] and familiar("Reanimated Reanimator") then
 		table.insert(use_initial_tbl, [[
 if hasskill Wink at
 	cast Wink at
@@ -2020,10 +2020,10 @@ endif]])
 		really_want_to_kill = true
 	end
 
-	if have_skill("Lash of the Cobra") and want_super_pickpocket(monstername()) then
+	if have_skill("Lash of the Cobra") and want_super_pickpocket(get_monstername()) then
 		print_ascensiondebug("macro: using Lash of the Cobra!")
 		table.insert(use_initial_tbl, [[cast Lash of the Cobra]])
-	elseif have_item("talisman of Renenutet") and want_super_itemdrop(monstername()) then
+	elseif have_item("talisman of Renenutet") and want_super_itemdrop(get_monstername()) then
 		print_ascensiondebug("macro: using talisman of Renenutet!")
 		table.insert(use_initial_tbl, [[use talisman of Renenutet]])
 		used_undying() -- Fake undying as workaround to trigger big spells
@@ -2078,7 +2078,7 @@ endif]])
 
 ]])
 
-	print_ascensiondebug("macro_kill", monstername(), script_want_2_day_SCHR(), playerclass("Seal Clubber"), not pt:contains("Procrastination Giant"), using_club(), not physically_resistant, use_crumbs, use_raindoh_flyers)
+	print_ascensiondebug("macro_kill", get_monstername(), script_want_2_day_SCHR(), playerclass("Seal Clubber"), not pt:contains("Procrastination Giant"), using_club(), not physically_resistant, use_crumbs, use_raindoh_flyers)
 
 	local function heavy_rains_spell()
 		if have_skill("Saucestorm") then

@@ -2910,13 +2910,12 @@ endif
 
 	function do_mantegna_resting()
 		local pt = get_place("chateau", "chateau_nightstand")
-		local substats = pt:match("some (.-) substats when you rest")
-		if substats == mainstat_type() then
+		local substats = pt:contains("some " .. get_mainstat_type() .. " substats when you rest")
+		if pt:contains("some " .. get_mainstat_type() .. " substats when you rest") then
 			local oldstat = rawmainstat()
 			result, resulturl = get_place("chateau", "chateau_restbox")
 			did_action = rawmainstat() > oldstat
 		else
-			print("DEBUG: detected mantegna substats as: " .. tostring(substats))
 			stop("TODO: wanted to rest at mantegna, but don't have the mainstat-appropriate nightstand item for powerleveling. Either buy the right nightstand item and run the script again, or powerlevel/restore MP manually.", pt)
 		end
 	end
@@ -2926,8 +2925,8 @@ endif
 			inform "vamping out"
 			cached_stuff.tried_vamping_out = true
 			script.wear { acc1 = "plastic vampire fangs" }
-			inform("vamping out: " .. mainstat_type())
-			vamp_out(mainstat_type())
+			inform("vamping out: " .. get_mainstat_type())
+			vamp_out(get_mainstat_type())
 			did_action = true
 		elseif have_chateau_mantegna() then
 			inform "powerleveling by resting at mantegna"
@@ -4841,6 +4840,7 @@ endif
 			not cached_stuff.currently_checked.unlocked_pyramid,
 		f = function()
 			inform "unlock pyramid"
+			get_place("desertbeach", "db_pyramid1")
 			result, resulturl = get_place("pyramid")
 			refresh_quest()
 			cached_stuff.currently_checked.unlocked_pyramid = true

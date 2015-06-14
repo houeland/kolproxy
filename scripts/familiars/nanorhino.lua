@@ -1,6 +1,6 @@
 add_processor("/fight.php", function()
 	if text:contains("launch a blast of white hot atomic energy") then
-		day["nanorhino banished monster"] = monstername()
+		day["nanorhino banished monster"] = get_monstername()
 	end
 end)
 

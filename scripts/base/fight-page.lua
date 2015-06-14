@@ -72,22 +72,28 @@ add_printer("/fight.php", function()
 
 	local color = nil
 	local extra = ""
-	if awesome_monsters[monstername()] then
+	local awesome_item = nil
+	for x, y in pairs(awesome_monsters) do
+		if monstername(x) then
+			awesome_item = y
+		end
+	end
+	if awesome_item then
 		color = "royalblue"
-		if awesome_monsters[monstername()] ~= "" then
-			local numitems = count_item(awesome_monsters[monstername()])
+		if awesome_item ~= "" then
+			local numitems = count_item(awesome_item)
 			if monstername("Blooper") then
 				numitems = count_item("white pixel") + math.min(count_item("red pixel"), count_item("green pixel"), count_item("blue pixel"))
 			end
-			if drop_uncertainty[monstername()] then
-				extra = extra .. [[<br><center style="font-size: 75%%; color: green">?? []] .. awesome_monsters[monstername()] .. ":" .. numitems .. "] ??</center>"
+			if drop_uncertainty[get_monstername()] then
+				extra = extra .. [[<br><center style="font-size: 75%%; color: green">?? []] .. awesome_item .. ":" .. numitems .. "] ??</center>"
 			else
-				extra = extra .. [[<br><center style="font-size: 75%%; color: green">[]] .. awesome_monsters[monstername()] .. ":" .. numitems .. "]</center>"
+				extra = extra .. [[<br><center style="font-size: 75%%; color: green">[]] .. awesome_item .. ":" .. numitems .. "]</center>"
 			end
 		end
--- 	elseif other_item_dropping_monsters[monstername()] then
+-- 	elseif other_item_dropping_monsters[get_monstername()] then
 -- 		local dropdata = {}
--- 		for i table.values(other_item_dropping_monsters[monstername()]) do
+-- 		for i table.values(other_item_dropping_monsters[get_monstername()]) do
 -- 			table.insert(dropdata, i .. ":" .. count_item(i)
 -- 		end
 -- 		extra = extra .. [[<br><center style="font-size: 75%%; color: gray">[]] .. table.concat(dropdata, ", ") .. [[]</center>]]
@@ -100,8 +106,8 @@ add_printer("/fight.php", function()
 		extra = extra .. [[<br><center style="font-size: 75%%; color: green">]] .. #tbl .." / 8 insults</center>"
 	end
 
-	if tower_monster_items[monstername()] then
-		local item_name = tower_monster_items[monstername()]
+	if tower_monster_items[get_monstername()] then
+		local item_name = tower_monster_items[get_monstername()]
 		local item_id = get_itemid(item_name)
 		if have_item(item_name) then
 			-- TODO: use make_href

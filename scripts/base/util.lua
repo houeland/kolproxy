@@ -20,9 +20,7 @@ local function parse_fight_vars(text)
 end
 
 function get_adventure_zoneid()
-	if path == "/fight.php" then
-		return tonumber(fight.zone)
-	end
+	return tonumber(fight.zone)
 end
 
 function adventure_zone(zone)
@@ -80,14 +78,24 @@ local function monstername_from_vars(monster_name, monster_name_tag)
 	end
 end
 
-function monstername(name)
-	if name then
-		return name == monstername()
-	end
+function get_monstername()
 	return monstername_from_vars(monster_name, monster_name_tag)
 end
 
-function raw_monstername()
+function has_monster_modifiers()
+	return ascensionpath("One Crazy Random Summer")
+end
+
+function monstername(name)
+	local monster = get_monstername()
+	if name == monster then
+		return true
+	elseif monster and has_monster_modifiers() and monster:match(name .. "$") then
+		return true
+	end
+end
+
+function get_raw_monstername()
 	return monster_name
 end
 

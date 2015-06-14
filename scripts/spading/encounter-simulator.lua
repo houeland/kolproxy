@@ -17,11 +17,11 @@ add_processor("/fight.php", function()
 		if zoneid and zone then
 			local queue = ascension["zone monster queue"] or {}
 			local ztbl = queue["z" .. zoneid] or {}
-			table.insert(ztbl, monstername() or "?")
+			table.insert(ztbl, get_monstername() or "?")
 			if #ztbl > 5 then
 				table.remove(ztbl, 1)
 			end
-			--print("DEBUG fight zoneid", fight.zone, monstername(), maybe_get_zonename(fight.zone))
+			--print("DEBUG fight zoneid", fight.zone, get_monstername(), maybe_get_zonename(fight.zone))
 			--print("  monster queue:", tojson(ztbl))
 			queue["z" .. zoneid] = ztbl
 			ascension["zone monster queue"] = queue

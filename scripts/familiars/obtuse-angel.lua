@@ -30,8 +30,8 @@ end)
 
 function start_wandering_copied_monster(copies)
 	day["wandering copied monster"] = {
-		["monster name"] = monstername(),
-		["display name"] = raw_monstername(),
+		["monster name"] = get_monstername(),
+		["display name"] = get_raw_monstername(),
 		["next monster start"] = nil,
 		["monsters remaining"] = copies,
 	}

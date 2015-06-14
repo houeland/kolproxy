@@ -15,7 +15,7 @@ function add_wandering_monster_tracker(label, monster_list, min_offset, max_offs
 
 	--- Add a fight processor to check if a monster is in the list
 	add_processor("/fight.php", function()
-		if monster_table[monstername()] then
+		if monster_table[get_monstername()] then
 			ascension["wanderer: "..label] = turnsthisrun() + min_offset
 		end
 	end)

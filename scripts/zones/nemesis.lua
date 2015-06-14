@@ -112,11 +112,11 @@ add_processor("/fight.php", function()
 		["pop-and-lock raver"] = "spastic and jerky",
 		["running man"] = "running anywhere",
 	}
-	if dancers[monstername()] then
+	if dancers[get_monstername()] then
 		if not fight["nemesis.dancer"] then
 			fight["nemesis.dancer"] = "yes"
 		end
-		if text:contains(dancers[monstername()]) then
+		if text:contains(dancers[get_monstername()]) then
 			fight["nemesis.dancer.special move"] = "yes"
 		else
 			fight["nemesis.dancer.special move"] = nil

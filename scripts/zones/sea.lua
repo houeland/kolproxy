@@ -16,8 +16,8 @@ end)
 -- Outpost
 
 add_processor("item drop: Mer-kin lockkey", function()
-	print("Mer-kin lockkey dropped from", monstername())
-	ascension["zones.sea.outpost lockkey monster"] = monstername()
+	print("Mer-kin lockkey dropped from", get_monstername())
+	ascension["zones.sea.outpost lockkey monster"] = get_monstername()
 end)
 
 add_printer("/seafloor.php", function()

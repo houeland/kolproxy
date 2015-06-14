@@ -88,13 +88,13 @@ local function getCombatDamage(fightBodyText)
 end
 
 add_processor("/fight.php", function()
-	if not fight["currently fighting"] or fight["currently fighting"].name ~= monstername() then
+	if not fight["currently fighting"] or fight["currently fighting"].name ~= get_monstername() then
 		fight["currently fighting first serverdata"] = nil
 		fight["currently fighting current serverdata"] = nil
 		--if the monster changed mid-combat, regen the 'currently fighting' table
 		fight["currently fighting"] = {
-			["name"] = monstername(),
-			["data"] = buildCurrentFightMonsterDataCache(monstername(), text), -- BUG: should not be caching item droprates!
+			["name"] = get_monstername(),
+			["data"] = buildCurrentFightMonsterDataCache(get_monstername(), text), -- BUG: should not be caching item droprates!
 		}
 		fight["currently fighting first serverdata"] = nil
 		for server_monsterstats_text in text:gmatch("var monsterstats = ({[^}]*})") do
