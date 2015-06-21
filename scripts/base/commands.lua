@@ -122,13 +122,27 @@ function set_equipment(tbl)
 			return "nil"
 		end
 	end
+	local function dump_debug()
+		local slots = {}
+		for x, _ in pairs(eq) do
+			slots[x] = true
+		end
+		for x, _ in pairs(tbl) do
+			slots[x] = true
+		end
+		for slot, _ in pairs(slots) do
+			print(slot, getnamedesc(eq[slot]), getnamedesc(tbl[slot]))
+		end
+	end
 	for a, b in pairs(eq) do
 		if not tbl[a] or b ~= get_itemid(tbl[a]) then
+			dump_debug()
 			error("Wearing " .. tostring(a) .. ":" .. tostring(b) .. " after trying to wear " .. getnamedesc(tbl[a]))
 		end
 	end
 	for a, b in pairs(tbl) do
 		if eq[a] ~= get_itemid(b) then
+			dump_debug()
 			error("Wearing " .. tostring(a) .. ":" .. tostring(eq[a]) .. " after trying to wear " .. getnamedesc(b))
 		end
 	end

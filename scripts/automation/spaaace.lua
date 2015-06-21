@@ -1,7 +1,7 @@
 local function adv_space_zone(zoneid)
 	script.ensure_buffs { "Fat Leon's Phat Loot Lyric", "Leash of Linguini", "Empathy" }
 	script.heal_up()
-	script.ensure_mp(100)
+	script.ensure_mp(70)
 	result, resulturl, advagain = autoadventure {
 		zoneid = zoneid,
 		noncombatchoices = {

@@ -1,5 +1,5 @@
 -- TODO: does not handle imported beer because of the &quot; escaping(?)
-function buy_itemname(name, input_amount)
+function buy_itemname(name, input_amount, fallback_whichshop)
 	assert(type(name) == "string")
 	get_itemid(name)
 	local amount = input_amount or 1
@@ -24,6 +24,13 @@ function buy_itemname(name, input_amount)
 			end
 		end
 	end
+	if fallback_whichshop then
+		local c = count_item(name)
+		local shoppt = raw_shop_buy_item({ [name] = amount }, fallback_whichshop)[1]()
+		if count_item(name) > c then
+			return function() return shoppt end
+		end
+	end
 	-- WORKAROUND FOR KOL BEING BROKEN --
 	return function() return [[{ /buy ]] .. amount .. " " .. name .. [[ failed. }]] end
 end
@@ -40,11 +47,11 @@ end
 
 function shop_buy_item(items, whichshop)
 	if type(items) == "string" then
-		return buy_itemname(items)
+		return buy_itemname(items, nil, whichshop)
 	else
 		local ptfs = {}
 		for x, y in pairs(items) do
-			table.insert(ptfs, buy_itemname(x, y))
+			table.insert(ptfs, buy_itemname(x, y, whichshop))
 		end
 		return ptfs
 	end

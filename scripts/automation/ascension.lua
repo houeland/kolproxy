@@ -4582,6 +4582,11 @@ endif
 	}
 
 	add_task {
+		prereq = want_star_key(),
+		f = script.make_star_key,
+	}
+
+	add_task {
 		when = want_digital_key() and
 			ascensionstatus("Softcore") and
 			not script.have_familiar("Angry Jung Man") and
@@ -4885,11 +4890,6 @@ endif
 	add_task {
 		prereq = doing_lvl12_war() and not completed_sonofa_beach(),
 		f = script.do_sonofa,
-	}
-
-	add_task {
-		prereq = want_star_key(),
-		f = script.make_star_key,
 	}
 
 	add_task {

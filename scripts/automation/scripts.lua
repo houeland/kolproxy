@@ -3482,7 +3482,7 @@ endif
 		if not have_item("dinghy plans") then
 			if count_item("Shore Inc. Ship Trip Scrip") >= 3 then
 				inform "buy dinghy plans"
-				buy_shore_inc_item("dinghy plans")
+				set_result(buy_shore_inc_item("dinghy plans"))
 				did_action = have_item("dinghy plans")
 			else
 				inform "shore for dinghy plans"
