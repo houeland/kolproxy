@@ -270,3 +270,11 @@ add_printer("/clan_viplounge.php", function()
 ]]):gsub([[<table><tr><form action=clan_viplounge.php method=post>]], [[<table id="hotdogtable"><tr><form action=clan_viplounge.php method=post>]]):gsub([[Hot Dog Leaderboards</a>]], [[%0<br><a href="]]..normal_page_href..[[" style="color: green">{ Hide "eat and restock" links }</a>]])
 	end
 end)
+
+add_automator("/clan_viplounge.php", function()
+	if params.preaction == "speakeasydrink" and params.drink and text:contains("<table><tr><td>Huh?</td></tr></table>") then
+		-- WORKAROUND: Kolproxy is changing this POST request into GET when clicking through warnings.
+		-- WORKAROUND: Reload the page here to get around this bug, since this particular page requires POST parameters.
+		text, url = post_page(path, params)
+	end
+end)
