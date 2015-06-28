@@ -1632,6 +1632,7 @@ function make_gremlin_macro(name, wrongmsg)
 	cast Lasagna Bandages
 	goto do_return
   endif
+
 ]]
 	end
 	local use_magnet = [[use molybdenum magnet]]
@@ -1646,6 +1647,8 @@ sub stall
 ]]..maybeheal..[[
 
 ]]..stall_action()..[[
+
+mark do_return
 
 endsub
 

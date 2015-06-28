@@ -96,19 +96,25 @@ local function run_wrapped_function_internal(f_env)
 	local intercept_path, intercept_query = kolproxycore_splituri(intercept_url)
 
 	f_env.text = intercept_pt
+	f_env.intercept_url = intercept_url
 	f_env.path = intercept_path
 	f_env.query = intercept_query
 	f_env.effuri_params = kolproxycore_decode_uri_query(intercept_url) or {}
 
-	local automate_pt = automate_wrapped(f_env)
+	local automate_pt, automate_url = automate_wrapped(f_env)
 
-	descit("automate", automate_pt, intercept_url)
+	descit("automate", automate_pt, automate_url)
+
+	local automate_path, automate_query = kolproxycore_splituri(automate_url)
 
 	f_env.text = automate_pt
+	f_env.automate_url = automate_url
+	f_env.path = automate_path
+	f_env.query = automate_query
 
 	local printer_pt = printer_wrapped(f_env)
 
-	descit("printer", printer_pt, intercept_url)
+	descit("printer", printer_pt, automate_url)
 
 	return printer_pt, intercept_url
 end

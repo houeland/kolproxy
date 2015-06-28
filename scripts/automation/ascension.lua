@@ -2507,7 +2507,7 @@ endif
 
 	add_task {
 		when = classid() < 10 and
-			(AT_song_duration() == 0 or not have_item("turtle totem") or not have_item("saucepan") or (can_equip_item("Rock and Roll Legend") and AT_song_duration() < 10)) and
+			(AT_song_duration() == 0 or not have_item("turtle totem") or not have_item("saucepan")) and
 			meat() >= 500,
 		task = tasks.get_starting_items,
 	}
@@ -4582,7 +4582,7 @@ endif
 	}
 
 	add_task {
-		prereq = want_star_key(),
+		prereq = level() >= 10 and want_star_key(),
 		f = script.make_star_key,
 	}
 

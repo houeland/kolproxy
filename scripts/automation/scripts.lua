@@ -2924,6 +2924,11 @@ endif
 			}
 		else
 			local remaining = remaining_hidden_city_liana_zones()
+			if not next(remaining) then
+				for _, x in ipairs(places) do
+					remaining[x.zone] = true
+				end
+			end
 			for _, x in ipairs(cached_stuff.completed_lianas or {}) do
 				remaining[x] = nil
 			end
@@ -4351,7 +4356,7 @@ endif
 			elseif advtitle == "Yeah, You're for Me, Punk Rock Giant" then
 				return "Check behind the trash can"
 			elseif advtitle == "Flavor of a Raver" then
-				return "Check Behind the Poster"
+				return "Check Behind the Giant Poster"
 			end
 		end })
 	end

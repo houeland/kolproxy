@@ -23,5 +23,5 @@ function get_unavailable_items()
 end
 
 function item_is_unavailable(item)
-	return get_unavailable_items()[get_itemname(item)]
+	return get_unavailable_items()[get_itemname(item)] ~= nil
 end

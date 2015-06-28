@@ -92,53 +92,6 @@ function get_automation_tasks(script, cached_stuff)
 				return result, resulturl
 			end
 
-			if playerclass("Accordion Thief") and AT_song_duration() < 10 then
-				inform "pick up RnR"
-				script.ensure_worthless_item()
-				if not have_item("hermit permit") then
-					store_buy_item("hermit permit", "m")
-				end
-				if not have_item("hot buttered roll") then
-					async_post_page("/hermit.php", { action = "trade", whichitem = get_itemid("hot buttered roll"), quantity = 1 })
-				end
-				if not have_item("hot buttered roll") then
-					critical "Failed to buy hot buttered roll."
-				end
-				if not have_item("casino pass") then
-					store_buy_item("casino pass", "m")
-				end
-				if not have_item("casino pass") then
-					critical "Failed to buy casino pass."
-				end
-				if not have_item("big rock") then
-					if not have_item("ten-leaf clover") then
-						uncloset_item("ten-leaf clover")
-					end
-					if not have_item("ten-leaf clover") and not have_item("disassembled clover") then
-						script.trade_for_clover()
-					end
-					if not have_item("ten-leaf clover") and have_item("disassembled clover") then
-						use_item("disassembled clover")
-					end
-					if not have_item("ten-leaf clover") then
-						stop "No ten-leaf clover."
-					end
-					script.maybe_ensure_buffs { "Mental A-cue-ity" }
-					async_get_page("/casino.php", { action = "slot", whichslot = 11 })
-					if not have_item("big rock") then
-						critical "Didn't get big rock."
-					end
-				end
-				set_result(smith_items("hot buttered roll", "big rock"))
-				script.unequip_if_worn("stolen accordion")
-				set_result(smith_items("heart of rock and roll", "stolen accordion"))
-				if not have_item("Rock and Roll Legend") then
-					critical "Couldn't smith RnR"
-				end
-				did_action = have_item("Rock and Roll Legend")
-				return result, resulturl, did_action
-			end
-
 			if not playerclass("Accordion Thief") and AT_song_duration() < 5 then
 				inform "buy toy accordion"
 				set_result(store_buy_item("toy accordion", "z"))

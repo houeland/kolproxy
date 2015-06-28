@@ -13,17 +13,12 @@ if not can_read_state() then
 end
 
 log_time_interval("automate:initialize", function()
-which = path
-if (requestpath == "/login.php" and text == "kolproxy login redirect") or (requestpath == "/afterlife.php" and path == "/main.php" and text == "kolproxy afterlife ascension") then
-	which = "player login"
-end
-
+automate_url = intercept_url
 setup_variables()
 end)
 
 log_time_interval("run automators", function()
-if which ~= "/loggedout.php" then
-	local automate_url = path
+if path ~= "/loggedout.php" then
 	text = run_functions(path, text, function(target, pt)
 		for _, x in ipairs(automators[target] or {}) do
 			getfenv(x.f).text = pt
@@ -38,7 +33,7 @@ if which ~= "/loggedout.php" then
 end
 end)
 
-return text
+return text, automate_url
 
 end
 
