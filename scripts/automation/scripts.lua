@@ -705,6 +705,9 @@ function get_automation_scripts(cached_stuff)
 		if ascensionpath("BIG!") and amount < 50 then
 			amount = 50
 		end
+		if level() >= 8 and maxmp() >= 90 and amount < 60 then
+			amount = 60
+		end
 		if challenge == "boris" then
 			if have_skill("Banishing Shout") and maxmp() >= 60 and level() >= 6 then
 				amount = 55

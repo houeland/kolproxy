@@ -5387,6 +5387,7 @@ ascension_automation_setup_href = add_automation_script("setup-ascension-automat
 
 	local ok_paths = {
 		[0] = true,
+		["Standard"] = true,
 --		["Way of the Surprising Fist"] = true -- needs updates
 		["Avatar of Boris"] = true,
 		[10] = true,

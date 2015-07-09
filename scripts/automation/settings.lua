@@ -364,7 +364,7 @@ function get_ascension_automation_settings(want_bonus)
 				itemname = x.name
 			end
 		end
-		if itemname and want_bonus.easy_combat and estimate_item_equip_bonuses(itemname)["Monster Level"] > 0 then
+		if itemname and want_bonus and want_bonus.easy_combat and estimate_item_equip_bonuses(itemname)["Monster Level"] > 0 then
 			itemname = nil
 		end
 		return itemname

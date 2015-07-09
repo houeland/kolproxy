@@ -8,12 +8,13 @@ function wrapped_function()
 
 reset_pageload_cache()
 
+automate_url = intercept_url
+
 if not can_read_state() then
-	return text
+	return text, automate_url
 end
 
 log_time_interval("automate:initialize", function()
-automate_url = intercept_url
 setup_variables()
 end)
 
