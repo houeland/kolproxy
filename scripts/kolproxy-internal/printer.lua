@@ -51,10 +51,10 @@ if path == "/login.php" then
 	local version_link = ""
 	print("current version", current_version, "latest version", latest_version)
 	if current_version ~= script_files_kolproxy_version then
-		version_link = [[<a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; text-decoration: none;">{ Kolproxy v]]..current_version..[[ incorrect installation. }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: red; font-size: smaller;">{ Click here to download a working version. }</a>]]
+		version_link = [[<a href="https://github.com/houeland/kolproxy/releases" target="_blank" style="color: red; text-decoration: none;">{ Kolproxy v]]..current_version..[[ incorrect installation. }</a><br><a href="https://github.com/houeland/kolproxy/releases" target="_blank" style="color: red; font-size: smaller;">{ Click here to download a working version. }</a>]]
 	elseif latest_version and current_version ~= latest_version and latest_version_base then
 		local issueslink = "https://github.com/houeland/kolproxy" .. make_href("/issues", { q = string.format("milestone:%s is:closed", latest_version_base) })
-		version_link = string.format([[<a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; text-decoration: none;">{ Kolproxy v%s }</a><br><a href="http://www.houeland.com/kolproxy/wiki/Installation" target="_blank" style="color: darkorange; font-size: smaller;">{ Click to upgrade to v%s. }</a><br><span style="color: darkorange; font-size: smaller;">{ <a href="%s" target="_blank" style="color: darkorange">List of latest fixes</a> }</span>]], current_version, latest_version, issueslink)
+		version_link = string.format([[<a href="https://github.com/houeland/kolproxy/releases" target="_blank" style="color: darkorange; text-decoration: none;">{ Kolproxy v%s }</a><br><a href="https://github.com/houeland/kolproxy/releases" target="_blank" style="color: darkorange; font-size: smaller;">{ Click to upgrade to v%s. }</a><br><span style="color: darkorange; font-size: smaller;">{ <a href="%s" target="_blank" style="color: darkorange">List of latest fixes</a> }</span>]], current_version, latest_version, issueslink)
 	else
 		version_link = [[<span style="color: green">{ Kolproxy v]]..current_version..[[ }</span>]]
 	end

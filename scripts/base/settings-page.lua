@@ -340,7 +340,7 @@ add_interceptor("/custom-settings", function()
 			<center><table><tr><td>
 			<tr><td><center><a href="custom-logs?pwd=]]..session.pwd..[[">Parse ascension log</a></center></td></tr>
 			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-aftercore-automation&pwd=]]..session.pwd..[[">Setup/run scripts</a></center></td></tr>
-			<tr><td><center><a href="http://www.houeland.com/kolproxy/wiki/" target="_blank">Kolproxy documentation</a> (opens in a new tab)</center></td></tr>
+			<tr><td><center><a href="https://github.com/houeland/kolproxy/wiki" target="_blank">Kolproxy documentation</a> (opens in a new tab)</center></td></tr>
 			</td></tr></table></center>
 ]], "Kolproxy page links") .. make_kol_html_frame([[
 			<center><table><tr><td>
