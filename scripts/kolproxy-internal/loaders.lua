@@ -39,6 +39,7 @@ load_file("item", "items/clover.lua")
 load_file("item", "items/halo.lua")
 load_file("item", "items/sugar-sheet.lua")
 load_file("item", "items/pantsgiving.lua")
+load_file("item", "items/deck-of-every-card.lua")
 load_file("interface", "items/beararms.lua")
 
 load_file("item", "classes/pastathrall.lua")
