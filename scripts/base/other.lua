@@ -502,6 +502,7 @@ local function add_use_item_ascension_assistance(itemname)
 		local c = count_item(itemname)
 		use_item(itemname)()
 		if count_item(itemname) < c then
+			add_assistance_message("Used " .. itemname)
 			return true
 		end
 	end)
@@ -520,7 +521,7 @@ add_use_item_ascension_assistance("desert sightseeing pamphlet")
 
 add_ascension_assistance(function() return have_item("Knob Goblin encryption key") and have_item("Cobb's Knob map") and not ascensionpath("Bees Hate You") end, function()
 	use_item("Cobb's Knob map")()
-	if not have_item("rusty screwdriver") then
+	if not have_item("Cobb's Knob map") then
 		add_assistance_message("Deciphered Cobb's Knob map")
 	end
 end)
