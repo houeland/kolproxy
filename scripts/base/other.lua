@@ -421,6 +421,15 @@ function add_ascension_assistance(checkf, f)
 	table.insert(ascension_assistance_list, { checkf = checkf, f = f, last_checked = nil })
 end
 
+function add_assistance_message(message)
+	print("DEBUG: ascension assistance message:", message)
+	if active_automation_assistance_scanner then
+		add_scanner_message(active_automation_assistance_scanner, message .. ".")
+	else
+		print("WARNING: no scan handler for assistance message:", message)
+	end
+end
+
 add_automator("all pages", function()
 	if not setting_enabled("automate simple tasks") then return end
 	local scan = setup_automation_scan_page_results()
@@ -510,11 +519,21 @@ add_use_item_ascension_assistance("evil eye")
 add_use_item_ascension_assistance("desert sightseeing pamphlet")
 
 add_ascension_assistance(function() return have_item("Knob Goblin encryption key") and have_item("Cobb's Knob map") and not ascensionpath("Bees Hate You") end, function()
-	use_item("Cobb's Knob map")
+	use_item("Cobb's Knob map")()
+	if not have_item("rusty screwdriver") then
+		add_assistance_message("Deciphered Cobb's Knob map")
+	end
 end)
 
 add_ascension_assistance(function() return have_item("Lady Spookyraven's necklace") end, function()
 	get_place("manor1", "manor1_ladys")
+end)
+
+add_ascension_assistance(function() return have_item("rusty screwdriver") end, function()
+	get_place("forestvillage", "fv_untinker")
+	if not have_item("rusty screwdriver") then
+		add_assistance_message("Returned screwdriver to untinker")
+	end
 end)
 
 function pick_up_continuum_transfunctioner()

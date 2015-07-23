@@ -435,29 +435,6 @@ get_fallback_choicespoilers _ref l = do
 	mapM_ add_line fallback_spoilers
 	return 1
 
--- TODO: parse in lua
-get_pulverize_groups _ref l = do
-	groups <- doReadDataFile "cache/data/pulverize-groups"
-	Lua.newtable l
-	topidx <- Lua.gettop l
-	let add_group (trgidx, (label, items)) = do
-		Lua.pushinteger l trgidx
-		Lua.newtable l
-		gidx <- Lua.gettop l
-
-		Lua.pushstring l "label"
-		Lua.pushstring l label
-		Lua.settable l gidx
-
-		Lua.pushstring l "items"
-		push_table_contents_integer_boolean l $ zip items (repeat True)
-		Lua.settable l gidx
-
-		Lua.settable l topidx
-
-	mapM_ add_group (zip [1..] groups)
-	return 1
-
 get_api_itemid_info ref l1 = do
 	itemid <- peekJustInteger l1 1
 	f <- KoL.Api.asyncGetItemInfoObj itemid ref

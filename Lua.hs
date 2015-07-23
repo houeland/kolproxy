@@ -73,8 +73,6 @@ setup_lua_instance level filename setupref = do
 
 		register_function "get_fallback_choicespoilers" $ get_fallback_choicespoilers
 
-		register_function "get_pulverize_groups" get_pulverize_groups
-
 		register_function "get_current_kolproxy_version" $ \_ref l -> do
 			Lua.pushstring l =<< get_current_kolproxy_version
 			return 1

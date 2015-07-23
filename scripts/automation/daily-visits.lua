@@ -73,6 +73,7 @@ function setup_automation_scan_page_results()
 		[[<center><table><tr><td><img src="http://images.kingdomofloathing.com/itemimages/meat.gif" height=30 width=30 alt="Meat"></td><td valign=center>You gain [0-9,]+ Meat.</td></tr></table></center>]],
 		[[<center><table class="item" style="float: none" rel="[^"]*"><tr><td><img src="http://images.kingdomofloathing.com/itemimages/[^"]+.gif" alt="[^"]*" title="[^"]*" class=hand onClick='descitem%([0-9]+%)'></td><td valign=center class=effect>You acquire .-</td></tr></table></center>]],
 		[[{"]]..playerid()..[==[":%[[^"]*"(I found ([^"]*)!)",]==],
+		[[<kolproxy%-message>(.-)</kolproxy%-message>]]
 	}
 	local ptfs = {}
 	return function(x)
@@ -93,6 +94,10 @@ function setup_automation_scan_page_results()
 			return results
 		end
 	end
+end
+
+function add_scanner_message(scanner, message)
+	return scanner([[<kolproxy-message>]] .. message .. [[</kolproxy-message>]])
 end
 
 function setup_automation_display_page_results(scan, text)
