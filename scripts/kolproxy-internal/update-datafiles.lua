@@ -234,7 +234,20 @@ local function parse_mafia_bonuslist(bonuslist, debug_source_name)
 	return bonuses
 end
 
-local function mafia_datafile(filename, whichsection)
+local function basic_mafia_datafile(filename)
+	local lines = {}
+	for l in io.lines("cache/files/" .. filename) do
+		l = remove_line_junk(l)
+		local tbl = split_tabbed_line(l)
+		if l:match("^#") then
+		elseif tbl[2] then
+			table.insert(lines, tbl)
+		end
+	end
+	return lines
+end
+
+local function modifiers_section(filename, whichsection)
 	local section = nil
 	local results = {}
 	for l in io.lines(filename) do
@@ -258,7 +271,7 @@ function parse_buffs()
 	local buffs = {}
 	buffs["A Little Bit Evil"] = {}
 
-	for name, tbl in pairs(mafia_datafile("cache/files/modifiers.txt", "Status Effects")) do
+	for name, tbl in pairs(modifiers_section("cache/files/modifiers.txt", "Status Effects")) do
 		local bonuslist = tbl.columns and tbl.columns[3]
 		if bonuslist then
 			buffs[name] = { bonuses = parse_mafia_bonuslist(bonuslist, name) }
@@ -320,7 +333,7 @@ end
 
 function parse_passives()
 	local passives = {}
-	for name, tbl in pairs(mafia_datafile("cache/files/modifiers.txt", "Passive Skills")) do
+	for name, tbl in pairs(modifiers_section("cache/files/modifiers.txt", "Passive Skills")) do
 		local bonuslist = tbl.columns and tbl.columns[3]
 		if bonuslist then
 			passives[name] = { bonuses = parse_mafia_bonuslist(bonuslist, name) }
@@ -352,7 +365,7 @@ function parse_outfits()
 			outfits[name] = { items = items, bonuses = {} }
 		end
 	end
-	for name, tbl in pairs(mafia_datafile("cache/files/modifiers.txt")) do
+	for name, tbl in pairs(modifiers_section("cache/files/modifiers.txt")) do
 		local bonuslist = tbl.columns and tbl.columns[3]
 		if outfits[name] and bonuslist then
 			outfits[name].bonuses = parse_mafia_bonuslist(bonuslist, name)
@@ -510,7 +523,7 @@ function parse_items()
 	end
 
 	local equip_sections = { Hats = true, Containers = true, Shirts = true, Weapons = true, ["Off-hand Items"] = true, Offhand = true, Offhands = true, Pants = true, Accessories = true, ["Familiar Items"] = true }
-	for name, tbl in pairs(mafia_datafile("cache/files/modifiers.txt")) do
+	for name, tbl in pairs(modifiers_section("cache/files/modifiers.txt")) do
 		local itemid = lowercasemap[name:lower()]
 		local bonuslist = tbl.columns and tbl.columns[3]
 		if equip_sections[tbl.section] and bonuslist and not blacklist[name] and not blacklist["bonuses: " .. name] then
@@ -555,6 +568,28 @@ function parse_items()
 		end
 	end
 
+	for name, tbl in pairs(basic_mafia_datafile("pulverize.txt")) do
+		local itemname, result = tbl[1], tbl[2]
+		local itemid = itemname and lowercasemap[itemname:lower()]
+		local resultitemid = result and lowercasemap[result:lower()]
+		if items[itemid] and items[resultitemid] then
+			items[itemid].pulverize_result = result
+		elseif items[itemid] and result == "nosmash" then
+			items[itemid].can_pulverize = false
+		elseif result == "upgrade" then
+			-- datafile clutter
+		elseif result == "258112" then
+			-- messed up datafile entry
+		else
+			hardwarn("pulverize:item does not make sense", itemname, "result", result)
+		end
+	end
+
+	for _, itemname in ipairs {} do -- npc-buyable items!
+		local itemid = itemname and lowercasemap[itemname:lower()]
+		items[itemid].pulverize_result = "useless powder"
+	end
+
 	for x, y in pairs(items) do
 		fixed_name = y.name:gsub([["]], [[&quot;]])
 		if y.name ~= fixed_name then
@@ -595,6 +630,8 @@ function verify_items(data)
 		["Staff of Fats"] = { id = 2268 },
 		["Spookyraven library key"] = { id = 7302 },
 		["Galapagosian Cuisses"] = { class = "Turtle Tamer" },
+		["Hairpiece On Fire"] = { pulverize_result = "handful of Smithereens" },
+		["Mr. Accessory"] = { can_pulverize = false },
 	}
 	local known_classes = {
 		["Seal Clubber"] = true,
@@ -793,7 +830,7 @@ end
 
 function parse_hatrack()
 	local hatrack = {}
-	for name, tbl in pairs(mafia_datafile("cache/files/modifiers.txt")) do
+	for name, tbl in pairs(modifiers_section("cache/files/modifiers.txt")) do
 		local bonuslist = tbl.columns and tbl.columns[3]
 		if bonuslist and processed_datafiles["items"][name] then
 			local desc = bonuslist:match([[Familiar Effect: "(.-)"]])
@@ -948,7 +985,7 @@ end
 -- TODO: merge with parse_familiars
 function parse_enthroned_familiars()
 	local enthroned_familiars = {}
-	for name, tbl in pairs(mafia_datafile("cache/files/modifiers.txt", "Enthroned familiars")) do
+	for name, tbl in pairs(modifiers_section("cache/files/modifiers.txt", "Enthroned familiars")) do
 		local bonuslist = tbl.columns and tbl.columns[3]
 		if name and bonuslist then
 			enthroned_familiars[name] = parse_mafia_bonuslist(bonuslist, name)

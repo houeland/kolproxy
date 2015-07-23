@@ -381,12 +381,14 @@ async_submit_page_func_DEBUG ref l1 = do
 					push_function l1 (\l2 -> do
 						ret <- f
 						case ret of
-							Right (pt, puri, _hdrs, _code) -> do
+							Right pr -> do
+								let (pt, puri) = (pageBody pr, pageUri pr)
 								lua_log_line ref ("< async_submit_page_func result " ++ (show puri)) (return ())
 								Lua.pushbytestring l2 pt
 								Lua.pushstring l2 (show puri)
 								return 2
-							Left (pt, puri, _hdrs, _code) -> do
+							Left pr -> do
+								let (pt, puri) = (pageBody pr, pageUri pr)
 								Lua.pushnil l2
 								let newtext = Data.ByteString.Char8.concat [pt, (Data.ByteString.Char8.pack "<br><br>{&nbsp;<a href=\"/kolproxy-troubleshooting\">Click here for kolproxy troubleshooting.</a>&nbsp;}")]
 								Lua.pushbytestring l2 newtext

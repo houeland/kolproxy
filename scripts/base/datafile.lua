@@ -309,3 +309,37 @@ function get_monsterid(name)
 	end
 	error("Unknown zone: " .. tostring(name) .. " (monster IDs are not in data file yet)")
 end
+
+function get_pulverize_result(item)
+	local idata = maybe_get_itemdata(item)
+	if not idata then return end
+
+	if idata.can_pulverize == false then
+		return
+	elseif idata.pulverize_result then
+		return idata.pulverize_result
+	elseif not idata.power then
+		return
+	end
+
+	-- TODO: Change these
+	if idata.power <= 35 then
+		return "1P"
+	elseif idata.power <= 55 then
+		return "2P"
+	elseif idata.power <= 75 then
+		return "3P"
+	elseif idata.power <= 95 then
+		return "1N/4P"
+	elseif idata.power <= 115 then
+		return "2N/1N+3P"
+	elseif idata.power <= 135 then
+		return "3N"
+	elseif idata.power <= 155 then
+		return "1W/4N"
+	elseif idata.power <= 175 then
+		return "2W/1W+3N"
+	else
+		return "3W"
+	end
+end

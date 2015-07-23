@@ -12,6 +12,7 @@ import Network.URI
 import Text.JSON
 import System.IO
 import qualified Data.ByteString
+import qualified Data.ByteString.Char8
 import qualified Data.Map
 import qualified Database.SQLite3Modded
 import qualified Network.HTTP
@@ -26,6 +27,13 @@ import qualified Scripting.LuaModded
 --   Request handler sequence
 --   ascension/day/session Lua state
 --   status/inventory cache
+
+data PageResult = PageResult {
+	pageBody :: Data.ByteString.Char8.ByteString,
+	pageUri :: URI,
+	pageHeaders :: [(String, String)],
+	pageHttpCode :: Integer
+}
 
 -- TODO: make this a record with named fields instead of a tuple?
 type DiscerningStateIdentifier = (String, Integer, Integer, String) -- name, ascension, rollover, sessid
@@ -78,8 +86,8 @@ data LogRefStuff = LogRefStuff {
 }
 
 data ProcessingRefStuff = ProcessingRefStuff {
-	processPage_ :: RefType -> URI -> Maybe [(String, String)] -> IO (IO (Either (Data.ByteString.ByteString, URI, [(String, String)], Integer) (Data.ByteString.ByteString, URI, [(String, String)], Integer))),
-	nochangeRawRetrievePageFunc_ :: RefType -> URI -> Maybe [(String, String)] -> Bool -> IO (IO (Data.ByteString.ByteString, URI, [(String, String)], Integer), IO (MVar (Either SomeException (JSObject JSValue)))),
+	processPage_ :: RefType -> URI -> Maybe [(String, String)] -> IO (IO (Either PageResult PageResult)),
+	nochangeRawRetrievePageFunc_ :: RefType -> URI -> Maybe [(String, String)] -> Bool -> IO (IO PageResult, IO (MVar (Either SomeException (JSObject JSValue)))),
 	getstatusfunc_ :: RefType -> IO (IO (JSObject JSValue))
 }
 

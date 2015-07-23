@@ -58,44 +58,25 @@ update_data_files = do
 					return ())
 
 download_data_files = do
---		pulverizegroups <- do
---			jstext <- load_data_file "http://userscripts.org/scripts/source/67792.user.js"
---			let groupslines = takeWhile (\x -> not (x =~ "}\\);")) $ dropWhile (\x -> not (x =~ "var groupList")) $ lines jstext
---			let groups = map head $ matchGroups "([0-9]+:\\[[0-9,]+\\])" $ concat groupslines
---			let [groupnamesline] = filter (\x -> x =~ "var groupNames") $ lines jstext
---			let groupnames = map head $ matchGroups "\"([^\"]+)\"" groupnamesline
---			let worthlesslines = takeWhile (\x -> not (x =~ "}\\);")) $ dropWhile (\x -> not (x =~ "var worthless")) $ lines jstext
---			let worthless = map head $ matchGroups "([0-9]+):1" $ concat worthlesslines
---			let items = map (\x -> case matchGroups "([0-9]+):\\[([0-9]+)" x of
---				[[ids, gs]] -> (a :: Integer, b :: Int)
---					where
---						(Just a, Just b) = (read_as ids, read_as gs)
---				_ -> throw $ InternalError $ "Error parsing pulverize data") groups
---			let regrouped = map (\(gx, y) -> (y, (mapMaybe (\(a,b) -> if b == gx
---				then Just a
---				else Nothing) items) ++
---				if y == "Worthless"
---					then map (\ix -> read_e ix :: Integer) worthless
---					else [])) (zip [0..] groupnames)
---			return regrouped
-
-	let dldatafile x = (do
-		let [[basename]] = matchGroups ".*/([^/]+)$" x
-		filedata <- getHTTPFileData x
+	let dldatafile path basename = (do
+		filedata <- getHTTPFileData $ path ++ basename
 		best_effort_atomic_file_write ("cache/files/" ++ basename) "." filedata) `catch` (\e -> do
-			putDebugStrLn $ "exception downloading datafile: " ++ x ++ ": " ++ show (e :: SomeException)
+			putWarningStrLn $ "exception downloading datafile: " ++ basename ++ ": " ++ show (e :: SomeException)
 			return ())
 
-	mapM_ (\x -> dldatafile ("http://svn.code.sf.net/p/kolmafia/code/src/data/" ++ x)) ["adventures.txt", "classskills.txt", "coinmasters.txt", "concoctions.txt", "combats.txt", "encounters.txt", "equipment.txt", "familiars.txt", "foldgroups.txt", "fullness.txt", "inebriety.txt", "items.txt", "modifiers.txt", "monsters.txt", "npcstores.txt", "outfits.txt", "spleenhit.txt", "statuseffects.txt", "zapgroups.txt"]
 
-	dldatafile "http://www.hogsofdestiny.com/faxbot/faxbot.xml"
+	let mafia_datafiles = ["adventures.txt", "classskills.txt", "coinmasters.txt", "concoctions.txt", "combats.txt", "encounters.txt", "equipment.txt", "familiars.txt", "foldgroups.txt", "fullness.txt", "inebriety.txt", "items.txt", "modifiers.txt", "monsters.txt", "npcstores.txt", "outfits.txt", "pulverize.txt", "spleenhit.txt", "statuseffects.txt", "zapgroups.txt"]
+
+	forM_ mafia_datafiles $ \basename -> dldatafile "http://svn.code.sf.net/p/kolmafia/code/src/data/" basename
+
+	dldatafile "http://www.hogsofdestiny.com/faxbot/" "faxbot.xml"
 
 -- userscripts.org is down, scripts not yet available elsewhere(?)
---	dldatafile "http://userscripts.org/scripts/source/67792.user.js"
---	dldatafile "http://userscripts.org/scripts/source/68727.user.js"
+--	dldatafile "http://userscripts.org/scripts/source/" "67792.user.js"
+--	dldatafile "http://userscripts.org/scripts/source/" "68727.user.js"
 
-	dldatafile "http://www.houeland.com/kol/mallprices.json"
-	dldatafile "http://www.houeland.com/kol/consumable-advgain.json"
+	dldatafile "http://www.houeland.com/kol/" "mallprices.json"
+	dldatafile "http://www.houeland.com/kol/" "consumable-advgain.json"
 
 	return ()
 

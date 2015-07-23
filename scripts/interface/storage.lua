@@ -265,7 +265,6 @@ maybe_pvp_stealable = {
 	"twinkly wad",
 	"agua de vida",
 	"shot of blackberry schnapps",
-	"pr0n chow mein",
 	"spooky lo mein",
 	"olive lo mein",
 	"pear tart",

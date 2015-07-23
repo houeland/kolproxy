@@ -214,18 +214,19 @@ local score_function_bonuses = {
 	"Adventures per day",
 	"PvP fights per day",
 	"All resistances",
-	"Cold Resistance",
 	"Hot Resistance",
-	"Sleaze Resistance",
+	"Cold Resistance",
 	"Spooky Resistance",
 	"Stench Resistance",
+	"Sleaze Resistance",
 	"Slime Resistance",
 	"All weapon damage",
-	"Cold Damage",
-	"Hot Damage",
-	"Sleaze Damage",
-	"Spooky Damage",
-	"Stench Damage",
+	"All spell damage",
+	"Hot (Spell) Damage",
+	"Cold (Spell) Damage",
+	"Spooky (Spell) Damage",
+	"Stench (Spell) Damage",
+	"Sleaze (Spell) Damage",
 }
 
 function get_modifier_maximizer_score_function(whichbonus, fuzzy)
@@ -241,6 +242,13 @@ function get_modifier_maximizer_score_function(whichbonus, fuzzy)
 
 	local scoref = function(bonuses)
 		return bonuses[whichbonus]
+	end
+	local function allelements(pattern, bonuses)
+		local value = 0
+		for _, elem in ipairs { "Hot", "Cold", "Spooky", "Stench", "Sleaze" } do
+			value = value + bonuses[string.format(pattern, elem)]
+		end
+		return value
 	end
 	if whichbonus == "HP & cold/spooky resistance" then
 		scoref = function(bonuses)
@@ -272,11 +280,21 @@ function get_modifier_maximizer_score_function(whichbonus, fuzzy)
 		end
 	elseif whichbonus == "All resistances" then
 		scoref = function(bonuses)
-			return bonuses["Cold Resistance"] + bonuses["Hot Resistance"] + bonuses["Sleaze Resistance"] + bonuses["Spooky Resistance"] + bonuses["Stench Resistance"] + bonuses["Slime Resistance"]
+			return allelements("%s Resistance", bonuses) + bonuses["Slime Resistance"]
 		end
 	elseif whichbonus == "All weapon damage" then
 		scoref = function(bonuses)
-			return bonuses["Weapon Damage"] + bonuses["Weapon Damage %"] / 2 + bonuses["Cold Damage"] + bonuses["Hot Damage"] + bonuses["Sleaze Damage"] + bonuses["Spooky Damage"] + bonuses["Stench Damage"]
+			return bonuses["Weapon Damage"] + bonuses["Weapon Damage %"] / 2 + allelements("%s Damage", bonuses)
+		end
+	elseif whichbonus == "All spell damage" then
+		scoref = function(bonuses)
+			return bonuses["Spell Damage"] + bonuses["Spell Damage %"] / 2 + allelements("Damage to %s Spells", bonuses)
+		end
+	elseif whichbonus:contains("(Spell)") then
+		local weaponbonus = whichbonus:gsub("^(.-) %(Spell%) Damage$", "%1 Damage")
+		local spellbonus = whichbonus:gsub("^(.-) %(Spell%) Damage$", "Damage to %1 Spells")
+		scoref = function(bonuses)
+			return bonuses[weaponbonus] + bonuses[spellbonus]
 		end
 	end
 	return scoref, whichbonus

@@ -1261,12 +1261,35 @@ mark m_done
 			action = function()
 				result, resulturl = get_place("nstower", "ns_01_contestbooth")
 				local options = parse_choice_options(result)
-				if options["Enter the Fastest Adventurer contest"] then
-					--...maximize init...
-				elseif options["Enter the Smoothest Adventurer contest"] then
-					--...maximize moxie...
-				elseif options["Enter the Stinkiest Adventurer contest"] then
-					--...maximixe stinky...
+				local contests = {
+					Fastest = "Combat Initiative",
+					Strongest = "Muscle",
+					Smartest = "Mysticality",
+					Smoothest = "Moxie",
+					Hottest = "Hot (Spell) Damage",
+					Coldest = "Cold (Spell) Damage",
+					Spookiest = "Spooky (Spell) Damage",
+					Stinkiest = "Stench (Spell) Damage",
+					Sleaziest = "Sleaze (Spell) Damage",
+				}
+				for which, target in pairs(contests) do
+					local choice = "Enter the " .. which .. " Adventurer contest"
+					if options[choice] then
+						script.maximize(target)
+						-- TODO: Use buffs!
+						if ascension_script_option("automate whenever possible") then
+							result, resulturl = get_place("nstower", "ns_01_contestbooth")
+							result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, {
+								["Test Your Might And Also Test Other Things"] = choice,
+							})
+							local pt = get_place("nstower", "ns_01_contestbooth")
+							local options = parse_choice_options(pt)
+							did_action = not options[choice]
+							return
+						else
+							stop("TODO: maximize " .. target .. " for " .. choice)
+						end
+					end
 				end
 				print("DEBUG ns contest", tostring(options))
 				did_action = false
@@ -1545,6 +1568,7 @@ endif
 				script.bonus_target { "easy combat" }
 				set_mcd(0)
 				script.want_familiar("Frumious Bandersnatch")
+				script.wear {}
 				script.ensure_buffs { "Go Get 'Em, Tiger!" }
 				result, resulturl = get_place("nstower")
 				if ascensionpath("Actually Ed the Undying") then

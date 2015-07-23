@@ -452,7 +452,7 @@ function get_automation_scripts(cached_stuff)
 		if famname == "auto" then
 			famname = firstfam { "Galloping Grill", "Golden Monkey", "Grim Brother", "Bloovian Groose", "Rogue Program", "Midget Clownfish", "Baby Z-Rex", "Smiling Rat", "Blood-Faced Volleyball", "Slimeling", "Dandy Lion", "Fist Turkey", "Angry Jung Man", "Gelatinous Cubeling", "Reagnimated Gnome", "Blavious Kloop", "Green Pixie", "Piano Cat", "Hippo Ballerina", "Obtuse Angel", "Pair of Stomping Boots", "Star Starfish", "Peppermint Rhino", "Mechanical Songbird", "Baby Gravy Fairy" } or "Galloping Grill"
 		end
-		return raw_want_familiar(famname)
+		return raw_want_familiar(famname) or {}
 	end
 
 	function f.have_familiar(famname)
@@ -1067,13 +1067,17 @@ function get_automation_scripts(cached_stuff)
 			return async_post_page("/clan_viplounge.php", { preaction = "goswimming", subaction = "laps" })
 		end,
 		["Pisces in the Skyces"] = function()
+			if cached_stuff.failed_pisces then return end
 			if not have_item("tobiko marble soda") then
 				script.ensure_mp(5)
 				set_result(cast_skill("Summon Alice's Army Cards"))
 				get_place("forestvillage")
 				get_page("/gamestore.php")
 				get_page("/gamestore.php", { place = "cashier" })
-				async_post_page("/gamestore.php", { action = "buysnack", whichsnack = get_itemid("tobiko marble soda") })
+				post_page("/gamestore.php", { action = "buysnack", whichsnack = get_itemid("tobiko marble soda") })
+			end
+			if not have_item("tobiko marble soda") then
+				cached_stuff.failed_pisces = true
 			end
 			return use_item("tobiko marble soda")
 		end,
@@ -4450,7 +4454,7 @@ endif
 					stop "TODO: Get identification documents in fist"
 				end
 			else
-				shop_buy_item("forged identification documents", "blackmarket")
+				set_result(shop_buy_item("forged identification documents", "blackmarket"))
 				if not have_item("forged identification documents") then
 					critical "Failed to buy identification documents"
 				end

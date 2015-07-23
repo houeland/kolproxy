@@ -52,7 +52,8 @@ doProcessPage ref uri params = do
 
 	forkIO_ "proxy:process" $ do
 		x <- try $ do
-			(pagetext, effuri, hdrs, code) <- log_time_interval ref ("fetchpage: " ++ (show uri)) $ xf
+			pr <- log_time_interval ref ("fetchpage: " ++ (show uri)) $ xf
+			let (pagetext, effuri) = (pageBody pr, pageUri pr)
 
 			let allparams = concat $ catMaybes $ [decodeUrlParams uri, decodeUrlParams effuri, params]
 			y <- log_time_interval ref ("processing: " ++ (show uri)) $ runProcessScript ref uri effuri pagetext allparams
@@ -61,16 +62,16 @@ doProcessPage ref uri params = do
 
 			log_page_result ref status_before_func log_time state_before uri params effuri pagetext status_after_func state_after
 
-			return (y, pagetext, effuri, hdrs, code)
+			return (y, pr)
 		putMVar mv =<< case x of
-			Right (Right msg, _, effuri, hdrs, code) -> do
-				return $ Right (msg, effuri, hdrs, code)
-			Right (Left (msg, trace), pagetext, effuri, hdrs, code) -> do
+			Right (Right msg, pr) -> do
+				return $ Right $ pr { pageBody = msg }
+			Right (Left (msg, trace), pr) -> do
 				putErrorStrLn $ "Error processing page[" ++ show uri ++ "]: " ++ msg ++ "\n" ++ trace
-				return $ Left (add_error_message_to_page ("process-page.lua error: " ++ msg ++ "\n" ++ trace) pagetext, effuri, hdrs, code)
+				return $ Left $ pr { pageBody = add_error_message_to_page ("process-page.lua error: " ++ msg ++ "\n" ++ trace) $ pageBody pr }
 			Left e -> do
 				putErrorStrLn $ "Exception while processing page[" ++ show uri ++ "]: " ++ (show (e :: SomeException))
-				return $ Left (add_error_message_to_page ("process-page.lua exception: " ++ (show e)) (Data.ByteString.Char8.pack "{ Kolproxy page processing. }"), mkuri "/error", [], 500)
+				return $ Left $ PageResult { pageBody = add_error_message_to_page ("process-page.lua exception: " ++ (show e)) (Data.ByteString.Char8.pack "{ Kolproxy page processing. }"), pageUri = mkuri "/error", pageHeaders = [], pageHttpCode = 500 }
 
 	return $ do
 		readMVar mv
@@ -83,15 +84,16 @@ doProcessPageChat ref uri params = do
 			(xf, _) <- internalKolRequest_pipelining ref uri params False
 			xf
 		putMVar mv =<< case x of
-			Right (pagetext, effuri, hdrs, code) -> do
+			Right pr -> do
+				let (pagetext, effuri) = (pageBody pr, pageUri pr)
 				case uriPath effuri of
 					-- TODO: Make sure they're logged in order!
 					"/newchatmessages.php" -> log_chat_messages ref pagetext
 					"/submitnewchat.php" -> log_chat_messages ref pagetext
 					_ -> return () -- TODO: Log this too?
-				return $ Right (pagetext, effuri, hdrs, code)
+				return $ Right pr
 			Left e -> do
-				return $ Left (add_error_message_to_page ("processchat exception: " ++ (show (e :: SomeException))) (Data.ByteString.Char8.pack "{ Kolproxy page processing. }"), mkuri "/error", [], 500)
+				return $ Left $ PageResult { pageBody = add_error_message_to_page ("processchar exception: " ++ (show (e :: SomeException))) (Data.ByteString.Char8.pack "{ Kolproxy page processing. }"), pageUri = mkuri "/error", pageHeaders = [], pageHttpCode = 500 }
 	return $ do
 		readMVar mv
 
@@ -116,8 +118,9 @@ kolProxyHandlerChat uri params baseref = do
 	let allparams = concat $ catMaybes $ [decodeUrlParams uri, params]
 	x <- case uriPath uri of
 		"/favicon.ico" -> do
-			Right (x, u, _, _) <- join $ (processPage ref) ref uri params
-			return $ Right (x, u, "text/html; charset=UTF-8")
+			Right pr <- join $ (processPage ref) ref uri params
+			let (x, u) = (pageBody pr, pageUri pr)
+			return $ Right (x, u, "image/vnd.microsoft.icon")
 		_ -> runChatRequestScript ref uri allparams
 	case x of
 		Right (msg, u, ct) -> do
@@ -134,7 +137,7 @@ make_ref baseref = do
 			getstatusfunc_ = statusfunc
 		}
 	}
-	state_is_ok <- (do
+	state_result <- try $ do
 		mjs <- readIORef (latestRawJson_ $ sessionData $ ref)
 		when (isNothing mjs) $ do
 			mv <- readIORef (jsonStatusPageMVarRef_ $ sessionData $ ref)
@@ -142,10 +145,12 @@ make_ref baseref = do
 			load_api_status_to_mv ref mv apixf
 		force_latest_status_parse ref
 		ensureLoadedState ref
-		return True) `catch` (\e -> do
-			putWarningStrLn $ "loadstate exception: " ++ show (e :: SomeException)
-			return False)
-	return ref { stateValid_ = state_is_ok }
+	case state_result of
+		Right _ -> do
+			return ref { stateValid_ = True }
+		Left err -> do
+			putWarningStrLn $ "loadstate exception: " ++ show (err :: SomeException)
+			return ref { stateValid_ = False }
 
 kolProxyHandler uri params baseref = do
 	t <- getCurrentTime
@@ -164,7 +169,8 @@ kolProxyHandler uri params baseref = do
 			then return action
 			else return $ Just $ makeErrorResponse (Data.ByteString.Char8.pack $ "Invalid pwd field") uri []
 
-	let handle_login (pt, effuri, allhdrs, code) = do
+	let handle_login pr = do
+		let (pt, effuri, allhdrs, code) = (pageBody pr, pageUri pr, pageHeaders pr, pageHttpCode pr)
 		let hdrs = filter (\(x, _y) -> (x == "Set-Cookie" || x == "Location")) allhdrs
 		putDebugStrLn $ "Login requested " ++ (show $ uriPath uri) ++ ", got " ++ (show $ uriPath effuri)
 		putDebugStrLn $ "  HTTP headers: " ++ show allhdrs
@@ -178,7 +184,6 @@ kolProxyHandler uri params baseref = do
 				putErrorStrLn $ "No cookie from logging in!"
 				putErrorStrLn $ "  headers: " ++ (show hdrs)
 				putErrorStrLn $ "  url: " ++ (show effuri)
---				handleRequest origref uri effuri hdrs params pt
 				makeErrorResponse pt effuri hdrs
 			else (do
 				newref <- do
@@ -211,8 +216,7 @@ kolProxyHandler uri params baseref = do
 					_ -> do
 						putInfoStrLn $ "Logging in over https..."
 						return internalKolHttpsRequest
-				(pt, effuri, allhdrs, code) <- loginrequestfunc uri (Just p_sensitive) (Nothing, useragent_ $ connection $ origref, hostUri_ $ connection $ origref, Nothing) True
-				handle_login (pt, effuri, allhdrs, code)
+				handle_login =<< loginrequestfunc uri (Just p_sensitive) (Nothing, useragent_ $ connection $ origref, hostUri_ $ connection $ origref, Nothing) True
 
 		"/custom-clear-lua-script-cache" -> check_pwd_for $ Just $ do
 			reset_lua_instances origref

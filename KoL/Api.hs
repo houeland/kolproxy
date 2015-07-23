@@ -89,7 +89,8 @@ getPlayerId name ref = do
 -- Downloading utility methods. TODO: put these elsewhere
 
 postPageRawNoScripts url params ref = do
-	(body, goturi, _, _) <- join $ fst <$> (nochangeRawRetrievePageFunc ref) ref (mkuri url) (Just params) True
+	pr <- join $ fst <$> (nochangeRawRetrievePageFunc ref) ref (mkuri url) (Just params) True
+	let (body, goturi) = (pageBody pr, pageUri pr)
 	if ((uriPath goturi) == (uriPath $ mkuri url))
 		then return body
 		else do
@@ -102,7 +103,8 @@ postPageRawNoScripts url params ref = do
 rawAsyncNochangeGetPageRawNoScripts url ref = do
 	f <- fst <$> (nochangeRawRetrievePageFunc ref) ref (mkuri url) Nothing False
 	return $ do
-		(body, goturi, _, _) <- f
+		pr <- f
+		let (body, goturi) = (pageBody pr, pageUri pr)
 		if ((uriPath goturi) == (uriPath $ mkuri url))
 			then return body
 			else do

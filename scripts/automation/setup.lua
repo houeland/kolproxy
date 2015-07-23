@@ -114,11 +114,11 @@ function run_automation_script(f, pwdsrc, scriptname)
 			print("Something unexpected happened: " .. errmsg)
 			print(e.trace)
 			result = get_result()
-			if result == "??? No action found ???" or result == "??? No automation done ???" then
-				result = [[<p style="color: darkorange">]] .. "Something unexpected happened: " .. errmsg .. "<br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>"
-			else
-				result = add_message_to_page(result, "<pre>Something unexpected happened: " .. errmsg .. "</pre><br><br><pre>Technical details:\n\n" .. e.trace .. "</pre>", nil, "darkorange")
-			end
+			local tracediv = [[<pre id="technicaldetails" style="display:none">Technical details:
+
+
+]] .. e.trace .. [[</pre><span style="color: green; text-decoration: underline" onclick="document.getElementById('technicaldetails').style.display = 'block'; this.style.display = 'none'">{ Show technical details }</span>]]
+			result = add_message_to_page(result, "<div>" .. errmsg .. "</div><br>" .. tracediv, "Something unexpected happened:", "darkorange")
 			local steptrace = get_error_trace_steps()
 			if next(steptrace) then
 				result = add_message_to_page(get_result(), "While trying to do: <tt>" .. table.concat(get_error_trace_steps(), " &rarr; ") .. "</tt>" .. automation_skiplink, "Automation stopped:", "darkorange")
