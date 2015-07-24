@@ -36,7 +36,7 @@ runKolproxy = (do
 	let portnum = case portenv of
 		Just x -> fromJust $ read_as x :: Integer
 		Nothing -> 18481
-	Server.runProxyServer Handlers.kolProxyHandler Handlers.kolProxyHandlerChat portnum) `catch` (\e -> putDebugStrLn ("runKolproxy exception: " ++ show (e :: Control.Exception.SomeException)))
+	Server.runProxyServer Server.kolProxyHandler Server.kolProxyHandlerChat portnum) `catch` (\e -> putDebugStrLn ("runKolproxy exception: " ++ show (e :: Control.Exception.SomeException)))
 
 main = PlatformLowlevel.platform_init $ do
 	hSetBuffering stdout LineBuffering
