@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface, BangPatterns #-}
 
-module Lua where
+module Lua (runProcessScript, runChatRequestScript, runBrowserRequestScript, runBotScript, runLogParsingScript, runLogScript, run_datafile_parsers) where
 
 import Prelude
 import Logging
@@ -70,8 +70,6 @@ setup_lua_instance level filename setupref = do
 			let Just xmldoc = parseXMLDoc xmlstr
 			push_simplexmldata l xmldoc
 			return 1
-
-		register_function "get_fallback_choicespoilers" $ get_fallback_choicespoilers
 
 		register_function "get_current_kolproxy_version" $ \_ref l -> do
 			Lua.pushstring l =<< get_current_kolproxy_version
@@ -162,8 +160,6 @@ setup_lua_instance level filename setupref = do
 					threadDelay $ round $ delay * 1000000
 					return 0
 
-		--Lua.registerhsfunction lstate "kolproxy_debug_print" (\x -> lua_log_line setupref ("kolproxy_debug_print: " ++ x) (return ()))
-
 		-- TODO: handle return codes?
 		void $ Lua.safeloadstring lstate "local dtb = debug.traceback; return function(e) kolproxy_debug_traceback = dtb(\"\", 2) return e end"
 		void $ Lua.pcall lstate 0 1 0 -- put error handling function on stack=1
@@ -214,7 +210,7 @@ get_lua_instance_for_code level filename ref = do
 					Left err -> return (insts, Left err)
 
 run_lua_code_ ref l dosetvars filename = do
-	log_time_interval ref "prepare for lua code" $ do
+	do
 		top <- Lua.gettop l
 		when (top > 1) $ do
 			putStrLn $ "ERROR: Lua top is " ++ show top
@@ -223,7 +219,7 @@ run_lua_code_ ref l dosetvars filename = do
 		void $ dosetvars l
 
 	moo_two <- log_time_interval ref ("run lua code: " ++ filename) $ Lua.pcall l 1 Lua.multret 1 -- returns on stack=2+
-	log_time_interval ref "retrieving results" $ case moo_two of
+	case moo_two of
 		0 -> do
 			top <- Lua.gettop l
 			rets <- mapM (\x -> do

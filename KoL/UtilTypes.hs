@@ -87,7 +87,6 @@ data LogRefStuff = LogRefStuff {
 
 data ProcessingRefStuff = ProcessingRefStuff {
 	processPage_ :: RefType -> URI -> Maybe [(String, String)] -> IO (IO (Either PageResult PageResult)),
-	nochangeRawRetrievePageFunc_ :: RefType -> URI -> Maybe [(String, String)] -> Bool -> IO (IO PageResult, IO (MVar (Either SomeException (JSObject JSValue)))),
 	getstatusfunc_ :: RefType -> IO (IO (JSObject JSValue))
 }
 
@@ -128,9 +127,7 @@ data RefType = RefType {
 	globalstuff_ :: GlobalRefStuff
 }
 
-getlogchan ref = logchan_ $ logstuff_ $ ref
 processPage ref = processPage_ $ processingstuff_ $ ref
-nochangeRawRetrievePageFunc ref = nochangeRawRetrievePageFunc_ $ processingstuff_ $ ref
 getstatusfunc ref = (getstatusfunc_ $ processingstuff_ $ ref) ref
 
 connection ref = connection_ $ otherstuff_ $ ref
@@ -149,7 +146,6 @@ store_info_logs ref = store_info_logs_ $ environment_settings_ $ globalstuff_ $ 
 
 doDbLogAction ref action = (doDbLogAction_ $ sessionData $ ref) ref action
 doChatLogAction ref action = (doChatLogAction_ $ globalstuff_ $ ref) action
---doStateAction ref action = (doStateAction_ $ sessionData $ ref) ref action
 
 data KolproxyException = UrlMismatchException String URI | NotLoggedInException | InValhallaException | ApiPageException String | HttpRequestException URI SomeException | StateException | InternalError String | LuaError String | NetworkError String
 	deriving (Typeable)

@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances #-}
 
-module KoL.HttpLowlevel where
+module KoL.HttpLowlevel (mkreq_slow, mkreq_fast, mkreq, rewrite_headers, simple_http_withproxy, simple_https_direct, check_for_http10, doHTTPreq, doHTTPSreq, kolproxy_withVersion, kolproxy_receiveHTTP, mkconnectsocket, mklistensocket, kolproxy_openTCPConnection, fast_mkconnthing, slow_mkconnthing, send_http_response, end_http) where
 
 import Prelude
 import Logging

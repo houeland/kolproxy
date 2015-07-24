@@ -1,4 +1,4 @@
-module State where
+module State (readMapFromFile, writeStateToFile, registerUpdatedState, unsetState, setState, getState, uglyhack_resetFightState, uglyhack_enumerateState, makeStateJSON, loadStateFromJson, download_actionbar, writeServerSettings, storeSettings, initializeState, ensureLoadedState, loadSettingsFromServer) where
 
 import Prelude
 import PlatformLowlevel

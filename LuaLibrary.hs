@@ -417,24 +417,6 @@ make_href _ref l = do
 				_ -> failLua $ "make_href error: unknown url " ++ (show inputuri)
 		_ -> failLua $ "make_href error: unknown url " ++ (show inputuristr)
 
--- TODO: parse in lua
-get_fallback_choicespoilers _ref l = do
-	fallback_spoilers <- doReadDataFile "cache/data/choice-spoilers"
-	Lua.newtable l
-	topidx <- Lua.gettop l
-	let add_line xs = do
-		case (lookup "choice number" xs, lookup "spoilers" xs) of
-			(Just choicenumstr, Just spoilersstr) -> do
-				case (read_as choicenumstr, read_as spoilersstr) of
-					(Just choicenum, Just spoilers) -> do
-						Lua.pushinteger l choicenum
-						push_table_contents_stringlist l spoilers
-						Lua.settable l topidx
-					_ -> throwIO $ InternalError $ "Invalid choice spoiler, id: " ++ show xs
-			_ -> throwIO $ InternalError $ "Invalid choice spoiler, id: " ++ show xs
-	mapM_ add_line fallback_spoilers
-	return 1
-
 get_api_itemid_info ref l1 = do
 	itemid <- peekJustInteger l1 1
 	f <- KoL.Api.asyncGetItemInfoObj itemid ref

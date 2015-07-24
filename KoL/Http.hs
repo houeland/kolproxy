@@ -1,4 +1,4 @@
-module KoL.Http where
+module KoL.Http (getHTTPFileData, postHTTPFileData, parseUriServerBugWorkaround, internalKolHttpsRequest, internalKolRequest, load_api_status_to_mv_mkapixf, load_api_status_to_mv, internalKolRequest_pipelining, login) where
 
 -- TODO: Merge with HttpLowlevel or at least restructure
 

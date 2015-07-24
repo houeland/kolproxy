@@ -1,5 +1,5 @@
 name:           Kolproxy
-version:        3.11
+version:        4.0.0
 synopsis:       Kingdom of Loathing user interface
 author:         Tor Gunnar Houeland
 build-type:     Simple
@@ -11,7 +11,7 @@ cabal-version:  >= 1.2
 --   cabal install --only-dependencies
 --
 -- Then e.g.:
---   ghc -threaded -DKOLPROXY_RELEASEBUILD=linux -optc-DLUA_USE_LINUX --make proxy.hs Scripting/*.c -o kolproxy
+--   ghc -threaded -DKOLPROXY_RELEASEBUILD=linux -optc-DLUA_USE_LINUX --make kolproxy.hs Scripting/*.c -o kolproxy
 
 executable kolproxy
   build-depends:
@@ -50,4 +50,4 @@ executable kolproxy
     Database/sqlite3.c
   cc-options: -DLUA_USE_LINUX
   ghc-options: -threaded
-  main-is: proxy.hs
+  main-is: kolproxy.hs

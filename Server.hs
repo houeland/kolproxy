@@ -1,4 +1,4 @@
-module KolproxyServer where
+module Server where
 
 import Prelude
 import HardcodedGameStuff

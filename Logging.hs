@@ -27,7 +27,7 @@ data LogItem = LogItem {
 	pageText :: Data.ByteString.Char8.ByteString
 }
 
-holdit ref action = writeChan (getlogchan ref) action
+holdit ref action = writeChan (logchan_ $ logstuff_ $ ref) action
 
 print_log_msg ref logdetails = do
 	doDbLogAction ref $ \db -> do
@@ -132,20 +132,20 @@ log_chat_messages ref text = (do
 			_ -> mwhoid
 		case (mtype, mtime, mmsg, mplayerid, mmid, mchannel) of
 			(Ok "public", Ok time, Ok msg, Ok playerid, Ok mid, Ok channel) -> do
-				doChatLogAction ref $ \db -> do
+				(doChatLogAction ref) $ \db -> do
 					do_db_query_ db "INSERT OR IGNORE INTO public(mid, time, channel, playerid, msg, rawjson) VALUES(?, ?, ?, ?, ?, ?);"
 						[Just $ Data.ByteString.Char8.pack $ show $ mid, Just $ Data.ByteString.Char8.pack $ show $ time, Just $ Data.ByteString.Char8.pack $ channel, Just $ Data.ByteString.Char8.pack $ show $ playerid, Just $ Data.ByteString.Char8.pack $ msg, Just $ Data.ByteString.Char8.pack $ rawjson]
 			(Ok "private", Ok time, Ok msg, Ok playerid, _, _) -> do
-				doChatLogAction ref $ \db -> do
+				(doChatLogAction ref) $ \db -> do
 					do_db_query_ db "INSERT INTO private(time, playerid, msg, rawjson) VALUES(?, ?, ?, ?);"
 						[Just $ Data.ByteString.Char8.pack $ show $ time, Just $ Data.ByteString.Char8.pack $ show $ playerid, Just $ Data.ByteString.Char8.pack $ msg, Just $ Data.ByteString.Char8.pack $ rawjson]
 			(Ok _, Ok time, Ok msg, _, _, _) -> do
-				doChatLogAction ref $ \db -> do
+				(doChatLogAction ref) $ \db -> do
 					do_db_query_ db "INSERT INTO other(time, msg, rawjson) VALUES(?, ?, ?);"
 						[Just $ Data.ByteString.Char8.pack $ show $ time, Just $ Data.ByteString.Char8.pack $ msg, Just $ Data.ByteString.Char8.pack $ rawjson]
 			_ -> do
 				putDebugStrLn $ "unrecognized chat type: " ++ show (mtype, mtime, mplayerid, mmid, mchannel)
-				doChatLogAction ref $ \db -> do
+				(doChatLogAction ref) $ \db -> do
 					do_db_query_ db "INSERT INTO unrecognized(rawjson) VALUES(?);"
 						[Just $ Data.ByteString.Char8.pack $ rawjson]
 		return ()) `catch` (\e -> do
@@ -159,7 +159,7 @@ log_chat_messages ref text = (do
 		_ -> putDebugStrLn $ "unrecognized chat format") msglist
 	return ()) `catch` (\e -> do
 		return (e :: SomeException)
-		doChatLogAction ref $ \db -> do
+		(doChatLogAction ref) $ \db -> do
 			do_db_query_ db "INSERT INTO oldchat(text) VALUES(?);"
 				[Just $ text]
 		return ())

@@ -1,4 +1,4 @@
-module HardcodedGameStuff where
+module HardcodedGameStuff (update_data_files, add_error_message_to_page) where
 
 import Prelude
 import Lua
