@@ -54,7 +54,7 @@ platform_init x = do
 	do_change_directory
 	withSocketsDo x
 
-platform_launch portnum = void $ createProcess (shell $ kolproxy_open_url_command ++ " http://localhost:" ++ show portnum ++ "/")
+platform_launch_url url = void $ createProcess (shell $ kolproxy_open_url_command ++ " " ++ url)
 
 -- TODO: Move to another file
 best_effort_atomic_file_write path basedir filedata = do
