@@ -1,9 +1,11 @@
-module Handlers where
+module Handlers (doProcessPage, doProcessPageChat) where
 
 import Prelude
 import qualified HardcodedGameStuff
 import qualified Logging
 import qualified Lua
+import qualified State
+import qualified KoL.Api
 import qualified KoL.Http
 import KoL.Util
 import KoL.UtilTypes
@@ -16,19 +18,20 @@ import Data.Time
 import Network.URI
 import qualified Data.ByteString.Char8
 
-get_the_state ref = do
-	cr <- canReadState ref
+get_the_state = do
+	cr <- canReadState
 	if cr
 		then do
-			(_, y) <- readIORef (state ref)
+			y <- State.readState
 			return $ Just y
 		else return Nothing
 
 doProcessPage ref uri params = do
-	status_before_func <- getstatusfunc ref
+	status_before_func <- KoL.Api.statusfunc ref
+
 	log_time <- getZonedTime -- TODO: ask CDM for rightnow in API
 
-	state_before <- get_the_state ref
+	state_before <- runWithRef ref get_the_state
 
 	Logging.log_file_retrieval ref uri params
 
@@ -50,7 +53,7 @@ doProcessPage ref uri params = do
 			let allparams = concat $ catMaybes $ [decodeUrlParams uri, decodeUrlParams effuri, params]
 			y <- Logging.log_time_interval ref ("processing: " ++ (show uri)) $ Lua.runProcessScript ref uri effuri pagetext allparams
 
-			state_after <- get_the_state ref
+			state_after <- runWithRef ref get_the_state
 
 			Logging.log_page_result ref status_before_func log_time state_before uri params effuri pagetext status_after_func state_after
 
@@ -88,13 +91,3 @@ doProcessPageChat ref uri params = do
 				return $ Left $ PageResult { pageBody = HardcodedGameStuff.add_error_message_to_page ("processchar exception: " ++ (show (e :: SomeException))) (Data.ByteString.Char8.pack "{ Kolproxy page processing. }"), pageUri = mkuri "/error", pageHeaders = [], pageHttpCode = 500 }
 	return $ do
 		readMVar mv
-
-statusfunc ref = do
-	mv <- readIORef $ jsonStatusPageMVarRef_ $ sessionData $ ref
-	return $ ((do
-		x <- readMVar mv
-		case x of
-			Right r -> return r
-			Left err -> throwIO err) `catch` (\e -> do
-				putDebugStrLn $ "statusfunc exception: " ++ show (e :: SomeException)
-				throwIO e))

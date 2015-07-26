@@ -9,25 +9,25 @@ import KoL.UtilTypes
 import Control.Exception
 import Data.Maybe
 import Network.URI
-import System.Directory (doesFileExist, createDirectoryIfMissing)
-import System.Environment (getArgs)
-import System.IO
+import qualified System.Directory (doesFileExist, createDirectoryIfMissing)
+import qualified System.Environment (getArgs)
+import qualified System.IO
 
 runKolproxy = (do
-	have_process_page <- doesFileExist "scripts/kolproxy-internal/process-page.lua"
+	have_process_page <- System.Directory.doesFileExist "scripts/kolproxy-internal/process-page.lua"
 	if have_process_page
 		then do
 			putInfoStrLn $ "Starting..."
-			createDirectoryIfMissing True "cache"
-			createDirectoryIfMissing True "cache/data"
-			createDirectoryIfMissing True "cache/files"
-			createDirectoryIfMissing True "logs"
-			createDirectoryIfMissing True "logs/chat"
-			createDirectoryIfMissing True "logs/scripts"
-			createDirectoryIfMissing True "logs/info"
-			createDirectoryIfMissing True "logs/parsed"
-			createDirectoryIfMissing True "logs/api"
-			createDirectoryIfMissing True "scripts/custom-autoload"
+			System.Directory.createDirectoryIfMissing True "cache"
+			System.Directory.createDirectoryIfMissing True "cache/data"
+			System.Directory.createDirectoryIfMissing True "cache/files"
+			System.Directory.createDirectoryIfMissing True "logs"
+			System.Directory.createDirectoryIfMissing True "logs/chat"
+			System.Directory.createDirectoryIfMissing True "logs/scripts"
+			System.Directory.createDirectoryIfMissing True "logs/info"
+			System.Directory.createDirectoryIfMissing True "logs/parsed"
+			System.Directory.createDirectoryIfMissing True "logs/api"
+			System.Directory.createDirectoryIfMissing True "scripts/custom-autoload"
 		else do
 			putWarningStrLn $ "Trying to start without required files in the \"scripts\" directory."
 			putWarningStrLn $ "  Did you unzip the files correctly?"
@@ -39,8 +39,8 @@ runKolproxy = (do
 	Server.runProxyServer Server.kolProxyHandler Server.kolProxyHandlerChat portnum) `catch` (\e -> putDebugStrLn ("runKolproxy exception: " ++ show (e :: Control.Exception.SomeException)))
 
 main = PlatformLowlevel.platform_init $ do
-	hSetBuffering stdout LineBuffering
-	args <- getArgs
+	System.IO.hSetBuffering System.IO.stdout System.IO.LineBuffering
+	args <- System.Environment.getArgs
 	case args of
 		["--runbotscript", botscriptfilename] -> runbot botscriptfilename
 		_ -> runKolproxy
@@ -60,9 +60,9 @@ runbot filename = do
 
 	cookie <- KoL.Http.login (login_useragent, login_host) username passwordmd5hash
 
-	let baseref = RefType {
+	let ref = RefType {
 		logstuff_ = LogRefStuff { logchan_ = dropping_logchan, solid_logchan_ = logchan },
-		processingstuff_ = error "processing",
+		processPage_ = Handlers.doProcessPageChat,
 		otherstuff_ = OtherRefStuff {
 			connection_ = ConnectionType {
 				cookie_ = cookie,
@@ -78,12 +78,4 @@ runbot filename = do
 		globalstuff_ = globalref
 	}
 
-	let okref = baseref {
-		processingstuff_ = ProcessingRefStuff {
-			processPage_ = Handlers.doProcessPageChat,
-			getstatusfunc_ = Handlers.statusfunc
-		},
-		stateValid_ = False
-	}
-
-	Lua.runBotScript okref filename
+	Lua.runBotScript ref filename

@@ -3,12 +3,11 @@
 module LuaLibrary where
 
 import Prelude
-import Logging
-import State
-import KoL.Http
+import qualified State
+import qualified KoL.Api
+import qualified KoL.Http
 import KoL.Util
 import KoL.UtilTypes
-import qualified KoL.Api
 import Control.Applicative
 import Control.Exception
 import Control.Monad
@@ -68,7 +67,7 @@ peekJustDouble l idx = (__peekJust l idx) :: IO Double
 get_current_kolproxy_version = return $ kolproxy_version_number :: IO String
 
 get_latest_kolproxy_version = do
-	version <- getHTTPFileData "http://www.houeland.com/kolproxy/latest-version.json"
+	version <- KoL.Http.getHTTPFileData "http://www.houeland.com/kolproxy/latest-version.json"
 	if (length version <= 1000)
 		then return version
 		else return "?"
@@ -76,27 +75,27 @@ get_latest_kolproxy_version = do
 set_state ref l = do
 	stateset <- peekJustString l 1
 	var <- peekJustString l 2
-	canread <- canReadState ref
+	canread <- runWithRef ref canReadState
 	unless canread $ failLua $ "Error: Trying to set state \"" ++ var ++ "\" before state is available."
 	unless (stateset `elem` ["character", "ascension", "day", "fight", "session"]) $ failLua $ "cannot write to stateset " ++ (show $ stateset)
-	oldvalue <- getState ref stateset var
+	oldvalue <- State.getState ref stateset var
 	newvalue <- do
 		isempty <- Lua.isnoneornil l 3
 		if isempty
 			then return Nothing
 			else Just <$> peekJustString l 3
 	when (oldvalue /= newvalue) $ case newvalue of
-		Just value -> setState ref stateset var value
-		Nothing -> unsetState ref stateset var
+		Just value -> State.setState ref stateset var value
+		Nothing -> State.unsetState ref stateset var
 	return 0
 
 get_state ref l = do
 	stateset <- peekJustString l 1
 	var <- peekJustString l 2
-	canread <- canReadState ref
+	canread <- runWithRef ref canReadState
 	unless canread $ failLua $ "Error: Trying to get state \"" ++ var ++ "\" before state is available."
 	unless (stateset `elem` ["character", "ascension", "day", "fight", "session"]) $ failLua $ "cannot read stateset " ++ (show $ stateset)
-	maybevalue <- getState ref stateset var
+	maybevalue <- State.getState ref stateset var
 	case maybevalue of
 		Just value -> Lua.pushbytestring l (Data.ByteString.Char8.pack value) >> return 1
 		_ -> return 0
@@ -108,14 +107,14 @@ set_chat_state ref l = do
 	var <- peekJustString l 1
 	value <- peekJustString l 2
 	charname <- get_ref_playername ref
-	chatmap <- Data.Map.insert var value <$> readMapFromFile ("chat-" ++ charname ++ ".state")
-	writeStateToFile ("chat-" ++ charname ++ ".state") (show chatmap)
+	chatmap <- Data.Map.insert var value <$> State.readMapFromFile ("chat-" ++ charname ++ ".state")
+	State.writeStateToFile ("chat-" ++ charname ++ ".state") (show chatmap)
 	return 0
 
 get_chat_state ref l = do
 	var <- peekJustString l 1
 	charname <- get_ref_playername ref
-	chatmap <- readMapFromFile ("chat-" ++ charname ++ ".state")
+	chatmap <- State.readMapFromFile ("chat-" ++ charname ++ ".state")
 	Lua.pushstring l $ fromMaybe "" (Data.Map.lookup var chatmap)
 	return 1
 
@@ -362,7 +361,6 @@ show_blocked_page_info ref l = do
 	return 2
 
 async_submit_page_func_DEBUG ref l1 = do
-	lua_log_line ref "> async_submit_page_func" (return ())
 	shouldstop <- readIORef (blocking_lua_scripting ref)
 	if shouldstop
 		then do
@@ -377,13 +375,11 @@ async_submit_page_func_DEBUG ref l1 = do
 					two <- peekJustString l1 2
 					params <- parse_keyvalue_luatbl l1 3
 					f <- async_submit_page_DEBUG ref one two params
-					lua_log_line ref "< async_submit_page_func requested" (return ())
 					push_function l1 (\l2 -> do
 						ret <- f
 						case ret of
 							Right pr -> do
 								let (pt, puri) = (pageBody pr, pageUri pr)
-								lua_log_line ref ("< async_submit_page_func result " ++ (show puri)) (return ())
 								Lua.pushbytestring l2 pt
 								Lua.pushstring l2 (show puri)
 								return 2
@@ -427,9 +423,9 @@ get_api_itemid_info ref l1 = do
 	return 1
 
 kolproxycore_enumerate_state ref l = do
-	canread <- canReadState ref
+	canread <- runWithRef ref canReadState
 	unless canread $ failLua $ "Error: Trying to enumerate state before state is available."
-	statekeys <- uglyhack_enumerateState ref
+	statekeys <- State.uglyhack_enumerateState ref
 	Lua.newtable l
 	mapM_ (\(statename, keylist) -> do
 		Lua.pushstring l statename

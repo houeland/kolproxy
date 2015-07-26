@@ -25,9 +25,9 @@ import Network.CGI (formDecode)
 import Network.HTTP
 import Network.Stream (ConnError (ErrorClosed))
 import Network.URI
-import System.Directory (doesFileExist)
-import System.IO
-import System.Random
+import qualified System.Directory (doesFileExist)
+import qualified System.IO
+import qualified System.Random
 import Text.Regex.TDFA
 import qualified Data.ByteString.Char8
 import qualified Data.Map
@@ -123,7 +123,7 @@ handle_kol_request sessionmaster mvsequence mvchat logchan dropping_logchan glob
 	-- TODO: merge the isChat parts: logchan, lastRetreieve, connLogSymbol, getconn, mvseq
 	let baseref = RefType {
 		logstuff_ = LogRefStuff { logchan_ = if isChat then dropping_logchan else logchan, solid_logchan_ = logchan },
-		processingstuff_ = undefined,
+		processPage_ = undefined,
 		otherstuff_ = OtherRefStuff {
 			connection_ = ConnectionType {
 				cookie_ = cookie,
@@ -164,17 +164,16 @@ make_globalref = do
 		}
 
 	let openlog filename = do
-		h <- openFile ("logs/info/" ++ filename) AppendMode
-		hSetBuffering h LineBuffering
+		h <- System.IO.openFile ("logs/info/" ++ filename) System.IO.AppendMode
+		System.IO.hSetBuffering h System.IO.LineBuffering
 		return h
 
 	indentref <- newIORef 0
 	blockluaref <- newIORef False
 	hfiles <- openlog "files-downloaded.txt"
 	htiming <- openlog "timing-log.txt"
-	hlua <- openlog "lua-log.txt"
 	hhttp <- openlog "http-log.txt"
-	shutdown_secret <- get_md5 <$> show <$> (randomIO :: IO Integer)
+	shutdown_secret <- get_md5 <$> show <$> (System.Random.randomIO :: IO Integer)
 
 	chatopendb <- create_db "sqlite3 chatlog" "chat-log.sqlite3"
 	do_db_query_ chatopendb "CREATE TABLE IF NOT EXISTS public(mid INTEGER PRIMARY KEY NOT NULL, time INTEGER NOT NULL, channel TEXT NOT NULL, playerid INTEGER NOT NULL, msg TEXT NOT NULL, rawjson TEXT NOT NULL);" []
@@ -202,7 +201,6 @@ make_globalref = do
 		blocking_lua_scripting_ = blockluaref,
 		h_files_downloaded_ = hfiles,
 		h_timing_log_ = htiming,
-		h_lua_log_ = hlua,
 		h_http_log_ = hhttp,
 		shutdown_secret_ = shutdown_secret,
 		doChatLogAction_ = \action -> writeChan chatlogchan action,
@@ -289,7 +287,7 @@ runProxyServer r rchat portnum = do
 		sessionData_ = undefined
 	}
 	let logref = LogRefStuff { logchan_ = logchan, solid_logchan_ = logchan }
-	let _log_fakeref = RefType { logstuff_ = logref, processingstuff_ = undefined, otherstuff_ = _fake_other, stateValid_ = undefined, globalstuff_ = globalref }
+	let _log_fakeref = RefType { logstuff_ = logref, processPage_ = undefined, otherstuff_ = _fake_other, stateValid_ = undefined, globalstuff_ = globalref }
 
 	let try_handling send_response x = do
 		result <- try x
@@ -361,10 +359,7 @@ makeRedirectResponse text _effuri headers = return $ mkResponse (3,0,2) (headers
 
 kolProxyHandlerChat uri params baseref = do
 	let ref = baseref {
-		processingstuff_ = ProcessingRefStuff {
-			processPage_ = Handlers.doProcessPageChat,
-			getstatusfunc_ = Handlers.statusfunc
-		}
+		processPage_ = Handlers.doProcessPageChat
 	}
 	let allparams = concat $ catMaybes $ [decodeUrlParams uri, params]
 	x <- case uriPath uri of
@@ -382,10 +377,7 @@ kolProxyHandlerChat uri params baseref = do
 
 make_ref baseref = do
 	let ref = baseref {
-		processingstuff_ = ProcessingRefStuff {
-			processPage_ = Handlers.doProcessPage,
-			getstatusfunc_ = Handlers.statusfunc
-		}
+		processPage_ = Handlers.doProcessPage
 	}
 	state_result <- try $ do
 		mjs <- readIORef (latestRawJson_ $ sessionData $ ref)
@@ -484,7 +476,7 @@ kolProxyHandler uri params baseref = do
 			resp <- case lookup "filename" allparams of
 				Just p -> if (p =~ "[a-z]+/[A-Za-z_]+\\.?[A-Za-z_]*")
 					then do
-						exists <- doesFileExist ("fileserver/" ++ p)
+						exists <- System.Directory.doesFileExist ("fileserver/" ++ p)
 						if exists
 							then do
 								contents <- Data.ByteString.Char8.readFile ("fileserver/" ++ p)
@@ -506,7 +498,7 @@ kolProxyHandler uri params baseref = do
 		Just r -> r
 		Nothing -> do
 			when (uriPath uri == "/logout.php") $ do
-				canread_before <- canReadState origref
+				canread_before <- runWithRef origref canReadState
 				when canread_before $ State.storeSettings origref
 			let reqtype = if isJust params then "POST" else "GET"
 			response <- Logging.log_time_interval origref ("browser request: " ++ (show uri)) $ Lua.runBrowserRequestScript origref uri allparams reqtype

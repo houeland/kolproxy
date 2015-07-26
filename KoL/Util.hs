@@ -6,6 +6,7 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Exception
 import Control.Monad
+import qualified Control.Monad.Reader
 import Data.List
 import Data.Maybe
 import Data.Typeable
@@ -22,6 +23,11 @@ import qualified Data.Map
 import qualified Database.SQLite3Modded
 
 
+askRef = Control.Monad.Reader.ask :: Control.Monad.Reader.ReaderT RefType IO RefType
+
+liftIO = Control.Monad.Reader.liftIO :: IO a -> Control.Monad.Reader.ReaderT RefType IO a
+
+runWithRef ref f = Control.Monad.Reader.runReaderT f (ref :: RefType)
 
 kolproxy_version_number = "4.1.0-dev"
 
@@ -83,7 +89,9 @@ cookie_to_sessid cookie =
 get_sessid ref = cookie_to_sessid $ cookie_ $ connection $ ref
 
 
-canReadState ref = return $ stateValid_ ref :: IO Bool
+canReadState = do
+	ref <- askRef
+	return $ stateValid_ ref
 
 create_db place filename = do
 	path <- getDirectoryPath place filename

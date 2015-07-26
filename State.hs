@@ -1,4 +1,4 @@
-module State (readMapFromFile, writeStateToFile, registerUpdatedState, unsetState, setState, getState, uglyhack_resetFightState, uglyhack_enumerateState, makeStateJSON, loadStateFromJson, download_actionbar, writeServerSettings, storeSettings, initializeState, ensureLoadedState, loadSettingsFromServer) where
+module State (readMapFromFile, writeStateToFile, registerUpdatedState, unsetState, setState, getState, uglyhack_resetFightState, uglyhack_enumerateState, makeStateJSON, loadStateFromJson, download_actionbar, writeServerSettings, storeSettings, initializeState, ensureLoadedState, loadSettingsFromServer, readState, internalReadStatePair) where
 
 import Prelude
 import PlatformLowlevel
@@ -17,6 +17,20 @@ import Data.Time.Clock.POSIX
 import System.IO.Error (isDoesNotExistError)
 import Text.JSON
 import qualified Data.Map
+
+__state ref = if stateValid_ ref
+	then stateData_ $ sessionData $ ref
+	else throw $ InternalError $ "Invalid state while trying to read"
+
+readState = do
+	ref <- askRef
+	(_, s) <- liftIO $ readIORef (__state ref)
+	return s
+
+internalReadStatePair = do
+	ref <- askRef
+	(id, s) <- liftIO $ readIORef (__state ref)
+	return (id, s)
 
 get_stid ref = do
 	ai <- getApiInfo ref
@@ -56,7 +70,7 @@ remap_stateset input_stateset input_var = if input_stateset == "fight"
 
 unsetState ref input_stateset input_var = do
 	let (stateset, var) = remap_stateset input_stateset input_var
-	(stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
+	(stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- runWithRef ref internalReadStatePair
 	let newstate = case stateset of
 		"request" -> (Data.Map.delete var requestmap, sessionmap, charmap, ascmap, daymap)
 		"session" -> (requestmap, Data.Map.delete var sessionmap, charmap, ascmap, daymap)
@@ -64,12 +78,12 @@ unsetState ref input_stateset input_var = do
 		"ascension" -> (requestmap, sessionmap, charmap, Data.Map.delete var ascmap, daymap)
 		"day" -> (requestmap, sessionmap, charmap, ascmap, Data.Map.delete var daymap)
 		_ -> throw $ InternalError $ "Invalid state table type: " ++ stateset
-	writeIORef (state ref) (stid, newstate)
+	writeIORef (__state ref) (stid, newstate)
 	registerUpdatedState ref stateset var
 
 setState ref input_stateset input_var value = do
 	let (stateset, var) = remap_stateset input_stateset input_var
-	(stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef $ state ref
+	(stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- runWithRef ref internalReadStatePair
 	let newstate = case stateset of
 		"request" -> (Data.Map.insert var value requestmap, sessionmap, charmap, ascmap, daymap)
 		"session" -> (requestmap, Data.Map.insert var value sessionmap, charmap, ascmap, daymap)
@@ -77,12 +91,12 @@ setState ref input_stateset input_var value = do
 		"ascension" -> (requestmap, sessionmap, charmap, Data.Map.insert var value ascmap, daymap)
 		"day" -> (requestmap, sessionmap, charmap, ascmap, Data.Map.insert var value daymap)
 		_ -> throw $ InternalError $ "Invalid state table type: " ++ stateset
-	writeIORef (state ref) (stid, newstate)
+	writeIORef (__state ref) (stid, newstate)
 	registerUpdatedState ref stateset var
 
 getState ref input_stateset input_var = do
 	let (stateset, var) = remap_stateset input_stateset input_var
-	(_stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
+	(requestmap, sessionmap, charmap, ascmap, daymap) <- runWithRef ref readState
 	return $ case stateset of
 		"request" -> Data.Map.lookup var requestmap
 		"session" -> Data.Map.lookup var sessionmap
@@ -92,18 +106,18 @@ getState ref input_stateset input_var = do
 		_ -> throw $ InternalError $ "Invalid state table type: " ++ stateset
 
 uglyhack_resetFightState ref = do
-	(_stid, (_requestmap, _sessionmap, _charmap, _ascmap, daymap)) <- readIORef (state ref)
+	(_requestmap, _sessionmap, _charmap, _ascmap, daymap) <- runWithRef ref readState
 	let fight_keys = Data.Map.toList $ Data.Map.filterWithKey (\x _y -> isPrefixOf "fight." x) daymap
 	mapM_ (\(x, _y) -> unsetState ref "day" x) fight_keys
 
 uglyhack_enumerateState ref = do
-	(_stid, (requestmap, sessionmap, charmap, ascmap, daymap)) <- readIORef (state ref)
+	(requestmap, sessionmap, charmap, ascmap, daymap) <- runWithRef ref readState
 	return [("request", Data.Map.keys requestmap), ("session", Data.Map.keys sessionmap), ("character", Data.Map.keys charmap), ("ascension", Data.Map.keys ascmap), ("day", Data.Map.keys daymap)]
 
 makeStateJSON ref newstateid = do
 	ai <- getApiInfo ref
 
-	(_stid, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
+	(_requestmap, _sessionmap, charmap, ascmap, extra_daymap) <- runWithRef ref readState
 	let daymap = Data.Map.filterWithKey (\x _y -> not $ isPrefixOf "fight." x) extra_daymap
 
 	jsondied <- newIORef False
@@ -226,7 +240,7 @@ writeServerSettings ref = do
 
 storeSettings ref = when (store_state_in_actionbar ref) $ do
 	writeIORef (lastStoredTime_ $ sessionData $ ref) =<< getCurrentTime
-	(_, (_requestmap, _sessionmap, charmap, ascmap, extra_daymap)) <- readIORef (state ref)
+	(_requestmap, _sessionmap, charmap, ascmap, extra_daymap) <- runWithRef ref readState
 	let daymap = Data.Map.filterWithKey (\x _y -> not $ isPrefixOf "fight." x) extra_daymap
 	let statedesc = show (charmap, ascmap, daymap)
 	laststored <- readIORef (lastStoredState_ $ sessionData $ ref)

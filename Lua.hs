@@ -3,13 +3,13 @@
 module Lua (runProcessScript, runChatRequestScript, runBrowserRequestScript, runBotScript, runLogParsingScript, runLogScript, run_datafile_parsers) where
 
 import Prelude
-import Logging
-import LuaLibrary
-import State
-import KoL.Http
+import qualified Logging
+import qualified LuaLibrary
+import qualified State
+import qualified KoL.Api
+import qualified KoL.Http
 import KoL.Util
 import KoL.UtilTypes
-import qualified KoL.Api
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception
@@ -27,59 +27,58 @@ import qualified Database.SQLite3Modded
 import qualified Scripting.LuaModded as Lua
 
 setup_lua_instance level filename setupref = do
-	(l, c) <- log_time_interval setupref ("setup lua: " ++ filename) $ do
+	(l, c) <- Logging.log_time_interval setupref ("setup lua: " ++ filename) $ do
 		code <- readFile filename
 
 		lstate <- Lua.newstate
 		Lua.openlibs lstate
 
 		let register_function name f = do
-			let log_f l = lua_log_line setupref name (f setupref l)
-			push_function lstate log_f name
+			LuaLibrary.push_function lstate (\l -> f setupref l) name
 			Lua.setglobal lstate name
 
-		register_function "raw_make_href" $ make_href
+		register_function "raw_make_href" $ LuaLibrary.make_href
 
 		register_function "get_inventory_counts" $ \ref l -> do
-			push_table_contents_integer_integer l =<< KoL.Api.getInventoryCounts ref
+			LuaLibrary.push_table_contents_integer_integer l =<< KoL.Api.getInventoryCounts ref
 			return 1
 
 		register_function "get_status_info" $ \ref l -> do
 			-- TODO: This fails when not logged in. Maybe not throw exception?
-			push_jsvalue l =<< KoL.Api.getCharStatusObj ref
+			LuaLibrary.push_jsvalue l =<< KoL.Api.getCharStatusObj ref
 			return 1
 
-		register_function "fromjson" $ \_ref l -> fromjson l
-		register_function "tojson" $ \_ref l -> tojson l
+		register_function "fromjson" $ \_ref l -> LuaLibrary.fromjson l
+		register_function "tojson" $ \_ref l -> LuaLibrary.tojson l
 
-		register_function "kolproxycore_decode_uri_query" $ \_ref l -> decode_uri_query l
+		register_function "kolproxycore_decode_uri_query" $ \_ref l -> LuaLibrary.decode_uri_query l
 
 		register_function "kolproxy_md5" $ \_ref l -> do
-			str <- peekJustString l 1
+			str <- LuaLibrary.peekJustString l 1
 			Lua.pushstring l $ get_md5 str
 			return 1
 
 		register_function "kolproxy_list_ascension_logs" $ \_ref l -> do
-			playerid <- peekJustInteger l 1
-			secretkey <- peekJustString l 2
-			Lua.pushstring l =<< postHTTPFileData "http://www.houeland.com/kolproxy/ascension-log" [("action", "list"), ("playerid", show playerid), ("secretkey", secretkey)]
+			playerid <- LuaLibrary.peekJustInteger l 1
+			secretkey <- LuaLibrary.peekJustString l 2
+			Lua.pushstring l =<< KoL.Http.postHTTPFileData "http://www.houeland.com/kolproxy/ascension-log" [("action", "list"), ("playerid", show playerid), ("secretkey", secretkey)]
 			return 1
 
 		register_function "simplexmldata_to_table" $ \_ref l -> do
-			xmlstr <- peekJustString l 1
+			xmlstr <- LuaLibrary.peekJustString l 1
 			let Just xmldoc = parseXMLDoc xmlstr
-			push_simplexmldata l xmldoc
+			LuaLibrary.push_simplexmldata l xmldoc
 			return 1
 
 		register_function "get_current_kolproxy_version" $ \_ref l -> do
-			Lua.pushstring l =<< get_current_kolproxy_version
+			Lua.pushstring l =<< LuaLibrary.get_current_kolproxy_version
 			return 1
 
 		register_function "get_latest_kolproxy_version" $ \_ref l -> do
-			versionstr <- get_latest_kolproxy_version
+			versionstr <- LuaLibrary.get_latest_kolproxy_version
 			case decodeStrict versionstr of
 				Ok jsonobj -> do
-					push_jsvalue l jsonobj
+					LuaLibrary.push_jsvalue l jsonobj
 					return 1
 				_ -> return 0
 
@@ -95,13 +94,13 @@ setup_lua_instance level filename setupref = do
 		register_function "kolproxy_log_time_interval" $ \ref l -> do
 			desc <- Lua.tostring l 1
 			Lua.remove l 1
-			isok <- log_time_interval ref ("lua:" ++ desc) $ Lua.pcall l 0 Lua.multret 0
+			isok <- Logging.log_time_interval ref ("lua:" ++ desc) $ Lua.pcall l 0 Lua.multret 0
 			case isok of
 				0 -> fromIntegral <$> Lua.gettop l
 				_ -> throwIO =<< LuaError <$> Lua.tostring l (-1)
 
 		register_function "kolproxy_can_read_state" $ \ref l -> do
-			x <- canReadState ref
+			x <- runWithRef ref canReadState
 			Lua.pushboolean l x
 			return 1
 
@@ -111,52 +110,52 @@ setup_lua_instance level filename setupref = do
 
 		register_function "list_custom_autoload_script_files" $ \_ref l -> do
 			filenames <- get_custom_autoload_script_files
-			push_table_contents_stringlist l filenames
+			LuaLibrary.push_table_contents_stringlist l filenames
 			return 1
 
 		register_function "block_lua_scripting" $ \ref _l -> do
 			writeIORef (blocking_lua_scripting ref) True
 			return 0
 
-		register_function "parse_request_param_string" parse_request_param_string
+		register_function "parse_request_param_string" LuaLibrary.parse_request_param_string
 
 		case level of
 			CHAT -> do
-				register_function "kolproxycore_async_submit_page" async_submit_page_func_DEBUG
+				register_function "kolproxycore_async_submit_page" LuaLibrary.async_submit_page_func_DEBUG
 				register_function "get_character_name" $ \ref l -> do
-					Lua.pushstring l =<< get_ref_playername ref
+					Lua.pushstring l =<< LuaLibrary.get_ref_playername ref
 					return 1
-				register_function "get_player_id" get_player_id
-				register_function "set_chat_state" set_chat_state
-				register_function "get_chat_state" get_chat_state
+				register_function "get_player_id" LuaLibrary.get_player_id
+				register_function "set_chat_state" LuaLibrary.set_chat_state
+				register_function "get_chat_state" LuaLibrary.get_chat_state
 			PROCESS -> do
-				register_function "set_state" set_state
-				register_function "get_state" get_state
+				register_function "set_state" LuaLibrary.set_state
+				register_function "get_state" LuaLibrary.get_state
 				register_function "reset_fight_state" $ \ref _l -> do
-					uglyhack_resetFightState ref
+					State.uglyhack_resetFightState ref
 					return 0
-				register_function "get_api_itemid_info" get_api_itemid_info
+				register_function "get_api_itemid_info" LuaLibrary.get_api_itemid_info
 			BROWSERREQUEST -> do
-				register_function "set_state" set_state
-				register_function "get_state" get_state
+				register_function "set_state" LuaLibrary.set_state
+				register_function "get_state" LuaLibrary.get_state
 				register_function "reset_fight_state" $ \ref _l -> do
-					uglyhack_resetFightState ref
+					State.uglyhack_resetFightState ref
 					return 0
-				register_function "get_api_itemid_info" get_api_itemid_info
-				register_function "kolproxycore_enumerate_state" kolproxycore_enumerate_state
-				register_function "kolproxycore_async_submit_page" async_submit_page_func_DEBUG
+				register_function "get_api_itemid_info" LuaLibrary.get_api_itemid_info
+				register_function "kolproxycore_enumerate_state" LuaLibrary.kolproxycore_enumerate_state
+				register_function "kolproxycore_async_submit_page" LuaLibrary.async_submit_page_func_DEBUG
 				register_function "kolproxycore_splituri" $ \_ref l -> do
-					uristr <- peekJustString l 1
+					uristr <- LuaLibrary.peekJustString l 1
 					let uri = mkuri uristr
 					Lua.pushstring l $ uriPath uri
 					Lua.pushstring l $ uriQuery uri
 					return 2
 			BOTSCRIPT -> do
-				register_function "get_api_itemid_info" get_api_itemid_info
-				register_function "kolproxycore_enumerate_state" kolproxycore_enumerate_state
-				register_function "kolproxycore_async_submit_page" async_submit_page_func_DEBUG
+				register_function "get_api_itemid_info" LuaLibrary.get_api_itemid_info
+				register_function "kolproxycore_enumerate_state" LuaLibrary.kolproxycore_enumerate_state
+				register_function "kolproxycore_async_submit_page" LuaLibrary.async_submit_page_func_DEBUG
 				register_function "kolproxycore_sleep" $ \_ref l -> do
-					delay <- peekJustDouble l 1
+					delay <- LuaLibrary.peekJustDouble l 1
 					threadDelay $ round $ delay * 1000000
 					return 0
 
@@ -169,7 +168,7 @@ setup_lua_instance level filename setupref = do
 
 	case c of
 		0 -> do
-			moo <- log_time_interval setupref ("do lua loading code: " ++ filename) $ Lua.pcall l 0 Lua.multret 1 -- returns on stack=2+
+			moo <- Logging.log_time_interval setupref ("do lua loading code: " ++ filename) $ Lua.pcall l 0 Lua.multret 1 -- returns on stack=2+
 			case moo of
 				0 -> do
 					Lua.setglobal l "kolproxy_stored_wrapped_function"
@@ -194,14 +193,14 @@ setup_lua_instance level filename setupref = do
 
 get_lua_instance_for_code level filename ref = do
 	-- TODO! CLOSE LUA INSTANCES!!
-	canread <- canReadState ref
+	canread <- runWithRef ref canReadState
 	modifyMVar (luaInstances_ $ sessionData $ ref) $ \insts -> do
 		case Data.Map.lookup (canread, filename, level) insts of
 			Just existingmv -> return (insts, Right existingmv)
 			_ -> do
 				either_l_setup <- do
 					putDebugStrLn $ "Making lua instance: " ++ show (canread, filename, level)
-					log_time_interval ref ("setup lua instance: " ++ filename ++ "|" ++ show level) $ setup_lua_instance level filename ref
+					Logging.log_time_interval ref ("setup lua instance: " ++ filename ++ "|" ++ show level) $ setup_lua_instance level filename ref
 				case either_l_setup of
 					Right l_setup -> do
 						mv_l <- newMVar l_setup
@@ -218,7 +217,7 @@ run_lua_code_ ref l dosetvars filename = do
 		Lua.getglobal l "kolproxy_stored_wrapped_function"
 		void $ dosetvars l
 
-	moo_two <- log_time_interval ref ("run lua code: " ++ filename) $ Lua.pcall l 1 Lua.multret 1 -- returns on stack=2+
+	moo_two <- Logging.log_time_interval ref ("run lua code: " ++ filename) $ Lua.pcall l 1 Lua.multret 1 -- returns on stack=2+
 	case moo_two of
 		0 -> do
 			top <- Lua.gettop l
@@ -248,7 +247,7 @@ run_lua_code level filename ref dosetvars = do
 		Left err -> return $ Left err
 
 setvars vars text allparams l = do
-	push_table_contents_string_string l vars
+	LuaLibrary.push_table_contents_string_string l vars
 	Lua.pushstring l "text"
 	Lua.pushbytestring l text
 	Lua.settable l (-3)
@@ -298,11 +297,11 @@ runLogScript log_db code = do
 	Lua.openlibs lstate
 
 	let register_function name f = do
-		push_function lstate f name
+		LuaLibrary.push_function lstate f name
 		Lua.setglobal lstate name
 
-	register_function "fromjson" fromjson
-	register_function "tojson" tojson
+	register_function "fromjson" LuaLibrary.fromjson
+	register_function "tojson" LuaLibrary.tojson
 
 	register_function "get_log_lines" $ \l -> do
 		s <- Database.SQLite3Modded.prepare log_db "SELECT idx FROM pageloads;"
@@ -322,8 +321,8 @@ runLogScript log_db code = do
 		return 1
 
 	register_function "get_line_text" $ \l -> do
-		whichidx <- peekJustInteger l 1
-		whichfield <- peekJustString l 2
+		whichidx <- LuaLibrary.peekJustInteger l 1
+		whichfield <- LuaLibrary.peekJustString l 2
 		s <- Database.SQLite3Modded.prepare log_db ("SELECT " ++ whichfield ++ " FROM pageloads WHERE idx == " ++ (show whichidx) ++ ";") -- TODO: make safe?
 		sr <- Database.SQLite3Modded.step s
 		retvals <- case sr of
@@ -339,7 +338,7 @@ runLogScript log_db code = do
 		return retvals
 
 	register_function "get_line_allparams" $ \l -> do
-		whichidx <- peekJustInteger l 1
+		whichidx <- LuaLibrary.peekJustInteger l 1
 		s <- Database.SQLite3Modded.prepare log_db ("SELECT requestedurl, retrievedurl, parameters FROM pageloads WHERE idx == " ++ (show whichidx) ++ ";")
 		sr <- Database.SQLite3Modded.step s
 		retvals <- case sr of
@@ -353,7 +352,7 @@ runLogScript log_db code = do
 					_ -> Nothing
 				let allparams = concat $ catMaybes $ [decodeUrlParams uri, decodeUrlParams effuri, params]
 -- 				putStrLn $ "allparams: " ++ show allparams
-				push_table_contents_string_string l allparams
+				LuaLibrary.push_table_contents_string_string l allparams
 				return 1
 			Database.SQLite3Modded.Done -> return 0
 		Database.SQLite3Modded.finalize s
@@ -361,15 +360,15 @@ runLogScript log_db code = do
 
 	loginforef <- newIORef Nothing
 	register_function "set_log_info" $ \l -> do
-		playerid <- peekJustInteger l 1
-		charname <- peekJustString l 2
-		ascnum <- peekJustInteger l 3
-		secretkey <- peekJustString l 4
+		playerid <- LuaLibrary.peekJustInteger l 1
+		charname <- LuaLibrary.peekJustString l 2
+		ascnum <- LuaLibrary.peekJustInteger l 3
+		secretkey <- LuaLibrary.peekJustString l 4
 		writeIORef loginforef $ Just (playerid, charname, ascnum, get_md5 $ secretkey)
 		return 0
 
 	register_function "get_url_path" $ \l -> do
-		urlstr <- peekJustString l 1
+		urlstr <- LuaLibrary.peekJustString l 1
 		case parseURIReference urlstr of
 			Just uri -> do
 				Lua.pushstring l (uriPath uri)
@@ -379,7 +378,7 @@ runLogScript log_db code = do
 	utc_arbitrary_epoch <- zonedTimeToUTC <$> getZonedTime
 
 	register_function "time_to_number" $ \l -> do
-		timestr <- peekJustString l 1
+		timestr <- LuaLibrary.peekJustString l 1
 		let utc_time = zonedTimeToUTC $ read timestr
 		let diff = diffUTCTime utc_time utc_arbitrary_epoch
 		Lua.pushnumber l $ realToFrac diff
@@ -398,7 +397,7 @@ runLogScript log_db code = do
 	retcode <- Lua.pcall l 0 Lua.multret 1 -- returns on stack=2+
 	jsonstr <- case retcode of
 		0 -> do
-			jsonstr <- encodeStrict <$> lua_to_jsvalue l
+			jsonstr <- encodeStrict <$> LuaLibrary.lua_to_jsvalue l
 			putStrLn $ "json length: " ++ (show $ length $ jsonstr)
 			return jsonstr
 		_ -> do
@@ -425,16 +424,16 @@ run_datafile_parsers = do
 	Lua.openlibs lstate
 
 	let register_function name f = do
-		push_function lstate f name
+		LuaLibrary.push_function lstate f name
 		Lua.setglobal lstate name
 
-	register_function "fromjson" fromjson
-	register_function "tojson" tojson
+	register_function "fromjson" LuaLibrary.fromjson
+	register_function "tojson" LuaLibrary.tojson
 
 	register_function "simplexmldata_to_table" $ \l -> do
-		xmlstr <- peekJustString l 1
+		xmlstr <- LuaLibrary.peekJustString l 1
 		let Just xmldoc = parseXMLDoc xmlstr
-		push_simplexmldata l xmldoc
+		LuaLibrary.push_simplexmldata l xmldoc
 		return 1
 
 	-- TODO: handle return value?

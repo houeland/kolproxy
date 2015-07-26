@@ -1,18 +1,30 @@
-module KoL.Api (getCharStatusObj, getInventoryObj, getInventoryCounts, ApiInfo(..), rawDecodeApiInfo, getApiInfo, force_latest_status_parse, asyncGetItemInfoObj, getPlayerId, postPageRawNoScripts, rawAsyncNochangeGetPageRawNoScripts, nochangeGetPageRawNoScripts) where
+module KoL.Api (getCharStatusObj, getInventoryCounts, ApiInfo(..), rawDecodeApiInfo, getApiInfo, force_latest_status_parse, asyncGetItemInfoObj, getPlayerId, postPageRawNoScripts, rawAsyncNochangeGetPageRawNoScripts, nochangeGetPageRawNoScripts, statusfunc) where
 
 import Prelude
 import qualified KoL.Http
 import KoL.Util
 import KoL.UtilTypes
 import Control.Applicative
+import Control.Concurrent
 import Control.Exception
 import Control.Monad
+import Data.IORef
 import Network.CGI (formEncode)
 import Network.URI
 import Text.JSON
 import qualified Data.ByteString.Char8
 
-readlateststatus ref = join $ getstatusfunc ref
+statusfunc ref = do
+	mv <- readIORef $ jsonStatusPageMVarRef_ $ sessionData $ ref
+	return $ ((do
+		x <- readMVar mv
+		case x of
+			Right r -> return r
+			Left err -> throwIO err) `catch` (\e -> do
+				putDebugStrLn $ "statusfunc exception: " ++ show (e :: SomeException)
+				throwIO e))
+
+readlateststatus ref = join $ statusfunc ref
 
 getCharStatusObj ref = do
 	jscomb <- readlateststatus ref

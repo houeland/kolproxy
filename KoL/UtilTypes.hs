@@ -85,11 +85,6 @@ data LogRefStuff = LogRefStuff {
 	solid_logchan_ :: Chan (IO ())
 }
 
-data ProcessingRefStuff = ProcessingRefStuff {
-	processPage_ :: RefType -> URI -> Maybe [(String, String)] -> IO (IO (Either PageResult PageResult)),
-	getstatusfunc_ :: RefType -> IO (IO (JSObject JSValue))
-}
-
 data EnvironmentSettings = EnvironmentSettings {
 	store_state_in_actionbar_ :: Bool,
 	store_state_locally_ :: Bool,
@@ -105,7 +100,6 @@ data GlobalRefStuff = GlobalRefStuff {
 	blocking_lua_scripting_ :: IORef Bool,
 	h_files_downloaded_ :: Handle,
 	h_timing_log_ :: Handle,
-	h_lua_log_ :: Handle,
 	h_http_log_ :: Handle,
 	shutdown_secret_ :: String,
 	use_slow_http_ref_ :: IORef Bool,
@@ -121,19 +115,15 @@ data OtherRefStuff = OtherRefStuff {
 
 data RefType = RefType {
 	logstuff_ :: LogRefStuff,
-	processingstuff_ :: ProcessingRefStuff,
+	processPage_ :: RefType -> URI -> Maybe [(String, String)] -> IO (IO (Either PageResult PageResult)),
 	otherstuff_ :: OtherRefStuff,
 	stateValid_ :: Bool,
 	globalstuff_ :: GlobalRefStuff
 }
 
-processPage ref = processPage_ $ processingstuff_ $ ref
-getstatusfunc ref = (getstatusfunc_ $ processingstuff_ $ ref) ref
+processPage ref = processPage_ $ ref
 
 connection ref = connection_ $ otherstuff_ $ ref
-state ref = if stateValid_ ref
-	then stateData_ $ sessionData $ ref
-	else throw $ InternalError $ "Invalid state while trying to read"
 sessionData ref = sessionData_ $ otherstuff_ $ ref
 logindents ref = logindents_ $ globalstuff_ $ ref
 blocking_lua_scripting ref = blocking_lua_scripting_ $ globalstuff_ $ ref
