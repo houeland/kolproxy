@@ -1,8 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module KoL.UtilTypes where
+module Kolproxy.UtilTypes where
 
 import Prelude
+
 import Control.Concurrent
 import Control.Exception
 import Data.IORef

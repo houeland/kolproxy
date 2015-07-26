@@ -1,15 +1,17 @@
-module Setup where
+module Kolproxy.Setup where
 
 import Prelude
-import qualified Handlers
-import qualified HardcodedGameStuff
-import qualified Lua
-import qualified PlatformLowlevel
-import qualified Server
-import qualified KoL.Http
-import qualified KoL.HttpLowlevel
-import KoL.Util
-import KoL.UtilTypes
+
+import Kolproxy.Util
+import Kolproxy.UtilTypes
+import qualified Kolproxy.Handlers
+import qualified Kolproxy.HardcodedGameStuff
+import qualified Kolproxy.Http
+import qualified Kolproxy.HttpLowlevel
+import qualified Kolproxy.Lua
+import qualified Kolproxy.PlatformLowlevel
+import qualified Kolproxy.Server
+
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception
@@ -18,12 +20,12 @@ import Data.IORef
 import Data.Maybe
 import Data.Time
 import Network.URI
+import qualified Data.Map
 import qualified System.Directory (doesFileExist, createDirectoryIfMissing)
 import qualified System.IO
 import qualified System.Random
-import qualified Data.Map
 
-initializeThenDo = PlatformLowlevel.platform_init
+initializeThenDo = Kolproxy.PlatformLowlevel.platform_init
 
 make_globalref = do
 	environment_settings <- do
@@ -71,7 +73,7 @@ make_globalref = do
 		case envhttp10 of
 			Just "1" -> return True
 			Just "0" -> return False
-			_ -> KoL.HttpLowlevel.check_for_http10
+			_ -> Kolproxy.HttpLowlevel.check_for_http10
 	tnow <- getCurrentTime
 	last_datafile_update_ref <- newIORef $ addUTCTime (fromInteger (-60000)) tnow
 	return GlobalRefStuff {
@@ -104,7 +106,7 @@ runProxyServer portnum = do
 	let logref = LogRefStuff { logchan_ = logchan, solid_logchan_ = logchan }
 	let _log_fakeref = RefType { logstuff_ = logref, processPage_ = undefined, otherstuff_ = _fake_other, stateValid_ = undefined, globalstuff_ = globalref }
 
-	(mvsequence, mvchat) <- Server.setupHandlerChannels _log_fakeref
+	(mvsequence, mvchat) <- Kolproxy.Server.setupHandlerChannels _log_fakeref
 
 	sessionmastermv <- newMVar Data.Map.empty
 	dblogmapmv <- newMVar Data.Map.empty
@@ -122,13 +124,13 @@ runProxyServer portnum = do
 						chanaction opendb
 					return (Data.Map.insert filename x m, x)
 		writeChan chan action
-	sock <- KoL.HttpLowlevel.mklistensocket (listen_public _log_fakeref) portnum
-	forkIO_ "kps:updatedatafiles" $ HardcodedGameStuff.update_data_files
-	when (launch_browser_ $ environment_settings_ $ globalref) $ forkIO_ "kps:launchkolproxy" $ PlatformLowlevel.platform_launch_url $ "http://localhost:" ++ show portnum ++ "/"
+	sock <- Kolproxy.HttpLowlevel.mklistensocket (listen_public _log_fakeref) portnum
+	forkIO_ "kps:updatedatafiles" $ Kolproxy.HardcodedGameStuff.update_data_files
+	when (launch_browser_ $ environment_settings_ $ globalref) $ forkIO_ "kps:launchkolproxy" $ Kolproxy.PlatformLowlevel.platform_launch_url $ "http://localhost:" ++ show portnum ++ "/"
 	let runLoop f = do
 		cont <- f
 		when cont $ runLoop f
-	debug_do "do_loop" $ runLoop $ Server.handleConnection globalref (sessionmastermv, dblogstuff) sock (portnum, mvsequence, mvchat, logchan, dropping_logchan)
+	debug_do "do_loop" $ runLoop $ Kolproxy.Server.handleConnection globalref (sessionmastermv, dblogstuff) sock (portnum, mvsequence, mvchat, logchan, dropping_logchan)
 	putStrLn "Shutting down."
 
 runKolproxy = (do
@@ -159,19 +161,19 @@ runKolproxy = (do
 runbot filename = do
 	(logchan, dropping_logchan, globalref) <- kolproxy_setup_refstuff
 
-	let login_useragent = kolproxy_version_string ++ " (" ++ PlatformLowlevel.platform_name ++ ")" ++ " BotScript/0.1 (" ++ filename ++ ")"
+	let login_useragent = kolproxy_version_string ++ " (" ++ Kolproxy.PlatformLowlevel.platform_name ++ ")" ++ " BotScript/0.1 (" ++ filename ++ ")"
 	let login_host = fromJust $ parseURI $ "http://www.kingdomofloathing.com/"
 
-	sc <- Server.make_sessionconn globalref "http://www.kingdomofloathing.com/" (error "dblogstuff")
+	sc <- Kolproxy.Server.make_sessionconn globalref "http://www.kingdomofloathing.com/" (error "dblogstuff")
 
 	Just username <- getEnvironmentSetting "KOLPROXY_BOTSCRIPT_USERNAME"
 	Just passwordmd5hash <- getEnvironmentSetting "KOLPROXY_BOTSCRIPT_PASSWORDMD5HASH"
 
-	cookie <- KoL.Http.login (login_useragent, login_host) username passwordmd5hash
+	cookie <- Kolproxy.Http.login (login_useragent, login_host) username passwordmd5hash
 
 	let ref = RefType {
 		logstuff_ = LogRefStuff { logchan_ = dropping_logchan, solid_logchan_ = logchan },
-		processPage_ = Handlers.doProcessPageChat,
+		processPage_ = Kolproxy.Handlers.doProcessPageChat,
 		otherstuff_ = OtherRefStuff {
 			connection_ = ConnectionType {
 				cookie_ = cookie,
@@ -187,4 +189,4 @@ runbot filename = do
 		globalstuff_ = globalref
 	}
 
-	Lua.runBotScript ref filename
+	Kolproxy.Lua.runBotScript ref filename

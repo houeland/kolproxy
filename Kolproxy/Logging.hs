@@ -1,8 +1,10 @@
-module Logging where
+module Kolproxy.Logging where
 
 import Prelude
-import KoL.Util
-import KoL.UtilTypes
+
+import Kolproxy.Util
+import Kolproxy.UtilTypes
+
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception

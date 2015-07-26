@@ -1,12 +1,13 @@
-module KoL.Util where
+module Kolproxy.Util where
 
 import Prelude
-import KoL.UtilTypes
+
+import Kolproxy.UtilTypes
+
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception
 import Control.Monad
-import qualified Control.Monad.Reader
 import Data.List
 import Data.Maybe
 import Data.Typeable
@@ -21,6 +22,7 @@ import qualified Data.ByteString.Lazy.Char8
 import qualified Data.Digest.Pure.MD5
 import qualified Data.Map
 import qualified Database.SQLite3Modded
+import qualified Control.Monad.Reader
 
 
 askRef = Control.Monad.Reader.ask :: Control.Monad.Reader.ReaderT RefType IO RefType

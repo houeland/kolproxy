@@ -1,9 +1,11 @@
-module KoL.Api (getCharStatusObj, getInventoryCounts, ApiInfo(..), rawDecodeApiInfo, getApiInfo, force_latest_status_parse, asyncGetItemInfoObj, getPlayerId, postPageRawNoScripts, rawAsyncNochangeGetPageRawNoScripts, nochangeGetPageRawNoScripts, statusfunc) where
+module Kolproxy.Api (getCharStatusObj, getInventoryCounts, ApiInfo(..), rawDecodeApiInfo, getApiInfo, force_latest_status_parse, asyncGetItemInfoObj, getPlayerId, postPageRawNoScripts, rawAsyncNochangeGetPageRawNoScripts, nochangeGetPageRawNoScripts, statusfunc) where
 
 import Prelude
-import qualified KoL.Http
-import KoL.Util
-import KoL.UtilTypes
+
+import Kolproxy.Util
+import Kolproxy.UtilTypes
+import qualified Kolproxy.Http
+
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception
@@ -102,7 +104,7 @@ getPlayerId name ref = do
 -- Downloading utility methods. TODO: put these elsewhere
 
 postPageRawNoScripts url params ref = do
-	pr <- join $ fst <$> KoL.Http.internalKolRequest_pipelining ref (mkuri url) (Just params) True
+	pr <- join $ fst <$> Kolproxy.Http.internalKolRequest_pipelining ref (mkuri url) (Just params) True
 	let (body, goturi) = (pageBody pr, pageUri pr)
 	if ((uriPath goturi) == (uriPath $ mkuri url))
 		then return body
@@ -114,7 +116,7 @@ postPageRawNoScripts url params ref = do
 					throwIO $ UrlMismatchException url goturi
 
 rawAsyncNochangeGetPageRawNoScripts url ref = do
-	f <- fst <$> KoL.Http.internalKolRequest_pipelining ref (mkuri url) Nothing False
+	f <- fst <$> Kolproxy.Http.internalKolRequest_pipelining ref (mkuri url) Nothing False
 	return $ do
 		pr <- f
 		let (body, goturi) = (pageBody pr, pageUri pr)

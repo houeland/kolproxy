@@ -1,10 +1,12 @@
-module LogParser (showLogs, compressLogs) where
+module Kolproxy.LogParser (showLogs, compressLogs) where
 
 import Prelude
-import Lua
-import PlatformLowlevel
-import KoL.Http
-import KoL.Util
+
+import Kolproxy.Http
+import Kolproxy.Lua
+import Kolproxy.PlatformLowlevel
+import Kolproxy.Util
+
 import Control.Applicative
 import Control.Concurrent
 import Control.Monad

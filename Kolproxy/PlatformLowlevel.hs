@@ -1,9 +1,11 @@
 {-# LANGUAGE CPP #-}
 
-module PlatformLowlevel where
+module Kolproxy.PlatformLowlevel where
 
 import Prelude
-import KoL.Util
+
+import Kolproxy.Util
+
 import Control.Applicative
 import Control.Exception
 import Control.Monad

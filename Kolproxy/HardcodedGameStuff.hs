@@ -1,10 +1,12 @@
-module HardcodedGameStuff (update_data_files, add_error_message_to_page) where
+module Kolproxy.HardcodedGameStuff (update_data_files, add_error_message_to_page) where
 
 import Prelude
-import Lua
-import PlatformLowlevel
-import KoL.Http
-import KoL.Util
+
+import Kolproxy.Http
+import Kolproxy.Lua
+import Kolproxy.PlatformLowlevel
+import Kolproxy.Util
+
 import Control.Exception
 import Control.Monad
 import Data.Time.Clock

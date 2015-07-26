@@ -1,12 +1,14 @@
-module KoL.Http (getHTTPFileData, postHTTPFileData, parseUriServerBugWorkaround, internalKolHttpsRequest, internalKolRequest, load_api_status_to_mv_mkapixf, load_api_status_to_mv, internalKolRequest_pipelining, login) where
+module Kolproxy.Http (getHTTPFileData, postHTTPFileData, parseUriServerBugWorkaround, internalKolHttpsRequest, internalKolRequest, load_api_status_to_mv_mkapixf, load_api_status_to_mv, internalKolRequest_pipelining, login) where
 
 -- TODO: Merge with HttpLowlevel or at least restructure
 
 import Prelude
-import Logging
-import KoL.HttpLowlevel
-import KoL.Util
-import KoL.UtilTypes
+
+import Kolproxy.HttpLowlevel
+import Kolproxy.Logging
+import Kolproxy.Util
+import Kolproxy.UtilTypes
+
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception

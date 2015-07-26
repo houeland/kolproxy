@@ -1,18 +1,20 @@
-module Server where
+module Kolproxy.Server where
 
 import Prelude
-import qualified Handlers
-import qualified HardcodedGameStuff
-import qualified Logging
-import qualified LogParser
-import qualified Lua
-import qualified PlatformLowlevel
-import qualified State
-import qualified KoL.Api
-import qualified KoL.Http
-import qualified KoL.HttpLowlevel
-import KoL.Util
-import KoL.UtilTypes
+
+import Kolproxy.Util
+import Kolproxy.UtilTypes
+import qualified Kolproxy.Api
+import qualified Kolproxy.Handlers
+import qualified Kolproxy.HardcodedGameStuff
+import qualified Kolproxy.Http
+import qualified Kolproxy.HttpLowlevel
+import qualified Kolproxy.Logging
+import qualified Kolproxy.LogParser
+import qualified Kolproxy.Lua
+import qualified Kolproxy.PlatformLowlevel
+import qualified Kolproxy.State
+
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception
@@ -25,21 +27,21 @@ import Network.CGI (formDecode)
 import Network.HTTP
 import Network.Stream (ConnError (ErrorClosed))
 import Network.URI
-import qualified System.Directory (doesFileExist)
 import Text.Regex.TDFA
 import qualified Data.ByteString.Char8
 import qualified Data.Map
 import qualified Network.Socket
+import qualified System.Directory (doesFileExist)
 
 make_sessionconn globalref kolproxy_direct_connection dblogstuff = do
 	slowconn <- readIORef $ use_slow_http_ref_ $ globalref
 	mkconnthing <- if slowconn
 		then do
 			putStrLn $ "INFO: Using slow server connections"
-			return $ debug_do "making slow connection" $ KoL.HttpLowlevel.slow_mkconnthing kolproxy_direct_connection
+			return $ debug_do "making slow connection" $ Kolproxy.HttpLowlevel.slow_mkconnthing kolproxy_direct_connection
 		else do
 			putStrLn $ "INFO: Using fast server connections"
-			return $ debug_do "making fast connection" $ KoL.HttpLowlevel.fast_mkconnthing kolproxy_direct_connection
+			return $ debug_do "making fast connection" $ Kolproxy.HttpLowlevel.fast_mkconnthing kolproxy_direct_connection
 	cs <- mkconnthing
 	cw <- mkconnthing
 	jspmvref <- newIORef =<< newEmptyMVar
@@ -52,8 +54,8 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff = do
 	-- TODO: Change this raw API decoding business?
 	let dologaction ref action = when (store_ascension_logs_ $ environment_settings_ $ globalref) $ do
 		Just jsonobj <- readIORef (latestValidJson_ $ sessionData $ ref)
-		let ai = KoL.Api.rawDecodeApiInfo jsonobj
-		dblogstuff ((KoL.Api.charName ai) ++ "-" ++ (show $ KoL.Api.ascension ai) ++ ".ascension-log.sqlite3") action
+		let ai = Kolproxy.Api.rawDecodeApiInfo jsonobj
+		dblogstuff ((Kolproxy.Api.charName ai) ++ "-" ++ (show $ Kolproxy.Api.ascension ai) ++ ".ascension-log.sqlite3") action
 	luainstancesref <- newMVar Data.Map.empty
 	laststoredstateref <- newIORef Nothing
 	laststoredtimeref <- newIORef tnow
@@ -98,7 +100,7 @@ get_sessionconn sessionmaster globalref cookie = do
 				return (Data.Map.insert sessid sessionconn m, sessionconn)
 	return (sc, kolproxy_hostUri)
 
-get_useragent agentHdr = kolproxy_version_string ++ " (" ++ PlatformLowlevel.platform_name ++ ")" ++ case agentHdr of
+get_useragent agentHdr = kolproxy_version_string ++ " (" ++ Kolproxy.PlatformLowlevel.platform_name ++ ")" ++ case agentHdr of
 	Just browseragent -> if (browseragent =~ "Safari") && (not (browseragent =~ "Chrome"))
 		then " " ++ browseragent ++ " NginxSafariBugWorkaround/1.0 (Faking Chrome/version)"
 		else " " ++ browseragent
@@ -144,10 +146,10 @@ handleConnection globalref sessionmaster sock (portnum, mvsequence, mvchat, logc
 	h <- debug_do "socket connection" $ socketConnection "???" (fromIntegral portnum) sh
 
 	let send_response resp = do
-		KoL.HttpLowlevel.send_http_response h resp
-		KoL.HttpLowlevel.end_http h
+		Kolproxy.HttpLowlevel.send_http_response h resp
+		Kolproxy.HttpLowlevel.end_http h
 
-	recvdata <- debug_do "receive HTTP" $ KoL.HttpLowlevel.kolproxy_receiveHTTP h
+	recvdata <- debug_do "receive HTTP" $ Kolproxy.HttpLowlevel.kolproxy_receiveHTTP h
 
 	let send_plain str uri = do
 		resp <- makeResponseWithNoExtraHeaders (Data.ByteString.Char8.pack str) uri [("Content-Type", "text/plain; charset=UTF-8"), ("Cache-Control", "no-cache")]
@@ -213,7 +215,7 @@ makeRedirectResponse text _effuri headers = return $ mkResponse (3,0,2) (headers
 
 kolProxyHandlerChat uri params baseref = do
 	let ref = baseref {
-		processPage_ = Handlers.doProcessPageChat
+		processPage_ = Kolproxy.Handlers.doProcessPageChat
 	}
 	let allparams = concat $ catMaybes $ [decodeUrlParams uri, params]
 	x <- case uriPath uri of
@@ -221,7 +223,7 @@ kolProxyHandlerChat uri params baseref = do
 			Right pr <- join $ (processPage ref) ref uri params
 			let (x, u) = (pageBody pr, pageUri pr)
 			return $ Right (x, u, "image/vnd.microsoft.icon")
-		_ -> Lua.runChatRequestScript ref uri allparams
+		_ -> Kolproxy.Lua.runChatRequestScript ref uri allparams
 	case x of
 		Right (msg, u, ct) -> do
 			makeResponseWithNoExtraHeaders msg u [("Content-Type", ct), ("Cache-Control", "no-cache")]
@@ -231,16 +233,16 @@ kolProxyHandlerChat uri params baseref = do
 
 make_ref baseref = do
 	let ref = baseref {
-		processPage_ = Handlers.doProcessPage
+		processPage_ = Kolproxy.Handlers.doProcessPage
 	}
 	state_result <- try $ do
 		mjs <- readIORef (latestRawJson_ $ sessionData $ ref)
 		when (isNothing mjs) $ do
 			mv <- readIORef (jsonStatusPageMVarRef_ $ sessionData $ ref)
-			apixf <- KoL.Http.load_api_status_to_mv_mkapixf ref
-			KoL.Http.load_api_status_to_mv ref mv apixf
-		KoL.Api.force_latest_status_parse ref
-		State.ensureLoadedState ref
+			apixf <- Kolproxy.Http.load_api_status_to_mv_mkapixf ref
+			Kolproxy.Http.load_api_status_to_mv ref mv apixf
+		Kolproxy.Api.force_latest_status_parse ref
+		Kolproxy.State.ensureLoadedState ref
 	case state_result of
 		Right _ -> do
 			return ref { stateValid_ = True }
@@ -253,15 +255,15 @@ kolProxyHandler uri params baseref = do
 	tlast <- readIORef (lastDatafileUpdate_ $ globalstuff_ $ baseref)
 	when (diffUTCTime t tlast > 10 * 60) $ do
 		writeIORef (lastDatafileUpdate_ $ globalstuff_ $ baseref) t
-		forkIO_ "proxy:updatedatafiles" $ HardcodedGameStuff.update_data_files -- TODO: maybe not for *every single page*?
+		forkIO_ "proxy:updatedatafiles" $ Kolproxy.HardcodedGameStuff.update_data_files -- TODO: maybe not for *every single page*?
 
-	origref <- Logging.log_time_interval baseref ("make ref for: " ++ (show uri)) $ make_ref baseref
+	origref <- Kolproxy.Logging.log_time_interval baseref ("make ref for: " ++ (show uri)) $ make_ref baseref
 
 	let allparams = concat $ catMaybes $ [decodeUrlParams uri, params]
 
 	let check_pwd_for action = do
-		ai <- KoL.Api.getApiInfo origref
-		if lookup "pwd" allparams == Just (KoL.Api.pwd ai)
+		ai <- Kolproxy.Api.getApiInfo origref
+		if lookup "pwd" allparams == Just (Kolproxy.Api.pwd ai)
 			then return action
 			else return $ Just $ makeErrorResponse (Data.ByteString.Char8.pack $ "Invalid pwd field") uri []
 
@@ -289,11 +291,11 @@ kolProxyHandler uri params baseref = do
 					writeIORef (latestValidJson_ $ sessionData $ origref) Nothing
 					make_ref $ baseref { otherstuff_ = (otherstuff_ origref) { connection_ = (connection_ $ otherstuff_ $ origref) { cookie_ = new_cookie } } }
 				putInfoStrLn $ "login.php -> getting server state"
-				ai <- KoL.Api.getApiInfo newref
-				putInfoStrLn $ "Logging in as " ++ (KoL.Api.charName ai) ++ " (ascension " ++ (show $ KoL.Api.ascension ai) ++ ")"
-				State.loadSettingsFromServer newref
+				ai <- Kolproxy.Api.getApiInfo newref
+				putInfoStrLn $ "Logging in as " ++ (Kolproxy.Api.charName ai) ++ " (ascension " ++ (show $ Kolproxy.Api.ascension ai) ++ ")"
+				Kolproxy.State.loadSettingsFromServer newref
 
-				forkIO_ "proxy:compresslogs" $ LogParser.compressLogs (KoL.Api.charName ai) (KoL.Api.ascension ai)
+				forkIO_ "proxy:compresslogs" $ Kolproxy.LogParser.compressLogs (Kolproxy.Api.charName ai) (Kolproxy.Api.ascension ai)
 
 				makeRedirectResponse pt uri hdrs) `catch` (\e -> do
 					putErrorStrLn $ "Failed to log in. Exception: " ++ (show (e :: Control.Exception.SomeException))
@@ -308,10 +310,10 @@ kolProxyHandler uri params baseref = do
 				loginrequestfunc <- case lookup "password" p_sensitive of
 					Just "" -> do
 						putInfoStrLn $ "Logging in..."
-						return KoL.Http.internalKolRequest
+						return Kolproxy.Http.internalKolRequest
 					_ -> do
 						putInfoStrLn $ "Logging in over https..."
-						return KoL.Http.internalKolHttpsRequest
+						return Kolproxy.Http.internalKolHttpsRequest
 				handle_login =<< loginrequestfunc uri (Just p_sensitive) (Nothing, useragent_ $ connection $ origref, hostUri_ $ connection $ origref, Nothing) True
 
 		"/custom-clear-lua-script-cache" -> check_pwd_for $ Just $ do
@@ -320,7 +322,7 @@ kolProxyHandler uri params baseref = do
 			makeResponse (Data.ByteString.Char8.pack $ "Cleared Lua script cache.") uri []
 
 		"/custom-logs" -> check_pwd_for $ Just $ do
-			pt <- LogParser.showLogs (lookup "which" allparams) (fromJust $ lookup "pwd" allparams)
+			pt <- Kolproxy.LogParser.showLogs (lookup "which" allparams) (fromJust $ lookup "pwd" allparams)
 			makeResponse (Data.ByteString.Char8.pack pt) uri []
 
 		"/kolproxy-automation-script" -> check_pwd_for $ Nothing
@@ -348,14 +350,14 @@ kolProxyHandler uri params baseref = do
 				Just (x, y) -> makeResponseWithNoExtraHeaders x uri [("Content-Type", y), ("Cache-Control", "max-age=3600")]
 		_ -> return Nothing
 
-	retresp <- Logging.log_time_interval origref ("run handler for: " ++ (show uri)) $ case response of
+	retresp <- Kolproxy.Logging.log_time_interval origref ("run handler for: " ++ (show uri)) $ case response of
 		Just r -> r
 		Nothing -> do
 			when (uriPath uri == "/logout.php") $ do
 				canread_before <- runWithRef origref canReadState
-				when canread_before $ State.storeSettings origref
+				when canread_before $ Kolproxy.State.storeSettings origref
 			let reqtype = if isJust params then "POST" else "GET"
-			response <- Logging.log_time_interval origref ("browser request: " ++ (show uri)) $ Lua.runBrowserRequestScript origref uri allparams reqtype
+			response <- Kolproxy.Logging.log_time_interval origref ("browser request: " ++ (show uri)) $ Kolproxy.Lua.runBrowserRequestScript origref uri allparams reqtype
 			case response of
 				Left (pt, effuri) -> makeErrorResponse pt effuri []
 				Right (pt, effuri, ct) -> makeResponseWithNoExtraHeaders pt effuri [("Content-Type", ct), ("Cache-Control", "no-cache")]
@@ -367,21 +369,21 @@ setupHandlerChannels ref = do
 		result <- try x
 		(send_response $ case result of
 			Right resp -> resp
-			Left err -> Server.mkResponse (5,0,0) errhdrs $ Data.ByteString.Char8.pack $ "Error:\n\n" ++ show (err :: SomeException)) `catch` (\e -> do
+			Left err -> Kolproxy.Server.mkResponse (5,0,0) errhdrs $ Data.ByteString.Char8.pack $ "Error:\n\n" ++ show (err :: SomeException)) `catch` (\e -> do
 				putWarningStrLn $ "send_response exception: " ++ show (e :: SomeException))
 	mvsequence <- newChan
 	forkIO_ "kps:mvseq" $ forever $ do
 		(uri, params, cookie, send_response) <- readChan mvsequence
 		try_handling send_response $ debug_do ("sequence response for: " ++ show uri) $ do
-			Logging.log_file_retrieval ref ("proxy:" ++ show uri) params
-			Logging.log_time_uri ref "request" uri
-			resp <- Logging.log_time_interval ref ("creating response for: " ++ show uri) $ Server.kolProxyHandler uri params cookie
+			Kolproxy.Logging.log_file_retrieval ref ("proxy:" ++ show uri) params
+			Kolproxy.Logging.log_time_uri ref "request" uri
+			resp <- Kolproxy.Logging.log_time_interval ref ("creating response for: " ++ show uri) $ Kolproxy.Server.kolProxyHandler uri params cookie
 			return resp
 	mvchat <- newChan
 	forkIO_ "kps:mvchat" $ forever $ do
 		(uri, params, cookie, send_response) <- readChan mvchat
 		forkIO_ "kps:mvchattry" $ do -- Serve asynced, possible private-message loss until server is fixed
 --              do -- Serve synced, possible hang on timeouts, still can't guarantee private-messages
-			try_handling send_response $ debug_do ("chat response for: " ++ show uri) $ Server.kolProxyHandlerChat uri params cookie
+			try_handling send_response $ debug_do ("chat response for: " ++ show uri) $ Kolproxy.Server.kolProxyHandlerChat uri params cookie
 	return (mvsequence, mvchat)
 

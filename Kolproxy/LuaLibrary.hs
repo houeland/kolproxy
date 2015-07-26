@@ -1,13 +1,15 @@
 {-# LANGUAGE ForeignFunctionInterface, BangPatterns #-}
 
-module LuaLibrary where
+module Kolproxy.LuaLibrary where
 
 import Prelude
-import qualified State
-import qualified KoL.Api
-import qualified KoL.Http
-import KoL.Util
-import KoL.UtilTypes
+
+import Kolproxy.Util
+import Kolproxy.UtilTypes
+import qualified Kolproxy.Api
+import qualified Kolproxy.Http
+import qualified Kolproxy.State
+
 import Control.Applicative
 import Control.Exception
 import Control.Monad
@@ -67,7 +69,7 @@ peekJustDouble l idx = (__peekJust l idx) :: IO Double
 get_current_kolproxy_version = return $ kolproxy_version_number :: IO String
 
 get_latest_kolproxy_version = do
-	version <- KoL.Http.getHTTPFileData "http://www.houeland.com/kolproxy/latest-version.json"
+	version <- Kolproxy.Http.getHTTPFileData "http://www.houeland.com/kolproxy/latest-version.json"
 	if (length version <= 1000)
 		then return version
 		else return "?"
@@ -78,15 +80,15 @@ set_state ref l = do
 	canread <- runWithRef ref canReadState
 	unless canread $ failLua $ "Error: Trying to set state \"" ++ var ++ "\" before state is available."
 	unless (stateset `elem` ["character", "ascension", "day", "fight", "session"]) $ failLua $ "cannot write to stateset " ++ (show $ stateset)
-	oldvalue <- State.getState ref stateset var
+	oldvalue <- Kolproxy.State.getState ref stateset var
 	newvalue <- do
 		isempty <- Lua.isnoneornil l 3
 		if isempty
 			then return Nothing
 			else Just <$> peekJustString l 3
 	when (oldvalue /= newvalue) $ case newvalue of
-		Just value -> State.setState ref stateset var value
-		Nothing -> State.unsetState ref stateset var
+		Just value -> Kolproxy.State.setState ref stateset var value
+		Nothing -> Kolproxy.State.unsetState ref stateset var
 	return 0
 
 get_state ref l = do
@@ -95,33 +97,33 @@ get_state ref l = do
 	canread <- runWithRef ref canReadState
 	unless canread $ failLua $ "Error: Trying to get state \"" ++ var ++ "\" before state is available."
 	unless (stateset `elem` ["character", "ascension", "day", "fight", "session"]) $ failLua $ "cannot read stateset " ++ (show $ stateset)
-	maybevalue <- State.getState ref stateset var
+	maybevalue <- Kolproxy.State.getState ref stateset var
 	case maybevalue of
 		Just value -> Lua.pushbytestring l (Data.ByteString.Char8.pack value) >> return 1
 		_ -> return 0
 
 -- TODO: Check if this is really OK. It's not in valhalla!
-get_ref_playername ref = KoL.Api.charName <$> KoL.Api.getApiInfo ref
+get_ref_playername ref = Kolproxy.Api.charName <$> Kolproxy.Api.getApiInfo ref
 
 set_chat_state ref l = do
 	var <- peekJustString l 1
 	value <- peekJustString l 2
 	charname <- get_ref_playername ref
-	chatmap <- Data.Map.insert var value <$> State.readMapFromFile ("chat-" ++ charname ++ ".state")
-	State.writeStateToFile ("chat-" ++ charname ++ ".state") (show chatmap)
+	chatmap <- Data.Map.insert var value <$> Kolproxy.State.readMapFromFile ("chat-" ++ charname ++ ".state")
+	Kolproxy.State.writeStateToFile ("chat-" ++ charname ++ ".state") (show chatmap)
 	return 0
 
 get_chat_state ref l = do
 	var <- peekJustString l 1
 	charname <- get_ref_playername ref
-	chatmap <- State.readMapFromFile ("chat-" ++ charname ++ ".state")
+	chatmap <- Kolproxy.State.readMapFromFile ("chat-" ++ charname ++ ".state")
 	Lua.pushstring l $ fromMaybe "" (Data.Map.lookup var chatmap)
 	return 1
 
 -- TODO: handle in Lua
 get_player_id ref l = do
 	name <- peekJustString l 1
-	pid <- KoL.Api.getPlayerId name ref
+	pid <- Kolproxy.Api.getPlayerId name ref
 	case pid of
 		Just x -> do
 			Lua.pushinteger l x
@@ -355,7 +357,7 @@ parse_keyvalue_luatbl l idx = do
 				failLua $ "ERROR: param " ++ show idx ++ " not a table parameter (" ++ show t ++ ")"
 
 show_blocked_page_info ref l = do
-	pwdstr <- KoL.Api.pwd <$> KoL.Api.getApiInfo ref
+	pwdstr <- Kolproxy.Api.pwd <$> Kolproxy.Api.getApiInfo ref
 	Lua.pushstring l $ "<html><body><tt style=\"color: darkorange\">Page loading blocked.</tt><br><br><a href=\"/custom-clear-lua-script-cache?pwd=" ++ pwdstr ++ "\" style=\"color: green\">Reset</a></body></html>"
 	Lua.pushstring l "/kolproxy-page-loading-blocked"
 	return 2
@@ -415,7 +417,7 @@ make_href _ref l = do
 
 get_api_itemid_info ref l1 = do
 	itemid <- peekJustInteger l1 1
-	f <- KoL.Api.asyncGetItemInfoObj itemid ref
+	f <- Kolproxy.Api.asyncGetItemInfoObj itemid ref
 	let callback_f l2 = do
 		push_jsvalue l2 =<< f
 		return 1
@@ -425,7 +427,7 @@ get_api_itemid_info ref l1 = do
 kolproxycore_enumerate_state ref l = do
 	canread <- runWithRef ref canReadState
 	unless canread $ failLua $ "Error: Trying to enumerate state before state is available."
-	statekeys <- State.uglyhack_enumerateState ref
+	statekeys <- Kolproxy.State.uglyhack_enumerateState ref
 	Lua.newtable l
 	mapM_ (\(statename, keylist) -> do
 		Lua.pushstring l statename

@@ -1,10 +1,12 @@
-module State (readMapFromFile, writeStateToFile, registerUpdatedState, unsetState, setState, getState, uglyhack_resetFightState, uglyhack_enumerateState, makeStateJSON, loadStateFromJson, download_actionbar, writeServerSettings, storeSettings, initializeState, ensureLoadedState, loadSettingsFromServer, readState, internalReadStatePair) where
+module Kolproxy.State (readMapFromFile, writeStateToFile, registerUpdatedState, unsetState, setState, getState, uglyhack_resetFightState, uglyhack_enumerateState, makeStateJSON, loadStateFromJson, download_actionbar, writeServerSettings, storeSettings, initializeState, ensureLoadedState, loadSettingsFromServer, readState, internalReadStatePair) where
 
 import Prelude
-import PlatformLowlevel
-import KoL.Util
-import KoL.UtilTypes
-import KoL.Api
+
+import Kolproxy.Api
+import Kolproxy.PlatformLowlevel
+import Kolproxy.Util
+import Kolproxy.UtilTypes
+
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception

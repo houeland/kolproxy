@@ -1,11 +1,13 @@
 {-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances #-}
 
-module KoL.HttpLowlevel (mkreq_slow, mkreq_fast, mkreq, rewrite_headers, simple_http_withproxy, simple_https_direct, check_for_http10, doHTTPreq, doHTTPSreq, kolproxy_withVersion, kolproxy_receiveHTTP, mkconnectsocket, mklistensocket, kolproxy_openTCPConnection, fast_mkconnthing, slow_mkconnthing, send_http_response, end_http) where
+module Kolproxy.HttpLowlevel (mkreq_slow, mkreq_fast, mkreq, rewrite_headers, simple_http_withproxy, simple_https_direct, check_for_http10, doHTTPreq, doHTTPSreq, kolproxy_withVersion, kolproxy_receiveHTTP, mkconnectsocket, mklistensocket, kolproxy_openTCPConnection, fast_mkconnthing, slow_mkconnthing, send_http_response, end_http) where
 
 import Prelude
-import Logging
-import KoL.Util
-import KoL.UtilTypes
+
+import Kolproxy.Logging
+import Kolproxy.Util
+import Kolproxy.UtilTypes
+
 import Control.Applicative
 import Control.Concurrent
 import Control.Exception
@@ -21,8 +23,6 @@ import Network.CGI (formEncode)
 import Network.HTTP
 import Network.Socket
 import Network.Stream (ConnError(..), failWith, fmapE)
-import qualified Network.TLS
-import qualified Network.TLS.Extra
 import Network.URI
 import Numeric (readHex)
 import System.IO
@@ -31,6 +31,8 @@ import qualified Data.ByteString.Char8
 import qualified Data.ByteString.Lazy
 import qualified Data.ByteString.Lazy.Char8
 import qualified Network.HTTP.HandleStream
+import qualified Network.TLS
+import qualified Network.TLS.Extra
 
 -- TODO: Split into a ModdedHttp part for the modified Network.HTTP stuff and another kolproxy part
 
