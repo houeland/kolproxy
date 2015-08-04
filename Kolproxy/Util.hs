@@ -134,9 +134,12 @@ forkIO_ name x = void $ forkIO $ x `catch` (\e -> do
 	putWarningStrLn $ name ++ " exception: " ++ (show (e :: SomeException))
 	return ())
 
-get_custom_autoload_script_files = do
-	filenames <- getDirectoryContents "scripts/custom-autoload"
-	return $ map ("custom-autoload/" ++) $ filter (=~ "\\.lua$") filenames
+maybeStripSuffix suffix xs = fmap reverse $ stripPrefix (reverse suffix) $ reverse xs
+
+getDirectoryFilesWithSuffix suffix directory = do
+	filenames <- getDirectoryContents directory
+	let filepaths = mapMaybe (maybeStripSuffix suffix) filenames
+	return $ map (\x -> directory ++ "/" ++ x ++ suffix) filepaths
 
 debug_do msg x = (x) `catch` (\e -> do
 	putDebugStrLn $ msg ++ " exception: " ++ show (e :: SomeException)
@@ -148,6 +151,6 @@ reset_lua_instances ref = do
 putErrorStrLn msg = putStrLn $ "ERROR: " ++ msg
 putWarningStrLn msg = putStrLn $ "WARNING: " ++ msg
 putInfoStrLn msg = putStrLn $ "INFO: " ++ msg
-putDebugStrLn msg = if kolproxy_version_number =~ "-dev"
+putDebugStrLn msg = if isSuffixOf "-dev" kolproxy_version_number
 	then putStrLn $ "DEBUG: " ++ msg
 	else return ()

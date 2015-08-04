@@ -155,7 +155,7 @@ if spoilers_tbl then
 elseif choice_adventure_number ~= nil then
 --	print("fallback for", adventure_title, choice_adventure_number)
 	local isok, spoilers = pcall(function()
-		return datafile("choice spoilers")
+		return datafile("choice-spoilers")
 	end)
 	if isok and spoilers["choiceid:"..tostring(choice_adventure_number)] and choice_adventure_number ~= 546 then -- 546 is Vamping Out, the fallback source doesn't actually explain anything there and is just wrong
 --		print("got", spoilers["choiceid:"..tostring(choice_adventure_number)])

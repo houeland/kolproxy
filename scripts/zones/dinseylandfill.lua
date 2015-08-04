@@ -2,7 +2,7 @@ function add_lines_at_end_of_body(text, lines)
 	return text:gsub([[</body>]], function() return "<center>" .. table.concat(lines, "<br>") .. "</center></body>" end)
 end
 
-add_printer("place:airport_stench", function()
+add_printer("place: airport_stench", function()
 	local lines = {}
 	local zones = {
 		["keycard &alpha;"] = "Barf Mountain",

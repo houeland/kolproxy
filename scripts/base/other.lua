@@ -486,7 +486,6 @@ end)
 local talked_to_toot = false
 add_ascension_assistance(function() return not talked_to_toot and turnsthisrun() <= 10 end, function()
 	async_get_page("/tutorial.php", { action = "toot" })
-	use_item("letter from King Ralph XI")
 	async_post_page("/galaktik.php", { action = "startquest", pwd = session.pwd })
 --	if not ascensionpath("Bees Hate You") then
 --		use_item("Newbiesport&trade; tent")
@@ -512,9 +511,10 @@ add_use_item_ascension_assistance("astral hot dog dinner")
 add_use_item_ascension_assistance("astral six-pack")
 add_use_item_ascension_assistance("carton of astral energy drinks")
 
+add_use_item_ascension_assistance("letter from King Ralph XI")
+add_use_item_ascension_assistance("letter to Ed the Undying")
 add_use_item_ascension_assistance("telegram from Lady Spookyraven")
 add_use_item_ascension_assistance("Letter for Melvign the Gnome")
-add_use_item_ascension_assistance("letter to Ed the Undying")
 
 add_use_item_ascension_assistance("evil eye")
 add_use_item_ascension_assistance("desert sightseeing pamphlet")

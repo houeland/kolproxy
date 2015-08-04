@@ -316,12 +316,12 @@ kolProxyHandler uri params baseref = do
 						return Kolproxy.Http.internalKolHttpsRequest
 				handle_login =<< loginrequestfunc uri (Just p_sensitive) (Nothing, useragent_ $ connection $ origref, hostUri_ $ connection $ origref, Nothing) True
 
-		"/custom-clear-lua-script-cache" -> check_pwd_for $ Just $ do
+		"/kolproxy-clear-lua-script-cache" -> check_pwd_for $ Just $ do
 			reset_lua_instances origref
 			writeIORef (blocking_lua_scripting origref) False
 			makeResponse (Data.ByteString.Char8.pack $ "Cleared Lua script cache.") uri []
 
-		"/custom-logs" -> check_pwd_for $ Just $ do
+		"/kolproxy-logs" -> check_pwd_for $ Just $ do
 			pt <- Kolproxy.LogParser.showLogs (lookup "which" allparams) (fromJust $ lookup "pwd" allparams)
 			makeResponse (Data.ByteString.Char8.pack pt) uri []
 

@@ -29,9 +29,9 @@ function intercept_warning(warning)
 	elseif warning.customaction then
 		extratext = [[<p>{ ]] .. warning.customaction .. [[ }</p>]]
 	end
-	-- TODO: Use POST is original request was POST
-	local session_disable_msg = [[<p><small><a href="#" onclick="var link = this; $.post('custom-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-]] .. warningid .. [[', stateset: 'session', value: 'true', ajax: 1 }, function(res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..make_resubmit_href()..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it anyway and disable this warning until I log out.") .. [[</a></small></p>]]
-	local one_turn_disable_msg = [[<p><small><a href="#" onclick="var link = this; $.post('custom-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-turn-]] .. turnsthisrun() .. [[-]] .. warningid .. [[', stateset: 'session', value: 'true', ajax: 1 }, function(res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..make_resubmit_href()..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it for this turn.") .. [[</a></small></p>]]
+	-- TODO: Use POST if original request was POST
+	local session_disable_msg = [[<p><small><a href="#" onclick="var link = this; $.post('kolproxy-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-]] .. warningid .. [[', stateset: 'session', value: 'true', ajax: 1 }, function(res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..make_resubmit_href()..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it anyway and disable this warning until I log out.") .. [[</a></small></p>]]
+	local one_turn_disable_msg = [[<p><small><a href="#" onclick="var link = this; $.post('kolproxy-settings', { pwd: ']] .. session.pwd .. [[', action: 'set state', name: 'warning-turn-]] .. turnsthisrun() .. [[-]] .. warningid .. [[', stateset: 'session', value: 'true', ajax: 1 }, function(res) { link.style.color = 'gray'; link.innerHTML = '(Disabled, trying again...)'; location.href = ']]..make_resubmit_href()..[[' }); return false;" style="color: ]] .. (warning.customdisablecolor or "darkorange") .. [[;">]] .. (warning.customdisablemsg or "I am sure! Do it for this turn.") .. [[</a></small></p>]]
 	if warning.customdisablemsg then
 		one_turn_disable_msg = ""
 	end
@@ -341,17 +341,16 @@ function run_functions(p, pagetext, run)
 				msg = run("item drop: " .. item_name, msg)
 			end
 			msg = run("item drop", msg)
--- 			print("item capture", pre, rel, mid, dropinfo, post)
--- 			local msg = pre .. rel .. mid .. "<span style=\"color: darkgreen\">" .. dropinfo .. "</span>" .. post
--- 			if string.match(rel, "u=u") then
--- 				msg = pre .. rel .. mid .. "<span style=\"color: darkgreen\">" .. dropinfo .. "</span> [use]" .. post
--- 				http://localhost:18481/inv_use.php?pwd=xxx&which=3&whichitem=3236
--- 			elseif string.match(rel, "u=q") then
--- 				msg = pre .. rel .. mid .. "<span style=\"color: darkgreen\">" .. dropinfo .. "</span> [equip]" .. post
--- 				http://localhost:18481/inv_equip.php?pwd=xxx&which=2&action=equip&whichitem=2813
--- 			end
 			return msg
 		end)
+	end
+
+	if p == "/fight.php" and pagetext:contains(">You win the fight!<!--WINWINWIN--><") then
+		local mn = get_monstername()
+		if mn then
+			pagetext = run("won fight: " .. mn, pagetext)
+		end
+		pagetext = run("won fight", pagetext)
 	end
 
 --[[
@@ -384,19 +383,11 @@ new inv_spleen
 		item_name = nil
 	end
 
-	if p == "/fight.php" and pagetext:contains(">You win the fight!<!--WINWINWIN--><") then
-		local mn = get_monstername()
-		if mn then
-			pagetext = run("won fight: " .. mn, pagetext)
-		end
-		pagetext = run("won fight", pagetext)
-	end
-
 	if p == "/place.php" and params.whichplace then
 		if params.action then
-			pagetext = run("place:" .. params.whichplace .. ":" .. params.action, pagetext)
+			pagetext = run("place: " .. params.whichplace .. ":" .. params.action, pagetext)
 		end
-		pagetext = run("place:" .. params.whichplace, pagetext)
+		pagetext = run("place: " .. params.whichplace, pagetext)
 	end
 
 	pagetext = run(p, pagetext)

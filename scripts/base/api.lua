@@ -147,10 +147,6 @@ function setup_functions()
 			end
 			return buffslist()[name] ~= nil
 		end
-		function buff(...)
-			print("WARNING: buff() is deprecated, use have_buff()")
-			return have_buff(...)
-		end
 		function buffturns(name) return buffslist()[name] or 0 end
 		function have_intrinsic(name) return intrinsicslist()[name] ~= nil end
 		function adventures() return tonumber(status().adventures) end

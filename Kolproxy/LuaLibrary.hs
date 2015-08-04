@@ -358,7 +358,7 @@ parse_keyvalue_luatbl l idx = do
 
 show_blocked_page_info ref l = do
 	pwdstr <- Kolproxy.Api.pwd <$> Kolproxy.Api.getApiInfo ref
-	Lua.pushstring l $ "<html><body><tt style=\"color: darkorange\">Page loading blocked.</tt><br><br><a href=\"/custom-clear-lua-script-cache?pwd=" ++ pwdstr ++ "\" style=\"color: green\">Reset</a></body></html>"
+	Lua.pushstring l $ "<html><body><tt style=\"color: darkorange\">Page loading blocked.</tt><br><br><a href=\"/kolproxy-clear-lua-script-cache?pwd=" ++ pwdstr ++ "\" style=\"color: green\">Reset</a></body></html>"
 	Lua.pushstring l "/kolproxy-page-loading-blocked"
 	return 2
 

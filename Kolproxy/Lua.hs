@@ -110,9 +110,14 @@ setup_lua_instance level filename setupref = do
 			Lua.pushboolean l $ listen_public ref
 			return 1
 
-		register_function "list_custom_autoload_script_files" $ \_ref l -> do
-			filenames <- get_custom_autoload_script_files
-			Kolproxy.LuaLibrary.push_table_contents_stringlist l filenames
+		register_function "kolproxy_list_custom_autoload_script_files" $ \_ref l -> do
+			scriptfiles <- getDirectoryFilesWithSuffix ".lua" "scripts/custom-autoload"
+			Kolproxy.LuaLibrary.push_table_contents_stringlist l scriptfiles
+			return 1
+
+		register_function "kolproxy_list_datafiles" $ \_ref l -> do
+			datafiles <- getDirectoryFilesWithSuffix ".json" "cache/data"
+			Kolproxy.LuaLibrary.push_table_contents_stringlist l datafiles
 			return 1
 
 		register_function "block_lua_scripting" $ \ref _l -> do

@@ -99,20 +99,20 @@ end
 
 mods["/compactmenu.php"] = {
 	[ [[(<option value="logout.php">Log Out</option>.-)(</select>)]] ] = [[%1<option value="nothing">- Select -</option>%2]],
-	[ [[<option value="account.php">Account Menu</option>]] ] = [[%0<option value="custom-settings?pwd=]] .. pwd .. [[">Kolproxy Settings</option>]],
+	[ [[<option value="account.php">Account Menu</option>]] ] = [[%0<option value="kolproxy-settings?pwd=]] .. pwd .. [[">Kolproxy Settings</option>]],
 }
 
 mods["/topmenu.php"] = {
 	[ [[(<option value="logout.php">Log Out</option>.-)(</select>)]] ] = [[%1<option value="nothing">- Select -</option>%2]],
-	[ [[<option value="account.php">Options</option>]] ] = [[%0<option value="custom-settings?pwd=]] .. pwd .. [[">Kolproxy Settings</option>]],
+	[ [[<option value="account.php">Options</option>]] ] = [[%0<option value="kolproxy-settings?pwd=]] .. pwd .. [[">Kolproxy Settings</option>]],
 }
 
 mods["/main.php"] = {
-	[ [[title="Bottom Edge".-</table>]] ] = [[%0<table><tr><td><a href="custom-settings?pwd=]] .. pwd .. [[" style="color: green">{ Kolproxy settings and tools }</a></td></tr></table>]]
+	[ [[title="Bottom Edge".-</table>]] ] = [[%0<table><tr><td><a href="kolproxy-settings?pwd=]] .. pwd .. [[" style="color: green">{ Kolproxy settings and tools }</a></td></tr></table>]]
 }
 
 mods["/charsheet.php"] = {
-	[ [[>Ascensions:</a></td><td><b>[0-9,.]-</b>]] ] = [[%0 <a href="custom-logs?pwd=]] .. pwd .. [[" style="color: green">{ View logs }</a>]]
+	[ [[>Ascensions:</a></td><td><b>[0-9,.]-</b>]] ] = [[%0 <a href="kolproxy-logs?pwd=]] .. pwd .. [[" style="color: green">{ View logs }</a>]]
 }
 
 mods["/loggedout.php"] = {

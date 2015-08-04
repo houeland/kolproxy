@@ -145,7 +145,7 @@ end
 local faxbot_href = add_automation_script("get-faxbot-monster", function()
 	local pt, pturl = get_page("/clan_viplounge.php", { action = "faxmachine" })
 	local function get_contents(cmd)
-		local faxbot_monsters_datafile = datafile("faxbot monsters")
+		local faxbot_monsters_datafile = datafile("faxbot-monsters")
 		for _, c in ipairs(faxbot_monsters_datafile.order) do
 			local x = faxbot_monsters_datafile.categories[c][cmd]
 			if x then
@@ -162,7 +162,7 @@ local faxbot_href = add_automation_script("get-faxbot-monster", function()
 end)
 
 add_printer("/clan_viplounge.php", function()
-	local faxbot_monsters_datafile = datafile("faxbot monsters")
+	local faxbot_monsters_datafile = datafile("faxbot-monsters")
 	text = text:gsub([[<input class=button type=submit value="Receive a Fax">.-</form>]], function(x)
 		local optgroups = {}
 		for _, c in ipairs(faxbot_monsters_datafile.order) do

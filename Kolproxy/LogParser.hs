@@ -83,7 +83,7 @@ showLogs fn pwd = do
 					True -> "<small>" ++ link ++ "</small>"
 					False -> link
 				where
-					link = "<a href=\"custom-logs?which=" ++ (charname ++ "-" ++ show ascnum) ++ "&pwd=" ++ pwd ++ "\">" ++ (show ascnum) ++ "</a>"
+					link = "<a href=\"kolproxy-logs?which=" ++ (charname ++ "-" ++ show ascnum) ++ "&pwd=" ++ pwd ++ "\">" ++ (show ascnum) ++ "</a>"
 			let group_to_row x = case x of
 				[] -> ""
 				(achar, _, _):_ -> "<tr><td>" ++ achar ++ "</td><td>" ++ (intercalate ", " (map desc_asc_link x)) ++ "</td></tr>\n"

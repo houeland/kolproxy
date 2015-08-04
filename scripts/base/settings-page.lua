@@ -269,17 +269,17 @@ function changed_feature_setting(what) {
 	var update_charpane = charpane_updaters[setting]
 	var update_menupane = menupane_updaters[setting]
 	if (c == "tdon") {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'"on"', ajax: 1 }, function(res) {
+		$.post('kolproxy-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'"on"', ajax: 1 }, function(res) {
 			if (update_charpane) top.charpane.location = "charpane.php"
 			if (update_menupane) top.menupane.location = "topmenu.php"
 		})
 	} else if (c == "tdoff") {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'"off"', ajax: 1 }, function(res) {
+		$.post('kolproxy-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'"off"', ajax: 1 }, function(res) {
 			if (update_charpane) top.charpane.location = "charpane.php"
 			if (update_menupane) top.menupane.location = "topmenu.php"
 		})
 	} else if (c == "tddefault") {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'', ajax: 1 }, function(res) {
+		$.post('kolproxy-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'setting: ' + setting, stateset:'character', value:'', ajax: 1 }, function(res) {
 			if (update_charpane) top.charpane.location = "charpane.php"
 			if (update_menupane) top.menupane.location = "topmenu.php"
 		})
@@ -304,7 +304,7 @@ function changed_feature_setting(what) {
 	return text
 end
 
-add_interceptor("/custom-settings", function()
+add_interceptor("/kolproxy-settings", function()
 	if params.pwd ~= session.pwd then
 		error("Invalid pwd field")
 	end
@@ -329,16 +329,16 @@ add_interceptor("/custom-settings", function()
 	local detailedchecked = (baselevel == "detailed") and [[checked="checked" ]] or ""
 	text = make_kol_html_frame([[
 			<center><table><tr><td>
-				<form action="custom-settings" method="post">
+				<form action="kolproxy-settings" method="post">
 					<div class="radiochoice"><input type="radio" name="settinglevel" id="settingslimited" value="limited" ]]..limitedchecked..[[onChange="changed_settings()"><label for="settingslimited">Limited</label><br>(Most like regular KoL. Only some features enabled.)</div>
 					<div class="radiochoice"><input type="radio" name="settinglevel" id="settingsstandard" value="standard" ]]..standardchecked..[[onChange="changed_settings()"><label for="settingsstandard">Standard</label><br>(Adds a default selection of useful features.)</div>
 					<div class="radiochoice"><input type="radio" name="settinglevel" id="settingsdetailed" value="detailed" ]]..detailedchecked..[[onChange="changed_settings()"><label for="settingsdetailed">Detailed</label><br>(Adds many more features, for those who like to know and see everything.)</div>
 				</form>
-				<center><form action="custom-settings" method="post"><input type="hidden" name="page" value="customize features"><input type="hidden" name="pwd" value="]]..session.pwd..[["><input type="submit" value="Advanced: Customize features"></center>
+				<center><form action="kolproxy-settings" method="post"><input type="hidden" name="page" value="customize features"><input type="hidden" name="pwd" value="]]..session.pwd..[["><input type="submit" value="Advanced: Customize features"></center>
 			</td></tr></table></center>
 ]], "Configure kolproxy features") .. make_kol_html_frame([[
 			<center><table><tr><td>
-			<tr><td><center><a href="custom-logs?pwd=]]..session.pwd..[[">Parse ascension log</a></center></td></tr>
+			<tr><td><center><a href="kolproxy-logs?pwd=]]..session.pwd..[[">Parse ascension log</a></center></td></tr>
 			<tr><td><center><a href="kolproxy-automation-script?automation-script=custom-aftercore-automation&pwd=]]..session.pwd..[[">Setup/run scripts</a></center></td></tr>
 			<tr><td><center><a href="https://github.com/houeland/kolproxy/wiki" target="_blank">Kolproxy documentation</a> (opens in a new tab)</center></td></tr>
 			</td></tr></table></center>
@@ -367,17 +367,17 @@ add_interceptor("/custom-settings", function()
 			<script type="text/javascript">
 function changed_settings() {
 	if (document.getElementById("settingslimited").checked) {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'"limited"', ajax: 1 }, function(res) {
+		$.post('kolproxy-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'"limited"', ajax: 1 }, function(res) {
 			top.charpane.location = "charpane.php"
 			top.menupane.location = "topmenu.php"
 		})
 	} else if (document.getElementById("settingsstandard").checked) {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'"standard"', ajax: 1 }, function(res) {
+		$.post('kolproxy-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'"standard"', ajax: 1 }, function(res) {
 			top.charpane.location = "charpane.php"
 			top.menupane.location = "topmenu.php"
 		})
 	} else if (document.getElementById("settingsdetailed").checked) {
-		$.post('custom-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'"detailed"', ajax: 1 }, function(res) {
+		$.post('kolproxy-settings', { pwd:']]..session.pwd..[[', action:'set state', name:'settings base level', stateset:'character', value:'"detailed"', ajax: 1 }, function(res) {
 			top.charpane.location = "charpane.php"
 			top.menupane.location = "topmenu.php"
 		})
@@ -385,7 +385,7 @@ function changed_settings() {
 }
 function clear_lua_script_cache(button) {
 	var pwd = ']] .. session.pwd .. [['
-	$.post('custom-clear-lua-script-cache', { pwd: pwd }, function(res) {
+	$.post('kolproxy-clear-lua-script-cache', { pwd: pwd }, function(res) {
 		button.value = 'Script cache cleared!'
 		setTimeout(function() { button.value = 'Reload Lua script files again' }, 3000)
 	});

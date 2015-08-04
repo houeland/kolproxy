@@ -4,7 +4,7 @@ if string then
 end
 
 local function load_datafile(datafilename)
-	local fobj = io.open("cache/data/" .. datafilename:gsub(" ", "-") .. ".json")
+	local fobj = io.open("cache/data/" .. datafilename .. ".json")
 	if not fobj then
 		error("Couldn't load datafile: " .. tostring(datafilename))
 	end
@@ -43,8 +43,10 @@ function reset_datafile_cache()
 	skillid_name_lookup = make_name_lookup("skills", "skillid")
 	familiarid_name_lookup = make_name_lookup("familiars", "famid")
 	zoneid_name_lookup = make_name_lookup("zones", "zoneid")
-	datafile("outfits")
-	datafile("semirares")
+	for _, x in ipairs(kolproxy_list_datafiles()) do
+		f = x:match("^cache/data/(.-)%.json$")
+		datafile(f)
+	end
 	monster_name_lookup = {}
 	for monstername, monster in pairs(datafile("monsters")) do
 		if monster.image then
@@ -249,7 +251,7 @@ end
 
 --function load_buff_extension_info()
 --	local skills = load_datafile("skills")
---	local buff_recast_skills = load_datafile("buff recast skills")
+--	local buff_recast_skills = load_datafile("buff-recast-skills")
 --	local info = {}
 --	for x, y in pairs(buff_recast_skills) do
 --		info[x] = { skillname = y, skillid = skills[y].skillid, mpcost = skills[y].mpcost }

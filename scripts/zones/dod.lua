@@ -76,6 +76,7 @@ function get_dod_potion_status()
 end
 
 add_processor("used combat item", function()
+	-- TODO: trigger on potion names instead of image
 	if item_image == "exclam.gif" then
 		local tbl = ascension["zone.dod.potions"] or {}
 		effects = {

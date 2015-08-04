@@ -199,6 +199,6 @@ load_file("other", "paths/standard.lua")
 
 load_file("interface", "interface/charpane.lua")
 
-for _, f in ipairs(list_custom_autoload_script_files()) do
-	load_file("custom autoload", f)
+for _, f in ipairs(kolproxy_list_custom_autoload_script_files()) do
+	load_file("custom autoload", f:gsub("^scripts/", ""))
 end

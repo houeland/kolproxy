@@ -35,14 +35,14 @@ for _, x in ipairs(interceptors[requestpath] or {}) do
 end
 
 if requestpath == "/inv_use.php" or requestpath == "/inv_spleen.php" then
+	for _, x in ipairs(interceptors["use item"] or {}) do
+		local t, u = x.f()
+		if t then
+			return t, u or requestpath
+		end
+	end
 	local n = maybe_get_itemname(tonumber(params.whichitem))
 	if n then
-		for _, x in ipairs(interceptors["use item"] or {}) do
-			local t, u = x.f()
-			if t then
-				return t, u or requestpath
-			end
-		end
 		for _, x in ipairs(interceptors["use item: " .. n] or {}) do
 			local t, u = x.f()
 			if t then
