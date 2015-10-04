@@ -922,7 +922,8 @@ function get_automation_scripts(cached_stuff)
 			elseif have_item("cast") then
 				use_item("cast")
 			elseif meat() >= 5000 and challenge ~= "zombie" then
-				post_page("/galaktik.php", { action = "curehp", pwd = get_pwd(), quantity = 10 })
+				buy_item("Doc Galaktik's Pungent Unguent")
+				use_item("Doc Galaktik's Pungent Unguent")
 			end
 			if hp() > oldhp then
 				if show_spammy_automation_events then
@@ -982,7 +983,7 @@ function get_automation_scripts(cached_stuff)
 			use_hottub()
 		end
 		if hp() < maxhp() and challenge ~= "zombie" then
---			post_page("/galaktik.php", { action = "curehp", pwd = get_pwd(), quantity = maxhp() - hp() })
+			-- TODO: Consider using Galaktik to heal up
 			if hp() < maxhp() then
 				stop("Failed to reach full HP")
 			end

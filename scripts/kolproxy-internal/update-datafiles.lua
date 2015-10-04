@@ -611,7 +611,7 @@ function verify_items(data)
 	local correct_data = {
 		["Orcish Frat House blueprints"] = {},
 		["Boris's Helm"] = { equip_bonuses = { ["Combat Initiative"] = 25 }, power = 100 },
-		["Hell ramen"] = { fullness = 6 },
+		["Hell ramen"] = { fullness = 4 },
 		["water purification pills"] = { drunkenness = 3 },
 		["beastly paste"] = { spleen = 4 },
 		["leather chaps"] = { equip_requirements = { Moxie = 65 } },

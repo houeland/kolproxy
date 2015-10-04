@@ -82,6 +82,10 @@ function get_monstername()
 	return monstername_from_vars(monster_name, monster_name_tag)
 end
 
+function get_adventure_title()
+	return adventure_title
+end
+
 function has_monster_modifiers()
 	return ascensionpath("One Crazy Random Summer")
 end

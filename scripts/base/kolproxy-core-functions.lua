@@ -353,6 +353,13 @@ function run_functions(p, pagetext, run)
 		pagetext = run("won fight", pagetext)
 	end
 
+	if p == "/choice.php" then
+		local title = get_adventure_title()
+		if title then
+			pagetext = run("choice: " .. title, pagetext)
+		end
+	end
+
 --[[
 Possible ways to use items:
 

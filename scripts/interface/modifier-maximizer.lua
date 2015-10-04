@@ -63,7 +63,7 @@ function maximize_equipment_slot_bonuses(slot, scoref_raw)
 			end
 		end
 	end
-	if have_storage_access() then
+	if have_unlimited_storage_access() then
 		for itemid, _ in pairs(get_cached_storage_items()) do
 			local name = maybe_get_itemname(itemid)
 			local d = maybe_get_itemdata(itemid)
@@ -318,7 +318,7 @@ function get_modifier_maximizer_equipment_suggestions(scoref)
 		previous_scores[slot] = prevscore
 	end
 
-	if slot_suggestion.weapon and slot_suggestion.offhand and is_twohanded_weapon(slot_suggestion.weapon.itemid) then
+	if slot_suggestion.weapon.itemid and slot_suggestion.offhand.itemid and is_twohanded_weapon(slot_suggestion.weapon.itemid) then
 		for _, x in ipairs(slot_alternatives.weapon) do
 			if not x.itemid or not is_twohanded_weapon(x.itemid) then
 				if x.score + slot_suggestion.offhand.score > slot_suggestion.weapon.score then
@@ -401,7 +401,7 @@ modifier_maximizer_href = add_automation_script("custom-modifier-maximizer", fun
 		if params.equip_itemname == "(none)" then
 			resultpt = unequip_slot(params.equip_slot)()
 		else
-			if params.from_storage and not have_item(params.equip_itemname) and have_storage_access() then
+			if params.from_storage and not have_item(params.equip_itemname) and have_unlimited_storage_access() then
 				pull_storage_item(params.equip_itemname)()
 			end
 			resultpt = equip_item(params.equip_itemname, params.equip_slot)()

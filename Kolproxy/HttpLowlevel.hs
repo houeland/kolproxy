@@ -20,7 +20,7 @@ import Data.Time.Clock
 import Network.BSD
 import Network.BufferType
 import Network.CGI (formEncode)
-import Network.HTTP
+import Network.HTTP --(normalizeRequest, normDoClose, normForProxy, rspBody, rspHeaders, rqBody, rqHeaders, rqMethod, rqURI, getAuth, host, openStream, writeBlock, close, port, RequestMethod(..))
 import Network.Socket
 import Network.Stream (ConnError(..), failWith, fmapE)
 import Network.URI
@@ -130,7 +130,7 @@ getResponseHead conn = parseResponseHead <$> read_till_empty conn
 switchResponse _ _ _ (Left e) _ = return $ Left e
 switchResponse conn allow_retry bdy_sent (Right (cd, rn, hdrs)) rqst = do
 -- 	putDebugStrLn $ "switchResponse: " ++ (show (cd, rn, hdrs, rqst))
-	x <- case matchResponse (rqMethod rqst) cd of
+	case matchResponse (rqMethod rqst) cd of
 		Continue -> if bdy_sent
 			then do {- keep waiting -}
 				rsp <- getResponseHead conn
@@ -184,8 +184,6 @@ switchResponse conn allow_retry bdy_sent (Right (cd, rn, hdrs)) rqst = do
 						putWarningStrLn $ "No content-length header!"
 						bdy <- connGetContents conn
 						return $ Right $ Response cd rn hdrs bdy
--- 	putDebugStrLn $ "/switchResponse: " ++ (show (cd,rn,hdrs,rqst))
-	return x
 
 mkreq_slow useragent cookie absuri params forproxy =
 		(returi, setRequestVersion "HTTP/1.0" req)
@@ -424,10 +422,12 @@ fast_mkconnthing server = do
 						Right (_requesting_it, req_nr) -> log_time_interval_http ref ("HTTP reading: " ++ (show $ rqURI rq)) $ do
 							what <- try $ ((do
 								rsp <- log_time_interval_http ref "HTTP head" $ getResponseHead c -- fails to read from mafia because mafia terminates with LF instead of CRLF. Is this still true?
-								Right resp <- log_time_interval_http ref "HTTP body" $ switchResponse c True False rsp rq
-								return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)) `catch` (\e -> do
-									doHTTPLOWLEVEL_DEBUGexception $ "http read exception: " ++ (show (e :: SomeException))
-									throwIO e))
+								switchedresp <- log_time_interval_http ref "HTTP body" $ switchResponse c True False rsp rq
+								case switchedresp of
+									Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)
+									Left err -> throwIO $ HttpError $ show err) `catch` (\e -> do
+										doHTTPLOWLEVEL_DEBUGexception $ "http read exception: " ++ (show (e :: SomeException))
+										throwIO e))
 							return (what, req_nr == 80)
 						Left err -> return (Left err, False) -- TODO: Change to True?
 					putMVar mvdest what `catch` (\e -> do

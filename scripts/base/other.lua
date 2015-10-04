@@ -486,7 +486,7 @@ end)
 local talked_to_toot = false
 add_ascension_assistance(function() return not talked_to_toot and turnsthisrun() <= 10 end, function()
 	async_get_page("/tutorial.php", { action = "toot" })
-	async_post_page("/galaktik.php", { action = "startquest", pwd = session.pwd })
+	async_get_page("/shop.php", { whichshop = "doc", action = "talk" })
 --	if not ascensionpath("Bees Hate You") then
 --		use_item("Newbiesport&trade; tent")
 --	end

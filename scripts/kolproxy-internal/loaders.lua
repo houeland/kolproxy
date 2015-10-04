@@ -98,6 +98,7 @@ load_file("zone", "zones/mad-tea-party.lua")
 load_file("zone", "zones/trick-or-treat.lua")
 load_file("zone", "zones/hiddencity.lua")
 load_file("zone", "zones/dinseylandfill.lua")
+load_file("zone", "zones/that-70s-volcano.lua")
 
 load_file("interface", "interface/counters.lua")
 load_file("interface", "interface/chatpane.lua")

@@ -138,7 +138,7 @@ store_info_logs ref = store_info_logs_ $ environment_settings_ $ globalstuff_ $ 
 doDbLogAction ref action = (doDbLogAction_ $ sessionData $ ref) ref action
 doChatLogAction ref action = (doChatLogAction_ $ globalstuff_ $ ref) action
 
-data KolproxyException = UrlMismatchException String URI | NotLoggedInException | InValhallaException | ApiPageException String | HttpRequestException URI SomeException | StateException | InternalError String | LuaError String | NetworkError String
+data KolproxyException = UrlMismatchException String URI | NotLoggedInException | InValhallaException | ApiPageException String | HttpRequestException URI SomeException | StateException | InternalError String | LuaError String | NetworkError String | HttpError String
 	deriving (Typeable)
 
 instance Exception KolproxyException
@@ -153,3 +153,4 @@ instance Show KolproxyException where
 	show (InternalError str) = "Internal error: " ++ str
 	show (LuaError str) = "Lua error: " ++ str
 	show (NetworkError str) = "Network error: " ++ str
+	show (HttpError str) = "HTTP connection error: " ++ str
