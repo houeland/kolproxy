@@ -5032,6 +5032,13 @@ function handle_adventure_result(pt, url, zoneid, macro, noncombatchoices, speci
 			print("INFO: UNDYING!", times_used_undying())
 			optname = "Go right back to the fight!"
 		end
+		if not optname and adventure_title == "Wooof! Wooooooof!" then
+			optname = "Throw a stick"
+		elseif not optname and adventure_title == "Playing Fetch*" then
+			optname = "Throw it down the road"
+		elseif not optname and adventure_title == "Your Dog Found Something Again" then
+			optname = "Give me the booze!"
+		end
 
 		local options = parse_choice_options(pt)
 		if optname and not pickchoice then

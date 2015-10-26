@@ -138,3 +138,28 @@ add_printer("/choice.php", function()
 		return prefix .. table.concat(new_options) .. suffix
 	end)
 end)
+
+function cheat_deck_of_every_card()
+	return get_page("/inv_use.php", { pwd = session.pwd, whichitem = get_itemid("Deck of Every Card"), cheat = 1 })
+end
+
+function automate_cheating_deck_of_every_card(target)
+	cheat_deck_of_every_card()
+	local choicept = get_page("/choice.php")
+	if not choicept:contains("You realize that if you fan the deck just right, you can see what card you're going to draw.") then
+		error "Cannot cheat deck of every card now"
+	end
+
+	local page_cards = {}
+	for value, cardname in choicept:gmatch([[<option value="([0-9]+)">(.-)</option>]]) do
+		page_cards[cardname] = tonumber(value)
+	end
+
+	local option = page_cards[target]
+	if not choicept:contains("You realize that if you fan the deck just right, you can see what card you're going to draw.") then
+		error "Cannot cheat that target from deck of every card now"
+	end
+
+	post_page("/choice.php", { whichchoice = 1086, option = 1, pwd = session.pwd, which = option })
+	return post_page("/choice.php", { whichchoice = 1085, option = 1, pwd = session.pwd })
+end

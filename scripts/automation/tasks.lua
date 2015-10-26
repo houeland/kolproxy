@@ -446,7 +446,7 @@ mark m_done
 				gear.hat = first_wearable { "lihc face" }
 				gear.weapon = first_wearable { "titanium assault umbrella" }
 				gear.acc1 = first_wearable { "sphygmomanometer", "plastic vampire fangs", "bejeweled pledge pin" }
-				gear.acc2 = first_wearable { "glowing red eye" }
+				gear.acc2 = first_wearable { "glowing red eye", "ghost of a necklace" }
 				if count_item("glowing red eye") >= 2 then
 					gear.acc3 = first_wearable { "glowing red eye" }
 				end

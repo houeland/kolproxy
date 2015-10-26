@@ -278,3 +278,18 @@ add_automator("/clan_viplounge.php", function()
 		text, url = post_page(path, params)
 	end
 end)
+
+function order_vip_speakeasy_drink(name)
+	local pt = get_page("/clan_viplounge.php", { action = "speakeasy" })
+
+	for tr in pt:gmatch("<tr.-</tr>") do
+		if tr:contains(">" .. name .. "<") then
+			local drink = tonumber(tr:match([[name="drink" value="([0-9]+)"]]))
+			if drink then
+				return post_page("/clan_viplounge.php", { preaction = "speakeasydrink", drink = drink, pwd = session.pwd })
+			end
+		end
+	end
+
+	error "Could not order drink from VIP Speakeasy."
+end

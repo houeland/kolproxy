@@ -95,6 +95,9 @@ function run_automation_script(f, pwdsrc, scriptname)
 		if url == "json" then
 			return text, resulturl
 		end
+		if not text then
+			text = "???"
+		end
 		if not text:contains("<html") then
 			text = [[
 <html>

@@ -672,6 +672,8 @@ local function parse_monster_stats(stats, monster_debug_line)
 			value, pos = stats:match('^"([^"]*)" ()', i)
 		elseif stats:sub(i, i) == " " then -- space (formatting error, ignore)
 			pos = i + 1
+		elseif stats:sub(i):match([[^Manuel: "([^"]*)"]]) then
+			pos = i + stats:sub(i):match([[^Manuel: "[^"]*"]]):len()
 		else
 			name, value, pos = stats:match("^([^:]+): +([^ ]+) ()", i)
 			if name and value then
@@ -709,9 +711,10 @@ local function parse_monster_stats(stats, monster_debug_line)
 			softwarn("monsters.txt:malformed line", monster_debug_line)
 		elseif stats:contains("DUMMY") then
 			return statstbl
+		elseif pos then
 		else
 			error_count_hard = error_count_hard + 1
-			print("WARNING: failed to parse monster stat", stats:sub(i))
+			print("WARNING: failed to parse monster stat [[" .. stats:sub(i) .. "]]")
 			print("DEBUG: ", monster_debug_line)
 			return statstbl
 		end
@@ -877,19 +880,20 @@ function parse_recipes()
 		local tbl = split_tabbed_line(l)
 		local itemname, crafttype = tbl[1], tbl[2]
 		if l:match("^# ") then
+		elseif not crafttype then
 		elseif crafttype == "CLIPART" then
 			add_recipe(itemname, { type = "cliparts", clips = { tonumber(tbl[3]), tonumber(tbl[4]), tonumber(tbl[5]) } })
-		elseif crafttype == "SMITH" or crafttype == "WSMITH" or crafttype == "ASMITH" then
+		elseif crafttype:contains("SMITH") then
 			table.remove(tbl, 1)
 			table.remove(tbl, 1)
 			table.sort(tbl)
 			add_recipe(itemname, { type = "smith", ingredients = tbl })
-		elseif crafttype == "MIX" or crafttype == "ACOCK" or crafttype == "SCOCK" or crafttype == "SACOCK" then
+		elseif crafttype == "MIX" or crafttype:contains("COCK") then
 			table.remove(tbl, 1)
 			table.remove(tbl, 1)
 			table.sort(tbl)
 			add_recipe(itemname, { type = "cocktail", ingredients = tbl })
-		elseif crafttype == "COOK" or crafttype == "PASTA" or crafttype == "TEMPURA" or crafttype == "SAUCE" or crafttype == "SSAUCE" or crafttype == "DSAUCE" then
+		elseif crafttype == "COOK" or crafttype == "PASTA" or crafttype == "TEMPURA" or crafttype:contains("SAUCE") then
 			table.remove(tbl, 1)
 			table.remove(tbl, 1)
 			table.sort(tbl)
@@ -899,7 +903,7 @@ function parse_recipes()
 			table.remove(tbl, 1)
 			table.sort(tbl)
 			add_recipe(itemname, { type = "combine", ingredients = tbl })
-		elseif crafttype and crafttype:contains("STILL") then
+		elseif crafttype:contains("STILL") then
 			add_recipe(itemname, { type = "still", base = tbl[3], ingredients = { tbl[3] } })
 		end
 	end

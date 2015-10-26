@@ -60,7 +60,34 @@ result_status = {
 	end
 }
 
-local function automate_day(whichday)
+local function want_shore()
+	return not unlocked_island() and not have_item("skeleton") and not ascensionpath("Avatar of Sneaky Pete")
+end
+
+local function unlocked_knob()
+	return level() >= 5 and not have_item("Cobb's Knob map")
+end
+
+local function need_encryption_key()
+	return not have_item("Knob Goblin encryption key") and not unlocked_knob()
+end
+
+local function have_frat_war_outfit()
+	return have_item("beer helmet") and have_item("distressed denim pants") and have_item("bejeweled pledge pin")
+end
+
+local function have_miners_outfit()
+	return have_item("miner's helmet") and have_item("7-Foot Dwarven mattock") and have_item("miner's pants")
+end
+
+function ensure_empty_config_table(t)
+	local n = next(t)
+	if n then
+		error("Config table not empty, contains key: " .. tostring(n))
+	end
+end
+
+local function init_automation()
 	reset_error_trace_steps()
 	finished = false
 	show_spammy_automation_events = ascension_script_option("show debug information")
@@ -108,26 +135,6 @@ local function automate_day(whichday)
 	end
 	do_debug_infoline = infoline
 
-	local function want_shore()
-		return not unlocked_island() and not have_item("skeleton") and not ascensionpath("Avatar of Sneaky Pete")
-	end
-
-	local function unlocked_knob()
-		return level() >= 5 and not have_item("Cobb's Knob map")
-	end
-
-	local function need_encryption_key()
-		return not have_item("Knob Goblin encryption key") and not unlocked_knob()
-	end
-
-	local function have_frat_war_outfit()
-		return have_item("beer helmet") and have_item("distressed denim pants") and have_item("bejeweled pledge pin")
-	end
-
-	local function have_miners_outfit()
-		return have_item("miner's helmet") and have_item("7-Foot Dwarven mattock") and have_item("miner's pants")
-	end
-
 	local council_text = async_get_page("/council.php")
 	local questlog_page = async_get_page("/questlog.php", { which = 7 })
 	council_text = council_text()
@@ -135,6 +142,9 @@ local function automate_day(whichday)
 
 	function refresh_quest()
 		questlog_page = get_page("/questlog.php", { which = 7 })
+	end
+	function refresh_council()
+		council_text = get_page("/council.php")
 	end
 
 	function quest(name)
@@ -146,17 +156,14 @@ local function automate_day(whichday)
 	function quest_get_raw_questlog_page()
 		return questlog_page
 	end
+	function quest_get_raw_council_text()
+		return council_text
+	end
 
-	local function can_photocopy()
+	function can_photocopy()
 		return not ascension_script_option("use fax machine manually") and not cached_stuff.have_faxed_today and have_item("Clan VIP Lounge key") and not ascensionpath("Avatar of Boris") and not ascensionpath("Avatar of Jarlsberg") and not ascensionpath("Avatar of Sneaky Pete") and not fax_machine_is_too_old()
 	end
 
-	local function ensure_empty_config_table(t)
-		local n = next(t)
-		if n then
-			error("Config table not empty, contains key: " .. tostring(n))
-		end
-	end
 	function adventure(t)
 		return function()
 			local pt, pturl, advagain = autoadventure { zoneid = get_zoneid(t.zone or t.zoneid), macro = t.macro_function, noncombatchoices = t.noncombats, specialnoncombatfunction = t.choice_function, ignorewarnings = true }
@@ -174,11 +181,11 @@ local function automate_day(whichday)
 	local tasks = get_automation_tasks(script, cached_stuff)
 
 	-- TODO: do these properly
-	local function started_war()
+	function started_war()
 		return quest("Make War, Not... Oh, Wait")
 	end
 
-	local function completed_war()
+	function completed_war()
 		return not quest("Make War, Not... Oh, Wait")
 	end
 
@@ -198,7 +205,7 @@ local function automate_day(whichday)
 		return cached_stuff.currently_checked.island_expanded_for_war
 	end
 
-	local function completed_filthworms()
+	function completed_filthworms()
 		if have_item("heart of the filthworm queen") then return true end
 		if not doing_lvl12_war() then return end
 		if cached_stuff.currently_checked.filthworms_completed == nil then
@@ -210,7 +217,7 @@ local function automate_day(whichday)
 		return cached_stuff.currently_checked.filthworms_completed
 	end
 
-	local function found_dr_awkward()
+	function found_dr_awkward()
 		if cached_stuff.currently_checked.found_dr_awkward == nil then
 			script.wear { acc1 = "Talisman o' Namsilat" }
 			local pt = get_place("palindome")
@@ -219,26 +226,235 @@ local function automate_day(whichday)
 		return cached_stuff.currently_checked.found_dr_awkward
 	end
 
-	local function completed_sonofa_beach()
+	function completed_sonofa_beach()
 		return have_item("tequila grenade") or have_item("molotov cocktail cocktail")
 	end
 
-	local function completed_gremlins()
+	function completed_gremlins()
 		return have_item("rusty chain necklace") or have_item("sawblade shield") or have_item("wrench bracelet")
 	end
 
-	local function completed_arena()
+	function completed_arena()
 		return not have_item("rock band flyers")
 	end
 
-	local function max_petelove()
+	function max_petelove()
 		if have_item("Sneaky Pete's leather jacket (collar popped)") or have_item("Sneaky Pete's leather jacket") then
 			return 50
 		else
 			return 30
 		end
 	end
-	local max_petehate = max_petelove
+	max_petehate = max_petelove
+
+	function countif(x)
+		if have_item(x) then
+			return 1
+		else
+			return 0
+		end
+	end
+
+	function get_first_we_have(tbl, n)
+		if n == nil then
+			n = 1
+		end
+		local ret = {}
+		for x in table.values(tbl) do
+			local ctr = 1
+			while count_item(x) >= ctr and n >= 0 do
+				table.insert(ret, x)
+				n = n - 1
+				ctr = ctr + 1
+			end
+		end
+		return unpack(ret)
+	end
+
+	function have_wand_or_parts()
+		if have_item("Wand of Nagamar") then
+			return true
+		else
+			local wa = have_item("WA") or (have_item("ruby W") and have_item("metallic A"))
+			local nd = have_item("ND") or (have_item("lowercase N") and have_item("heavy D"))
+			return wa and nd
+		end
+	end
+
+	function cook_advanced(item)
+		if not cached_stuff.can_cook_advanced_items then
+			cached_stuff.can_cook_advanced_items = can_cook_advanced_items()
+		end
+		if not cached_stuff.can_cook_advanced_items and meat() >= 1000 then
+			buy_and_install_dramatic_range_for_advanced_cooking()
+			cached_stuff.can_cook_advanced_items = can_cook_advanced_items()
+		end
+		return craft_item(item)
+	end
+
+	function cook_sauce_item(item)
+		if not have_item("scrumptious reagent") then
+			script.ensure_mp(10)
+			cast_skill("Advanced Saucecrafting")
+		end
+		return cook_advanced(item)
+	end
+
+	function run_task(x)
+		ignore_buffing_and_outfit = false
+		if x.f then
+			if x.message then
+				hidden_inform(x.message)
+			end
+			if have_item("detuned radio") or (moonsign_area() == "Little Canadia") or (moonsign_area() == "Gnomish Gnomad Camp" and unlocked_beach()) then
+				if mcd() < 10 and level() < 13 then
+					if moonsign_area() == "Little Canadia" then
+						set_mcd(11)
+					else
+						set_mcd(10)
+					end
+				elseif mcd() ~= 0 and level() >= 13 then
+					set_mcd(0)
+				end
+			end
+			x.f()
+		else
+			x.prereq = nil
+			if x.hide_message and not ascension_script_option("show debug information") then
+			elseif x.message then
+				inform(x.message)
+			elseif ascension_script_option("show debug information") then
+				inform "{ no task message }"
+			end
+			x.message = nil
+			x.hide_message = nil
+
+			if x.mcd then
+				set_mcd(x.mcd)
+			elseif have_item("detuned radio") or (moonsign_area() == "Little Canadia") or (moonsign_area() == "Gnomish Gnomad Camp" and unlocked_beach()) then
+				if mcd() < 10 and level() < 13 then
+					if moonsign_area() == "Little Canadia" then
+						set_mcd(11)
+					else
+						set_mcd(10)
+					end
+				elseif mcd() ~= 0 and level() >= 13 then
+					set_mcd(0)
+				end
+			end
+			x.mcd = nil
+
+			if x.nobuffing then
+				ignore_buffing_and_outfit = true
+				x.nobuffing = nil
+			end
+
+			if x.bonus_target then
+				script.bonus_target(x.bonus_target)
+				x.bonus_target = nil
+			end
+
+			if x.runawayfrom then
+				script.set_runawayfrom(x.runawayfrom)
+				x.runawayfrom = nil
+			end
+
+			if x.buffs then
+				script.ensure_buffs(x.buffs)
+				x.buffs = nil
+			elseif not ignore_buffing_and_outfit then
+				script.ensure_buffs {}
+			end
+
+			if x.maybe_buffs then
+				script.maybe_ensure_buffs(x.maybe_buffs)
+				x.maybe_buffs = nil
+			end
+
+			script.heal_up()
+
+			local towear = x.equipment or (not ignore_buffing_and_outfit and {})
+			x.equipment = nil
+
+			x.minmp = x.minmp or 0
+			if x.minmp > 20 and playerclass("Pastamancer") then
+				x.minmp = x.minmp / 2
+			end
+			if x.olfact and have_skill("Transcendent Olfaction") then
+				if not trailed then
+					x.minmp = x.minmp + 40
+				elseif trailed ~= x.olfact then
+					stop("Trailing " .. trailed .. " when trying to olfact " .. x.olfact)
+				end
+			end
+			x.olfact = nil
+
+			if arrowed_possible and x.minmp < 60 then
+				x.minmp = 60
+			elseif maxmp() >= 100 and x.minmp < 40 then
+				x.minmp = 40
+			end
+
+			x.familiar = x.familiar or x.fam or "auto"
+			if x.familiar then
+				-- TODO: unequip fam?
+				local famt = script.want_familiar(x.familiar)
+				local fammpregen, famequip = famt.mpregen, famt.familiarequip
+				if fammpregen then
+					if challenge == "fist" then
+						script.burn_mp(x.minmp + 40)
+					else
+						script.burn_mp(x.minmp + 20)
+					end
+				end
+				if famequip and towear and not towear.familiarequip and have_item(famequip) then
+					towear.familiarequip = famequip
+				end
+				x.familiar = nil
+				x.fam = nil
+			end
+
+			if towear then
+				script.wear(towear)
+			end
+
+			if x.minmp > 0 then
+				if mp() < x.minmp then
+					infoline("ensuring " .. x.minmp .. " MP to fight")
+				end
+				script.ensure_mp(x.minmp)
+			end
+			x.minmp = nil
+
+			if x.finalcheck then
+				x.finalcheck()
+				x.finalcheck = nil
+			end
+
+			local pt, pturl, advagain = x.action()
+			if pt then
+				result, resulturl = pt, pturl
+			end
+			x.action = nil
+
+			if x.after_action then
+				x.after_action()
+			end
+			x.after_action = nil
+
+			if advagain then
+				did_action = true
+			end
+
+			ensure_empty_config_table(x)
+		end
+	end
+
+	return script, tasks
+end
+
+local function automate_day(whichday)
+	local script, tasks = init_automation()
 
 	challenge = nil
 	if ascensionpath("Way of the Surprising Fist") then
@@ -544,40 +760,6 @@ endif
 		cached_stuff.currently_checked.kgs_available = check_buying_from_knob_dispensary()
 	end
 
-	local function countif(x)
-		if have_item(x) then
-			return 1
-		else
-			return 0
-		end
-	end
-
-	local function get_first_we_have(tbl, n)
-		if n == nil then
-			n = 1
-		end
-		local ret = {}
-		for x in table.values(tbl) do
-			local ctr = 1
-			while count_item(x) >= ctr and n >= 0 do
-				table.insert(ret, x)
-				n = n - 1
-				ctr = ctr + 1
-			end
-		end
-		return unpack(ret)
-	end
-
-	local function have_wand_or_parts()
-		if have_item("Wand of Nagamar") then
-			return true
-		else
-			local wa = have_item("WA") or (have_item("ruby W") and have_item("metallic A"))
-			local nd = have_item("ND") or (have_item("lowercase N") and have_item("heavy D"))
-			return wa and nd
-		end
-	end
-
 	local function ensure_yellow_ray()
 		if have_buff("Everything Looks Yellow") then
 			return false
@@ -794,7 +976,7 @@ endif
 				async_get_page("/campground.php")
 				if setting_enabled("automate daily visits/harvest garden") then
 					-- TODO: remove, should have been done anyway?
-					async_get_page("/campground.php", { action = "garden", pwd = get_pwd() })
+					visit_campground_garden()
 				end
 
 				async_post_page("/campground.php", { action = "telescopelow" })
@@ -856,7 +1038,7 @@ endif
 	}
 
 	add_task {
-		when = council_text:contains("Toot Oriole"),
+		when = quest_get_raw_council_text():contains("Toot Oriole"),
 		task = {
 			message = "visit the toot oriole",
 			nobuffing = true,
@@ -2265,6 +2447,8 @@ endif
 		}
 	}
 
+	-- TODO: rest at mantegna with all free rests
+
 	add_task {
 		when = ready_to_end_day() and
 			fullness() >= estimate_max_fullness() and
@@ -2459,12 +2643,13 @@ endif
 			message = "low on adventures",
 			nobuffing = true,
 			action = function()
+				local old_advs = advs()
 				local final_consumption = (estimate_max_fullness() - fullness()) <= 3 and (estimate_max_safe_drunkenness() - drunkenness()) <= 3
 				result, resulturl = script.eat_food(true, final_consumption)
 				if advs() < want_advs then
 					result, resulturl = script.drink_booze(true, final_consumption)
 				end
-				if advs() >= want_advs then
+				if advs() > old_advs then
 					did_action = true
 				else
 					stop("Fewer than " .. tostring(want_advs) .. " adventures left")
@@ -2863,16 +3048,8 @@ endif
 		if trailed ~= "dairy goat" then
 			local pt, pturl, ate = script.eat_food()
 			if not ate and get_result():contains("You need a more advanced cooking appliance") and meat() >= 2500 then
-				if not have_item("Dramatic&trade; range") then
-					inform "  buying dramatic range"
-					set_result(store_buy_item("Dramatic&trade; range", "m"))
-					if not have_item("Dramatic&trade; range") then
-						critical "Couldn't buy dramatic range (for advanced cooking)"
-					end
-				end
-				inform "  using dramatic range"
-				set_result(use_item("Dramatic&trade; range"))
-				did_action = not have_item("Dramatic&trade; range")
+				inform "  buying dramatic range for cooking"
+				did_action = buy_and_install_dramatic_range_for_advanced_cooking()
 			end
 			if pt and pturl and ate then
 				return pt, pturl, ate
@@ -2906,18 +3083,6 @@ endif
 	elseif mainstat_type("Moxie") then
 		do_powerleveling_sub = script.do_moxie_powerleveling
 		use_dancecard = script.do_moxie_use_dancecard
-	end
-
-	function do_mantegna_resting()
-		local pt = get_place("chateau", "chateau_nightstand")
-		local substats = pt:contains("some " .. get_mainstat_type() .. " substats when you rest")
-		if pt:contains("some " .. get_mainstat_type() .. " substats when you rest") then
-			local oldstat = rawmainstat()
-			result, resulturl = get_place("chateau", "chateau_restbox")
-			did_action = rawmainstat() > oldstat
-		else
-			stop("TODO: wanted to rest at mantegna, but don't have the mainstat-appropriate nightstand item for powerleveling. Either buy the right nightstand item and run the script again, or powerlevel/restore MP manually.", pt)
-		end
 	end
 
 	function do_powerleveling()
@@ -4404,7 +4569,7 @@ endif
 				end
 				if quest_text("gather up some cheese and ore") and count_item("goat cheese") >= 3 then
 					if daysthisrun() >= 2 and not ascensionstatus("Hardcore") then
-						local want_ore = questlog_page:match("bring him back 3 chunks of ([a-z]+ ore)")
+						local want_ore = quest_get_raw_questlog_page():match("bring him back 3 chunks of ([a-z]+ ore)")
 						if want_ore and get_itemid(want_ore) then
 							local got = count_item(want_ore)
 							if got < 3 then
@@ -4929,10 +5094,10 @@ endif
 		when = function()
 			if not ascensionpath("Actually Ed the Undying") then return end
 			for i = 1, 5 do
-				if council_text:contains("It’s time to take the Holy MacGuffin home") then
+				if quest_get_raw_council_text():contains("It’s time to take the Holy MacGuffin home") then
 					return true
 				end
-				council_text = get_page("/council.php")
+				refresh_council()
 			end
 		end,
 		task = {
@@ -4990,156 +5155,6 @@ endif
 					end
 		end
 	end }
-
-	function run_task(x)
-		ignore_buffing_and_outfit = false
-		if x.f then
-			if x.message then
-				hidden_inform(x.message)
-			end
-			if have_item("detuned radio") or (moonsign_area() == "Little Canadia") or (moonsign_area() == "Gnomish Gnomad Camp" and unlocked_beach()) then
-				if mcd() < 10 and level() < 13 then
-					if moonsign_area() == "Little Canadia" then
-						set_mcd(11)
-					else
-						set_mcd(10)
-					end
-				elseif mcd() ~= 0 and level() >= 13 then
-					set_mcd(0)
-				end
-			end
-			x.f()
-		else
-			x.prereq = nil
-			if x.hide_message and not ascension_script_option("show debug information") then
-			elseif x.message then
-				inform(x.message)
-			elseif ascension_script_option("show debug information") then
-				inform "{ no task message }"
-			end
-			x.message = nil
-			x.hide_message = nil
-
-			if x.mcd then
-				set_mcd(x.mcd)
-			elseif have_item("detuned radio") or (moonsign_area() == "Little Canadia") or (moonsign_area() == "Gnomish Gnomad Camp" and unlocked_beach()) then
-				if mcd() < 10 and level() < 13 then
-					if moonsign_area() == "Little Canadia" then
-						set_mcd(11)
-					else
-						set_mcd(10)
-					end
-				elseif mcd() ~= 0 and level() >= 13 then
-					set_mcd(0)
-				end
-			end
-			x.mcd = nil
-
-			if x.nobuffing then
-				ignore_buffing_and_outfit = true
-				x.nobuffing = nil
-			end
-
-			if x.bonus_target then
-				script.bonus_target(x.bonus_target)
-				x.bonus_target = nil
-			end
-
-			if x.runawayfrom then
-				script.set_runawayfrom(x.runawayfrom)
-				x.runawayfrom = nil
-			end
-
-			if x.buffs then
-				script.ensure_buffs(x.buffs)
-				x.buffs = nil
-			elseif not ignore_buffing_and_outfit then
-				script.ensure_buffs {}
-			end
-
-			if x.maybe_buffs then
-				script.maybe_ensure_buffs(x.maybe_buffs)
-				x.maybe_buffs = nil
-			end
-
-			script.heal_up()
-
-			local towear = x.equipment or (not ignore_buffing_and_outfit and {})
-			x.equipment = nil
-
-			x.minmp = x.minmp or 0
-			if x.minmp > 20 and playerclass("Pastamancer") then
-				x.minmp = x.minmp / 2
-			end
-			if x.olfact and have_skill("Transcendent Olfaction") then
-				if not trailed then
-					x.minmp = x.minmp + 40
-				elseif trailed ~= x.olfact then
-					stop("Trailing " .. trailed .. " when trying to olfact " .. x.olfact)
-				end
-			end
-			x.olfact = nil
-
-			if arrowed_possible and x.minmp < 60 then
-				x.minmp = 60
-			elseif maxmp() >= 100 and x.minmp < 40 then
-				x.minmp = 40
-			end
-
-			x.familiar = x.familiar or x.fam or "auto"
-			if x.familiar then
-				-- TODO: unequip fam?
-				local famt = script.want_familiar(x.familiar)
-				local fammpregen, famequip = famt.mpregen, famt.familiarequip
-				if fammpregen then
-					if challenge == "fist" then
-						script.burn_mp(x.minmp + 40)
-					else
-						script.burn_mp(x.minmp + 20)
-					end
-				end
-				if famequip and towear and not towear.familiarequip and have_item(famequip) then
-					towear.familiarequip = famequip
-				end
-				x.familiar = nil
-				x.fam = nil
-			end
-
-			if towear then
-				script.wear(towear)
-			end
-
-			if x.minmp > 0 then
-				if mp() < x.minmp then
-					infoline("ensuring " .. x.minmp .. " MP to fight")
-				end
-				script.ensure_mp(x.minmp)
-			end
-			x.minmp = nil
-
-			if x.finalcheck then
-				x.finalcheck()
-				x.finalcheck = nil
-			end
-
-			local pt, pturl, advagain = x.action()
-			if pt then
-				result, resulturl = pt, pturl
-			end
-			x.action = nil
-
-			if x.after_action then
-				x.after_action()
-			end
-			x.after_action = nil
-
-			if advagain then
-				did_action = true
-			end
-
-			ensure_empty_config_table(x)
-		end
-	end
 
 	local skiplink = ""
 	for _, x in ipairs(tasks_list) do
@@ -5458,27 +5473,20 @@ add_printer("/main.php", function()
 		return
 	end
 
-	if ascension["__script.ascension script enabled"] == true then
+	if ascension["__script.ascension script enabled"] == true or ascensionpath("Community Service") then
 		local links = {
-			{ titleday = " day 1", whichday = 1 },
-			{ titleday = " day 2", whichday = 2 },
-			{ titleday = " day 3", whichday = 3 },
-			{ titleday = " day 4+", whichday = 4 },
+			ascension_automation_script_href { ahref_description = "Automate ascension", whichday = 1000 },
 		}
-		if not ascensionpath("Way of the Surprising Fist") then
+		if ascensionpath("Community Service") then
 			links = {
-				{ titleday = "", whichday = 1000 },
+				community_service_automation_script_href { ahref_description = "Automate Community Service" },
 			}
 		end
 
 		local rows = {}
 		for _, x in ipairs(links) do
 --local alink = [[<a href="]]..ascension_automation_script_href { pwd = session.pwd, whichday = x.whichday }..[[" style="color: green" onclick="this.style.color = 'gray'">{ Automate ascension]]..x.titleday..[[ }</a>]]
-			local alink = ascension_automation_script_href { ahref_description = "Automate ascension" .. x.titleday, whichday = x.whichday }
-			if x.whichday == daysthisrun() then
-				alink = [[&rarr; ]] .. alink .. [[ &larr;]]
-			end
-			table.insert(rows, [[<tr><td><center>]] .. alink .. [[</center></td></tr>]])
+			table.insert(rows, [[<tr><td><center>]] .. x .. [[</center></td></tr>]])
 		end
 		text = text:gsub([[title="Bottom Edge".-</table>]], [[%0<table>]] .. table.concat(rows) .. [[</table>]])
 	else
@@ -5489,3 +5497,232 @@ add_printer("/main.php", function()
 		text = text:gsub([[title="Bottom Edge".-</table>]], [[%0<table>]] .. table.concat(rows) .. [[</table>]])
 	end
 end)
+
+community_service_automation_script_href = add_automation_script("automate-community-service", function()
+	if autoattack_is_set() then
+		disable_autoattack()
+	end
+
+	local script, tasks = init_automation()
+
+	local function service_remaining(which)
+		return quest_get_raw_council_text():contains("<b>"..which.."</b>")
+	end
+
+	local function get_service_turns(which)
+		for tbl in quest_get_raw_council_text():gmatch("<Table .-</table>") do
+			if tbl:contains("<b>"..which.."</b>") then
+				return tonumber(tbl:match([[value="Perform Service %(([0-9]+) Adventure]]))
+			end
+		end
+	end
+
+	local function perform_service(which)
+		for tbl in quest_get_raw_council_text():gmatch("<Table .-</table>") do
+			if tbl:contains("<b>"..which.."</b>") then
+				print("Performing", which, "for", get_service_turns(which), "turns")
+				local option = tonumber(tbl:match("name=option value=([0-9]+)"))
+				post_page("/choice.php", { whichchoice = 1089, option = option, pwd = session.pwd })
+			end
+		end
+	end
+
+	if have_item("a ten-percent bonus") then
+		use_item("a ten-percent bonus")
+	end
+
+	if level() <= 3 and mainstat_type("Mysticality") then
+		automate_cheating_deck_of_every_card("III - The Empress")
+	end
+
+	if meat() < 3000 then
+		if not have_item("1952 Mickey Mantle card") then
+			automate_cheating_deck_of_every_card("1952 Mickey Mantle")
+		end
+		autosell_item("1952 Mickey Mantle card")
+	end
+
+	-- before finishing day, automate_cheating_deck_of_every_card("Giant Growth")
+
+	cast_skill("Summon Smithsness", 3)
+	if not have_item("Saucepanic") then
+		craft_item("Saucepanic")
+	end
+	if daysthisrun() == 1 and not have_item("Hairpiece On Fire") then
+		buy_item("maiden wig")
+		craft_item("Hairpiece On Fire")
+	end
+	if service_remaining("Make Margaritas") then
+		buy_item("third-hand lantern")
+		craft_item("A Light that Never Goes Out")
+	end
+
+	if not have_item("toy accordion") then
+		buy_item("toy accordion")
+	end
+
+	if not have_item("turtle totem") then
+		for i = 1, 15 do
+			buy_item("chewing gum on a string")()
+			use_item("chewing gum on a string")
+			if have_item("turtle totem") then
+				break
+			end
+		end
+	end
+
+	script.ensure_buffs {}
+
+	if not cached_stuff.done_garden then
+		visit_campground_garden()
+		cached_stuff.done_garden = true
+	end
+
+	if service_remaining("Make Margaritas") and not have_item("milk of magnesium") then
+		if not have_item("glass of goat's milk") and not cached_stuff.done_goatsmilk then
+			script.want_familiar("Crimbo Shrub")
+			use_item("box of old Crimbo decorations")
+			post_page("/choice.php", { whichchoice = 999, pwd = session.pwd, option = 1, topper = 2, lights = 1, garland = 3, gift = 1 })
+
+			local chateau = get_place("chateau")
+			if chateau:contains("Painting of a dairy goat") then
+				local pt, pturl = get_place("chateau", "chateau_painting")
+				result, resulturl, advagain = handle_adventure_result(pt, pturl, "?", [[cast Open a Big Yellow Present]])
+			end
+			cached_stuff.done_goatsmilk = true
+		end
+		cook_sauce_item("milk of magnesium")
+	end
+
+	-- crimbo shrub, decorate, get goat from painting, YR it
+
+	if service_remaining("Coil Wire") then
+		if advs() <= 70 and drunkenness() < 3 then
+			buy_item("Ice Island Long Tea")
+			if have_item("Ice Island Long Tea") then
+				script.ensure_buff_turns("Ode to Booze", 5)
+				order_vip_speakeasy_drink("Lucky Lindy")
+				drink_item("Ice Island Long Tea")
+			end
+		end
+		perform_service("Coil Wire")
+	end
+
+	-- (pork gems)
+
+
+	if service_remaining("Make Margaritas") and drunkenness() < 7 then
+		script.ensure_buff_turns("Ode to Booze", 2)
+		order_vip_speakeasy_drink("Sockdollager")
+	end
+
+	if service_remaining("Make Margaritas") and not have_item("experimental serum G-9") then
+		for i = 1, 15 do
+			if count_item("experimental serum G-9") >= 3 or advs() == 0 then break end
+			script.maximize("Item Drops from Monsters")
+
+			if zone_awaiting_florist_decision("The Secret Government Laboratory") then
+				plant_florist_plants { 20, 11, 15 }
+			end
+
+			-- buff +item, sniff government scientist, get 3x g-9 serum, run from rest
+			run_task {
+				message = "farm g-9 serum at government lab",
+				minmp = 60,
+				equipment = { acc1 = first_wearable { "Personal Ventilation Unit" } },
+				bonus_target = { "item" },
+				action = adventure {
+					zone = "The Secret Government Laboratory",
+					macro_function = macro_kill_monster, -- TODO: sniff and run from others
+				}
+			}
+		end
+	end
+
+	while spleen() <= 11 and have_item("powdered gold") do
+		use_item("powdered gold")
+	end
+
+	while mantegna_resting_is_free() do
+		do_mantegna_resting()
+	end
+
+	if level() >= 7 and count_item("astral pilsner") >= 5 and drunkenness() < 10 then
+		script.ensure_buff_turns("Ode to Booze", 5)
+		drink_item("astral pilsner")
+		drink_item("astral pilsner")
+		drink_item("astral pilsner")
+		drink_item("astral pilsner")
+		drink_item("astral pilsner")
+	end
+
+	if drunkenness() < 14 then
+		for i = 1, 10 do
+			if drunkenness() >= 14 then break end
+			script.ensure_buff_turns("Ode to Booze", 1)
+			if have_item("astral pilsner") then
+				drink_item("astral pilsner")
+			elseif have_item("Agitated Turkey") then
+				drink_item("Agitated Turkey")
+			end
+		end
+	end
+
+	if service_remaining("Reduce Gazelle Population") then
+		perform_service("Reduce Gazelle Population")
+	end
+
+	if fullness() == 0 and have_item("weird gazelle steak") then
+		buy_item("snow crab")
+		buy_item("pickled egg")
+		buy_item("pickled egg")
+		craft_item("This Charming Flan")
+		craft_item("This Charming Flan")
+		if have_item("snow crab") and count_item("This Charming Flan") >= 2 then
+			script.ensure_buff_turns("Got Milk", 15)
+			eat_item("weird gazelle steak")
+			eat_item("snow crab")
+			eat_item("This Charming Flan")
+			eat_item("This Charming Flan")
+		end
+	end
+
+	if service_remaining("Make Margaritas") then
+		run_task {
+			message = "do item service",
+			bonus_target = { "item" },
+			action = function()
+				script.maximize("Item Drops from Monsters")
+				perform_service("Make Margaritas")
+				did_action = true
+			end,
+		}
+	end
+
+-- unlock island
+-- YR hippy outfit
+-- clover hippy camp in outfit for fruit baskets until a cherry is obtained. %%olfacting novelty tropical skeletons with heavy +item% as a back up or as an alternative
+-- cook 4 sauce potions %% oil of expertise, serum of sarcasm, tomato juice, ointment of the occult
+
+	if have_item("emergency margarita") and fullness() == 15 and drunkenness() == 14 and spleen() >= 8 then
+		script.ensure_buffs { "Simmering" }
+		script.ensure_buff_turns("Ode to Booze", 10)
+		text, url = drink_item("emergency margarita")()
+	end
+
+	if not text then
+		text, url = "(Nothing to do)", "/done"
+	end
+end)
+
+function do_mantegna_resting()
+	local pt = get_place("chateau", "chateau_nightstand")
+	local substats = pt:contains("some " .. get_mainstat_type() .. " substats when you rest")
+	if pt:contains("some " .. get_mainstat_type() .. " substats when you rest") then
+		local oldstat = rawmainstat()
+		result, resulturl = get_place("chateau", "chateau_restbox")
+		did_action = rawmainstat() > oldstat
+	else
+		stop("TODO: wanted to rest at mantegna, but don't have the mainstat-appropriate nightstand item for powerleveling. Either buy the right nightstand item and run the script again, or powerlevel/restore MP manually.", pt)
+	end
+end

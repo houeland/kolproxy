@@ -90,7 +90,7 @@ aftercore_automation_href = add_automation_script("aftercore-automation", functi
 	pull_storage_item("borrowed time")
 	use_item("borrowed time")
 
-	async_get_page("/campground.php", { action = "garden", pwd = session.pwd })
+	visit_campground_garden()
 
 	local function remaining_spleen()
 		return estimate_max_spleen() - spleen()

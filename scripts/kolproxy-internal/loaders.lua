@@ -49,6 +49,7 @@ load_file("skill", "skills/inigo.lua")
 load_file("skill", "skills/pastamancer-spells.lua")
 load_file("skill", "skills/sauceror-spells.lua")
 load_file("skill", "skills/ed-spells.lua")
+load_file("skill", "skills/calculate-the-universe.lua")
 
 load_file("familiar", "familiars/butt-away.lua")
 load_file("familiar", "familiars/llama.lua")
@@ -199,6 +200,10 @@ load_file("other", "paths/ed.lua")
 load_file("other", "paths/standard.lua")
 
 load_file("interface", "interface/charpane.lua")
+
+load_file("campground", "campground/garden.lua")
+load_file("campground", "campground/haunted-doghouse.lua")
+load_file("campground", "campground/kitchen.lua")
 
 for _, f in ipairs(kolproxy_list_custom_autoload_script_files()) do
 	load_file("custom autoload", f:gsub("^scripts/", ""))

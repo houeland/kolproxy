@@ -164,7 +164,7 @@ function do_daily_visits()
 	elseif campground_pt:contains("wintergarden1.gif") or campground_pt:contains("wintergarden2.gif") then
 		add_result([[Skipped harvesting garden (waiting for frost flower).]])
 	elseif setting_enabled("automate daily visits/harvest garden") then
-		dopage("/campground.php", { action = "garden", pwd = pwd })
+		queue_page_result(visit_campground_garden())
 	else
 		add_result("Skipped harvesting garden (can be enabled in settings).")
 	end
