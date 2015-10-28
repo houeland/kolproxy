@@ -101,8 +101,8 @@ add_warning {
 	type = "notice",
 	when = "ascension",
 	check = function(zoneid)
-	if zoneid and zoneid >= 261 and zoneid <= 264 then
-		local evilometer = parse_evilometer()
+		if zoneid and zoneid >= 261 and zoneid <= 264 then
+			local evilometer = parse_evilometer()
 			if evilometer then
 				local evil_here = evilometer[maybe_get_zonename(zoneid)]
 				if evil_here <= 25 then
