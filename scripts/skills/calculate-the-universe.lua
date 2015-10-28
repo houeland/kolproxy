@@ -101,7 +101,7 @@ add_interceptor("/runskillz.php", function()
 end)
 
 add_warning {
-	message = string.format([[You might want to cast <a href="%s">Calculate the Universe</a> now to freely choose the result.]], calculate_href { pwd = session.pwd }),
+	message = "You might want to cast Calculate the Universe now to freely choose the result.",
 	type = "notice",
 	check = function()
 		return can_calculate_the_universe() and can_calculate_the_universe_as_any_number()
