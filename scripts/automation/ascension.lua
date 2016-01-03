@@ -4752,7 +4752,8 @@ endif
 	}
 
 	add_task {
-		when = want_digital_key() and
+		when = not item_is_unavailable("Snow Suit") and -- workaround for jars/jung man not being listed
+			want_digital_key() and
 			ascensionstatus("Softcore") and
 			not script.have_familiar("Angry Jung Man") and
 			not cached_stuff.tried_pulling_mystic_jar and

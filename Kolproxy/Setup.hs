@@ -156,7 +156,7 @@ runKolproxy = (do
 	let portnum = case portenv of
 		Just x -> fromJust $ read_as x :: Integer
 		Nothing -> 18481
-	runProxyServer portnum) `catch` (\e -> putDebugStrLn ("runKolproxy exception: " ++ show (e :: Control.Exception.SomeException)))
+	runProxyServer portnum) `catch` (\e -> putInfoStrLn ("runKolproxy exception: " ++ show (e :: Control.Exception.SomeException)))
 
 runbot filename = do
 	(logchan, dropping_logchan, globalref) <- kolproxy_setup_refstuff
