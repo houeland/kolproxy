@@ -205,6 +205,8 @@ function do_daily_visits()
 	dopage("/choice.php", { whichchoice = 585, pwd = pwd, option = 1, action = "treasure" })
 	dopage("/choice.php", { whichchoice = 585, pwd = pwd, option = 1, action = "leave" })
 
+	queue_page_result(cast_skill("Communism!"))
+
 	if setting_enabled("automate daily visits/do lazy aftercore daily tasks") and have_mall_access() then
 		if have_dinseylandfill() then
 			if not have_item("bag of park garbage") and could_have_item_in_storage("bag of park garbage") then

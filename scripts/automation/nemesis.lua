@@ -3,7 +3,7 @@
 local required_items_perclass = {
 	{ lew = "Hammer of Smiting", ew = "Bjorn's Hammer", extra = "distilled seal blood", door = { "viking helmet", "insanely spicy bean burrito", "clown whip" } },
 	{ lew = "Chelonian Morningstar", ew = "Mace of the Tortoise", extra = "turtle chain", door = { "viking helmet", "insanely spicy bean burrito", "clownskin buckler" } },
-	{ lew = "Greek Pasta of Peril", ew = "Pasta of Peril", extra = "high-octane olive oil", door = { "stalk of asparagus", "insanely spicy enchanted bean burrito", "boring spaghetti" } },
+	{ lew = "Greek Pasta Spoon of Peril", ew = "Pasta Spoon of Peril", extra = "high-octane olive oil", door = { "stalk of asparagus", "insanely spicy enchanted bean burrito", "boring spaghetti" } },
 	{ lew = "17-alarm Saucepan", ew = "5-Alarm Saucepan", extra = "Peppercorns of Power", door = { "stalk of asparagus", "insanely spicy enchanted bean burrito", "tomato juice of powerful power" } },
 	{ lew = "Shagadelic Disco Banjo", ew = "Disco Banjo", extra = "vial of mojo", door = { "dirty hobo gloves", "insanely spicy jumping bean burrito", "fuzzbump" } },
 	{ lew = "Squeezebox of the Ages", ew = "Rock and Roll Legend", extra = "golden reeds", door = { "dirty hobo gloves", "insanely spicy jumping bean burrito" } },
@@ -197,7 +197,43 @@ setup_turnplaying_script {
 		inform "nothing to do, trying again"
 		advagain = true
 	else
-		stop "TODO: Next quest step???"
+		local mountains_pt = get_place("mountains")
+		if mountains_pt:contains("mts_caveblocked") then
+			result, resulturl = get_place("mountains", "mts_caveblocked")
+			result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", nil, {}, function(advtitle, choicenum, pagetext)
+				local solutions = {
+					"Freak the hell out like a wrathful wolverine.",
+					"Sympathize with an amphibian.",
+					"Entangle the wall with noodles.",
+					"Shoot a stream of sauce at the wall.",
+					"Focus on your disco state of mind.",
+					"Bash the wall with your accordion.",
+				}
+				for _, s in ipairs(solutions) do
+					if pagetext:contains(s) then
+						return s
+					end
+				end
+			end)
+		else
+			local nemesiscave = get_place("nemesiscave")
+			if nemesiscave:contains("nmcave_rubble") then
+				if count_item("fizzing spore pod") < 6 then
+					result, resulturl = autoadventure { zoneid = get_zoneid("The Fungal Nethers") }
+				else
+					result, resulturl = get_place("nemesiscave", "nmcave_rubble")
+					result, resulturl = handle_adventure_result(result, resulturl, "?", nil, {
+						["Rubble, Rubble, Toil and Trouble"] = "Blast the tunnel clear with fizzing spore pods"
+					})
+					advagain = get_place("nemesiscave"):contains("nmcave_boss")
+				end
+			elseif nemesiscave:contains("nmcave_boss") then
+				result, resulturl = get_place("nemesiscave", "nmcave_boss")
+				result, resulturl, did_action = handle_adventure_result(result, resulturl, "?", macro_kill_monster)
+			else
+				stop "TODO: Next quest step???"
+			end
+		end
 	end
 	__set_turnplaying_result(result, resulturl, advagain)
 end
@@ -401,7 +437,7 @@ end
 function try_killing_P_nemesis()
 	script.bonus_target { "easy combat" }
 	script.ensure_buffs {}
-	script.wear { weapon = "Greek Pasta of Peril" }
+	script.wear { weapon = "Greek Pasta Spoon of Peril", acc1 = first_wearable { "spaghetti cult robe" } }
 	script.ensure_mp(50)
 	fought = false
 	local had_cult_robe = have_equipped_item("spaghetti cult robe")
@@ -416,6 +452,9 @@ function try_killing_P_nemesis()
 	result, resulturl, advagain = handle_adventure_result(result, resulturl, "?", macro_noodleserpent)
 	print("DEBUG: lock url advagain", locked(), resulturl, advagain)
 	check_volcanomaze()
+	if fought then
+		advagain = true
+	end
 	return fought
 end
 
@@ -427,6 +466,25 @@ function automate_P_nemesis_island()
 		print("DEBUG: killing nemesis...")
 		return
 	end
+	if not pastathrall("Spaghetti Elemental") then
+		if not have_skill("Bind Spaghetti Elemental") then
+			stop "TODO: get spaghetti elemental"
+		end
+		script.ensure_mp(150)
+		cast_skill("Bind Spaghetti Elemental")
+		advagain = pastathrall("Spaghetti Elemental")
+		return
+	end
+	if not session.__script_tried_pasta_powder then
+		session.__script_tried_pasta_powder = true
+		maybe_pull_item("experimental carbon fiber pasta additive")
+		use_item("experimental carbon fiber pasta additive")
+	end
+	if quest_text("As soon as you can find where they're hiding") and not have_item("spaghetti cult robe") then
+		local pt, url = get_page("/volcanoisland.php", { pwd = session.pwd, action = "tuba" })
+		result, resulturl, advagain = handle_adventure_result(pt, url, "?", macro_kill_monster)
+		return
+	end
 	stop "TODO: Automate pastamancer island"
 end
 
@@ -436,7 +494,7 @@ end
 				-- fight until heavy if not
 				-- fight with heavy thrall
 				-- equip "spaghetti cult robe", go to lair
-				-- equip "Greek Pasta of Peril", do lair and maze
+				-- equip "Greek Pasta Spoon of Peril", do lair and maze
 				-- kill boss, cast noodles a lot
 function automation_step(tbl)
 end

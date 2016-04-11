@@ -509,6 +509,8 @@ function estimate_max_fullness()
 		mf = 5
 	elseif ascensionpath("Actually Ed the Undying") then
 		mf = 0
+	elseif ascensionpath("Avatar of West of Loathing") then
+		mf = 10
 	end
 	local stomach_skills = {
 		["Stomach of Steel"] = 5,
@@ -548,6 +550,8 @@ function estimate_max_safe_drunkenness()
 		dlimit = 20
 	elseif ascensionpath("Actually Ed the Undying") then
 		dlimit = 0
+	elseif ascensionpath("Avatar of West of Loathing") then
+		dlimit = 9
 	end
 
 	local liver_skills = {
@@ -570,6 +574,8 @@ function estimate_max_spleen()
 	local ms = 15
 	if ascensionpath("Actually Ed the Undying") then
 		ms = 5
+	elseif ascensionpath("Avatar of West of Loathing") then
+		ms = 10
 	end
 	local spleen_skills = {
 		["Spleen of Steel"] = 5,

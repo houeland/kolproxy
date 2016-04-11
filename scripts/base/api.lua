@@ -71,6 +71,7 @@ function setup_functions()
 			"Avatar of Sneaky Pete", -- 15
 			nil, -- 16
 			"Ed", -- 17
+			"Cow Puncher", -- 18
 		}
 		function classid() return tonumber(status().class) end
 		function maybe_playerclassname()

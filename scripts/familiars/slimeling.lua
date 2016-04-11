@@ -20,7 +20,7 @@ dont_slime = {
 
 	"Bjorn's Hammer",
 	"Mace of the Tortoise",
-	"Pasta of Peril",
+	"Pasta Spoon of Peril",
 	"5%-Alarm Saucepan",
 	"Disco Banjo",
 	"Rock and Roll Legend",

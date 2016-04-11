@@ -1232,6 +1232,13 @@ endwhile
 end
 
 function make_sniff_macro(name, action)
+	if script_use_unified_kill_macro() then
+		return function(pt)
+			__ugly_workaround_macro_olfaction_target = name
+			add_macro_target("yellowraypatternmatch", name)
+			return macro_kill_monster(pt)
+		end
+	end
 	return [[
 ]] .. COMMON_MACROSTUFF_START(20, 35) .. [[
 
@@ -1859,7 +1866,7 @@ function is_wearing_shield()
 end
 
 function estimate_current_monster_fight_damage(cfm, bonuses)
-	local monster_attack = cfm.Stats.Atk
+	local monster_attack = cfm.Stats.Atk or 100
 	local defend_stat = buffedmoxie()
 	if buffedmuscle() > defend_stat and have_skill("Hero of the Half-Shell") and is_wearing_shield() then
 		defend_stat = buffedmuscle()
@@ -1952,10 +1959,16 @@ local function want_super_itemdrop(name)
 	return name and monsters[name]
 end
 
+function make_dummy_cfm()
+	return { Stats = {} }
+end
+
 macro_kill_monster_text = ""
+__ugly_workaround_macro_olfaction_target = nil
 function macro_kill_monster(pt)
 	pt = pt or ""
 	local pt_monster_name = nil
+	local get_monstername
 	local function monstername(str)
 		-- WORKAROUND: Regular functionality not currently available while automating
 		if str then
@@ -1974,11 +1987,15 @@ function macro_kill_monster(pt)
 		end
 		return pt_monster_name or ""
 	end
+	get_monstername = monstername
 	local cfm = getCurrentFightMonster()
+	local olfaction_target = __ugly_workaround_macro_olfaction_target
+	__ugly_workaround_macro_olfaction_target = nil
 	if not cfm or not cfm.Stats or not cfm.Stats.Atk then
 		print_ascensiondebug("macro_kill generation", "cfm incomplete when generating combat macro", tostring(cfm))
 		print_ascensiondebug("macro_kill generation", "monster", get_monstername())
-		return macro_noodleserpent_raw
+		cfm = make_dummy_cfm()
+--		return macro_noodleserpent_raw
 	end
 	local bonuses = estimate_current_bonuses()
 	bonuses.add(estimate_fight_page_bonuses(pt))
@@ -2060,12 +2077,19 @@ endif]])
 
 	if not cfm.Stats.staggerimmune then
 		table.insert(use_initial_tbl, [[
+if hasskill Summon Love Scarabs
+	cast Summon Love Scarabs
+endif
 if hasskill Summon Love Mosquito
 	cast Summon Love Mosquito
 endif
-if hasskill Summon Love Scarabs
-	cast Summon Love Scarabs
+if hasskill Summon Love Stinkbug
+	cast Summon Love Stinkbug
 endif]])
+	end
+
+	if olfaction_target then
+		table.insert(use_initial_tbl, cast_olfaction(olfaction_target))
 	end
 
 	if have_equipped_item("Thor's Pliers") and not cfm.Stats.staggerimmune then
@@ -2074,6 +2098,10 @@ endif]])
 
 	if have_equipped_item("Pantsgiving") and not cfm.Stats.staggerimmune then
 		table.insert(use_initial_tbl, "cast Air Dirty Laundry")
+	end
+
+	if ascensionpath("Avatar of West of Loathing") and have_skill("Shoot") then
+		table.insert(use_initial_tbl, "cast Shoot")
 	end
 
 	use_initial_stuff = table.concat(use_initial_tbl, [[
