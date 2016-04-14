@@ -5266,6 +5266,9 @@ endif
 
 	if locked() then
 		print("DEBUG: locked at end of turn, did_action was", did_action)
+		print("DEBUG: locked status:", locked())
+		get_page("/api.php")
+		print("DEBUG: new locked status:", locked())
 		did_action = false
 	end
 

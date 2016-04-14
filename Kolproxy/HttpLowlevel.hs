@@ -20,12 +20,13 @@ import Data.Time.Clock
 import Network.BSD
 import Network.BufferType
 import Network.CGI (formEncode)
-import Network.HTTP --(normalizeRequest, normDoClose, normForProxy, rspBody, rspHeaders, rqBody, rqHeaders, rqMethod, rqURI, getAuth, host, openStream, writeBlock, close, port, RequestMethod(..))
+import Network.HTTP
 import Network.Socket
 import Network.Stream (ConnError(..), failWith, fmapE)
 import Network.URI
 import Numeric (readHex)
 import System.IO
+import qualified Codec.Compression.GZip
 import qualified Data.ByteString
 import qualified Data.ByteString.Char8
 import qualified Data.ByteString.Lazy
@@ -198,10 +199,10 @@ mkreq_fast useragent cookie absuri params forproxy =
 		cookiehdr = case cookie of
 			Nothing -> []
 			Just x -> [mkHeader HdrCookie x]
-		otherhdrs = [mkHeader HdrUserAgent useragent, mkHeader HdrConnection "Keep-Alive", mkHeader HdrAccept "*/*", mkHeader HdrAcceptEncoding ""]
+		otherhdrs = [mkHeader HdrUserAgent useragent, mkHeader HdrConnection "Keep-Alive", mkHeader HdrAccept "*/*", mkHeader HdrAcceptEncoding "gzip"]
 		hdrs = cookiehdr ++ otherhdrs
 
-mkreq isslow = if False then mkreq_slow else mkreq_fast
+mkreq isslow = if isslow then mkreq_slow else mkreq_fast
 
 rewrite_headers hdrs = map (\(Header x y) -> (show x, y)) hdrs
 
@@ -252,15 +253,11 @@ check_for_http10 = do
 	use_proxy <- getEnvironmentSetting "KOLPROXY_USE_PROXY_SERVER"
 	use_server <- getEnvironmentSetting "KOLPROXY_SERVER"
 	let autodetect = do
-		c <- kolproxy_openTCPConnection "http://www.kingdomofloathing.com/"
-		let request = "GET /radio.php HTTP/1.1\r\nUser-Agent: " ++ kolproxy_version_string ++ "\r\nHost: www.kingdomofloathing.com\r\nAccept: */*\r\n\r\n"
-		connPut c request
-		connFlush c
-		lines <- read_till_empty c
-		hClose c
-		case lines of
-			("HTTP/1.1 200 OK\r\n":_rest) -> putInfoStrLn "Detected fast server connection" >> return False
-			_ -> putWarningStrLn "Detected slow server connection, using compatibility mode" >> return True
+		return False
+--		resp <- simple_https_direct (mkreq "https://www.kingdomofloathing.com/radio.php")
+--		case lines of
+--			("HTTP/1.1 200 OK\r\n":_rest) -> putInfoStrLn "Detected fast server connection" >> return False
+--			_ -> putWarningStrLn "Detected slow server connection, using compatibility mode" >> return True
 	case (use_proxy, use_server) of
 		(Nothing, Nothing) -> do
 			try_ad <- try autodetect
@@ -279,7 +276,7 @@ doHTTPreq (absuri, rq) = do
 		(Nothing, "https:") -> simple_https_direct rq
 		_ -> simple_http_withproxy rq
 	case r of
-		Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp)
+		Right resp -> return (absuri, decodeBody resp, rewrite_headers $ rspHeaders resp, mkCode resp)
 		Left ce -> do
 			putWarningStrLn $ "doHTTPreq: " ++ (show ce)
 			throwIO $ InternalError $ "doHTTPreq[" ++ (show ce) ++ "]"
@@ -288,7 +285,7 @@ doHTTPSreq (absuri, rq) = do
 --	putDebugStrLn $ "doHTTPSreq: " ++ show absuri
 	r <- simple_https_direct rq
 	case r of
-		Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp)
+		Right resp -> return (absuri, decodeBody resp, rewrite_headers $ rspHeaders resp, mkCode resp)
 		Left ce -> do
 			putWarningStrLn $ "doHTTPSreq: " ++ (show ce)
 			throwIO $ InternalError $ "doHTTPSreq[" ++ (show ce) ++ "]"
@@ -383,12 +380,16 @@ kolproxy_openTCPConnection server = do
 			let a = Network.Socket.SockAddrInet (toEnum portnum) hostA
 			Network.Socket.connect s a
 			h <- Network.Socket.socketToHandle s ReadWriteMode
-			return h
+			rng <- makeSystem
+			c <- Network.TLS.contextNewOnHandle h (Network.TLS.defaultParamsClient { Network.TLS.pCiphers = Network.TLS.Extra.ciphersuite_strong }) rng
+			Network.TLS.handshake c
+			mvc <- newMVar (SslConn { sslconn_c = c, sslconn_sendBuffer = [], sslconn_recvBuffer = Data.ByteString.empty })
+			return mvc
 	where
 		Just parsed = parseURI server
 		Just auth = parseURIAuthority $ uriToAuthorityString parsed
 		hostname = host auth
-		portnum = fromMaybe 80 (port auth)
+		portnum = fromMaybe 443 (port auth)
 		getHostAddr h = do
 			catchIO (Network.Socket.inet_addr hostname) -- handles ascii IP numbers
 				(\ _ -> do
@@ -400,35 +401,36 @@ kolproxy_openTCPConnection server = do
 			catchIO (Network.BSD.getHostByName h)
 				(\ _ -> throwIO $ NetworkError $ ("openTCPConnection: host lookup failure for " ++ show h))
 
+ensure_connection_ server = do
+	conn <- try $ kolproxy_openTCPConnection server
+	case conn of
+		Right c -> return c
+		Left err -> do
+			putWarningStrLn $ "Connection exception: " ++ show (err :: SomeException)
+			threadDelay 500000
+			putInfoStrLn $ "Trying again..."
+			ensure_connection_ server
+
 fast_mkconnthing server = do
 	-- TODO: merge stale-check and max-requests-check?
 	connmv <- newEmptyMVar
 	let open_conn = do
 		tnow <- getCurrentTime
-		let ensure_connection = do
-			conn <- try $ kolproxy_openTCPConnection server
-			case conn of
-				Right c -> return c
-				Left err -> do
-					putWarningStrLn $ "Connection exception: " ++ show (err :: SomeException)
-					threadDelay 500000
-					putInfoStrLn $ "Trying again..."
-					ensure_connection
-		c <- ensure_connection
+		c <- ensure_connection_ server
 		rchan <- newChan
 		req_counter <- newIORef 0
 		let run = do
 			stuff <- readChan rchan
 			case stuff of
 				Just (isok, (absuri, rq, mvdest, ref)) -> do
-					putDebugStrLn $ "FastHttpsChan processing: " ++ show absuri
+--					putDebugStrLn $ "FastHttpsChan processing: " ++ show absuri
 					(what, was_last_request) <- case isok of
 						Right (_requesting_it, req_nr) -> log_time_interval_http ref ("HTTP reading: " ++ (show $ rqURI rq)) $ do
 							what <- try $ ((do
 								rsp <- log_time_interval_http ref "HTTP head" $ getResponseHead c -- fails to read from mafia because mafia terminates with LF instead of CRLF. Is this still true?
 								switchedresp <- log_time_interval_http ref "HTTP body" $ switchResponse c True False rsp rq
 								case switchedresp of
-									Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)
+									Right resp -> return (absuri, decodeBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)
 									Left err -> throwIO $ HttpError $ show err) `catch` (\e -> do
 										doHTTPLOWLEVEL_DEBUGexception $ "http read exception: " ++ (show (e :: SomeException))
 										throwIO e))
@@ -446,6 +448,7 @@ fast_mkconnthing server = do
 								cf x
 								transfer (n - 1)
 							transfer (pending - 1)
+							withMVar c $ \raw_c -> Network.TLS.bye (sslconn_c raw_c)
 							return (Right (cf, connt, pending - 1, cnewkill), False)
 						case (was_last_request, what) of
 							(True, _) -> kill_it
@@ -472,7 +475,7 @@ fast_mkconnthing server = do
 				let requesting_it = (req_nr <= 80) -- Do a maximum of 80 requests per connection
 				if requesting_it
 					then do
-						putDebugStrLn $ "Request: " ++ show absuri
+--						putDebugStrLn $ "Request: " ++ show absuri
 						connPut c (show rq)
 						connPut c (Data.ByteString.Char8.unpack $ rqBody rq)
 						connFlush c -- Maybe TODO???: only flush when done requesting???
@@ -520,7 +523,7 @@ slow_mkconnthing _server = do
 		(absuri, rq, mvdest, _ref) <- (readChan slowconnchan) `catch` (\e -> do
 			doHTTPLOWLEVEL_DEBUGexception $ "slowconnchan read exception: " ++ (show (e :: SomeException))
 			throwIO e)
-		putDebugStrLn $ "SlowHttpsChan processing: " ++ show absuri
+--		putDebugStrLn $ "SlowHttpsChan processing: " ++ show absuri
 		use_proxy <- getEnvironmentSetting "KOLPROXY_USE_PROXY_SERVER"
 		auth <- case use_proxy of
 			Nothing -> getAuth rq
@@ -528,7 +531,7 @@ slow_mkconnthing _server = do
 		let nrq = normalizeRequest (defaultNormalizeRequestOptions { normDoClose = True, normForProxy = False }) rq
 		r <- simple_https_direct nrq
 		answer <- (try $ case r of
-			Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)
+			Right resp -> return (absuri, decodeBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)
 			Left ce -> throwIO $ NetworkError $ "slowHTTP error: [" ++ (show ce) ++ "]") :: IO ConnChanActionType
 		putMVar mvdest answer) `catch` (\e -> doHTTPLOWLEVEL_DEBUGexception $ "slowconnchan error: " ++ (show (e :: SomeException))))
 
@@ -537,6 +540,10 @@ slow_mkconnthing _server = do
 send_http_response h resp = do
 	-- TODO: check for errors?
 	void $ writeBlock h (Network.BufferType.buf_fromStr Network.BufferType.bufferOps $ show resp)
-	void $ writeBlock h (Data.ByteString.Char8.unpack $ rspBody resp)
+	void $ writeBlock h (Data.ByteString.Char8.unpack $ decodeBody resp)
 
 end_http h = Network.HTTP.close h
+
+decodeBody resp = case findHeader HdrContentEncoding resp of
+	Just "gzip" -> Data.ByteString.concat $ Data.ByteString.Lazy.toChunks $ Codec.Compression.GZip.decompress $ Data.ByteString.Lazy.fromChunks $ [rspBody resp]
+	_ -> rspBody resp

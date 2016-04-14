@@ -81,7 +81,7 @@ make_sessionconn globalref kolproxy_direct_connection dblogstuff = do
 	}
 
 get_kolproxy_direct_connection_details = do
-	kolproxy_host <- fromMaybe "http://www.kingdomofloathing.com/" <$> getEnvironmentSetting "KOLPROXY_SERVER"
+	kolproxy_host <- fromMaybe "https://www.kingdomofloathing.com/" <$> getEnvironmentSetting "KOLPROXY_SERVER"
 	use_proxy <- getEnvironmentSetting "KOLPROXY_USE_PROXY_SERVER" -- TODO: merge with doHTTPreq code
 	let kolproxy_direct_connection = case use_proxy of
 		Nothing -> kolproxy_host

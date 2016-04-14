@@ -162,9 +162,9 @@ runbot filename = do
 	(logchan, dropping_logchan, globalref) <- kolproxy_setup_refstuff
 
 	let login_useragent = kolproxy_version_string ++ " (" ++ Kolproxy.PlatformLowlevel.platform_name ++ ")" ++ " BotScript/0.1 (" ++ filename ++ ")"
-	let login_host = fromJust $ parseURI $ "http://www.kingdomofloathing.com/"
+	let login_host = fromJust $ parseURI $ "https://www.kingdomofloathing.com/"
 
-	sc <- Kolproxy.Server.make_sessionconn globalref "http://www.kingdomofloathing.com/" (error "dblogstuff")
+	sc <- Kolproxy.Server.make_sessionconn globalref "https://www.kingdomofloathing.com/" (error "dblogstuff")
 
 	Just username <- getEnvironmentSetting "KOLPROXY_BOTSCRIPT_USERNAME"
 	Just passwordmd5hash <- getEnvironmentSetting "KOLPROXY_BOTSCRIPT_PASSWORDMD5HASH"
