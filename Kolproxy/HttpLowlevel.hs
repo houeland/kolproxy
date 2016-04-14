@@ -402,6 +402,7 @@ kolproxy_openTCPConnection server = do
 				(\ _ -> throwIO $ NetworkError $ ("openTCPConnection: host lookup failure for " ++ show h))
 
 ensure_connection_ server = do
+	putDebugStrLn $ "Opening connection to " ++ server
 	conn <- try $ kolproxy_openTCPConnection server
 	case conn of
 		Right c -> return c
@@ -417,99 +418,41 @@ fast_mkconnthing server = do
 	let open_conn = do
 		tnow <- getCurrentTime
 		c <- ensure_connection_ server
-		rchan <- newChan
-		req_counter <- newIORef 0
-		let run = do
-			stuff <- readChan rchan
-			case stuff of
-				Just (isok, (absuri, rq, mvdest, ref)) -> do
---					putDebugStrLn $ "FastHttpsChan processing: " ++ show absuri
-					(what, was_last_request) <- case isok of
-						Right (_requesting_it, req_nr) -> log_time_interval_http ref ("HTTP reading: " ++ (show $ rqURI rq)) $ do
-							what <- try $ ((do
-								rsp <- log_time_interval_http ref "HTTP head" $ getResponseHead c -- fails to read from mafia because mafia terminates with LF instead of CRLF. Is this still true?
-								switchedresp <- log_time_interval_http ref "HTTP body" $ switchResponse c True False rsp rq
-								case switchedresp of
-									Right resp -> return (absuri, decodeBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)
-									Left err -> throwIO $ HttpError $ show err) `catch` (\e -> do
-										doHTTPLOWLEVEL_DEBUGexception $ "http read exception: " ++ (show (e :: SomeException))
-										throwIO e))
-							return (what, req_nr == 80)
-						Left err -> return (Left err, False) -- TODO: Change to True?
-					putMVar mvdest what `catch` (\e -> do
-						doHTTPLOWLEVEL_DEBUGexception $ "http write mvdest exception for " ++ (uriPath absuri) ++ ": " ++ (show (e :: SomeException))
-						throwIO e)
-					going <- (modifyMVar connmv $ \zzz -> do
-						let Right (cf_stored, _, pending, thiskillfunc) = zzz
-						let kill_it = do
-							(cf, connt, _, cnewkill) <- open_conn
-							let transfer n = when (n > 0) $ do
-								Just (_, x) <- readChan rchan
-								cf x
-								transfer (n - 1)
-							transfer (pending - 1)
-							withMVar c $ \raw_c -> Network.TLS.bye (sslconn_c raw_c)
-							return (Right (cf, connt, pending - 1, cnewkill), False)
-						case (was_last_request, what) of
-							(True, _) -> kill_it
-							(_, Right (_, _, hdrs, _, _)) -> case lookup "Connection" hdrs of
-								Just "close" -> do
-									putWarningStrLn $ "server closed connection"
-									kill_it
-								_ -> do
-									trefreshed <- getCurrentTime
-									return (Right (cf_stored, trefreshed, pending - 1, thiskillfunc), True)
-							_ -> do
-								putWarningStrLn $ "no headers from server, closing connection"
-								kill_it) `catch` (\e -> do
-									doHTTPLOWLEVEL_DEBUG $ "http put exception for " ++ (uriPath absuri) ++ ": " ++ (show (e :: SomeException))
-									throwIO e)
-					when going run
-				_ -> return ()
-		forkIO_ "HTTPlow:run" $ (run `catch` (\e -> do
-			doHTTPLOWLEVEL_DEBUGexception $ "http forked-run exception: " ++ (show (e :: SomeException))
-			throwIO e))
-		let cfunc (absuri, rq, mvdest, ref) = do
-			isok <- log_time_interval_http ref ("HTTP asking: " ++ (show $ rqURI $ rq)) $ try $ do
-				req_nr <- atomicModifyIORef req_counter (\x -> (x + 1, x + 1))
-				let requesting_it = (req_nr <= 80) -- Do a maximum of 80 requests per connection
-				if requesting_it
-					then do
---						putDebugStrLn $ "Request: " ++ show absuri
-						connPut c (show rq)
-						connPut c (Data.ByteString.Char8.unpack $ rqBody rq)
-						connFlush c -- Maybe TODO???: only flush when done requesting???
-					else return ()
-				return (requesting_it, req_nr)
-			writeChan rchan $ Just (isok, (absuri, rq, mvdest, ref))
-		let ckill = writeChan rchan Nothing
-		return (cfunc, tnow, 0, ckill)
+		let cfunc (absuri, rq, mvdest, _ref) = do
+			connPut c (show rq)
+			connPut c (Data.ByteString.Char8.unpack $ rqBody rq)
+			connFlush c
+			rsp <- getResponseHead c
+			resresp <- switchResponse c True False rsp rq
+			v <- try $ case resresp of
+				Right resp -> return (absuri, decodeBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)
+				Left ce -> throwIO $ NetworkError $ "HTTPS error: [" ++ (show ce) ++ "]"
+			putMVar mvdest v
+		let ckill = do
+			withMVar c $ \conn -> do
+				Network.TLS.bye (sslconn_c conn)
+			return ()
+		return (cfunc, tnow, ckill)
 	putMVar connmv =<< (try $ throwIO $ InternalError $ "Not connected to server")
-
--- connchan collects requests
--- we have 0-1 open valid connections to server going for this connchan
--- if overfull: wait for closing
--- if 0 or 1 invalid: make new connection
--- send request to connection
 
 	connchan <- newChan
 	forkIO_ "HTTPlow:connchan" $ forever $ handle (\e -> doHTTPLOWLEVEL_DEBUGexception $ "connchan error: " ++ (show (e :: SomeException))) $ do
 		x <- readChan connchan
 
 		modifyMVar_ connmv $ \z -> do
+			tnow <- getCurrentTime
 			what <- case z of
-				Right (_cf_stored, t_stored, _pending, oldkill) -> do
-					tnow <- getCurrentTime
-					if diffUTCTime tnow t_stored <= 60.0 -- Reuse connection if it is less than a minute old
+				Right (_cf_stored, t_stored, oldkill) -> do
+					if diffUTCTime tnow t_stored <= 300.0 -- Reuse connection if it is less than 5 minutes old
 						then return z
 						else try $ do
 							oldkill
 							open_conn
 				Left _ -> try $ open_conn
 			case what of
-				Right (cf, t, p, k) -> do
+				Right (cf, _t, k) -> do
 					cf x
-					return $ Right (cf, t, p + 1, k)
+					return $ Right (cf, tnow, k)
 				Left err -> do
 					let (_absuri, _rq, mvdest, _ref) = x
 					putMVar mvdest $ Left (err :: SomeException)
