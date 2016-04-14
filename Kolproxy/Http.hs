@@ -15,11 +15,13 @@ import Control.Exception
 import Control.Monad
 import Data.IORef
 import Data.List (intercalate)
+import Data.Maybe
 import Data.Time
 import Data.Time.Clock.POSIX
 import Network.URI
 import Text.JSON
 import qualified Data.ByteString.Char8
+--import qualified Network.HTTP
 
 getHTTPFileData url = do
 	(_, body, _, _) <- doHTTPreq (mkreq True kolproxy_version_string Nothing (mkuri url) Nothing True)
@@ -115,8 +117,10 @@ load_api_status_to_mv ref mv apixf = do
 		_ -> return ()
 	putMVar mv apires
 
-internalKolRequest_pipelining ref uri params should_invalidate_cache = do
--- 	putDebugStrLn $ "pipeline-req " ++ show uri
+internalKolRequest_pipelining ref uri params should_invalidate_cache = privateKolRequest_pipelining ref uri params should_invalidate_cache []
+
+privateKolRequest_pipelining ref uri params should_invalidate_cache extraHdrs = do
+--	putDebugStrLn $ "pipeline-req " ++ show uri
 	let host = hostUri_ $ connection $ ref
 
 	curjsonmv <- if should_invalidate_cache
@@ -127,7 +131,22 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 		else readIORef (jsonStatusPageMVarRef_ $ sessionData $ ref)
 	retrieval_start <- getCurrentTime
 	slowconn <- readIORef $ use_slow_http_ref_ $ globalstuff_ $ ref
-	let (reqabsuri, r) = mkreq slowconn (useragent_ $ connection $ ref) (cookie_ $ connection $ ref) (uri `relativeTo` host) params True
+
+	let new_cookie = case filter (\(a, _b) -> a == "Set-Cookie") extraHdrs of
+		[] -> Nothing
+		(x:xs) -> Just $ intercalate "; " (map ((takeWhile (/= ';')) . snd) (x:xs)) -- TODO: Make readable
+	let old_cookie = cookie_ $ connection $ ref
+
+	let cookie = case cookielist of
+			[] -> Nothing
+			(x:xs) -> Just $ intercalate "; " (x:xs)
+		where
+			cookielist = catMaybes [Just "appserver=www11", old_cookie, new_cookie]
+
+--	putDebugStrLn $ "pipeline cookie: " ++ (show cookie)
+	let (reqabsuri, r) = mkreq slowconn (useragent_ $ connection $ ref) cookie (uri `relativeTo` host) params True
+--	putDebugStrLn $ "pipeline r request: " ++ (show r)
+--	putDebugStrLn $ "split uri: " ++ (show (Network.HTTP.splitRequestURI (uri `relativeTo` host)))
 	mv_x <- newEmptyMVar
 	writeChan (getconn_ $ connection $ ref) (reqabsuri, r, mv_x, ref)
 
@@ -144,6 +163,7 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 					-- TODO: make it not happen
 					putWarningStrLn $ "httpreq read exception for " ++ (uriPath reqabsuri) ++ ": " ++ (show (e :: SomeException))
 					throwIO e)
+--				putDebugStrLn $ "pipe result x: " ++ (show x)
 				case x of
 					Right (retabsuri, body, hdrs, code, _) -> return $ PageResult { pageBody = body, pageUri = retabsuri, pageHeaders = hdrs, pageHttpCode = code }
 					Left e -> throwIO $ HttpRequestException reqabsuri e
@@ -165,8 +185,9 @@ internalKolRequest_pipelining ref uri params should_invalidate_cache = do
 						Just to -> return $ Just to
 					let addheaders = filter (\(x, _y) -> (x == "Set-Cookie" || x == "Location")) hdrs
 					-- TODO: respect new cookie header here?
--- 					putDebugStrLn $ "--> local redirected " ++ (show retabsuri) ++ " -> " ++ (show to)
-					(y, mvy) <- internalKolRequest_pipelining ref touri Nothing should_invalidate_cache
+--					putDebugStrLn $ "--> local redirected " ++ (show reqabsuri) ++ " -> " ++ (show touri)
+--					putDebugStrLn $ "--> addheaders: " ++ (show addheaders)
+					(y, mvy) <- privateKolRequest_pipelining ref touri Nothing should_invalidate_cache addheaders
 					new_page_result <- y
 					themv <- mvy
 					return (new_page_result { pageHeaders = addheaders ++ (pageHeaders new_page_result) }, themv)

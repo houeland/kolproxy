@@ -295,6 +295,7 @@ function cannon_action()
 		"Toss",
 		"Clobber",
 		"Ravioli Shurikens",
+		"Pistolwhip",
 		not cannot_use_undying() and "Fist of the Mummy" or "???",
 		elem ~= "Hot" and "Roar of the Lion" or "???",
 		elem ~= "Spooky" and "Howl of the Jackal" or "???",

@@ -191,15 +191,17 @@ mkreq_slow useragent cookie absuri params forproxy =
 		(returi, req) = mkreq_fast useragent cookie absuri params forproxy
 
 mkreq_fast useragent cookie absuri params forproxy =
-		(absuri, normalizeRequest defaultNormalizeRequestOptions { normForProxy = forproxy } $ case params of
-			Nothing -> Request { rqURI = absuri, rqMethod = GET, rqHeaders = cookiehdr, rqBody = Data.ByteString.empty }
-			Just p -> let enc = formEncode p in Request { rqURI = absuri, rqMethod = POST, rqHeaders = cookiehdr ++ [mkHeader HdrContentType "application/x-www-form-urlencoded", mkHeader HdrContentLength (show $ length enc)], rqBody = Data.ByteString.Char8.pack enc })
+		(absuri, normalizeRequest defaultNormalizeRequestOptions { normForProxy = False } $ case params of
+			Nothing -> Request { rqURI = absuri, rqMethod = GET, rqHeaders = hdrs, rqBody = Data.ByteString.empty }
+			Just p -> let enc = formEncode p in Request { rqURI = absuri, rqMethod = POST, rqHeaders = hdrs ++ [mkHeader HdrContentType "application/x-www-form-urlencoded", mkHeader HdrContentLength (show $ length enc)], rqBody = Data.ByteString.Char8.pack enc })
 	where
 		cookiehdr = case cookie of
-			Nothing -> [mkHeader HdrUserAgent useragent] -- ++ [mkHeader HdrConnection "Keep-Alive"]
-			Just x -> [mkHeader HdrCookie x, mkHeader HdrUserAgent useragent] -- ++ [mkHeader HdrConnection "Keep-Alive"]
+			Nothing -> []
+			Just x -> [mkHeader HdrCookie x]
+		otherhdrs = [mkHeader HdrUserAgent useragent, mkHeader HdrConnection "Keep-Alive", mkHeader HdrAccept "*/*", mkHeader HdrAcceptEncoding ""]
+		hdrs = cookiehdr ++ otherhdrs
 
-mkreq isslow = if isslow then mkreq_slow else mkreq_fast
+mkreq isslow = if False then mkreq_slow else mkreq_fast
 
 rewrite_headers hdrs = map (\(Header x y) -> (show x, y)) hdrs
 
@@ -231,6 +233,7 @@ simple_https_direct rq = do
 
 	mvc <- newMVar (SslConn { sslconn_c = c, sslconn_sendBuffer = [], sslconn_recvBuffer = Data.ByteString.empty })
 
+--	putDebugStrLn $ "  https write: " ++ (show rq)
 	connPut mvc (show rq)
 	connPut mvc (Data.ByteString.Char8.unpack $ rqBody rq)
 	connFlush mvc
@@ -418,6 +421,7 @@ fast_mkconnthing server = do
 			stuff <- readChan rchan
 			case stuff of
 				Just (isok, (absuri, rq, mvdest, ref)) -> do
+					putDebugStrLn $ "FastHttpsChan processing: " ++ show absuri
 					(what, was_last_request) <- case isok of
 						Right (_requesting_it, req_nr) -> log_time_interval_http ref ("HTTP reading: " ++ (show $ rqURI rq)) $ do
 							what <- try $ ((do
@@ -468,7 +472,7 @@ fast_mkconnthing server = do
 				let requesting_it = (req_nr <= 80) -- Do a maximum of 80 requests per connection
 				if requesting_it
 					then do
---						putDebugStrLn $ "Request: " ++ show absuri
+						putDebugStrLn $ "Request: " ++ show absuri
 						connPut c (show rq)
 						connPut c (Data.ByteString.Char8.unpack $ rqBody rq)
 						connFlush c -- Maybe TODO???: only flush when done requesting???
@@ -516,13 +520,13 @@ slow_mkconnthing _server = do
 		(absuri, rq, mvdest, _ref) <- (readChan slowconnchan) `catch` (\e -> do
 			doHTTPLOWLEVEL_DEBUGexception $ "slowconnchan read exception: " ++ (show (e :: SomeException))
 			throwIO e)
+		putDebugStrLn $ "SlowHttpsChan processing: " ++ show absuri
 		use_proxy <- getEnvironmentSetting "KOLPROXY_USE_PROXY_SERVER"
 		auth <- case use_proxy of
 			Nothing -> getAuth rq
 			Just p -> getAuth $ Request { rqURI = fromJust $ parseURI $ ("proxy://" ++ p ++ "/"), rqMethod = GET, rqHeaders = [], rqBody = "" }
-		s <- openStream (host auth) $ fromMaybe 80 (port auth)
-		let nrq = normalizeRequest (defaultNormalizeRequestOptions { normDoClose = True, normForProxy = True }) rq
-		r <- Network.HTTP.HandleStream.sendHTTP s nrq
+		let nrq = normalizeRequest (defaultNormalizeRequestOptions { normDoClose = True, normForProxy = False }) rq
+		r <- simple_https_direct nrq
 		answer <- (try $ case r of
 			Right resp -> return (absuri, rspBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)
 			Left ce -> throwIO $ NetworkError $ "slowHTTP error: [" ++ (show ce) ++ "]") :: IO ConnChanActionType
