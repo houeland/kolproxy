@@ -31,7 +31,7 @@ liftIO = Control.Monad.Reader.liftIO :: IO a -> Control.Monad.Reader.ReaderT Ref
 
 runWithRef ref f = Control.Monad.Reader.runReaderT f (ref :: RefType)
 
-kolproxy_version_number = "4.2.0-dev"
+kolproxy_version_number = "4.2.0-alpha"
 
 kolproxy_version_string = "kolproxy/" ++ kolproxy_version_number
 
