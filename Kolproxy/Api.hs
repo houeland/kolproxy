@@ -7,7 +7,6 @@ import Kolproxy.UtilTypes
 import qualified Kolproxy.Http
 
 import Control.Applicative
-import Control.Concurrent
 import Control.Exception
 import Control.Monad
 import Data.IORef
@@ -19,7 +18,7 @@ import qualified Data.ByteString.Char8
 statusfunc ref = do
 	mv <- readIORef $ jsonStatusPageMVarRef_ $ sessionData $ ref
 	return $ ((do
-		x <- readMVar mv
+		x <- readMVar_msg "reading statusfunc" mv
 		case x of
 			Right r -> return r
 			Left err -> throwIO err) `catch` (\e -> do

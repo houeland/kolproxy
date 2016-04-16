@@ -4,7 +4,6 @@ module Kolproxy.HttpLowlevel (mkreq_slow, mkreq_fast, mkreq, rewrite_headers, si
 
 import Prelude
 
-import Kolproxy.Logging
 import Kolproxy.Util
 import Kolproxy.UtilTypes
 
@@ -15,7 +14,6 @@ import Control.Monad
 import Crypto.Random.AESCtr (makeSystem)
 import Data.Char
 import Data.Maybe
-import Data.IORef
 import Data.Time.Clock
 import Network.BSD
 import Network.BufferType
@@ -37,7 +35,7 @@ import qualified Network.TLS.Extra
 
 -- TODO: Split into a ModdedHttp part for the modified Network.HTTP stuff and another kolproxy part
 
-doHTTPLOWLEVEL_DEBUG _ = return ()
+_doHTTPLOWLEVEL_DEBUG _ = return ()
 -- doHTTPLOWLEVEL_DEBUG x = putStrLn $ "HTTPlow DEBUG: " ++ x
 doHTTPLOWLEVEL_DEBUGexception _ = return ()
 --doHTTPLOWLEVEL_DEBUGexception x = putStrLn $ "HTTPlow DEBUGexc: " ++ x
@@ -191,7 +189,7 @@ mkreq_slow useragent cookie absuri params forproxy =
 	where
 		(returi, req) = mkreq_fast useragent cookie absuri params forproxy
 
-mkreq_fast useragent cookie absuri params forproxy =
+mkreq_fast useragent cookie absuri params _forproxy =
 		(absuri, normalizeRequest defaultNormalizeRequestOptions { normForProxy = False } $ case params of
 			Nothing -> Request { rqURI = absuri, rqMethod = GET, rqHeaders = hdrs, rqBody = Data.ByteString.empty }
 			Just p -> let enc = formEncode p in Request { rqURI = absuri, rqMethod = POST, rqHeaders = hdrs ++ [mkHeader HdrContentType "application/x-www-form-urlencoded", mkHeader HdrContentLength (show $ length enc)], rqBody = Data.ByteString.Char8.pack enc })
@@ -414,36 +412,39 @@ ensure_connection_ server = do
 
 fast_mkconnthing server = do
 	-- TODO: merge stale-check and max-requests-check?
-	connmv <- newEmptyMVar
+	connmv <- newMVar =<< (try $ throwIO $ InternalError "Not connected to server")
 	let open_conn = do
 		tnow <- getCurrentTime
+		putDebugStrLn $ "open_conn at: " ++ (show tnow)
 		c <- ensure_connection_ server
-		let cfunc (absuri, rq, mvdest, _ref) = do
+		let cfunc absuri rq = try $ do
 			connPut c (show rq)
 			connPut c (Data.ByteString.Char8.unpack $ rqBody rq)
 			connFlush c
 			rsp <- getResponseHead c
 			resresp <- switchResponse c True False rsp rq
-			v <- try $ case resresp of
+			case resresp of
 				Right resp -> return (absuri, decodeBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)
 				Left ce -> throwIO $ NetworkError $ "HTTPS error: [" ++ (show ce) ++ "]"
-			putMVar mvdest v
 		let ckill = do
-			withMVar c $ \conn -> do
-				Network.TLS.bye (sslconn_c conn)
+			putDebugStrLn $ "ckill for: " ++ (show tnow)
+			withMVar c $ \conn -> Network.TLS.bye (sslconn_c conn)
 			return ()
 		return (cfunc, tnow, ckill)
-	putMVar connmv =<< (try $ throwIO $ InternalError $ "Not connected to server")
 
 	connchan <- newChan
 	forkIO_ "HTTPlow:connchan" $ forever $ handle (\e -> doHTTPLOWLEVEL_DEBUGexception $ "connchan error: " ++ (show (e :: SomeException))) $ do
 		x <- readChan connchan
 
+		do
+			let (absuri, _rq, _mvdest, _ref) = x
+			putDebugStrLn $ "connchan x: " ++ (show absuri)
+
 		modifyMVar_ connmv $ \z -> do
 			tnow <- getCurrentTime
 			what <- case z of
 				Right (_cf_stored, t_stored, oldkill) -> do
-					if diffUTCTime tnow t_stored <= 300.0 -- Reuse connection if it is less than 5 minutes old
+					if diffUTCTime tnow t_stored <= 120.0 -- Reuse connection if it is less than 2 minutes old
 						then return z
 						else try $ do
 							oldkill
@@ -451,10 +452,25 @@ fast_mkconnthing server = do
 				Left _ -> try $ open_conn
 			case what of
 				Right (cf, _t, k) -> do
-					cf x
-					return $ Right (cf, tnow, k)
+					let (absuri, rq, mvdest, _ref) = x
+					putDebugStrLn $ "Right conn for: " ++ (show absuri)
+					v <- cf absuri rq
+					case v of
+						Right (_, _, hdrs, _, _) -> case lookup "Connection" hdrs of
+							Just "close" -> do
+								putWarningStrLn $ "server closed connection"
+								putMVar mvdest v
+								err <- try $ throwIO $ InternalError "Not connected to server"
+								return err
+							_ -> do
+								putMVar mvdest v
+								return $ Right (cf, tnow, k)
+						Left err -> do
+							putMVar mvdest v
+							return $ Left err
 				Left err -> do
-					let (_absuri, _rq, mvdest, _ref) = x
+					let (absuri, _rq, mvdest, _ref) = x
+					putDebugStrLn $ "Left conn for: " ++ (show absuri)
 					putMVar mvdest $ Left (err :: SomeException)
 					return $ Left err
 
@@ -468,14 +484,15 @@ slow_mkconnthing _server = do
 			throwIO e)
 --		putDebugStrLn $ "SlowHttpsChan processing: " ++ show absuri
 		use_proxy <- getEnvironmentSetting "KOLPROXY_USE_PROXY_SERVER"
-		auth <- case use_proxy of
+		_auth <- case use_proxy of
 			Nothing -> getAuth rq
 			Just p -> getAuth $ Request { rqURI = fromJust $ parseURI $ ("proxy://" ++ p ++ "/"), rqMethod = GET, rqHeaders = [], rqBody = "" }
 		let nrq = normalizeRequest (defaultNormalizeRequestOptions { normDoClose = True, normForProxy = False }) rq
-		r <- simple_https_direct nrq
-		answer <- (try $ case r of
-			Right resp -> return (absuri, decodeBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)
-			Left ce -> throwIO $ NetworkError $ "slowHTTP error: [" ++ (show ce) ++ "]") :: IO ConnChanActionType
+		answer <- try $ do
+			r <- simple_https_direct nrq
+			case r of
+				Right resp -> return (absuri, decodeBody resp, rewrite_headers $ rspHeaders resp, mkCode resp, resp)
+				Left ce -> throwIO $ NetworkError $ "slowHTTP error: [" ++ (show ce) ++ "]"
 		putMVar mvdest answer) `catch` (\e -> doHTTPLOWLEVEL_DEBUGexception $ "slowconnchan error: " ++ (show (e :: SomeException))))
 
 	return slowconnchan :: IO ConnChanType

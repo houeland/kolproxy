@@ -43,7 +43,7 @@ doProcessPage ref uri params = do
 		writeIORef (cachedActionbar_ $ sessionData $ ref) Nothing
 
 	let status_after_func = do
-		readMVar =<< mvf
+		readMVar_msg "doProcessPage status_after_func" =<< mvf
 
 	mv <- newEmptyMVar
 
@@ -71,7 +71,7 @@ doProcessPage ref uri params = do
 				return $ Left $ PageResult { pageBody = Kolproxy.HardcodedGameStuff.add_error_message_to_page ("process-page.lua exception: " ++ (show e)) (Data.ByteString.Char8.pack "{ Kolproxy page processing. }"), pageUri = mkuri "/error", pageHeaders = [], pageHttpCode = 500 }
 
 	return $ do
-		readMVar mv
+		takeMVar_msg "doProcessPage return" mv
 
 doProcessPageChat ref uri params = do
 	mv <- newEmptyMVar
@@ -92,4 +92,4 @@ doProcessPageChat ref uri params = do
 			Left e -> do
 				return $ Left $ PageResult { pageBody = Kolproxy.HardcodedGameStuff.add_error_message_to_page ("processchar exception: " ++ (show (e :: SomeException))) (Data.ByteString.Char8.pack "{ Kolproxy page processing. }"), pageUri = mkuri "/error", pageHeaders = [], pageHttpCode = 500 }
 	return $ do
-		readMVar mv
+		takeMVar_msg "doProcessPageChat return" mv

@@ -154,3 +154,19 @@ putInfoStrLn msg = putStrLn $ "INFO: " ++ msg
 putDebugStrLn msg = if isSuffixOf "-dev" kolproxy_version_number
 	then putStrLn $ "DEBUG: " ++ msg
 	else return ()
+
+takeMVar_msg msg mv = do
+	result <- try $ takeMVar mv
+	case result of
+		Right v -> return v
+		Left err -> do
+			putDebugStrLn $ "takeMVar (" ++ msg ++ ") failed: " ++ (show (err :: SomeException))
+			throwIO $ InternalError $ "takeMVar error (" ++ msg ++ "): " ++ show err
+
+readMVar_msg msg mv = do
+	result <- try $ readMVar mv
+	case result of
+		Right v -> return v
+		Left err -> do
+			putDebugStrLn $ "readMVar (" ++ msg ++ ") failed: " ++ (show (err :: SomeException))
+			throwIO $ InternalError $ "readMVar error (" ++ msg ++ "): " ++ show err

@@ -148,6 +148,7 @@ privateKolRequest_pipelining ref uri params should_invalidate_cache extraHdrs = 
 --	putDebugStrLn $ "pipeline r request: " ++ (show r)
 --	putDebugStrLn $ "split uri: " ++ (show (Network.HTTP.splitRequestURI (uri `relativeTo` host)))
 	mv_x <- newEmptyMVar
+	putDebugStrLn $ "write chan x: " ++ (show reqabsuri)
 	writeChan (getconn_ $ connection $ ref) (reqabsuri, r, mv_x, ref)
 
 	when should_invalidate_cache $ do
@@ -157,8 +158,9 @@ privateKolRequest_pipelining ref uri params should_invalidate_cache extraHdrs = 
 	mv_val <- newEmptyMVar
 	forkIO_ "HTTP:mv_val" $ do
 		putMVar mv_val =<< (try $ do
+			putDebugStrLn $ "http start x: " ++ (show reqabsuri)
 			page_result <- do
-				x <- (readMVar mv_x) `catch` (\e -> do
+				x <- (takeMVar_msg "privateKolRequest_pipelining page_result" mv_x) `catch` (\e -> do
 					-- TODO: when does this happen?
 					-- TODO: make it not happen
 					putWarningStrLn $ "httpreq read exception for " ++ (uriPath reqabsuri) ++ ": " ++ (show (e :: SomeException))
@@ -167,6 +169,7 @@ privateKolRequest_pipelining ref uri params should_invalidate_cache extraHdrs = 
 				case x of
 					Right (retabsuri, body, hdrs, code, _) -> return $ PageResult { pageBody = body, pageUri = retabsuri, pageHeaders = hdrs, pageHttpCode = code }
 					Left e -> throwIO $ HttpRequestException reqabsuri e
+			putDebugStrLn $ "http retrieved x: " ++ (show reqabsuri)
 			retrieval_end <- getCurrentTime
 			prev_retrieval_end <- readIORef (lastRetrieve_ $ connection $ ref)
 			writeIORef (lastRetrieve_ $ connection $ ref) retrieval_end
@@ -187,20 +190,22 @@ privateKolRequest_pipelining ref uri params should_invalidate_cache extraHdrs = 
 					-- TODO: respect new cookie header here?
 --					putDebugStrLn $ "--> local redirected " ++ (show reqabsuri) ++ " -> " ++ (show touri)
 --					putDebugStrLn $ "--> addheaders: " ++ (show addheaders)
+					putDebugStrLn $ "http redirecting x: " ++ (show reqabsuri)
 					(y, mvy) <- privateKolRequest_pipelining ref touri Nothing should_invalidate_cache addheaders
 					new_page_result <- y
 					themv <- mvy
+					putDebugStrLn $ "http redirected x: " ++ (show reqabsuri) ++ " -> " ++ (show touri)
 					return (new_page_result { pageHeaders = addheaders ++ (pageHeaders new_page_result) }, themv)
 				else return (page_result, curjsonmv))
 
 	let xf = do
-		x <- readMVar mv_val
+		x <- readMVar_msg ("privateKolRequest_pipelining xf" ++ (show reqabsuri)) mv_val
 		case x of
 			Right (rx, _) -> return rx
 			Left e -> throwIO (e :: SomeException)
 
 	let mvf = do
-		x <- readMVar mv_val
+		x <- readMVar_msg ("privateKolRequest_pipelining mvf" ++ (show reqabsuri)) mv_val
 		case x of
 			Right (_, mv) -> return mv
 			Left e -> throwIO (e :: SomeException)
